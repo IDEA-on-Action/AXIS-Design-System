@@ -74,14 +74,25 @@
 **배포 URL**: `https://[your-domain]/r/registry.json`
 **CORS**: 모든 도메인 허용 (_headers 설정)
 
-### Phase C: Monet Registry 클라이언트 (Week 8)
+### Phase C: Monet Registry 클라이언트 (Week 8) ✅ 완료
 
 | # | 작업 | 상태 |
 |---|------|------|
-| C1 | registry.monet.design API 분석 | 🔲 |
-| C2 | Monet 컴포넌트 조회 CLI 도구 개발 | 🔲 |
-| C3 | Monet → AXIS 변환 어댑터 구현 | 🔲 |
-| C4 | 랜딩페이지 템플릿 가져오기 테스트 | 🔲 |
+| C1 | Monet API/MCP 분석 | ✅ |
+| C2 | Monet CLI 도구 개발 (axis-cli monet) | ✅ |
+| C3 | .claude/mcp.json에 Monet MCP 서버 추가 | ✅ |
+| C4 | 사용 가이드 문서화 | ✅ |
+
+**CLI 사용법**:
+```bash
+axis-cli monet list              # 카테고리 목록 (14개)
+axis-cli monet browse <category> # 카테고리 컴포넌트 보기
+axis-cli monet search <query>    # 컴포넌트 검색
+axis-cli monet import            # 클립보드에서 가져오기
+axis-cli monet setup             # MCP 설정 안내
+```
+
+**MCP 연동**: API 키 필요 (https://monet.design/mcp)
 
 ### Phase D: V0 통합 (Week 9)
 

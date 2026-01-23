@@ -6,6 +6,7 @@ import ora from "ora";
 import fs from "fs-extra";
 import path from "path";
 import prompts from "prompts";
+import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 
 const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
 
@@ -205,6 +206,76 @@ program
 
     console.log(chalk.gray("사용법: npx axis-cli add <component-name>"));
     console.log(chalk.gray("Agentic: npx axis-cli add <component-name> --agentic\n"));
+  });
+
+// ==========================================
+// Monet 명령어
+// ==========================================
+const monetCmd = program
+  .command("monet")
+  .description("Monet Design 컴포넌트 관리 (https://monet.design)");
+
+monetCmd
+  .command("list")
+  .alias("ls")
+  .description("Monet 카테고리 목록")
+  .action(async () => {
+    const client = new MonetClient();
+    await client.listCategories();
+  });
+
+monetCmd
+  .command("browse <category>")
+  .alias("b")
+  .description("카테고리별 컴포넌트 보기")
+  .action(async (category) => {
+    const client = new MonetClient();
+    await client.browseCategory(category);
+  });
+
+monetCmd
+  .command("search <query>")
+  .alias("s")
+  .description("컴포넌트 검색")
+  .action(async (query) => {
+    const client = new MonetClient();
+    await client.searchComponents(query);
+  });
+
+monetCmd
+  .command("import")
+  .alias("i")
+  .description("클립보드에서 컴포넌트 가져오기")
+  .action(async () => {
+    const client = new MonetClient();
+    await client.importFromClipboard();
+  });
+
+monetCmd
+  .command("setup")
+  .description("Monet MCP 서버 설정 안내")
+  .action(() => {
+    console.log(chalk.blue("\n🔧 Monet MCP 서버 설정\n"));
+
+    console.log(chalk.bold("1. API 키 발급:"));
+    console.log(chalk.cyan("   https://monet.design/mcp\n"));
+
+    console.log(chalk.bold("2. 환경 변수 설정:"));
+    console.log(chalk.gray("   .env 파일에 추가:"));
+    console.log(chalk.cyan("   MONET_API_KEY=your-api-key-here\n"));
+
+    console.log(chalk.bold("3. Claude Code MCP 설정:"));
+    console.log(chalk.gray("   .claude/mcp.json에서 monet 서버 활성화:\n"));
+    console.log(
+      chalk.cyan(`   "monet": {
+     "url": "https://www.monet.design/api/remote/mcp",
+     "headers": { "Authorization": "Bearer \${MONET_API_KEY}" },
+     "disabled": false
+   }\n`)
+    );
+
+    console.log(chalk.bold("4. Claude Code 재시작 후 사용:"));
+    console.log(chalk.gray('   "monet에서 hero 컴포넌트 찾아줘"\n'));
   });
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)

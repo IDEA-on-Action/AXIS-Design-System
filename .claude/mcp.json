@@ -4,6 +4,13 @@
       "command": "npx",
       "args": ["shadcn@latest", "mcp"]
     },
+    "monet": {
+      "url": "https://www.monet.design/api/remote/mcp",
+      "headers": {
+        "Authorization": "Bearer ${MONET_API_KEY}"
+      },
+      "disabled": true
+    },
     "axis": {
       "command": "node",
       "args": ["packages/axis-mcp/dist/index.js"]
