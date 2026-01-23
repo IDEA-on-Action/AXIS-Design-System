@@ -24,6 +24,7 @@
 |------|------|
 | [monorepo-setup.md](guides/monorepo-setup.md) | pnpm workspace + Turborepo 설정 가이드 |
 | [agentic-ui-design.md](guides/agentic-ui-design.md) | Agentic UI 디자인 시스템 기획서 |
+| [library-curator-agent.md](guides/library-curator-agent.md) | Library Curator Agent 사용 가이드 |
 
 ---
 

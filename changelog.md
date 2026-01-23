@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.0] - 2026-01-23
+
+### Added
+
+- **Library Curator Agent 구현** 📚
+  - 디자인 시스템 라이브러리 수집/분류/배치 Agent
+  - 4개 소스 Collector: shadcn, Monet, V0, AXIS
+  - 10개 카테고리 자동 분류 (Classifier)
+  - 사이트 배치 모듈 (Publisher)
+
+- **axis-cli library 명령어** 🛠️
+  - `axis-cli library collect` - 컴포넌트 수집
+  - `axis-cli library list` - 목록 조회
+  - `axis-cli library search` - 검색
+  - `axis-cli library stats` - 통계
+  - `axis-cli library publish` - 사이트 배치
+
+- **Library 페이지 UI** 🎨
+  - `/library` - 메인 페이지 (카테고리 탭, 소스 필터, 검색)
+  - `/library/[category]` - 카테고리별 목록
+  - `/library/[category]/[slug]` - 컴포넌트 상세 페이지
+
+- **테스트 인프라** 🧪
+  - vitest 테스트 프레임워크 도입
+  - 58개 단위 테스트 케이스 작성
+  - `pnpm test` 명령어 지원
+
+- **문서화** 📖
+  - `docs/specs/library-curator-agent.md` - 설계 명세
+  - `docs/guides/library-curator-agent.md` - 사용 가이드
+  - `.claude/agents/library_curator.md` - Agent 정의
+
+### Changed
+
+- 사이트 헤더에 "Library" 네비게이션 추가
+
+---
+
 ## [0.6.2] - 2026-01-23
 
 ### Added
