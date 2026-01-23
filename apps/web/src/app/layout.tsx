@@ -10,6 +10,9 @@ export const metadata: Metadata = {
   title: 'AXIS Design System',
   description: 'AI/LLM 애플리케이션을 위한 React 컴포넌트 라이브러리',
   manifest: '/manifest.json',
+  icons: {
+    icon: '/favicon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
