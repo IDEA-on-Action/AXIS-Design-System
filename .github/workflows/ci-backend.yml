@@ -20,6 +20,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# 워크플로 권한 설정
+permissions:
+  contents: read
+  security-events: write  # Trivy SARIF 업로드에 필요
+
 jobs:
   # ===========================================
   # Lint & Format
