@@ -1,6 +1,6 @@
 {
   "sprint_id": "SPRINT-2026-002",
-  "title": "Sprint - v0.6.0",
+  "title": "AXIS DS v0.7.0",
   "source_todo_path": "D:\\GitHub\\AXIS Design System\\project-todo.md",
   "decision": "GO",
   "days": [
@@ -31,13 +31,13 @@
         {
           "id": "D2-1",
           "day": 2,
-          "title": "마지막 버그 수정",
-          "description": "[General] 안정화 및 최적화",
-          "status": "completed",
-          "priority": "medium",
-          "source_todo_id": "TODO-008",
+          "title": "모바일 앱 (PWA/React Native) - *PoC 이후 검토*",
+          "description": "[Phase 4] 채점 전략 (에이전트별)",
+          "status": "skipped",
+          "priority": "low",
+          "source_todo_id": "TODO-035",
           "assignee": null,
-          "completed_at": "2026-01-23T16:26:31.149473",
+          "completed_at": null,
           "notes": null
         }
       ]
@@ -50,11 +50,11 @@
         {
           "id": "D3-1",
           "day": 3,
-          "title": "모바일 앱 (PWA/React Native) - *PoC 이후 검토*",
-          "description": "[Phase 4] 채점 전략 (에이전트별)",
+          "title": "Day 3 작업",
+          "description": "작업 진행",
           "status": "skipped",
-          "priority": "low",
-          "source_todo_id": "TODO-035",
+          "priority": "medium",
+          "source_todo_id": null,
           "assignee": null,
           "completed_at": null,
           "notes": null
@@ -94,7 +94,7 @@
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:21:31.896911",
+          "completed_at": "2026-01-23T16:51:14.291745",
           "notes": null
         },
         {
@@ -106,7 +106,7 @@
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:21:37.665635",
+          "completed_at": "2026-01-23T16:51:21.676063",
           "notes": null
         },
         {
@@ -118,7 +118,7 @@
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:26:44.623199",
+          "completed_at": "2026-01-23T16:51:28.864041",
           "notes": null
         }
       ]
@@ -130,14 +130,14 @@
   "next_actions": [
     "후속 액션 정의 필요"
   ],
-  "created_at": "2026-01-23T16:15:36.270558",
+  "created_at": "2026-01-23T16:46:33.549234",
   "started_at": null,
-  "completed_at": "2026-01-23T16:27:01.009261",
+  "completed_at": "2026-01-23T16:51:43.364842",
   "success_criteria": [
-    "스프린트 태스크 80% 이상 완료 (2개 이상)",
+    "스프린트 태스크 80% 이상 완료 (1개 이상)",
     "모든 완료 항목 테스트 통과",
     "project-todo.md 업데이트 완료"
   ],
-  "success_rate": 57.14285714285714,
+  "success_rate": 42.857142857142854,
   "todo_version": "0.6.0"
 }
