@@ -207,7 +207,7 @@ async def get_activity_stats(
     source_count_query = (
         select(
             Entity.properties["source_type"].astext.label("source_type"),
-            func.count().label("count"),
+            func.count().label("cnt"),
         )
         .where(Entity.entity_type == EntityType.ACTIVITY)
         .group_by(Entity.properties["source_type"].astext)
@@ -220,10 +220,10 @@ async def get_activity_stats(
     for row in source_rows:
         source_type = row.source_type or "manual"
         if source_type in by_source_type:
-            by_source_type[source_type] = row.count
+            by_source_type[source_type] = row.cnt
         else:
             # 알 수 없는 소스 타입은 manual로 집계
-            by_source_type["manual"] = by_source_type.get("manual", 0) + row.count
+            by_source_type["manual"] = by_source_type.get("manual", 0) + row.cnt
 
     return ActivityStatsResponse(
         total=total,

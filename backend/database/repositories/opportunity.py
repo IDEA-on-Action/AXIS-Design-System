@@ -134,7 +134,7 @@ class OpportunityRepository(CRUDBase[Opportunity]):
         # 단일 GROUP BY 쿼리로 모든 통계 조회
         stats_query = select(
             Opportunity.current_stage,
-            func.count().label("count"),
+            func.count().label("cnt"),
         ).group_by(Opportunity.current_stage)
         result = await db.execute(stats_query)
         rows = result.all()
@@ -146,10 +146,10 @@ class OpportunityRepository(CRUDBase[Opportunity]):
         inactive_stages = {OpportunityStage.HOLD, OpportunityStage.DROP}
 
         for row in rows:
-            stage_stats[row.current_stage.value] = row.count
-            total += row.count
+            stage_stats[row.current_stage.value] = row.cnt
+            total += row.cnt
             if row.current_stage not in inactive_stages:
-                active_count += row.count
+                active_count += row.cnt
 
         return {
             "total": total,

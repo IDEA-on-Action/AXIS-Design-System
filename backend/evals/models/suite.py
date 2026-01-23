@@ -76,11 +76,11 @@ class GateConfig(BaseModel):
     blocking: bool = Field(True, description="실패 시 배포 차단")
     pass_criteria: PassCriteria = Field(
         default_factory=PassCriteria,
-        description="통과 기준",  # type: ignore[arg-type]
+        description="통과 기준",
     )
     exceptions: GateExceptions = Field(
         default_factory=GateExceptions,
-        description="예외 설정",  # type: ignore[arg-type]
+        description="예외 설정",
     )
 
 
@@ -125,19 +125,19 @@ class NotificationConfig(BaseModel):
 
     on_failure: NotificationEvent = Field(
         default_factory=NotificationEvent,
-        description="실패 시 알림",  # type: ignore[arg-type]
+        description="실패 시 알림",
     )
     on_regression: NotificationEvent = Field(
         default_factory=NotificationEvent,
-        description="회귀 시 알림",  # type: ignore[arg-type]
+        description="회귀 시 알림",
     )
     on_saturation: SaturationNotification = Field(
         default_factory=SaturationNotification,
-        description="포화 시 알림",  # type: ignore[arg-type]
+        description="포화 시 알림",
     )
     daily_digest: DailyDigestNotification = Field(
         default_factory=DailyDigestNotification,
-        description="일일 다이제스트",  # type: ignore[arg-type]
+        description="일일 다이제스트",
     )
 
 

@@ -420,7 +420,7 @@ class OntologyRepository:
         # 엔티티 타입별 개수를 단일 GROUP BY 쿼리로 조회
         entity_stats_query = select(
             Entity.entity_type,
-            func.count().label("count"),
+            func.count().label("cnt"),
         ).group_by(Entity.entity_type)
         entity_result = await db.execute(entity_stats_query)
         entity_rows = entity_result.all()
@@ -428,22 +428,22 @@ class OntologyRepository:
         entity_by_type = {entity_type.value: 0 for entity_type in EntityType}
         entity_count = 0
         for row in entity_rows:
-            entity_by_type[row.entity_type.value] = row.count
-            entity_count += row.count
+            entity_by_type[row.entity_type.value] = row.cnt
+            entity_count += row.cnt
 
         # Triple 통계를 단일 쿼리로 조회 (predicate별 개수 + 평균 신뢰도)
         triple_stats_query = select(
             Triple.predicate,
-            func.count().label("count"),
+            func.count().label("cnt"),
         ).group_by(Triple.predicate)
         triple_result = await db.execute(triple_stats_query)
         triple_rows = triple_result.all()
 
         triple_by_predicate = {predicate.value: 0 for predicate in PredicateType}
         triple_count = 0
-        for row in triple_rows:
-            triple_by_predicate[row.predicate.value] = row.count
-            triple_count += row.count
+        for triple_row in triple_rows:
+            triple_by_predicate[triple_row.predicate.value] = triple_row.cnt
+            triple_count += triple_row.cnt
 
         # 평균 신뢰도 (별도 쿼리, 집계 함수)
         avg_confidence = await db.scalar(select(func.avg(Triple.confidence)).select_from(Triple))

@@ -4,7 +4,9 @@
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "skipLibCheck": true,
+    "incremental": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

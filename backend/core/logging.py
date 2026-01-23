@@ -171,7 +171,7 @@ def setup_sentry() -> None:
                 sentry_logging,
             ],
             send_default_pii=False,
-            before_send=_filter_sensitive_data,
+            before_send=_filter_sensitive_data,  # type: ignore[arg-type]
         )
 
         structlog.get_logger().info(

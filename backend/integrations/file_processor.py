@@ -561,7 +561,7 @@ JSON만 반환하고 다른 설명은 생략해주세요."""
                 items = data
             # 객체인 경우
             elif isinstance(data, dict):
-                items = data.get("seminars", data.get("events", [data]))
+                items = data.get("seminars", data.get("events", [data]))  # type: ignore[assignment]
             else:
                 return []
 

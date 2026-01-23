@@ -73,7 +73,7 @@ logger = structlog.get_logger()
 # OpenAPI 메타데이터
 # ============================================================
 
-API_VERSION = "0.4.0"
+API_VERSION = "0.6.0"
 
 # 태그 설명 (Swagger UI에서 그룹화)
 TAGS_METADATA = [
@@ -238,12 +238,14 @@ app = FastAPI(
     },
     servers=[
         {"url": "http://localhost:8000", "description": "Local Development"},
-        {"url": "https://ax-discovery-portal.onrender.com", "description": "Production (Render)"},
+        {"url": "https://api.axdiscovery.com", "description": "Production"},
+        {"url": "https://api-staging.axdiscovery.com", "description": "Staging"},
+        {"url": "https://ax-discovery-api.onrender.com", "description": "Render (Legacy)"},
     ],
 )
 
 # CORS 설정
-# Development: localhost 허용, Production: Cloudflare Pages 도메인 허용
+# Development: localhost 허용, Production: Cloudflare Pages + 커스텀 도메인 허용
 CORS_ORIGINS = [
     # Development
     "http://localhost:3000",  # Next.js web
@@ -258,7 +260,10 @@ CORS_ORIGINS = [
     "http://127.0.0.1:3100",
     "http://127.0.0.1:4000",
     "http://127.0.0.1:5173",
-    # Production - Cloudflare Pages
+    # Production - 커스텀 도메인
+    "https://app.axdiscovery.com",
+    "https://staging.app.axdiscovery.com",
+    # Production - Cloudflare Pages (fallback)
     "https://ax-discovery-portal.pages.dev",
     "https://ax-discovery-portal-preview.pages.dev",
 ]
@@ -389,6 +394,52 @@ async def ready():
         "version": API_VERSION,
         "environment": settings.app_env,
         "components": components,
+    }
+
+
+# ============================================================
+# Kubernetes Probe 엔드포인트
+# ============================================================
+
+
+@app.get("/health/live")
+@app.head("/health/live")
+async def liveness_probe():
+    """
+    Liveness Probe
+
+    컨테이너가 살아있는지 확인.
+    실패 시 컨테이너 재시작.
+    """
+    return {"status": "alive", "version": API_VERSION}
+
+
+@app.get("/health/ready")
+@app.head("/health/ready")
+async def readiness_probe():
+    """
+    Readiness Probe
+
+    트래픽을 받을 준비가 되었는지 확인.
+    실패 시 로드밸런서에서 제외.
+    """
+    # /ready 엔드포인트와 동일한 로직 사용
+    return await ready()
+
+
+@app.get("/health/startup")
+@app.head("/health/startup")
+async def startup_probe():
+    """
+    Startup Probe
+
+    애플리케이션이 시작되었는지 확인.
+    시작 완료 전까지 liveness/readiness 검사 지연.
+    """
+    return {
+        "status": "started",
+        "version": API_VERSION,
+        "service": "ax-discovery-portal",
     }
 
 
