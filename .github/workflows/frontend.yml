@@ -73,6 +73,9 @@ jobs:
       - name: Type check
         run: pnpm type-check
 
+      - name: Build Registry
+        run: pnpm build:registry
+
       - name: Build
         run: pnpm build
         env:

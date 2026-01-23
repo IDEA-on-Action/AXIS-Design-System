@@ -1,0 +1,18 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "agentic-streaming-text",
+  "type": "registry:ui",
+  "title": "Streaming Text",
+  "description": "LLM 스트리밍 텍스트 출력 컴포넌트",
+  "dependencies": [
+    "framer-motion"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "components/agentic/streaming-text.tsx",
+      "type": "registry:ui",
+      "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface StreamingTextProps {\n  /** 스트리밍할 텍스트 */\n  text: string;\n  /** 스트리밍 속도 (ms) */\n  speed?: number;\n  /** 스트리밍 완료 여부 */\n  isComplete?: boolean;\n  /** 커서 표시 여부 */\n  showCursor?: boolean;\n  /** 완료 콜백 */\n  onComplete?: () => void;\n  /** 추가 클래스 */\n  className?: string;\n}\n\n/**\n * 텍스트를 실시간으로 스트리밍하는 컴포넌트\n * AI 응답을 타이핑 효과로 표시할 때 사용\n */\nexport function StreamingText({\n  text,\n  speed = 20,\n  isComplete = false,\n  showCursor = true,\n  onComplete,\n  className,\n}: StreamingTextProps) {\n  const [displayedText, setDisplayedText] = React.useState(\"\");\n  const [isStreaming, setIsStreaming] = React.useState(false);\n  const prevTextRef = React.useRef(\"\");\n\n  React.useEffect(() => {\n    if (isComplete) {\n      setDisplayedText(text);\n      setIsStreaming(false);\n      return;\n    }\n\n    // 새로운 텍스트가 추가된 경우에만 스트리밍\n    if (text.length > prevTextRef.current.length && text.startsWith(prevTextRef.current)) {\n      const newText = text.slice(prevTextRef.current.length);\n      let charIndex = 0;\n      setIsStreaming(true);\n\n      const interval = setInterval(() => {\n        if (charIndex < newText.length) {\n          setDisplayedText((prev) => prev + newText[charIndex]);\n          charIndex++;\n        } else {\n          clearInterval(interval);\n          setIsStreaming(false);\n          if (onComplete) onComplete();\n        }\n      }, speed);\n\n      prevTextRef.current = text;\n      return () => clearInterval(interval);\n    } else if (text !== prevTextRef.current) {\n      // 텍스트가 완전히 변경된 경우 리셋\n      setDisplayedText(\"\");\n      prevTextRef.current = \"\";\n    }\n  }, [text, speed, isComplete, onComplete]);\n\n  return (\n    <div className={cn(\"relative\", className)}>\n      <span className=\"text-[var(--axis-text-primary)] whitespace-pre-wrap\">\n        {displayedText}\n      </span>\n      {showCursor && isStreaming && (\n        <span className=\"inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse\" />\n      )}\n    </div>\n  );\n}\n"
+    }
+  ]
+}

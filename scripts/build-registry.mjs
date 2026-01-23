@@ -30,6 +30,12 @@ const PACKAGES = [
   }
 ];
 
+// 배포 대상 디렉토리
+const DEPLOY_DIRS = [
+  'public/r',           // 루트 레벨 (로컬 테스트용)
+  'apps/web/public/r'   // Next.js 앱 (Cloudflare Pages 배포용)
+];
+
 async function readComponentSource(packagePath, componentName) {
   const componentDir = path.join(ROOT, packagePath, 'src', componentName);
   const indexPath = path.join(componentDir, 'index.tsx');
@@ -112,11 +118,10 @@ async function buildPackageRegistry(pkg) {
 async function buildMergedRegistry() {
   console.log('\n📋 통합 레지스트리 빌드...');
 
-  const outputDir = path.join(ROOT, 'public', 'r');
-  await fs.mkdir(outputDir, { recursive: true });
-
   const allItems = [];
+  const registryItems = [];
 
+  // 먼저 모든 컴포넌트 데이터 수집
   for (const pkg of PACKAGES) {
     const registryPath = path.join(ROOT, pkg.path, 'registry', 'registry.json');
     const registryContent = await fs.readFile(registryPath, 'utf-8');
@@ -146,9 +151,7 @@ async function buildMergedRegistry() {
         ]
       };
 
-      // 개별 파일 저장
-      const itemPath = path.join(outputDir, `${itemName}.json`);
-      await fs.writeFile(itemPath, JSON.stringify(registryItem, null, 2));
+      registryItems.push({ name: itemName, data: registryItem });
 
       allItems.push({
         name: itemName,
@@ -159,7 +162,7 @@ async function buildMergedRegistry() {
     }
   }
 
-  // 통합 registry.json 생성
+  // 통합 registry.json 데이터
   const mergedRegistry = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: "axis",
@@ -167,11 +170,25 @@ async function buildMergedRegistry() {
     items: allItems
   };
 
-  const registryPath = path.join(outputDir, 'registry.json');
-  await fs.writeFile(registryPath, JSON.stringify(mergedRegistry, null, 2));
+  // 모든 배포 디렉토리에 저장
+  for (const deployDir of DEPLOY_DIRS) {
+    const outputDir = path.join(ROOT, deployDir);
+    await fs.mkdir(outputDir, { recursive: true });
 
-  console.log(`  ✅ ${allItems.length}개 컴포넌트 통합 완료`);
-  console.log(`  📁 출력: public/r/`);
+    // 개별 컴포넌트 파일 저장
+    for (const item of registryItems) {
+      const itemPath = path.join(outputDir, `${item.name}.json`);
+      await fs.writeFile(itemPath, JSON.stringify(item.data, null, 2));
+    }
+
+    // registry.json 저장
+    const registryPath = path.join(outputDir, 'registry.json');
+    await fs.writeFile(registryPath, JSON.stringify(mergedRegistry, null, 2));
+
+    console.log(`  📁 ${deployDir}/`);
+  }
+
+  console.log(`  ✅ ${allItems.length}개 컴포넌트 × ${DEPLOY_DIRS.length}개 디렉토리 배포 완료`);
 }
 
 async function main() {

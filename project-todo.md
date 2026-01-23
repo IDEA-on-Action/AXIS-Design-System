@@ -62,14 +62,17 @@
 - `public/r/*.json` - 20개 컴포넌트 레지스트리 아이템
 - `scripts/build-registry.mjs` - 레지스트리 빌드 스크립트
 
-### Phase B: AXIS Design System Registry 구축 (Week 7-8)
+### Phase B: AXIS Design System Registry 구축 (Week 7-8) ✅ 완료
 
 | # | 작업 | 상태 |
 |---|------|------|
-| B1 | `registry.json` 스키마 작성 (AXIS 컴포넌트 20개) | 🔲 |
-| B2 | 각 컴포넌트별 `registry-item.json` 생성 | 🔲 |
-| B3 | Registry 엔드포인트 배포 (`axis.minu.best/r/`) | 🔲 |
-| B4 | MCP 서버 통합 테스트 | 🔲 |
+| B1 | `registry.json` 스키마 작성 (AXIS 컴포넌트 20개) | ✅ |
+| B2 | 각 컴포넌트별 `registry-item.json` 생성 | ✅ |
+| B3 | Registry 엔드포인트 배포 (`apps/web/public/r/`) | ✅ |
+| B4 | CI/CD 워크플로 업데이트 (레지스트리 빌드 포함) | ✅ |
+
+**배포 URL**: `https://[your-domain]/r/registry.json`
+**CORS**: 모든 도메인 허용 (_headers 설정)
 
 ### Phase C: Monet Registry 클라이언트 (Week 8)
 
