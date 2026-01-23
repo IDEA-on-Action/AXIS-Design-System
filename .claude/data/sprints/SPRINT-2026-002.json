@@ -1,8 +1,8 @@
 {
   "sprint_id": "SPRINT-2026-002",
-  "title": "AXIS DS v0.7.0",
+  "title": "Sprint - v0.6.0",
   "source_todo_path": "D:\\GitHub\\AXIS Design System\\project-todo.md",
-  "decision": "GO",
+  "decision": "PENDING",
   "days": [
     {
       "day": 1,
@@ -14,7 +14,7 @@
           "day": 1,
           "title": "실제 데이터 수집 시작 (Activity 20+, Signal 30+/주)",
           "description": "[General] PoC 목표 달성 검증",
-          "status": "skipped",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": "TODO-001",
           "assignee": null,
@@ -33,7 +33,7 @@
           "day": 2,
           "title": "모바일 앱 (PWA/React Native) - *PoC 이후 검토*",
           "description": "[Phase 4] 채점 전략 (에이전트별)",
-          "status": "skipped",
+          "status": "pending",
           "priority": "low",
           "source_todo_id": "TODO-035",
           "assignee": null,
@@ -52,7 +52,7 @@
           "day": 3,
           "title": "Day 3 작업",
           "description": "작업 진행",
-          "status": "skipped",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
@@ -71,7 +71,7 @@
           "day": 4,
           "title": "Day 4 작업",
           "description": "작업 진행",
-          "status": "skipped",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
@@ -90,11 +90,11 @@
           "day": 5,
           "title": "완료 항목 검증",
           "description": "구현 결과 테스트",
-          "status": "completed",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:51:14.291745",
+          "completed_at": null,
           "notes": null
         },
         {
@@ -102,11 +102,11 @@
           "day": 5,
           "title": "문서 업데이트",
           "description": "project-todo.md 갱신",
-          "status": "completed",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:51:21.676063",
+          "completed_at": null,
           "notes": null
         },
         {
@@ -114,30 +114,26 @@
           "day": 5,
           "title": "스프린트 회고",
           "description": "학습점 및 개선점 정리",
-          "status": "completed",
+          "status": "pending",
           "priority": "medium",
           "source_todo_id": null,
           "assignee": null,
-          "completed_at": "2026-01-23T16:51:28.864041",
+          "completed_at": null,
           "notes": null
         }
       ]
     }
   ],
-  "findings": [
-    "결정 기록됨 - 상세 내용 추가 필요"
-  ],
-  "next_actions": [
-    "후속 액션 정의 필요"
-  ],
-  "created_at": "2026-01-23T16:46:33.549234",
+  "findings": [],
+  "next_actions": [],
+  "created_at": "2026-01-23T17:13:42.281924",
   "started_at": null,
-  "completed_at": "2026-01-23T16:51:43.364842",
+  "completed_at": null,
   "success_criteria": [
     "스프린트 태스크 80% 이상 완료 (1개 이상)",
     "모든 완료 항목 테스트 통과",
     "project-todo.md 업데이트 완료"
   ],
-  "success_rate": 42.857142857142854,
+  "success_rate": 0.0,
   "todo_version": "0.6.0"
 }
