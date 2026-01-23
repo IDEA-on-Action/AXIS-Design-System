@@ -5,7 +5,7 @@
 
 ## 트리거
 
-- `/ax:wrap-up` 명령
+- `/wrap-up` 명령
 - "작업 정리" 프롬프트
 
 ## 실행 흐름
@@ -53,9 +53,9 @@ SLACK_WEBHOOK_URL=<your-webhook-url>
 ### 2. 사용
 
 ```bash
-/ax:wrap-up                # 기본 실행
-/ax:wrap-up --no-sync      # 로컬 커밋만
-/ax:wrap-up --dry-run      # 미리보기
+/wrap-up                # 기본 실행
+/wrap-up --no-sync      # 로컬 커밋만
+/wrap-up --dry-run      # 미리보기
 ```
 
 ---
@@ -87,8 +87,7 @@ git diff --stat
 | 문서 | 업데이트 조건 |
 |------|--------------|
 | `changelog.md` | 기능 추가/변경/수정 시 |
-| `project-todo.md` | 작업 완료/추가 시 |
-| `CLAUDE.md` | 구조/규칙 변경 시 |
+| `README.md` | 주요 변경 시 |
 
 ### 3단계: 테스트 실행
 
@@ -104,6 +103,12 @@ pytest tests/
 pnpm lint
 pnpm typecheck
 pnpm test
+```
+
+**Go 프로젝트:**
+```bash
+go vet ./...
+go test ./...
 ```
 
 ### 4단계: 테스트 결과 처리
@@ -140,13 +145,8 @@ git push
 
 #### GitHub Project 업데이트 (GITHUB_PROJECT_NUMBER 설정 시)
 ```bash
-# Issue close
 gh issue close <number> --repo ${GITHUB_ORG}/${GITHUB_REPO}
-
-# Issue 생성
 gh issue create --repo ${GITHUB_ORG}/${GITHUB_REPO} --title "..." --body "..."
-
-# Project에 추가
 gh project item-add ${GITHUB_PROJECT_NUMBER} --owner ${GITHUB_ORG} --url <issue_url>
 ```
 
@@ -216,7 +216,7 @@ curl -X POST "${SLACK_WEBHOOK_URL}" \
   -d '{"text": "Test message"}'
 ```
 
-> ⚠️ **주의**: Webhook URL을 Git에 커밋하지 마세요. `.gitignore`에 `.env` 추가 필수.
+> ⚠️ Webhook URL을 Git에 커밋하지 마세요. `.gitignore`에 `.env` 추가 필수.
 
 ---
 
@@ -265,32 +265,6 @@ curl -X POST "${SLACK_WEBHOOK_URL}" \
 | 변경 없음 | 변경 사항 확인 |
 | GitHub 실패 | `gh auth status` 확인 |
 | Slack 실패 | Webhook URL 확인 |
-
----
-
-## 다른 프로젝트에서 사용하기
-
-### 방법 1: 스킬 파일 복사
-
-```bash
-# 스킬 디렉토리 복사
-cp -r .claude/skills/ax-wrap-up /path/to/other-project/.claude/skills/wrap-up
-
-# 환경 변수 설정
-cd /path/to/other-project
-cat >> .env << EOF
-PROJECT_NAME=Other Project
-GITHUB_ORG=other-org
-GITHUB_REPO=other-repo
-EOF
-```
-
-### 방법 2: 보일러플레이트 사용
-
-```bash
-# boilerplate에서 복사
-cp -r boilerplate/.claude /path/to/new-project/
-```
 
 ---
 
