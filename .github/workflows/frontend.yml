@@ -79,7 +79,7 @@ jobs:
       - name: Build
         run: pnpm build
         env:
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'https://api.axdiscovery.com' }}
+          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || '' }}
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -139,7 +139,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler pages deploy apps/web/out --project-name=ax-discovery-portal --branch=${{ github.head_ref }}
+        run: npx wrangler pages deploy apps/web/out --project-name=axis-design-system --branch=${{ github.head_ref }}
 
       - name: Comment PR with preview URL
         if: steps.check-cf.outputs.skip != 'true'
@@ -148,7 +148,7 @@ jobs:
           script: |
             const branch = context.payload.pull_request.head.ref;
             const safeBranch = branch.replace(/[^a-z0-9-]/gi, '-').toLowerCase();
-            const previewUrl = `https://${safeBranch}.ax-discovery-portal.pages.dev`;
+            const previewUrl = `https://${safeBranch}.axis-design-system.pages.dev`;
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -207,4 +207,4 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx wrangler pages deploy apps/web/out --project-name=ax-discovery-portal --branch=main
+        run: npx wrangler pages deploy apps/web/out --project-name=axis-design-system --branch=main

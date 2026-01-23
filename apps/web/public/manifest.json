@@ -1,7 +1,7 @@
 {
-  "name": "AX Discovery Portal",
-  "short_name": "AX Discovery",
-  "description": "AX BD팀 멀티에이전트 기반 사업기회 포착 엔진",
+  "name": "AXIS Design System",
+  "short_name": "AXIS DS",
+  "description": "React 컴포넌트 라이브러리 및 디자인 토큰 시스템",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
