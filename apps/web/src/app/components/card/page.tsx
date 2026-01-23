@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@ax/ui'
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ const cardProps = [
   { name: 'children', type: 'ReactNode', required: true, description: '카드 내용' },
 ]
 
-const basicExample = `import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@ax/ui'
+const basicExample = `import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@axis-ds/ui-react'
 
 export function Example() {
   return (

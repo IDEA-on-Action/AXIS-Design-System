@@ -1,6 +1,6 @@
 'use client'
 
-import { Button, Badge, Input } from '@ax/ui'
+import { Button, Badge, Input } from '@axis-ds/ui-react'
 
 interface ComponentPreviewProps {
   name: string

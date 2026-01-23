@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Button } from '@ax/ui'
+import { Button } from '@axis-ds/ui-react'
 import { Home, ArrowLeft } from 'lucide-react'
 
 export default function NotFound() {

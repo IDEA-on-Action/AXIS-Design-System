@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Github, Menu } from 'lucide-react'
-import { Button } from '@ax/ui'
+import { Button } from '@axis-ds/ui-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 

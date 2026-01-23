@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ax/ui'
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@axis-ds/ui-react'
 import { ArrowRight, Copy, Terminal } from 'lucide-react'
 import { ComponentPreview } from '@/components/component-preview'
 

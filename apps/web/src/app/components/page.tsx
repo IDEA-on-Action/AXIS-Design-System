@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ax/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@axis-ds/ui-react'
 
 const components = [
   { name: 'Button', description: '다양한 스타일과 크기의 버튼 컴포넌트', href: '/components/button' },

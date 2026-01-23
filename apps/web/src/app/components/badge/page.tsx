@@ -1,6 +1,6 @@
 'use client'
 
-import { Badge } from '@ax/ui'
+import { Badge } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -10,7 +10,7 @@ const badgeProps = [
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
-const basicExample = `import { Badge } from '@ax/ui'
+const basicExample = `import { Badge } from '@axis-ds/ui-react'
 
 export function Example() {
   return <Badge>Badge</Badge>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@ax/ui'
+import { Button } from '@axis-ds/ui-react'
 import { Check, Copy } from 'lucide-react'
 import { useState } from 'react'
 

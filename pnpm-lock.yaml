@@ -27,6 +27,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@axis-ds/agentic-ui':
+        specifier: workspace:*
+        version: link:../../packages/axis-agentic-ui
       '@axis-ds/ui-react':
         specifier: workspace:*
         version: link:../../packages/axis-ui-react

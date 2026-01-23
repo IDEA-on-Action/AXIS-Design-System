@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Badge } from '@ax/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Badge } from '@axis-ds/ui-react'
 import { Skeleton } from '@/components/skeleton'
 import { Search, Package, Layers, Bot, FileText, Layout, Navigation, Bell, SquareStack, Table, BarChart3, Wrench, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'

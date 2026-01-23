@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ax/ui'
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@axis-ds/ui-react'
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react'
 import Link from 'next/link'
 

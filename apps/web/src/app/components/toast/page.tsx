@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@ax/ui'
+import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -12,8 +12,8 @@ const toastProps = [
   { name: 'action', type: '{ label, onClick }', default: '-', description: '액션 버튼' },
 ]
 
-const basicExample = `import { toast } from '@ax/ui'
-import { Button } from '@ax/ui'
+const basicExample = `import { toast } from '@axis-ds/ui-react'
+import { Button } from '@axis-ds/ui-react'
 
 export function Example() {
   return (
@@ -114,7 +114,7 @@ export default function ToastPage() {
             앱 루트에 Toaster 컴포넌트를 추가해야 합니다.
           </p>
           <CodeBlock code={`// app/layout.tsx
-import { Toaster } from '@ax/ui'
+import { Toaster } from '@axis-ds/ui-react'
 
 export default function RootLayout({ children }) {
   return (

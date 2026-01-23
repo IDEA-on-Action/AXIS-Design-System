@@ -1,6 +1,6 @@
 'use client'
 
-import { Button } from '@ax/ui'
+import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import { Loader2, Mail, ChevronRight } from 'lucide-react'
@@ -14,7 +14,7 @@ const buttonProps = [
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
-const basicExample = `import { Button } from '@ax/ui'
+const basicExample = `import { Button } from '@axis-ds/ui-react'
 
 export function Example() {
   return <Button>Click me</Button>

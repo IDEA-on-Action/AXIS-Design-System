@@ -23,7 +23,7 @@ const surfaceTypesList = [
   { name: 'approval_request', description: '승인 요청' },
 ]
 
-const basicExample = `import { SurfaceRenderer } from '@ax/ui'
+const basicExample = `import { SurfaceRenderer } from '@axis-ds/ui-react'
 
 const messageSurface = {
   id: 'msg-001',

@@ -1,36 +1,45 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@ax/ui'
-import { StreamingText } from '@ax/agentic-ui'
+import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
 
+// Mock StreamingText 컴포넌트
+const StreamingText = ({ text, isComplete, showCursor = true }: { text: string; isComplete?: boolean; showCursor?: boolean }) => (
+  <div className="relative">
+    <span className="text-foreground whitespace-pre-wrap">{text}</span>
+    {showCursor && !isComplete && (
+      <span className="inline-block w-0.5 h-4 ml-0.5 bg-foreground animate-pulse" />
+    )}
+  </div>
+)
+
 const streamingTextProps = [
-  { name: 'content', type: 'string', required: true, description: '표시할 텍스트 내용' },
-  { name: 'isStreaming', type: 'boolean', required: true, description: '스트리밍 중 여부' },
-  { name: 'typingSpeed', type: 'number', default: '0', description: '타이핑 속도 (ms per character)' },
+  { name: 'text', type: 'string', required: true, description: '표시할 텍스트 내용' },
+  { name: 'speed', type: 'number', default: '20', description: '스트리밍 속도 (ms per character)' },
+  { name: 'isComplete', type: 'boolean', default: 'false', description: '스트리밍 완료 여부' },
   { name: 'showCursor', type: 'boolean', default: 'true', description: '커서 표시 여부' },
-  { name: 'messageId', type: 'string', default: '-', description: '메시지 ID (여러 메시지 구분용)' },
+  { name: 'onComplete', type: '() => void', default: '-', description: '완료 콜백' },
 ]
 
-const basicExample = `import { StreamingText } from '@ax/ui'
+const basicExample = `import { StreamingText } from '@axis-ds/agentic-ui'
 
 export function Example() {
-  const [content, setContent] = useState('')
-  const [isStreaming, setIsStreaming] = useState(true)
+  const [text, setText] = useState('')
+  const [isComplete, setIsComplete] = useState(false)
 
   // 스트리밍 시뮬레이션
   useEffect(() => {
-    const text = 'AI가 응답을 생성하고 있습니다...'
+    const fullText = 'AI가 응답을 생성하고 있습니다...'
     let i = 0
     const interval = setInterval(() => {
-      if (i < text.length) {
-        setContent(text.slice(0, i + 1))
+      if (i < fullText.length) {
+        setText(fullText.slice(0, i + 1))
         i++
       } else {
-        setIsStreaming(false)
+        setIsComplete(true)
         clearInterval(interval)
       }
     }, 50)
@@ -39,38 +48,30 @@ export function Example() {
 
   return (
     <StreamingText
-      content={content}
-      isStreaming={isStreaming}
+      text={text}
+      isComplete={isComplete}
     />
   )
 }`
 
-const listExample = `import { StreamingTextList } from '@ax/ui'
-
-const messages = [
-  { id: '1', content: '첫 번째 메시지입니다.', isStreaming: false },
-  { id: '2', content: '두 번째 메시지를 생성 중...', isStreaming: true },
-]
-
-export function Example() {
-  return <StreamingTextList messages={messages} />
-}`
-
 export default function StreamingTextPage() {
-  const [content, setContent] = useState('')
-  const [isStreaming, setIsStreaming] = useState(false)
+  const [text, setText] = useState('')
+  const [isComplete, setIsComplete] = useState(false)
+  const [isRunning, setIsRunning] = useState(false)
 
   const startDemo = () => {
-    setContent('')
-    setIsStreaming(true)
-    const text = 'AI가 사용자의 질문에 대한 답변을 생성하고 있습니다. 실시간으로 텍스트가 표시되며, 완료되면 커서가 사라집니다.'
+    setText('')
+    setIsComplete(false)
+    setIsRunning(true)
+    const fullText = 'AI가 사용자의 질문에 대한 답변을 생성하고 있습니다. 실시간으로 텍스트가 표시되며, 완료되면 커서가 사라집니다.'
     let i = 0
     const interval = setInterval(() => {
-      if (i < text.length) {
-        setContent(text.slice(0, i + 1))
+      if (i < fullText.length) {
+        setText(fullText.slice(0, i + 1))
         i++
       } else {
-        setIsStreaming(false)
+        setIsComplete(true)
+        setIsRunning(false)
         clearInterval(interval)
       }
     }, 30)
@@ -102,11 +103,11 @@ export default function StreamingTextPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
           <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <Button onClick={startDemo} disabled={isStreaming}>
-              {isStreaming ? '스트리밍 중...' : '데모 시작'}
+            <Button onClick={startDemo} disabled={isRunning}>
+              {isRunning ? '스트리밍 중...' : '데모 시작'}
             </Button>
-            {(content || isStreaming) && (
-              <StreamingText content={content} isStreaming={isStreaming} />
+            {(text || isRunning) && (
+              <StreamingText text={text} isComplete={isComplete} />
             )}
           </div>
         </section>
@@ -115,15 +116,6 @@ export default function StreamingTextPage() {
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Usage</h2>
           <CodeBlock code={basicExample} />
-        </section>
-
-        {/* List */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">StreamingTextList</h2>
-          <p className="text-muted-foreground mb-4">
-            여러 스트리밍 메시지를 표시하는 컨테이너입니다.
-          </p>
-          <CodeBlock code={listExample} />
         </section>
 
         {/* Props */}

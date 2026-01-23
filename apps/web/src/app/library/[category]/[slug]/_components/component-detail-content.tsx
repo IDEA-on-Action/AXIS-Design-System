@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Button, Badge, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from '@ax/ui'
+import { Button, Badge, Card, CardContent, Tabs, TabsContent, TabsList, TabsTrigger } from '@axis-ds/ui-react'
 import { Skeleton } from '@/components/skeleton'
 import { CodeBlock } from '@/components/code-block'
 import { ChevronLeft, Package, Copy, Check, ExternalLink, Calendar, Tag, Layers, AlertCircle } from 'lucide-react'

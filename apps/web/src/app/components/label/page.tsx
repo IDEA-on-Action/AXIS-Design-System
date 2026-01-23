@@ -1,6 +1,6 @@
 'use client'
 
-import { Input, Label } from '@ax/ui'
+import { Input, Label } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -10,13 +10,13 @@ const labelProps = [
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
-const basicExample = `import { Label } from '@ax/ui'
+const basicExample = `import { Label } from '@axis-ds/ui-react'
 
 export function Example() {
   return <Label htmlFor="email">Email</Label>
 }`
 
-const withInputExample = `import { Input, Label } from '@ax/ui'
+const withInputExample = `import { Input, Label } from '@axis-ds/ui-react'
 
 export function Example() {
   return (

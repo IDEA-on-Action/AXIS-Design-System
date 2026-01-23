@@ -1,6 +1,6 @@
 'use client'
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ax/ui'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ const tabsProps = [
   { name: 'orientation', type: '"horizontal" | "vertical"', default: '"horizontal"', description: '탭 방향' },
 ]
 
-const basicExample = `import { Tabs, TabsContent, TabsList, TabsTrigger } from '@ax/ui'
+const basicExample = `import { Tabs, TabsContent, TabsList, TabsTrigger } from '@axis-ds/ui-react'
 
 export function Example() {
   return (

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ax/ui'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@axis-ds/ui-react'
 
 const agenticComponents = [
   {

@@ -1,11 +1,102 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@ax/ui'
-import { ApprovalCard as ApprovalDialog } from '@ax/agentic-ui'
+import { Button, Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
+
+type Impact = 'low' | 'medium' | 'high' | 'critical'
+
+interface ChangeItem {
+  label: string
+  type: 'create' | 'update' | 'delete'
+  before?: string
+  after: string
+}
+
+// Mock ApprovalDialog 컴포넌트
+const ApprovalDialog = ({
+  open,
+  onOpenChange,
+  title,
+  description,
+  impact,
+  changes,
+  onApprove,
+  onReject
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  title: string
+  description: string
+  impact: Impact
+  changes: ChangeItem[]
+  onApprove: () => void
+  onReject: (reason?: string) => void
+}) => {
+  const impactColors: Record<Impact, string> = {
+    low: 'bg-blue-100 text-blue-700',
+    medium: 'bg-yellow-100 text-yellow-700',
+    high: 'bg-orange-100 text-orange-700',
+    critical: 'bg-red-100 text-red-700'
+  }
+
+  const typeIcons: Record<ChangeItem['type'], string> = {
+    create: '+',
+    update: '~',
+    delete: '-'
+  }
+
+  const typeColors: Record<ChangeItem['type'], string> = {
+    create: 'bg-green-100 text-green-600',
+    update: 'bg-blue-100 text-blue-600',
+    delete: 'bg-red-100 text-red-600'
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <DialogTitle>{title}</DialogTitle>
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${impactColors[impact]}`}>
+              {impact}
+            </span>
+          </div>
+          <DialogDescription>{description}</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-2 my-4">
+          <h4 className="text-sm font-medium">변경 사항</h4>
+          {changes.map((change, i) => (
+            <div key={i} className="flex items-start gap-2 p-2 rounded bg-muted/50">
+              <span className={`w-5 h-5 flex items-center justify-center rounded text-xs ${typeColors[change.type]}`}>
+                {typeIcons[change.type]}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{change.label}</p>
+                {change.type === 'update' && change.before && (
+                  <p className="text-xs text-muted-foreground line-through">{change.before}</p>
+                )}
+                <p className="text-xs text-muted-foreground">{change.after}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <DialogFooter className="gap-2">
+          <Button variant="outline" onClick={() => onReject()}>
+            거부
+          </Button>
+          <Button onClick={onApprove}>
+            승인
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
 
 const approvalDialogProps = [
   { name: 'open', type: 'boolean', required: true, description: '다이얼로그 열림 상태' },
@@ -16,19 +107,9 @@ const approvalDialogProps = [
   { name: 'changes', type: 'ChangeItem[]', default: '-', description: '변경 사항 목록' },
   { name: 'onApprove', type: '() => void', required: true, description: '승인 콜백' },
   { name: 'onReject', type: '(reason?: string) => void', required: true, description: '거부 콜백' },
-  { name: 'onRequestMoreInfo', type: '() => void', default: '-', description: '추가 정보 요청 콜백' },
-  { name: 'timeout', type: 'number', default: '-', description: '타임아웃 (ms)' },
-  { name: 'isApproving', type: 'boolean', default: 'false', description: '승인 처리 중 상태' },
 ]
 
-const changeItemProps = [
-  { name: 'label', type: 'string', required: true, description: '변경 항목 레이블' },
-  { name: 'type', type: '"create" | "update" | "delete"', required: true, description: '변경 유형' },
-  { name: 'before', type: 'string', default: '-', description: '변경 전 값' },
-  { name: 'after', type: 'string', required: true, description: '변경 후 값' },
-]
-
-const basicExample = `import { ApprovalDialog } from '@ax/ui'
+const basicExample = `import { ApprovalCard } from '@axis-ds/agentic-ui'
 
 const changes = [
   { label: 'Button.tsx', type: 'create', after: '새 버튼 컴포넌트' },
@@ -58,13 +139,13 @@ export function Example() {
 
 export default function ApprovalDialogPage() {
   const [open, setOpen] = useState(false)
-  const [impact, setImpact] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')
+  const [impact, setImpact] = useState<Impact>('medium')
 
-  const changes = [
-    { label: 'NewFeature.tsx', type: 'create' as const, after: '새 기능 컴포넌트 추가' },
-    { label: 'index.ts', type: 'update' as const, before: 'export { Button }', after: 'export { Button, NewFeature }' },
-    { label: 'package.json', type: 'update' as const, before: '"version": "1.0.0"', after: '"version": "1.1.0"' },
-    { label: 'deprecated.ts', type: 'delete' as const, after: '삭제됨' },
+  const changes: ChangeItem[] = [
+    { label: 'NewFeature.tsx', type: 'create', after: '새 기능 컴포넌트 추가' },
+    { label: 'index.ts', type: 'update', before: 'export { Button }', after: 'export { Button, NewFeature }' },
+    { label: 'package.json', type: 'update', before: '"version": "1.0.0"', after: '"version": "1.1.0"' },
+    { label: 'deprecated.ts', type: 'delete', after: '삭제됨' },
   ]
 
   return (
@@ -75,11 +156,11 @@ export default function ApprovalDialogPage() {
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
             <span>/</span>
-            <span>ApprovalDialog</span>
+            <span>ApprovalCard</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">ApprovalDialog</h1>
+          <h1 className="text-4xl font-bold tracking-tight mb-4">ApprovalCard</h1>
           <p className="text-lg text-muted-foreground">
-            AI 에이전트의 작업을 사용자가 승인/거부할 수 있는 다이얼로그입니다.
+            AI 에이전트의 작업을 사용자가 승인/거부할 수 있는 컴포넌트입니다.
             Human-in-the-Loop 패턴 구현에 사용됩니다.
           </p>
         </div>
@@ -87,7 +168,7 @@ export default function ApprovalDialogPage() {
         {/* Installation */}
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add approval-dialog" language="bash" />
+          <CodeBlock code="npx axis-cli add approval-card" language="bash" />
         </section>
 
         {/* Interactive Demo */}
@@ -168,44 +249,10 @@ export default function ApprovalDialogPage() {
           </div>
         </section>
 
-        {/* Change Types */}
+        {/* Props */}
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Change Types</h2>
-          <div className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-green-100 text-green-600 text-xs">+</span>
-                <code className="font-mono text-sm font-semibold">create</code>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">새 파일/리소스 생성</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-600 text-xs">~</span>
-                <code className="font-mono text-sm font-semibold">update</code>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">기존 파일/리소스 수정</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 text-xs">-</span>
-                <code className="font-mono text-sm font-semibold">delete</code>
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">파일/리소스 삭제</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Props - ApprovalDialog */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">ApprovalDialog Props</h2>
+          <h2 className="text-2xl font-semibold mb-4">Props</h2>
           <PropsTable props={approvalDialogProps} />
-        </section>
-
-        {/* Props - ChangeItem */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">ChangeItem Object</h2>
-          <PropsTable props={changeItemProps} />
         </section>
       </div>
     </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@ax/ui'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -18,7 +18,7 @@ const basicExample = `import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@ax/ui'
+} from '@axis-ds/ui-react'
 
 export function Example() {
   return (

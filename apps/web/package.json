@@ -10,6 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@axis-ds/agentic-ui": "workspace:*",
     "@axis-ds/ui-react": "workspace:*",
     "@tanstack/react-query": "^5.64.2",
     "clsx": "^2.1.1",

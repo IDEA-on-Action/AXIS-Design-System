@@ -1,6 +1,6 @@
 'use client'
 
-import { Separator } from '@ax/ui'
+import { Separator } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -11,7 +11,7 @@ const separatorProps = [
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
-const basicExample = `import { Separator } from '@ax/ui'
+const basicExample = `import { Separator } from '@axis-ds/ui-react'
 
 export function Example() {
   return (

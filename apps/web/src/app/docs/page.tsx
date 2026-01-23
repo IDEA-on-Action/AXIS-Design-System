@@ -1,4 +1,4 @@
-import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@ax/ui'
+import { Button, Card, CardContent, CardDescription, CardHeader, CardTitle } from '@axis-ds/ui-react'
 import { Copy, Terminal } from 'lucide-react'
 import Link from 'next/link'
 
