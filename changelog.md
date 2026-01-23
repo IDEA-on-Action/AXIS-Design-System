@@ -36,6 +36,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - GitHub Secrets/Variables 설정 체크리스트
   - 배포 시작 가이드 문서화
 
+### Fixed
+
+- **GitHub Actions 워크플로 수정** 🔧
+  - `evals-regression.yml`: YAML 파싱 오류 수정 (템플릿 리터럴 들여쓰기)
+  - `ci-backend.yml`: Security Scan SARIF 업로드 권한 추가
+  - `ci-backend.yml`: workflow_dispatch 수동 실행 트리거 추가
+  - `templates.py`: ruff format 적용 (긴 조건문 줄바꿈)
+
+- **테스트 실패 수정** 🔧
+  - `test_ontology_modules.py`: MagicMock 대신 namedtuple 사용 (row.cnt 속성)
+  - `test_api_integration.py`: Confluence 미설정 시 ValueError 예외 처리
+  - `pyproject.toml`: aiosqlite 테스트 의존성 추가
+  - `backend/core/config.py`: app_env에 'test' 환경 추가
+
 ### Changed
 
 - `packages/axis-cli` 확장
