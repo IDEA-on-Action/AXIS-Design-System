@@ -18,39 +18,39 @@ const agenticComponents = [
     href: '/agentic/approval-dialog'
   },
   {
-    name: 'StepIndicator',
-    description: '단계별 진행 상태 표시',
-    href: '/agentic/step-indicator'
-  },
-  {
-    name: 'AgentRunContainer',
-    description: '에이전트 실행 컨테이너',
-    href: '/agentic/agent-run-container'
-  },
-  {
     name: 'SurfaceRenderer',
     description: '다양한 컨텐츠 타입 렌더링',
     href: '/agentic/surface-renderer'
   },
   {
-    name: 'ActivityPreviewCard',
-    description: 'Activity 미리보기 카드',
-    href: '/agentic/activity-preview-card'
+    name: 'RunProgress',
+    description: '에이전트 실행 진행 상태',
+    href: '/agentic/run-progress'
   },
   {
-    name: 'CollectorHealthBar',
-    description: '수집기 상태 모니터링 바',
-    href: '/agentic/collector-health-bar'
+    name: 'StepTimeline',
+    description: '단계별 타임라인 표시',
+    href: '/agentic/step-timeline'
   },
   {
-    name: 'SeminarChatPanel',
-    description: '세미나 정보 추출 채팅 패널',
-    href: '/agentic/seminar-chat-panel'
+    name: 'SourcePanel',
+    description: 'AI 응답 출처/근거 표시',
+    href: '/agentic/source-panel'
   },
   {
-    name: 'FileUploadZone',
-    description: '파일 업로드 드래그앤드롭 영역',
-    href: '/agentic/file-upload-zone'
+    name: 'RecoveryBanner',
+    description: '에러 복구 옵션 배너',
+    href: '/agentic/recovery-banner'
+  },
+  {
+    name: 'AgentAvatar',
+    description: 'AI 에이전트 아바타',
+    href: '/agentic/agent-avatar'
+  },
+  {
+    name: 'ThinkingIndicator',
+    description: 'AI 생각 중 인디케이터',
+    href: '/agentic/thinking-indicator'
   },
 ]
 

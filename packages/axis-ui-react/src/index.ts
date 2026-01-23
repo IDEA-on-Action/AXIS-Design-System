@@ -51,3 +51,24 @@ export {
   ToastAction,
   ToastClose,
 } from "./toast";
+export { Avatar, avatarVariants, type AvatarProps } from "./avatar";
+export {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
+export { Skeleton, type SkeletonProps } from "./skeleton";
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  alertVariants,
+  type AlertProps,
+} from "./alert";
+export {
+  Progress,
+  progressVariants,
+  progressIndicatorVariants,
+  type ProgressProps,
+} from "./progress";

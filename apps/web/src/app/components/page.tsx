@@ -12,6 +12,11 @@ const components = [
   { name: 'Tabs', description: '탭 네비게이션', href: '/components/tabs' },
   { name: 'Separator', description: '구분선', href: '/components/separator' },
   { name: 'Toast', description: '알림 토스트 메시지', href: '/components/toast' },
+  { name: 'Avatar', description: '사용자/엔티티 아바타', href: '/components/avatar' },
+  { name: 'Tooltip', description: '호버 시 추가 정보 표시', href: '/components/tooltip' },
+  { name: 'Skeleton', description: '로딩 상태 플레이스홀더', href: '/components/skeleton' },
+  { name: 'Alert', description: '중요 정보 알림 배너', href: '/components/alert' },
+  { name: 'Progress', description: '진행 상태 표시 바', href: '/components/progress' },
 ]
 
 export default function ComponentsPage() {

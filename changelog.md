@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.7.1] - 2026-01-24
+
+### Added
+
+- **Core UI 컴포넌트 5개 추가** (`@axis-ds/ui-react`)
+  - Avatar: 이미지/이니셜 아바타, 4개 크기 지원
+  - Tooltip: Radix UI 기반 툴팁
+  - Skeleton: 로딩 상태 플레이스홀더
+  - Alert: 5개 variant (default, info, success, warning, destructive)
+  - Progress: 진행 바, 3개 크기, 4개 색상
+
+- **Agentic UI 문서 6개 추가** (`apps/web`)
+  - RunProgress, StepTimeline, SourcePanel
+  - RecoveryBanner, AgentAvatar, ThinkingIndicator
+
+- **Core UI 문서 5개 추가** (`apps/web`)
+  - Avatar, Tooltip, Skeleton, Alert, Progress
+
+### Changed
+
+- **네비게이션 업데이트**
+  - `/components` 페이지: 15개 컴포넌트로 확장
+  - `/agentic` 페이지: 10개 실제 구현 컴포넌트로 수정
+
+### Metrics
+
+- 총 컴포넌트: 20개 → **25개**
+- 문서 완성도: 56% → **100%**
+
+---
+
 ## [0.7.0] - 2026-01-23
 
 ### Changed
