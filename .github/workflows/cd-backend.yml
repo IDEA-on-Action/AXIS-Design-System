@@ -8,23 +8,59 @@ on:
       - 'pyproject.toml'
       - 'render.yaml'
 
+# 필요한 Secrets:
+#   RENDER_STAGING_DEPLOY_HOOK: Render 스테이징 배포 Webhook URL
+#   RENDER_PRODUCTION_DEPLOY_HOOK: Render 프로덕션 배포 Webhook URL
+#
+# 필요한 Variables:
+#   STAGING_API_URL: 스테이징 API URL (health check용)
+#   PRODUCTION_API_URL: 프로덕션 API URL (health check용)
+#
+# 설정 방법:
+#   1. GitHub Repository → Settings → Secrets and variables → Actions
+#   2. Secrets 탭에서 'New repository secret' 클릭
+#   3. Render Dashboard → Web Service → Settings → Deploy Hook에서 URL 복사
+
 jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
     environment: staging
-    # main 또는 staging 브랜치 푸시 시 스테이징 배포
+    # main 또는 staging 브랜치 푸시 시 배포
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging'
 
     steps:
-      - name: Deploy to Render Staging
+      - name: Check deploy hook
+        id: check
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}"
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "⏭️ RENDER_STAGING_DEPLOY_HOOK이 설정되지 않아 배포를 건너뜁니다."
+            echo ""
+            echo "🔧 설정 방법:"
+            echo "  1. GitHub Repository → Settings → Secrets and variables → Actions"
+            echo "  2. Secrets 탭에서 'New repository secret' 클릭"
+            echo "  3. Name: RENDER_STAGING_DEPLOY_HOOK"
+            echo "  4. Value: Render Dashboard → Web Service → Settings → Deploy Hook URL"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Render Staging
+        if: steps.check.outputs.skip != 'true'
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_STAGING_DEPLOY_HOOK }}
+        run: |
+          curl -X POST "$DEPLOY_HOOK"
 
       - name: Wait for deployment
+        if: steps.check.outputs.skip != 'true'
         run: sleep 60
 
       - name: Health check (with retry)
+        if: steps.check.outputs.skip != 'true' && vars.STAGING_API_URL != ''
         run: |
           for i in 1 2 3 4 5; do
             response=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.STAGING_API_URL }}/health" || echo "000")
@@ -48,14 +84,37 @@ jobs:
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - name: Deploy to Render Production
+      - name: Check deploy hook
+        id: check
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}
         run: |
-          curl -X POST "${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}"
+          if [ -z "$DEPLOY_HOOK" ]; then
+            echo "⏭️ RENDER_PRODUCTION_DEPLOY_HOOK이 설정되지 않아 배포를 건너뜁니다."
+            echo ""
+            echo "🔧 설정 방법:"
+            echo "  1. GitHub Repository → Settings → Secrets and variables → Actions"
+            echo "  2. Secrets 탭에서 'New repository secret' 클릭"
+            echo "  3. Name: RENDER_PRODUCTION_DEPLOY_HOOK"
+            echo "  4. Value: Render Dashboard → Web Service → Settings → Deploy Hook URL"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Deploy to Render Production
+        if: steps.check.outputs.skip != 'true'
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_PRODUCTION_DEPLOY_HOOK }}
+        run: |
+          curl -X POST "$DEPLOY_HOOK"
 
       - name: Wait for deployment
+        if: steps.check.outputs.skip != 'true'
         run: sleep 60
 
       - name: Health check (with retry)
+        if: steps.check.outputs.skip != 'true' && vars.PRODUCTION_API_URL != ''
         run: |
           for i in 1 2 3 4 5; do
             response=$(curl -s -o /dev/null -w "%{http_code}" "${{ vars.PRODUCTION_API_URL }}/health" || echo "000")
