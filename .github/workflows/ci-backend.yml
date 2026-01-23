@@ -15,6 +15,7 @@ on:
       - 'pyproject.toml'
       - 'tests/**'
       - 'Dockerfile'
+  workflow_dispatch:  # 수동 실행 지원
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
