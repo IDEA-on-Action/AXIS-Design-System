@@ -39,7 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # wheel에서 패키지 설치
 COPY --from=builder /wheels /wheels
 COPY pyproject.toml ./
-RUN pip install --no-cache-dir --find-links=/wheels -e . \
+RUN pip install --no-cache-dir /wheels/*.whl \
     && rm -rf /wheels
 
 # 애플리케이션 코드 복사
