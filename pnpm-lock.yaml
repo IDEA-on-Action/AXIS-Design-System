@@ -212,6 +212,9 @@ importers:
         specifier: '>=18.0.0'
         version: 19.2.3(react@18.3.1)
     devDependencies:
+      '@types/minimatch':
+        specifier: ^5.1.2
+        version: 5.1.2
       '@types/react':
         specifier: ^19.0.6
         version: 19.2.8
@@ -3310,9 +3313,8 @@ packages:
   '@types/jsonfile@6.1.4':
     resolution: {integrity: sha512-D5qGUYwjvnNNextdU59/+fI+spnwtTFmyQP0h+PfIOSkNfpU6AOICUOkm4i0OnSk+NyjdPJrxCDro0sJsWlRpQ==}
 
-  '@types/minimatch@6.0.0':
-    resolution: {integrity: sha512-zmPitbQ8+6zNutpwgcQuLcsEpn/Cj54Kbn7L5pX0Os5kdWplB7xPgEh/g+SWOB/qmows2gpuCaPyduq8ZZRnxA==}
-    deprecated: This is a stub types definition. minimatch provides its own type definitions, so you do not need this installed.
+  '@types/minimatch@5.1.2':
+    resolution: {integrity: sha512-K0VQKziLUWkVKiRVrx4a40iPaxTUefQmjtkQofBkYRcoaaL/8rhwDWww9qWbrgicNOgnpIsMxyNIUM4+n6dUIA==}
 
   '@types/node-fetch@2.6.13':
     resolution: {integrity: sha512-QGpRVpzSaUs30JBSGPjOg4Uveu384erbHBoT1zeONvyCfwQxIkUshLAOqN/k9EjGviPRmWTTe6aH2qySWKTVSw==}
@@ -10828,7 +10830,7 @@ snapshots:
 
   '@types/glob@7.2.0':
     dependencies:
-      '@types/minimatch': 6.0.0
+      '@types/minimatch': 5.1.2
       '@types/node': 22.19.6
 
   '@types/json-schema@7.0.15': {}
@@ -10839,9 +10841,7 @@ snapshots:
     dependencies:
       '@types/node': 22.19.6
 
-  '@types/minimatch@6.0.0':
-    dependencies:
-      minimatch: 10.1.1
+  '@types/minimatch@5.1.2': {}
 
   '@types/node-fetch@2.6.13':
     dependencies:
