@@ -30,7 +30,7 @@
 | # | 항목 | 우선순위 | 상태 |
 |---|------|----------|------|
 | 1 | **디자인 시스템 리소스 연동** (shadcn/ui, Monet, V0) | P0 | ✅ |
-| 2 | **프로덕션 배포 환경 확정** (Cloudflare + Render) | P0 | ✅ |
+| 2 | **프로덕션 배포 완료** (Cloudflare Pages + Render) | P0 | ✅ |
 | 3 | 사용자 온보딩 (BD팀 교육) | P1 | 🔲 |
 | 4 | Confluence 실제 Space 연동 | P1 | 🔲 |
 
