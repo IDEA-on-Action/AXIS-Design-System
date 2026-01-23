@@ -314,15 +314,15 @@ jobs:
             // 코멘트 본문
             const body = `## ${statusEmoji} Evals Regression Suite ${statusText}
 
-**판정**: ${decision}
-**통과율**: ${(passRate * 100).toFixed(1)}%
-**평균 점수**: ${avgScore.toFixed(2)}
+            **판정**: ${decision}
+            **통과율**: ${(passRate * 100).toFixed(1)}%
+            **평균 점수**: ${avgScore.toFixed(2)}
 
-### Task 결과
-${taskTable}
+            ### Task 결과
+            ${taskTable}
 
-> 상세 결과는 [Actions 아티팩트](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})에서 확인하세요.
-`;
+            > 상세 결과는 [Actions 아티팩트](https://github.com/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId})에서 확인하세요.
+            `;
 
             // 기존 코멘트 찾기
             const { data: comments } = await github.rest.issues.listComments({
