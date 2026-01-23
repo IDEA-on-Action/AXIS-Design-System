@@ -1567,15 +1567,14 @@ class TestOntologyRepository:
     @pytest.mark.asyncio
     async def test_get_stats(self):
         """온톨로지 통계 조회"""
-        # Entity 통계 mock row
-        entity_row = MagicMock()
-        entity_row.entity_type = EntityType.SIGNAL
-        entity_row.count = 10
+        # Entity 통계 mock row - namedtuple 스타일로 생성
+        from collections import namedtuple
 
-        # Triple 통계 mock row
-        triple_row = MagicMock()
-        triple_row.predicate = PredicateType.HAS_PAIN
-        triple_row.count = 20
+        EntityStatRow = namedtuple("EntityStatRow", ["entity_type", "cnt"])
+        TripleStatRow = namedtuple("TripleStatRow", ["predicate", "cnt"])
+
+        entity_row = EntityStatRow(entity_type=EntityType.SIGNAL, cnt=10)
+        triple_row = TripleStatRow(predicate=PredicateType.HAS_PAIN, cnt=20)
 
         # execute 결과 mock
         entity_result = MagicMock()

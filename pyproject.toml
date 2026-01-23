@@ -55,6 +55,7 @@ dev = [
     "pre-commit>=4.0.0",
     "types-PyYAML>=6.0.0",  # mypy용 YAML 타입 스텁
     "asyncpg>=0.29.0",  # 테스트용 비동기 PostgreSQL 드라이버
+    "aiosqlite>=0.20.0",  # 테스트용 비동기 SQLite 드라이버
 ]
 monitoring = [
     "sentry-sdk[fastapi]>=2.0.0",
