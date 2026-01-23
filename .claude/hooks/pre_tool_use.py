@@ -64,7 +64,7 @@ PERMISSION_RULES = [
         mode=PermissionMode.LOG,
         description="Confluence 페이지 내용 추가"
     ),
-    
+
     # DB 작업
     PermissionRule(
         pattern=r"confluence\.db_upsert_row",
@@ -76,19 +76,31 @@ PERMISSION_RULES = [
         mode=PermissionMode.DENY,
         description="Confluence DB 행 삭제 (차단)"
     ),
-    
+
     # 외부 API
     PermissionRule(
         pattern=r"external\..*",
         mode=PermissionMode.LOG,
         description="외부 API 호출"
     ),
-    
+
     # 읽기 작업 - 허용
     PermissionRule(
         pattern=r"confluence\.(search|get|query).*",
         mode=PermissionMode.ALLOW,
         description="Confluence 읽기 작업"
+    ),
+
+    # AXIS Design System MCP 규칙
+    PermissionRule(
+        pattern=r"axis\.install_component",
+        mode=PermissionMode.LOG,
+        description="AXIS 컴포넌트 설치"
+    ),
+    PermissionRule(
+        pattern=r"axis\.(search|get|list).*",
+        mode=PermissionMode.ALLOW,
+        description="AXIS 읽기 작업"
     ),
 ]
 

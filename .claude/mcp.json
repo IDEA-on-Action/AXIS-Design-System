@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "axis": {
+      "command": "node",
+      "args": ["packages/axis-mcp/dist/index.js"]
+    },
     "confluence": {
       "command": "python",
       "args": ["backend/integrations/mcp_confluence/server.py"],
