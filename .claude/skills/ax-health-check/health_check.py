@@ -20,6 +20,7 @@ AX Health Check Skill - 프로젝트 점검
 """
 
 import argparse
+import io
 import json
 import re
 import subprocess
@@ -28,6 +29,11 @@ from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+# Windows 콘솔 UTF-8 출력 설정
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
 class CheckStatus(Enum):
@@ -83,6 +89,8 @@ def run_command(cmd: list[str], cwd: Path | None = None, timeout: int = 60) -> t
             cwd=cwd,
             capture_output=True,
             text=True,
+            encoding='utf-8',
+            errors='replace',
             timeout=timeout,
             shell=sys.platform == "win32"
         )

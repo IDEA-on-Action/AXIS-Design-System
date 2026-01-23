@@ -18,6 +18,7 @@ AX ToDo Skill - ToDo 관리 및 Confluence 동기화
 """
 
 import argparse
+import io
 import json
 import os
 import re
@@ -27,6 +28,11 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any
+
+# Windows 콘솔 UTF-8 출력 설정
+if sys.platform == "win32":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
 
 
 class TodoStatus(Enum):
