@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **BD팀 온보딩 섹션** 🎓
+  - `/onboarding` - Quick Start (3단계 시작 가이드)
+  - `/onboarding/concepts` - 핵심 개념 (Activity, Signal, Scorecard, Brief)
+  - `/onboarding/workflows` - 워크플로 가이드 (WF-01~04 파이프라인)
+  - `/onboarding/web-ui` - 웹 UI 사용법
+  - `/onboarding/cli` - CLI 명령어 가이드
+  - `/onboarding/faq` - 자주 묻는 질문
+  - 사이드바 네비게이션이 포함된 반응형 레이아웃
+
 - **Library Curator Agent 구현** 📚
   - 디자인 시스템 라이브러리 수집/분류/배치 Agent
   - 4개 소스 Collector: shadcn, Monet, V0, AXIS
