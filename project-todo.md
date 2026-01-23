@@ -30,9 +30,195 @@
 | # | 항목 | 우선순위 | 상태 |
 |---|------|----------|------|
 | 1 | **디자인 시스템 리소스 연동** (shadcn/ui, Monet, V0) | P0 | ✅ |
-| 2 | 프로덕션 배포 환경 확정 (Render/AWS/GCP) | P0 | 🔲 |
+| 2 | **프로덕션 배포 환경 확정** (Cloudflare + Render) | P0 | ✅ |
 | 3 | 사용자 온보딩 (BD팀 교육) | P1 | 🔲 |
 | 4 | Confluence 실제 Space 연동 | P1 | 🔲 |
+
+---
+
+## 🚀 프로덕션 배포 환경 (확정)
+
+### 아키텍처 개요
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Production Environment                    │
+├─────────────────────────────────────────────────────────────┤
+│                                                               │
+│  ┌─────────────┐    HTTPS     ┌─────────────────────────┐   │
+│  │   Users     │─────────────▶│  Cloudflare Pages       │   │
+│  │  (Browser)  │              │  - Frontend (Next.js)   │   │
+│  └─────────────┘              │  - Static Assets        │   │
+│                               │  - Edge CDN             │   │
+│                               └───────────┬─────────────┘   │
+│                                           │                   │
+│                                           │ API Calls         │
+│                                           ▼                   │
+│                               ┌─────────────────────────┐   │
+│                               │  Render                 │   │
+│                               │  - Backend (FastAPI)    │   │
+│                               │  - Python 3.11          │   │
+│                               └───────────┬─────────────┘   │
+│                                           │                   │
+│                    ┌──────────────────────┼──────────────┐   │
+│                    │                      │              │   │
+│                    ▼                      ▼              ▼   │
+│  ┌─────────────────────┐  ┌──────────────────┐  ┌────────┐ │
+│  │  Cloudflare D1      │  │  Confluence      │  │ Claude │ │
+│  │  (SQLite Edge)      │  │  (MCP Server)    │  │  API   │ │
+│  └─────────────────────┘  └──────────────────┘  └────────┘ │
+│                                                               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### 확정된 플랫폼
+
+| 레이어 | 플랫폼 | 플랜 | 비용 |
+|--------|--------|------|------|
+| **Frontend** | Cloudflare Pages | Free | $0/월 |
+| **Backend** | Render | Free → Starter | $0~$7/월 |
+| **Database** | Cloudflare D1 | Free | $0/월 (5GB) |
+| **CDN/Edge** | Cloudflare | Free | $0/월 |
+| **CI/CD** | GitHub Actions | Free | 2,000분/월 |
+
+**총 예상 비용**: $0~$7/월 (Free tier로 시작, 필요시 확장)
+
+### 환경별 URL (확정)
+
+| 환경 | Frontend | Backend |
+|------|----------|---------|
+| **Production** | `https://ax-discovery-portal.pages.dev` | `https://ax-discovery-api.onrender.com` |
+| **Staging** | `https://staging.ax-discovery-portal.pages.dev` | `https://ax-discovery-api-staging.onrender.com` |
+| **Preview** | `https://{branch}.ax-discovery-portal.pages.dev` | - |
+
+### GitHub Secrets 설정 체크리스트
+
+| Secret 이름 | 용도 | 설정 방법 |
+|-------------|------|----------|
+| `CLOUDFLARE_API_TOKEN` | Cloudflare Pages 배포 | Cloudflare Dashboard → API Tokens |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 계정 식별 | Cloudflare Dashboard → Overview |
+| `RENDER_STAGING_DEPLOY_HOOK` | Render Staging 배포 | Render Dashboard → Settings → Deploy Hook |
+| `RENDER_PRODUCTION_DEPLOY_HOOK` | Render Production 배포 | Render Dashboard → Settings → Deploy Hook |
+
+### GitHub Variables 설정 체크리스트
+
+| Variable 이름 | 용도 | 값 |
+|---------------|------|-----|
+| `STAGING_API_URL` | Staging API URL | `https://ax-discovery-api-staging.onrender.com` |
+| `PRODUCTION_API_URL` | Production API URL | `https://ax-discovery-api.onrender.com` |
+| `NEXT_PUBLIC_API_URL` | Frontend API URL | `https://ax-discovery-api.onrender.com` |
+
+### 배포 설정 파일
+
+| 파일 | 용도 | 상태 |
+|------|------|------|
+| `render.yaml` | Render Blueprint (IaC) | ✅ 완료 |
+| `wrangler.toml` | Cloudflare Pages 설정 | ✅ 완료 |
+| `.github/workflows/frontend.yml` | Frontend CI/CD | ✅ 완료 |
+| `.github/workflows/cd-backend.yml` | Backend CD | ✅ 완료 |
+| `.github/workflows/ci-backend.yml` | Backend CI | ✅ 완료 |
+
+### 배포 시작 가이드
+
+#### 1. Cloudflare 설정 (Frontend)
+
+```bash
+# 1. Cloudflare 계정 생성/로그인
+#    https://dash.cloudflare.com
+
+# 2. Pages 프로젝트 생성
+#    Pages → Create a project → Connect to Git → 저장소 선택
+
+# 3. 빌드 설정
+#    Framework preset: Next.js (Static HTML Export)
+#    Build command: pnpm build
+#    Build output directory: apps/web/out
+#    Root directory: /
+
+# 4. API Token 생성
+#    My Profile → API Tokens → Create Token
+#    템플릿: "Edit Cloudflare Workers" 선택
+
+# 5. D1 Database 확인 (이미 생성됨)
+#    Workers & Pages → D1 → ax-discovery-db
+#    ID: 631b77f1-274d-4254-ba42-53b5cec41408
+```
+
+#### 2. Render 설정 (Backend)
+
+```bash
+# 1. Render 계정 생성/로그인
+#    https://dashboard.render.com
+
+# 2. Blueprint 배포 (render.yaml 사용)
+#    New → Blueprint → Connect Repository
+#    render.yaml 자동 감지됨
+
+# 3. 환경 변수 설정 (Render Dashboard)
+#    - ANTHROPIC_API_KEY: Claude API 키
+#    - CONFLUENCE_BASE_URL: https://your-domain.atlassian.net/wiki
+#    - CONFLUENCE_API_TOKEN: Atlassian API Token
+#    - CONFLUENCE_USER_EMAIL: 이메일
+#    - CONFLUENCE_SPACE_KEY: 스페이스 키
+
+# 4. Deploy Hook URL 복사
+#    Settings → Deploy Hook → Copy URL
+```
+
+#### 3. GitHub Secrets 설정
+
+```bash
+# GitHub Repository → Settings → Secrets and variables → Actions
+
+# Secrets 탭:
+# - CLOUDFLARE_API_TOKEN
+# - CLOUDFLARE_ACCOUNT_ID
+# - RENDER_STAGING_DEPLOY_HOOK
+# - RENDER_PRODUCTION_DEPLOY_HOOK
+
+# Variables 탭:
+# - STAGING_API_URL
+# - PRODUCTION_API_URL
+# - NEXT_PUBLIC_API_URL
+```
+
+#### 4. 배포 테스트
+
+```bash
+# Frontend 배포 트리거
+git push origin main
+
+# 또는 수동 트리거
+gh workflow run "Frontend CI/CD" --ref main
+
+# 배포 상태 확인
+gh run list --workflow=frontend.yml
+```
+
+### 선택한 이유
+
+**Cloudflare Pages (Frontend)**
+- 무제한 무료 요청
+- 글로벌 Edge CDN
+- GitHub 자동 연동
+- Preview 환경 자동 생성
+- D1 Database 통합
+
+**Render (Backend)**
+- Python 네이티브 지원
+- Free tier로 시작 가능
+- IaC (render.yaml) 지원
+- 자동 HTTPS
+- 간편한 환경 변수 관리
+
+**대안 비교**
+
+| 대안 | 장점 | 단점 | 결론 |
+|------|------|------|------|
+| Vercel | Next.js 최적화 | Serverless 제한 | Frontend는 Cloudflare가 더 유연 |
+| AWS Lambda | 확장성 | 복잡한 설정, 비용 | PoC에는 과도함 |
+| GCP Cloud Run | 컨테이너 | 설정 복잡성 | Render가 더 간편 |
+| Railway | 간편함 | Free tier 제한 | Render와 유사하나 D1 연동 불가 |
 
 ---
 

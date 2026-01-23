@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.1] - 2026-01-23
+
+### Added
+
+- **디자인 시스템 리소스 연동 (Phase A~D 완료)** 🎨
+  - **Phase A**: shadcn/ui MCP 서버 연동
+    - `.mcp.json`, `components.json` 설정
+    - Claude Code에서 shadcn 컴포넌트 조회/설치 가능
+  - **Phase B**: AXIS Registry 구축
+    - 20개 컴포넌트 레지스트리 (`public/r/*.json`)
+    - `scripts/build-registry.mjs` 빌드 스크립트
+    - Cloudflare Pages 배포용 CORS 설정
+  - **Phase C**: Monet CLI 클라이언트
+    - `axis-cli monet` 명령어 (list/browse/search/import/setup)
+    - 14개 카테고리, 1000+ 컴포넌트 접근
+    - MCP 서버 연동 지원
+  - **Phase D**: V0 통합 도구
+    - `axis-cli v0` 명령어 (convert/import/guide/setup)
+    - shadcn/ui → AXIS import 자동 변환
+    - GitHub 동기화 워크플로 안내
+
+- **프로덕션 배포 환경 확정** 🚀
+  - **Frontend**: Cloudflare Pages (Free tier)
+  - **Backend**: Render (Free → Starter)
+  - **Database**: Cloudflare D1 (5GB Free)
+  - 환경별 URL 확정 (Production/Staging/Preview)
+  - GitHub Secrets/Variables 설정 체크리스트
+  - 배포 시작 가이드 문서화
+
+### Changed
+
+- `packages/axis-cli` 확장
+  - monet, v0 명령어 그룹 추가
+  - tsup 빌드에 monet.ts, v0.ts 포함
+- `.github/workflows/frontend.yml`
+  - `build:registry` 단계 추가
+
+---
+
 ## [0.6.0] - 2026-01-18
 
 ### Added
