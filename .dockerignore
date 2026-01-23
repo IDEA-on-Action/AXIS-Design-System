@@ -1,0 +1,64 @@
+# ============================================================
+# Docker 빌드 제외 파일
+# ============================================================
+
+# Git
+.git
+.gitignore
+.github
+
+# Node.js / Frontend
+node_modules
+.pnpm-store
+apps/
+packages/
+*.lock
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Python 캐시
+__pycache__
+*.py[cod]
+*$py.class
+.pytest_cache
+.mypy_cache
+.ruff_cache
+*.egg-info
+dist/
+build/
+.eggs/
+
+# 환경 파일 (민감 정보)
+.env
+.env.local
+.env.*.local
+*.env
+
+# IDE / Editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# 테스트 및 문서
+tests/
+docs/
+evals/
+*.md
+!README.md
+
+# 기타
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+.turbo
+
+# Docker 관련
+Dockerfile*
+docker-compose*
+.docker
+
+# CI/CD
+.github/

@@ -1,0 +1,60 @@
+# ============================================================
+# AX Discovery Portal - Docker Compose
+# 로컬 개발 및 테스트 환경
+# ============================================================
+
+version: '3.9'
+
+services:
+  # Backend API 서버
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ax-discovery-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env.development
+    environment:
+      - APP_ENV=development
+      - PORT=8000
+    volumes:
+      # 개발 시 코드 변경 반영 (읽기 전용)
+      - ./backend:/app/backend:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - ax-network
+    restart: unless-stopped
+
+  # PostgreSQL (선택적, 로컬 DB 테스트용)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: ax-discovery-db
+  #   environment:
+  #     POSTGRES_USER: ax_user
+  #     POSTGRES_PASSWORD: ax_password
+  #     POSTGRES_DB: ax_discovery
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - ax-network
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ax_user -d ax_discovery"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+networks:
+  ax-network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
