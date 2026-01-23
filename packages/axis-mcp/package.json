@@ -1,23 +1,27 @@
 {
   "name": "@axis-ds/mcp",
   "version": "0.1.0",
+  "type": "module",
   "description": "AXIS Design System - MCP Server for AI-assisted component discovery",
   "bin": {
     "axis-mcp": "./dist/index.js"
   },
   "main": "dist/index.js",
   "files": [
-    "dist"
+    "dist",
+    "src/registry/data"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs --dts",
-    "dev": "tsup src/index.ts --format cjs --watch",
+    "build": "tsup src/index.ts --format esm --dts --clean && npm run copy-data",
+    "copy-data": "node -e \"const fs=require('fs');fs.cpSync('src/registry/data','dist/registry/data',{recursive:true})\"",
+    "dev": "tsup src/index.ts --format esm --watch",
     "clean": "rm -rf dist"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "fs-extra": "^11.2.0",
-    "node-fetch": "^3.3.0"
+    "node-fetch": "^3.3.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.0",

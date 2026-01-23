@@ -1,0 +1,274 @@
+#!/usr/bin/env node
+
+import { Command } from "commander";
+import chalk from "chalk";
+import ora from "ora";
+import fs from "fs-extra";
+import path from "path";
+import prompts from "prompts";
+
+const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
+
+interface ComponentInfo {
+  name: string;
+  type: "ui" | "agentic";
+  description: string;
+  dependencies: string[];
+  files: { path: string; content: string }[];
+}
+
+const program = new Command();
+
+program
+  .name("axis-cli")
+  .description("AXIS Design System CLI - shadcn 호환 컴포넌트 설치 도구")
+  .version("0.1.0");
+
+// init 명령어
+program
+  .command("init")
+  .description("프로젝트에 AXIS Design System 초기화")
+  .option("-y, --yes", "기본값으로 자동 설정")
+  .action(async (options) => {
+    console.log(chalk.blue("\n🎨 AXIS Design System 초기화\n"));
+
+    const config = options.yes
+      ? {
+          componentsDir: "./src/components/ui",
+          tailwindConfig: "./tailwind.config.ts",
+          globalCss: "./src/app/globals.css",
+        }
+      : await prompts([
+          {
+            type: "text",
+            name: "componentsDir",
+            message: "컴포넌트 디렉토리:",
+            initial: "./src/components/ui",
+          },
+          {
+            type: "text",
+            name: "tailwindConfig",
+            message: "Tailwind 설정 파일:",
+            initial: "./tailwind.config.ts",
+          },
+          {
+            type: "text",
+            name: "globalCss",
+            message: "글로벌 CSS 파일:",
+            initial: "./src/app/globals.css",
+          },
+        ]);
+
+    // axis.config.json 생성
+    const axisConfig = {
+      $schema: "https://axis.minu.best/schema.json",
+      componentsDir: config.componentsDir,
+      tailwindConfig: config.tailwindConfig,
+      globalCss: config.globalCss,
+      registry: REGISTRY_URL,
+    };
+
+    await fs.writeJSON("axis.config.json", axisConfig, { spaces: 2 });
+    console.log(chalk.green("✓ axis.config.json 생성 완료"));
+
+    // utils.ts 생성
+    const utilsPath = path.join(config.componentsDir, "utils.ts");
+    await fs.ensureDir(path.dirname(utilsPath));
+    await fs.writeFile(
+      utilsPath,
+      `import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
+export function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+`
+    );
+    console.log(chalk.green("✓ utils.ts 생성 완료"));
+
+    console.log(chalk.blue("\n초기화 완료! 이제 다음 명령어로 컴포넌트를 추가하세요:"));
+    console.log(chalk.cyan("  npx axis-cli add button\n"));
+  });
+
+// add 명령어
+program
+  .command("add <component>")
+  .description("컴포넌트 추가")
+  .option("--agentic", "Agentic UI 컴포넌트 추가")
+  .option("-y, --yes", "확인 없이 덮어쓰기")
+  .action(async (component, options) => {
+    const spinner = ora(`${component} 컴포넌트 가져오는 중...`).start();
+
+    try {
+      // 설정 파일 읽기
+      const configPath = path.resolve("axis.config.json");
+      if (!(await fs.pathExists(configPath))) {
+        spinner.fail("axis.config.json을 찾을 수 없습니다. 먼저 'axis-cli init'을 실행하세요.");
+        process.exit(1);
+      }
+
+      const config = await fs.readJSON(configPath);
+      const category = options.agentic ? "agentic" : "ui";
+
+      // Registry에서 컴포넌트 정보 가져오기 (로컬 폴백)
+      const componentInfo = await getComponentInfo(component, category);
+
+      if (!componentInfo) {
+        spinner.fail(`'${component}' 컴포넌트를 찾을 수 없습니다.`);
+        process.exit(1);
+      }
+
+      spinner.text = `${component} 컴포넌트 설치 중...`;
+
+      // 컴포넌트 파일 생성
+      for (const file of componentInfo.files) {
+        const filePath = path.join(config.componentsDir, file.path);
+
+        if (await fs.pathExists(filePath)) {
+          if (!options.yes) {
+            const { overwrite } = await prompts({
+              type: "confirm",
+              name: "overwrite",
+              message: `${file.path}이(가) 이미 존재합니다. 덮어쓰시겠습니까?`,
+              initial: false,
+            });
+            if (!overwrite) continue;
+          }
+        }
+
+        await fs.ensureDir(path.dirname(filePath));
+        await fs.writeFile(filePath, file.content);
+      }
+
+      spinner.succeed(chalk.green(`${component} 컴포넌트 추가 완료`));
+
+      // 의존성 안내
+      if (componentInfo.dependencies.length > 0) {
+        console.log(chalk.yellow("\n필요한 의존성:"));
+        console.log(chalk.cyan(`  pnpm add ${componentInfo.dependencies.join(" ")}`));
+      }
+    } catch (error) {
+      spinner.fail(`오류 발생: ${(error as Error).message}`);
+      process.exit(1);
+    }
+  });
+
+// list 명령어
+program
+  .command("list")
+  .description("사용 가능한 컴포넌트 목록")
+  .option("--category <type>", "카테고리 필터 (ui, agentic)")
+  .action(async (options) => {
+    console.log(chalk.blue("\n📦 AXIS Design System 컴포넌트\n"));
+
+    const components = {
+      ui: [
+        { name: "button", description: "기본 버튼 컴포넌트" },
+        { name: "input", description: "텍스트 입력 필드" },
+        { name: "card", description: "카드 컨테이너" },
+        { name: "dialog", description: "모달 다이얼로그" },
+        { name: "badge", description: "뱃지/태그" },
+        { name: "select", description: "선택 드롭다운" },
+        { name: "tabs", description: "탭 네비게이션" },
+        { name: "toast", description: "알림 토스트" },
+        { name: "label", description: "폼 라벨" },
+        { name: "separator", description: "구분선" },
+      ],
+      agentic: [
+        { name: "run-progress", description: "에이전트 실행 진행률" },
+        { name: "step-timeline", description: "단계별 타임라인" },
+        { name: "approval-card", description: "사용자 승인 요청" },
+        { name: "streaming-text", description: "실시간 텍스트 스트리밍" },
+        { name: "tool-call-card", description: "도구 호출 표시" },
+        { name: "source-panel", description: "AI 근거/출처 표시" },
+        { name: "thinking-indicator", description: "생각 중 표시" },
+        { name: "recovery-banner", description: "오류 복구 안내" },
+        { name: "agent-avatar", description: "에이전트 아바타" },
+        { name: "surface-renderer", description: "동적 Surface 렌더링" },
+      ],
+    };
+
+    const showCategory = (category: "ui" | "agentic", items: typeof components.ui) => {
+      console.log(chalk.bold(category === "ui" ? "Core UI" : "Agentic UI"));
+      items.forEach((c) => {
+        console.log(`  ${chalk.cyan(c.name.padEnd(20))} ${chalk.gray(c.description)}`);
+      });
+      console.log();
+    };
+
+    if (!options.category || options.category === "ui") {
+      showCategory("ui", components.ui);
+    }
+    if (!options.category || options.category === "agentic") {
+      showCategory("agentic", components.agentic);
+    }
+
+    console.log(chalk.gray("사용법: npx axis-cli add <component-name>"));
+    console.log(chalk.gray("Agentic: npx axis-cli add <component-name> --agentic\n"));
+  });
+
+// 컴포넌트 정보 가져오기 (로컬 폴백 포함)
+async function getComponentInfo(name: string, category: string): Promise<ComponentInfo | null> {
+  // 로컬 컴포넌트 템플릿
+  const localComponents: Record<string, ComponentInfo> = {
+    button: {
+      name: "button",
+      type: "ui",
+      description: "Primary button component",
+      dependencies: ["@radix-ui/react-slot", "class-variance-authority", "clsx", "tailwind-merge"],
+      files: [
+        {
+          path: "button.tsx",
+          content: `import * as React from "react"
+import { Slot } from "@radix-ui/react-slot"
+import { cva, type VariantProps } from "class-variance-authority"
+import { cn } from "./utils"
+
+const buttonVariants = cva(
+  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  {
+    variants: {
+      variant: {
+        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+        outline: "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
+      },
+      size: {
+        sm: "h-8 px-3 text-xs",
+        default: "h-10 px-4 py-2",
+        lg: "h-12 px-6 text-base",
+        icon: "h-10 w-10",
+      },
+    },
+    defaultVariants: { variant: "default", size: "default" },
+  }
+)
+
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  asChild?: boolean
+}
+
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : "button"
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+  }
+)
+Button.displayName = "Button"
+
+export { Button, buttonVariants }
+`,
+        },
+      ],
+    },
+  };
+
+  return localComponents[name] || null;
+}
+
+program.parse();

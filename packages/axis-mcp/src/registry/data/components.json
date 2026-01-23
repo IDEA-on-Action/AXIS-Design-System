@@ -1,0 +1,228 @@
+{
+  "components": [
+    {
+      "name": "button",
+      "displayName": "Button",
+      "description": "다양한 스타일과 크기를 지원하는 기본 버튼 컴포넌트",
+      "category": "core",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-slot", "class-variance-authority"],
+      "files": [
+        { "path": "components/ui/button.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "variant", "type": "\"default\" | \"destructive\" | \"outline\" | \"secondary\" | \"ghost\" | \"link\"", "required": false, "default": "\"default\"", "description": "버튼 스타일 변형" },
+        { "name": "size", "type": "\"default\" | \"sm\" | \"lg\" | \"icon\"", "required": false, "default": "\"default\"", "description": "버튼 크기" },
+        { "name": "asChild", "type": "boolean", "required": false, "default": "false", "description": "자식 요소를 버튼으로 렌더링" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Button>Click me</Button>",
+          "description": "기본 스타일 버튼"
+        },
+        {
+          "title": "변형 사용",
+          "code": "<Button variant=\"destructive\">Delete</Button>",
+          "description": "위험 작업용 버튼"
+        }
+      ]
+    },
+    {
+      "name": "input",
+      "displayName": "Input",
+      "description": "텍스트 입력을 위한 기본 입력 필드 컴포넌트",
+      "category": "form",
+      "package": "@axis-ds/ui-react",
+      "dependencies": [],
+      "files": [
+        { "path": "components/ui/input.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "type", "type": "string", "required": false, "default": "\"text\"", "description": "입력 타입" },
+        { "name": "placeholder", "type": "string", "required": false, "description": "플레이스홀더 텍스트" },
+        { "name": "disabled", "type": "boolean", "required": false, "default": "false", "description": "비활성화 상태" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Input placeholder=\"Enter text...\" />",
+          "description": "기본 텍스트 입력"
+        }
+      ]
+    },
+    {
+      "name": "label",
+      "displayName": "Label",
+      "description": "폼 요소에 대한 접근성 레이블 컴포넌트",
+      "category": "form",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-label"],
+      "files": [
+        { "path": "components/ui/label.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "htmlFor", "type": "string", "required": false, "description": "연결할 폼 요소의 id" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Label htmlFor=\"email\">Email</Label>",
+          "description": "폼 레이블"
+        }
+      ]
+    },
+    {
+      "name": "card",
+      "displayName": "Card",
+      "description": "콘텐츠를 그룹화하는 카드 컨테이너 컴포넌트",
+      "category": "layout",
+      "package": "@axis-ds/ui-react",
+      "dependencies": [],
+      "files": [
+        { "path": "components/ui/card.tsx", "type": "component" }
+      ],
+      "props": [],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Card>\n  <CardHeader>\n    <CardTitle>Title</CardTitle>\n  </CardHeader>\n  <CardContent>Content</CardContent>\n</Card>",
+          "description": "기본 카드 구조"
+        }
+      ]
+    },
+    {
+      "name": "badge",
+      "displayName": "Badge",
+      "description": "상태나 카테고리를 표시하는 작은 레이블 컴포넌트",
+      "category": "core",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["class-variance-authority"],
+      "files": [
+        { "path": "components/ui/badge.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "variant", "type": "\"default\" | \"secondary\" | \"destructive\" | \"outline\"", "required": false, "default": "\"default\"", "description": "배지 스타일 변형" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Badge>New</Badge>",
+          "description": "기본 배지"
+        }
+      ]
+    },
+    {
+      "name": "separator",
+      "displayName": "Separator",
+      "description": "콘텐츠를 시각적으로 구분하는 구분선 컴포넌트",
+      "category": "layout",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-separator"],
+      "files": [
+        { "path": "components/ui/separator.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "orientation", "type": "\"horizontal\" | \"vertical\"", "required": false, "default": "\"horizontal\"", "description": "구분선 방향" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Separator />",
+          "description": "가로 구분선"
+        }
+      ]
+    },
+    {
+      "name": "dialog",
+      "displayName": "Dialog",
+      "description": "모달 다이얼로그 컴포넌트",
+      "category": "core",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-dialog"],
+      "files": [
+        { "path": "components/ui/dialog.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "open", "type": "boolean", "required": false, "description": "다이얼로그 열림 상태" },
+        { "name": "onOpenChange", "type": "(open: boolean) => void", "required": false, "description": "열림 상태 변경 콜백" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Dialog>\n  <DialogTrigger>Open</DialogTrigger>\n  <DialogContent>\n    <DialogTitle>Title</DialogTitle>\n    <DialogDescription>Description</DialogDescription>\n  </DialogContent>\n</Dialog>",
+          "description": "기본 다이얼로그"
+        }
+      ]
+    },
+    {
+      "name": "select",
+      "displayName": "Select",
+      "description": "드롭다운 선택 컴포넌트",
+      "category": "form",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-select"],
+      "files": [
+        { "path": "components/ui/select.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "value", "type": "string", "required": false, "description": "선택된 값" },
+        { "name": "onValueChange", "type": "(value: string) => void", "required": false, "description": "값 변경 콜백" },
+        { "name": "placeholder", "type": "string", "required": false, "description": "플레이스홀더 텍스트" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Select>\n  <SelectTrigger>\n    <SelectValue placeholder=\"Select...\" />\n  </SelectTrigger>\n  <SelectContent>\n    <SelectItem value=\"1\">Option 1</SelectItem>\n    <SelectItem value=\"2\">Option 2</SelectItem>\n  </SelectContent>\n</Select>",
+          "description": "기본 셀렉트"
+        }
+      ]
+    },
+    {
+      "name": "tabs",
+      "displayName": "Tabs",
+      "description": "탭 네비게이션 컴포넌트",
+      "category": "layout",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-tabs"],
+      "files": [
+        { "path": "components/ui/tabs.tsx", "type": "component" }
+      ],
+      "props": [
+        { "name": "value", "type": "string", "required": false, "description": "활성 탭 값" },
+        { "name": "onValueChange", "type": "(value: string) => void", "required": false, "description": "탭 변경 콜백" },
+        { "name": "defaultValue", "type": "string", "required": false, "description": "기본 활성 탭" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "<Tabs defaultValue=\"tab1\">\n  <TabsList>\n    <TabsTrigger value=\"tab1\">Tab 1</TabsTrigger>\n    <TabsTrigger value=\"tab2\">Tab 2</TabsTrigger>\n  </TabsList>\n  <TabsContent value=\"tab1\">Content 1</TabsContent>\n  <TabsContent value=\"tab2\">Content 2</TabsContent>\n</Tabs>",
+          "description": "기본 탭"
+        }
+      ]
+    },
+    {
+      "name": "toast",
+      "displayName": "Toast",
+      "description": "알림 토스트 메시지 컴포넌트",
+      "category": "core",
+      "package": "@axis-ds/ui-react",
+      "dependencies": ["@radix-ui/react-toast"],
+      "files": [
+        { "path": "components/ui/toast.tsx", "type": "component" },
+        { "path": "components/ui/toaster.tsx", "type": "component" },
+        { "path": "hooks/use-toast.ts", "type": "component" }
+      ],
+      "props": [
+        { "name": "variant", "type": "\"default\" | \"destructive\"", "required": false, "default": "\"default\"", "description": "토스트 스타일 변형" }
+      ],
+      "examples": [
+        {
+          "title": "기본 사용",
+          "code": "const { toast } = useToast()\ntoast({ title: \"Success!\", description: \"Operation completed.\" })",
+          "description": "토스트 표시"
+        }
+      ]
+    }
+  ]
+}

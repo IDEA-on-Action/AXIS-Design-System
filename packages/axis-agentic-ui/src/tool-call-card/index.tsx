@@ -136,7 +136,7 @@ export function ToolCallCard({
               </pre>
             </div>
           )}
-          {output && (
+          {output !== undefined && (
             <div>
               <h5 className="text-xs font-medium text-[var(--axis-text-secondary)] mb-1">
                 출력
