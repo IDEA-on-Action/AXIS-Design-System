@@ -29,7 +29,7 @@
 
 | # | 항목 | 우선순위 | 상태 |
 |---|------|----------|------|
-| 1 | **디자인 시스템 리소스 연동** (shadcn/ui, Monet, V0) | P0 | 🔲 |
+| 1 | **디자인 시스템 리소스 연동** (shadcn/ui, Monet, V0) | P0 | ✅ |
 | 2 | 프로덕션 배포 환경 확정 (Render/AWS/GCP) | P0 | 🔲 |
 | 3 | 사용자 온보딩 (BD팀 교육) | P1 | 🔲 |
 | 4 | Confluence 실제 Space 연동 | P1 | 🔲 |
@@ -94,13 +94,27 @@ axis-cli monet setup             # MCP 설정 안내
 
 **MCP 연동**: API 키 필요 (https://monet.design/mcp)
 
-### Phase D: V0 통합 (Week 9)
+### Phase D: V0 통합 (Week 9) ✅ 완료
 
 | # | 작업 | 상태 |
 |---|------|------|
-| D1 | V0 생성 코드 → AXIS 컴포넌트 변환 가이드 작성 | 🔲 |
-| D2 | GitHub 동기화 워크플로 설정 | 🔲 |
-| D3 | V0 템플릿 AXIS 스타일 적용 스크립트 | 🔲 |
+| D1 | V0 생성 코드 → AXIS 컴포넌트 변환 가이드 작성 | ✅ |
+| D2 | GitHub 동기화 워크플로 설정 안내 | ✅ |
+| D3 | V0 템플릿 AXIS 스타일 적용 스크립트 | ✅ |
+| D4 | CLI 명령어 구현 (convert, import, guide, setup) | ✅ |
+
+**CLI 사용법**:
+```bash
+axis-cli v0 convert <file>   # V0 코드를 AXIS 스타일로 변환
+axis-cli v0 import           # URL/클립보드에서 가져오기 안내
+axis-cli v0 guide            # 변환 가이드 출력
+axis-cli v0 setup            # GitHub 동기화 설정 안내
+```
+
+**변환 규칙**:
+- `@/components/ui/*` → `@axis-ds/ui-react/*`
+- Lucide 아이콘 유지
+- cn() 함수 자동 import 추가
 
 ### 기술 스택
 

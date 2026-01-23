@@ -7,6 +7,7 @@ import fs from "fs-extra";
 import path from "path";
 import prompts from "prompts";
 import { MonetClient, MONET_CATEGORIES } from "./monet.js";
+import { V0Client } from "./v0.js";
 
 const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
 
@@ -276,6 +277,47 @@ monetCmd
 
     console.log(chalk.bold("4. Claude Code 재시작 후 사용:"));
     console.log(chalk.gray('   "monet에서 hero 컴포넌트 찾아줘"\n'));
+  });
+
+// ==========================================
+// V0 명령어
+// ==========================================
+const v0Cmd = program.command("v0").description("V0 (v0.app) 코드 변환 및 통합");
+
+v0Cmd
+  .command("convert <file>")
+  .alias("c")
+  .description("V0 코드를 AXIS 스타일로 변환")
+  .option("-o, --output <path>", "출력 파일 경로")
+  .action(async (file, options) => {
+    const client = new V0Client();
+    await client.convertFile(file, options.output);
+  });
+
+v0Cmd
+  .command("import")
+  .alias("i")
+  .description("V0 URL/클립보드에서 가져오기")
+  .action(async () => {
+    const client = new V0Client();
+    await client.importFromUrl();
+  });
+
+v0Cmd
+  .command("guide")
+  .alias("g")
+  .description("V0 → AXIS 변환 가이드")
+  .action(() => {
+    const client = new V0Client();
+    client.showGuide();
+  });
+
+v0Cmd
+  .command("setup")
+  .description("V0 GitHub 연동 안내")
+  .action(async () => {
+    const client = new V0Client();
+    await client.setupGitHubSync();
   });
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)
