@@ -3,17 +3,23 @@
   "version": "0.6.0",
   "private": true,
   "description": "AX BD팀 멀티에이전트 기반 사업기회 포착 엔진 - Monorepo",
+  "pnpm": {
+    "overrides": {
+      "@types/react": "^19.0.6",
+      "@types/react-dom": "^19.0.2"
+    }
+  },
   "scripts": {
     "dev": "pnpm --filter @ax/web dev",
     "dev:web": "pnpm --filter @ax/web dev",
-    "build": "pnpm -r build",
+    "build": "turbo run build",
     "build:web": "pnpm --filter @ax/web build",
-    "lint": "pnpm -r lint",
-    "type-check": "pnpm -r type-check",
-    "clean": "pnpm -r clean && rm -rf node_modules",
+    "lint": "turbo run lint",
+    "type-check": "turbo run type-check",
+    "clean": "pnpm -r clean && rm -rf node_modules .turbo",
     "backend:dev": "cd backend && uvicorn backend.api.main:app --reload",
     "backend:test": "cd backend && pytest",
-    "test": "pnpm -r test"
+    "test": "turbo run test"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
