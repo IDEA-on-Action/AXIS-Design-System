@@ -3,8 +3,6 @@
 # 로컬 개발 및 테스트 환경
 # ============================================================
 
-version: '3.9'
-
 services:
   # Backend API 서버
   backend:
@@ -19,6 +17,10 @@ services:
     environment:
       - APP_ENV=development
       - PORT=8000
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/ax_discovery_dev
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       # 개발 시 코드 변경 반영 (읽기 전용)
       - ./backend:/app/backend:ro
@@ -32,29 +34,29 @@ services:
       - ax-network
     restart: unless-stopped
 
-  # PostgreSQL (선택적, 로컬 DB 테스트용)
-  # postgres:
-  #   image: postgres:15-alpine
-  #   container_name: ax-discovery-db
-  #   environment:
-  #     POSTGRES_USER: ax_user
-  #     POSTGRES_PASSWORD: ax_password
-  #     POSTGRES_DB: ax_discovery
-  #   ports:
-  #     - "5432:5432"
-  #   volumes:
-  #     - postgres_data:/var/lib/postgresql/data
-  #   networks:
-  #     - ax-network
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "pg_isready -U ax_user -d ax_discovery"]
-  #     interval: 10s
-  #     timeout: 5s
-  #     retries: 5
+  # PostgreSQL (로컬 DB)
+  postgres:
+    image: postgres:15-alpine
+    container_name: ax-discovery-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ax_discovery_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ax-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d ax_discovery_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   ax-network:
     driver: bridge
 
-# volumes:
-#   postgres_data:
+volumes:
+  postgres_data:
