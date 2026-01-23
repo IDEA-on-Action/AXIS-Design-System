@@ -1,0 +1,66 @@
+{
+  "name": "axis-agentic",
+  "homepage": "https://axis.minu.best",
+  "items": [
+    {
+      "name": "agentic-run-progress",
+      "type": "registry:ui",
+      "title": "Run Progress",
+      "description": "AI 에이전트 실행 진행률 표시 컴포넌트"
+    },
+    {
+      "name": "agentic-streaming-text",
+      "type": "registry:ui",
+      "title": "Streaming Text",
+      "description": "LLM 스트리밍 텍스트 출력 컴포넌트"
+    },
+    {
+      "name": "agentic-approval-card",
+      "type": "registry:ui",
+      "title": "Approval Card",
+      "description": "사용자 승인 요청 카드 컴포넌트"
+    },
+    {
+      "name": "agentic-step-timeline",
+      "type": "registry:ui",
+      "title": "Step Timeline",
+      "description": "에이전트 실행 단계 타임라인 컴포넌트"
+    },
+    {
+      "name": "agentic-thinking-indicator",
+      "type": "registry:ui",
+      "title": "Thinking Indicator",
+      "description": "AI 사고 과정 표시 컴포넌트"
+    },
+    {
+      "name": "agentic-source-panel",
+      "type": "registry:ui",
+      "title": "Source Panel",
+      "description": "참조 소스 표시 패널 컴포넌트"
+    },
+    {
+      "name": "agentic-recovery-banner",
+      "type": "registry:ui",
+      "title": "Recovery Banner",
+      "description": "에러 복구 배너 컴포넌트"
+    },
+    {
+      "name": "agentic-agent-avatar",
+      "type": "registry:ui",
+      "title": "Agent Avatar",
+      "description": "AI 에이전트 아바타 컴포넌트"
+    },
+    {
+      "name": "agentic-surface-renderer",
+      "type": "registry:ui",
+      "title": "Surface Renderer",
+      "description": "동적 UI Surface 렌더러 컴포넌트"
+    },
+    {
+      "name": "agentic-tool-call-card",
+      "type": "registry:ui",
+      "title": "Tool Call Card",
+      "description": "도구 호출 결과 표시 카드 컴포넌트"
+    }
+  ]
+}

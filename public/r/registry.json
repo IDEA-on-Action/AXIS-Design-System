@@ -1,0 +1,127 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "axis",
+  "homepage": "https://axis.minu.best",
+  "items": [
+    {
+      "name": "button",
+      "type": "registry:ui",
+      "title": "Button",
+      "description": "AXIS 버튼 컴포넌트 - 다양한 variant와 size 지원"
+    },
+    {
+      "name": "input",
+      "type": "registry:ui",
+      "title": "Input",
+      "description": "AXIS 입력 필드 컴포넌트"
+    },
+    {
+      "name": "label",
+      "type": "registry:ui",
+      "title": "Label",
+      "description": "AXIS 라벨 컴포넌트 - 폼 필드 라벨링"
+    },
+    {
+      "name": "card",
+      "type": "registry:ui",
+      "title": "Card",
+      "description": "AXIS 카드 컴포넌트 - Header, Content, Footer 포함"
+    },
+    {
+      "name": "badge",
+      "type": "registry:ui",
+      "title": "Badge",
+      "description": "AXIS 배지 컴포넌트 - 상태 표시용"
+    },
+    {
+      "name": "separator",
+      "type": "registry:ui",
+      "title": "Separator",
+      "description": "AXIS 구분선 컴포넌트"
+    },
+    {
+      "name": "dialog",
+      "type": "registry:ui",
+      "title": "Dialog",
+      "description": "AXIS 다이얼로그 컴포넌트 - 모달 UI"
+    },
+    {
+      "name": "select",
+      "type": "registry:ui",
+      "title": "Select",
+      "description": "AXIS 셀렉트 컴포넌트 - 드롭다운 선택"
+    },
+    {
+      "name": "tabs",
+      "type": "registry:ui",
+      "title": "Tabs",
+      "description": "AXIS 탭 컴포넌트 - 탭 네비게이션"
+    },
+    {
+      "name": "toast",
+      "type": "registry:ui",
+      "title": "Toast",
+      "description": "AXIS 토스트 컴포넌트 - 알림 메시지"
+    },
+    {
+      "name": "agentic-run-progress",
+      "type": "registry:ui",
+      "title": "Run Progress",
+      "description": "AI 에이전트 실행 진행률 표시 컴포넌트"
+    },
+    {
+      "name": "agentic-streaming-text",
+      "type": "registry:ui",
+      "title": "Streaming Text",
+      "description": "LLM 스트리밍 텍스트 출력 컴포넌트"
+    },
+    {
+      "name": "agentic-approval-card",
+      "type": "registry:ui",
+      "title": "Approval Card",
+      "description": "사용자 승인 요청 카드 컴포넌트"
+    },
+    {
+      "name": "agentic-step-timeline",
+      "type": "registry:ui",
+      "title": "Step Timeline",
+      "description": "에이전트 실행 단계 타임라인 컴포넌트"
+    },
+    {
+      "name": "agentic-thinking-indicator",
+      "type": "registry:ui",
+      "title": "Thinking Indicator",
+      "description": "AI 사고 과정 표시 컴포넌트"
+    },
+    {
+      "name": "agentic-source-panel",
+      "type": "registry:ui",
+      "title": "Source Panel",
+      "description": "참조 소스 표시 패널 컴포넌트"
+    },
+    {
+      "name": "agentic-recovery-banner",
+      "type": "registry:ui",
+      "title": "Recovery Banner",
+      "description": "에러 복구 배너 컴포넌트"
+    },
+    {
+      "name": "agentic-agent-avatar",
+      "type": "registry:ui",
+      "title": "Agent Avatar",
+      "description": "AI 에이전트 아바타 컴포넌트"
+    },
+    {
+      "name": "agentic-surface-renderer",
+      "type": "registry:ui",
+      "title": "Surface Renderer",
+      "description": "동적 UI Surface 렌더러 컴포넌트"
+    },
+    {
+      "name": "agentic-tool-call-card",
+      "type": "registry:ui",
+      "title": "Tool Call Card",
+      "description": "도구 호출 결과 표시 카드 컴포넌트"
+    }
+  ]
+}

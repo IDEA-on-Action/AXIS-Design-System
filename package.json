@@ -14,6 +14,7 @@
     "dev:web": "pnpm --filter @ax/web dev",
     "build": "turbo run build",
     "build:web": "pnpm --filter @ax/web build",
+    "build:registry": "node scripts/build-registry.mjs",
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "clean": "pnpm -r clean && rm -rf node_modules .turbo",

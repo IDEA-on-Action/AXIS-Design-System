@@ -1,5 +1,9 @@
 {
   "mcpServers": {
+    "shadcn": {
+      "command": "npx",
+      "args": ["shadcn@latest", "mcp"]
+    },
     "axis": {
       "command": "node",
       "args": ["packages/axis-mcp/dist/index.js"]
