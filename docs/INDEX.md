@@ -2,7 +2,7 @@
 
 > 프로젝트 문서 네비게이션
 
-**버전**: 0.6.0 | **마지막 업데이트**: 2026-01-18
+**버전**: 0.7.0 | **마지막 업데이트**: 2026-01-23
 
 ---
 
@@ -43,6 +43,7 @@
 
 | 문서 | 설명 |
 |------|------|
+| [library-curator-agent.md](specs/library-curator-agent.md) | Library Curator Agent 설계 명세 |
 | [ontology-v2-design.md](specs/ontology-v2-design.md) | 온톨로지 v2 설계 명세 |
 
 ---

@@ -8,8 +8,9 @@ import path from "path";
 import prompts from "prompts";
 import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 import { V0Client } from "./v0.js";
+import { LibraryCurator, Publisher } from "./library/index.js";
 
-const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
+const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://ds.minu.best/r";
 
 interface ComponentInfo {
   name: string;
@@ -63,7 +64,7 @@ program
 
     // axis.config.json 생성
     const axisConfig = {
-      $schema: "https://axis.minu.best/schema.json",
+      $schema: "https://ds.minu.best/schema.json",
       componentsDir: config.componentsDir,
       tailwindConfig: config.tailwindConfig,
       globalCss: config.globalCss,
@@ -318,6 +319,188 @@ v0Cmd
   .action(async () => {
     const client = new V0Client();
     await client.setupGitHubSync();
+  });
+
+// ==========================================
+// Library 명령어
+// ==========================================
+const libraryCmd = program
+  .command("library")
+  .alias("lib")
+  .description("디자인 시스템 라이브러리 수집/분류/배치");
+
+libraryCmd
+  .command("collect")
+  .alias("c")
+  .description("외부 소스에서 컴포넌트 수집")
+  .option("-s, --source <source>", "소스 지정 (shadcn, monet, v0, axis)")
+  .option("-i, --incremental", "증분 수집 (변경분만)")
+  .option("--dry-run", "실제 저장 없이 미리보기")
+  .action(async (options) => {
+    const curator = new LibraryCurator();
+    const sources = options.source ? [options.source] : undefined;
+
+    const results = await curator.collectAll(sources, {
+      incremental: options.incremental,
+      verbose: true,
+    });
+
+    if (!options.dryRun) {
+      const index = await curator.generateIndex();
+      await curator.saveIndex(index);
+    }
+
+    // 결과 요약
+    let total = 0;
+    let failed = 0;
+    for (const [, result] of results) {
+      total += result.collected;
+      failed += result.failed;
+    }
+
+    console.log(chalk.blue(`\n📊 수집 완료: ${total}개 컴포넌트`));
+    if (failed > 0) {
+      console.log(chalk.yellow(`   실패: ${failed}개`));
+    }
+  });
+
+libraryCmd
+  .command("list")
+  .alias("ls")
+  .description("라이브러리 컴포넌트 목록")
+  .option("-c, --category <category>", "카테고리 필터")
+  .option("-s, --source <source>", "소스 필터")
+  .action(async (options) => {
+    const curator = new LibraryCurator();
+    const index = await curator.loadIndex();
+
+    if (!index) {
+      console.log(chalk.yellow("\n⚠️  라이브러리 인덱스가 없습니다."));
+      console.log(chalk.gray("   axis-cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
+      return;
+    }
+
+    let components = index.components;
+
+    if (options.category) {
+      components = components.filter((c) => c.category === options.category);
+    }
+    if (options.source) {
+      components = components.filter((c) => c.source.type === options.source);
+    }
+
+    console.log(chalk.blue(`\n📦 Library Components (${components.length}개)\n`));
+
+    // 카테고리별 그룹화
+    const byCategory = new Map<string, typeof components>();
+    for (const comp of components) {
+      const cat = comp.category;
+      if (!byCategory.has(cat)) {
+        byCategory.set(cat, []);
+      }
+      byCategory.get(cat)!.push(comp);
+    }
+
+    for (const [category, items] of byCategory) {
+      console.log(chalk.bold(`${category} (${items.length})`));
+      for (const item of items.slice(0, 10)) {
+        console.log(
+          `  ${chalk.cyan(item.name.padEnd(25))} ${chalk.gray(item.source.type.padEnd(8))} ${chalk.gray(item.description.slice(0, 40))}`
+        );
+      }
+      if (items.length > 10) {
+        console.log(chalk.gray(`  ... 외 ${items.length - 10}개`));
+      }
+      console.log();
+    }
+  });
+
+libraryCmd
+  .command("search <query>")
+  .alias("s")
+  .description("컴포넌트 검색")
+  .option("-c, --category <category>", "카테고리 필터")
+  .option("-s, --source <source>", "소스 필터")
+  .action(async (query, options) => {
+    const curator = new LibraryCurator();
+    const results = await curator.searchComponents(query, {
+      category: options.category,
+      source: options.source,
+    });
+
+    if (results.length === 0) {
+      console.log(chalk.yellow(`\n'${query}'에 대한 검색 결과가 없습니다.\n`));
+      return;
+    }
+
+    console.log(chalk.blue(`\n🔍 '${query}' 검색 결과 (${results.length}개)\n`));
+
+    for (const comp of results.slice(0, 20)) {
+      console.log(
+        `  ${chalk.cyan(comp.name.padEnd(25))} ${chalk.gray(comp.source.type.padEnd(8))} ${chalk.gray(comp.category.padEnd(12))} ${chalk.gray(comp.description.slice(0, 30))}`
+      );
+    }
+
+    if (results.length > 20) {
+      console.log(chalk.gray(`\n  ... 외 ${results.length - 20}개`));
+    }
+    console.log();
+  });
+
+libraryCmd
+  .command("stats")
+  .description("라이브러리 통계")
+  .action(async () => {
+    const curator = new LibraryCurator();
+    await curator.printStats();
+  });
+
+libraryCmd
+  .command("publish")
+  .description("사이트에 라이브러리 배치")
+  .option("-o, --output <dir>", "출력 디렉토리", "apps/web/public/library")
+  .option("--minify", "JSON 압축")
+  .option("--clean", "기존 배치 정리 후 재배치")
+  .action(async (options) => {
+    const curator = new LibraryCurator();
+    const publisher = new Publisher();
+
+    const index = await curator.loadIndex();
+
+    if (!index) {
+      console.log(chalk.yellow("\n⚠️  라이브러리 인덱스가 없습니다."));
+      console.log(chalk.gray("   axis-cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
+      return;
+    }
+
+    console.log(chalk.blue("\n📤 Library 배치\n"));
+    console.log(chalk.gray(`총 ${index.stats.total}개 컴포넌트\n`));
+
+    // 기존 배치 정리
+    if (options.clean) {
+      await publisher.clean(options.output);
+    }
+
+    // 배치 실행
+    const result = await publisher.publish(index, {
+      outputDir: options.output,
+      minify: options.minify,
+      generateSearchIndex: true,
+    });
+
+    if (result.success) {
+      console.log(chalk.green(`\n✓ 배치 완료`));
+      console.log(chalk.gray(`  - 출력 디렉토리: ${result.outputDir}`));
+      console.log(chalk.gray(`  - 생성된 파일: ${result.files.length}개`));
+      console.log(chalk.gray(`  - 카테고리: ${result.stats.categoriesPublished}개`));
+      console.log(chalk.gray(`  - 검색 인덱스: ${result.stats.searchIndexSize}개 항목`));
+    } else {
+      console.log(chalk.red(`\n✗ 배치 실패`));
+      for (const error of result.errors) {
+        console.log(chalk.red(`  - ${error}`));
+      }
+    }
+    console.log();
   });
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)

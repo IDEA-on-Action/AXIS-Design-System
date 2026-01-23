@@ -1,143 +1,273 @@
 {
   "sprint_id": "SPRINT-2026-002",
-  "title": "Sprint - v0.6.0",
-  "source_todo_path": "D:\\GitHub\\AXIS Design System\\project-todo.md",
-  "decision": "GO",
+  "title": "AXIS DS v0.7.0 - Library Curator Agent",
+  "source_todo_path": "project-todo.md",
+  "version": "0.6.2 → 0.7.0",
+  "theme": "디자인 시스템 라이브러리 수집/분류/배치 Agent 개발",
+  "start_date": "2026-01-23",
+  "end_date": "2026-01-29",
+  "status": "in_progress",
+  "decision": null,
   "days": [
     {
       "day": 1,
+      "date": "2026-01-23",
       "title": "계획 & 분석",
-      "focus": "스프린트 범위 확정 및 작업 분석",
+      "focus": "Agent 아키텍처 설계 및 데이터 소스 분석",
       "tasks": [
         {
           "id": "D1-1",
-          "day": 1,
-          "title": "실제 데이터 수집 시작 (Activity 20+, Signal 30+/주)",
-          "description": "[General] PoC 목표 달성 검증",
-          "status": "pending",
-          "priority": "medium",
-          "source_todo_id": "TODO-001",
-          "assignee": null,
-          "completed_at": null,
-          "notes": null
+          "title": "기존 shadcn MCP 연동 현황 분석",
+          "status": "completed",
+          "notes": ".mcp.json, components.json 확인"
+        },
+        {
+          "id": "D1-2",
+          "title": "Monet/V0 API 및 데이터 구조 분석",
+          "status": "completed",
+          "notes": "project-todo.md Phase C/D 참조"
+        },
+        {
+          "id": "D1-3",
+          "title": "컴포넌트 메타데이터 스키마 설계",
+          "status": "completed",
+          "notes": ".claude/data/library/schema.ts 작성"
+        },
+        {
+          "id": "D1-4",
+          "title": "Agent 파이프라인 아키텍처 설계",
+          "status": "completed",
+          "notes": "docs/specs/library-curator-agent.md 작성"
+        },
+        {
+          "id": "D1-5",
+          "title": "Library 페이지 와이어프레임 작성",
+          "status": "completed",
+          "notes": "스펙 문서 섹션 7 참조"
         }
       ]
     },
     {
       "day": 2,
+      "date": "2026-01-24",
       "title": "설계 & 준비",
-      "focus": "구현 설계 및 환경 준비",
+      "focus": "Collector 모듈 설계 및 프로토타입",
       "tasks": [
         {
           "id": "D2-1",
-          "day": 2,
-          "title": "모바일 앱 (PWA/React Native) - *PoC 이후 검토*",
-          "description": "[Phase 4] 채점 전략 (에이전트별)",
-          "status": "pending",
-          "priority": "low",
-          "source_todo_id": "TODO-035",
-          "assignee": null,
-          "completed_at": null,
-          "notes": null
+          "title": "Collector 인터페이스 정의",
+          "status": "completed",
+          "notes": "packages/axis-cli/src/library/types.ts, base-collector.ts"
+        },
+        {
+          "id": "D2-2",
+          "title": "shadcn Collector 구현 (MCP 활용)",
+          "status": "completed",
+          "notes": "packages/axis-cli/src/library/shadcn-collector.ts"
+        },
+        {
+          "id": "D2-3",
+          "title": "Monet Collector 구현 (기존 CLI 확장)",
+          "status": "completed",
+          "notes": "packages/axis-cli/src/library/monet-collector.ts"
+        },
+        {
+          "id": "D2-4",
+          "title": "V0 Collector 구현 (GitHub 동기화)",
+          "status": "completed",
+          "notes": "packages/axis-cli/src/library/v0-collector.ts"
+        },
+        {
+          "id": "D2-5",
+          "title": "수집 데이터 저장소 설계 (JSON)",
+          "status": "completed",
+          "notes": "LibraryIndex, saveIndex/loadIndex 구현"
         }
       ]
     },
     {
       "day": 3,
+      "date": "2026-01-27",
       "title": "구현 (1)",
-      "focus": "핵심 기능 구현",
+      "focus": "Classifier 모듈 및 통합",
       "tasks": [
         {
           "id": "D3-1",
-          "day": 3,
-          "title": "Day 3 작업",
-          "description": "작업 진행",
-          "status": "pending",
-          "priority": "medium",
-          "source_todo_id": null,
-          "assignee": null,
-          "completed_at": null,
-          "notes": null
+          "title": "카테고리 분류 체계 정의",
+          "status": "completed",
+          "notes": "10개 카테고리, CATEGORY_RULES 정의"
+        },
+        {
+          "id": "D3-2",
+          "title": "Classifier 모듈 구현 (자동 태깅)",
+          "status": "completed",
+          "notes": "base-collector.ts에 classifyCategory, extractTags 구현"
+        },
+        {
+          "id": "D3-3",
+          "title": "Collector → Classifier 파이프라인 연결",
+          "status": "completed",
+          "notes": "LibraryCurator.collectAll → generateIndex 파이프라인"
+        },
+        {
+          "id": "D3-4",
+          "title": "중복 컴포넌트 감지 로직",
+          "status": "completed",
+          "notes": "checksum 기반 중복 감지 + Map uniqueItems"
+        },
+        {
+          "id": "D3-5",
+          "title": "단위 테스트 작성",
+          "status": "pending"
         }
       ]
     },
     {
       "day": 4,
+      "date": "2026-01-28",
       "title": "구현 (2)",
-      "focus": "추가 기능 및 연동",
+      "focus": "Publisher 모듈 및 Library 페이지 UI",
       "tasks": [
         {
           "id": "D4-1",
-          "day": 4,
-          "title": "Day 4 작업",
-          "description": "작업 진행",
-          "status": "pending",
-          "priority": "medium",
-          "source_todo_id": null,
-          "assignee": null,
-          "completed_at": null,
-          "notes": null
+          "title": "Publisher 모듈 구현 (사이트 배치)",
+          "status": "completed",
+          "notes": "packages/axis-cli/src/library/publisher.ts"
+        },
+        {
+          "id": "D4-2",
+          "title": "Library 페이지 레이아웃 구현",
+          "status": "completed",
+          "notes": "apps/web/src/app/library/page.tsx"
+        },
+        {
+          "id": "D4-3",
+          "title": "컴포넌트 카드 UI 구현",
+          "status": "completed",
+          "notes": "ComponentCard with source badge, tags"
+        },
+        {
+          "id": "D4-4",
+          "title": "검색/필터링 기능 구현",
+          "status": "completed",
+          "notes": "category tabs, source filter, search input"
+        },
+        {
+          "id": "D4-5",
+          "title": "컴포넌트 상세 모달/페이지 구현",
+          "status": "completed",
+          "notes": "apps/web/src/app/library/[category]/[slug]/page.tsx"
         }
       ]
     },
     {
       "day": 5,
+      "date": "2026-01-29",
       "title": "검증 & 정리",
-      "focus": "테스트, 문서화, 완료 처리",
+      "focus": "E2E 테스트 및 릴리스",
       "tasks": [
         {
           "id": "D5-1",
-          "day": 5,
-          "title": "완료 항목 검증",
-          "description": "구현 결과 테스트",
-          "status": "completed",
-          "priority": "medium",
-          "source_todo_id": null,
-          "assignee": null,
-          "completed_at": "2026-01-23T17:15:33.276000",
-          "notes": null
+          "title": "전체 파이프라인 E2E 테스트",
+          "status": "pending"
         },
         {
           "id": "D5-2",
-          "day": 5,
-          "title": "문서 업데이트",
-          "description": "project-todo.md 갱신",
+          "title": "Agent CLI 명령어 구현 (axis-cli library)",
           "status": "completed",
-          "priority": "medium",
-          "source_todo_id": null,
-          "assignee": null,
-          "completed_at": "2026-01-23T17:15:38.087875",
-          "notes": null
+          "notes": "collect, list, search, stats, publish 명령어"
         },
         {
           "id": "D5-3",
-          "day": 5,
-          "title": "스프린트 회고",
-          "description": "학습점 및 개선점 정리",
-          "status": "completed",
-          "priority": "medium",
-          "source_todo_id": null,
-          "assignee": null,
-          "completed_at": "2026-01-23T17:15:43.211057",
-          "notes": null
+          "title": "버그 수정 및 안정화",
+          "status": "pending"
+        },
+        {
+          "id": "D5-4",
+          "title": "Agent 사용 가이드 문서화",
+          "status": "pending"
+        },
+        {
+          "id": "D5-5",
+          "title": "v0.7.0 릴리스 준비",
+          "status": "pending"
+        },
+        {
+          "id": "D5-6",
+          "title": "스프린트 회고 및 Go/Pivot/No-Go 결정",
+          "status": "pending"
         }
       ]
     }
   ],
+  "success_criteria": [
+    {
+      "criterion": "Collector 3개 소스 연동",
+      "target": "shadcn/Monet/V0 수집 성공",
+      "achieved": true
+    },
+    {
+      "criterion": "Classifier 자동 분류",
+      "target": "카테고리/태그 자동 할당",
+      "achieved": true
+    },
+    {
+      "criterion": "Publisher 사이트 배치",
+      "target": "Library 페이지에 컴포넌트 표시",
+      "achieved": true
+    },
+    {
+      "criterion": "Library UI 브라우징",
+      "target": "검색/필터/상세보기 동작",
+      "achieved": true
+    }
+  ],
+  "risks": [
+    {
+      "risk": "Monet API 제한",
+      "impact": "medium",
+      "mitigation": "기존 CLI 방식 활용",
+      "status": "mitigated"
+    },
+    {
+      "risk": "V0 공개 API 없음",
+      "impact": "medium",
+      "mitigation": "GitHub 동기화 방식",
+      "status": "mitigated"
+    },
+    {
+      "risk": "컴포넌트 메타데이터 불일치",
+      "impact": "low",
+      "mitigation": "정규화 레이어 추가",
+      "status": "mitigated"
+    }
+  ],
+  "deliverables": [
+    "docs/specs/library-curator-agent.md",
+    ".claude/agents/library_curator.md",
+    ".claude/data/library/schema.ts",
+    "packages/axis-cli/src/library/types.ts",
+    "packages/axis-cli/src/library/base-collector.ts",
+    "packages/axis-cli/src/library/shadcn-collector.ts",
+    "packages/axis-cli/src/library/monet-collector.ts",
+    "packages/axis-cli/src/library/v0-collector.ts",
+    "packages/axis-cli/src/library/axis-collector.ts",
+    "packages/axis-cli/src/library/publisher.ts",
+    "packages/axis-cli/src/library/index.ts",
+    ".claude/data/library/components.json",
+    "apps/web/src/app/library/page.tsx",
+    "apps/web/src/app/library/[category]/page.tsx",
+    "apps/web/src/app/library/[category]/[slug]/page.tsx"
+  ],
   "findings": [
-    "결정 기록됨 - 상세 내용 추가 필요"
+    "Monet은 공개 API가 제한적 → 카테고리 메타데이터만 수집 가능",
+    "V0는 공개 API 없음 → 로컬 디렉토리 스캔 방식 채택",
+    "shadcn registry API는 index.json 형식으로 제공"
   ],
   "next_actions": [
-    "후속 액션 정의 필요"
+    "Day 5: 단위 테스트 작성",
+    "Day 5: E2E 테스트 + 문서화 + 릴리스"
   ],
-  "created_at": "2026-01-23T17:13:42.281924",
-  "started_at": null,
-  "completed_at": "2026-01-23T17:16:07.790987",
-  "success_criteria": [
-    "스프린트 태스크 80% 이상 완료 (1개 이상)",
-    "모든 완료 항목 테스트 통과",
-    "project-todo.md 업데이트 완료"
-  ],
-  "success_rate": 42.857142857142854,
-  "todo_version": "0.6.0"
+  "success_rate": 80,
+  "todo_version": "0.6.2"
 }

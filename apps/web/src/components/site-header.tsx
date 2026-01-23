@@ -11,6 +11,7 @@ const navItems = [
   { href: '/docs', label: 'Docs' },
   { href: '/components', label: 'Components' },
   { href: '/agentic', label: 'Agentic UI' },
+  { href: '/library', label: 'Library' },
 ]
 
 export function SiteHeader() {

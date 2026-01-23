@@ -166,7 +166,7 @@ async function buildMergedRegistry() {
   const mergedRegistry = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: "axis",
-    homepage: "https://axis.minu.best",
+    homepage: "https://ds.minu.best",
     items: allItems
   };
 

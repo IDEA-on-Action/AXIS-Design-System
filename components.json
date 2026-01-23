@@ -20,6 +20,6 @@
   "registries": {
     "@shadcn": "https://ui.shadcn.com/r/{name}.json",
     "@monet": "https://registry.monet.design/{name}.json",
-    "@axis": "https://axis.minu.best/r/{name}.json"
+    "@axis": "https://ds.minu.best/r/{name}.json"
   }
 }
