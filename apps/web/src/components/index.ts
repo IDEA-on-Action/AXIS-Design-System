@@ -2,4 +2,5 @@
  * Components Export
  */
 
-export { AuthGuard } from './AuthGuard'
+export { SiteHeader } from './site-header'
+export { ComponentPreview } from './component-preview'
