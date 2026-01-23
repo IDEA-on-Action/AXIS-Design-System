@@ -599,10 +599,16 @@ class TestWorkflowIntegration:
     @pytest.mark.asyncio
     async def test_confluence_bidirectional_sync(self, async_client):
         """Confluence 양방향 동기화 API"""
-        response = await async_client.post(
-            "/api/workflows/confluence-sync/bidirectional",
-            params={"target_type": "signal"},
-        )
+        try:
+            response = await async_client.post(
+                "/api/workflows/confluence-sync/bidirectional",
+                params={"target_type": "signal"},
+            )
+        except ValueError as e:
+            # Confluence 미설정 시 예외 발생 허용
+            if "Confluence not configured" in str(e):
+                pytest.skip("Confluence not configured in test environment")
+            raise
 
         # Confluence 미설정 시 에러 응답 허용
         if response.status_code == 500:
