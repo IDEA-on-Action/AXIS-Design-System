@@ -162,9 +162,11 @@ def count_files() -> int:
     """템플릿 파일 수 계산"""
     count = 0
     for file_path in BOILERPLATE_DIR.rglob("*"):
-        if file_path.is_file() and not any(
-            should_exclude(p) for p in file_path.parents
-        ) and not should_exclude(file_path):
+        if (
+            file_path.is_file()
+            and not any(should_exclude(p) for p in file_path.parents)
+            and not should_exclude(file_path)
+        ):
             count += 1
     return count
 
@@ -240,7 +242,8 @@ async def download_template(
     if any([project_name, project_description, author_name, org, cli_name]):
         config = TemplateConfig(
             project_name=project_name or "my-agent-project",
-            project_description=project_description or "Claude Agent SDK 기반 멀티에이전트 프로젝트",
+            project_description=project_description
+            or "Claude Agent SDK 기반 멀티에이전트 프로젝트",
             author_name=author_name or "Your Team",
             org=org or "your-org",
             cli_name=cli_name,
