@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 의존성 파일 복사 및 wheel 빌드
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 RUN pip wheel --no-cache-dir --wheel-dir /wheels .
 
 # ============================================================
@@ -38,7 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # wheel에서 패키지 설치
 COPY --from=builder /wheels /wheels
-COPY pyproject.toml ./
+COPY pyproject.toml README.md ./
 RUN pip install --no-cache-dir /wheels/*.whl \
     && rm -rf /wheels
 

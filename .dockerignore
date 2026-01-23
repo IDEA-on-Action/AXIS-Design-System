@@ -45,8 +45,10 @@ build/
 tests/
 docs/
 evals/
-*.md
-!README.md
+CLAUDE.md
+CHANGELOG.md
+project-todo.md
+constitution.md
 
 # 기타
 *.log
