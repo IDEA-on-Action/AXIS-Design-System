@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `/library/[category]` - 카테고리별 목록
   - `/library/[category]/[slug]` - 컴포넌트 상세 페이지
 
+- **Claude Code 확장 기능 (SSDD)**
+  - Skills 8개: `/ax-health`, `/ax-build`, `/ax-component`, `/ax-wrap-up`, `/ax-dev`, `/ax-library`, `/ax-mcp`, `/ax-release`
+  - Hooks 3개: Pre-commit 타입체크, Post-edit 컴포넌트 타입체크, Post-edit 레지스트리 빌드
+  - Custom Commands 4개: `/status`, `/components`, `/registry`, `/clean`
+  - Agents 3개: `component-dev`, `docs-writer`, `code-reviewer`
+
 ---
 
 ## [0.6.2] - 2026-01-23
