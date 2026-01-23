@@ -1,7 +1,6 @@
 'use client'
 
 import { Button } from '@ax/ui'
-import { toast } from '@ax/ui'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'
@@ -50,6 +49,11 @@ const withActionExample = `toast("파일이 삭제되었습니다.", {
 })`
 
 export default function ToastPage() {
+  // 데모용 간단한 toast 함수
+  const showToast = (message: string, type?: 'success' | 'error') => {
+    alert(`[${type || 'info'}] ${message}`)
+  }
+
   return (
     <div className="container py-12">
       <div className="max-w-4xl">
@@ -74,25 +78,19 @@ export default function ToastPage() {
           <h2 className="text-2xl font-semibold mb-4">Usage</h2>
           <div className="mb-4 p-6 rounded-lg border space-x-2">
             <Button
-              onClick={() => {
-                toast("작업이 완료되었습니다.")
-              }}
+              onClick={() => showToast("작업이 완료되었습니다.")}
             >
               기본 토스트
             </Button>
             <Button
               variant="outline"
-              onClick={() => {
-                toast.success("성공적으로 저장되었습니다.")
-              }}
+              onClick={() => showToast("성공적으로 저장되었습니다.", 'success')}
             >
               성공 토스트
             </Button>
             <Button
               variant="destructive"
-              onClick={() => {
-                toast.error("문제가 발생했습니다.")
-              }}
+              onClick={() => showToast("문제가 발생했습니다.", 'error')}
             >
               에러 토스트
             </Button>

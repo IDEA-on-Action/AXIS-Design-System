@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-checkbox",
+  "slug": "checkbox",
+  "name": "checkbox",
+  "description": "shadcn/ui checkbox component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/checkbox"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.239Z"
+}

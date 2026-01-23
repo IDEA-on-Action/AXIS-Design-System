@@ -1,0 +1,21 @@
+{
+  "id": "monet-faq-sections",
+  "slug": "faq-sections",
+  "name": "FAQ Sections",
+  "description": "FAQ 섹션",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=faq"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

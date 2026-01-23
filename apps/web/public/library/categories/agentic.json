@@ -1,0 +1,544 @@
+{
+  "category": "agentic",
+  "name": "Agentic",
+  "description": "Agentic UI 컴포넌트",
+  "icon": "bot",
+  "count": 17,
+  "components": [
+    {
+      "id": "axis-agent-avatar",
+      "slug": "agent-avatar",
+      "name": "Agent Avatar",
+      "description": "에이전트 아바타 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/agent-avatar"
+      },
+      "tags": [],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface AgentAvatarProps {\n  /** 에이전트 이름 */\n  name: string;\n  /** 이미지 URL */\n  src?: string;\n  /** 크기 */\n  size?: \"sm\" | \"md\" | \"lg\" | \"xl\";\n  /** 상태 표시 */\n  status?: \"online\" | \"busy\" | \"offline\";\n  /** 에이전트 타입 */\n  type?: \"assistant\" | \"tool\" | \"system\";\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst sizeStyles = {\n  sm: \"w-6 h-6 text-xs\",\n  md: \"w-8 h-8 text-sm\",\n  lg: \"w-10 h-10 text-base\",\n  xl: \"w-12 h-12 text-lg\",\n};\n\nconst statusStyles = {\n  online: \"bg-[var(--axis-color-green-500)]\",\n  busy: \"bg-[var(--axis-color-yellow-500)]\",\n  offline: \"bg-[var(--axis-color-gray-400)]\",\n};\n\nconst typeColors = {\n  assistant: \"bg-[var(--axis-color-purple-500)]\",\n  tool: \"bg-[var(--axis-color-blue-500)]\",\n  system: \"bg-[var(--axis-color-gray-600)]\",\n};\n\n/**\n * 에이전트 아바타 컴포넌트\n */\nexport function AgentAvatar({\n  name,\n  src,\n  size = \"md\",\n  status,\n  type = \"assistant\",\n  className,\n}: AgentAvatarProps) {\n  const initials = name\n    .split(\" \")\n    .map((n) => n[0])\n    .join(\"\")\n    .slice(0, 2)\n    .toUpperCase();\n\n  return (\n    <div className={cn(\"relative inline-flex\", className)}>\n      {src ? (\n        <img\n          src={src}\n          alt={name}\n          className={cn(\n            \"rounded-full object-cover\",\n            sizeStyles[size]\n          )}\n        />\n      ) : (\n        <div\n          className={cn(\n            \"rounded-full flex items-center justify-center font-medium text-white\",\n            sizeStyles[size],\n            typeColors[type]\n          )}\n        >\n          {initials}\n        </div>\n      )}\n      {status && (\n        <span\n          className={cn(\n            \"absolute bottom-0 right-0 rounded-full border-2 border-[var(--axis-surface-default)]\",\n            size === \"sm\" ? \"w-2 h-2\" : \"w-3 h-3\",\n            statusStyles[status]\n          )}\n        />\n      )}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.821Z"
+    },
+    {
+      "id": "axis-approval-card",
+      "slug": "approval-card",
+      "name": "Approval Card",
+      "description": "사용자 승인이 필요한 작업을 표시하는 카드 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/approval-card"
+      },
+      "tags": [
+        "animated",
+        "container"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type Severity = \"info\" | \"warning\" | \"error\";\n\nexport interface ApprovalAction {\n  label: string;\n  variant?: \"default\" | \"secondary\" | \"ghost\" | \"destructive\";\n  onClick: () => void;\n}\n\nexport interface ApprovalCardProps {\n  /** 제목 */\n  title: string;\n  /** 설명 */\n  description?: string;\n  /** 심각도 (색상 결정) */\n  severity?: Severity;\n  /** 액션 버튼 목록 */\n  actions: ApprovalAction[];\n  /** 추가 내용 */\n  children?: React.ReactNode;\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst severityStyles: Record<Severity, { border: string; icon: string; bg: string }> = {\n  info: {\n    border: \"border-l-[var(--axis-color-blue-500)]\",\n    icon: \"text-[var(--axis-color-blue-500)]\",\n    bg: \"bg-[var(--axis-surface-info)]\",\n  },\n  warning: {\n    border: \"border-l-[var(--axis-color-yellow-500)]\",\n    icon: \"text-[var(--axis-color-yellow-500)]\",\n    bg: \"bg-[var(--axis-surface-warning)]\",\n  },\n  error: {\n    border: \"border-l-[var(--axis-color-red-500)]\",\n    icon: \"text-[var(--axis-color-red-500)]\",\n    bg: \"bg-[var(--axis-surface-error)]\",\n  },\n};\n\nconst severityIcons: Record<Severity, React.ReactNode> = {\n  info: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\" />\n    </svg>\n  ),\n  warning: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\" />\n    </svg>\n  ),\n  error: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\" />\n    </svg>\n  ),\n};\n\nconst actionVariantStyles: Record<string, string> = {\n  default: \"bg-[var(--axis-button-bg-default)] text-white hover:bg-[var(--axis-button-bg-hover)]\",\n  secondary: \"bg-[var(--axis-button-secondary-bg-default)] text-[var(--axis-text-primary)] hover:bg-[var(--axis-button-secondary-bg-hover)]\",\n  ghost: \"bg-transparent text-[var(--axis-text-primary)] hover:bg-[var(--axis-surface-secondary)]\",\n  destructive: \"bg-[var(--axis-button-destructive-bg-default)] text-white hover:bg-[var(--axis-button-destructive-bg-hover)]\",\n};\n\n/**\n * 사용자 승인이 필요한 작업을 표시하는 카드 컴포넌트\n */\nexport function ApprovalCard({\n  title,\n  description,\n  severity = \"info\",\n  actions,\n  children,\n  className,\n}: ApprovalCardProps) {\n  const styles = severityStyles[severity];\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border border-l-4 p-4\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        styles.border,\n        className\n      )}\n    >\n      <div className=\"flex items-start gap-3\">\n        <div className={cn(\"flex-shrink-0 mt-0.5\", styles.icon)}>\n          {severityIcons[severity]}\n        </div>\n        <div className=\"flex-1 min-w-0\">\n          <h4 className=\"text-sm font-semibold text-[var(--axis-text-primary)]\">\n            {title}\n          </h4>\n          {description && (\n            <p className=\"mt-1 text-sm text-[var(--axis-text-secondary)]\">\n              {description}\n            </p>\n          )}\n          {children && <div className=\"mt-3\">{children}</div>}\n          <div className=\"flex flex-wrap gap-2 mt-4\">\n            {actions.map((action, index) => (\n              <button\n                key={index}\n                onClick={action.onClick}\n                className={cn(\n                  \"px-3 py-1.5 text-sm font-medium rounded-md transition-colors\",\n                  actionVariantStyles[action.variant || \"default\"]\n                )}\n              >\n                {action.label}\n              </button>\n            ))}\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.823Z"
+    },
+    {
+      "id": "axis-recovery-banner",
+      "slug": "recovery-banner",
+      "name": "Recovery Banner",
+      "description": "에러 발생 시 복구 옵션을 제공하는 배너",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/recovery-banner"
+      },
+      "tags": [
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface RecoveryBannerProps {\n  /** 에러 메시지 */\n  message: string;\n  /** 상세 설명 */\n  description?: string;\n  /** 재시도 콜백 */\n  onRetry?: () => void;\n  /** 무시 콜백 */\n  onDismiss?: () => void;\n  /** 추가 클래스 */\n  className?: string;\n}\n\n/**\n * 에러 발생 시 복구 옵션을 제공하는 배너\n */\nexport function RecoveryBanner({\n  message,\n  description,\n  onRetry,\n  onDismiss,\n  className,\n}: RecoveryBannerProps) {\n  return (\n    <div\n      className={cn(\n        \"flex items-start gap-3 p-4 rounded-lg border\",\n        \"bg-[var(--axis-surface-error)] border-[var(--axis-color-red-200)]\",\n        className\n      )}\n      role=\"alert\"\n    >\n      <svg\n        className=\"w-5 h-5 text-[var(--axis-color-red-500)] flex-shrink-0 mt-0.5\"\n        fill=\"none\"\n        stroke=\"currentColor\"\n        viewBox=\"0 0 24 24\"\n      >\n        <path\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n          strokeWidth={2}\n          d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\"\n        />\n      </svg>\n      <div className=\"flex-1 min-w-0\">\n        <p className=\"text-sm font-medium text-[var(--axis-text-error)]\">\n          {message}\n        </p>\n        {description && (\n          <p className=\"mt-1 text-sm text-[var(--axis-text-secondary)]\">\n            {description}\n          </p>\n        )}\n        <div className=\"flex gap-2 mt-3\">\n          {onRetry && (\n            <button\n              onClick={onRetry}\n              className=\"px-3 py-1.5 text-sm font-medium rounded-md bg-[var(--axis-color-red-500)] text-white hover:bg-[var(--axis-color-red-600)] transition-colors\"\n            >\n              재시도\n            </button>\n          )}\n          {onDismiss && (\n            <button\n              onClick={onDismiss}\n              className=\"px-3 py-1.5 text-sm font-medium rounded-md bg-transparent text-[var(--axis-text-primary)] hover:bg-[var(--axis-surface-secondary)] transition-colors\"\n            >\n              무시\n            </button>\n          )}\n        </div>\n      </div>\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.825Z"
+    },
+    {
+      "id": "axis-run-progress",
+      "slug": "run-progress",
+      "name": "Run Progress",
+      "description": "에이전트 실행 진행 상태를 표시하는 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/run-progress"
+      },
+      "tags": [
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type StepStatus = \"pending\" | \"running\" | \"complete\" | \"error\";\n\nexport interface Step {\n  id: string;\n  label: string;\n  status: StepStatus;\n  description?: string;\n}\n\nexport interface RunProgressProps {\n  /** 전체 실행 상태 */\n  status: \"idle\" | \"running\" | \"complete\" | \"error\";\n  /** 단계 목록 */\n  steps: Step[];\n  /** 현재 진행 중인 단계 인덱스 */\n  currentStep?: number;\n  /** 취소 콜백 */\n  onCancel?: () => void;\n  /** 재시도 콜백 */\n  onRetry?: () => void;\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst statusColors: Record<StepStatus, string> = {\n  pending: \"bg-[var(--axis-color-gray-300)]\",\n  running: \"bg-[var(--axis-color-blue-500)] animate-pulse\",\n  complete: \"bg-[var(--axis-color-green-500)]\",\n  error: \"bg-[var(--axis-color-red-500)]\",\n};\n\nconst statusIcons: Record<StepStatus, React.ReactNode> = {\n  pending: null,\n  running: (\n    <svg className=\"w-3 h-3 animate-spin\" viewBox=\"0 0 24 24\" fill=\"none\">\n      <circle className=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" strokeWidth=\"4\" />\n      <path className=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z\" />\n    </svg>\n  ),\n  complete: (\n    <svg className=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M5 13l4 4L19 7\" />\n    </svg>\n  ),\n  error: (\n    <svg className=\"w-3 h-3\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n    </svg>\n  ),\n};\n\n/**\n * 에이전트 실행 진행 상태를 표시하는 컴포넌트\n */\nexport function RunProgress({\n  status,\n  steps,\n  currentStep,\n  onCancel,\n  onRetry,\n  className,\n}: RunProgressProps) {\n  const progressPercent = React.useMemo(() => {\n    const completed = steps.filter((s) => s.status === \"complete\").length;\n    return Math.round((completed / steps.length) * 100);\n  }, [steps]);\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border p-4\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        className\n      )}\n    >\n      {/* 헤더 */}\n      <div className=\"flex items-center justify-between mb-4\">\n        <div className=\"flex items-center gap-2\">\n          {status === \"running\" && (\n            <div className=\"w-2 h-2 rounded-full bg-[var(--axis-color-blue-500)] animate-pulse\" />\n          )}\n          <span className=\"text-sm font-medium text-[var(--axis-text-primary)]\">\n            {status === \"idle\" && \"대기 중\"}\n            {status === \"running\" && \"실행 중\"}\n            {status === \"complete\" && \"완료\"}\n            {status === \"error\" && \"오류 발생\"}\n          </span>\n        </div>\n        <span className=\"text-xs text-[var(--axis-text-secondary)]\">\n          {progressPercent}%\n        </span>\n      </div>\n\n      {/* 진행 바 */}\n      <div className=\"w-full h-1.5 rounded-full bg-[var(--axis-surface-secondary)] mb-4\">\n        <div\n          className=\"h-full rounded-full bg-[var(--axis-color-blue-500)] transition-all duration-300\"\n          style={{ width: `${progressPercent}%` }}\n        />\n      </div>\n\n      {/* 단계 목록 */}\n      <div className=\"space-y-2\">\n        {steps.map((step, index) => (\n          <div\n            key={step.id}\n            className={cn(\n              \"flex items-center gap-3 p-2 rounded-md transition-colors\",\n              currentStep === index && \"bg-[var(--axis-surface-secondary)]\"\n            )}\n          >\n            <div\n              className={cn(\n                \"w-5 h-5 rounded-full flex items-center justify-center text-white text-xs\",\n                statusColors[step.status]\n              )}\n            >\n              {statusIcons[step.status] || index + 1}\n            </div>\n            <div className=\"flex-1 min-w-0\">\n              <p className=\"text-sm font-medium text-[var(--axis-text-primary)] truncate\">\n                {step.label}\n              </p>\n              {step.description && (\n                <p className=\"text-xs text-[var(--axis-text-secondary)] truncate\">\n                  {step.description}\n                </p>\n              )}\n            </div>\n          </div>\n        ))}\n      </div>\n\n      {/* 액션 버튼 */}\n      {(onCancel || onRetry) && (\n        <div className=\"flex justify-end gap-2 mt-4 pt-4 border-t border-[var(--axis-border-default)]\">\n          {status === \"running\" && onCancel && (\n            <button\n              onClick={onCancel}\n              className=\"px-3 py-1.5 text-sm rounded-md bg-[var(--axis-surface-secondary)] text-[var(--axis-text-primary)] hover:bg-[var(--axis-surface-tertiary)]\"\n            >\n              취소\n            </button>\n          )}\n          {status === \"error\" && onRetry && (\n            <button\n              onClick={onRetry}\n              className=\"px-3 py-1.5 text-sm rounded-md bg-[var(--axis-color-blue-500)] text-white hover:bg-[var(--axis-color-blue-600)]\"\n            >\n              재시도\n            </button>\n          )}\n        </div>\n      )}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.827Z"
+    },
+    {
+      "id": "axis-source-panel",
+      "slug": "source-panel",
+      "name": "Source Panel",
+      "description": "AI 응답의 출처/근거를 표시하는 패널",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/source-panel"
+      },
+      "tags": [
+        "stateful"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type SourceType = \"web\" | \"file\" | \"database\" | \"api\";\n\nexport interface Source {\n  id: string;\n  type: SourceType;\n  title: string;\n  url?: string;\n  path?: string;\n  snippet?: string;\n  relevance?: number;\n}\n\nexport interface SourcePanelProps {\n  sources: Source[];\n  expandable?: boolean;\n  defaultExpanded?: boolean;\n  maxItems?: number;\n  className?: string;\n}\n\nconst sourceIcons: Record<SourceType, React.ReactNode> = {\n  web: (\n    <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9\" />\n    </svg>\n  ),\n  file: (\n    <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z\" />\n    </svg>\n  ),\n  database: (\n    <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4\" />\n    </svg>\n  ),\n  api: (\n    <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z\" />\n    </svg>\n  ),\n};\n\n/**\n * AI 응답의 출처/근거를 표시하는 패널\n */\nexport function SourcePanel({\n  sources,\n  expandable = true,\n  defaultExpanded = false,\n  maxItems = 5,\n  className,\n}: SourcePanelProps) {\n  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);\n  const displayedSources = isExpanded ? sources : sources.slice(0, maxItems);\n  const hasMore = sources.length > maxItems;\n\n  if (sources.length === 0) return null;\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border p-3\",\n        \"bg-[var(--axis-surface-secondary)] border-[var(--axis-border-default)]\",\n        className\n      )}\n    >\n      <h4 className=\"text-xs font-medium text-[var(--axis-text-secondary)] mb-2\">\n        출처 ({sources.length}개)\n      </h4>\n      <div className=\"space-y-2\">\n        {displayedSources.map((source) => (\n          <div\n            key={source.id}\n            className=\"flex items-start gap-2 p-2 rounded-md bg-[var(--axis-surface-default)]\"\n          >\n            <span className=\"text-[var(--axis-icon-secondary)] mt-0.5\">\n              {sourceIcons[source.type]}\n            </span>\n            <div className=\"flex-1 min-w-0\">\n              <p className=\"text-sm font-medium text-[var(--axis-text-primary)] truncate\">\n                {source.url ? (\n                  <a\n                    href={source.url}\n                    target=\"_blank\"\n                    rel=\"noopener noreferrer\"\n                    className=\"hover:underline\"\n                  >\n                    {source.title}\n                  </a>\n                ) : (\n                  source.title\n                )}\n              </p>\n              {source.snippet && (\n                <p className=\"text-xs text-[var(--axis-text-secondary)] line-clamp-2 mt-0.5\">\n                  {source.snippet}\n                </p>\n              )}\n              {source.path && (\n                <code className=\"text-xs text-[var(--axis-text-tertiary)]\">\n                  {source.path}\n                </code>\n              )}\n            </div>\n            {source.relevance !== undefined && (\n              <span className=\"text-xs text-[var(--axis-text-tertiary)]\">\n                {Math.round(source.relevance * 100)}%\n              </span>\n            )}\n          </div>\n        ))}\n      </div>\n      {expandable && hasMore && (\n        <button\n          onClick={() => setIsExpanded(!isExpanded)}\n          className=\"mt-2 text-xs text-[var(--axis-text-brand)] hover:underline\"\n        >\n          {isExpanded ? \"접기\" : `${sources.length - maxItems}개 더 보기`}\n        </button>\n      )}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.831Z"
+    },
+    {
+      "id": "axis-step-timeline",
+      "slug": "step-timeline",
+      "name": "Step Timeline",
+      "description": "단계별 타임라인 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/step-timeline"
+      },
+      "tags": [
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type TimelineStepStatus = \"pending\" | \"running\" | \"complete\" | \"error\" | \"skipped\";\n\nexport interface TimelineStep {\n  id: string;\n  label: string;\n  status: TimelineStepStatus;\n  timestamp?: Date;\n  description?: string;\n}\n\nexport interface StepTimelineProps {\n  steps: TimelineStep[];\n  orientation?: \"vertical\" | \"horizontal\";\n  className?: string;\n}\n\n/**\n * 단계별 타임라인 컴포넌트\n */\nexport function StepTimeline({\n  steps,\n  orientation = \"vertical\",\n  className,\n}: StepTimelineProps) {\n  const isVertical = orientation === \"vertical\";\n\n  return (\n    <div\n      className={cn(\n        isVertical ? \"flex flex-col gap-4\" : \"flex items-center gap-2\",\n        className\n      )}\n    >\n      {steps.map((step, index) => (\n        <div\n          key={step.id}\n          className={cn(\n            \"relative flex\",\n            isVertical ? \"items-start gap-3\" : \"flex-col items-center\"\n          )}\n        >\n          {/* 연결선 */}\n          {index < steps.length - 1 && (\n            <div\n              className={cn(\n                \"absolute bg-[var(--axis-border-default)]\",\n                isVertical\n                  ? \"left-2.5 top-6 w-0.5 h-full -translate-x-1/2\"\n                  : \"top-2.5 left-6 h-0.5 w-full\"\n              )}\n            />\n          )}\n\n          {/* 상태 인디케이터 */}\n          <div\n            className={cn(\n              \"relative z-10 w-5 h-5 rounded-full flex items-center justify-center\",\n              step.status === \"complete\" && \"bg-[var(--axis-color-green-500)]\",\n              step.status === \"running\" && \"bg-[var(--axis-color-blue-500)] animate-pulse\",\n              step.status === \"error\" && \"bg-[var(--axis-color-red-500)]\",\n              step.status === \"skipped\" && \"bg-[var(--axis-color-gray-300)]\",\n              step.status === \"pending\" && \"bg-[var(--axis-color-gray-300)]\"\n            )}\n          >\n            {step.status === \"complete\" && (\n              <svg className=\"w-3 h-3 text-white\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n                <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={3} d=\"M5 13l4 4L19 7\" />\n              </svg>\n            )}\n          </div>\n\n          {/* 라벨 */}\n          <div className={cn(isVertical ? \"flex-1\" : \"text-center mt-2\")}>\n            <p className=\"text-sm font-medium text-[var(--axis-text-primary)]\">\n              {step.label}\n            </p>\n            {step.description && (\n              <p className=\"text-xs text-[var(--axis-text-secondary)]\">\n                {step.description}\n              </p>\n            )}\n            {step.timestamp && (\n              <p className=\"text-xs text-[var(--axis-text-tertiary)]\">\n                {step.timestamp.toLocaleTimeString()}\n              </p>\n            )}\n          </div>\n        </div>\n      ))}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.833Z"
+    },
+    {
+      "id": "axis-streaming-text",
+      "slug": "streaming-text",
+      "name": "Streaming Text",
+      "description": "텍스트를 실시간으로 스트리밍하는 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/streaming-text"
+      },
+      "tags": [
+        "stateful",
+        "side-effects",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface StreamingTextProps {\n  /** 스트리밍할 텍스트 */\n  text: string;\n  /** 스트리밍 속도 (ms) */\n  speed?: number;\n  /** 스트리밍 완료 여부 */\n  isComplete?: boolean;\n  /** 커서 표시 여부 */\n  showCursor?: boolean;\n  /** 완료 콜백 */\n  onComplete?: () => void;\n  /** 추가 클래스 */\n  className?: string;\n}\n\n/**\n * 텍스트를 실시간으로 스트리밍하는 컴포넌트\n * AI 응답을 타이핑 효과로 표시할 때 사용\n */\nexport function StreamingText({\n  text,\n  speed = 20,\n  isComplete = false,\n  showCursor = true,\n  onComplete,\n  className,\n}: StreamingTextProps) {\n  const [displayedText, setDisplayedText] = React.useState(\"\");\n  const [isStreaming, setIsStreaming] = React.useState(false);\n  const prevTextRef = React.useRef(\"\");\n\n  React.useEffect(() => {\n    if (isComplete) {\n      setDisplayedText(text);\n      setIsStreaming(false);\n      return;\n    }\n\n    // 새로운 텍스트가 추가된 경우에만 스트리밍\n    if (text.length > prevTextRef.current.length && text.startsWith(prevTextRef.current)) {\n      const newText = text.slice(prevTextRef.current.length);\n      let charIndex = 0;\n      setIsStreaming(true);\n\n      const interval = setInterval(() => {\n        if (charIndex < newText.length) {\n          setDisplayedText((prev) => prev + newText[charIndex]);\n          charIndex++;\n        } else {\n          clearInterval(interval);\n          setIsStreaming(false);\n          if (onComplete) onComplete();\n        }\n      }, speed);\n\n      prevTextRef.current = text;\n      return () => clearInterval(interval);\n    } else if (text !== prevTextRef.current) {\n      // 텍스트가 완전히 변경된 경우 리셋\n      setDisplayedText(\"\");\n      prevTextRef.current = \"\";\n    }\n  }, [text, speed, isComplete, onComplete]);\n\n  return (\n    <div className={cn(\"relative\", className)}>\n      <span className=\"text-[var(--axis-text-primary)] whitespace-pre-wrap\">\n        {displayedText}\n      </span>\n      {showCursor && isStreaming && (\n        <span className=\"inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse\" />\n      )}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.836Z"
+    },
+    {
+      "id": "axis-surface-renderer",
+      "slug": "surface-renderer",
+      "name": "Surface Renderer",
+      "description": "다양한 타입의 Surface를 동적으로 렌더링하는 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/surface-renderer"
+      },
+      "tags": [],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type SurfaceType = \"text\" | \"code\" | \"table\" | \"chart\" | \"form\" | \"custom\";\n\nexport interface Surface {\n  id: string;\n  type: SurfaceType;\n  title?: string;\n  content: unknown;\n  metadata?: Record<string, unknown>;\n}\n\nexport interface SurfaceRendererProps {\n  surface: Surface;\n  renderCustom?: (surface: Surface) => React.ReactNode;\n  className?: string;\n}\n\n/**\n * 다양한 타입의 Surface를 동적으로 렌더링하는 컴포넌트\n */\nexport function SurfaceRenderer({\n  surface,\n  renderCustom,\n  className,\n}: SurfaceRendererProps) {\n  const renderContent = () => {\n    switch (surface.type) {\n      case \"text\":\n        return (\n          <div className=\"prose prose-sm max-w-none text-[var(--axis-text-primary)]\">\n            {String(surface.content)}\n          </div>\n        );\n\n      case \"code\":\n        return (\n          <pre className=\"p-3 rounded-md bg-[var(--axis-surface-secondary)] overflow-x-auto\">\n            <code className=\"text-sm font-mono text-[var(--axis-text-primary)]\">\n              {String(surface.content)}\n            </code>\n          </pre>\n        );\n\n      case \"table\":\n        const tableData = surface.content as { headers: string[]; rows: string[][] };\n        return (\n          <div className=\"overflow-x-auto\">\n            <table className=\"w-full text-sm\">\n              <thead>\n                <tr className=\"border-b border-[var(--axis-border-default)]\">\n                  {tableData.headers.map((header, i) => (\n                    <th\n                      key={i}\n                      className=\"px-3 py-2 text-left font-medium text-[var(--axis-text-secondary)]\"\n                    >\n                      {header}\n                    </th>\n                  ))}\n                </tr>\n              </thead>\n              <tbody>\n                {tableData.rows.map((row, i) => (\n                  <tr\n                    key={i}\n                    className=\"border-b border-[var(--axis-border-default)] last:border-0\"\n                  >\n                    {row.map((cell, j) => (\n                      <td\n                        key={j}\n                        className=\"px-3 py-2 text-[var(--axis-text-primary)]\"\n                      >\n                        {cell}\n                      </td>\n                    ))}\n                  </tr>\n                ))}\n              </tbody>\n            </table>\n          </div>\n        );\n\n      case \"chart\":\n        return (\n          <div className=\"p-4 text-center text-[var(--axis-text-secondary)]\">\n            [차트: {surface.title || \"데이터 시각화\"}]\n          </div>\n        );\n\n      case \"form\":\n        return (\n          <div className=\"p-4 text-center text-[var(--axis-text-secondary)]\">\n            [폼: {surface.title || \"입력 양식\"}]\n          </div>\n        );\n\n      case \"custom\":\n        if (renderCustom) {\n          return renderCustom(surface);\n        }\n        return (\n          <div className=\"p-4 text-center text-[var(--axis-text-secondary)]\">\n            [커스텀 Surface]\n          </div>\n        );\n\n      default:\n        return null;\n    }\n  };\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border p-4\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        className\n      )}\n    >\n      {surface.title && (\n        <h4 className=\"text-sm font-medium text-[var(--axis-text-primary)] mb-3\">\n          {surface.title}\n        </h4>\n      )}\n      {renderContent()}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.838Z"
+    },
+    {
+      "id": "axis-thinking-indicator",
+      "slug": "thinking-indicator",
+      "name": "Thinking Indicator",
+      "description": "AI가 생각 중임을 표시하는 인디케이터",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/thinking-indicator"
+      },
+      "tags": [
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface ThinkingIndicatorProps {\n  /** 표시할 텍스트 */\n  text?: string;\n  /** 크기 */\n  size?: \"sm\" | \"md\" | \"lg\";\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst sizeStyles = {\n  sm: \"text-xs gap-1\",\n  md: \"text-sm gap-1.5\",\n  lg: \"text-base gap-2\",\n};\n\nconst dotSizes = {\n  sm: \"w-1 h-1\",\n  md: \"w-1.5 h-1.5\",\n  lg: \"w-2 h-2\",\n};\n\n/**\n * AI가 생각 중임을 표시하는 인디케이터\n */\nexport function ThinkingIndicator({\n  text = \"생각 중\",\n  size = \"md\",\n  className,\n}: ThinkingIndicatorProps) {\n  return (\n    <div\n      className={cn(\n        \"flex items-center text-[var(--axis-text-secondary)]\",\n        sizeStyles[size],\n        className\n      )}\n    >\n      <span>{text}</span>\n      <div className=\"flex gap-0.5\">\n        {[0, 1, 2].map((i) => (\n          <div\n            key={i}\n            className={cn(\n              \"rounded-full bg-current animate-bounce\",\n              dotSizes[size]\n            )}\n            style={{ animationDelay: `${i * 150}ms` }}\n          />\n        ))}\n      </div>\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.841Z"
+    },
+    {
+      "id": "axis-tool-call-card",
+      "slug": "tool-call-card",
+      "name": "Tool Call Card",
+      "description": "AI 도구 호출 정보를 표시하는 카드 컴포넌트",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/tool-call-card"
+      },
+      "tags": [
+        "stateful",
+        "animated",
+        "container"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type ToolStatus = \"pending\" | \"running\" | \"success\" | \"error\";\n\nexport interface ToolCallCardProps {\n  /** 도구 이름 */\n  toolName: string;\n  /** 도구 설명 */\n  description?: string;\n  /** 실행 상태 */\n  status: ToolStatus;\n  /** 입력 파라미터 */\n  input?: Record<string, unknown>;\n  /** 출력 결과 */\n  output?: unknown;\n  /** 에러 메시지 */\n  error?: string;\n  /** 실행 시간 (ms) */\n  duration?: number;\n  /** 펼침 상태 */\n  defaultExpanded?: boolean;\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }> = {\n  pending: {\n    color: \"text-[var(--axis-color-gray-400)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <circle cx=\"12\" cy=\"12\" r=\"10\" strokeWidth={2} />\n      </svg>\n    ),\n  },\n  running: {\n    color: \"text-[var(--axis-color-blue-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4 animate-spin\" viewBox=\"0 0 24 24\" fill=\"none\">\n        <circle className=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" strokeWidth=\"4\" />\n        <path className=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z\" />\n      </svg>\n    ),\n  },\n  success: {\n    color: \"text-[var(--axis-color-green-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M5 13l4 4L19 7\" />\n      </svg>\n    ),\n  },\n  error: {\n    color: \"text-[var(--axis-color-red-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n      </svg>\n    ),\n  },\n};\n\n/**\n * AI 도구 호출 정보를 표시하는 카드 컴포넌트\n */\nexport function ToolCallCard({\n  toolName,\n  description,\n  status,\n  input,\n  output,\n  error,\n  duration,\n  defaultExpanded = false,\n  className,\n}: ToolCallCardProps) {\n  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);\n  const config = statusConfig[status];\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border overflow-hidden\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        className\n      )}\n    >\n      {/* 헤더 */}\n      <button\n        onClick={() => setIsExpanded(!isExpanded)}\n        className=\"w-full flex items-center justify-between p-3 hover:bg-[var(--axis-surface-secondary)] transition-colors\"\n      >\n        <div className=\"flex items-center gap-2\">\n          <span className={config.color}>{config.icon}</span>\n          <code className=\"text-sm font-mono text-[var(--axis-text-primary)]\">\n            {toolName}\n          </code>\n          {description && (\n            <span className=\"text-xs text-[var(--axis-text-secondary)]\">\n              — {description}\n            </span>\n          )}\n        </div>\n        <div className=\"flex items-center gap-2\">\n          {duration !== undefined && (\n            <span className=\"text-xs text-[var(--axis-text-tertiary)]\">\n              {duration}ms\n            </span>\n          )}\n          <svg\n            className={cn(\n              \"w-4 h-4 text-[var(--axis-text-secondary)] transition-transform\",\n              isExpanded && \"rotate-180\"\n            )}\n            fill=\"none\"\n            stroke=\"currentColor\"\n            viewBox=\"0 0 24 24\"\n          >\n            <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M19 9l-7 7-7-7\" />\n          </svg>\n        </div>\n      </button>\n\n      {/* 내용 */}\n      {isExpanded && (\n        <div className=\"border-t border-[var(--axis-border-default)] p-3 space-y-3\">\n          {input && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-secondary)] mb-1\">\n                입력\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-secondary)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-primary)]\">\n                  {JSON.stringify(input, null, 2)}\n                </code>\n              </pre>\n            </div>\n          )}\n          {output !== undefined && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-secondary)] mb-1\">\n                출력\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-secondary)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-primary)]\">\n                  {typeof output === \"string\" ? output : JSON.stringify(output, null, 2)}\n                </code>\n              </pre>\n            </div>\n          )}\n          {error && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-error)] mb-1\">\n                에러\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-error)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-error)]\">{error}</code>\n              </pre>\n            </div>\n          )}\n        </div>\n      )}\n    </div>\n  );\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": [
+          "@axis-ds/ui-react"
+        ]
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.843Z"
+    },
+    {
+      "id": "axis-activity-preview-card",
+      "slug": "activity-preview-card",
+      "name": "Activity Preview Card",
+      "description": "AXIS Activity Preview Card component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/activity-preview-card"
+      },
+      "tags": [
+        "container"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { ActivityPreviewCard } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\n\nconst activityPreviewCardProps = [\n  { name: 'activity', type: 'ActivityData', default: '-', description: 'Activity 데이터 객체', required: true },\n  { name: 'onEdit', type: '() => void', default: '-', description: '수정 버튼 클릭 핸들러' },\n  { name: 'variant', type: '\"default\" | \"compact\"', default: '\"default\"', description: '카드 변형' },\n  { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },\n]\n\nconst activityDataProps = [\n  { name: 'activity_id', type: 'string', default: '-', description: 'Activity 고유 ID', required: true },\n  { name: 'title', type: 'string', default: '-', description: '세미나/이벤트 제목', required: true },\n  { name: 'date', type: 'string | null', default: 'null', description: '일시' },\n  { name: 'organizer', type: 'string | null', default: 'null', description: '주최자' },\n  { name: 'url', type: 'string', default: '-', description: '원본 URL', required: true },\n  { name: 'play_id', type: 'string', default: '-', description: 'Play DB ID', required: true },\n  { name: 'themes', type: 'string[]', default: '[]', description: '테마/카테고리 목록' },\n  { name: 'source', type: 'string', default: '-', description: '데이터 소스 (KT, 그룹사, 대외)', required: true },\n  { name: 'channel', type: 'string', default: '-', description: '수집 채널', required: true },\n  { name: 'status', type: 'string', default: '-', description: '상태', required: true },\n]\n\nconst basicExample = `import { ActivityPreviewCard } from '@ax/ui'\n\nconst activity = {\n  activity_id: 'ACT-2024-001',\n  title: 'AI/LLM 기술 세미나',\n  date: '2024-03-15',\n  organizer: 'KT AI Lab',\n  url: 'https://example.com/seminar',\n  play_id: 'PLAY-001',\n  themes: ['AI', 'LLM', 'Enterprise'],\n  source: 'KT',\n  channel: '자사활동',\n  status: 'collected',\n}\n\nexport function Example() {\n  return (\n    <ActivityPreviewCard\n      activity={activity}\n      onEdit={() => console.log('Edit clicked')}\n    />\n  )\n}`\n\nconst compactExample = `<ActivityPreviewCard\n  activity={activity}\n  variant=\"compact\"\n/>`\n\nconst sampleActivity = {\n  activity_id: 'ACT-2024-001',\n  title: 'AI/LLM 기반 엔터프라이즈 솔루션 세미나',\n  date: '2024-03-15 14:00',\n  organizer: 'KT AI Innovation Lab',\n  url: 'https://example.com/seminar',\n  play_id: 'PLAY-AI-001',\n  themes: ['AI', 'LLM', 'Enterprise', 'Cloud'],\n  source: 'KT',\n  channel: '자사활동',\n  status: 'collected',\n}\n\nconst sampleActivity2 = {\n  activity_id: 'ACT-2024-002',\n  title: 'DevOps & Cloud Native 워크샵',\n  date: '2024-03-20',\n  organizer: 'AWS Korea',\n  url: 'https://example.com/workshop',\n  play_id: 'PLAY-CLOUD-002',\n  themes: ['DevOps', 'Kubernetes', 'Cloud'],\n  source: '대외',\n  channel: '데스크리서치',\n  status: 'pending',\n}\n\nexport default function ActivityPreviewCardPage() {\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>ActivityPreviewCard</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">ActivityPreviewCard</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            Activity 정보를 미리보기 형태로 표시하는 카드 컴포넌트입니다.\n            WF-01 세미나 파이프라인 결과 표시에 사용됩니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add activity-preview-card\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <ActivityPreviewCard\n              activity={sampleActivity}\n              onEdit={() => alert('수정 버튼 클릭')}\n            />\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Variants</h2>\n          <div className=\"space-y-4 mb-4\">\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Default</p>\n              <ActivityPreviewCard activity={sampleActivity2} />\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Compact</p>\n              <ActivityPreviewCard activity={sampleActivity2} variant=\"compact\" />\n            </div>\n          </div>\n          <CodeBlock code={compactExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Multiple Cards</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30 space-y-4\">\n            <ActivityPreviewCard activity={sampleActivity} />\n            <ActivityPreviewCard activity={sampleActivity2} />\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={activityPreviewCardProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">ActivityData Interface</h2>\n          <PropsTable props={activityDataProps} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.845Z"
+    },
+    {
+      "id": "axis-agent-run-container",
+      "slug": "agent-run-container",
+      "name": "Agent Run Container",
+      "description": "실행 중",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/agent-run-container"
+      },
+      "tags": [
+        "stateful"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { AgentRunContainer, StreamingText, StepIndicator } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\nimport { useState } from 'react'\n\nconst agentRunContainerProps = [\n  { name: 'runId', type: 'string', default: '-', description: '실행 ID', required: true },\n  { name: 'sessionId', type: 'string', default: '-', description: '세션 ID' },\n  { name: 'title', type: 'string', default: '-', description: '워크플로 제목', required: true },\n  { name: 'description', type: 'string', default: '-', description: '워크플로 설명' },\n  { name: 'status', type: 'RunStatus', default: '-', description: '실행 상태 (idle | running | completed | error | paused)', required: true },\n  { name: 'onCancel', type: '() => void', default: '-', description: '취소 핸들러 (running 상태에서 표시)' },\n  { name: 'onRetry', type: '() => void', default: '-', description: '재시도 핸들러 (error 상태에서 표시)' },\n  { name: 'children', type: 'React.ReactNode', default: '-', description: '하위 컴포넌트' },\n]\n\nconst basicExample = `import { AgentRunContainer } from '@ax/ui'\n\nexport function Example() {\n  return (\n    <AgentRunContainer\n      runId=\"run-001\"\n      title=\"데이터 수집 워크플로\"\n      description=\"외부 소스에서 세미나 정보를 수집합니다.\"\n      status=\"running\"\n      onCancel={() => console.log('취소')}\n    >\n      {/* 워크플로 내용 */}\n    </AgentRunContainer>\n  )\n}`\n\nconst statusExample = `// 대기 중\n<AgentRunContainer\n  runId=\"run-001\"\n  title=\"워크플로\"\n  status=\"idle\"\n/>\n\n// 실행 중\n<AgentRunContainer\n  runId=\"run-002\"\n  title=\"워크플로\"\n  status=\"running\"\n  onCancel={() => {}}\n/>\n\n// 완료\n<AgentRunContainer\n  runId=\"run-003\"\n  title=\"워크플로\"\n  status=\"completed\"\n/>\n\n// 오류\n<AgentRunContainer\n  runId=\"run-004\"\n  title=\"워크플로\"\n  status=\"error\"\n  onRetry={() => {}}\n/>\n\n// 일시 중지\n<AgentRunContainer\n  runId=\"run-005\"\n  title=\"워크플로\"\n  status=\"paused\"\n/>`\n\nconst steps = [\n  { id: '1', label: '데이터 수집', status: 'completed' as const },\n  { id: '2', label: '분석 중', status: 'running' as const },\n  { id: '3', label: '결과 저장', status: 'pending' as const },\n]\n\nexport default function AgentRunContainerPage() {\n  const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'error' | 'paused'>('running')\n\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>AgentRunContainer</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">AgentRunContainer</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            에이전트 워크플로 실행을 감싸는 컨테이너 컴포넌트입니다.\n            실행 상태를 시각화하고 취소/재시도 액션을 제공합니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add agent-run-container\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <AgentRunContainer\n              runId=\"demo-run-001\"\n              title=\"세미나 수집 워크플로\"\n              description=\"외부 소스에서 세미나 정보를 수집합니다.\"\n              status={status}\n              onCancel={() => setStatus('paused')}\n              onRetry={() => setStatus('running')}\n            >\n              <div className=\"space-y-4\">\n                <StepIndicator steps={steps} currentStepIndex={1} />\n                <StreamingText\n                  content=\"현재 OnOffMix에서 데이터를 수집하고 있습니다...\"\n                  isStreaming={status === 'running'}\n                />\n              </div>\n            </AgentRunContainer>\n          </div>\n          <div className=\"mb-4 flex gap-2 flex-wrap\">\n            <button\n              onClick={() => setStatus('idle')}\n              className=\"px-3 py-1 text-sm rounded border hover:bg-muted\"\n            >\n              Idle\n            </button>\n            <button\n              onClick={() => setStatus('running')}\n              className=\"px-3 py-1 text-sm rounded border hover:bg-muted\"\n            >\n              Running\n            </button>\n            <button\n              onClick={() => setStatus('completed')}\n              className=\"px-3 py-1 text-sm rounded border hover:bg-muted\"\n            >\n              Completed\n            </button>\n            <button\n              onClick={() => setStatus('error')}\n              className=\"px-3 py-1 text-sm rounded border hover:bg-muted\"\n            >\n              Error\n            </button>\n            <button\n              onClick={() => setStatus('paused')}\n              className=\"px-3 py-1 text-sm rounded border hover:bg-muted\"\n            >\n              Paused\n            </button>\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Status Variants</h2>\n          <div className=\"space-y-4 mb-4\">\n            <AgentRunContainer\n              runId=\"idle-demo\"\n              title=\"대기 중 상태\"\n              status=\"idle\"\n            >\n              <p className=\"text-sm text-muted-foreground\">워크플로가 시작되지 않았습니다.</p>\n            </AgentRunContainer>\n\n            <AgentRunContainer\n              runId=\"running-demo\"\n              title=\"실행 중 상태\"\n              status=\"running\"\n              onCancel={() => {}}\n            >\n              <p className=\"text-sm text-muted-foreground\">워크플로가 실행 중입니다.</p>\n            </AgentRunContainer>\n\n            <AgentRunContainer\n              runId=\"completed-demo\"\n              title=\"완료 상태\"\n              status=\"completed\"\n            >\n              <p className=\"text-sm text-muted-foreground\">워크플로가 성공적으로 완료되었습니다.</p>\n            </AgentRunContainer>\n\n            <AgentRunContainer\n              runId=\"error-demo\"\n              title=\"오류 상태\"\n              status=\"error\"\n              onRetry={() => {}}\n            >\n              <p className=\"text-sm text-muted-foreground\">워크플로 실행 중 오류가 발생했습니다.</p>\n            </AgentRunContainer>\n\n            <AgentRunContainer\n              runId=\"paused-demo\"\n              title=\"일시 중지 상태\"\n              status=\"paused\"\n            >\n              <p className=\"text-sm text-muted-foreground\">워크플로가 일시 중지되었습니다.</p>\n            </AgentRunContainer>\n          </div>\n          <CodeBlock code={statusExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={agentRunContainerProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">RunStatus Type</h2>\n          <CodeBlock code={`type RunStatus = 'idle' | 'running' | 'completed' | 'error' | 'paused'`} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.849Z"
+    },
+    {
+      "id": "axis-approval-dialog",
+      "slug": "approval-dialog",
+      "name": "Approval Dialog",
+      "description": "AXIS Approval Dialog component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/approval-dialog"
+      },
+      "tags": [
+        "stateful"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { useState } from 'react'\nimport { Button } from '@ax/ui'\nimport { ApprovalDialog } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\n\nconst approvalDialogProps = [\n  { name: 'open', type: 'boolean', required: true, description: '다이얼로그 열림 상태' },\n  { name: 'onOpenChange', type: '(open: boolean) => void', default: '-', description: '열림 상태 변경 콜백' },\n  { name: 'title', type: 'string', required: true, description: '다이얼로그 제목' },\n  { name: 'description', type: 'string', required: true, description: '설명 텍스트' },\n  { name: 'impact', type: '\"low\" | \"medium\" | \"high\" | \"critical\"', required: true, description: '위험도 수준' },\n  { name: 'changes', type: 'ChangeItem[]', default: '-', description: '변경 사항 목록' },\n  { name: 'onApprove', type: '() => void', required: true, description: '승인 콜백' },\n  { name: 'onReject', type: '(reason?: string) => void', required: true, description: '거부 콜백' },\n  { name: 'onRequestMoreInfo', type: '() => void', default: '-', description: '추가 정보 요청 콜백' },\n  { name: 'timeout', type: 'number', default: '-', description: '타임아웃 (ms)' },\n  { name: 'isApproving', type: 'boolean', default: 'false', description: '승인 처리 중 상태' },\n]\n\nconst changeItemProps = [\n  { name: 'label', type: 'string', required: true, description: '변경 항목 레이블' },\n  { name: 'type', type: '\"create\" | \"update\" | \"delete\"', required: true, description: '변경 유형' },\n  { name: 'before', type: 'string', default: '-', description: '변경 전 값' },\n  { name: 'after', type: 'string', required: true, description: '변경 후 값' },\n]\n\nconst basicExample = `import { ApprovalDialog } from '@ax/ui'\n\nconst changes = [\n  { label: 'Button.tsx', type: 'create', after: '새 버튼 컴포넌트' },\n  { label: 'index.ts', type: 'update', before: '기존 export', after: 'export 추가' },\n  { label: 'old-button.tsx', type: 'delete', after: '삭제됨' },\n]\n\nexport function Example() {\n  const [open, setOpen] = useState(false)\n\n  return (\n    <>\n      <Button onClick={() => setOpen(true)}>변경 사항 검토</Button>\n      <ApprovalDialog\n        open={open}\n        onOpenChange={setOpen}\n        title=\"코드 변경 승인\"\n        description=\"AI가 다음 변경 사항을 적용하려고 합니다.\"\n        impact=\"medium\"\n        changes={changes}\n        onApprove={() => { console.log('Approved'); setOpen(false) }}\n        onReject={(reason) => { console.log('Rejected:', reason); setOpen(false) }}\n      />\n    </>\n  )\n}`\n\nexport default function ApprovalDialogPage() {\n  const [open, setOpen] = useState(false)\n  const [impact, setImpact] = useState<'low' | 'medium' | 'high' | 'critical'>('medium')\n\n  const changes = [\n    { label: 'NewFeature.tsx', type: 'create' as const, after: '새 기능 컴포넌트 추가' },\n    { label: 'index.ts', type: 'update' as const, before: 'export { Button }', after: 'export { Button, NewFeature }' },\n    { label: 'package.json', type: 'update' as const, before: '\"version\": \"1.0.0\"', after: '\"version\": \"1.1.0\"' },\n    { label: 'deprecated.ts', type: 'delete' as const, after: '삭제됨' },\n  ]\n\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        {/* Header */}\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>ApprovalDialog</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">ApprovalDialog</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            AI 에이전트의 작업을 사용자가 승인/거부할 수 있는 다이얼로그입니다.\n            Human-in-the-Loop 패턴 구현에 사용됩니다.\n          </p>\n        </div>\n\n        {/* Installation */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add approval-dialog\" language=\"bash\" />\n        </section>\n\n        {/* Interactive Demo */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Interactive Demo</h2>\n          <div className=\"mb-4 p-6 rounded-lg border space-y-4\">\n            <div className=\"flex items-center gap-2\">\n              <span className=\"text-sm\">위험도:</span>\n              {(['low', 'medium', 'high', 'critical'] as const).map((level) => (\n                <Button\n                  key={level}\n                  size=\"sm\"\n                  variant={impact === level ? 'default' : 'outline'}\n                  onClick={() => setImpact(level)}\n                >\n                  {level}\n                </Button>\n              ))}\n            </div>\n            <Button onClick={() => setOpen(true)}>변경 사항 검토</Button>\n            <ApprovalDialog\n              open={open}\n              onOpenChange={setOpen}\n              title=\"코드 변경 승인 요청\"\n              description=\"AI가 다음 변경 사항을 적용하려고 합니다. 검토 후 승인 또는 거부해주세요.\"\n              impact={impact}\n              changes={changes}\n              onApprove={() => {\n                alert('승인되었습니다!')\n                setOpen(false)\n              }}\n              onReject={(reason) => {\n                alert(reason ? `거부됨: ${reason}` : '거부되었습니다.')\n                setOpen(false)\n              }}\n            />\n          </div>\n        </section>\n\n        {/* Usage */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        {/* Impact Levels */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Impact Levels</h2>\n          <div className=\"space-y-4\">\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-600 text-xs\">i</span>\n                <code className=\"font-mono text-sm font-semibold\">low</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">낮은 위험도 - 일반적인 작업</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-yellow-100 text-yellow-600 text-xs\">!</span>\n                <code className=\"font-mono text-sm font-semibold\">medium</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">중간 위험도 - 주의가 필요한 작업</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-orange-600 text-xs\">!</span>\n                <code className=\"font-mono text-sm font-semibold\">high</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">높은 위험도 - 신중한 검토 필요</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-600 text-xs\">!</span>\n                <code className=\"font-mono text-sm font-semibold\">critical</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">심각한 위험도 - 되돌리기 어려운 작업</p>\n            </div>\n          </div>\n        </section>\n\n        {/* Change Types */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Change Types</h2>\n          <div className=\"space-y-4\">\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-5 w-5 items-center justify-center rounded bg-green-100 text-green-600 text-xs\">+</span>\n                <code className=\"font-mono text-sm font-semibold\">create</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">새 파일/리소스 생성</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-5 w-5 items-center justify-center rounded bg-blue-100 text-blue-600 text-xs\">~</span>\n                <code className=\"font-mono text-sm font-semibold\">update</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">기존 파일/리소스 수정</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-5 w-5 items-center justify-center rounded bg-red-100 text-red-600 text-xs\">-</span>\n                <code className=\"font-mono text-sm font-semibold\">delete</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">파일/리소스 삭제</p>\n            </div>\n          </div>\n        </section>\n\n        {/* Props - ApprovalDialog */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">ApprovalDialog Props</h2>\n          <PropsTable props={approvalDialogProps} />\n        </section>\n\n        {/* Props - ChangeItem */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">ChangeItem Object</h2>\n          <PropsTable props={changeItemProps} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.852Z"
+    },
+    {
+      "id": "axis-collector-health-bar",
+      "slug": "collector-health-bar",
+      "name": "Collector Health Bar",
+      "description": "AXIS Collector Health Bar component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/collector-health-bar"
+      },
+      "tags": [
+        "stateful"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { CollectorHealthBar } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\nimport { useState } from 'react'\n\nconst collectorHealthBarProps = [\n  { name: 'data', type: 'HealthCheckData | null', default: '-', description: '헬스체크 데이터', required: true },\n  { name: 'isLoading', type: 'boolean', default: 'false', description: '로딩 상태' },\n  { name: 'onRefresh', type: '() => void', default: '-', description: '새로고침 핸들러' },\n  { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },\n]\n\nconst healthCheckDataProps = [\n  { name: 'checked_at', type: 'string', default: '-', description: '확인 시각 (ISO 8601)', required: true },\n  { name: 'results', type: 'CollectorHealthResult[]', default: '-', description: '수집기별 결과', required: true },\n  { name: 'summary', type: 'object', default: '-', description: '요약 정보 (total, healthy, degraded, unhealthy)', required: true },\n]\n\nconst collectorHealthResultProps = [\n  { name: 'collector_name', type: 'string', default: '-', description: '수집기 이름', required: true },\n  { name: 'status', type: '\"healthy\" | \"degraded\" | \"unhealthy\"', default: '-', description: '상태', required: true },\n  { name: 'checked_at', type: 'string', default: '-', description: '확인 시각', required: true },\n  { name: 'sample_count', type: 'number', default: '-', description: '수집된 샘플 수', required: true },\n  { name: 'error_message', type: 'string | null', default: 'null', description: '오류 메시지' },\n  { name: 'response_time_ms', type: 'number | null', default: 'null', description: '응답 시간 (ms)' },\n]\n\nconst basicExample = `import { CollectorHealthBar } from '@ax/ui'\n\nconst healthData = {\n  checked_at: '2024-03-15T10:30:00Z',\n  results: [\n    { collector_name: 'onoffmix', status: 'healthy', checked_at: '...', sample_count: 45, error_message: null, response_time_ms: 120 },\n    { collector_name: 'eventus', status: 'healthy', checked_at: '...', sample_count: 32, error_message: null, response_time_ms: 85 },\n    { collector_name: 'festa', status: 'degraded', checked_at: '...', sample_count: 12, error_message: '일부 데이터 누락', response_time_ms: 340 },\n  ],\n  summary: { total: 3, healthy: 2, degraded: 1, unhealthy: 0 }\n}\n\nexport function Example() {\n  return (\n    <CollectorHealthBar\n      data={healthData}\n      onRefresh={() => console.log('새로고침')}\n    />\n  )\n}`\n\nconst healthyData = {\n  checked_at: new Date().toISOString(),\n  results: [\n    { collector_name: 'onoffmix', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 45, error_message: null, response_time_ms: 120 },\n    { collector_name: 'eventus', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 32, error_message: null, response_time_ms: 85 },\n    { collector_name: 'festa', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 28, error_message: null, response_time_ms: 95 },\n  ],\n  summary: { total: 3, healthy: 3, degraded: 0, unhealthy: 0 }\n}\n\nconst degradedData = {\n  checked_at: new Date().toISOString(),\n  results: [\n    { collector_name: 'onoffmix', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 45, error_message: null, response_time_ms: 120 },\n    { collector_name: 'eventus', status: 'degraded' as const, checked_at: new Date().toISOString(), sample_count: 12, error_message: '응답 지연 발생', response_time_ms: 850 },\n    { collector_name: 'festa', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 28, error_message: null, response_time_ms: 95 },\n  ],\n  summary: { total: 3, healthy: 2, degraded: 1, unhealthy: 0 }\n}\n\nconst unhealthyData = {\n  checked_at: new Date().toISOString(),\n  results: [\n    { collector_name: 'onoffmix', status: 'healthy' as const, checked_at: new Date().toISOString(), sample_count: 45, error_message: null, response_time_ms: 120 },\n    { collector_name: 'eventus', status: 'unhealthy' as const, checked_at: new Date().toISOString(), sample_count: 0, error_message: '연결 실패: ECONNREFUSED', response_time_ms: null },\n    { collector_name: 'festa', status: 'degraded' as const, checked_at: new Date().toISOString(), sample_count: 8, error_message: '일부 데이터 누락', response_time_ms: 450 },\n  ],\n  summary: { total: 3, healthy: 1, degraded: 1, unhealthy: 1 }\n}\n\nexport default function CollectorHealthBarPage() {\n  const [isLoading, setIsLoading] = useState(false)\n\n  const handleRefresh = () => {\n    setIsLoading(true)\n    setTimeout(() => setIsLoading(false), 1500)\n  }\n\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>CollectorHealthBar</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">CollectorHealthBar</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            데이터 수집기의 상태를 한눈에 보여주는 헬스바 컴포넌트입니다.\n            각 수집기의 정상/저하/오류 상태를 실시간으로 모니터링합니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add collector-health-bar\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <CollectorHealthBar\n              data={healthyData}\n              isLoading={isLoading}\n              onRefresh={handleRefresh}\n            />\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Status Variants</h2>\n          <div className=\"space-y-4\">\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Healthy (모든 수집기 정상)</p>\n              <CollectorHealthBar data={healthyData} />\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Degraded (일부 저하)</p>\n              <CollectorHealthBar data={degradedData} />\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Unhealthy (오류 발생)</p>\n              <CollectorHealthBar data={unhealthyData} />\n            </div>\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Loading State</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <CollectorHealthBar\n              data={null}\n              isLoading={true}\n            />\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={collectorHealthBarProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">HealthCheckData Interface</h2>\n          <PropsTable props={healthCheckDataProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">CollectorHealthResult Interface</h2>\n          <PropsTable props={collectorHealthResultProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">HealthStatus Type</h2>\n          <CodeBlock code={`type HealthStatus = 'healthy' | 'degraded' | 'unhealthy'`} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.855Z"
+    },
+    {
+      "id": "axis-file-upload-zone",
+      "slug": "file-upload-zone",
+      "name": "File Upload Zone",
+      "description": "AXIS File Upload Zone component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/file-upload-zone"
+      },
+      "tags": [],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { FileUploadZone } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\n\nconst fileUploadZoneProps = [\n  { name: 'onUpload', type: '(files: File[], playId?: string) => Promise<UploadResponse>', default: '-', description: '파일 업로드 핸들러', required: true },\n  { name: 'onComplete', type: '(seminars: SeminarExtractResult[]) => void', default: '-', description: '업로드 완료 콜백' },\n  { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },\n]\n\nconst uploadResponseProps = [\n  { name: 'total_extracted', type: 'number', default: '-', description: '총 추출된 세미나 수', required: true },\n  { name: 'results', type: 'UploadResult[]', default: '-', description: '파일별 결과 목록', required: true },\n]\n\nconst uploadResultProps = [\n  { name: 'filename', type: 'string', default: '-', description: '파일명', required: true },\n  { name: 'extracted_count', type: 'number', default: '-', description: '추출된 세미나 수', required: true },\n  { name: 'seminars', type: 'SeminarExtractResult[]', default: '-', description: '추출된 세미나 목록', required: true },\n  { name: 'error', type: 'string | null', default: 'null', description: '오류 메시지' },\n]\n\nconst basicExample = `import { FileUploadZone } from '@ax/ui'\n\nexport function Example() {\n  const handleUpload = async (files: File[], playId?: string) => {\n    const formData = new FormData()\n    files.forEach(f => formData.append('files', f))\n    if (playId) formData.append('play_id', playId)\n\n    const response = await fetch('/api/seminar/upload', {\n      method: 'POST',\n      body: formData,\n    })\n    return response.json()\n  }\n\n  return (\n    <FileUploadZone\n      onUpload={handleUpload}\n      onComplete={(seminars) => {\n        console.log('Extracted seminars:', seminars)\n      }}\n    />\n  )\n}`\n\nconst mockUpload = async () => {\n  // 실제로는 API 호출\n  return {\n    total_extracted: 0,\n    results: [],\n  }\n}\n\nexport default function FileUploadZonePage() {\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>FileUploadZone</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">FileUploadZone</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            드래그 앤 드롭 파일 업로드 컴포넌트입니다. 이미지, PDF, 문서 파일에서\n            OCR을 통해 세미나 정보를 추출합니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add file-upload-zone\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <FileUploadZone\n              onUpload={mockUpload}\n              onComplete={(seminars) => {\n                console.log('Extracted:', seminars)\n              }}\n            />\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Supported File Types</h2>\n          <div className=\"grid gap-4 md:grid-cols-2\">\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">이미지</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                JPG, JPEG, PNG, WebP, GIF\n              </p>\n              <p className=\"text-xs text-muted-foreground mt-1\">\n                OCR로 텍스트 추출\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">문서</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                PDF, DOCX\n              </p>\n              <p className=\"text-xs text-muted-foreground mt-1\">\n                텍스트 및 이미지 추출\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">스프레드시트</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                XLSX, XLS, CSV\n              </p>\n              <p className=\"text-xs text-muted-foreground mt-1\">\n                행별 세미나 정보 파싱\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">텍스트</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                TXT, JSON, MD\n              </p>\n              <p className=\"text-xs text-muted-foreground mt-1\">\n                직접 텍스트 파싱\n              </p>\n            </div>\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">File Status</h2>\n          <div className=\"space-y-3\">\n            <div className=\"flex items-center gap-3 p-3 bg-gray-50 rounded-lg\">\n              <div className=\"h-8 w-8 bg-gray-200 rounded flex items-center justify-center\">\n                <span className=\"text-xs\">PDF</span>\n              </div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">seminar-list.pdf</p>\n                <p className=\"text-xs text-gray-500\">2.4 MB</p>\n              </div>\n              <span className=\"text-xs text-gray-400\">Pending</span>\n            </div>\n            <div className=\"flex items-center gap-3 p-3 bg-gray-50 rounded-lg\">\n              <div className=\"h-8 w-8 bg-gray-200 rounded flex items-center justify-center\">\n                <span className=\"text-xs\">IMG</span>\n              </div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">screenshot.png</p>\n                <p className=\"text-xs text-gray-500\">1.2 MB</p>\n                <p className=\"text-xs text-green-600\">3개 세미나 추출</p>\n              </div>\n              <span className=\"text-green-500\">✓</span>\n            </div>\n            <div className=\"flex items-center gap-3 p-3 bg-gray-50 rounded-lg\">\n              <div className=\"h-8 w-8 bg-gray-200 rounded flex items-center justify-center\">\n                <span className=\"text-xs\">XLS</span>\n              </div>\n              <div className=\"flex-1\">\n                <p className=\"text-sm font-medium\">data.xlsx</p>\n                <p className=\"text-xs text-gray-500\">512 KB</p>\n                <p className=\"text-xs text-red-600\">파싱 실패: 잘못된 형식</p>\n              </div>\n              <span className=\"text-red-500\">✕</span>\n            </div>\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={fileUploadZoneProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">UploadResponse Interface</h2>\n          <PropsTable props={uploadResponseProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">UploadResult Interface</h2>\n          <PropsTable props={uploadResultProps} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.858Z"
+    },
+    {
+      "id": "axis-seminar-chat-panel",
+      "slug": "seminar-chat-panel",
+      "name": "Seminar Chat Panel",
+      "description": "AXIS Seminar Chat Panel component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/seminar-chat-panel"
+      },
+      "tags": [
+        "stateful"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\nimport { Bot, User, Send, Paperclip, X } from 'lucide-react'\n\nconst seminarChatPanelProps = [\n  { name: 'isOpen', type: 'boolean', default: '-', description: '패널 열림 상태', required: true },\n  { name: 'onClose', type: '() => void', default: '-', description: '닫기 핸들러', required: true },\n  { name: 'onSeminarAdded', type: '(seminars: SeminarExtractResult[]) => void', default: '-', description: '세미나 추가 완료 콜백' },\n  { name: 'onChatSubmit', type: '(message: string, files?: File[]) => Promise<...>', default: '-', description: '채팅 제출 핸들러', required: true },\n  { name: 'onConfirmSeminars', type: '(seminars: SeminarExtractResult[], playId?: string) => Promise<void>', default: '-', description: '세미나 확인 핸들러', required: true },\n  { name: 'onUploadFiles', type: '(files: File[], playId?: string) => Promise<...>', default: '-', description: '파일 업로드 핸들러', required: true },\n]\n\nconst seminarExtractResultProps = [\n  { name: 'title', type: 'string', default: '-', description: '세미나 제목', required: true },\n  { name: 'description', type: 'string | null', default: 'null', description: '세미나 설명' },\n  { name: 'date', type: 'string | null', default: 'null', description: '일시' },\n  { name: 'organizer', type: 'string | null', default: 'null', description: '주최자' },\n  { name: 'url', type: 'string | null', default: 'null', description: 'URL' },\n  { name: 'categories', type: 'string[]', default: '[]', description: '카테고리 목록' },\n  { name: 'confidence', type: 'number', default: '-', description: '추출 신뢰도 (0-1)', required: true },\n]\n\nconst basicExample = `import { SeminarChatPanel } from '@ax/ui'\nimport { useState } from 'react'\n\nexport function Example() {\n  const [isOpen, setIsOpen] = useState(false)\n\n  return (\n    <>\n      <Button onClick={() => setIsOpen(true)}>\n        세미나 추가\n      </Button>\n\n      <SeminarChatPanel\n        isOpen={isOpen}\n        onClose={() => setIsOpen(false)}\n        onSeminarAdded={(seminars) => {\n          console.log('Added:', seminars)\n        }}\n        onChatSubmit={async (message, files) => {\n          // API 호출\n          const response = await fetch('/api/seminar/extract', {\n            method: 'POST',\n            body: JSON.stringify({ message, files }),\n          })\n          return response.body // SSE 스트림\n        }}\n        onConfirmSeminars={async (seminars, playId) => {\n          await fetch('/api/seminar/confirm', {\n            method: 'POST',\n            body: JSON.stringify({ seminars, playId }),\n          })\n        }}\n        onUploadFiles={async (files, playId) => {\n          const formData = new FormData()\n          files.forEach(f => formData.append('files', f))\n          const response = await fetch('/api/seminar/upload', {\n            method: 'POST',\n            body: formData,\n          })\n          return response.json()\n        }}\n      />\n    </>\n  )\n}`\n\nexport default function SeminarChatPanelPage() {\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>SeminarChatPanel</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">SeminarChatPanel</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            채팅 기반 세미나 정보 추가 패널입니다. URL, 텍스트, 파일에서\n            세미나 정보를 추출하고 등록할 수 있습니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add seminar-chat-panel\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Preview</h2>\n          <div className=\"mb-4 rounded-lg border bg-muted/30 overflow-hidden\">\n            {/* 미니 패널 프리뷰 */}\n            <div className=\"bg-white shadow-lg max-w-md mx-auto\">\n              {/* 헤더 */}\n              <div className=\"flex items-center justify-between px-4 py-3 border-b\">\n                <h2 className=\"font-semibold\">세미나 추가</h2>\n                <button className=\"p-1 hover:bg-muted rounded\">\n                  <X className=\"h-4 w-4\" />\n                </button>\n              </div>\n\n              {/* 탭 */}\n              <div className=\"px-4 pt-2\">\n                <div className=\"inline-flex h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground\">\n                  <button className=\"inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium bg-background text-foreground shadow\">\n                    채팅으로 추가\n                  </button>\n                  <button className=\"inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium\">\n                    파일 업로드\n                  </button>\n                </div>\n              </div>\n\n              {/* 메시지 */}\n              <div className=\"p-4 space-y-4 h-48 overflow-y-auto\">\n                <div className=\"flex gap-2\">\n                  <div className=\"h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0\">\n                    <Bot className=\"h-4 w-4 text-gray-600\" />\n                  </div>\n                  <div className=\"flex-1\">\n                    <div className=\"inline-block rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800\">\n                      안녕하세요! 세미나 정보를 추가해드릴게요. URL을 붙여넣거나, 세미나 정보를 입력해주세요.\n                    </div>\n                  </div>\n                </div>\n\n                <div className=\"flex gap-2 flex-row-reverse\">\n                  <div className=\"h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0\">\n                    <User className=\"h-4 w-4 text-blue-600\" />\n                  </div>\n                  <div className=\"flex-1 text-right\">\n                    <div className=\"inline-block rounded-lg px-3 py-2 text-sm bg-blue-500 text-white\">\n                      https://festa.io/events/12345\n                    </div>\n                  </div>\n                </div>\n\n                <div className=\"flex gap-2\">\n                  <div className=\"h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0\">\n                    <Bot className=\"h-4 w-4 text-gray-600\" />\n                  </div>\n                  <div className=\"flex-1\">\n                    <div className=\"inline-block rounded-lg px-3 py-2 text-sm bg-gray-100 text-gray-800\">\n                      1개의 세미나를 찾았습니다.\n                    </div>\n                  </div>\n                </div>\n              </div>\n\n              {/* 입력창 */}\n              <div className=\"p-4 border-t\">\n                <div className=\"flex gap-2\">\n                  <button className=\"inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium border border-input bg-background hover:bg-accent h-9 w-9\">\n                    <Paperclip className=\"h-4 w-4\" />\n                  </button>\n                  <input\n                    type=\"text\"\n                    placeholder=\"URL 또는 세미나 정보 입력...\"\n                    className=\"flex-1 flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm\"\n                  />\n                  <button className=\"inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3\">\n                    <Send className=\"h-4 w-4\" />\n                  </button>\n                </div>\n              </div>\n            </div>\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Features</h2>\n          <div className=\"grid gap-4\">\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">URL 자동 추출</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                세미나 URL을 입력하면 자동으로 제목, 일시, 주최자 등을 추출합니다.\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">파일 업로드</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                이미지, PDF, 문서 파일에서 OCR을 통해 세미나 정보를 추출합니다.\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">실시간 스트리밍</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                SSE를 통해 추출 진행 상황을 실시간으로 표시합니다.\n              </p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <h3 className=\"font-semibold mb-2\">선택적 등록</h3>\n              <p className=\"text-sm text-muted-foreground\">\n                추출된 세미나 중 원하는 것만 선택하여 등록할 수 있습니다.\n              </p>\n            </div>\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={seminarChatPanelProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">SeminarExtractResult Interface</h2>\n          <PropsTable props={seminarExtractResultProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">ChatSSEEvent Type</h2>\n          <CodeBlock code={`interface ChatSSEEvent {\n  type: 'start' | 'progress' | 'info' | 'extracted' | 'complete' | 'error'\n  message?: string\n  seminars?: SeminarExtractResult[]\n  count?: number\n  timestamp?: string\n}`} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "next",
+          "lucide-react",
+          "@ax/ui"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.862Z"
+    },
+    {
+      "id": "axis-step-indicator",
+      "slug": "step-indicator",
+      "name": "Step Indicator",
+      "description": "AXIS Step Indicator component",
+      "category": "agentic",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/agentic/step-indicator"
+      },
+      "tags": [
+        "stateful",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "page.tsx",
+            "content": "'use client'\n\nimport { useState } from 'react'\nimport { Button } from '@ax/ui'\nimport { StepIndicator } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\n\nconst stepIndicatorProps = [\n  { name: 'steps', type: 'Step[]', required: true, description: '단계 목록' },\n  { name: 'currentStepIndex', type: 'number', required: true, description: '현재 단계 인덱스 (0-indexed)' },\n  { name: 'orientation', type: '\"horizontal\" | \"vertical\"', default: '\"vertical\"', description: '표시 방향' },\n  { name: 'compact', type: 'boolean', default: 'false', description: '컴팩트 모드' },\n]\n\nconst stepProps = [\n  { name: 'id', type: 'string', required: true, description: '단계 고유 ID' },\n  { name: 'label', type: 'string', required: true, description: '단계 레이블' },\n  { name: 'status', type: '\"pending\" | \"running\" | \"completed\" | \"error\" | \"skipped\"', required: true, description: '단계 상태' },\n  { name: 'duration', type: 'number', default: '-', description: '실행 시간 (ms)' },\n  { name: 'message', type: 'string', default: '-', description: '추가 메시지' },\n]\n\nconst basicExample = `import { StepIndicator } from '@ax/ui'\n\nconst steps = [\n  { id: '1', label: '데이터 수집', status: 'completed', duration: 1200 },\n  { id: '2', label: 'AI 분석', status: 'running' },\n  { id: '3', label: '결과 생성', status: 'pending' },\n  { id: '4', label: '검토', status: 'pending' },\n]\n\nexport function Example() {\n  return <StepIndicator steps={steps} currentStepIndex={1} />\n}`\n\nconst horizontalExample = `<StepIndicator\n  steps={steps}\n  currentStepIndex={2}\n  orientation=\"horizontal\"\n/>`\n\ntype StepStatus = 'pending' | 'running' | 'completed' | 'error' | 'skipped'\n\nexport default function StepIndicatorPage() {\n  const [currentStep, setCurrentStep] = useState(0)\n\n  const getSteps = (current: number) => [\n    { id: '1', label: '데이터 수집', status: (current > 0 ? 'completed' : current === 0 ? 'running' : 'pending') as StepStatus, duration: current > 0 ? 1234 : undefined },\n    { id: '2', label: 'AI 분석', status: (current > 1 ? 'completed' : current === 1 ? 'running' : 'pending') as StepStatus, duration: current > 1 ? 2567 : undefined },\n    { id: '3', label: '결과 생성', status: (current > 2 ? 'completed' : current === 2 ? 'running' : 'pending') as StepStatus, duration: current > 2 ? 890 : undefined },\n    { id: '4', label: '사용자 검토', status: (current > 3 ? 'completed' : current === 3 ? 'running' : 'pending') as StepStatus },\n  ]\n\n  const steps = getSteps(currentStep)\n\n  const nextStep = () => setCurrentStep((s) => Math.min(s + 1, 3))\n  const prevStep = () => setCurrentStep((s) => Math.max(s - 1, 0))\n  const reset = () => setCurrentStep(0)\n\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        {/* Header */}\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>StepIndicator</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">StepIndicator</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            AI 에이전트의 워크플로 단계를 시각적으로 표시하는 컴포넌트입니다.\n          </p>\n        </div>\n\n        {/* Installation */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add step-indicator\" language=\"bash\" />\n        </section>\n\n        {/* Interactive Demo */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Interactive Demo</h2>\n          <div className=\"mb-4 p-6 rounded-lg border space-y-6\">\n            <StepIndicator steps={steps} currentStepIndex={currentStep} />\n            <div className=\"flex gap-2\">\n              <Button variant=\"outline\" onClick={prevStep} disabled={currentStep === 0}>\n                이전\n              </Button>\n              <Button onClick={nextStep} disabled={currentStep === 3}>\n                다음\n              </Button>\n              <Button variant=\"ghost\" onClick={reset}>\n                리셋\n              </Button>\n            </div>\n          </div>\n        </section>\n\n        {/* Vertical */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Vertical (Default)</h2>\n          <div className=\"mb-4 p-6 rounded-lg border\">\n            <StepIndicator\n              steps={[\n                { id: '1', label: '데이터 수집', status: 'completed', duration: 1234 },\n                { id: '2', label: 'AI 분석', status: 'completed', duration: 2567 },\n                { id: '3', label: '결과 생성', status: 'running' },\n                { id: '4', label: '검토', status: 'pending' },\n              ]}\n              currentStepIndex={2}\n            />\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        {/* Horizontal */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Horizontal</h2>\n          <div className=\"mb-4 p-6 rounded-lg border\">\n            <StepIndicator\n              steps={[\n                { id: '1', label: '수집', status: 'completed' },\n                { id: '2', label: '분석', status: 'completed' },\n                { id: '3', label: '생성', status: 'running' },\n                { id: '4', label: '검토', status: 'pending' },\n              ]}\n              currentStepIndex={2}\n              orientation=\"horizontal\"\n            />\n          </div>\n          <CodeBlock code={horizontalExample} />\n        </section>\n\n        {/* Status Types */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Status Types</h2>\n          <div className=\"space-y-4\">\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs\">○</span>\n                <code className=\"font-mono text-sm font-semibold\">pending</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">대기 중</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 text-blue-500 text-xs animate-spin\">⟳</span>\n                <code className=\"font-mono text-sm font-semibold\">running</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">실행 중</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-green-100 text-green-500 text-xs\">✓</span>\n                <code className=\"font-mono text-sm font-semibold\">completed</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">완료됨</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-100 text-red-500 text-xs\">✕</span>\n                <code className=\"font-mono text-sm font-semibold\">error</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">오류 발생</p>\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <div className=\"flex items-center gap-2\">\n                <span className=\"inline-flex h-6 w-6 items-center justify-center rounded-full bg-muted text-muted-foreground text-xs\">⏭</span>\n                <code className=\"font-mono text-sm font-semibold\">skipped</code>\n              </div>\n              <p className=\"mt-1 text-sm text-muted-foreground\">건너뜀</p>\n            </div>\n          </div>\n        </section>\n\n        {/* Props - StepIndicator */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">StepIndicator Props</h2>\n          <PropsTable props={stepIndicatorProps} />\n        </section>\n\n        {/* Props - Step */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Step Object</h2>\n          <PropsTable props={stepProps} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@ax/ui",
+          "next"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.865Z"
+    }
+  ]
+}

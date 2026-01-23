@@ -1,0 +1,21 @@
+{
+  "id": "monet-cta-with-image",
+  "slug": "cta-with-image",
+  "name": "CTA with Image",
+  "description": "이미지 CTA",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=cta"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

@@ -7,13 +7,28 @@
 
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import type {
-  AgentEvent,
-  RunStatus,
-  StepStatus,
-  A2UISurface,
-  ApprovalRequestedEvent,
-} from '@ax/types'
+
+// AG-UI 이벤트 타입 (인라인 정의)
+type RunStatus = 'running' | 'paused' | 'completed' | 'error'
+type StepStatus = 'pending' | 'running' | 'completed' | 'error'
+
+interface AgentEvent {
+  type: string
+  timestamp: string
+  [key: string]: unknown
+}
+
+interface A2UISurface {
+  type: string
+  data: unknown
+}
+
+interface ApprovalRequestedEvent extends AgentEvent {
+  type: 'APPROVAL_REQUESTED'
+  requestId: string
+  message: string
+  options?: string[]
+}
 
 // 단계 정보
 interface StepInfo {

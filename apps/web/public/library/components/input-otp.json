@@ -1,0 +1,23 @@
+{
+  "id": "shadcn-input-otp",
+  "slug": "input-otp",
+  "name": "input-otp",
+  "description": "shadcn/ui input-otp component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/input-otp"
+  },
+  "tags": [
+    "input"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.379Z"
+}

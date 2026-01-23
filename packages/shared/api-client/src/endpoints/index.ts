@@ -1,6 +1,0 @@
-export * from './activities'
-export * from './inbox'
-export * from './scorecard'
-export * from './brief'
-export * from './plays'
-export * from './tasks'

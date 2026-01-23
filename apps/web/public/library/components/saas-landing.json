@@ -1,0 +1,21 @@
+{
+  "id": "monet-saas-landing",
+  "slug": "saas-landing",
+  "name": "SaaS Landing",
+  "description": "SaaS 스타터 랜딩",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=landing"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.735Z"
+}

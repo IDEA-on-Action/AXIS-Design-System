@@ -1,0 +1,21 @@
+{
+  "id": "monet-full-landing-pages",
+  "slug": "full-landing-pages",
+  "name": "Full Landing Pages",
+  "description": "랜딩 페이지",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=landing"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.735Z"
+}

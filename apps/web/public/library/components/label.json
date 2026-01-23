@@ -1,0 +1,32 @@
+{
+  "id": "axis-label",
+  "slug": "label",
+  "name": "Label",
+  "description": "AXIS Label component",
+  "category": "ui",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/label"
+  },
+  "tags": [
+    "forwardRef"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as LabelPrimitive from \"@radix-ui/react-label\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst labelVariants = cva(\n  \"text-sm font-medium leading-none text-[var(--axis-text-primary)] peer-disabled:cursor-not-allowed peer-disabled:opacity-70\"\n);\n\nexport interface LabelProps\n  extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,\n    VariantProps<typeof labelVariants> {}\n\nconst Label = React.forwardRef<\n  React.ElementRef<typeof LabelPrimitive.Root>,\n  LabelProps\n>(({ className, ...props }, ref) => (\n  <LabelPrimitive.Root\n    ref={ref}\n    className={cn(labelVariants(), className)}\n    {...props}\n  />\n));\nLabel.displayName = LabelPrimitive.Root.displayName;\n\nexport { Label };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-label",
+      "class-variance-authority"
+    ],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.812Z"
+}

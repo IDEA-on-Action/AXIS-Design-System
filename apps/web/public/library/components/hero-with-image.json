@@ -1,0 +1,21 @@
+{
+  "id": "monet-hero-with-image",
+  "slug": "hero-with-image",
+  "name": "Hero with Image",
+  "description": "이미지 배경 히어로",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=hero"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

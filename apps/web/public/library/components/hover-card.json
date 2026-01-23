@@ -1,0 +1,23 @@
+{
+  "id": "shadcn-hover-card",
+  "slug": "hover-card",
+  "name": "hover-card",
+  "description": "shadcn/ui hover-card component",
+  "category": "data-display",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/hover-card"
+  },
+  "tags": [
+    "container"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.349Z"
+}

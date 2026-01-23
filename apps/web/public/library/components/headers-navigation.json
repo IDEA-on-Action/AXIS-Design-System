@@ -1,0 +1,21 @@
+{
+  "id": "monet-headers-navigation",
+  "slug": "headers-navigation",
+  "name": "Headers/Navigation",
+  "description": "헤더/네비게이션",
+  "category": "navigation",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=header"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

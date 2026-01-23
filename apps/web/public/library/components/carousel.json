@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-carousel",
+  "slug": "carousel",
+  "name": "carousel",
+  "description": "shadcn/ui carousel component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/carousel"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.215Z"
+}

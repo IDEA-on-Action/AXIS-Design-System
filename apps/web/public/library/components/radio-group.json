@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-radio-group",
+  "slug": "radio-group",
+  "name": "radio-group",
+  "description": "shadcn/ui radio-group component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/radio-group"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.474Z"
+}

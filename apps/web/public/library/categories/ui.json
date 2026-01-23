@@ -1,0 +1,1107 @@
+{
+  "category": "ui",
+  "name": "UI",
+  "description": "기본 UI 컴포넌트",
+  "icon": "layers",
+  "count": 47,
+  "components": [
+    {
+      "id": "shadcn-accordion",
+      "slug": "accordion",
+      "name": "accordion",
+      "description": "shadcn/ui accordion component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/accordion"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.003Z"
+    },
+    {
+      "id": "shadcn-button",
+      "slug": "button",
+      "name": "button",
+      "description": "shadcn/ui button component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/button"
+      },
+      "tags": [
+        "interactive"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.175Z"
+    },
+    {
+      "id": "shadcn-calendar",
+      "slug": "calendar",
+      "name": "calendar",
+      "description": "shadcn/ui calendar component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/calendar"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.187Z"
+    },
+    {
+      "id": "shadcn-carousel",
+      "slug": "carousel",
+      "name": "carousel",
+      "description": "shadcn/ui carousel component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/carousel"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.215Z"
+    },
+    {
+      "id": "shadcn-collapsible",
+      "slug": "collapsible",
+      "name": "collapsible",
+      "description": "shadcn/ui collapsible component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/collapsible"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.255Z"
+    },
+    {
+      "id": "shadcn-command",
+      "slug": "command",
+      "name": "command",
+      "description": "shadcn/ui command component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/command"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.269Z"
+    },
+    {
+      "id": "shadcn-resizable",
+      "slug": "resizable",
+      "name": "resizable",
+      "description": "shadcn/ui resizable component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/resizable"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.490Z"
+    },
+    {
+      "id": "shadcn-sonner",
+      "slug": "sonner",
+      "name": "sonner",
+      "description": "shadcn/ui sonner component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/sonner"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.608Z"
+    },
+    {
+      "id": "shadcn-toggle",
+      "slug": "toggle",
+      "name": "toggle",
+      "description": "shadcn/ui toggle component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/toggle"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.700Z"
+    },
+    {
+      "id": "shadcn-toggle-group",
+      "slug": "toggle-group",
+      "name": "toggle-group",
+      "description": "shadcn/ui toggle-group component",
+      "category": "ui",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/toggle-group"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.715Z"
+    },
+    {
+      "id": "monet-hero-with-image",
+      "slug": "hero-with-image",
+      "name": "Hero with Image",
+      "description": "이미지 배경 히어로",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=hero"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-hero-centered",
+      "slug": "hero-centered",
+      "name": "Hero Centered",
+      "description": "중앙 정렬 히어로",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=hero"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-hero-split",
+      "slug": "hero-split",
+      "name": "Hero Split",
+      "description": "분할 레이아웃 히어로",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=hero"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-hero-gradient",
+      "slug": "hero-gradient",
+      "name": "Hero Gradient",
+      "description": "그라데이션 히어로",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=hero"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-hero-sections",
+      "slug": "hero-sections",
+      "name": "Hero Sections",
+      "description": "히어로 섹션 컴포넌트",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=hero"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-feature-alternating",
+      "slug": "feature-alternating",
+      "name": "Feature Alternating",
+      "description": "교차 레이아웃",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=feature"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-feature-icons",
+      "slug": "feature-icons",
+      "name": "Feature Icons",
+      "description": "아이콘 기반 기능",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=feature"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-feature-sections",
+      "slug": "feature-sections",
+      "name": "Feature Sections",
+      "description": "기능 소개 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=feature"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-testimonial-carousel",
+      "slug": "testimonial-carousel",
+      "name": "Testimonial Carousel",
+      "description": "캐러셀 후기",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=testimonial"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-testimonial-quote",
+      "slug": "testimonial-quote",
+      "name": "Testimonial Quote",
+      "description": "인용구 후기",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=testimonial"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-testimonials",
+      "slug": "testimonials",
+      "name": "Testimonials",
+      "description": "고객 후기 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=testimonial"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-pricing-three-tiers",
+      "slug": "pricing-three-tiers",
+      "name": "Pricing Three Tiers",
+      "description": "3단 요금제",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=pricing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-pricing-comparison",
+      "slug": "pricing-comparison",
+      "name": "Pricing Comparison",
+      "description": "비교 테이블",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=pricing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-pricing-toggle",
+      "slug": "pricing-toggle",
+      "name": "Pricing Toggle",
+      "description": "월/연 토글 요금제",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=pricing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-cta-simple",
+      "slug": "cta-simple",
+      "name": "CTA Simple",
+      "description": "심플 CTA",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=cta"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-cta-with-image",
+      "slug": "cta-with-image",
+      "name": "CTA with Image",
+      "description": "이미지 CTA",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=cta"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-cta-newsletter",
+      "slug": "cta-newsletter",
+      "name": "CTA Newsletter",
+      "description": "뉴스레터 CTA",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=cta"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-call-to-action",
+      "slug": "call-to-action",
+      "name": "Call to Action",
+      "description": "CTA 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=cta"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-statistics",
+      "slug": "statistics",
+      "name": "Statistics",
+      "description": "통계 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=stats"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-logo-clouds",
+      "slug": "logo-clouds",
+      "name": "Logo Clouds",
+      "description": "로고 클라우드",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=logo-cloud"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-team-sections",
+      "slug": "team-sections",
+      "name": "Team Sections",
+      "description": "팀 소개 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=team"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-faq-sections",
+      "slug": "faq-sections",
+      "name": "FAQ Sections",
+      "description": "FAQ 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=faq"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-newsletter",
+      "slug": "newsletter",
+      "name": "Newsletter",
+      "description": "뉴스레터 섹션",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=newsletter"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-deepcon-ai-landing",
+      "slug": "deepcon-ai-landing",
+      "name": "Deepcon AI Landing",
+      "description": "AI SaaS 랜딩",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=landing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.735Z"
+    },
+    {
+      "id": "monet-saas-landing",
+      "slug": "saas-landing",
+      "name": "SaaS Landing",
+      "description": "SaaS 스타터 랜딩",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=landing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.735Z"
+    },
+    {
+      "id": "monet-agency-landing",
+      "slug": "agency-landing",
+      "name": "Agency Landing",
+      "description": "에이전시 랜딩",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=landing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.735Z"
+    },
+    {
+      "id": "monet-full-landing-pages",
+      "slug": "full-landing-pages",
+      "name": "Full Landing Pages",
+      "description": "랜딩 페이지",
+      "category": "ui",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=landing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.735Z"
+    },
+    {
+      "id": "axis-badge",
+      "slug": "badge",
+      "name": "Badge",
+      "description": "AXIS Badge component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/badge"
+      },
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst badgeVariants = cva(\n  \"inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"border-transparent bg-[var(--axis-badge-default-bg)] text-[var(--axis-badge-default-text)]\",\n        success:\n          \"border-transparent bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]\",\n        warning:\n          \"border-transparent bg-[var(--axis-badge-warning-bg)] text-[var(--axis-badge-warning-text)]\",\n        error:\n          \"border-transparent bg-[var(--axis-badge-error-bg)] text-[var(--axis-badge-error-text)]\",\n        info:\n          \"border-transparent bg-[var(--axis-badge-info-bg)] text-[var(--axis-badge-info-text)]\",\n        outline: \"border-[var(--axis-border-default)] text-[var(--axis-text-primary)]\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n);\n\nexport interface BadgeProps\n  extends React.HTMLAttributes<HTMLDivElement>,\n    VariantProps<typeof badgeVariants> {}\n\nconst Badge = React.forwardRef<HTMLDivElement, BadgeProps>(\n  ({ className, variant, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(badgeVariants({ variant }), className)}\n      {...props}\n    />\n  )\n);\nBadge.displayName = \"Badge\";\n\nexport { Badge, badgeVariants };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "class-variance-authority"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.800Z"
+    },
+    {
+      "id": "axis-button",
+      "slug": "button",
+      "name": "Button",
+      "description": "AXIS Button component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/button"
+      },
+      "tags": [
+        "forwardRef",
+        "animated",
+        "interactive"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { Slot } from \"@radix-ui/react-slot\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst buttonVariants = cva(\n  \"inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"bg-[var(--axis-button-bg-default)] text-[var(--axis-button-text-default)] hover:bg-[var(--axis-button-bg-hover)] active:bg-[var(--axis-button-bg-active)] focus-visible:ring-[var(--axis-button-border-focus)]\",\n        secondary:\n          \"bg-[var(--axis-button-secondary-bg-default)] text-[var(--axis-button-secondary-text-default)] hover:bg-[var(--axis-button-secondary-bg-hover)] active:bg-[var(--axis-button-secondary-bg-active)]\",\n        ghost:\n          \"bg-[var(--axis-button-ghost-bg-default)] text-[var(--axis-button-ghost-text-default)] hover:bg-[var(--axis-button-ghost-bg-hover)] active:bg-[var(--axis-button-ghost-bg-active)]\",\n        destructive:\n          \"bg-[var(--axis-button-destructive-bg-default)] text-[var(--axis-button-destructive-text-default)] hover:bg-[var(--axis-button-destructive-bg-hover)] active:bg-[var(--axis-button-destructive-bg-active)]\",\n        outline:\n          \"border border-[var(--axis-border-default)] bg-transparent hover:bg-[var(--axis-surface-secondary)] text-[var(--axis-text-primary)]\",\n        link: \"text-[var(--axis-text-brand)] underline-offset-4 hover:underline\",\n      },\n      size: {\n        sm: \"h-8 px-3 text-xs\",\n        default: \"h-10 px-4 py-2\",\n        lg: \"h-12 px-6 text-base\",\n        icon: \"h-10 w-10\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n);\n\nexport interface ButtonProps\n  extends React.ButtonHTMLAttributes<HTMLButtonElement>,\n    VariantProps<typeof buttonVariants> {\n  /** Slot 패턴을 사용하여 자식 요소를 버튼으로 렌더링 */\n  asChild?: boolean;\n}\n\nconst Button = React.forwardRef<HTMLButtonElement, ButtonProps>(\n  ({ className, variant, size, asChild = false, ...props }, ref) => {\n    const Comp = asChild ? Slot : \"button\";\n    return (\n      <Comp\n        className={cn(buttonVariants({ variant, size, className }))}\n        ref={ref}\n        {...props}\n      />\n    );\n  }\n);\nButton.displayName = \"Button\";\n\nexport { Button, buttonVariants };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-slot",
+          "class-variance-authority"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.804Z"
+    },
+    {
+      "id": "axis-card",
+      "slug": "card",
+      "name": "Card",
+      "description": "AXIS Card component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/card"
+      },
+      "tags": [
+        "forwardRef",
+        "container"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\nexport interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}\n\nconst Card = React.forwardRef<HTMLDivElement, CardProps>(\n  ({ className, ...props }, ref) => (\n    <div\n      ref={ref}\n      className={cn(\n        \"rounded-lg border bg-[var(--axis-card-bg-default)] border-[var(--axis-card-border-default)] shadow-sm\",\n        className\n      )}\n      {...props}\n    />\n  )\n);\nCard.displayName = \"Card\";\n\nconst CardHeader = React.forwardRef<\n  HTMLDivElement,\n  React.HTMLAttributes<HTMLDivElement>\n>(({ className, ...props }, ref) => (\n  <div\n    ref={ref}\n    className={cn(\"flex flex-col space-y-1.5 p-6\", className)}\n    {...props}\n  />\n));\nCardHeader.displayName = \"CardHeader\";\n\nconst CardTitle = React.forwardRef<\n  HTMLParagraphElement,\n  React.HTMLAttributes<HTMLHeadingElement>\n>(({ className, ...props }, ref) => (\n  <h3\n    ref={ref}\n    className={cn(\n      \"text-2xl font-semibold leading-none tracking-tight text-[var(--axis-text-primary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nCardTitle.displayName = \"CardTitle\";\n\nconst CardDescription = React.forwardRef<\n  HTMLParagraphElement,\n  React.HTMLAttributes<HTMLParagraphElement>\n>(({ className, ...props }, ref) => (\n  <p\n    ref={ref}\n    className={cn(\"text-sm text-[var(--axis-text-secondary)]\", className)}\n    {...props}\n  />\n));\nCardDescription.displayName = \"CardDescription\";\n\nconst CardContent = React.forwardRef<\n  HTMLDivElement,\n  React.HTMLAttributes<HTMLDivElement>\n>(({ className, ...props }, ref) => (\n  <div ref={ref} className={cn(\"p-6 pt-0\", className)} {...props} />\n));\nCardContent.displayName = \"CardContent\";\n\nconst CardFooter = React.forwardRef<\n  HTMLDivElement,\n  React.HTMLAttributes<HTMLDivElement>\n>(({ className, ...props }, ref) => (\n  <div\n    ref={ref}\n    className={cn(\"flex items-center p-6 pt-0\", className)}\n    {...props}\n  />\n));\nCardFooter.displayName = \"CardFooter\";\n\nexport {\n  Card,\n  CardHeader,\n  CardFooter,\n  CardTitle,\n  CardDescription,\n  CardContent,\n};\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.807Z"
+    },
+    {
+      "id": "axis-dialog",
+      "slug": "dialog",
+      "name": "Dialog",
+      "description": "AXIS Dialog component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/dialog"
+      },
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as DialogPrimitive from \"@radix-ui/react-dialog\";\nimport { cn } from \"../utils\";\n\nconst Dialog = DialogPrimitive.Root;\nconst DialogTrigger = DialogPrimitive.Trigger;\nconst DialogPortal = DialogPrimitive.Portal;\nconst DialogClose = DialogPrimitive.Close;\n\nconst DialogOverlay = React.forwardRef<\n  React.ElementRef<typeof DialogPrimitive.Overlay>,\n  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>\n>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Overlay\n    ref={ref}\n    className={cn(\n      \"fixed inset-0 z-50 bg-[var(--axis-dialog-overlay-bg)] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0\",\n      className\n    )}\n    {...props}\n  />\n));\nDialogOverlay.displayName = DialogPrimitive.Overlay.displayName;\n\nconst DialogContent = React.forwardRef<\n  React.ElementRef<typeof DialogPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>\n>(({ className, children, ...props }, ref) => (\n  <DialogPortal>\n    <DialogOverlay />\n    <DialogPrimitive.Content\n      ref={ref}\n      className={cn(\n        \"fixed left-[50%] top-[50%] z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border p-6 shadow-lg duration-200\",\n        \"bg-[var(--axis-dialog-content-bg)] border-[var(--axis-dialog-content-border)]\",\n        \"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]\",\n        \"sm:rounded-lg\",\n        className\n      )}\n      {...props}\n    >\n      {children}\n    </DialogPrimitive.Content>\n  </DialogPortal>\n));\nDialogContent.displayName = DialogPrimitive.Content.displayName;\n\nconst DialogHeader = ({\n  className,\n  ...props\n}: React.HTMLAttributes<HTMLDivElement>) => (\n  <div\n    className={cn(\n      \"flex flex-col space-y-1.5 text-center sm:text-left\",\n      className\n    )}\n    {...props}\n  />\n);\nDialogHeader.displayName = \"DialogHeader\";\n\nconst DialogFooter = ({\n  className,\n  ...props\n}: React.HTMLAttributes<HTMLDivElement>) => (\n  <div\n    className={cn(\n      \"flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2\",\n      className\n    )}\n    {...props}\n  />\n);\nDialogFooter.displayName = \"DialogFooter\";\n\nconst DialogTitle = React.forwardRef<\n  React.ElementRef<typeof DialogPrimitive.Title>,\n  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>\n>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Title\n    ref={ref}\n    className={cn(\n      \"text-lg font-semibold leading-none tracking-tight text-[var(--axis-text-primary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nDialogTitle.displayName = DialogPrimitive.Title.displayName;\n\nconst DialogDescription = React.forwardRef<\n  React.ElementRef<typeof DialogPrimitive.Description>,\n  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>\n>(({ className, ...props }, ref) => (\n  <DialogPrimitive.Description\n    ref={ref}\n    className={cn(\"text-sm text-[var(--axis-text-secondary)]\", className)}\n    {...props}\n  />\n));\nDialogDescription.displayName = DialogPrimitive.Description.displayName;\n\nexport {\n  Dialog,\n  DialogPortal,\n  DialogOverlay,\n  DialogClose,\n  DialogTrigger,\n  DialogContent,\n  DialogHeader,\n  DialogFooter,\n  DialogTitle,\n  DialogDescription,\n};\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-dialog"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.808Z"
+    },
+    {
+      "id": "axis-input",
+      "slug": "input",
+      "name": "Input",
+      "description": "AXIS Input component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/input"
+      },
+      "tags": [
+        "forwardRef",
+        "animated",
+        "input"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\nexport interface InputProps\n  extends React.InputHTMLAttributes<HTMLInputElement> {\n  /** 에러 상태 표시 */\n  error?: boolean;\n}\n\nconst Input = React.forwardRef<HTMLInputElement, InputProps>(\n  ({ className, type, error, ...props }, ref) => {\n    return (\n      <input\n        type={type}\n        className={cn(\n          \"flex h-10 w-full rounded-md border px-3 py-2 text-sm transition-colors\",\n          \"bg-[var(--axis-input-bg-default)] text-[var(--axis-input-text-default)]\",\n          \"border-[var(--axis-input-border-default)]\",\n          \"placeholder:text-[var(--axis-input-text-placeholder)]\",\n          \"hover:border-[var(--axis-input-border-hover)]\",\n          \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-input-border-focus)] focus-visible:ring-offset-2\",\n          \"disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--axis-input-bg-disabled)]\",\n          \"file:border-0 file:bg-transparent file:text-sm file:font-medium\",\n          error && \"border-[var(--axis-input-border-error)] focus-visible:ring-[var(--axis-input-border-error)]\",\n          className\n        )}\n        ref={ref}\n        {...props}\n      />\n    );\n  }\n);\nInput.displayName = \"Input\";\n\nexport { Input };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.810Z"
+    },
+    {
+      "id": "axis-label",
+      "slug": "label",
+      "name": "Label",
+      "description": "AXIS Label component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/label"
+      },
+      "tags": [
+        "forwardRef"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as LabelPrimitive from \"@radix-ui/react-label\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst labelVariants = cva(\n  \"text-sm font-medium leading-none text-[var(--axis-text-primary)] peer-disabled:cursor-not-allowed peer-disabled:opacity-70\"\n);\n\nexport interface LabelProps\n  extends React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>,\n    VariantProps<typeof labelVariants> {}\n\nconst Label = React.forwardRef<\n  React.ElementRef<typeof LabelPrimitive.Root>,\n  LabelProps\n>(({ className, ...props }, ref) => (\n  <LabelPrimitive.Root\n    ref={ref}\n    className={cn(labelVariants(), className)}\n    {...props}\n  />\n));\nLabel.displayName = LabelPrimitive.Root.displayName;\n\nexport { Label };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-label",
+          "class-variance-authority"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.812Z"
+    },
+    {
+      "id": "axis-select",
+      "slug": "select",
+      "name": "Select",
+      "description": "AXIS Select component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/select"
+      },
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as SelectPrimitive from \"@radix-ui/react-select\";\nimport { cn } from \"../utils\";\n\nconst Select = SelectPrimitive.Root;\nconst SelectGroup = SelectPrimitive.Group;\nconst SelectValue = SelectPrimitive.Value;\n\nconst SelectTrigger = React.forwardRef<\n  React.ElementRef<typeof SelectPrimitive.Trigger>,\n  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>\n>(({ className, children, ...props }, ref) => (\n  <SelectPrimitive.Trigger\n    ref={ref}\n    className={cn(\n      \"flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm\",\n      \"bg-[var(--axis-input-bg-default)] border-[var(--axis-input-border-default)]\",\n      \"placeholder:text-[var(--axis-input-text-placeholder)]\",\n      \"hover:border-[var(--axis-input-border-hover)]\",\n      \"focus:outline-none focus:ring-2 focus:ring-[var(--axis-input-border-focus)] focus:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"[&>span]:line-clamp-1\",\n      className\n    )}\n    {...props}\n  >\n    {children}\n    <SelectPrimitive.Icon asChild>\n      <svg\n        className=\"h-4 w-4 opacity-50\"\n        fill=\"none\"\n        stroke=\"currentColor\"\n        viewBox=\"0 0 24 24\"\n      >\n        <path\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n          strokeWidth={2}\n          d=\"M19 9l-7 7-7-7\"\n        />\n      </svg>\n    </SelectPrimitive.Icon>\n  </SelectPrimitive.Trigger>\n));\nSelectTrigger.displayName = SelectPrimitive.Trigger.displayName;\n\nconst SelectContent = React.forwardRef<\n  React.ElementRef<typeof SelectPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>\n>(({ className, children, position = \"popper\", ...props }, ref) => (\n  <SelectPrimitive.Portal>\n    <SelectPrimitive.Content\n      ref={ref}\n      className={cn(\n        \"relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border shadow-md\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        \"data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95\",\n        position === \"popper\" &&\n          \"data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1\",\n        className\n      )}\n      position={position}\n      {...props}\n    >\n      <SelectPrimitive.Viewport\n        className={cn(\n          \"p-1\",\n          position === \"popper\" &&\n            \"h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)]\"\n        )}\n      >\n        {children}\n      </SelectPrimitive.Viewport>\n    </SelectPrimitive.Content>\n  </SelectPrimitive.Portal>\n));\nSelectContent.displayName = SelectPrimitive.Content.displayName;\n\nconst SelectLabel = React.forwardRef<\n  React.ElementRef<typeof SelectPrimitive.Label>,\n  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>\n>(({ className, ...props }, ref) => (\n  <SelectPrimitive.Label\n    ref={ref}\n    className={cn(\n      \"py-1.5 pl-8 pr-2 text-sm font-semibold text-[var(--axis-text-secondary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nSelectLabel.displayName = SelectPrimitive.Label.displayName;\n\nconst SelectItem = React.forwardRef<\n  React.ElementRef<typeof SelectPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>\n>(({ className, children, ...props }, ref) => (\n  <SelectPrimitive.Item\n    ref={ref}\n    className={cn(\n      \"relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none\",\n      \"text-[var(--axis-text-primary)]\",\n      \"focus:bg-[var(--axis-surface-secondary)] focus:text-[var(--axis-text-primary)]\",\n      \"data-[disabled]:pointer-events-none data-[disabled]:opacity-50\",\n      className\n    )}\n    {...props}\n  >\n    <span className=\"absolute left-2 flex h-3.5 w-3.5 items-center justify-center\">\n      <SelectPrimitive.ItemIndicator>\n        <svg\n          className=\"h-4 w-4\"\n          fill=\"none\"\n          stroke=\"currentColor\"\n          viewBox=\"0 0 24 24\"\n        >\n          <path\n            strokeLinecap=\"round\"\n            strokeLinejoin=\"round\"\n            strokeWidth={2}\n            d=\"M5 13l4 4L19 7\"\n          />\n        </svg>\n      </SelectPrimitive.ItemIndicator>\n    </span>\n    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>\n  </SelectPrimitive.Item>\n));\nSelectItem.displayName = SelectPrimitive.Item.displayName;\n\nconst SelectSeparator = React.forwardRef<\n  React.ElementRef<typeof SelectPrimitive.Separator>,\n  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>\n>(({ className, ...props }, ref) => (\n  <SelectPrimitive.Separator\n    ref={ref}\n    className={cn(\"-mx-1 my-1 h-px bg-[var(--axis-border-default)]\", className)}\n    {...props}\n  />\n));\nSelectSeparator.displayName = SelectPrimitive.Separator.displayName;\n\nexport {\n  Select,\n  SelectGroup,\n  SelectValue,\n  SelectTrigger,\n  SelectContent,\n  SelectLabel,\n  SelectItem,\n  SelectSeparator,\n};\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-select"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.813Z"
+    },
+    {
+      "id": "axis-separator",
+      "slug": "separator",
+      "name": "Separator",
+      "description": "AXIS Separator component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/separator"
+      },
+      "tags": [
+        "forwardRef"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as SeparatorPrimitive from \"@radix-ui/react-separator\";\nimport { cn } from \"../utils\";\n\nexport interface SeparatorProps\n  extends React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root> {}\n\nconst Separator = React.forwardRef<\n  React.ElementRef<typeof SeparatorPrimitive.Root>,\n  SeparatorProps\n>(\n  (\n    { className, orientation = \"horizontal\", decorative = true, ...props },\n    ref\n  ) => (\n    <SeparatorPrimitive.Root\n      ref={ref}\n      decorative={decorative}\n      orientation={orientation}\n      className={cn(\n        \"shrink-0 bg-[var(--axis-border-default)]\",\n        orientation === \"horizontal\" ? \"h-[1px] w-full\" : \"h-full w-[1px]\",\n        className\n      )}\n      {...props}\n    />\n  )\n);\nSeparator.displayName = SeparatorPrimitive.Root.displayName;\n\nexport { Separator };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-separator"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.815Z"
+    },
+    {
+      "id": "axis-tabs",
+      "slug": "tabs",
+      "name": "Tabs",
+      "description": "AXIS Tabs component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/tabs"
+      },
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as TabsPrimitive from \"@radix-ui/react-tabs\";\nimport { cn } from \"../utils\";\n\nconst Tabs = TabsPrimitive.Root;\n\nconst TabsList = React.forwardRef<\n  React.ElementRef<typeof TabsPrimitive.List>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>\n>(({ className, ...props }, ref) => (\n  <TabsPrimitive.List\n    ref={ref}\n    className={cn(\n      \"inline-flex h-10 items-center justify-center rounded-md p-1\",\n      \"bg-[var(--axis-surface-secondary)] text-[var(--axis-text-secondary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nTabsList.displayName = TabsPrimitive.List.displayName;\n\nconst TabsTrigger = React.forwardRef<\n  React.ElementRef<typeof TabsPrimitive.Trigger>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>\n>(({ className, ...props }, ref) => (\n  <TabsPrimitive.Trigger\n    ref={ref}\n    className={cn(\n      \"inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-all\",\n      \"ring-offset-[var(--axis-surface-default)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      \"disabled:pointer-events-none disabled:opacity-50\",\n      \"data-[state=active]:bg-[var(--axis-surface-default)] data-[state=active]:text-[var(--axis-text-primary)] data-[state=active]:shadow-sm\",\n      className\n    )}\n    {...props}\n  />\n));\nTabsTrigger.displayName = TabsPrimitive.Trigger.displayName;\n\nconst TabsContent = React.forwardRef<\n  React.ElementRef<typeof TabsPrimitive.Content>,\n  React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>\n>(({ className, ...props }, ref) => (\n  <TabsPrimitive.Content\n    ref={ref}\n    className={cn(\n      \"mt-2 ring-offset-[var(--axis-surface-default)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      className\n    )}\n    {...props}\n  />\n));\nTabsContent.displayName = TabsPrimitive.Content.displayName;\n\nexport { Tabs, TabsList, TabsTrigger, TabsContent };\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-tabs"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.817Z"
+    },
+    {
+      "id": "axis-toast",
+      "slug": "toast",
+      "name": "Toast",
+      "description": "AXIS Toast component",
+      "category": "ui",
+      "source": {
+        "type": "axis",
+        "registry": "@axis",
+        "url": "https://axis.minu.best/ui/toast"
+      },
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "code": {
+        "files": [
+          {
+            "path": "index.tsx",
+            "content": "import * as React from \"react\";\nimport * as ToastPrimitives from \"@radix-ui/react-toast\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst ToastProvider = ToastPrimitives.Provider;\n\nconst ToastViewport = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Viewport>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>\n>(({ className, ...props }, ref) => (\n  <ToastPrimitives.Viewport\n    ref={ref}\n    className={cn(\n      \"fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]\",\n      className\n    )}\n    {...props}\n  />\n));\nToastViewport.displayName = ToastPrimitives.Viewport.displayName;\n\nconst toastVariants = cva(\n  \"group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full\",\n  {\n    variants: {\n      variant: {\n        default:\n          \"border-[var(--axis-border-default)] bg-[var(--axis-surface-default)] text-[var(--axis-text-primary)]\",\n        success:\n          \"border-[var(--axis-border-success)] bg-[var(--axis-surface-success)] text-[var(--axis-text-success)]\",\n        error:\n          \"border-[var(--axis-border-error)] bg-[var(--axis-surface-error)] text-[var(--axis-text-error)]\",\n        warning:\n          \"border-transparent bg-[var(--axis-surface-warning)] text-[var(--axis-text-warning)]\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n    },\n  }\n);\n\nconst Toast = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Root>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &\n    VariantProps<typeof toastVariants>\n>(({ className, variant, ...props }, ref) => (\n  <ToastPrimitives.Root\n    ref={ref}\n    className={cn(toastVariants({ variant }), className)}\n    {...props}\n  />\n));\nToast.displayName = ToastPrimitives.Root.displayName;\n\nconst ToastAction = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Action>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>\n>(({ className, ...props }, ref) => (\n  <ToastPrimitives.Action\n    ref={ref}\n    className={cn(\n      \"inline-flex h-8 shrink-0 items-center justify-center rounded-md border px-3 text-sm font-medium transition-colors\",\n      \"border-[var(--axis-border-default)] bg-transparent\",\n      \"hover:bg-[var(--axis-surface-secondary)]\",\n      \"focus:outline-none focus:ring-2 focus:ring-[var(--axis-border-focus)]\",\n      \"disabled:pointer-events-none disabled:opacity-50\",\n      className\n    )}\n    {...props}\n  />\n));\nToastAction.displayName = ToastPrimitives.Action.displayName;\n\nconst ToastClose = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Close>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>\n>(({ className, ...props }, ref) => (\n  <ToastPrimitives.Close\n    ref={ref}\n    className={cn(\n      \"absolute right-2 top-2 rounded-md p-1 text-[var(--axis-text-secondary)] opacity-0 transition-opacity\",\n      \"hover:text-[var(--axis-text-primary)]\",\n      \"focus:opacity-100 focus:outline-none focus:ring-2\",\n      \"group-hover:opacity-100\",\n      className\n    )}\n    toast-close=\"\"\n    {...props}\n  >\n    <svg className=\"h-4 w-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n    </svg>\n  </ToastPrimitives.Close>\n));\nToastClose.displayName = ToastPrimitives.Close.displayName;\n\nconst ToastTitle = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Title>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>\n>(({ className, ...props }, ref) => (\n  <ToastPrimitives.Title\n    ref={ref}\n    className={cn(\"text-sm font-semibold\", className)}\n    {...props}\n  />\n));\nToastTitle.displayName = ToastPrimitives.Title.displayName;\n\nconst ToastDescription = React.forwardRef<\n  React.ElementRef<typeof ToastPrimitives.Description>,\n  React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>\n>(({ className, ...props }, ref) => (\n  <ToastPrimitives.Description\n    ref={ref}\n    className={cn(\"text-sm opacity-90\", className)}\n    {...props}\n  />\n));\nToastDescription.displayName = ToastPrimitives.Description.displayName;\n\nexport {\n  ToastProvider,\n  ToastViewport,\n  Toast,\n  ToastTitle,\n  ToastDescription,\n  ToastClose,\n  ToastAction,\n};\n",
+            "type": "component"
+          }
+        ],
+        "dependencies": [
+          "@radix-ui/react-toast",
+          "class-variance-authority"
+        ],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.819Z"
+    }
+  ]
+}

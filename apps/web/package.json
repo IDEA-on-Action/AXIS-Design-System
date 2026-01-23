@@ -1,6 +1,6 @@
 {
   "name": "@ax/web",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "private": true,
   "scripts": {
     "dev": "next dev -p 3100",
@@ -10,11 +10,7 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@ax/api-client": "workspace:*",
-    "@ax/config": "workspace:*",
-    "@ax/types": "workspace:*",
-    "@ax/ui": "workspace:*",
-    "@ax/utils": "workspace:*",
+    "@axis-ds/ui-react": "workspace:*",
     "@tanstack/react-query": "^5.64.2",
     "clsx": "^2.1.1",
     "immer": "^10.1.1",

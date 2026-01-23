@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-toggle",
+  "slug": "toggle",
+  "name": "toggle",
+  "description": "shadcn/ui toggle component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/toggle"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.700Z"
+}

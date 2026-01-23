@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-tooltip",
+  "slug": "tooltip",
+  "name": "tooltip",
+  "description": "shadcn/ui tooltip component",
+  "category": "overlay",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/tooltip"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.733Z"
+}

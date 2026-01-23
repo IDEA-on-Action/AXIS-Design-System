@@ -7,29 +7,29 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./button": {
+      "types": "./dist/button.d.ts",
       "import": "./dist/button.mjs",
-      "require": "./dist/button.js",
-      "types": "./dist/button.d.ts"
+      "require": "./dist/button.js"
     },
     "./input": {
+      "types": "./dist/input.d.ts",
       "import": "./dist/input.mjs",
-      "require": "./dist/input.js",
-      "types": "./dist/input.d.ts"
+      "require": "./dist/input.js"
     },
     "./card": {
+      "types": "./dist/card.d.ts",
       "import": "./dist/card.mjs",
-      "require": "./dist/card.js",
-      "types": "./dist/card.d.ts"
+      "require": "./dist/card.js"
     },
     "./dialog": {
+      "types": "./dist/dialog.d.ts",
       "import": "./dist/dialog.mjs",
-      "require": "./dist/dialog.js",
-      "types": "./dist/dialog.d.ts"
+      "require": "./dist/dialog.js"
     }
   },
   "files": [

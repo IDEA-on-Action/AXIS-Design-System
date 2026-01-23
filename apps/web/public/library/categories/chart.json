@@ -1,0 +1,51 @@
+{
+  "category": "chart",
+  "name": "Chart",
+  "description": "차트/시각화",
+  "icon": "chart-bar",
+  "count": 2,
+  "components": [
+    {
+      "id": "shadcn-chart",
+      "slug": "chart",
+      "name": "chart",
+      "description": "shadcn/ui chart component",
+      "category": "chart",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/chart"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.228Z"
+    },
+    {
+      "id": "shadcn-scroll-area",
+      "slug": "scroll-area",
+      "name": "scroll-area",
+      "description": "shadcn/ui scroll-area component",
+      "category": "chart",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/scroll-area"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.506Z"
+    }
+  ]
+}

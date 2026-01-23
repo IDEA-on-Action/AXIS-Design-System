@@ -1,6 +1,12 @@
 'use client'
 
-import { FileUploadZone } from '@ax/ui'
+// FileUploadZone은 현재 axis-agentic-ui에 없으므로 Mock 컴포넌트 사용
+const FileUploadZone = ({ onUpload, onComplete, className }: { onUpload: (files: File[], playId?: string) => Promise<{ total_extracted: number; results: unknown[] }>; onComplete?: (seminars: unknown[]) => void; className?: string }) => (
+  <div className={`border-2 border-dashed rounded-lg p-8 text-center ${className || ''}`}>
+    <p className="text-muted-foreground">파일을 드래그 앤 드롭하거나 클릭하여 업로드</p>
+    <p className="text-sm text-muted-foreground mt-2">지원 형식: PDF, DOCX, XLSX, 이미지</p>
+  </div>
+)
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'

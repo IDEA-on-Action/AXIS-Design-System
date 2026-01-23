@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@ax/ui'
-import { StreamingText } from '@ax/ui'
+import { StreamingText } from '@ax/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'

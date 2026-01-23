@@ -7,25 +7,29 @@
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.js"
     },
     "./run-progress": {
-      "import": "./dist/run-progress.mjs",
-      "require": "./dist/run-progress.js"
+      "types": "./dist/run-progress/index.d.ts",
+      "import": "./dist/run-progress/index.mjs",
+      "require": "./dist/run-progress/index.js"
     },
     "./approval-card": {
-      "import": "./dist/approval-card.mjs",
-      "require": "./dist/approval-card.js"
+      "types": "./dist/approval-card/index.d.ts",
+      "import": "./dist/approval-card/index.mjs",
+      "require": "./dist/approval-card/index.js"
     },
     "./streaming-text": {
-      "import": "./dist/streaming-text.mjs",
-      "require": "./dist/streaming-text.js"
+      "types": "./dist/streaming-text/index.d.ts",
+      "import": "./dist/streaming-text/index.mjs",
+      "require": "./dist/streaming-text/index.js"
     },
     "./tool-call-card": {
-      "import": "./dist/tool-call-card.mjs",
-      "require": "./dist/tool-call-card.js"
+      "types": "./dist/tool-call-card/index.d.ts",
+      "import": "./dist/tool-call-card/index.mjs",
+      "require": "./dist/tool-call-card/index.js"
     }
   },
   "files": [

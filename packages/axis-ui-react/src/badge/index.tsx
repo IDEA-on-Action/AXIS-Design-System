@@ -9,6 +9,10 @@ const badgeVariants = cva(
       variant: {
         default:
           "border-transparent bg-[var(--axis-badge-default-bg)] text-[var(--axis-badge-default-text)]",
+        secondary:
+          "border-transparent bg-[var(--axis-bg-muted)] text-[var(--axis-text-secondary)]",
+        destructive:
+          "border-transparent bg-[var(--axis-badge-error-bg)] text-[var(--axis-badge-error-text)]",
         success:
           "border-transparent bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]",
         warning:

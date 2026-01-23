@@ -1,0 +1,21 @@
+{
+  "id": "monet-hero-sections",
+  "slug": "hero-sections",
+  "name": "Hero Sections",
+  "description": "히어로 섹션 컴포넌트",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=hero"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "monet-pricing-tables",
+  "slug": "pricing-tables",
+  "name": "Pricing Tables",
+  "description": "요금제 테이블",
+  "category": "data-display",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=pricing"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "monet-testimonial-grid",
+  "slug": "testimonial-grid",
+  "name": "Testimonial Grid",
+  "description": "그리드 후기",
+  "category": "layout",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=testimonial"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

@@ -1,0 +1,31 @@
+{
+  "id": "axis-input",
+  "slug": "input",
+  "name": "Input",
+  "description": "AXIS Input component",
+  "category": "ui",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/input"
+  },
+  "tags": [
+    "forwardRef",
+    "animated",
+    "input"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\nexport interface InputProps\n  extends React.InputHTMLAttributes<HTMLInputElement> {\n  /** 에러 상태 표시 */\n  error?: boolean;\n}\n\nconst Input = React.forwardRef<HTMLInputElement, InputProps>(\n  ({ className, type, error, ...props }, ref) => {\n    return (\n      <input\n        type={type}\n        className={cn(\n          \"flex h-10 w-full rounded-md border px-3 py-2 text-sm transition-colors\",\n          \"bg-[var(--axis-input-bg-default)] text-[var(--axis-input-text-default)]\",\n          \"border-[var(--axis-input-border-default)]\",\n          \"placeholder:text-[var(--axis-input-text-placeholder)]\",\n          \"hover:border-[var(--axis-input-border-hover)]\",\n          \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-input-border-focus)] focus-visible:ring-offset-2\",\n          \"disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--axis-input-bg-disabled)]\",\n          \"file:border-0 file:bg-transparent file:text-sm file:font-medium\",\n          error && \"border-[var(--axis-input-border-error)] focus-visible:ring-[var(--axis-input-border-error)]\",\n          className\n        )}\n        ref={ref}\n        {...props}\n      />\n    );\n  }\n);\nInput.displayName = \"Input\";\n\nexport { Input };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.810Z"
+}

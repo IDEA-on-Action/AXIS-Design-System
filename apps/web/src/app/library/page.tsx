@@ -1,81 +1,74 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Badge } from '@ax/ui'
+import { Skeleton } from '@/components/skeleton'
 import { Search, Package, Layers, Bot, FileText, Layout, Navigation, Bell, SquareStack, Table, BarChart3, Wrench, Filter } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import type { LibraryIndex, LibraryComponent, LibraryStats } from '@/lib/library-types'
+import { sourceTypes } from '@/lib/library-types'
 
-// 카테고리 정의
-const categories = [
+// 아이콘 매핑
+const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+  layers: Layers,
+  bot: Bot,
+  'text-cursor-input': FileText,
+  layout: Layout,
+  navigation: Navigation,
+  bell: Bell,
+  'square-stack': SquareStack,
+  table: Table,
+  'chart-bar': BarChart3,
+  wrench: Wrench,
+}
+
+// 기본 카테고리 정의
+const defaultCategories = [
   { id: 'all', name: '전체', icon: Layers, description: '모든 컴포넌트' },
-  { id: 'ui', name: 'UI', icon: Layers, description: '기본 UI 컴포넌트' },
-  { id: 'agentic', name: 'Agentic', icon: Bot, description: 'Agentic UI 컴포넌트' },
-  { id: 'form', name: 'Form', icon: FileText, description: '폼 컴포넌트' },
-  { id: 'layout', name: 'Layout', icon: Layout, description: '레이아웃 컴포넌트' },
-  { id: 'navigation', name: 'Navigation', icon: Navigation, description: '네비게이션' },
-  { id: 'feedback', name: 'Feedback', icon: Bell, description: '피드백 컴포넌트' },
-  { id: 'overlay', name: 'Overlay', icon: SquareStack, description: '오버레이 컴포넌트' },
-  { id: 'data-display', name: 'Data Display', icon: Table, description: '데이터 표시' },
-  { id: 'chart', name: 'Chart', icon: BarChart3, description: '차트/시각화' },
-  { id: 'utility', name: 'Utility', icon: Wrench, description: '유틸리티' },
 ]
-
-// 소스 타입 정의
-const sourceTypes = {
-  shadcn: { name: 'shadcn/ui', color: 'bg-zinc-500' },
-  axis: { name: 'AXIS', color: 'bg-blue-500' },
-  monet: { name: 'Monet', color: 'bg-purple-500' },
-  v0: { name: 'V0', color: 'bg-green-500' },
-}
-
-// 샘플 컴포넌트 데이터 (실제로는 API/JSON에서 로드)
-const sampleComponents = [
-  // UI 컴포넌트
-  { id: 'shadcn-button', slug: 'button', name: 'Button', description: '다양한 스타일과 크기의 버튼', category: 'ui', source: 'shadcn', tags: ['interactive', 'form'] },
-  { id: 'shadcn-card', slug: 'card', name: 'Card', description: '콘텐츠를 그룹화하는 카드 컨테이너', category: 'ui', source: 'shadcn', tags: ['container', 'layout'] },
-  { id: 'shadcn-input', slug: 'input', name: 'Input', description: '텍스트 입력 필드', category: 'form', source: 'shadcn', tags: ['form', 'input'] },
-  { id: 'shadcn-label', slug: 'label', name: 'Label', description: '폼 필드 레이블', category: 'form', source: 'shadcn', tags: ['form', 'label'] },
-  { id: 'shadcn-select', slug: 'select', name: 'Select', description: '드롭다운 선택 컴포넌트', category: 'form', source: 'shadcn', tags: ['form', 'select'] },
-  { id: 'shadcn-dialog', slug: 'dialog', name: 'Dialog', description: '모달 다이얼로그', category: 'overlay', source: 'shadcn', tags: ['modal', 'overlay'] },
-  { id: 'shadcn-badge', slug: 'badge', name: 'Badge', description: '상태 표시 뱃지', category: 'ui', source: 'shadcn', tags: ['status', 'indicator'] },
-  { id: 'shadcn-tabs', slug: 'tabs', name: 'Tabs', description: '탭 네비게이션', category: 'navigation', source: 'shadcn', tags: ['navigation', 'tabs'] },
-  { id: 'shadcn-separator', slug: 'separator', name: 'Separator', description: '구분선', category: 'ui', source: 'shadcn', tags: ['layout', 'divider'] },
-  { id: 'shadcn-toast', slug: 'toast', name: 'Toast', description: '알림 토스트 메시지', category: 'feedback', source: 'shadcn', tags: ['notification', 'feedback'] },
-  // Agentic 컴포넌트
-  { id: 'axis-streaming-text', slug: 'streaming-text', name: 'Streaming Text', description: '실시간 텍스트 스트리밍', category: 'agentic', source: 'axis', tags: ['agentic', 'streaming'] },
-  { id: 'axis-approval-dialog', slug: 'approval-dialog', name: 'Approval Dialog', description: '사용자 승인 요청 UI', category: 'agentic', source: 'axis', tags: ['agentic', 'approval'] },
-  { id: 'axis-step-indicator', slug: 'step-indicator', name: 'Step Indicator', description: '단계별 진행 표시', category: 'agentic', source: 'axis', tags: ['agentic', 'progress'] },
-  { id: 'axis-tool-call-card', slug: 'tool-call-card', name: 'Tool Call Card', description: 'AI 도구 호출 표시', category: 'agentic', source: 'axis', tags: ['agentic', 'tool'] },
-  { id: 'axis-activity-preview-card', slug: 'activity-preview-card', name: 'Activity Preview Card', description: '활동 미리보기 카드', category: 'agentic', source: 'axis', tags: ['agentic', 'activity'] },
-  { id: 'axis-collector-health-bar', slug: 'collector-health-bar', name: 'Collector Health Bar', description: '수집기 상태 표시', category: 'agentic', source: 'axis', tags: ['agentic', 'health'] },
-  { id: 'axis-file-upload-zone', slug: 'file-upload-zone', name: 'File Upload Zone', description: '파일 업로드 영역', category: 'form', source: 'axis', tags: ['form', 'upload'] },
-  { id: 'axis-seminar-chat-panel', slug: 'seminar-chat-panel', name: 'Seminar Chat Panel', description: '세미나 채팅 패널', category: 'agentic', source: 'axis', tags: ['agentic', 'chat'] },
-  { id: 'axis-surface-renderer', slug: 'surface-renderer', name: 'Surface Renderer', description: '동적 Surface 렌더러', category: 'agentic', source: 'axis', tags: ['agentic', 'renderer'] },
-  { id: 'axis-agent-run-container', slug: 'agent-run-container', name: 'Agent Run Container', description: '에이전트 실행 컨테이너', category: 'agentic', source: 'axis', tags: ['agentic', 'container'] },
-]
-
-// 통계 계산
-function calculateStats(components: typeof sampleComponents) {
-  const bySource: Record<string, number> = {}
-  const byCategory: Record<string, number> = {}
-
-  for (const comp of components) {
-    bySource[comp.source] = (bySource[comp.source] || 0) + 1
-    byCategory[comp.category] = (byCategory[comp.category] || 0) + 1
-  }
-
-  return { total: components.length, bySource, byCategory }
-}
 
 export default function LibraryPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [selectedSource, setSelectedSource] = useState<string | null>(null)
+  const [data, setData] = useState<LibraryIndex | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // 데이터 로드
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const response = await fetch('/library/index.json')
+        const json = await response.json()
+        setData(json)
+      } catch (error) {
+        console.error('Library 데이터 로드 실패:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  // 카테고리 목록
+  const categories = useMemo(() => {
+    if (!data) return defaultCategories
+    return [
+      { id: 'all', name: '전체', icon: Layers, description: '모든 컴포넌트' },
+      ...data.categories.map((cat) => ({
+        id: cat.id,
+        name: cat.name,
+        icon: iconMap[cat.icon] || Layers,
+        description: cat.description,
+      })),
+    ]
+  }, [data])
 
   // 필터링된 컴포넌트
   const filteredComponents = useMemo(() => {
-    return sampleComponents.filter((comp) => {
+    if (!data) return []
+    return data.components.filter((comp) => {
       // 카테고리 필터
       if (selectedCategory !== 'all' && comp.category !== selectedCategory) {
         return false
@@ -98,9 +91,25 @@ export default function LibraryPage() {
 
       return true
     })
-  }, [searchQuery, selectedCategory, selectedSource])
+  }, [data, searchQuery, selectedCategory, selectedSource])
 
-  const stats = calculateStats(sampleComponents)
+  const stats: LibraryStats = data?.stats || { total: 0, bySource: {}, byCategory: {} }
+
+  if (loading) {
+    return (
+      <div className="container py-12">
+        <div className="flex flex-col gap-4 mb-8">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-6 w-96" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-48 rounded-lg" />
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="container py-12">
@@ -108,7 +117,7 @@ export default function LibraryPage() {
       <div className="flex flex-col gap-4 mb-8">
         <h1 className="text-4xl font-bold tracking-tight">Library</h1>
         <p className="text-lg text-muted-foreground max-w-2xl">
-          AXIS Design System의 컴포넌트 라이브러리입니다. shadcn/ui, Monet, V0 등 다양한 소스에서 수집된 컴포넌트를 탐색하세요.
+          AXIS Design System의 컴포넌트 라이브러리입니다. shadcn/ui, Monet, V0 등 다양한 소스에서 수집된 {stats.total}개의 컴포넌트를 탐색하세요.
         </p>
       </div>
 
@@ -167,7 +176,7 @@ export default function LibraryPage() {
             >
               전체
             </button>
-            {Object.entries(sourceTypes).map(([key, { name, color }]) => (
+            {Object.entries(sourceTypes).map(([key, { name }]) => (
               <button
                 key={key}
                 onClick={() => setSelectedSource(selectedSource === key ? null : key)}
@@ -188,7 +197,7 @@ export default function LibraryPage() {
       {/* Component Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {filteredComponents.map((component) => {
-          const sourceInfo = sourceTypes[component.source as keyof typeof sourceTypes]
+          const sourceInfo = sourceTypes[component.source]
 
           return (
             <Link key={component.id} href={`/library/${component.category}/${component.slug}`}>
@@ -240,7 +249,7 @@ export default function LibraryPage() {
           <span className="text-muted-foreground/50">|</span>
           {Object.entries(stats.bySource).map(([source, count]) => (
             <span key={source}>
-              {sourceTypes[source as keyof typeof sourceTypes]?.name}: {count}
+              {sourceTypes[source]?.name}: {count}
             </span>
           ))}
         </div>

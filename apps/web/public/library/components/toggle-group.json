@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-toggle-group",
+  "slug": "toggle-group",
+  "name": "toggle-group",
+  "description": "shadcn/ui toggle-group component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/toggle-group"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.715Z"
+}

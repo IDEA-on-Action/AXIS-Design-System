@@ -1,8 +1,7 @@
 'use client'
 
 import { QueryClient, QueryClientProvider, MutationCache, QueryCache } from '@tanstack/react-query'
-import { Toaster, toast } from '@ax/ui'
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
 
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
@@ -49,17 +48,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
               console.warn('Background refetch failed:', error)
               return
             }
-            // 첫 로드 에러만 toast 표시
-            toast.error('데이터 로딩 실패', {
-              description: getErrorMessage(error),
-            })
+            // 첫 로드 에러 로깅
+            console.error('데이터 로딩 실패:', getErrorMessage(error))
           },
         }),
         mutationCache: new MutationCache({
           onError: (error) => {
-            toast.error('작업 실패', {
-              description: getErrorMessage(error),
-            })
+            console.error('작업 실패:', getErrorMessage(error))
           },
         }),
       })
@@ -68,7 +63,6 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <Toaster position="top-right" richColors closeButton />
     </QueryClientProvider>
   )
 }

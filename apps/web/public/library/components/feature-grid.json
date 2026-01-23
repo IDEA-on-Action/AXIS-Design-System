@@ -1,0 +1,21 @@
+{
+  "id": "monet-feature-grid",
+  "slug": "feature-grid",
+  "name": "Feature Grid",
+  "description": "그리드 형식 기능 소개",
+  "category": "layout",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=feature"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

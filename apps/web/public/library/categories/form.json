@@ -1,0 +1,248 @@
+{
+  "category": "form",
+  "name": "Form",
+  "description": "폼 컴포넌트",
+  "icon": "text-cursor-input",
+  "count": 11,
+  "components": [
+    {
+      "id": "shadcn-checkbox",
+      "slug": "checkbox",
+      "name": "checkbox",
+      "description": "shadcn/ui checkbox component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/checkbox"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.239Z"
+    },
+    {
+      "id": "shadcn-form",
+      "slug": "form",
+      "name": "form",
+      "description": "shadcn/ui form component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/form"
+      },
+      "tags": [
+        "input"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.334Z"
+    },
+    {
+      "id": "shadcn-input",
+      "slug": "input",
+      "name": "input",
+      "description": "shadcn/ui input component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/input"
+      },
+      "tags": [
+        "input"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.367Z"
+    },
+    {
+      "id": "shadcn-input-otp",
+      "slug": "input-otp",
+      "name": "input-otp",
+      "description": "shadcn/ui input-otp component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/input-otp"
+      },
+      "tags": [
+        "input"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.379Z"
+    },
+    {
+      "id": "shadcn-label",
+      "slug": "label",
+      "name": "label",
+      "description": "shadcn/ui label component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/label"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.395Z"
+    },
+    {
+      "id": "shadcn-radio-group",
+      "slug": "radio-group",
+      "name": "radio-group",
+      "description": "shadcn/ui radio-group component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/radio-group"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.474Z"
+    },
+    {
+      "id": "shadcn-select",
+      "slug": "select",
+      "name": "select",
+      "description": "shadcn/ui select component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/select"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.517Z"
+    },
+    {
+      "id": "shadcn-slider",
+      "slug": "slider",
+      "name": "slider",
+      "description": "shadcn/ui slider component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/slider"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.596Z"
+    },
+    {
+      "id": "shadcn-switch",
+      "slug": "switch",
+      "name": "switch",
+      "description": "shadcn/ui switch component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/switch"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.620Z"
+    },
+    {
+      "id": "shadcn-textarea",
+      "slug": "textarea",
+      "name": "textarea",
+      "description": "shadcn/ui textarea component",
+      "category": "form",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/textarea"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.672Z"
+    },
+    {
+      "id": "monet-contact-forms",
+      "slug": "contact-forms",
+      "name": "Contact Forms",
+      "description": "문의 폼",
+      "category": "form",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=contact"
+      },
+      "tags": [
+        "input"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    }
+  ]
+}

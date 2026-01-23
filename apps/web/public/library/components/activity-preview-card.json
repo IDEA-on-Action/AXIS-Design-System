@@ -1,0 +1,32 @@
+{
+  "id": "axis-activity-preview-card",
+  "slug": "activity-preview-card",
+  "name": "Activity Preview Card",
+  "description": "AXIS Activity Preview Card component",
+  "category": "agentic",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/agentic/activity-preview-card"
+  },
+  "tags": [
+    "container"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "page.tsx",
+        "content": "'use client'\n\nimport { ActivityPreviewCard } from '@ax/ui'\nimport { CodeBlock } from '@/components/code-block'\nimport { PropsTable } from '@/components/props-table'\nimport Link from 'next/link'\n\nconst activityPreviewCardProps = [\n  { name: 'activity', type: 'ActivityData', default: '-', description: 'Activity 데이터 객체', required: true },\n  { name: 'onEdit', type: '() => void', default: '-', description: '수정 버튼 클릭 핸들러' },\n  { name: 'variant', type: '\"default\" | \"compact\"', default: '\"default\"', description: '카드 변형' },\n  { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },\n]\n\nconst activityDataProps = [\n  { name: 'activity_id', type: 'string', default: '-', description: 'Activity 고유 ID', required: true },\n  { name: 'title', type: 'string', default: '-', description: '세미나/이벤트 제목', required: true },\n  { name: 'date', type: 'string | null', default: 'null', description: '일시' },\n  { name: 'organizer', type: 'string | null', default: 'null', description: '주최자' },\n  { name: 'url', type: 'string', default: '-', description: '원본 URL', required: true },\n  { name: 'play_id', type: 'string', default: '-', description: 'Play DB ID', required: true },\n  { name: 'themes', type: 'string[]', default: '[]', description: '테마/카테고리 목록' },\n  { name: 'source', type: 'string', default: '-', description: '데이터 소스 (KT, 그룹사, 대외)', required: true },\n  { name: 'channel', type: 'string', default: '-', description: '수집 채널', required: true },\n  { name: 'status', type: 'string', default: '-', description: '상태', required: true },\n]\n\nconst basicExample = `import { ActivityPreviewCard } from '@ax/ui'\n\nconst activity = {\n  activity_id: 'ACT-2024-001',\n  title: 'AI/LLM 기술 세미나',\n  date: '2024-03-15',\n  organizer: 'KT AI Lab',\n  url: 'https://example.com/seminar',\n  play_id: 'PLAY-001',\n  themes: ['AI', 'LLM', 'Enterprise'],\n  source: 'KT',\n  channel: '자사활동',\n  status: 'collected',\n}\n\nexport function Example() {\n  return (\n    <ActivityPreviewCard\n      activity={activity}\n      onEdit={() => console.log('Edit clicked')}\n    />\n  )\n}`\n\nconst compactExample = `<ActivityPreviewCard\n  activity={activity}\n  variant=\"compact\"\n/>`\n\nconst sampleActivity = {\n  activity_id: 'ACT-2024-001',\n  title: 'AI/LLM 기반 엔터프라이즈 솔루션 세미나',\n  date: '2024-03-15 14:00',\n  organizer: 'KT AI Innovation Lab',\n  url: 'https://example.com/seminar',\n  play_id: 'PLAY-AI-001',\n  themes: ['AI', 'LLM', 'Enterprise', 'Cloud'],\n  source: 'KT',\n  channel: '자사활동',\n  status: 'collected',\n}\n\nconst sampleActivity2 = {\n  activity_id: 'ACT-2024-002',\n  title: 'DevOps & Cloud Native 워크샵',\n  date: '2024-03-20',\n  organizer: 'AWS Korea',\n  url: 'https://example.com/workshop',\n  play_id: 'PLAY-CLOUD-002',\n  themes: ['DevOps', 'Kubernetes', 'Cloud'],\n  source: '대외',\n  channel: '데스크리서치',\n  status: 'pending',\n}\n\nexport default function ActivityPreviewCardPage() {\n  return (\n    <div className=\"container py-12\">\n      <div className=\"max-w-4xl\">\n        <div className=\"mb-8\">\n          <div className=\"flex items-center gap-2 text-sm text-muted-foreground mb-2\">\n            <Link href=\"/agentic\" className=\"hover:text-foreground\">Agentic UI</Link>\n            <span>/</span>\n            <span>ActivityPreviewCard</span>\n          </div>\n          <h1 className=\"text-4xl font-bold tracking-tight mb-4\">ActivityPreviewCard</h1>\n          <p className=\"text-lg text-muted-foreground\">\n            Activity 정보를 미리보기 형태로 표시하는 카드 컴포넌트입니다.\n            WF-01 세미나 파이프라인 결과 표시에 사용됩니다.\n          </p>\n        </div>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add activity-preview-card\" language=\"bash\" />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Usage</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30\">\n            <ActivityPreviewCard\n              activity={sampleActivity}\n              onEdit={() => alert('수정 버튼 클릭')}\n            />\n          </div>\n          <CodeBlock code={basicExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Variants</h2>\n          <div className=\"space-y-4 mb-4\">\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Default</p>\n              <ActivityPreviewCard activity={sampleActivity2} />\n            </div>\n            <div className=\"rounded-lg border p-4\">\n              <p className=\"text-sm font-medium mb-3\">Compact</p>\n              <ActivityPreviewCard activity={sampleActivity2} variant=\"compact\" />\n            </div>\n          </div>\n          <CodeBlock code={compactExample} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Multiple Cards</h2>\n          <div className=\"mb-4 p-6 rounded-lg border bg-muted/30 space-y-4\">\n            <ActivityPreviewCard activity={sampleActivity} />\n            <ActivityPreviewCard activity={sampleActivity2} />\n          </div>\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Props</h2>\n          <PropsTable props={activityPreviewCardProps} />\n        </section>\n\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">ActivityData Interface</h2>\n          <PropsTable props={activityDataProps} />\n        </section>\n      </div>\n    </div>\n  )\n}\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@ax/ui",
+      "next"
+    ],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.845Z"
+}

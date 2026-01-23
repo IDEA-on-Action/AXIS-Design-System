@@ -1,0 +1,21 @@
+{
+  "id": "monet-hero-gradient",
+  "slug": "hero-gradient",
+  "name": "Hero Gradient",
+  "description": "그라데이션 히어로",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=hero"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

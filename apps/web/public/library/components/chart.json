@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-chart",
+  "slug": "chart",
+  "name": "chart",
+  "description": "shadcn/ui chart component",
+  "category": "chart",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/chart"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.228Z"
+}

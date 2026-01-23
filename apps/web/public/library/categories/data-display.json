@@ -1,0 +1,162 @@
+{
+  "category": "data-display",
+  "name": "Data Display",
+  "description": "데이터 표시",
+  "icon": "table",
+  "count": 7,
+  "components": [
+    {
+      "id": "shadcn-avatar",
+      "slug": "avatar",
+      "name": "avatar",
+      "description": "shadcn/ui avatar component",
+      "category": "data-display",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/avatar"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.097Z"
+    },
+    {
+      "id": "shadcn-badge",
+      "slug": "badge",
+      "name": "badge",
+      "description": "shadcn/ui badge component",
+      "category": "data-display",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/badge"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.138Z"
+    },
+    {
+      "id": "shadcn-card",
+      "slug": "card",
+      "name": "card",
+      "description": "shadcn/ui card component",
+      "category": "data-display",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/card"
+      },
+      "tags": [
+        "container"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.200Z"
+    },
+    {
+      "id": "shadcn-hover-card",
+      "slug": "hover-card",
+      "name": "hover-card",
+      "description": "shadcn/ui hover-card component",
+      "category": "data-display",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/hover-card"
+      },
+      "tags": [
+        "container"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.349Z"
+    },
+    {
+      "id": "shadcn-table",
+      "slug": "table",
+      "name": "table",
+      "description": "shadcn/ui table component",
+      "category": "data-display",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/table"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.640Z"
+    },
+    {
+      "id": "monet-feature-cards",
+      "slug": "feature-cards",
+      "name": "Feature Cards",
+      "description": "카드 형식 기능",
+      "category": "data-display",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=feature"
+      },
+      "tags": [
+        "container"
+      ],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-pricing-tables",
+      "slug": "pricing-tables",
+      "name": "Pricing Tables",
+      "description": "요금제 테이블",
+      "category": "data-display",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=pricing"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    }
+  ]
+}

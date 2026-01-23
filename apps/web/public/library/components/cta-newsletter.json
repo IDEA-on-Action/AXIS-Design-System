@@ -1,0 +1,21 @@
+{
+  "id": "monet-cta-newsletter",
+  "slug": "cta-newsletter",
+  "name": "CTA Newsletter",
+  "description": "뉴스레터 CTA",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=cta"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

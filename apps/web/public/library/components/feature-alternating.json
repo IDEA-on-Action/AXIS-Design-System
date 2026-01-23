@@ -1,0 +1,21 @@
+{
+  "id": "monet-feature-alternating",
+  "slug": "feature-alternating",
+  "name": "Feature Alternating",
+  "description": "교차 레이아웃",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=feature"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

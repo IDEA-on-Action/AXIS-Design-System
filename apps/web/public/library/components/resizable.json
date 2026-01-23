@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-resizable",
+  "slug": "resizable",
+  "name": "resizable",
+  "description": "shadcn/ui resizable component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/resizable"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.490Z"
+}

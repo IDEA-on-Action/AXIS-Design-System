@@ -1,8 +1,6 @@
 'use client'
 
-import { Button, Badge, Input, Card, CardContent } from '@ax/ui'
-import { StreamingText, ToolCallCard, ApprovalDialog, StepIndicator } from '@ax/ui'
-import { useState } from 'react'
+import { Button, Badge, Input } from '@ax/ui'
 
 interface ComponentPreviewProps {
   name: string
@@ -10,7 +8,6 @@ interface ComponentPreviewProps {
 }
 
 export function ComponentPreview({ name, agentic }: ComponentPreviewProps) {
-  const [dialogOpen, setDialogOpen] = useState(false)
 
   // Core UI Previews
   if (!agentic) {

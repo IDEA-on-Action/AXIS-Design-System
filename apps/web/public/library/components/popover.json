@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-popover",
+  "slug": "popover",
+  "name": "popover",
+  "description": "shadcn/ui popover component",
+  "category": "overlay",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/popover"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.449Z"
+}

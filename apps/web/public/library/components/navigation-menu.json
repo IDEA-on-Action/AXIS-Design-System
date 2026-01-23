@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-navigation-menu",
+  "slug": "navigation-menu",
+  "name": "navigation-menu",
+  "description": "shadcn/ui navigation-menu component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/navigation-menu"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.423Z"
+}

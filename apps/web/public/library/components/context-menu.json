@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-context-menu",
+  "slug": "context-menu",
+  "name": "context-menu",
+  "description": "shadcn/ui context-menu component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/context-menu"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.282Z"
+}

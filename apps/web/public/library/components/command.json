@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-command",
+  "slug": "command",
+  "name": "command",
+  "description": "shadcn/ui command component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/command"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.269Z"
+}

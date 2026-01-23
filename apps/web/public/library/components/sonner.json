@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-sonner",
+  "slug": "sonner",
+  "name": "sonner",
+  "description": "shadcn/ui sonner component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/sonner"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.608Z"
+}

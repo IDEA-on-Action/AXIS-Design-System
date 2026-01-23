@@ -1,0 +1,132 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-01-23T12:59:43.865Z",
+  "stats": {
+    "total": 108,
+    "bySource": {
+      "shadcn": 47,
+      "monet": 34,
+      "axis": 27
+    },
+    "byCategory": {
+      "ui": 47,
+      "feedback": 5,
+      "layout": 4,
+      "data-display": 7,
+      "navigation": 10,
+      "chart": 2,
+      "form": 11,
+      "overlay": 5,
+      "agentic": 17
+    }
+  },
+  "categories": [
+    {
+      "id": "ui",
+      "name": "UI",
+      "description": "기본 UI 컴포넌트",
+      "icon": "layers",
+      "order": 1
+    },
+    {
+      "id": "agentic",
+      "name": "Agentic",
+      "description": "Agentic UI 컴포넌트",
+      "icon": "bot",
+      "order": 2
+    },
+    {
+      "id": "form",
+      "name": "Form",
+      "description": "폼 컴포넌트",
+      "icon": "text-cursor-input",
+      "order": 3
+    },
+    {
+      "id": "layout",
+      "name": "Layout",
+      "description": "레이아웃 컴포넌트",
+      "icon": "layout",
+      "order": 4
+    },
+    {
+      "id": "navigation",
+      "name": "Navigation",
+      "description": "네비게이션",
+      "icon": "navigation",
+      "order": 5
+    },
+    {
+      "id": "feedback",
+      "name": "Feedback",
+      "description": "피드백 컴포넌트",
+      "icon": "bell",
+      "order": 6
+    },
+    {
+      "id": "overlay",
+      "name": "Overlay",
+      "description": "오버레이 컴포넌트",
+      "icon": "square-stack",
+      "order": 7
+    },
+    {
+      "id": "data-display",
+      "name": "Data Display",
+      "description": "데이터 표시",
+      "icon": "table",
+      "order": 8
+    },
+    {
+      "id": "chart",
+      "name": "Chart",
+      "description": "차트/시각화",
+      "icon": "chart-bar",
+      "order": 9
+    },
+    {
+      "id": "utility",
+      "name": "Utility",
+      "description": "유틸리티",
+      "icon": "wrench",
+      "order": 10
+    }
+  ],
+  "tags": [
+    {
+      "id": "animated",
+      "name": "animated",
+      "count": 15
+    },
+    {
+      "id": "forwardRef",
+      "name": "forwardRef",
+      "count": 10
+    },
+    {
+      "id": "stateful",
+      "name": "stateful",
+      "count": 8
+    },
+    {
+      "id": "container",
+      "name": "container",
+      "count": 7
+    },
+    {
+      "id": "input",
+      "name": "input",
+      "count": 5
+    },
+    {
+      "id": "interactive",
+      "name": "interactive",
+      "count": 2
+    },
+    {
+      "id": "side-effects",
+      "name": "side-effects",
+      "count": 1
+    }
+  ]
+}

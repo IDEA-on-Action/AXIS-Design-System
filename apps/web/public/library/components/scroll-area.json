@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-scroll-area",
+  "slug": "scroll-area",
+  "name": "scroll-area",
+  "description": "shadcn/ui scroll-area component",
+  "category": "chart",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/scroll-area"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.506Z"
+}

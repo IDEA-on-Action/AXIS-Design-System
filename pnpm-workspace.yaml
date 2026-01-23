@@ -5,6 +5,5 @@ packages:
   # Applications
   - 'apps/*'
 
-  # Shared packages
+  # Design System packages
   - 'packages/*'
-  - 'packages/shared/*'

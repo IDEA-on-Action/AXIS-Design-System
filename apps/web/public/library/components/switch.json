@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-switch",
+  "slug": "switch",
+  "name": "switch",
+  "description": "shadcn/ui switch component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/switch"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.620Z"
+}

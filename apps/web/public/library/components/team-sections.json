@@ -1,0 +1,21 @@
+{
+  "id": "monet-team-sections",
+  "slug": "team-sections",
+  "name": "Team Sections",
+  "description": "팀 소개 섹션",
+  "category": "ui",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=team"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}

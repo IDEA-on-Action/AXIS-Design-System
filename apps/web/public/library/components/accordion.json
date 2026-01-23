@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-accordion",
+  "slug": "accordion",
+  "name": "accordion",
+  "description": "shadcn/ui accordion component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/accordion"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.003Z"
+}

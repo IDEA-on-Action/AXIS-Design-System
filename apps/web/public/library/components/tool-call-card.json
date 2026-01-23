@@ -1,0 +1,33 @@
+{
+  "id": "axis-tool-call-card",
+  "slug": "tool-call-card",
+  "name": "Tool Call Card",
+  "description": "AI 도구 호출 정보를 표시하는 카드 컴포넌트",
+  "category": "agentic",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/agentic/tool-call-card"
+  },
+  "tags": [
+    "stateful",
+    "animated",
+    "container"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type ToolStatus = \"pending\" | \"running\" | \"success\" | \"error\";\n\nexport interface ToolCallCardProps {\n  /** 도구 이름 */\n  toolName: string;\n  /** 도구 설명 */\n  description?: string;\n  /** 실행 상태 */\n  status: ToolStatus;\n  /** 입력 파라미터 */\n  input?: Record<string, unknown>;\n  /** 출력 결과 */\n  output?: unknown;\n  /** 에러 메시지 */\n  error?: string;\n  /** 실행 시간 (ms) */\n  duration?: number;\n  /** 펼침 상태 */\n  defaultExpanded?: boolean;\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }> = {\n  pending: {\n    color: \"text-[var(--axis-color-gray-400)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <circle cx=\"12\" cy=\"12\" r=\"10\" strokeWidth={2} />\n      </svg>\n    ),\n  },\n  running: {\n    color: \"text-[var(--axis-color-blue-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4 animate-spin\" viewBox=\"0 0 24 24\" fill=\"none\">\n        <circle className=\"opacity-25\" cx=\"12\" cy=\"12\" r=\"10\" stroke=\"currentColor\" strokeWidth=\"4\" />\n        <path className=\"opacity-75\" fill=\"currentColor\" d=\"M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z\" />\n      </svg>\n    ),\n  },\n  success: {\n    color: \"text-[var(--axis-color-green-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M5 13l4 4L19 7\" />\n      </svg>\n    ),\n  },\n  error: {\n    color: \"text-[var(--axis-color-red-500)]\",\n    icon: (\n      <svg className=\"w-4 h-4\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n        <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M6 18L18 6M6 6l12 12\" />\n      </svg>\n    ),\n  },\n};\n\n/**\n * AI 도구 호출 정보를 표시하는 카드 컴포넌트\n */\nexport function ToolCallCard({\n  toolName,\n  description,\n  status,\n  input,\n  output,\n  error,\n  duration,\n  defaultExpanded = false,\n  className,\n}: ToolCallCardProps) {\n  const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);\n  const config = statusConfig[status];\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border overflow-hidden\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        className\n      )}\n    >\n      {/* 헤더 */}\n      <button\n        onClick={() => setIsExpanded(!isExpanded)}\n        className=\"w-full flex items-center justify-between p-3 hover:bg-[var(--axis-surface-secondary)] transition-colors\"\n      >\n        <div className=\"flex items-center gap-2\">\n          <span className={config.color}>{config.icon}</span>\n          <code className=\"text-sm font-mono text-[var(--axis-text-primary)]\">\n            {toolName}\n          </code>\n          {description && (\n            <span className=\"text-xs text-[var(--axis-text-secondary)]\">\n              — {description}\n            </span>\n          )}\n        </div>\n        <div className=\"flex items-center gap-2\">\n          {duration !== undefined && (\n            <span className=\"text-xs text-[var(--axis-text-tertiary)]\">\n              {duration}ms\n            </span>\n          )}\n          <svg\n            className={cn(\n              \"w-4 h-4 text-[var(--axis-text-secondary)] transition-transform\",\n              isExpanded && \"rotate-180\"\n            )}\n            fill=\"none\"\n            stroke=\"currentColor\"\n            viewBox=\"0 0 24 24\"\n          >\n            <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M19 9l-7 7-7-7\" />\n          </svg>\n        </div>\n      </button>\n\n      {/* 내용 */}\n      {isExpanded && (\n        <div className=\"border-t border-[var(--axis-border-default)] p-3 space-y-3\">\n          {input && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-secondary)] mb-1\">\n                입력\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-secondary)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-primary)]\">\n                  {JSON.stringify(input, null, 2)}\n                </code>\n              </pre>\n            </div>\n          )}\n          {output !== undefined && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-secondary)] mb-1\">\n                출력\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-secondary)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-primary)]\">\n                  {typeof output === \"string\" ? output : JSON.stringify(output, null, 2)}\n                </code>\n              </pre>\n            </div>\n          )}\n          {error && (\n            <div>\n              <h5 className=\"text-xs font-medium text-[var(--axis-text-error)] mb-1\">\n                에러\n              </h5>\n              <pre className=\"text-xs p-2 rounded bg-[var(--axis-surface-error)] overflow-x-auto\">\n                <code className=\"text-[var(--axis-text-error)]\">{error}</code>\n              </pre>\n            </div>\n          )}\n        </div>\n      )}\n    </div>\n  );\n}\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": [
+      "@axis-ds/ui-react"
+    ]
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.843Z"
+}

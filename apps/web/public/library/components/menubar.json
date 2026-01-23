@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-menubar",
+  "slug": "menubar",
+  "name": "menubar",
+  "description": "shadcn/ui menubar component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/menubar"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.410Z"
+}

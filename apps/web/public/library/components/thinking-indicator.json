@@ -1,0 +1,31 @@
+{
+  "id": "axis-thinking-indicator",
+  "slug": "thinking-indicator",
+  "name": "Thinking Indicator",
+  "description": "AI가 생각 중임을 표시하는 인디케이터",
+  "category": "agentic",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/agentic/thinking-indicator"
+  },
+  "tags": [
+    "animated"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport interface ThinkingIndicatorProps {\n  /** 표시할 텍스트 */\n  text?: string;\n  /** 크기 */\n  size?: \"sm\" | \"md\" | \"lg\";\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst sizeStyles = {\n  sm: \"text-xs gap-1\",\n  md: \"text-sm gap-1.5\",\n  lg: \"text-base gap-2\",\n};\n\nconst dotSizes = {\n  sm: \"w-1 h-1\",\n  md: \"w-1.5 h-1.5\",\n  lg: \"w-2 h-2\",\n};\n\n/**\n * AI가 생각 중임을 표시하는 인디케이터\n */\nexport function ThinkingIndicator({\n  text = \"생각 중\",\n  size = \"md\",\n  className,\n}: ThinkingIndicatorProps) {\n  return (\n    <div\n      className={cn(\n        \"flex items-center text-[var(--axis-text-secondary)]\",\n        sizeStyles[size],\n        className\n      )}\n    >\n      <span>{text}</span>\n      <div className=\"flex gap-0.5\">\n        {[0, 1, 2].map((i) => (\n          <div\n            key={i}\n            className={cn(\n              \"rounded-full bg-current animate-bounce\",\n              dotSizes[size]\n            )}\n            style={{ animationDelay: `${i * 150}ms` }}\n          />\n        ))}\n      </div>\n    </div>\n  );\n}\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": [
+      "@axis-ds/ui-react"
+    ]
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.841Z"
+}

@@ -1,0 +1,32 @@
+{
+  "id": "axis-approval-card",
+  "slug": "approval-card",
+  "name": "Approval Card",
+  "description": "사용자 승인이 필요한 작업을 표시하는 카드 컴포넌트",
+  "category": "agentic",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/agentic/approval-card"
+  },
+  "tags": [
+    "animated",
+    "container"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"@axis-ds/ui-react\";\n\nexport type Severity = \"info\" | \"warning\" | \"error\";\n\nexport interface ApprovalAction {\n  label: string;\n  variant?: \"default\" | \"secondary\" | \"ghost\" | \"destructive\";\n  onClick: () => void;\n}\n\nexport interface ApprovalCardProps {\n  /** 제목 */\n  title: string;\n  /** 설명 */\n  description?: string;\n  /** 심각도 (색상 결정) */\n  severity?: Severity;\n  /** 액션 버튼 목록 */\n  actions: ApprovalAction[];\n  /** 추가 내용 */\n  children?: React.ReactNode;\n  /** 추가 클래스 */\n  className?: string;\n}\n\nconst severityStyles: Record<Severity, { border: string; icon: string; bg: string }> = {\n  info: {\n    border: \"border-l-[var(--axis-color-blue-500)]\",\n    icon: \"text-[var(--axis-color-blue-500)]\",\n    bg: \"bg-[var(--axis-surface-info)]\",\n  },\n  warning: {\n    border: \"border-l-[var(--axis-color-yellow-500)]\",\n    icon: \"text-[var(--axis-color-yellow-500)]\",\n    bg: \"bg-[var(--axis-surface-warning)]\",\n  },\n  error: {\n    border: \"border-l-[var(--axis-color-red-500)]\",\n    icon: \"text-[var(--axis-color-red-500)]\",\n    bg: \"bg-[var(--axis-surface-error)]\",\n  },\n};\n\nconst severityIcons: Record<Severity, React.ReactNode> = {\n  info: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\" />\n    </svg>\n  ),\n  warning: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z\" />\n    </svg>\n  ),\n  error: (\n    <svg className=\"w-5 h-5\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">\n      <path strokeLinecap=\"round\" strokeLinejoin=\"round\" strokeWidth={2} d=\"M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z\" />\n    </svg>\n  ),\n};\n\nconst actionVariantStyles: Record<string, string> = {\n  default: \"bg-[var(--axis-button-bg-default)] text-white hover:bg-[var(--axis-button-bg-hover)]\",\n  secondary: \"bg-[var(--axis-button-secondary-bg-default)] text-[var(--axis-text-primary)] hover:bg-[var(--axis-button-secondary-bg-hover)]\",\n  ghost: \"bg-transparent text-[var(--axis-text-primary)] hover:bg-[var(--axis-surface-secondary)]\",\n  destructive: \"bg-[var(--axis-button-destructive-bg-default)] text-white hover:bg-[var(--axis-button-destructive-bg-hover)]\",\n};\n\n/**\n * 사용자 승인이 필요한 작업을 표시하는 카드 컴포넌트\n */\nexport function ApprovalCard({\n  title,\n  description,\n  severity = \"info\",\n  actions,\n  children,\n  className,\n}: ApprovalCardProps) {\n  const styles = severityStyles[severity];\n\n  return (\n    <div\n      className={cn(\n        \"rounded-lg border border-l-4 p-4\",\n        \"bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]\",\n        styles.border,\n        className\n      )}\n    >\n      <div className=\"flex items-start gap-3\">\n        <div className={cn(\"flex-shrink-0 mt-0.5\", styles.icon)}>\n          {severityIcons[severity]}\n        </div>\n        <div className=\"flex-1 min-w-0\">\n          <h4 className=\"text-sm font-semibold text-[var(--axis-text-primary)]\">\n            {title}\n          </h4>\n          {description && (\n            <p className=\"mt-1 text-sm text-[var(--axis-text-secondary)]\">\n              {description}\n            </p>\n          )}\n          {children && <div className=\"mt-3\">{children}</div>}\n          <div className=\"flex flex-wrap gap-2 mt-4\">\n            {actions.map((action, index) => (\n              <button\n                key={index}\n                onClick={action.onClick}\n                className={cn(\n                  \"px-3 py-1.5 text-sm font-medium rounded-md transition-colors\",\n                  actionVariantStyles[action.variant || \"default\"]\n                )}\n              >\n                {action.label}\n              </button>\n            ))}\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": [
+      "@axis-ds/ui-react"
+    ]
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.823Z"
+}

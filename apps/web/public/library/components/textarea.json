@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-textarea",
+  "slug": "textarea",
+  "name": "textarea",
+  "description": "shadcn/ui textarea component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/textarea"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.672Z"
+}

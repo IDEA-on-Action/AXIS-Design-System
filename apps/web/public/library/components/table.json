@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-table",
+  "slug": "table",
+  "name": "table",
+  "description": "shadcn/ui table component",
+  "category": "data-display",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/table"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.640Z"
+}

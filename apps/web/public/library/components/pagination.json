@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-pagination",
+  "slug": "pagination",
+  "name": "pagination",
+  "description": "shadcn/ui pagination component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/pagination"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.434Z"
+}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@ax/ui'
-import { ApprovalDialog } from '@ax/ui'
+import { ApprovalCard as ApprovalDialog } from '@ax/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from '@ax/ui'
-import { StepIndicator } from '@ax/ui'
+import { StepTimeline as StepIndicator } from '@ax/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
 import Link from 'next/link'

@@ -1,0 +1,93 @@
+{
+  "category": "layout",
+  "name": "Layout",
+  "description": "레이아웃 컴포넌트",
+  "icon": "layout",
+  "count": 4,
+  "components": [
+    {
+      "id": "shadcn-aspect-ratio",
+      "slug": "aspect-ratio",
+      "name": "aspect-ratio",
+      "description": "shadcn/ui aspect-ratio component",
+      "category": "layout",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/aspect-ratio"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.072Z"
+    },
+    {
+      "id": "shadcn-separator",
+      "slug": "separator",
+      "name": "separator",
+      "description": "shadcn/ui separator component",
+      "category": "layout",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/separator"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.540Z"
+    },
+    {
+      "id": "monet-feature-grid",
+      "slug": "feature-grid",
+      "name": "Feature Grid",
+      "description": "그리드 형식 기능 소개",
+      "category": "layout",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=feature"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    },
+    {
+      "id": "monet-testimonial-grid",
+      "slug": "testimonial-grid",
+      "name": "Testimonial Grid",
+      "description": "그리드 후기",
+      "category": "layout",
+      "source": {
+        "type": "monet",
+        "registry": "@monet",
+        "url": "https://www.monet.design/c?category=testimonial"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.734Z"
+    }
+  ]
+}

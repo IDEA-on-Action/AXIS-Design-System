@@ -1,0 +1,114 @@
+{
+  "category": "overlay",
+  "name": "Overlay",
+  "description": "오버레이 컴포넌트",
+  "icon": "square-stack",
+  "count": 5,
+  "components": [
+    {
+      "id": "shadcn-dialog",
+      "slug": "dialog",
+      "name": "dialog",
+      "description": "shadcn/ui dialog component",
+      "category": "overlay",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/dialog"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.293Z"
+    },
+    {
+      "id": "shadcn-drawer",
+      "slug": "drawer",
+      "name": "drawer",
+      "description": "shadcn/ui drawer component",
+      "category": "overlay",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/drawer"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.305Z"
+    },
+    {
+      "id": "shadcn-popover",
+      "slug": "popover",
+      "name": "popover",
+      "description": "shadcn/ui popover component",
+      "category": "overlay",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/popover"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.449Z"
+    },
+    {
+      "id": "shadcn-sheet",
+      "slug": "sheet",
+      "name": "sheet",
+      "description": "shadcn/ui sheet component",
+      "category": "overlay",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/sheet"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.557Z"
+    },
+    {
+      "id": "shadcn-tooltip",
+      "slug": "tooltip",
+      "name": "tooltip",
+      "description": "shadcn/ui tooltip component",
+      "category": "overlay",
+      "source": {
+        "type": "shadcn",
+        "registry": "@shadcn",
+        "url": "https://ui.shadcn.com/docs/components/tooltip"
+      },
+      "tags": [],
+      "code": {
+        "files": [],
+        "dependencies": [],
+        "devDependencies": [],
+        "registryDeps": []
+      },
+      "status": "active",
+      "updatedAt": "2026-01-23T12:59:43.733Z"
+    }
+  ]
+}

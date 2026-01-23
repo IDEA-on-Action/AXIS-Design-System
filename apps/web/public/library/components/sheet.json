@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-sheet",
+  "slug": "sheet",
+  "name": "sheet",
+  "description": "shadcn/ui sheet component",
+  "category": "overlay",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/sheet"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.557Z"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-skeleton",
+  "slug": "skeleton",
+  "name": "skeleton",
+  "description": "shadcn/ui skeleton component",
+  "category": "feedback",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/skeleton"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.582Z"
+}

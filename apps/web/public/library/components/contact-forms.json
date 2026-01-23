@@ -1,0 +1,23 @@
+{
+  "id": "monet-contact-forms",
+  "slug": "contact-forms",
+  "name": "Contact Forms",
+  "description": "문의 폼",
+  "category": "form",
+  "source": {
+    "type": "monet",
+    "registry": "@monet",
+    "url": "https://www.monet.design/c?category=contact"
+  },
+  "tags": [
+    "input"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.734Z"
+}
