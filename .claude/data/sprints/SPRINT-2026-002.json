@@ -1,0 +1,143 @@
+{
+  "sprint_id": "SPRINT-2026-002",
+  "title": "Sprint - v0.6.0",
+  "source_todo_path": "D:\\GitHub\\AXIS Design System\\project-todo.md",
+  "decision": "GO",
+  "days": [
+    {
+      "day": 1,
+      "title": "계획 & 분석",
+      "focus": "스프린트 범위 확정 및 작업 분석",
+      "tasks": [
+        {
+          "id": "D1-1",
+          "day": 1,
+          "title": "실제 데이터 수집 시작 (Activity 20+, Signal 30+/주)",
+          "description": "[General] PoC 목표 달성 검증",
+          "status": "skipped",
+          "priority": "medium",
+          "source_todo_id": "TODO-001",
+          "assignee": null,
+          "completed_at": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "title": "설계 & 준비",
+      "focus": "구현 설계 및 환경 준비",
+      "tasks": [
+        {
+          "id": "D2-1",
+          "day": 2,
+          "title": "마지막 버그 수정",
+          "description": "[General] 안정화 및 최적화",
+          "status": "completed",
+          "priority": "medium",
+          "source_todo_id": "TODO-008",
+          "assignee": null,
+          "completed_at": "2026-01-23T16:26:31.149473",
+          "notes": null
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "title": "구현 (1)",
+      "focus": "핵심 기능 구현",
+      "tasks": [
+        {
+          "id": "D3-1",
+          "day": 3,
+          "title": "모바일 앱 (PWA/React Native) - *PoC 이후 검토*",
+          "description": "[Phase 4] 채점 전략 (에이전트별)",
+          "status": "skipped",
+          "priority": "low",
+          "source_todo_id": "TODO-035",
+          "assignee": null,
+          "completed_at": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "day": 4,
+      "title": "구현 (2)",
+      "focus": "추가 기능 및 연동",
+      "tasks": [
+        {
+          "id": "D4-1",
+          "day": 4,
+          "title": "Day 4 작업",
+          "description": "작업 진행",
+          "status": "skipped",
+          "priority": "medium",
+          "source_todo_id": null,
+          "assignee": null,
+          "completed_at": null,
+          "notes": null
+        }
+      ]
+    },
+    {
+      "day": 5,
+      "title": "검증 & 정리",
+      "focus": "테스트, 문서화, 완료 처리",
+      "tasks": [
+        {
+          "id": "D5-1",
+          "day": 5,
+          "title": "완료 항목 검증",
+          "description": "구현 결과 테스트",
+          "status": "completed",
+          "priority": "medium",
+          "source_todo_id": null,
+          "assignee": null,
+          "completed_at": "2026-01-23T16:21:31.896911",
+          "notes": null
+        },
+        {
+          "id": "D5-2",
+          "day": 5,
+          "title": "문서 업데이트",
+          "description": "project-todo.md 갱신",
+          "status": "completed",
+          "priority": "medium",
+          "source_todo_id": null,
+          "assignee": null,
+          "completed_at": "2026-01-23T16:21:37.665635",
+          "notes": null
+        },
+        {
+          "id": "D5-3",
+          "day": 5,
+          "title": "스프린트 회고",
+          "description": "학습점 및 개선점 정리",
+          "status": "completed",
+          "priority": "medium",
+          "source_todo_id": null,
+          "assignee": null,
+          "completed_at": "2026-01-23T16:26:44.623199",
+          "notes": null
+        }
+      ]
+    }
+  ],
+  "findings": [
+    "결정 기록됨 - 상세 내용 추가 필요"
+  ],
+  "next_actions": [
+    "후속 액션 정의 필요"
+  ],
+  "created_at": "2026-01-23T16:15:36.270558",
+  "started_at": null,
+  "completed_at": "2026-01-23T16:27:01.009261",
+  "success_criteria": [
+    "스프린트 태스크 80% 이상 완료 (2개 이상)",
+    "모든 완료 항목 테스트 통과",
+    "project-todo.md 업데이트 완료"
+  ],
+  "success_rate": 57.14285714285714,
+  "todo_version": "0.6.0"
+}
