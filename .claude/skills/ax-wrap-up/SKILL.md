@@ -1,7 +1,7 @@
 # AX Wrap-up Skill (작업 정리)
 
 SSDD 원칙에 따라 작업 내용을 정리하고, 테스트 검증 후 Git 커밋을 수행합니다.
-**기본적으로 Confluence Action Log 및 Slack 알림까지 자동 처리합니다.**
+**GitHub Project 동기화 및 Slack 알림이 기본 제공됩니다.**
 동기화를 건너뛰려면 `--no-sync` 옵션을 사용하세요.
 
 ## 트리거
@@ -23,9 +23,8 @@ SSDD 원칙에 따라 작업 내용을 정리하고, 테스트 검증 후 Git �
 5단계: Git 커밋
     ↓
 6단계: 외부 시스템 동기화 (기본 실행)
-    ├─ Confluence Action Log 업데이트 (/ax:confluence 연계)
     ├─ GitHub Project 업데이트 (gh CLI)
-    └─ Slack 알림 전송 (governance agent 연계)
+    └─ Slack 알림 전송 (선택)
 ```
 
 ## 실행 단계
@@ -116,32 +115,7 @@ Co-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>"
 커밋 완료 후 외부 시스템에 작업 내역을 자동으로 동기화합니다.
 `--no-sync` 옵션으로 건너뛸 수 있습니다.
 
-#### 6-1. Confluence Action Log 업데이트
-
-`/ax:confluence` skill을 연계하여 Action Log에 커밋 정보를 기록합니다.
-
-```python
-# confluence_sync agent 활용
-await confluence.append_to_page(
-    page_id=CONFLUENCE_ACTION_LOG_PAGE_ID,  # 786433
-    append_md=f"""
----
-
-## 📝 [{timestamp}] 작업 완료
-
-**커밋**: [`{commit_hash}`]({github_url}/commit/{commit_hash})
-
-**메시지**: {commit_message}
-
-**변경 파일** ({file_count}개):
-{file_list}
-
-**작성자**: Claude Opus 4.5
-"""
-)
-```
-
-#### 6-2. GitHub Project 업데이트
+#### 6-1. GitHub Project 업데이트
 
 `gh` CLI를 활용하여 GitHub Project의 Issues 상태를 업데이트합니다.
 
@@ -189,58 +163,94 @@ gh issue edit <issue_number> \
   --add-label "status:in-progress"
 ```
 
-#### 6-3. Slack 알림 전송
+#### 6-2. Slack 알림 전송 (선택)
 
-`governance` agent의 알림 기능을 활용하여 Slack에 작업 완료를 알립니다.
+Slack Webhook을 통해 작업 완료 알림을 전송합니다.
 
-```python
-# SlackMCP 활용 (governance agent 연계)
-await slack.send_notification(
-    title="🚀 작업 완료 - AX Discovery Portal",
-    text=f"""
-커밋: {commit_hash}
-{commit_message}
-
-📄 Confluence: Action Log 업데이트됨
-📁 GitHub: {issues_closed}개 Issue 완료, {issues_created}개 생성
-📁 변경 파일: {file_count}개
-✅ 테스트: {test_result}
-""",
-    color="good"  # green
-)
+```bash
+# Slack Webhook으로 알림 전송
+curl -X POST "${SLACK_WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "🚀 작업 완료 - AXIS Design System",
+    "attachments": [{
+      "color": "good",
+      "fields": [
+        {"title": "커밋", "value": "'${commit_hash}'", "short": true},
+        {"title": "변경 파일", "value": "'${file_count}'개", "short": true},
+        {"title": "메시지", "value": "'${commit_message}'"}
+      ]
+    }]
+  }'
 ```
 
-#### 환경 변수 요구사항
+## Slack 연동 설정 가이드
 
-| 변수 | 용도 | 예시 |
-|------|------|------|
-| `CONFLUENCE_ACTION_LOG_PAGE_ID` | Action Log 페이지 ID | 786433 |
-| `CONFLUENCE_TODO_PAGE_ID` | Project TODO 페이지 ID | 720932 |
-| `CONFLUENCE_PLAY_DB_PAGE_ID` | Play DB 페이지 ID | 720899 |
-| `SLACK_WEBHOOK_URL` | Slack Incoming Webhook | https://hooks.slack.com/... |
-| `GITHUB_ORG` | GitHub Organization 이름 | IDEA-on-Action |
-| `GITHUB_REPO` | GitHub Repository 이름 | AXIS-Design-System |
-| `GITHUB_PROJECT_NUMBER` | GitHub Project 번호 | 4 |
+Slack 알림을 활성화하려면 다음 단계를 따르세요.
 
-#### Confluence 페이지 구조
+### 1단계: Slack App 생성
 
+1. [Slack API](https://api.slack.com/apps) 접속
+2. **Create New App** → **From scratch** 선택
+3. App 이름: `AXIS Build Bot` (또는 원하는 이름)
+4. Workspace 선택 후 **Create App**
+
+### 2단계: Incoming Webhook 활성화
+
+1. 좌측 메뉴에서 **Incoming Webhooks** 클릭
+2. **Activate Incoming Webhooks** 토글 ON
+3. **Add New Webhook to Workspace** 클릭
+4. 알림 받을 채널 선택 (예: `#dev-notifications`)
+5. **Allow** 클릭
+
+### 3단계: Webhook URL 복사
+
+생성된 Webhook URL을 복사합니다:
 ```
-Project TODO (720932) ─────────────── 스프린트 단위 진행현황
-    │
-    ├── EXT_Desk_D01 ToDo List (753719) ── Play별 세부 작업
-    └── ...
-
-Play DB (720899) ──────────────────── 세부 작업 페이지 링크만 포함
-Action Log (786433) ───────────────── 작업 이력 기록
+<your-webhook-url>
 ```
 
-#### 동기화 조건
+### 4단계: 환경 변수 설정
+
+프로젝트 루트의 `.env` 파일에 추가:
+
+```bash
+# Slack 알림 설정
+SLACK_WEBHOOK_URL=<your-webhook-url>
+SLACK_CHANNEL=#dev-notifications  # 선택사항
+```
+
+### 5단계: 테스트
+
+```bash
+# Webhook 테스트
+curl -X POST "${SLACK_WEBHOOK_URL}" \
+  -H "Content-Type: application/json" \
+  -d '{"text": "✅ AXIS Design System Slack 연동 테스트 성공!"}'
+```
+
+### 보안 주의사항
+
+> ⚠️ **중요**: Webhook URL은 절대 Git에 커밋하지 마세요!
+> - `.env` 파일은 `.gitignore`에 포함되어 있어야 합니다
+> - CI/CD에서는 GitHub Secrets 사용 권장
+
+## 환경 변수 요구사항
+
+| 변수 | 용도 | 필수 | 예시 |
+|------|------|------|------|
+| `GITHUB_ORG` | GitHub Organization | ✅ | IDEA-on-Action |
+| `GITHUB_REPO` | GitHub Repository | ✅ | AXIS-Design-System |
+| `GITHUB_PROJECT_NUMBER` | GitHub Project 번호 | ✅ | 4 |
+| `SLACK_WEBHOOK_URL` | Slack Incoming Webhook | ❌ | https://hooks.slack.com/... |
+| `SLACK_CHANNEL` | 알림 채널 (기본: Webhook 설정 채널) | ❌ | #dev-notifications |
+
+## 동기화 조건
 
 | 조건 | 동작 |
 |------|------|
-| 기본 (옵션 없음) | Confluence + GitHub + Slack 모두 실행 |
+| 기본 (옵션 없음) | GitHub + Slack 모두 실행 |
 | `--no-sync` 옵션 지정 | 동기화 건너뜀 (로컬 커밋만) |
-| `--sync-confluence` | Confluence만 실행 |
 | `--sync-github` | GitHub Project만 실행 |
 | `--sync-slack` | Slack만 실행 |
 | 환경 변수 미설정 | 해당 동기화 건너뜀 (경고 표시) |
@@ -321,10 +331,6 @@ Action Log (786433) ───────────────── 작업 �
 📤 5. 외부 시스템 동기화
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📄 Confluence Action Log
-   ✅ 업데이트 완료
-   Page: https://xxx.atlassian.net/wiki/spaces/AB/pages/786433
-
 🐙 GitHub Project
    ✅ 업데이트 완료
    Issues closed: 2
@@ -333,7 +339,7 @@ Action Log (786433) ───────────────── 작업 �
 
 💬 Slack 알림
    ✅ 전송 완료
-   Channel: #ax-bd-alerts
+   Channel: #dev-notifications
 ```
 
 ## 옵션
@@ -345,7 +351,6 @@ Action Log (786433) ───────────────── 작업 �
 | `--auto` | 모든 확인 자동 승인 | false |
 | `--dry-run` | 실제 커밋 없이 미리보기 | false |
 | `--no-sync` | 동기화 건너뛰기 (로컬 커밋만) | false |
-| `--sync-confluence` | Confluence만 동기화 | false |
 | `--sync-github` | GitHub Project만 동기화 | false |
 | `--sync-slack` | Slack만 알림 | false |
 
@@ -356,18 +361,15 @@ Action Log (786433) ───────────────── 작업 �
 | 테스트 실패 | "테스트 실패로 커밋이 중단되었습니다" | 실패 테스트 수정 후 재실행 |
 | 충돌 | "Git 충돌이 감지되었습니다" | 충돌 해결 후 재실행 |
 | 변경 없음 | "커밋할 변경 사항이 없습니다" | 작업 확인 |
-| Confluence 실패 | "Confluence 동기화 실패" | 환경 변수 및 네트워크 확인 |
 | GitHub 실패 | "GitHub Project 동기화 실패" | gh auth status 확인, 권한 확인 |
 | Slack 실패 | "Slack 알림 전송 실패" | SLACK_WEBHOOK_URL 확인 |
-| 환경 변수 미설정 | "⚠️ CONFLUENCE_ACTION_LOG_PAGE_ID 미설정" | .env 파일 확인 |
 | gh CLI 미인증 | "⚠️ GitHub CLI 인증 필요" | gh auth login 실행 |
 
 ## 사용법
 
-```
-/ax:wrap-up                    # 기본 실행 (커밋 + Confluence + GitHub + Slack 동기화)
+```bash
+/ax:wrap-up                    # 기본 실행 (커밋 + GitHub + Slack 동기화)
 /ax:wrap-up --no-sync          # 로컬 커밋만 (동기화 건너뛰기)
-/ax:wrap-up --sync-confluence  # 커밋 + Confluence만 동기화
 /ax:wrap-up --sync-github      # 커밋 + GitHub Project만 동기화
 /ax:wrap-up --sync-slack       # 커밋 + Slack만 알림
 /ax:wrap-up --dry-run          # 미리보기 (커밋 없음)
@@ -375,21 +377,18 @@ Action Log (786433) ───────────────── 작업 �
 /ax:wrap-up --auto             # 자동 모드 (모든 확인 자동 승인)
 ```
 
-## 연계 Skill/Agent
+## 연계 도구
 
-| Skill/Agent | 역할 | 연계 방식 |
-|-------------|------|----------|
-| `/ax:confluence` | Confluence 동기화 | Action Log append_to_page |
-| `confluence_sync` | DB/Live doc 업데이트 | append_to_page 호출 |
+| 도구 | 역할 | 연계 방식 |
+|------|------|----------|
 | `gh` CLI | GitHub Issue/Project 관리 | gh issue, gh project 명령 |
-| `governance` | 알림 전송 | SlackMCP.send_notification |
+| Slack Webhook | 알림 전송 | HTTP POST |
 
 ## 관련 문서
 
 - [CLAUDE.md](../../../CLAUDE.md) - 프로젝트 개발 문서
 - [changelog.md](../../../changelog.md) - 변경 이력
 - [project-todo.md](../../../project-todo.md) - 작업 추적
-- [ax-confluence SKILL.md](../ax-confluence/SKILL.md) - Confluence 동기화 Skill
-- [confluence_sync.md](../../agents/confluence_sync.md) - Confluence Sync Agent
 - [GitHub Project](https://github.com/orgs/IDEA-on-Action/projects/4) - GitHub Project Board
 - [GitHub CLI Manual](https://cli.github.com/manual/) - gh CLI 공식 문서
+- [Slack Incoming Webhooks](https://api.slack.com/messaging/webhooks) - Slack Webhook 가이드
