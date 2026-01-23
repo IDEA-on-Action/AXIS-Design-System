@@ -913,18 +913,48 @@ def main():
                 print(f"💾 저장됨: {file_path}")
         return
 
-    # 기본: ToDo 확인 후 안내
+    # 기본: ToDo 기반 스프린트 자동 생성
     todo_path = find_todo_file()
     if todo_path:
         items, version, _ = parse_todo_file(todo_path)
-        print(format_todo_status(todo_path, items, version))
+        pending_count = sum(1 for i in items if i.status != TaskStatus.COMPLETED)
+
+        if pending_count == 0:
+            print("✅ 모든 ToDo 항목이 완료되었습니다!")
+            print("새 작업을 project-todo.md에 추가한 후 다시 시도하세요.")
+            return
+
+        title = args.title or f"Sprint - v{version}" if version else "Sprint"
+
+        print(f"🚀 ToDo 기반 스프린트 생성 중...")
+        print(f"   원본: {todo_path}")
+        print(f"   미완료 항목: {pending_count}개")
         print("")
-        print("💡 스프린트 생성: /ax:sprint --from-todo")
-        print("💡 커스텀 생성: /ax:sprint --new --title \"제목\"")
+
+        sprint = create_sprint_from_todo(
+            title=title,
+            todo_items=items,
+            todo_version=version,
+            todo_path=str(todo_path),
+            num_days=args.days
+        )
+
+        file_path = save_sprint(sprint, args.dry_run)
+
+        if args.json:
+            print(format_sprint_json(sprint))
+        else:
+            print(format_sprint_summary(sprint))
+            print("")
+            if not args.dry_run:
+                print(f"💾 저장됨: {file_path}")
+            print("")
+            print("💡 상태 업데이트: python .claude/skills/ax-sprint/sprint_skill.py --update " + sprint.sprint_id + ":D1-1:completed")
+            print("💡 완료 처리: python .claude/skills/ax-sprint/sprint_skill.py --decision " + sprint.sprint_id + ":GO")
     else:
         print(format_todo_status(None, [], None))
         print("")
-        print("💡 빈 스프린트 생성: /ax:sprint --new --title \"제목\"")
+        print("💡 빈 스프린트 생성: python .claude/skills/ax-sprint/sprint_skill.py --new --title \"제목\"")
 
 
 if __name__ == "__main__":
