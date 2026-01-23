@@ -24,25 +24,14 @@ services:
         value: "false"
       - key: LOG_LEVEL
         value: INFO
-      # 아래 변수들은 Render Dashboard에서 수동 설정
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: CONFLUENCE_BASE_URL
-        sync: false
-      - key: CONFLUENCE_API_TOKEN
-        sync: false
-      - key: CONFLUENCE_USER_EMAIL
-        sync: false
-      - key: CONFLUENCE_SPACE_KEY
-        sync: false
       - key: CLOUDFLARE_ACCOUNT_ID
-        sync: false
-      - key: CLOUDFLARE_API_TOKEN
-        sync: false
+        value: "02ae9a2bead25d99caa8f3258b81f568"
       - key: D1_DATABASE_ID
-        sync: false
+        value: "631b77f1-274d-4254-ba42-53b5cec41408"
       - key: CORS_ORIGINS
-        sync: false
+        value: "https://ax-discovery-portal.pages.dev,https://axis.minu.best"
 
   # Staging 백엔드 서비스
   - type: web
@@ -66,22 +55,11 @@ services:
         value: "true"
       - key: LOG_LEVEL
         value: DEBUG
-      # 아래 변수들은 Render Dashboard에서 수동 설정
       - key: ANTHROPIC_API_KEY
         sync: false
-      - key: CONFLUENCE_BASE_URL
-        sync: false
-      - key: CONFLUENCE_API_TOKEN
-        sync: false
-      - key: CONFLUENCE_USER_EMAIL
-        sync: false
-      - key: CONFLUENCE_SPACE_KEY
-        sync: false
       - key: CLOUDFLARE_ACCOUNT_ID
-        sync: false
-      - key: CLOUDFLARE_API_TOKEN
-        sync: false
+        value: "02ae9a2bead25d99caa8f3258b81f568"
       - key: D1_DATABASE_ID
-        sync: false
+        value: "631b77f1-274d-4254-ba42-53b5cec41408"
       - key: CORS_ORIGINS
-        sync: false
+        value: "https://staging.ax-discovery-portal.pages.dev"
