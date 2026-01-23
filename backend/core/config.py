@@ -33,9 +33,9 @@ class Settings(BaseSettings):
     # =========================================================================
     # Application
     # =========================================================================
-    app_env: Literal["development", "staging", "production"] = Field(
+    app_env: Literal["development", "staging", "production", "test"] = Field(
         default="development",
-        description="애플리케이션 환경 (development, staging, production)",
+        description="애플리케이션 환경 (development, staging, production, test)",
     )
     debug: bool = Field(default=True, description="디버그 모드")
     log_level: str = Field(default="INFO", description="로그 레벨")
