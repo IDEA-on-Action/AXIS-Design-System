@@ -24,6 +24,7 @@ SSDD 원칙에 따라 작업 내용을 정리하고, 테스트 검증 후 Git �
     ↓
 6단계: 외부 시스템 동기화 (기본 실행)
     ├─ Confluence Action Log 업데이트 (/ax:confluence 연계)
+    ├─ GitHub Project 업데이트 (gh CLI)
     └─ Slack 알림 전송 (governance agent 연계)
 ```
 
@@ -140,7 +141,55 @@ await confluence.append_to_page(
 )
 ```
 
-#### 6-2. Slack 알림 전송
+#### 6-2. GitHub Project 업데이트
+
+`gh` CLI를 활용하여 GitHub Project의 Issues 상태를 업데이트합니다.
+
+**동기화 로직**:
+
+```bash
+# 1. project-todo.md에서 완료된 항목 추출
+# 2. 해당 GitHub Issue를 closed 상태로 변경
+# 3. 새로운 미완료 항목이 있으면 Issue 생성
+# 4. Project Board에 반영
+```
+
+**완료 항목 처리**:
+
+```bash
+# project-todo.md에서 완료 항목 패턴: - [x] 항목명
+# 해당 Issue 찾아서 close
+
+gh issue close <issue_number> \
+  --repo IDEA-on-Action/AXIS-Design-System \
+  --comment "✅ 작업 완료 (commit: ${commit_hash})"
+```
+
+**새 항목 생성**:
+
+```bash
+# project-todo.md에서 미완료 항목 중 Issue가 없는 것 생성
+
+gh issue create \
+  --repo IDEA-on-Action/AXIS-Design-System \
+  --title "${task_title}" \
+  --body "${task_description}" \
+  --label "${phase_label}"
+
+# Project에 추가
+gh project item-add 4 --owner IDEA-on-Action --url "${issue_url}"
+```
+
+**진행 상태 업데이트**:
+
+```bash
+# Issue에 status:in-progress 라벨 추가/제거
+gh issue edit <issue_number> \
+  --repo IDEA-on-Action/AXIS-Design-System \
+  --add-label "status:in-progress"
+```
+
+#### 6-3. Slack 알림 전송
 
 `governance` agent의 알림 기능을 활용하여 Slack에 작업 완료를 알립니다.
 
@@ -153,6 +202,7 @@ await slack.send_notification(
 {commit_message}
 
 📄 Confluence: Action Log 업데이트됨
+📁 GitHub: {issues_closed}개 Issue 완료, {issues_created}개 생성
 📁 변경 파일: {file_count}개
 ✅ 테스트: {test_result}
 """,
@@ -168,6 +218,9 @@ await slack.send_notification(
 | `CONFLUENCE_TODO_PAGE_ID` | Project TODO 페이지 ID | 720932 |
 | `CONFLUENCE_PLAY_DB_PAGE_ID` | Play DB 페이지 ID | 720899 |
 | `SLACK_WEBHOOK_URL` | Slack Incoming Webhook | https://hooks.slack.com/... |
+| `GITHUB_ORG` | GitHub Organization 이름 | IDEA-on-Action |
+| `GITHUB_REPO` | GitHub Repository 이름 | AXIS-Design-System |
+| `GITHUB_PROJECT_NUMBER` | GitHub Project 번호 | 4 |
 
 #### Confluence 페이지 구조
 
@@ -185,9 +238,10 @@ Action Log (786433) ───────────────── 작업 �
 
 | 조건 | 동작 |
 |------|------|
-| 기본 (옵션 없음) | Confluence + Slack 모두 실행 |
+| 기본 (옵션 없음) | Confluence + GitHub + Slack 모두 실행 |
 | `--no-sync` 옵션 지정 | 동기화 건너뜀 (로컬 커밋만) |
 | `--sync-confluence` | Confluence만 실행 |
+| `--sync-github` | GitHub Project만 실행 |
 | `--sync-slack` | Slack만 실행 |
 | 환경 변수 미설정 | 해당 동기화 건너뜀 (경고 표시) |
 
@@ -271,6 +325,12 @@ Action Log (786433) ───────────────── 작업 �
    ✅ 업데이트 완료
    Page: https://xxx.atlassian.net/wiki/spaces/AB/pages/786433
 
+🐙 GitHub Project
+   ✅ 업데이트 완료
+   Issues closed: 2
+   Issues created: 0
+   Project: https://github.com/orgs/IDEA-on-Action/projects/4
+
 💬 Slack 알림
    ✅ 전송 완료
    Channel: #ax-bd-alerts
@@ -286,6 +346,7 @@ Action Log (786433) ───────────────── 작업 �
 | `--dry-run` | 실제 커밋 없이 미리보기 | false |
 | `--no-sync` | 동기화 건너뛰기 (로컬 커밋만) | false |
 | `--sync-confluence` | Confluence만 동기화 | false |
+| `--sync-github` | GitHub Project만 동기화 | false |
 | `--sync-slack` | Slack만 알림 | false |
 
 ## 에러 처리
@@ -296,15 +357,18 @@ Action Log (786433) ───────────────── 작업 �
 | 충돌 | "Git 충돌이 감지되었습니다" | 충돌 해결 후 재실행 |
 | 변경 없음 | "커밋할 변경 사항이 없습니다" | 작업 확인 |
 | Confluence 실패 | "Confluence 동기화 실패" | 환경 변수 및 네트워크 확인 |
+| GitHub 실패 | "GitHub Project 동기화 실패" | gh auth status 확인, 권한 확인 |
 | Slack 실패 | "Slack 알림 전송 실패" | SLACK_WEBHOOK_URL 확인 |
 | 환경 변수 미설정 | "⚠️ CONFLUENCE_ACTION_LOG_PAGE_ID 미설정" | .env 파일 확인 |
+| gh CLI 미인증 | "⚠️ GitHub CLI 인증 필요" | gh auth login 실행 |
 
 ## 사용법
 
 ```
-/ax:wrap-up                    # 기본 실행 (커밋 + Confluence + Slack 동기화)
+/ax:wrap-up                    # 기본 실행 (커밋 + Confluence + GitHub + Slack 동기화)
 /ax:wrap-up --no-sync          # 로컬 커밋만 (동기화 건너뛰기)
 /ax:wrap-up --sync-confluence  # 커밋 + Confluence만 동기화
+/ax:wrap-up --sync-github      # 커밋 + GitHub Project만 동기화
 /ax:wrap-up --sync-slack       # 커밋 + Slack만 알림
 /ax:wrap-up --dry-run          # 미리보기 (커밋 없음)
 /ax:wrap-up --skip-docs        # 문서 업데이트 건너뛰기
@@ -317,6 +381,7 @@ Action Log (786433) ───────────────── 작업 �
 |-------------|------|----------|
 | `/ax:confluence` | Confluence 동기화 | Action Log append_to_page |
 | `confluence_sync` | DB/Live doc 업데이트 | append_to_page 호출 |
+| `gh` CLI | GitHub Issue/Project 관리 | gh issue, gh project 명령 |
 | `governance` | 알림 전송 | SlackMCP.send_notification |
 
 ## 관련 문서
@@ -326,3 +391,5 @@ Action Log (786433) ───────────────── 작업 �
 - [project-todo.md](../../../project-todo.md) - 작업 추적
 - [ax-confluence SKILL.md](../ax-confluence/SKILL.md) - Confluence 동기화 Skill
 - [confluence_sync.md](../../agents/confluence_sync.md) - Confluence Sync Agent
+- [GitHub Project](https://github.com/orgs/IDEA-on-Action/projects/4) - GitHub Project Board
+- [GitHub CLI Manual](https://cli.github.com/manual/) - gh CLI 공식 문서
