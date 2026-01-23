@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.6.2] - 2026-01-23
+
+### Added
+
+- **AXIS Design System 사이트 구현** 🎨
+  - 메인 페이지: Hero 섹션, Core UI/Agentic UI 컴포넌트 갤러리
+  - `/components`: 10개 기본 UI 컴포넌트 목록
+  - `/agentic`: 10개 Agentic UI 컴포넌트 목록
+  - `/docs`: 설치 가이드 페이지
+  - SiteHeader: 반응형 네비게이션 헤더
+  - ComponentPreview: 컴포넌트 미리보기
+
+- **프로덕션 배포 완료** 🚀
+  - Frontend: https://ds.minu.best (Cloudflare Pages)
+  - Backend: https://ax-discovery-api.onrender.com (Render)
+
+### Changed
+
+- CI/CD 워크플로 단순화 (Staging 제거, Production 전용)
+
+### Removed
+
+- AX Discovery Portal 페이지 삭제 (activities, brief, inbox, login, plays, scorecard, seminar)
+
+---
+
 ## [0.6.1] - 2026-01-23
 
 ### Added

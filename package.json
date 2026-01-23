@@ -1,6 +1,6 @@
 {
   "name": "ax-discovery-portal-monorepo",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "private": true,
   "description": "AX BD팀 멀티에이전트 기반 사업기회 포착 엔진 - Monorepo",
   "pnpm": {
@@ -18,8 +18,8 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "clean": "pnpm -r clean && rm -rf node_modules .turbo",
-    "backend:dev": "cd backend && uvicorn backend.api.main:app --reload",
-    "backend:test": "cd backend && pytest",
+    "backend:dev": "uvicorn backend.api.main:app --reload",
+    "backend:test": "pytest",
     "test": "turbo run test"
   },
   "devDependencies": {
