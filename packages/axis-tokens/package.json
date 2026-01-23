@@ -1,0 +1,40 @@
+{
+  "name": "@axis-ds/tokens",
+  "version": "0.1.0",
+  "description": "AXIS Design System - Design Tokens (CSS Variables + JSON)",
+  "main": "dist/js/tokens.js",
+  "module": "dist/js/tokens.mjs",
+  "types": "dist/js/tokens.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/js/tokens.mjs",
+      "require": "./dist/js/tokens.js",
+      "types": "./dist/js/tokens.d.ts"
+    },
+    "./css": "./dist/css/variables.css",
+    "./json": "./dist/json/tokens.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node build-tokens.js",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "style-dictionary": "^4.2.0"
+  },
+  "keywords": [
+    "design-tokens",
+    "css-variables",
+    "design-system",
+    "axis"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thoughtandaction/axis.git",
+    "directory": "packages/axis-tokens"
+  },
+  "homepage": "https://axis.minu.best"
+}

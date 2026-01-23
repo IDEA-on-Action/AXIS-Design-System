@@ -1,0 +1,107 @@
+{
+  "button": {
+    "bg": {
+      "default": { "value": "{color.blue.500}" },
+      "hover": { "value": "{color.blue.600}" },
+      "active": { "value": "{color.blue.700}" },
+      "disabled": { "value": "{color.gray.300}" }
+    },
+    "text": {
+      "default": { "value": "{color.white}" },
+      "disabled": { "value": "{color.gray.500}" }
+    },
+    "border": {
+      "default": { "value": "transparent" },
+      "focus": { "value": "{color.blue.400}" }
+    }
+  },
+  "button-secondary": {
+    "bg": {
+      "default": { "value": "{color.gray.100}" },
+      "hover": { "value": "{color.gray.200}" },
+      "active": { "value": "{color.gray.300}" }
+    },
+    "text": {
+      "default": { "value": "{color.gray.900}" }
+    }
+  },
+  "button-ghost": {
+    "bg": {
+      "default": { "value": "transparent" },
+      "hover": { "value": "{color.gray.100}" },
+      "active": { "value": "{color.gray.200}" }
+    },
+    "text": {
+      "default": { "value": "{color.gray.700}" }
+    }
+  },
+  "button-destructive": {
+    "bg": {
+      "default": { "value": "{color.red.500}" },
+      "hover": { "value": "{color.red.600}" },
+      "active": { "value": "{color.red.700}" }
+    },
+    "text": {
+      "default": { "value": "{color.white}" }
+    }
+  },
+  "input": {
+    "bg": {
+      "default": { "value": "{color.white}" },
+      "disabled": { "value": "{color.gray.100}" }
+    },
+    "text": {
+      "default": { "value": "{color.gray.900}" },
+      "placeholder": { "value": "{color.gray.400}" }
+    },
+    "border": {
+      "default": { "value": "{color.gray.300}" },
+      "hover": { "value": "{color.gray.400}" },
+      "focus": { "value": "{color.blue.500}" },
+      "error": { "value": "{color.red.500}" }
+    }
+  },
+  "card": {
+    "bg": {
+      "default": { "value": "{color.white}" }
+    },
+    "border": {
+      "default": { "value": "{color.gray.200}" }
+    },
+    "shadow": {
+      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)" }
+    }
+  },
+  "badge": {
+    "default": {
+      "bg": { "value": "{color.gray.100}" },
+      "text": { "value": "{color.gray.700}" }
+    },
+    "success": {
+      "bg": { "value": "{color.green.100}" },
+      "text": { "value": "{color.green.700}" }
+    },
+    "warning": {
+      "bg": { "value": "{color.yellow.100}" },
+      "text": { "value": "{color.yellow.700}" }
+    },
+    "error": {
+      "bg": { "value": "{color.red.100}" },
+      "text": { "value": "{color.red.700}" }
+    },
+    "info": {
+      "bg": { "value": "{color.blue.100}" },
+      "text": { "value": "{color.blue.700}" }
+    }
+  },
+  "dialog": {
+    "overlay": {
+      "bg": { "value": "rgba(0, 0, 0, 0.5)" }
+    },
+    "content": {
+      "bg": { "value": "{color.white}" },
+      "border": { "value": "{color.gray.200}" },
+      "shadow": { "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)" }
+    }
+  }
+}

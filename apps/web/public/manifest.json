@@ -1,0 +1,11 @@
+{
+  "name": "AX Discovery Portal",
+  "short_name": "AX Discovery",
+  "description": "AX BD팀 멀티에이전트 기반 사업기회 포착 엔진",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": []
+}

@@ -1,0 +1,47 @@
+{
+  "dependencies": [
+    {
+      "name": "shadcn/ui",
+      "source": "https://github.com/shadcn-ui/ui",
+      "version": "0.8.0",
+      "license": "MIT",
+      "files": [
+        "button",
+        "input",
+        "card",
+        "dialog",
+        "badge",
+        "select",
+        "tabs",
+        "toast",
+        "label",
+        "separator"
+      ],
+      "modifications": "AXIS 토큰 시스템 적용, CSS 변수 기반 스타일링"
+    },
+    {
+      "name": "Radix UI",
+      "source": "https://github.com/radix-ui/primitives",
+      "license": "MIT",
+      "usage": "headless UI primitives (dialog, select, tabs, toast, tooltip)"
+    },
+    {
+      "name": "class-variance-authority",
+      "source": "https://github.com/joe-bell/cva",
+      "license": "Apache-2.0",
+      "usage": "component variant management"
+    },
+    {
+      "name": "Style Dictionary",
+      "source": "https://github.com/amzn/style-dictionary",
+      "license": "Apache-2.0",
+      "usage": "design token build system"
+    },
+    {
+      "name": "Framer Motion",
+      "source": "https://github.com/framer/motion",
+      "license": "MIT",
+      "usage": "animation library for agentic-ui components"
+    }
+  ]
+}

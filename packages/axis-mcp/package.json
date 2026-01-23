@@ -1,0 +1,42 @@
+{
+  "name": "@axis-ds/mcp",
+  "version": "0.1.0",
+  "description": "AXIS Design System - MCP Server for AI-assisted component discovery",
+  "bin": {
+    "axis-mcp": "./dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs --dts",
+    "dev": "tsup src/index.ts --format cjs --watch",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "fs-extra": "^11.2.0",
+    "node-fetch": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^22.0.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "design-system",
+    "axis"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thoughtandaction/axis.git",
+    "directory": "packages/axis-mcp"
+  },
+  "homepage": "https://axis.minu.best"
+}

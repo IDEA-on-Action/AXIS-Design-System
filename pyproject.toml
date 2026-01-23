@@ -1,0 +1,111 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ax-discovery-portal"
+version = "0.5.1"
+description = "AX BD팀 멀티에이전트 기반 사업기회 포착 엔진"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "AX BD Team"}
+]
+keywords = ["claude", "agent", "mcp", "bd", "discovery"]
+
+dependencies = [
+    "anthropic>=0.40.0",
+    "claude-agent-sdk>=0.1.19",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "pydantic[email]>=2.10.0",  # email-validator 포함
+    "pydantic-settings>=2.6.0",
+    "email-validator>=2.0.0",  # Render 캐시 문제 해결용 명시적 추가
+    "atlassian-python-api>=3.41.0",
+    "httpx>=0.28.0",
+    "structlog>=24.4.0",
+    "python-dotenv>=1.0.0",
+    "psycopg[binary]>=3.2.0",  # asyncpg 대신 사용 (바이너리 휠 제공, C 빌드 불필요)
+    "sqlalchemy[asyncio]>=2.0.0",
+    "alembic>=1.14.0",
+    "tenacity>=9.0.0",
+    "jsonschema>=4.23.0",
+    "sse-starlette>=2.2.1",
+    "openai>=1.40.0",  # 임베딩 생성용
+    "python-jose[cryptography]>=3.3.0",  # JWT 생성/검증
+    "passlib[bcrypt]>=1.7.4",  # 비밀번호 해싱
+    "feedparser>=6.0.0",  # RSS 피드 파싱 (외부 세미나 수집용)
+    "markdown2>=2.5.0",  # Markdown → Confluence 변환
+    "python-multipart>=0.0.9",  # 파일 업로드
+    "pypdf>=4.0.0",  # PDF 텍스트 추출
+    "python-docx>=1.1.0",  # DOCX 문서 추출
+    "openpyxl>=3.1.0",  # XLSX 스프레드시트 추출
+    "pyyaml>=6.0.0",  # YAML 파싱 (Evals Task/Suite 정의)
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.8.0",
+    "mypy>=1.13.0",
+    "pre-commit>=4.0.0",
+    "types-PyYAML>=6.0.0",  # mypy용 YAML 타입 스텁
+]
+monitoring = [
+    "sentry-sdk[fastapi]>=2.0.0",
+]
+loadtest = [
+    "locust>=2.29.0",
+]
+
+[project.scripts]
+ax-portal = "backend.api.main:main"
+ax-index-entities = "scripts.index_entities:cli"
+ax-evals = "backend.evals.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/AX-BD-Team/ax-discovery-portal"
+Repository = "https://github.com/AX-BD-Team/ax-discovery-portal"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP", "B", "C4", "SIM"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "B008",   # function call in default argument (FastAPI Depends pattern)
+    "N806",   # variable in function should be lowercase (Mock naming)
+    "SIM102", # nested if (readability preference)
+    "SIM105", # contextlib.suppress (intentional try-except-pass)
+    "SIM117", # nested with statements (readability preference)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]  # allow imports not at top in test files
+"backend/database/models/*" = ["F821"]  # SQLAlchemy string references for relationships
+"backend/api/main.py" = ["E402"]  # load_dotenv() must run before other imports
+"backend/evals/cli.py" = ["E402"]  # PYTHONPATH 설정 후 import 필요
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.11"
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+strict_optional = true
+warn_unused_ignores = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true

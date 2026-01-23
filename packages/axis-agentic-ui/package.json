@@ -1,0 +1,75 @@
+{
+  "name": "@axis-ds/agentic-ui",
+  "version": "0.1.0",
+  "description": "AXIS Design System - Agentic UI Components for AI/LLM Applications",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./run-progress": {
+      "import": "./dist/run-progress.mjs",
+      "require": "./dist/run-progress.js"
+    },
+    "./approval-card": {
+      "import": "./dist/approval-card.mjs",
+      "require": "./dist/approval-card.js"
+    },
+    "./streaming-text": {
+      "import": "./dist/streaming-text.mjs",
+      "require": "./dist/streaming-text.js"
+    },
+    "./tool-call-card": {
+      "import": "./dist/tool-call-card.mjs",
+      "require": "./dist/tool-call-card.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts src/*/index.ts --format cjs,esm --dts --external react",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react",
+    "clean": "rm -rf dist",
+    "lint": "eslint src",
+    "type-check": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "dependencies": {
+    "@axis-ds/tokens": "workspace:*",
+    "@axis-ds/ui-react": "workspace:*",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.0",
+    "framer-motion": "^11.0.0",
+    "tailwind-merge": "^2.5.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "react": "^18.2.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "react",
+    "agentic",
+    "ai",
+    "llm",
+    "components",
+    "design-system",
+    "axis"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thoughtandaction/axis.git",
+    "directory": "packages/axis-agentic-ui"
+  },
+  "homepage": "https://axis.minu.best"
+}
