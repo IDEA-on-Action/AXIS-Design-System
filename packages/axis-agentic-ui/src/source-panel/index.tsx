@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { SOURCE_TYPE_LABELS } from "../constants/a11y-labels";
 
 export type SourceType = "web" | "file" | "database" | "api";
 
@@ -57,6 +58,7 @@ export function SourcePanel({
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
   const displayedSources = isExpanded ? sources : sources.slice(0, maxItems);
   const hasMore = sources.length > maxItems;
+  const listId = React.useId();
 
   if (sources.length === 0) return null;
 
@@ -71,16 +73,18 @@ export function SourcePanel({
       <h4 className="text-xs font-medium text-[var(--axis-text-secondary)] mb-2">
         출처 ({sources.length}개)
       </h4>
-      <div className="space-y-2">
+      <div id={listId} role="list" aria-label="출처 목록" className="space-y-2">
         {displayedSources.map((source) => (
           <div
             key={source.id}
+            role="listitem"
             className="flex items-start gap-2 p-2 rounded-md bg-[var(--axis-surface-default)]"
           >
-            <span className="text-[var(--axis-icon-secondary)] mt-0.5">
+            <span className="text-[var(--axis-icon-secondary)] mt-0.5" aria-hidden="true">
               {sourceIcons[source.type]}
             </span>
             <div className="flex-1 min-w-0">
+              <span className="sr-only">{SOURCE_TYPE_LABELS[source.type]}:</span>
               <p className="text-sm font-medium text-[var(--axis-text-primary)] truncate">
                 {source.url ? (
                   <a
@@ -88,8 +92,10 @@ export function SourcePanel({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="hover:underline"
+                    aria-label={`${source.title} (새 창에서 열림)`}
                   >
                     {source.title}
+                    <span className="sr-only">, 새 창에서 열림</span>
                   </a>
                 ) : (
                   source.title
@@ -117,6 +123,8 @@ export function SourcePanel({
       {expandable && hasMore && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
+          aria-expanded={isExpanded}
+          aria-controls={listId}
           className="mt-2 text-xs text-[var(--axis-text-brand)] hover:underline"
         >
           {isExpanded ? "접기" : `${sources.length - maxItems}개 더 보기`}

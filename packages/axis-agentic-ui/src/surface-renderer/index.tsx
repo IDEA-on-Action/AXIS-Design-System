@@ -47,12 +47,16 @@ export function SurfaceRenderer({
         const tableData = surface.content as { headers: string[]; rows: string[][] };
         return (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table role="table" className="w-full text-sm">
+              {surface.title && (
+                <caption className="sr-only">{surface.title}</caption>
+              )}
               <thead>
                 <tr className="border-b border-[var(--axis-border-default)]">
                   {tableData.headers.map((header, i) => (
                     <th
                       key={i}
+                      scope="col"
                       className="px-3 py-2 text-left font-medium text-[var(--axis-text-secondary)]"
                     >
                       {header}

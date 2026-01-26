@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { SEVERITY_LABELS } from "../constants/a11y-labels";
 
 export type Severity = "info" | "warning" | "error";
 
@@ -10,6 +11,8 @@ export interface ApprovalAction {
 }
 
 export interface ApprovalCardProps {
+  /** 고유 ID (접근성용) */
+  id?: string;
   /** 제목 */
   title: string;
   /** 설명 */
@@ -71,6 +74,7 @@ const actionVariantStyles: Record<string, string> = {
  * 사용자 승인이 필요한 작업을 표시하는 카드 컴포넌트
  */
 export function ApprovalCard({
+  id,
   title,
   description,
   severity = "info",
@@ -79,9 +83,17 @@ export function ApprovalCard({
   className,
 }: ApprovalCardProps) {
   const styles = severityStyles[severity];
+  const generatedId = React.useId();
+  const baseId = id || generatedId;
+  const titleId = `${baseId}-title`;
+  const descId = `${baseId}-desc`;
+  const severityLabel = SEVERITY_LABELS[severity];
 
   return (
     <div
+      role="region"
+      aria-labelledby={titleId}
+      aria-describedby={description ? descId : undefined}
       className={cn(
         "rounded-lg border border-l-4 p-4",
         "bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]",
@@ -90,15 +102,16 @@ export function ApprovalCard({
       )}
     >
       <div className="flex items-start gap-3">
-        <div className={cn("flex-shrink-0 mt-0.5", styles.icon)}>
+        <div className={cn("flex-shrink-0 mt-0.5", styles.icon)} aria-hidden="true">
           {severityIcons[severity]}
         </div>
         <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-semibold text-[var(--axis-text-primary)]">
+          <span className="sr-only">{severityLabel} 알림:</span>
+          <h4 id={titleId} className="text-sm font-semibold text-[var(--axis-text-primary)]">
             {title}
           </h4>
           {description && (
-            <p className="mt-1 text-sm text-[var(--axis-text-secondary)]">
+            <p id={descId} className="mt-1 text-sm text-[var(--axis-text-secondary)]">
               {description}
             </p>
           )}

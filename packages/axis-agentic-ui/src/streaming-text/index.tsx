@@ -2,6 +2,10 @@ import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
 
 export interface StreamingTextProps {
+  /** 접근성 라이브 영역 모드 */
+  "aria-live"?: "polite" | "assertive" | "off";
+  /** 접근성 레이블 */
+  "aria-label"?: string;
   /** 스트리밍할 텍스트 */
   text: string;
   /** 스트리밍 속도 (ms) */
@@ -26,6 +30,8 @@ export function StreamingText({
   isComplete = false,
   showCursor = true,
   onComplete,
+  "aria-live": ariaLive,
+  "aria-label": ariaLabel,
   className,
 }: StreamingTextProps) {
   const [displayedText, setDisplayedText] = React.useState("");
@@ -66,12 +72,18 @@ export function StreamingText({
   }, [text, speed, isComplete, onComplete]);
 
   return (
-    <div className={cn("relative", className)}>
+    <div
+      role="region"
+      aria-label={ariaLabel || "AI 응답"}
+      aria-live={ariaLive ?? "polite"}
+      aria-busy={isStreaming}
+      className={cn("relative", className)}
+    >
       <span className="text-[var(--axis-text-primary)] whitespace-pre-wrap">
         {displayedText}
       </span>
       {showCursor && isStreaming && (
-        <span className="inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse" />
+        <span className="inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse" aria-hidden="true" />
       )}
     </div>
   );

@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { STATUS_LABELS } from "../constants/a11y-labels";
 
 export type TimelineStepStatus = "pending" | "running" | "complete" | "error" | "skipped";
 
@@ -29,6 +30,8 @@ export function StepTimeline({
 
   return (
     <div
+      role="list"
+      aria-label="작업 타임라인"
       className={cn(
         isVertical ? "flex flex-col gap-4" : "flex items-center gap-2",
         className
@@ -37,6 +40,8 @@ export function StepTimeline({
       {steps.map((step, index) => (
         <div
           key={step.id}
+          role="listitem"
+          aria-current={step.status === "running" ? "step" : undefined}
           className={cn(
             "relative flex",
             isVertical ? "items-start gap-3" : "flex-col items-center"
@@ -45,6 +50,7 @@ export function StepTimeline({
           {/* 연결선 */}
           {index < steps.length - 1 && (
             <div
+              aria-hidden="true"
               className={cn(
                 "absolute bg-[var(--axis-border-default)]",
                 isVertical
@@ -56,6 +62,7 @@ export function StepTimeline({
 
           {/* 상태 인디케이터 */}
           <div
+            aria-hidden="true"
             className={cn(
               "relative z-10 w-5 h-5 rounded-full flex items-center justify-center",
               step.status === "complete" && "bg-[var(--axis-color-green-500)]",
@@ -74,6 +81,7 @@ export function StepTimeline({
 
           {/* 라벨 */}
           <div className={cn(isVertical ? "flex-1" : "text-center mt-2")}>
+            <span className="sr-only">{STATUS_LABELS[step.status]}:</span>
             <p className="text-sm font-medium text-[var(--axis-text-primary)]">
               {step.label}
             </p>

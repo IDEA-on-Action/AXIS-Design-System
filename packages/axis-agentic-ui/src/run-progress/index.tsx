@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { STATUS_LABELS } from "../constants/a11y-labels";
 
 export type StepStatus = "pending" | "running" | "complete" | "error";
 
@@ -95,7 +96,14 @@ export function RunProgress({
       </div>
 
       {/* 진행 바 */}
-      <div className="w-full h-1.5 rounded-full bg-[var(--axis-surface-secondary)] mb-4">
+      <div
+        role="progressbar"
+        aria-valuenow={progressPercent}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label={`실행 진행률 ${progressPercent}%`}
+        className="w-full h-1.5 rounded-full bg-[var(--axis-surface-secondary)] mb-4"
+      >
         <div
           className="h-full rounded-full bg-[var(--axis-color-blue-500)] transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
@@ -103,10 +111,12 @@ export function RunProgress({
       </div>
 
       {/* 단계 목록 */}
-      <div className="space-y-2">
+      <div role="list" aria-label="실행 단계" className="space-y-2">
         {steps.map((step, index) => (
           <div
             key={step.id}
+            role="listitem"
+            aria-current={currentStep === index ? "step" : undefined}
             className={cn(
               "flex items-center gap-3 p-2 rounded-md transition-colors",
               currentStep === index && "bg-[var(--axis-surface-secondary)]"
@@ -117,10 +127,12 @@ export function RunProgress({
                 "w-5 h-5 rounded-full flex items-center justify-center text-white text-xs",
                 statusColors[step.status]
               )}
+              aria-hidden="true"
             >
               {statusIcons[step.status] || index + 1}
             </div>
             <div className="flex-1 min-w-0">
+              <span className="sr-only">{STATUS_LABELS[step.status]}:</span>
               <p className="text-sm font-medium text-[var(--axis-text-primary)] truncate">
                 {step.label}
               </p>

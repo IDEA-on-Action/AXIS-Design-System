@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { STATUS_LABELS } from "../constants/a11y-labels";
 
 export type ToolStatus = "pending" | "running" | "success" | "error";
 
@@ -20,6 +21,8 @@ export interface ToolCallCardProps {
   duration?: number;
   /** 펼침 상태 */
   defaultExpanded?: boolean;
+  /** 접근성 레이블 */
+  "aria-label"?: string;
   /** 추가 클래스 */
   className?: string;
 }
@@ -72,10 +75,13 @@ export function ToolCallCard({
   error,
   duration,
   defaultExpanded = false,
+  "aria-label": ariaLabel,
   className,
 }: ToolCallCardProps) {
   const [isExpanded, setIsExpanded] = React.useState(defaultExpanded);
   const config = statusConfig[status];
+  const contentId = React.useId();
+  const statusLabel = STATUS_LABELS[status] || status;
 
   return (
     <div
@@ -88,10 +94,13 @@ export function ToolCallCard({
       {/* 헤더 */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
+        aria-expanded={isExpanded}
+        aria-controls={contentId}
+        aria-label={ariaLabel || `${toolName} - ${statusLabel}`}
         className="w-full flex items-center justify-between p-3 hover:bg-[var(--axis-surface-secondary)] transition-colors"
       >
         <div className="flex items-center gap-2">
-          <span className={config.color}>{config.icon}</span>
+          <span className={config.color} aria-hidden="true">{config.icon}</span>
           <code className="text-sm font-mono text-[var(--axis-text-primary)]">
             {toolName}
           </code>
@@ -123,7 +132,7 @@ export function ToolCallCard({
 
       {/* 내용 */}
       {isExpanded && (
-        <div className="border-t border-[var(--axis-border-default)] p-3 space-y-3">
+        <div id={contentId} className="border-t border-[var(--axis-border-default)] p-3 space-y-3">
           {input && (
             <div>
               <h5 className="text-xs font-medium text-[var(--axis-text-secondary)] mb-1">

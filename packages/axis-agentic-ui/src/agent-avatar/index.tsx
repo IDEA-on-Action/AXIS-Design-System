@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@axis-ds/ui-react";
+import { AGENT_STATUS_LABELS } from "../constants/a11y-labels";
 
 export interface AgentAvatarProps {
   /** 에이전트 이름 */
@@ -53,12 +54,20 @@ export function AgentAvatar({
     .slice(0, 2)
     .toUpperCase();
 
+  const statusLabel = status ? AGENT_STATUS_LABELS[status] : "";
+  const ariaLabel = `${name}${statusLabel ? `, ${statusLabel}` : ""}`;
+
   return (
-    <div className={cn("relative inline-flex", className)}>
+    <div
+      role="img"
+      aria-label={ariaLabel}
+      className={cn("relative inline-flex", className)}
+    >
       {src ? (
         <img
           src={src}
-          alt={name}
+          alt=""
+          aria-hidden="true"
           className={cn(
             "rounded-full object-cover",
             sizeStyles[size]
@@ -66,6 +75,7 @@ export function AgentAvatar({
         />
       ) : (
         <div
+          aria-hidden="true"
           className={cn(
             "rounded-full flex items-center justify-center font-medium text-white",
             sizeStyles[size],
@@ -77,6 +87,7 @@ export function AgentAvatar({
       )}
       {status && (
         <span
+          aria-hidden="true"
           className={cn(
             "absolute bottom-0 right-0 rounded-full border-2 border-[var(--axis-surface-default)]",
             size === "sm" ? "w-2 h-2" : "w-3 h-3",

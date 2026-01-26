@@ -32,6 +32,9 @@ export function ThinkingIndicator({
 }: ThinkingIndicatorProps) {
   return (
     <div
+      role="status"
+      aria-live="polite"
+      aria-label={text}
       className={cn(
         "flex items-center text-[var(--axis-text-secondary)]",
         sizeStyles[size],
@@ -39,7 +42,7 @@ export function ThinkingIndicator({
       )}
     >
       <span>{text}</span>
-      <div className="flex gap-0.5">
+      <div className="flex gap-0.5" aria-hidden="true">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
