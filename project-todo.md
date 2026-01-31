@@ -31,7 +31,6 @@
 
 | # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 |
 |---|------|-------|--------------|-------|----------|
-| 7 | MCP 템플릿 Tools 구현 | [WI-0009](docs/workitems/WI-0009-mcp-template-tools/) | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | P3 |
 | 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 |
 
 ### 완료
@@ -52,6 +51,7 @@
 | 12 | CLI Template 명령어 구현 | [#52](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/52) | P5 | 2026-02-01 |
 | 13 | DX 개발자 경험 향상 | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | 2026-02-01 |
 | 14 | Agentic UI 추가 구현 | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | 2026-02-01 |
+| 15 | MCP 템플릿 Tools 구현 | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | 2026-02-01 |
 
 ---
 
@@ -65,9 +65,9 @@
 | Phase 3 | Agentic UI | 10 | 10 | 100% |
 | Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
 | Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
-| Phase 6 | MCP 연동 고도화 | 0 | 6 | 0% |
+| Phase 6 | MCP 연동 고도화 | 5 | 6 | 83% |
 | Phase 7 | 외부 DS 연합형 확장 | 0 | 4 | 0% |
-| **전체** | - | **43** | **53** | **81%** |
+| **전체** | - | **48** | **53** | **91%** |
 
 ### Phase별 상세
 
@@ -151,13 +151,13 @@
 </details>
 
 <details>
-<summary>Phase 6: MCP 연동 고도화 (0%) - #53</summary>
+<summary>Phase 6: MCP 연동 고도화 (83%) - #53</summary>
 
-- [ ] list_templates MCP tool
-- [ ] get_template MCP tool
-- [ ] apply_template MCP tool
-- [ ] diff_template MCP tool
-- [ ] check_project MCP tool
+- [x] list_templates MCP tool
+- [x] get_template MCP tool
+- [x] apply_template MCP tool
+- [x] diff_template MCP tool
+- [x] check_project MCP tool
 - [ ] IDE/Claude Code 워크플로 문서화
 
 </details>

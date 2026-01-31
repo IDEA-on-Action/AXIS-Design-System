@@ -59,3 +59,27 @@ export {
   type SaveParams,
   type SaveResultType,
 } from "./prompt/index.js";
+
+// 템플릿 도구
+export {
+  handleListTemplates,
+  formatListTemplatesResult,
+  handleGetTemplate,
+  formatGetTemplateResult,
+  handleApplyTemplate,
+  formatApplyTemplateResult,
+  handleDiffTemplate,
+  formatDiffTemplateResult,
+  handleCheckProject,
+  formatCheckProjectResult,
+  type ListTemplatesParams,
+  type ListTemplatesResult,
+  type GetTemplateParams,
+  type GetTemplateResult,
+  type ApplyTemplateParams,
+  type ApplyTemplateResult,
+  type DiffTemplateParams,
+  type DiffTemplateResult,
+  type CheckProjectParams,
+  type CheckProjectResult,
+} from "./template.js";

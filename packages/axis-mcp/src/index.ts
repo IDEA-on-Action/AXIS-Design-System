@@ -22,6 +22,17 @@ import {
   formatComponentList,
   formatTokenList,
   formatInstallResult,
+  // 템플릿 도구
+  handleListTemplates,
+  formatListTemplatesResult,
+  handleGetTemplate,
+  formatGetTemplateResult,
+  handleApplyTemplate,
+  formatApplyTemplateResult,
+  handleDiffTemplate,
+  formatDiffTemplateResult,
+  handleCheckProject,
+  formatCheckProjectResult,
   // 프롬프트 도구
   handleDetect,
   handleAnalyze,
@@ -458,6 +469,185 @@ server.tool(
           },
         ],
         isError: !result.success,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.list_templates
+server.tool(
+  "axis.list_templates",
+  "AXIS 디자인 시스템의 템플릿 목록을 조회합니다.",
+  {
+    category: z.string().optional().describe("템플릿 카테고리 필터"),
+  },
+  async ({ category }) => {
+    try {
+      const result = await handleListTemplates({ category });
+      const formatted = formatListTemplatesResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.get_template
+server.tool(
+  "axis.get_template",
+  "AXIS 디자인 시스템 템플릿의 상세 정보를 조회합니다.",
+  {
+    name: z.string().describe("템플릿 이름 (slug)"),
+  },
+  async ({ name }) => {
+    try {
+      const result = await handleGetTemplate({ name });
+      const formatted = formatGetTemplateResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.apply_template
+server.tool(
+  "axis.apply_template",
+  "AXIS 디자인 시스템 템플릿을 프로젝트에 적용합니다.",
+  {
+    name: z.string().describe("템플릿 이름 (slug)"),
+    targetDir: z.string().describe("적용 대상 디렉토리 경로"),
+    dryRun: z.boolean().optional().describe("미리보기 모드 (파일 미생성, 기본: false)"),
+  },
+  async ({ name, targetDir, dryRun }) => {
+    try {
+      const result = await handleApplyTemplate({ name, targetDir, dryRun });
+      const formatted = formatApplyTemplateResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+        isError: !result.success,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.diff_template
+server.tool(
+  "axis.diff_template",
+  "로컬 프로젝트와 원격 템플릿의 파일 차이를 비교합니다.",
+  {
+    name: z.string().describe("템플릿 이름 (slug)"),
+    targetDir: z.string().optional().describe("비교 대상 디렉토리 (기본: 현재 디렉토리)"),
+  },
+  async ({ name, targetDir }) => {
+    try {
+      const result = await handleDiffTemplate({ name, targetDir });
+      const formatted = formatDiffTemplateResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.check_project
+server.tool(
+  "axis.check_project",
+  "프로젝트의 AXIS 디자인 시스템 설정 상태를 검증합니다.",
+  {
+    targetDir: z.string().optional().describe("검증 대상 디렉토리 (기본: 현재 디렉토리)"),
+  },
+  async ({ targetDir }) => {
+    try {
+      const result = await handleCheckProject({ targetDir });
+      const formatted = formatCheckProjectResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "알 수 없는 오류";
