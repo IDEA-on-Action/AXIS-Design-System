@@ -1,0 +1,43 @@
+{
+  "version": "1.0.0",
+  "updatedAt": "2026-01-31T15:30:19.030Z",
+  "total": 1,
+  "templates": [
+    {
+      "name": "Theme Only",
+      "slug": "theme-only",
+      "description": "AXIS 디자인 토큰과 테마 시스템만 적용된 최소 구성 템플릿입니다. 다크모드 토글, CSS 변수 기반 테마, Tailwind CSS 설정이 포함됩니다.",
+      "category": "minimal",
+      "version": "0.1.0",
+      "author": "AXIS Design System",
+      "tags": [
+        "theme",
+        "dark-mode",
+        "minimal",
+        "starter"
+      ],
+      "features": [
+        "AXIS 디자인 토큰 적용",
+        "다크모드 토글",
+        "CSS 변수 기반 테마 시스템",
+        "Tailwind CSS 설정",
+        "TypeScript 지원"
+      ],
+      "dependencies": {
+        "next": "^15.1.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "tailwind-merge": "^3.4.0",
+        "clsx": "^2.1.1"
+      },
+      "devDependencies": {
+        "tailwindcss": "^3.4.0",
+        "typescript": "^5.7.0",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "autoprefixer": "^10.4.0",
+        "postcss": "^8.4.0"
+      }
+    }
+  ]
+}

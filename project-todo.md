@@ -28,16 +28,15 @@
 | # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 | 상태 |
 |---|------|-------|--------------|-------|----------|------|
 | 1 | axis-cli 기능 확장 | [WI-0001](docs/workitems/WI-0001-cli-extension/) | [#42](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/42) | P2 | P1 | 🔄 |
+| 2 | Core UI 컴포넌트 확장 (30개 목표) | [WI-0003](docs/workitems/WI-0003-core-ui-expansion/) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | P2 | 🔄 |
 
 ### 할 일
 
 | # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 |
 |---|------|-------|--------------|-------|----------|
-| 1 | Core UI 컴포넌트 확장 (30개 목표) | [WI-0003](docs/workitems/WI-0003-core-ui-expansion/) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | P2 |
 | 2 | Agentic UI 추가 구현 | [WI-0004](docs/workitems/WI-0004-agentic-ui-expansion/) | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | P2 |
 | 3 | npm 배포 준비 | [WI-0005](docs/workitems/WI-0005-npm-publish/) | [#43](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/43) | P2 | P2 |
 | 4 | DX 개발자 경험 향상 | [WI-0006](docs/workitems/WI-0006-dx-improvement/) | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | P3 |
-| 5 | 템플릿 시스템 기반 구축 | [WI-0007](docs/workitems/WI-0007-template-foundation/) | [#51](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/51) | P4 | P3 |
 | 6 | CLI Template 명령어 구현 | [WI-0008](docs/workitems/WI-0008-cli-template-cmd/) | [#52](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/52) | P5 | P3 |
 | 7 | MCP 템플릿 Tools 구현 | [WI-0009](docs/workitems/WI-0009-mcp-template-tools/) | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | P3 |
 | 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 |
@@ -53,6 +52,7 @@
 | 5 | Core UI 기본 컴포넌트 10개 | [#49](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/49) | P1 | 2026-01-22 |
 | 6 | Agentic UI 기본 컴포넌트 10개 | [#50](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/50) | P3 | 2026-01-22 |
 | 7 | 문서 사이트 개선 | [#41](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/41) | P3 | 2026-01-31 |
+| 8 | 템플릿 시스템 기반 구축 | [#51](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/51) | P4 | 2026-02-01 |
 
 ---
 
@@ -64,11 +64,11 @@
 | Phase 1 | Core 컴포넌트 | 8 | 8 | 100% |
 | Phase 2 | 인프라 구축 | 8 | 8 | 100% |
 | Phase 3 | Agentic UI | 10 | 10 | 100% |
-| Phase 4 | 템플릿 골격 + 갤러리 | 0 | 4 | 0% |
+| Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
 | Phase 5 | Template Engine + CLI | 0 | 8 | 0% |
 | Phase 6 | MCP 연동 고도화 | 0 | 6 | 0% |
 | Phase 7 | 외부 DS 연합형 확장 | 0 | 4 | 0% |
-| **전체** | - | **31** | **53** | **58%** |
+| **전체** | - | **35** | **53** | **66%** |
 
 ### Phase별 상세
 
@@ -128,12 +128,12 @@
 </details>
 
 <details>
-<summary>Phase 4: 템플릿 골격 + 갤러리 (0%) - #51</summary>
+<summary>Phase 4: 템플릿 골격 + 갤러리 (100%) ✅ - #51</summary>
 
-- [ ] templates/ 디렉토리 구조 설계
-- [ ] template.json 스키마 정의
-- [ ] 최소 템플릿 구현 (Theme-only)
-- [ ] 템플릿 갤러리 UI 기본 구현
+- [x] templates/ 디렉토리 구조 설계
+- [x] template.json 스키마 정의
+- [x] 최소 템플릿 구현 (Theme-only)
+- [x] 템플릿 갤러리 UI 기본 구현
 
 </details>
 
@@ -177,14 +177,12 @@
 
 ## 🔜 다음 단계
 
-### Phase 4: 템플릿 골격 + 갤러리 (#51)
-1. templates/ 디렉토리 구조 설계
-2. template.json 스키마 정의
-3. 최소 템플릿 구현 (Theme-only)
-4. 템플릿 갤러리 UI 기본 구현
+### Phase 5: Template Engine + CLI (#52)
+1. axis template list/info/apply/init/diff 명령어 구현
+2. 샘플 템플릿 추가 (landing/dashboard/agentic)
 
 ### Phase 2 잔여: CLI 기능 확장 (#42)
-5. axis-cli 기능 확장 (WI-0001)
+3. axis-cli 기능 확장 (WI-0001)
 
 ---
 
