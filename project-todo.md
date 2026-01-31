@@ -180,9 +180,6 @@
 1. axis template list/info/apply/init/diff 명령어 구현
 2. 샘플 템플릿 추가 (landing/dashboard/agentic)
 
-### Phase 2 잔여: CLI 기능 확장 (#42)
-3. axis-cli 기능 확장 (WI-0001)
-
 ---
 
 ## 📅 버전 계획
