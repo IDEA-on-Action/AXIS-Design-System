@@ -1,82 +1,79 @@
 # ax-library
 
-외부 컴포넌트를 수집하고 AXIS Design System에 배치합니다.
+외부 컴포넌트(shadcn 등)를 AXIS Design System에 맞게 커스터마이징하는 가이드입니다.
 
 ## 사용법
 
 ```
-/ax-library [작업] [소스]
+/ax-library [컴포넌트명]
 ```
 
-## 작업 유형
+## 컴포넌트 검색/추가
 
-| 작업 | 설명 |
+shadcn 레지스트리 검색 및 컴포넌트 추가는 MCP 도구 또는 CLI를 직접 사용하세요:
+
+| 작업 | 방법 |
 |------|------|
-| `search` | shadcn 레지스트리에서 컴포넌트 검색 |
-| `add` | 컴포넌트 추가 |
-| `list` | 현재 등록된 컴포넌트 목록 |
-| `update` | 컴포넌트 업데이트 |
+| 검색 | MCP `mcp__shadcn__search_items_in_registries` 또는 shadcn 문서 참조 |
+| 상세 확인 | MCP `mcp__shadcn__view_items_in_registries` |
+| 예제 보기 | MCP `mcp__shadcn__get_item_examples_from_registries` |
+| 설치 | `npx shadcn@latest add [컴포넌트명]` |
 
-## 컴포넌트 검색
+## AXIS 커스터마이징 체크리스트
 
-### shadcn 레지스트리 검색
-MCP 도구 `mcp__shadcn__search_items_in_registries` 사용:
-- 레지스트리: `["@shadcn"]`
-- 쿼리: 검색어
+컴포넌트 추가 후 아래 항목을 반드시 적용합니다:
 
-### 예시 사용
-MCP 도구로 컴포넌트를 검색하고 예제를 확인합니다.
+### 1. 디자인 토큰 교체
+- [ ] 하드코딩된 색상 → `@axis-ds/tokens` CSS 변수 또는 Tailwind 토큰 클래스
+- [ ] 하드코딩된 간격/폰트 → 토큰 값
 
-## 컴포넌트 추가 워크플로우
+### 2. 컴포넌트 구조 표준화
+- [ ] `displayName` 추가 (`Component.displayName = 'Component'`)
+- [ ] `forwardRef` 적용
+- [ ] Props 인터페이스 명시 (`ComponentProps`)
+- [ ] `className` prop 지원 (cn 유틸리티 사용)
 
-### 1. 컴포넌트 정보 확인
-MCP 도구 `mcp__shadcn__view_items_in_registries` 사용
+### 3. 접근성 확인
+- [ ] 키보드 네비게이션 동작 확인
+- [ ] ARIA 속성 적절성 검토
+- [ ] 스크린 리더 테스트
 
-### 2. 예제 확인
-MCP 도구 `mcp__shadcn__get_item_examples_from_registries` 사용
+### 4. 다크모드 지원
+- [ ] 다크모드에서 색상/배경 토큰이 올바르게 전환되는지 확인
 
-### 3. 추가 명령어 확인
-MCP 도구 `mcp__shadcn__get_add_command_for_items` 사용
+### 5. Export 설정
+- [ ] `packages/axis-ui-react/src/index.ts`에 export 추가
+- [ ] 레지스트리 빌드 확인: `pnpm build:registry`
 
-### 4. 컴포넌트 설치
-```bash
-npx shadcn@latest add [컴포넌트명]
-```
-
-### 5. AXIS 스타일 적용
-- 디자인 토큰 적용
-- 네이밍 규칙 통일
-- 문서화
+### 6. 문서화
+- [ ] `apps/web/src/app/components/[컴포넌트명]/` 페이지 생성
+- [ ] 기본 사용 예제, Props 테이블, 변형(Variants) 예시 포함
 
 ## 레지스트리 관리
 
-### 현재 레지스트리 확인
 ```bash
+# 레지스트리 빌드
 pnpm build:registry
 ```
 
-### registry.json 위치
-`packages/axis-cli/registry.json`
-
-## 컴포넌트 커스터마이징 체크리스트
-
-- [ ] AXIS 디자인 토큰 적용 (@axis-ds/tokens)
-- [ ] 컴포넌트 네이밍 규칙 준수
-- [ ] TypeScript 타입 정의 완료
-- [ ] 접근성(a11y) 확인
-- [ ] 다크모드 지원 확인
-- [ ] 문서화 완료
+registry.json 위치: `packages/axis-cli/registry.json`
 
 ## 출력 형식
 
 ```
-## 라이브러리 작업 결과
+## AXIS 커스터마이징 결과: [컴포넌트명]
 
-### 작업: [search/add/list/update]
+### 적용 항목
+| 항목 | 상태 |
+|------|------|
+| 디자인 토큰 교체 | ✅ / ❌ |
+| displayName | ✅ / ❌ |
+| forwardRef | ✅ / ❌ |
+| 접근성 | ✅ / ❌ |
+| 다크모드 | ✅ / ❌ |
+| Export | ✅ / ❌ |
+| 문서화 | ✅ / ❌ |
 
-### 결과:
-[작업별 상세 결과]
-
-### 다음 단계:
+### 다음 단계
 [권장 조치사항]
 ```

@@ -109,5 +109,5 @@ pnpm version major
 
 ## 6. 현행화 (필수)
 
-WI 작업인 경우 `/ax-wi-end`를 실행하세요.
+WI 작업인 경우 `/ax-wi end`를 실행하세요.
 WI가 아닌 경우: project-todo.md 상태만 갱신하고 CHANGELOG.md를 업데이트합니다.

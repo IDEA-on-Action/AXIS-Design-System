@@ -30,7 +30,7 @@
 | **Package Manager** | pnpm | 9.15.4+ |
 | **Build** | Turborepo | 2.3.3+ |
 | **Framework** | React | 19 |
-| **Styling** | Tailwind CSS | 4 |
+| **Styling** | Tailwind CSS | 3.4 |
 | **Type** | TypeScript | 5.7+ |
 | **Web App** | Next.js | 15 |
 
@@ -79,6 +79,10 @@ axis-design-system/
 
 - **OS**: Windows — 경로에 `\` 사용, bash 명령 호환성 주의
 - **Shell**: PowerShell/Git Bash 환경에서 pnpm 스크립트 실행
+- **개발 서버**: `pnpm dev:web` → `localhost:3100`
+- **배포**: Cloudflare Pages (`@opennextjs/cloudflare`)
+- **상태관리**: Zustand 5 + TanStack React Query 5
+- **아이콘**: Lucide React
 
 ---
 
@@ -100,6 +104,9 @@ pnpm type-check
 # 린트
 pnpm lint
 
+# 웹앱 빌드 (template index 자동 생성 후 next build)
+pnpm build:web
+
 # 레지스트리 빌드
 pnpm build:registry
 ```
@@ -115,11 +122,11 @@ pnpm build:registry
 
 ### 커스텀 커맨드 (ax-*)
 - `ax-build`, `ax-component`, `ax-dev`, `ax-health`, `ax-library`
-- `ax-mcp`, `ax-prompt`, `ax-release`, `ax-wrap-up`
+- `ax-mcp`, `ax-prompt`, `ax-release`, `ax-wi`
 
 ### 전문 에이전트
 - `design-system-architect`, `component-dev`, `code-reviewer`
-- `docs-writer`, `test-engineer`, `prompt-refinery`
+- `docs-writer`, `test-engineer`
 
 ### 템플릿
 - **컴포넌트 PRD**: [docs/templates/component-prd.md](docs/templates/component-prd.md)

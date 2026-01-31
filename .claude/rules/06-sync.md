@@ -45,9 +45,9 @@ Refs: WI-NNNN
 
 | 트리거 | 현행화 대상 |
 |--------|-------------|
-| ax-wi-start | project-todo.md (상태 🔄 확인) |
-| ax-wi-end | WI todo.md, project-todo.md (진행률/완료) |
-| ax-wrap-up | project-todo.md, WI todo.md |
+| ax-wi start | project-todo.md (상태 🔄 확인) |
+| ax-wi end | WI todo.md, project-todo.md (진행률/완료) |
+| ax-wi wrap-up | WI 감지 시 ax-wi end 위임 |
 | ax-release | project-todo.md, CHANGELOG.md |
 | ax-build | WI todo.md (빌드 관련 항목) |
 | wi-pipeline 완료 | project-todo.md, 전체 WI 산출물 |

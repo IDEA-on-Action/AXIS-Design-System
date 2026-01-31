@@ -186,7 +186,7 @@ Claude: ## 저장 완료
 ### 세션 종료 시 자동 탐지
 
 ```
-사용자: /ax-wrap-up
+사용자: /ax-wi wrap-up
 
 Claude: ## 세션 요약
         ...
