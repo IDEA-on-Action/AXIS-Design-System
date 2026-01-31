@@ -4,28 +4,25 @@
 
 ## 빌드 순서
 
-### 1. 사전 정리
-```bash
-pnpm clean
-```
+### 1. 사전 점검 (ax-health quick)
 
-### 2. 의존성 확인
+빌드 전 `/ax-health quick`과 동일한 점검을 수행합니다:
+
 ```bash
 pnpm install
-```
-
-### 3. 타입 체크
-```bash
 pnpm type-check
+pnpm lint
 ```
-- 오류 발생 시 중단하고 보고
 
-### 4. 전체 빌드
+- 타입 오류 또는 린트 오류 발생 시 **중단하고 보고**
+- 이 단계는 ax-health의 빠른 점검 모드와 동일하므로, 직전에 `/ax-health quick`을 실행한 경우 생략 가능
+
+### 2. 전체 빌드
 ```bash
 pnpm build
 ```
 
-### 5. 레지스트리 빌드 (선택적)
+### 3. 레지스트리 빌드 (선택적)
 ```bash
 pnpm build:registry
 ```
@@ -96,5 +93,5 @@ pnpm build:registry
 
 ## 6. 빌드 후 현행화
 
-WI 작업인 경우 `/ax-wi-end`를 실행하세요.
+WI 작업인 경우 `/ax-wi end`를 실행하세요.
 WI가 아닌 경우: project-todo.md 상태만 갱신합니다.
