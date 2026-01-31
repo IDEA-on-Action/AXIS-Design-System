@@ -1,21 +1,29 @@
 {
-  "id": "shadcn-table",
+  "id": "axis-table",
   "slug": "table",
-  "name": "table",
-  "description": "shadcn/ui table component",
+  "name": "Table",
+  "description": "AXIS Table component",
   "category": "data-display",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/table"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/table"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef"
+  ],
   "code": {
-    "files": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\nconst Table = React.forwardRef<\n  HTMLTableElement,\n  React.HTMLAttributes<HTMLTableElement>\n>(({ className, ...props }, ref) => (\n  <div className=\"relative w-full overflow-auto\">\n    <table\n      ref={ref}\n      className={cn(\n        \"w-full caption-bottom text-sm text-[var(--axis-text-primary)]\",\n        className\n      )}\n      {...props}\n    />\n  </div>\n));\nTable.displayName = \"Table\";\n\nconst TableHeader = React.forwardRef<\n  HTMLTableSectionElement,\n  React.HTMLAttributes<HTMLTableSectionElement>\n>(({ className, ...props }, ref) => (\n  <thead\n    ref={ref}\n    className={cn(\"[&_tr]:border-b\", className)}\n    {...props}\n  />\n));\nTableHeader.displayName = \"TableHeader\";\n\nconst TableBody = React.forwardRef<\n  HTMLTableSectionElement,\n  React.HTMLAttributes<HTMLTableSectionElement>\n>(({ className, ...props }, ref) => (\n  <tbody\n    ref={ref}\n    className={cn(\"[&_tr:last-child]:border-0\", className)}\n    {...props}\n  />\n));\nTableBody.displayName = \"TableBody\";\n\nconst TableFooter = React.forwardRef<\n  HTMLTableSectionElement,\n  React.HTMLAttributes<HTMLTableSectionElement>\n>(({ className, ...props }, ref) => (\n  <tfoot\n    ref={ref}\n    className={cn(\n      \"border-t bg-[var(--axis-surface-secondary)] font-medium [&>tr]:last:border-b-0\",\n      className\n    )}\n    {...props}\n  />\n));\nTableFooter.displayName = \"TableFooter\";\n\nconst TableRow = React.forwardRef<\n  HTMLTableRowElement,\n  React.HTMLAttributes<HTMLTableRowElement>\n>(({ className, ...props }, ref) => (\n  <tr\n    ref={ref}\n    className={cn(\n      \"border-b border-[var(--axis-border-default)] transition-colors\",\n      \"hover:bg-[var(--axis-surface-secondary)]\",\n      \"data-[state=selected]:bg-[var(--axis-surface-tertiary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nTableRow.displayName = \"TableRow\";\n\nconst TableHead = React.forwardRef<\n  HTMLTableCellElement,\n  React.ThHTMLAttributes<HTMLTableCellElement>\n>(({ className, ...props }, ref) => (\n  <th\n    ref={ref}\n    className={cn(\n      \"h-12 px-4 text-left align-middle font-medium text-[var(--axis-text-secondary)]\",\n      \"[&:has([role=checkbox])]:pr-0\",\n      className\n    )}\n    {...props}\n  />\n));\nTableHead.displayName = \"TableHead\";\n\nconst TableCell = React.forwardRef<\n  HTMLTableCellElement,\n  React.TdHTMLAttributes<HTMLTableCellElement>\n>(({ className, ...props }, ref) => (\n  <td\n    ref={ref}\n    className={cn(\n      \"p-4 align-middle [&:has([role=checkbox])]:pr-0\",\n      className\n    )}\n    {...props}\n  />\n));\nTableCell.displayName = \"TableCell\";\n\nconst TableCaption = React.forwardRef<\n  HTMLTableCaptionElement,\n  React.HTMLAttributes<HTMLTableCaptionElement>\n>(({ className, ...props }, ref) => (\n  <caption\n    ref={ref}\n    className={cn(\n      \"mt-4 text-sm text-[var(--axis-text-secondary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nTableCaption.displayName = \"TableCaption\";\n\nexport {\n  Table,\n  TableHeader,\n  TableBody,\n  TableFooter,\n  TableRow,\n  TableHead,\n  TableCell,\n  TableCaption,\n};\n",
+        "type": "component"
+      }
+    ],
     "dependencies": [],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.640Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

@@ -1,21 +1,32 @@
 {
-  "id": "shadcn-switch",
+  "id": "axis-switch",
   "slug": "switch",
-  "name": "switch",
-  "description": "shadcn/ui switch component",
+  "name": "Switch",
+  "description": "AXIS Switch component",
   "category": "form",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/switch"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/switch"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as SwitchPrimitive from \"@radix-ui/react-switch\";\nimport { cn } from \"../utils\";\n\nconst Switch = React.forwardRef<\n  React.ElementRef<typeof SwitchPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <SwitchPrimitive.Root\n    className={cn(\n      \"peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--axis-surface-primary)]\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"data-[state=checked]:bg-[var(--axis-interactive-primary)]\",\n      \"data-[state=unchecked]:bg-[var(--axis-surface-tertiary)]\",\n      className\n    )}\n    {...props}\n    ref={ref}\n  >\n    <SwitchPrimitive.Thumb\n      className={cn(\n        \"pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform\",\n        \"data-[state=checked]:translate-x-5 data-[state=unchecked]:translate-x-0\"\n      )}\n    />\n  </SwitchPrimitive.Root>\n));\nSwitch.displayName = SwitchPrimitive.Root.displayName;\n\nexport { Switch };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-switch"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.620Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

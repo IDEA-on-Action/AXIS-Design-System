@@ -1,21 +1,33 @@
 {
-  "id": "shadcn-toggle",
+  "id": "axis-toggle",
   "slug": "toggle",
-  "name": "toggle",
-  "description": "shadcn/ui toggle component",
+  "name": "Toggle",
+  "description": "AXIS Toggle component",
   "category": "ui",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/toggle"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/toggle"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as TogglePrimitive from \"@radix-ui/react-toggle\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst toggleVariants = cva(\n  \"inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-[var(--axis-surface-primary)] transition-colors hover:bg-[var(--axis-surface-secondary)] hover:text-[var(--axis-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-[var(--axis-surface-secondary)] data-[state=on]:text-[var(--axis-text-primary)] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0\",\n  {\n    variants: {\n      variant: {\n        default: \"bg-transparent\",\n        outline:\n          \"border border-[var(--axis-border-default)] bg-transparent hover:bg-[var(--axis-surface-secondary)] hover:text-[var(--axis-text-primary)]\",\n      },\n      size: {\n        default: \"h-10 px-3 min-w-10\",\n        sm: \"h-9 px-2.5 min-w-9\",\n        lg: \"h-11 px-5 min-w-11\",\n      },\n    },\n    defaultVariants: {\n      variant: \"default\",\n      size: \"default\",\n    },\n  }\n);\n\nconst Toggle = React.forwardRef<\n  React.ElementRef<typeof TogglePrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root> &\n    VariantProps<typeof toggleVariants>\n>(({ className, variant, size, ...props }, ref) => (\n  <TogglePrimitive.Root\n    ref={ref}\n    className={cn(toggleVariants({ variant, size, className }))}\n    {...props}\n  />\n));\nToggle.displayName = TogglePrimitive.Root.displayName;\n\nexport { Toggle, toggleVariants };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-toggle",
+      "class-variance-authority"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.700Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

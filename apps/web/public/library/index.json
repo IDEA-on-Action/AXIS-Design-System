@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-01-23T12:59:43.865Z",
+  "updatedAt": "2026-02-01T00:00:00.000Z",
   "stats": {
     "total": 108,
     "bySource": {
-      "shadcn": 47,
+      "shadcn": 32,
       "monet": 34,
-      "axis": 27
+      "axis": 42
     },
     "byCategory": {
       "ui": 47,
@@ -14,7 +14,7 @@
       "layout": 4,
       "data-display": 7,
       "navigation": 10,
-      "chart": 2,
+      "chart": 1,
       "form": 11,
       "overlay": 5,
       "agentic": 17
@@ -94,13 +94,13 @@
   ],
   "components": [
     {
-      "id": "shadcn-accordion",
+      "id": "axis-accordion",
       "slug": "accordion",
-      "name": "accordion",
-      "description": "shadcn/ui accordion component",
+      "name": "Accordion",
+      "description": "AXIS Accordion component",
       "category": "ui",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "animated"],
       "status": "active"
     },
     {
@@ -154,13 +154,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-breadcrumb",
+      "id": "axis-breadcrumb",
       "slug": "breadcrumb",
-      "name": "breadcrumb",
-      "description": "shadcn/ui breadcrumb component",
+      "name": "Breadcrumb",
+      "description": "AXIS Breadcrumb component",
       "category": "navigation",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef"],
       "status": "active"
     },
     {
@@ -218,33 +218,33 @@
       "status": "active"
     },
     {
-      "id": "shadcn-checkbox",
+      "id": "axis-checkbox",
       "slug": "checkbox",
-      "name": "checkbox",
-      "description": "shadcn/ui checkbox component",
+      "name": "Checkbox",
+      "description": "AXIS Checkbox component",
       "category": "form",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {
-      "id": "shadcn-collapsible",
+      "id": "axis-collapsible",
       "slug": "collapsible",
-      "name": "collapsible",
-      "description": "shadcn/ui collapsible component",
+      "name": "Collapsible",
+      "description": "AXIS Collapsible component",
       "category": "ui",
-      "source": "shadcn",
+      "source": "axis",
       "tags": [],
       "status": "active"
     },
     {
-      "id": "shadcn-command",
+      "id": "axis-command",
       "slug": "command",
-      "name": "command",
-      "description": "shadcn/ui command component",
+      "name": "Command",
+      "description": "AXIS Command component",
       "category": "ui",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {
@@ -278,13 +278,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-dropdown-menu",
+      "id": "axis-dropdown-menu",
       "slug": "dropdown-menu",
-      "name": "dropdown-menu",
-      "description": "shadcn/ui dropdown-menu component",
+      "name": "DropdownMenu",
+      "description": "AXIS DropdownMenu component",
       "category": "navigation",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "animated", "interactive"],
       "status": "active"
     },
     {
@@ -376,13 +376,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-popover",
+      "id": "axis-popover",
       "slug": "popover",
-      "name": "popover",
-      "description": "shadcn/ui popover component",
+      "name": "Popover",
+      "description": "AXIS Popover component",
       "category": "overlay",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "animated"],
       "status": "active"
     },
     {
@@ -396,13 +396,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-radio-group",
+      "id": "axis-radio-group",
       "slug": "radio-group",
-      "name": "radio-group",
-      "description": "shadcn/ui radio-group component",
+      "name": "RadioGroup",
+      "description": "AXIS RadioGroup component",
       "category": "form",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {
@@ -416,13 +416,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-scroll-area",
+      "id": "axis-scroll-area",
       "slug": "scroll-area",
-      "name": "scroll-area",
-      "description": "shadcn/ui scroll-area component",
-      "category": "chart",
-      "source": "shadcn",
-      "tags": [],
+      "name": "ScrollArea",
+      "description": "AXIS ScrollArea component",
+      "category": "ui",
+      "source": "axis",
+      "tags": ["forwardRef"],
       "status": "active"
     },
     {
@@ -446,13 +446,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-sheet",
+      "id": "axis-sheet",
       "slug": "sheet",
-      "name": "sheet",
-      "description": "shadcn/ui sheet component",
+      "name": "Sheet",
+      "description": "AXIS Sheet component",
       "category": "overlay",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "animated"],
       "status": "active"
     },
     {
@@ -476,13 +476,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-slider",
+      "id": "axis-slider",
       "slug": "slider",
-      "name": "slider",
-      "description": "shadcn/ui slider component",
+      "name": "Slider",
+      "description": "AXIS Slider component",
       "category": "form",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {
@@ -496,23 +496,23 @@
       "status": "active"
     },
     {
-      "id": "shadcn-switch",
+      "id": "axis-switch",
       "slug": "switch",
-      "name": "switch",
-      "description": "shadcn/ui switch component",
+      "name": "Switch",
+      "description": "AXIS Switch component",
       "category": "form",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {
-      "id": "shadcn-table",
+      "id": "axis-table",
       "slug": "table",
-      "name": "table",
-      "description": "shadcn/ui table component",
+      "name": "Table",
+      "description": "AXIS Table component",
       "category": "data-display",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef"],
       "status": "active"
     },
     {
@@ -526,13 +526,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-textarea",
+      "id": "axis-textarea",
       "slug": "textarea",
-      "name": "textarea",
-      "description": "shadcn/ui textarea component",
+      "name": "Textarea",
+      "description": "AXIS Textarea component",
       "category": "form",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef"],
       "status": "active"
     },
     {
@@ -546,13 +546,13 @@
       "status": "active"
     },
     {
-      "id": "shadcn-toggle",
+      "id": "axis-toggle",
       "slug": "toggle",
-      "name": "toggle",
-      "description": "shadcn/ui toggle component",
+      "name": "Toggle",
+      "description": "AXIS Toggle component",
       "category": "ui",
-      "source": "shadcn",
-      "tags": [],
+      "source": "axis",
+      "tags": ["forwardRef", "interactive"],
       "status": "active"
     },
     {

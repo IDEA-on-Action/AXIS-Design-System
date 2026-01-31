@@ -1,21 +1,32 @@
 {
-  "id": "shadcn-slider",
+  "id": "axis-slider",
   "slug": "slider",
-  "name": "slider",
-  "description": "shadcn/ui slider component",
+  "name": "Slider",
+  "description": "AXIS Slider component",
   "category": "form",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/slider"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/slider"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { cn } from \"../utils\";\n\nconst Slider = React.forwardRef<\n  React.ElementRef<typeof SliderPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <SliderPrimitive.Root\n    ref={ref}\n    className={cn(\n      \"relative flex w-full touch-none select-none items-center\",\n      className\n    )}\n    {...props}\n  >\n    <SliderPrimitive.Track className=\"relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--axis-surface-tertiary)]\">\n      <SliderPrimitive.Range className=\"absolute h-full bg-[var(--axis-interactive-primary)]\" />\n    </SliderPrimitive.Track>\n    <SliderPrimitive.Thumb className=\"block h-5 w-5 rounded-full border-2 border-[var(--axis-interactive-primary)] bg-[var(--axis-surface-primary)] ring-offset-[var(--axis-surface-primary)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50\" />\n  </SliderPrimitive.Root>\n));\nSlider.displayName = SliderPrimitive.Root.displayName;\n\nexport { Slider };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-slider"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.596Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

@@ -36,6 +36,6 @@ const Toggle = React.forwardRef<
     {...props}
   />
 ));
-Toggle.displayName = TogglePrimitive.Root.displayName;
+Toggle.displayName = "Toggle";
 
 export { Toggle, toggleVariants };

@@ -1,21 +1,32 @@
 {
-  "id": "shadcn-command",
+  "id": "axis-command",
   "slug": "command",
-  "name": "command",
-  "description": "shadcn/ui command component",
+  "name": "Command",
+  "description": "AXIS Command component",
   "category": "ui",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/command"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/command"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { Command as CommandPrimitive } from \"cmdk\";\nimport { cn } from \"../utils\";\n\nconst Command = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive>\n>(({ className, ...props }, ref) => (\n  <CommandPrimitive\n    ref={ref}\n    className={cn(\n      \"flex h-full w-full flex-col overflow-hidden rounded-md bg-[var(--axis-surface-primary)] text-[var(--axis-text-primary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nCommand.displayName = \"Command\";\n\nconst CommandInput = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.Input>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>\n>(({ className, ...props }, ref) => (\n  <div className=\"flex items-center border-b border-[var(--axis-border-default)] px-3\">\n    <svg\n      xmlns=\"http://www.w3.org/2000/svg\"\n      width=\"16\"\n      height=\"16\"\n      viewBox=\"0 0 24 24\"\n      fill=\"none\"\n      stroke=\"currentColor\"\n      strokeWidth=\"2\"\n      strokeLinecap=\"round\"\n      strokeLinejoin=\"round\"\n      className=\"mr-2 h-4 w-4 shrink-0 opacity-50\"\n    >\n      <circle cx=\"11\" cy=\"11\" r=\"8\" />\n      <path d=\"m21 21-4.3-4.3\" />\n    </svg>\n    <CommandPrimitive.Input\n      ref={ref}\n      className={cn(\n        \"flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none\",\n        \"placeholder:text-[var(--axis-text-tertiary)]\",\n        \"disabled:cursor-not-allowed disabled:opacity-50\",\n        className\n      )}\n      {...props}\n    />\n  </div>\n));\nCommandInput.displayName = CommandPrimitive.Input.displayName;\n\nconst CommandList = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.List>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>\n>(({ className, ...props }, ref) => (\n  <CommandPrimitive.List\n    ref={ref}\n    className={cn(\n      \"max-h-[300px] overflow-y-auto overflow-x-hidden\",\n      className\n    )}\n    {...props}\n  />\n));\nCommandList.displayName = CommandPrimitive.List.displayName;\n\nconst CommandEmpty = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.Empty>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>\n>((props, ref) => (\n  <CommandPrimitive.Empty\n    ref={ref}\n    className=\"py-6 text-center text-sm text-[var(--axis-text-secondary)]\"\n    {...props}\n  />\n));\nCommandEmpty.displayName = CommandPrimitive.Empty.displayName;\n\nconst CommandGroup = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.Group>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>\n>(({ className, ...props }, ref) => (\n  <CommandPrimitive.Group\n    ref={ref}\n    className={cn(\n      \"overflow-hidden p-1 text-[var(--axis-text-primary)]\",\n      \"[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-[var(--axis-text-secondary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nCommandGroup.displayName = CommandPrimitive.Group.displayName;\n\nconst CommandSeparator = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.Separator>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>\n>(({ className, ...props }, ref) => (\n  <CommandPrimitive.Separator\n    ref={ref}\n    className={cn(\"-mx-1 h-px bg-[var(--axis-border-default)]\", className)}\n    {...props}\n  />\n));\nCommandSeparator.displayName = CommandPrimitive.Separator.displayName;\n\nconst CommandItem = React.forwardRef<\n  React.ElementRef<typeof CommandPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>\n>(({ className, ...props }, ref) => (\n  <CommandPrimitive.Item\n    ref={ref}\n    className={cn(\n      \"relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none\",\n      \"data-[selected=true]:bg-[var(--axis-surface-secondary)] data-[selected=true]:text-[var(--axis-text-primary)]\",\n      \"data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-50\",\n      \"[&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0\",\n      className\n    )}\n    {...props}\n  />\n));\nCommandItem.displayName = CommandPrimitive.Item.displayName;\n\nexport {\n  Command,\n  CommandInput,\n  CommandList,\n  CommandEmpty,\n  CommandGroup,\n  CommandItem,\n  CommandSeparator,\n};\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "cmdk"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.269Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

@@ -1,21 +1,32 @@
 {
-  "id": "shadcn-radio-group",
+  "id": "axis-radio-group",
   "slug": "radio-group",
-  "name": "radio-group",
-  "description": "shadcn/ui radio-group component",
+  "name": "RadioGroup",
+  "description": "AXIS RadioGroup component",
   "category": "form",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/radio-group"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/radio-group"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as RadioGroupPrimitive from \"@radix-ui/react-radio-group\";\nimport { cn } from \"../utils\";\n\nconst RadioGroup = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Root\n    className={cn(\"grid gap-2\", className)}\n    {...props}\n    ref={ref}\n  />\n));\nRadioGroup.displayName = RadioGroupPrimitive.Root.displayName;\n\nconst RadioGroupItem = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Item\n    ref={ref}\n    className={cn(\n      \"aspect-square h-4 w-4 rounded-full border border-[var(--axis-border-default)]\",\n      \"ring-offset-[var(--axis-surface-primary)]\",\n      \"focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"data-[state=checked]:border-[var(--axis-interactive-primary)] data-[state=checked]:text-[var(--axis-interactive-primary)]\",\n      className\n    )}\n    {...props}\n  >\n    <RadioGroupPrimitive.Indicator className=\"flex items-center justify-center\">\n      <svg\n        xmlns=\"http://www.w3.org/2000/svg\"\n        width=\"8\"\n        height=\"8\"\n        viewBox=\"0 0 8 8\"\n        fill=\"currentColor\"\n      >\n        <circle cx=\"4\" cy=\"4\" r=\"4\" />\n      </svg>\n    </RadioGroupPrimitive.Indicator>\n  </RadioGroupPrimitive.Item>\n));\nRadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName;\n\nexport { RadioGroup, RadioGroupItem };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-radio-group"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.474Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

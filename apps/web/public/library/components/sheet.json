@@ -1,21 +1,33 @@
 {
-  "id": "shadcn-sheet",
+  "id": "axis-sheet",
   "slug": "sheet",
-  "name": "sheet",
-  "description": "shadcn/ui sheet component",
+  "name": "Sheet",
+  "description": "AXIS Sheet component",
   "category": "overlay",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/sheet"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/sheet"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "animated"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as SheetPrimitive from \"@radix-ui/react-dialog\";\nimport { cva, type VariantProps } from \"class-variance-authority\";\nimport { cn } from \"../utils\";\n\nconst Sheet = SheetPrimitive.Root;\nconst SheetTrigger = SheetPrimitive.Trigger;\nconst SheetClose = SheetPrimitive.Close;\nconst SheetPortal = SheetPrimitive.Portal;\n\nconst SheetOverlay = React.forwardRef<\n  React.ElementRef<typeof SheetPrimitive.Overlay>,\n  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>\n>(({ className, ...props }, ref) => (\n  <SheetPrimitive.Overlay\n    className={cn(\n      \"fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0\",\n      className\n    )}\n    {...props}\n    ref={ref}\n  />\n));\nSheetOverlay.displayName = SheetPrimitive.Overlay.displayName;\n\nconst sheetVariants = cva(\n  \"fixed z-50 gap-4 bg-[var(--axis-surface-primary)] border-[var(--axis-border-default)] p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500\",\n  {\n    variants: {\n      side: {\n        top: \"inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top\",\n        bottom:\n          \"inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom\",\n        left: \"inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm\",\n        right:\n          \"inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm\",\n      },\n    },\n    defaultVariants: {\n      side: \"right\",\n    },\n  }\n);\n\ninterface SheetContentProps\n  extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,\n    VariantProps<typeof sheetVariants> {}\n\nconst SheetContent = React.forwardRef<\n  React.ElementRef<typeof SheetPrimitive.Content>,\n  SheetContentProps\n>(({ side = \"right\", className, children, ...props }, ref) => (\n  <SheetPortal>\n    <SheetOverlay />\n    <SheetPrimitive.Content\n      ref={ref}\n      className={cn(sheetVariants({ side }), className)}\n      {...props}\n    >\n      <SheetPrimitive.Close className=\"absolute right-4 top-4 rounded-sm opacity-70 ring-offset-[var(--axis-surface-primary)] transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-[var(--axis-ring)] focus:ring-offset-2 disabled:pointer-events-none\">\n        <svg\n          xmlns=\"http://www.w3.org/2000/svg\"\n          width=\"16\"\n          height=\"16\"\n          viewBox=\"0 0 24 24\"\n          fill=\"none\"\n          stroke=\"currentColor\"\n          strokeWidth=\"2\"\n          strokeLinecap=\"round\"\n          strokeLinejoin=\"round\"\n        >\n          <path d=\"M18 6 6 18\" />\n          <path d=\"m6 6 12 12\" />\n        </svg>\n        <span className=\"sr-only\">Close</span>\n      </SheetPrimitive.Close>\n      {children}\n    </SheetPrimitive.Content>\n  </SheetPortal>\n));\nSheetContent.displayName = SheetPrimitive.Content.displayName;\n\nconst SheetHeader = ({\n  className,\n  ...props\n}: React.HTMLAttributes<HTMLDivElement>) => (\n  <div\n    className={cn(\n      \"flex flex-col space-y-2 text-center sm:text-left\",\n      className\n    )}\n    {...props}\n  />\n);\nSheetHeader.displayName = \"SheetHeader\";\n\nconst SheetFooter = ({\n  className,\n  ...props\n}: React.HTMLAttributes<HTMLDivElement>) => (\n  <div\n    className={cn(\n      \"flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2\",\n      className\n    )}\n    {...props}\n  />\n);\nSheetFooter.displayName = \"SheetFooter\";\n\nconst SheetTitle = React.forwardRef<\n  React.ElementRef<typeof SheetPrimitive.Title>,\n  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>\n>(({ className, ...props }, ref) => (\n  <SheetPrimitive.Title\n    ref={ref}\n    className={cn(\n      \"text-lg font-semibold text-[var(--axis-text-primary)]\",\n      className\n    )}\n    {...props}\n  />\n));\nSheetTitle.displayName = SheetPrimitive.Title.displayName;\n\nconst SheetDescription = React.forwardRef<\n  React.ElementRef<typeof SheetPrimitive.Description>,\n  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>\n>(({ className, ...props }, ref) => (\n  <SheetPrimitive.Description\n    ref={ref}\n    className={cn(\"text-sm text-[var(--axis-text-secondary)]\", className)}\n    {...props}\n  />\n));\nSheetDescription.displayName = SheetPrimitive.Description.displayName;\n\nexport {\n  Sheet,\n  SheetPortal,\n  SheetOverlay,\n  SheetTrigger,\n  SheetClose,\n  SheetContent,\n  SheetHeader,\n  SheetFooter,\n  SheetTitle,\n  SheetDescription,\n};\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-dialog",
+      "class-variance-authority"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.557Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

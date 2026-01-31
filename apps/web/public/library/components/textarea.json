@@ -1,21 +1,29 @@
 {
-  "id": "shadcn-textarea",
+  "id": "axis-textarea",
   "slug": "textarea",
-  "name": "textarea",
-  "description": "shadcn/ui textarea component",
+  "name": "Textarea",
+  "description": "AXIS Textarea component",
   "category": "form",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/textarea"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/textarea"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef"
+  ],
   "code": {
-    "files": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\nconst Textarea = React.forwardRef<\n  HTMLTextAreaElement,\n  React.ComponentPropsWithoutRef<\"textarea\">\n>(({ className, ...props }, ref) => (\n  <textarea\n    className={cn(\n      \"flex min-h-[80px] w-full rounded-md border border-[var(--axis-border-default)] bg-[var(--axis-surface-primary)] px-3 py-2 text-sm\",\n      \"text-[var(--axis-text-primary)]\",\n      \"ring-offset-[var(--axis-surface-primary)]\",\n      \"placeholder:text-[var(--axis-text-tertiary)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      className\n    )}\n    ref={ref}\n    {...props}\n  />\n));\nTextarea.displayName = \"Textarea\";\n\nexport { Textarea };\n",
+        "type": "component"
+      }
+    ],
     "dependencies": [],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.672Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

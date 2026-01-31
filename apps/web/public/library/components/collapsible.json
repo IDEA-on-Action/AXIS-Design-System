@@ -1,21 +1,29 @@
 {
-  "id": "shadcn-collapsible",
+  "id": "axis-collapsible",
   "slug": "collapsible",
-  "name": "collapsible",
-  "description": "shadcn/ui collapsible component",
+  "name": "Collapsible",
+  "description": "AXIS Collapsible component",
   "category": "ui",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/collapsible"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/collapsible"
   },
   "tags": [],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as CollapsiblePrimitive from \"@radix-ui/react-collapsible\";\n\nconst Collapsible = CollapsiblePrimitive.Root;\nconst CollapsibleTrigger = CollapsiblePrimitive.CollapsibleTrigger;\nconst CollapsibleContent = CollapsiblePrimitive.CollapsibleContent;\n\nexport { Collapsible, CollapsibleTrigger, CollapsibleContent };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-collapsible"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.255Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }

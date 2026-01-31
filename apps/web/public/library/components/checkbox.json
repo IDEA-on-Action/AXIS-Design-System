@@ -1,21 +1,32 @@
 {
-  "id": "shadcn-checkbox",
+  "id": "axis-checkbox",
   "slug": "checkbox",
-  "name": "checkbox",
-  "description": "shadcn/ui checkbox component",
+  "name": "Checkbox",
+  "description": "AXIS Checkbox component",
   "category": "form",
   "source": {
-    "type": "shadcn",
-    "registry": "@shadcn",
-    "url": "https://ui.shadcn.com/docs/components/checkbox"
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis.minu.best/ui/checkbox"
   },
-  "tags": [],
+  "tags": [
+    "forwardRef",
+    "interactive"
+  ],
   "code": {
-    "files": [],
-    "dependencies": [],
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport * as CheckboxPrimitive from \"@radix-ui/react-checkbox\";\nimport { cn } from \"../utils\";\n\nconst Checkbox = React.forwardRef<\n  React.ElementRef<typeof CheckboxPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <CheckboxPrimitive.Root\n    ref={ref}\n    className={cn(\n      \"peer h-4 w-4 shrink-0 rounded-sm border border-[var(--axis-border-default)]\",\n      \"ring-offset-[var(--axis-surface-primary)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"data-[state=checked]:bg-[var(--axis-interactive-primary)] data-[state=checked]:border-[var(--axis-interactive-primary)] data-[state=checked]:text-white\",\n      className\n    )}\n    {...props}\n  >\n    <CheckboxPrimitive.Indicator\n      className={cn(\"flex items-center justify-center text-current\")}\n    >\n      <svg\n        xmlns=\"http://www.w3.org/2000/svg\"\n        width=\"12\"\n        height=\"12\"\n        viewBox=\"0 0 24 24\"\n        fill=\"none\"\n        stroke=\"currentColor\"\n        strokeWidth=\"3\"\n        strokeLinecap=\"round\"\n        strokeLinejoin=\"round\"\n      >\n        <path d=\"M20 6 9 17l-5-5\" />\n      </svg>\n    </CheckboxPrimitive.Indicator>\n  </CheckboxPrimitive.Root>\n));\nCheckbox.displayName = CheckboxPrimitive.Root.displayName;\n\nexport { Checkbox };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [
+      "@radix-ui/react-checkbox"
+    ],
     "devDependencies": [],
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-01-23T12:59:43.239Z"
+  "updatedAt": "2026-02-01T00:00:00.000Z"
 }
