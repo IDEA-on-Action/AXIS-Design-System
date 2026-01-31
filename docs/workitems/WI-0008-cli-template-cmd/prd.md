@@ -1,6 +1,6 @@
 # PRD — CLI Template 명령어 구현
 
-> 작성일: 2026-01-31 | WI: WI-0008 | GitHub: #52 | 상태: Draft
+> 작성일: 2026-01-31 | WI: WI-0008 | GitHub: #52 | 상태: Done
 
 ---
 

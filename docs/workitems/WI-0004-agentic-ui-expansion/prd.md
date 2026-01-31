@@ -1,6 +1,6 @@
 # PRD — Agentic UI 추가 구현
 
-> 작성일: 2026-01-31 | WI: WI-0004 | GitHub: #40 | 상태: Draft
+> 작성일: 2026-01-31 | WI: WI-0004 | GitHub: #40 | 상태: Done
 
 ---
 
