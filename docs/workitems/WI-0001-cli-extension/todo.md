@@ -32,19 +32,19 @@
   - 대상 파일: `packages/axis-cli/src/sync/index.ts`
   - 테스트: E2E 시나리오
 
-- [ ] **T4: 타입 정의 완성**
+- [x] **T4: 타입 정의 완성**
   - AC: AC3 — 타입 체크 통과
   - 대상 파일: `packages/axis-cli/src/sync/types.ts`
   - 테스트: `pnpm type-check`
 
 ### Phase 2: 확장
 
-- [ ] **T5: status 명령어 구현**
+- [x] **T5: status 명령어 구현**
   - AC: 프로젝트 상태 요약 출력
   - 대상 파일: `packages/axis-cli/src/`
   - 테스트: 출력 형식 검증
 
-- [ ] **T6: dry-run 모드 구현**
+- [x] **T6: dry-run 모드 구현**
   - AC: `--dry-run` 플래그로 변경 없이 미리보기
   - 대상 파일: `packages/axis-cli/src/sync/index.ts`
 
@@ -52,7 +52,7 @@
 
 ## Definition of Done (WI)
 
-- [ ] 모든 Task 완료
+- [x] 모든 Task 완료
 - [x] 타입 체크 통과 (`pnpm type-check`)
 - [x] 린트 통과 (`pnpm lint`)
 - [x] 빌드 성공 (`pnpm build`)
