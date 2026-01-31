@@ -25,10 +25,7 @@
 
 ### 진행 중
 
-| # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 | 상태 |
-|---|------|-------|--------------|-------|----------|------|
-| 1 | axis-cli 기능 확장 | [WI-0001](docs/workitems/WI-0001-cli-extension/) | [#42](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/42) | P2 | P1 | 🔄 |
-| 2 | Core UI 컴포넌트 확장 (30개 목표) | [WI-0003](docs/workitems/WI-0003-core-ui-expansion/) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | P2 | 🔄 |
+없음
 
 ### 할 일
 
@@ -53,6 +50,8 @@
 | 6 | Agentic UI 기본 컴포넌트 10개 | [#50](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/50) | P3 | 2026-01-22 |
 | 7 | 문서 사이트 개선 | [#41](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/41) | P3 | 2026-01-31 |
 | 8 | 템플릿 시스템 기반 구축 | [#51](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/51) | P4 | 2026-02-01 |
+| 9 | axis-cli 기능 확장 | [#42](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/42) | P2 | 2026-02-01 |
+| 10 | Core UI 컴포넌트 확장 (30개) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | 2026-02-01 |
 
 ---
 

@@ -1,6 +1,6 @@
 # TODO — axis-cli 기능 확장
 
-> WI: WI-0001 | PRD 기반 | 상태: In Progress
+> WI: WI-0001 | PRD 기반 | 상태: Done
 
 ---
 
@@ -56,5 +56,5 @@
 - [x] 타입 체크 통과 (`pnpm type-check`)
 - [x] 린트 통과 (`pnpm lint`)
 - [x] 빌드 성공 (`pnpm build`)
-- [ ] 문서 업데이트
-- [ ] 릴리스 노트 작성
+- [x] 문서 업데이트
+- [x] 릴리스 노트 작성

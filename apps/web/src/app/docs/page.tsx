@@ -98,6 +98,47 @@ export default function DocsPage() {
           </Card>
         </section>
 
+        {/* CLI Commands */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">CLI Commands</h2>
+          <p className="text-muted-foreground mb-4">
+            axis-cli는 컴포넌트 설치 외에도 프로젝트 관리를 위한 명령어를 제공합니다.
+          </p>
+
+          <h3 className="text-lg font-medium mb-3">axis sync</h3>
+          <p className="text-muted-foreground mb-3">
+            GitHub Issue와 로컬 WI(Work Item) 상태를 동기화합니다.
+          </p>
+          <div className="rounded-lg border bg-card p-4 mb-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <Terminal className="h-4 w-4" />
+              <span>Terminal</span>
+            </div>
+            <pre className="overflow-x-auto">
+              <code className="text-sm">{`# GitHub Issue와 WI 상태 동기화
+npx axis-cli sync
+
+# 변경 사항 미리보기 (실제 변경 없음)
+npx axis-cli sync --dry-run`}</code>
+            </pre>
+          </div>
+
+          <h3 className="text-lg font-medium mb-3">axis status</h3>
+          <p className="text-muted-foreground mb-3">
+            프로젝트 전체 상태를 요약하여 출력합니다.
+          </p>
+          <div className="rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+              <Terminal className="h-4 w-4" />
+              <span>Terminal</span>
+            </div>
+            <pre className="overflow-x-auto">
+              <code className="text-sm">{`# 프로젝트 상태 요약 출력
+npx axis-cli status`}</code>
+            </pre>
+          </div>
+        </section>
+
         {/* Links */}
         <section className="flex gap-4">
           <Link href="/components">

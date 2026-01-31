@@ -1,6 +1,6 @@
 # TODO — Core UI 컴포넌트 확장
 
-> WI: WI-0003 | PRD 기반 | 상태: In Progress
+> WI: WI-0003 | PRD 기반 | 상태: Done
 
 ---
 
@@ -129,9 +129,9 @@
 
 ## Definition of Done (WI)
 
-- [ ] 모든 Task 완료
+- [x] 모든 Task 완료
 - [x] 타입 체크 통과 (`pnpm type-check`)
 - [x] 린트 통과 (`pnpm lint`)
 - [x] 빌드 성공 (`pnpm build`)
-- [ ] 컴포넌트별 문서 및 예제 포함
-- [ ] 릴리스 노트 작성
+- [x] 컴포넌트별 문서 및 예제 포함
+- [x] 릴리스 노트 작성
