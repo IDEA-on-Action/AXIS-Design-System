@@ -15,10 +15,14 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --tsconfig tsconfig.json",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --tsconfig tsconfig.json",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

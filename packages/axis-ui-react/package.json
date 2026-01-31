@@ -135,11 +135,15 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts src/*/index.tsx --format cjs,esm --dts --external react",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

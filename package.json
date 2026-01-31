@@ -18,13 +18,18 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "clean": "pnpm -r clean && rm -rf node_modules .turbo",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "devDependencies": {
+    "@changesets/changelog-github": "^0.5.2",
+    "@changesets/cli": "^2.29.8",
     "@types/node": "^22.10.5",
-    "typescript": "^5.7.2",
     "prettier": "^3.4.2",
-    "turbo": "^2.3.3"
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
   },
   "engines": {
     "node": ">=20.0.0",

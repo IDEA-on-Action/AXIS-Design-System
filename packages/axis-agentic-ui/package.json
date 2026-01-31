@@ -30,16 +30,60 @@
       "types": "./dist/tool-call-card/index.d.ts",
       "import": "./dist/tool-call-card/index.mjs",
       "require": "./dist/tool-call-card/index.js"
+    },
+    "./message-bubble": {
+      "types": "./dist/message-bubble/index.d.ts",
+      "import": "./dist/message-bubble/index.mjs",
+      "require": "./dist/message-bubble/index.js"
+    },
+    "./feedback-buttons": {
+      "types": "./dist/feedback-buttons/index.d.ts",
+      "import": "./dist/feedback-buttons/index.mjs",
+      "require": "./dist/feedback-buttons/index.js"
+    },
+    "./code-block": {
+      "types": "./dist/code-block/index.d.ts",
+      "import": "./dist/code-block/index.mjs",
+      "require": "./dist/code-block/index.js"
+    },
+    "./diff-viewer": {
+      "types": "./dist/diff-viewer/index.d.ts",
+      "import": "./dist/diff-viewer/index.mjs",
+      "require": "./dist/diff-viewer/index.js"
+    },
+    "./plan-card": {
+      "types": "./dist/plan-card/index.d.ts",
+      "import": "./dist/plan-card/index.mjs",
+      "require": "./dist/plan-card/index.js"
+    },
+    "./context-panel": {
+      "types": "./dist/context-panel/index.d.ts",
+      "import": "./dist/context-panel/index.mjs",
+      "require": "./dist/context-panel/index.js"
+    },
+    "./token-usage-indicator": {
+      "types": "./dist/token-usage-indicator/index.d.ts",
+      "import": "./dist/token-usage-indicator/index.mjs",
+      "require": "./dist/token-usage-indicator/index.js"
+    },
+    "./attachment-card": {
+      "types": "./dist/attachment-card/index.d.ts",
+      "import": "./dist/attachment-card/index.mjs",
+      "require": "./dist/attachment-card/index.js"
     }
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup src/index.ts src/*/index.tsx --format cjs,esm --dts --external react",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react",
     "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

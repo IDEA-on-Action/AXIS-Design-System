@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "IDEA-on-Action/AXIS-Design-System" }
+  ],
+  "commit": false,
+  "fixed": [],
+  "linked": [
+    ["@axis-ds/tokens", "@axis-ds/ui-react", "@axis-ds/agentic-ui", "@axis-ds/theme"]
+  ],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@ax/web"]
+}
