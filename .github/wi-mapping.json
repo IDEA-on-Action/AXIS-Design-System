@@ -1,8 +1,8 @@
 {
   "version": "1.0.0",
   "repository": {
-    "owner": "thoughtandaction",
-    "repo": "axis"
+    "owner": "IDEA-on-Action",
+    "repo": "AXIS-Design-System"
   },
   "project": {
     "number": 4
@@ -10,16 +10,74 @@
   "mappings": [
     {
       "wiId": "WI-0001",
-      "issueNumber": 1,
-      "lastSyncedAt": "2026-01-26T00:00:00.000Z",
+      "slug": "cli-extension",
+      "issueNumber": 42,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
       "lastStatus": "🔄"
     },
     {
       "wiId": "WI-0002",
-      "issueNumber": 2,
-      "lastSyncedAt": "2026-01-26T00:00:00.000Z",
+      "slug": "docs-enhancement",
+      "issueNumber": 41,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
       "lastStatus": "🔄"
+    },
+    {
+      "wiId": "WI-0003",
+      "slug": "core-ui-expansion",
+      "issueNumber": 39,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0004",
+      "slug": "agentic-ui-expansion",
+      "issueNumber": 40,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0005",
+      "slug": "npm-publish",
+      "issueNumber": 43,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0006",
+      "slug": "dx-improvement",
+      "issueNumber": 44,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0007",
+      "slug": "template-foundation",
+      "issueNumber": 51,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0008",
+      "slug": "cli-template-cmd",
+      "issueNumber": 52,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0009",
+      "slug": "mcp-template-tools",
+      "issueNumber": 53,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
+    },
+    {
+      "wiId": "WI-0010",
+      "slug": "external-ds-federation",
+      "issueNumber": 54,
+      "lastSyncedAt": "2026-01-31T00:00:00.000Z",
+      "lastStatus": "📋"
     }
   ],
-  "updatedAt": "2026-01-26T00:00:00.000Z"
+  "updatedAt": "2026-01-31T00:00:00.000Z"
 }

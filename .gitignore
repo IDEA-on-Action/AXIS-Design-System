@@ -53,6 +53,7 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+nul
 
 # PWA
 public/sw.js
