@@ -107,58 +107,7 @@ pnpm version major
 
 ---
 
-## 6. 현행화 체크리스트 (필수)
+## 6. 현행화 (필수)
 
-릴리스 완료 후 반드시 아래 현행화를 수행합니다.
-
-### 6.1 project-todo.md 업데이트
-
-1. 릴리스에 포함된 WI 항목의 상태를 ✅ 완료로 변경
-2. 버전 정보 업데이트
-3. 완료된 WI를 "완료" 섹션으로 이동
-
-```markdown
-## 완료된 작업 (v0.7.0)
-| WI ID | 항목 | 완료일 |
-|-------|------|--------|
-| WI-0001 | Button 컴포넌트 | 2025-01-26 |
-```
-
-### 6.2 WI 산출물 검증
-
-릴리스 전 각 WI의 산출물 완성도 확인:
-
-```
-# 체크리스트
-- [ ] docs/workitems/<WI_ID>/release-notes.md 작성됨
-- [ ] docs/workitems/<WI_ID>/todo.md 모든 항목 완료
-- [ ] docs/workitems/<WI_ID>/testplan.md 테스트 통과
-```
-
-### 6.3 CHANGELOG.md 동기화
-
-1. 릴리스 노트 내용을 CHANGELOG.md 상단에 추가
-2. 형식: Keep a Changelog 표준
-
-```markdown
-## [0.7.0] - 2025-01-26
-
-### Added
-- Button 컴포넌트 (#WI-0001)
-
-### Changed
-- ...
-
-### Fixed
-- ...
-```
-
-### 6.4 현행화 최종 확인
-
-```
-### 릴리스 현행화 체크
-- [ ] project-todo.md 버전 및 상태 업데이트
-- [ ] 모든 관련 WI release-notes.md 작성 확인
-- [ ] CHANGELOG.md 업데이트
-- [ ] 완료된 WI 항목 "완료" 섹션으로 이동
-```
+WI 작업인 경우 `/ax-wi-end`를 실행하세요.
+WI가 아닌 경우: project-todo.md 상태만 갱신하고 CHANGELOG.md를 업데이트합니다.

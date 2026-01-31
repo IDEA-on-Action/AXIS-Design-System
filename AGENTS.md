@@ -53,20 +53,7 @@ PRD → TODO → 구현 → 테스트 → Release Notes
 3. **테스트 필수**: 테스트 없이 "완료" 불가
 4. **릴리스 강제**: 머지/배포 전 릴리스 노트 필수
 
-### 상세 규칙
-
-- Claude Code: `.claude/rules/05-ssdd.md`
-- Cline: `.clinerules/05-ssdd.md`
-
----
-
-## 2) Doc-driven Development
-
-**원칙:**
-1. PRD 없이는 TODO를 만들지 않는다
-2. TODO 없이는 구현을 시작하지 않는다
-3. 테스트 없이 "완료" 처리하지 않는다
-4. 릴리스 노트 없이 머지/배포하지 않는다
+> 상세 규칙: `.claude/rules/05-ssdd.md`
 
 ---
 
@@ -85,26 +72,13 @@ PRD → TODO → 구현 → 테스트 → Release Notes
 
 ## 4) Definition of Done (품질 게이트)
 
-- [ ] TODO 항목 완료 (또는 다음 릴리즈로 명시적 이월)
-- [ ] 타입 체크 통과: `pnpm type-check`
-- [ ] 린트 통과: `pnpm lint`
-- [ ] 빌드 성공: `pnpm build`
-- [ ] 문서 업데이트 (해당 시)
-- [ ] release-notes.md 작성
-- [ ] 민감정보 커밋 금지
+> 상세 규칙: `.claude/rules/20-quality.md`
 
 ---
 
 ## 5) 보안/데이터 취급
 
-민감정보로 간주하는 파일 패턴:
-- `.env*`, `*.key`, `*.pem`
-- `*secret*`, `*credentials*`
-- `id_rsa*`
-
-**규칙:**
-- 에이전트가 열람/복사/붙여넣기 금지
-- 필요 시 사용자가 환경변수로 주입
+> 상세 규칙: `.claude/rules/30-security.md`
 
 ---
 

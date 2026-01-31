@@ -1,7 +1,7 @@
 {
   "$schema": "./prompt-index.schema.json",
   "version": "1.0.0",
-  "lastUpdated": "2025-01-26T00:00:00+09:00",
+  "lastUpdated": "2025-02-01T00:00:00+09:00",
   "categories": {
     "planning": {
       "description": "기능 계획, 리팩토링, 접근성 개선 등 계획 수립",
@@ -17,7 +17,7 @@
     },
     "workflow": {
       "description": "세션 정리, PR 설명, 커밋 메시지 등 워크플로우",
-      "count": 1
+      "count": 0
     }
   },
   "prompts": [
@@ -63,21 +63,10 @@
       "createdAt": "2025-01-20T00:00:00+09:00",
       "updatedAt": "2025-01-20T00:00:00+09:00",
       "usageCount": 0
-    },
-    {
-      "id": "workflow/session-wrap-up",
-      "name": "session-wrap-up",
-      "category": "workflow",
-      "description": "작업 세션 종료 시 정리 템플릿",
-      "path": ".claude/prompts/workflow/session-wrap-up.md",
-      "variables": [],
-      "createdAt": "2025-01-20T00:00:00+09:00",
-      "updatedAt": "2025-01-20T00:00:00+09:00",
-      "usageCount": 0
     }
   ],
   "stats": {
-    "totalPrompts": 4,
+    "totalPrompts": 3,
     "totalUsage": 0,
     "mostUsed": null,
     "recentlyAdded": "planning/accessibility-plan"
