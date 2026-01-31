@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+**/node_modules/
+.pnp
+.pnp.js
+vendor/
+**/vendor/
+
+# Build outputs
+/build/
+/dist/
+/out/
+/.next/
+/coverage/
+/target/
+.turbo/
+**/.turbo/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Environment variables & secrets
+.env
+.env.*
+*.pem
+*.key
+*id_rsa*
+*credentials*
+*secret*
+secrets/
+**/secrets/
+
+# Large data files
+*.csv
+*.xlsx
+*.parquet
+*.zip
+*.tar
+*.gz
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Storybook
+storybook-static/
+
+# Test
+coverage/
+.nyc_output/

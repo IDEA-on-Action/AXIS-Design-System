@@ -9,6 +9,7 @@ import prompts from "prompts";
 import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 import { V0Client } from "./v0.js";
 import { LibraryCurator, Publisher } from "./library/index.js";
+import { registerSyncCommand } from "./sync/index.js";
 
 const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://ds.minu.best/r";
 
@@ -502,6 +503,11 @@ libraryCmd
     }
     console.log();
   });
+
+// ==========================================
+// Sync 명령어
+// ==========================================
+registerSyncCommand(program);
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)
 async function getComponentInfo(name: string, category: string): Promise<ComponentInfo | null> {

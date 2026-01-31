@@ -2,6 +2,7 @@
 
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
+import Image from 'next/image'
 import Link from 'next/link'
 
 // Mock AgentAvatar 컴포넌트
@@ -24,13 +25,15 @@ const typeColors: Record<string, string> = {
   system: 'bg-gray-600',
 }
 
+const sizePx: Record<string, number> = { sm: 24, md: 32, lg: 40, xl: 48 }
+
 const AgentAvatar = ({ name, src, size = 'md', status, type = 'assistant' }: any) => {
   const initials = name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
 
   return (
     <div className="relative inline-flex">
       {src ? (
-        <img src={src} alt={name} className={`rounded-full object-cover ${sizeStyles[size]}`} />
+        <Image src={src} alt={name} width={sizePx[size]} height={sizePx[size]} className={`rounded-full object-cover ${sizeStyles[size]}`} unoptimized />
       ) : (
         <div className={`rounded-full flex items-center justify-center font-medium text-white ${sizeStyles[size]} ${typeColors[type]}`}>
           {initials}

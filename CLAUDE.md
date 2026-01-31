@@ -50,8 +50,11 @@ axis-design-system/
 │   ├── axis-cli/               # @axis-ds/cli
 │   └── axis-mcp/               # MCP 서버
 ├── docs/                       # 문서
-├── pnpm-workspace.yaml         # pnpm workspace 설정
-├── turbo.json                  # Turborepo 설정
+│   └── templates/              # 산출물 템플릿
+├── .claude/
+│   ├── rules/                  # AI 협업 규칙
+│   ├── agents/                 # 전문 에이전트
+│   └── commands/               # ax-* 커맨드
 └── package.json                # 루트 패키지
 ```
 
@@ -59,40 +62,23 @@ axis-design-system/
 
 ## 🤖 AI 협업 규칙
 
-### 언어 원칙
+> 상세 규칙은 `.claude/rules/`에서 관리됩니다.
 
-- **모든 출력은 한글로 작성**: 코드 주석, 커밋 메시지, 문서, 대화 응답
-- **예외**: 코드 변수명, 함수명, 기술 용어는 영문 유지
-
-### 날짜/시간 원칙
-
-- **기준 시간대**: KST (Korea Standard Time, UTC+9)
-- **날짜 표기**: YYYY-MM-DD 형식
-
-### 작업 실행 원칙
-
-- **병렬 작업 우선**: 독립적인 작업은 항상 병렬로 진행
-- **효율성 극대화**: 의존성 없는 도구 호출은 동시에 실행
-
-### 코드 컨벤션
-
-- **Import Alias**: `@/` → `src/`
-- **컴포넌트**: PascalCase
-- **함수/훅**: camelCase
-- **파일명**: kebab-case
-- **CSS**: Tailwind CSS 유틸리티 클래스 사용
+| 규칙 파일 | 내용 |
+|-----------|------|
+| `00-general.md` | 언어, 날짜, 작업 실행 원칙 |
+| `05-ssdd.md` | SSDD 파이프라인, WI 산출물 구조 |
+| `06-sync.md` | 작업 완료 후 현행화 규칙 |
+| `10-code-conventions.md` | Import, 네이밍, 스타일링 규칙 |
+| `20-quality.md` | 품질 게이트, 테스트 원칙 |
+| `30-security.md` | 민감 정보, 보안 규칙 |
 
 ---
 
-## 🔢 버전 관리
+## ⚠️ 환경 참고
 
-**형식**: Major.Minor.Patch (Semantic Versioning)
-
-| 버전 | 변경 기준 |
-|------|-----------|
-| Major (X.0.0) | Breaking Changes |
-| Minor (0.X.0) | 새로운 기능 추가 |
-| Patch (0.0.X) | 버그 수정 |
+- **OS**: Windows — 경로에 `\` 사용, bash 명령 호환성 주의
+- **Shell**: PowerShell/Git Bash 환경에서 pnpm 스크립트 실행
 
 ---
 
@@ -122,9 +108,24 @@ pnpm build:registry
 
 ## 📝 참고사항
 
+### 문서
 - **문서 인덱스**: [docs/INDEX.md](docs/INDEX.md)
 - **Monorepo 설정**: [docs/guides/monorepo-setup.md](docs/guides/monorepo-setup.md)
 - **Agentic UI 디자인**: [docs/guides/agentic-ui-design.md](docs/guides/agentic-ui-design.md)
+
+### 커스텀 커맨드 (ax-*)
+- `ax-build`, `ax-component`, `ax-dev`, `ax-health`, `ax-library`
+- `ax-mcp`, `ax-prompt`, `ax-release`, `ax-wrap-up`
+
+### 전문 에이전트
+- `design-system-architect`, `component-dev`, `code-reviewer`
+- `docs-writer`, `test-engineer`, `prompt-refinery`
+
+### 템플릿
+- **컴포넌트 PRD**: [docs/templates/component-prd.md](docs/templates/component-prd.md)
+- **컴포넌트 스펙**: [docs/templates/component-spec.md](docs/templates/component-spec.md)
+- **릴리스 노트**: [docs/templates/release-notes.md](docs/templates/release-notes.md)
+- **ADR**: [docs/templates/adr.md](docs/templates/adr.md)
 
 ---
 

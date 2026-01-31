@@ -1,0 +1,69 @@
+# GitHub Project 동기화 워크플로
+# project-todo.md 변경 시 GitHub Project #4와 자동 동기화
+
+name: Sync Project Board
+
+on:
+  push:
+    paths:
+      - 'project-todo.md'
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run 모드 (미리보기만)'
+        required: false
+        default: 'false'
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+  repository-projects: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build axis-cli
+        run: pnpm --filter axis-cli build
+
+      - name: Sync to GitHub Project
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            npx axis-cli sync --dry-run --verbose
+          else
+            npx axis-cli sync --verbose
+          fi
+
+      - name: Update mapping file
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          if git diff --quiet .github/wi-mapping.json; then
+            echo "매핑 파일 변경 없음"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add .github/wi-mapping.json
+            git commit -m "chore: update wi-mapping.json [skip ci]"
+            git push
+          fi

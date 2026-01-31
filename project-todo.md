@@ -25,19 +25,34 @@
 
 ### 진행 중
 
-| # | 항목 | WI ID | Phase | 우선순위 | 상태 |
-|---|------|-------|-------|----------|------|
-| 1 | 컴포넌트 문서화 | [WI-0001](docs/workitems/WI-0001-component-docs/) | P3 | P1 | 🔄 |
-| 2 | 라이브러리 페이지 구현 | [WI-0002](docs/workitems/WI-0002-library-page/) | P3 | P1 | 🔄 |
+| # | 항목 | GitHub Issue | Phase | 우선순위 | 상태 |
+|---|------|--------------|-------|----------|------|
+| 1 | axis-cli 기능 확장 | [#42](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/42) | P2 | P1 | 🔄 |
+| 2 | 문서 사이트 개선 | [#41](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/41) | P3 | P1 | 🔄 |
+
+### 할 일
+
+| # | 항목 | GitHub Issue | Phase | 우선순위 |
+|---|------|--------------|-------|----------|
+| 1 | Core UI 컴포넌트 확장 (30개 목표) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | P2 |
+| 2 | Agentic UI 추가 구현 | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | P2 |
+| 3 | npm 배포 준비 | [#43](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/43) | P2 | P2 |
+| 4 | DX 개발자 경험 향상 | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | P3 |
+| 5 | 템플릿 시스템 기반 구축 | [#51](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/51) | P4 | P3 |
+| 6 | CLI Template 명령어 구현 | [#52](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/52) | P5 | P3 |
+| 7 | MCP 템플릿 Tools 구현 | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | P3 |
+| 8 | 외부 DS 연합형 확장 | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 |
 
 ### 완료
 
-| # | 항목 | WI ID | Phase | 완료일 |
-|---|------|-------|-------|--------|
-| 1 | Monorepo 구조 설정 | - | P0 | 2026-01-20 |
-| 2 | 기본 컴포넌트 구현 | - | P1 | 2026-01-21 |
-| 3 | CLI 도구 구현 | - | P2 | 2026-01-22 |
-| 4 | MCP 서버 구현 | - | P2 | 2026-01-22 |
+| # | 항목 | GitHub Issue | Phase | 완료일 |
+|---|------|--------------|-------|--------|
+| 1 | Monorepo 구조 및 패키지 설정 | [#45](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/45) | P0 | 2026-01-22 |
+| 2 | 디자인 시스템 리소스 연동 | [#46](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/46) | P2 | 2026-01-23 |
+| 3 | 사이트 구현 및 배포 | [#47](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/47) | P2 | 2026-01-23 |
+| 4 | 프로젝트 정리 및 Library 기능 | [#48](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/48) | P3 | 2026-01-23 |
+| 5 | Core UI 기본 컴포넌트 10개 | [#49](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/49) | P1 | 2026-01-22 |
+| 6 | Agentic UI 기본 컴포넌트 10개 | [#50](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/50) | P3 | 2026-01-22 |
 
 ---
 
@@ -107,54 +122,54 @@
 - [x] ArtifactRenderer 컴포넌트
 - [x] ProgressStepper 컴포넌트
 - [x] 접근성 WCAG 2.1 AA 지원
-- [ ] 컴포넌트 문서화 완성 (WI-0001)
-- [ ] 라이브러리 페이지 구현 (WI-0002)
+- [ ] 컴포넌트 문서화 완성 (#41)
+- [ ] 라이브러리 페이지 구현 (#41)
 
 </details>
 
 <details>
-<summary>Phase 4: 템플릿 골격 + 갤러리 (0%)</summary>
+<summary>Phase 4: 템플릿 골격 + 갤러리 (0%) - #51</summary>
 
-- [ ] templates/ 디렉토리 구조 설계 (WI-0003)
-- [ ] template.json 스키마 정의 (WI-0004)
-- [ ] 최소 템플릿 구현 (Theme-only) (WI-0005)
-- [ ] 템플릿 갤러리 UI 기본 구현 (WI-0006)
-
-</details>
-
-<details>
-<summary>Phase 5: Template Engine + CLI (0%)</summary>
-
-- [ ] axis template list 명령어 (WI-0007)
-- [ ] axis template info 명령어 (WI-0008)
-- [ ] axis template apply 명령어 (WI-0009)
-- [ ] axis template init 명령어 (WI-0010)
-- [ ] axis template diff 명령어 (WI-0011)
-- [ ] axis check 명령어 (WI-0012)
-- [ ] postInstall patch 시스템 (WI-0013)
-- [ ] 샘플 템플릿 추가 (landing/dashboard/agentic) (WI-0014)
+- [ ] templates/ 디렉토리 구조 설계
+- [ ] template.json 스키마 정의
+- [ ] 최소 템플릿 구현 (Theme-only)
+- [ ] 템플릿 갤러리 UI 기본 구현
 
 </details>
 
 <details>
-<summary>Phase 6: MCP 연동 고도화 (0%)</summary>
+<summary>Phase 5: Template Engine + CLI (0%) - #52</summary>
 
-- [ ] list_templates MCP tool (WI-0015)
-- [ ] get_template MCP tool (WI-0016)
-- [ ] apply_template MCP tool (WI-0017)
-- [ ] diff_template MCP tool (WI-0018)
-- [ ] check_project MCP tool (WI-0019)
-- [ ] IDE/Claude Code 워크플로 문서화 (WI-0020)
+- [ ] axis template list 명령어
+- [ ] axis template info 명령어
+- [ ] axis template apply 명령어
+- [ ] axis template init 명령어
+- [ ] axis template diff 명령어
+- [ ] axis check 명령어
+- [ ] postInstall patch 시스템
+- [ ] 샘플 템플릿 추가 (landing/dashboard/agentic)
 
 </details>
 
 <details>
-<summary>Phase 7: 외부 DS 연합형 확장 (0%)</summary>
+<summary>Phase 6: MCP 연동 고도화 (0%) - #53</summary>
 
-- [ ] shadcn 블록 링크 템플릿 (WI-0021)
-- [ ] monet 리소스 link-only 연동 (WI-0022)
-- [ ] 커뮤니티 기여 가이드 (WI-0023)
-- [ ] 라이선스 게이트 자동화 (WI-0024)
+- [ ] list_templates MCP tool
+- [ ] get_template MCP tool
+- [ ] apply_template MCP tool
+- [ ] diff_template MCP tool
+- [ ] check_project MCP tool
+- [ ] IDE/Claude Code 워크플로 문서화
+
+</details>
+
+<details>
+<summary>Phase 7: 외부 DS 연합형 확장 (0%) - #54</summary>
+
+- [ ] shadcn 블록 링크 템플릿
+- [ ] monet 리소스 link-only 연동
+- [ ] 커뮤니티 기여 가이드
+- [ ] 라이선스 게이트 자동화
 
 </details>
 
@@ -163,12 +178,14 @@
 ## 🔜 다음 단계
 
 ### Phase 3 완료 (현재)
-1. 컴포넌트 문서 페이지 완성 (WI-0001)
-2. 라이브러리 페이지 구현 (WI-0002)
+1. 문서 사이트 개선 (#41)
+   - 컴포넌트 문서 페이지 완성
+   - 라이브러리 페이지 구현
 
 ### Phase 4 준비
-3. templates/ 디렉토리 구조 설계 (WI-0003)
-4. template.json 스키마 정의 (WI-0004)
+2. 템플릿 시스템 기반 구축 (#51)
+   - templates/ 디렉토리 구조 설계
+   - template.json 스키마 정의
 
 ---
 
@@ -184,17 +201,13 @@
 
 ---
 
-## 📝 WI 연동 안내
+## 📝 GitHub 프로젝트 연동
 
-> SSDD 원칙에 따라 모든 작업은 Work Item(WI)으로 관리됩니다.
+> 모든 작업 항목은 GitHub 프로젝트와 동기화됩니다.
 
-**WI 폴더 위치**: `docs/workitems/<WI_ID>-<slug>/`
+**프로젝트**: [IDEA-on-Action/projects/4](https://github.com/orgs/IDEA-on-Action/projects/4)
 
-**WI 산출물**:
-- prd.md (요구사항)
-- todo.md (체크리스트)
-- plan.md (구현 계획)
-- testplan.md (테스트 계획)
-- release-notes.md (릴리스 노트)
-
-상세 규칙: `.claude/rules/05-ssdd.md` 또는 `.clinerules/05-ssdd.md` 참조
+**동기화 원칙**:
+- 이슈 번호로 작업 추적 (예: #42)
+- 상태는 GitHub 프로젝트 보드와 일치
+- Done/In Progress/Todo 상태 반영
