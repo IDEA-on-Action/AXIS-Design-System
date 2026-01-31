@@ -10,6 +10,7 @@ import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 import { V0Client } from "./v0.js";
 import { LibraryCurator, Publisher } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
+import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
 
 const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://ds.minu.best/r";
 
@@ -24,7 +25,7 @@ interface ComponentInfo {
 const program = new Command();
 
 program
-  .name("axis-cli")
+  .name("axis")
   .description("AXIS Design System CLI - shadcn 호환 컴포넌트 설치 도구")
   .version("0.1.0");
 
@@ -107,7 +108,11 @@ program
       // 설정 파일 읽기
       const configPath = path.resolve("axis.config.json");
       if (!(await fs.pathExists(configPath))) {
-        spinner.fail("axis.config.json을 찾을 수 없습니다. 먼저 'axis-cli init'을 실행하세요.");
+        spinner.fail(
+          "axis.config.json을 찾을 수 없습니다.\n" +
+          "  해결: 프로젝트 루트에서 'npx @axis-ds/cli init'을 실행하세요.\n" +
+          "  참고: https://axis.minu.best/docs/guides/quick-start"
+        );
         process.exit(1);
       }
 
@@ -118,7 +123,11 @@ program
       const componentInfo = await getComponentInfo(component, category);
 
       if (!componentInfo) {
-        spinner.fail(`'${component}' 컴포넌트를 찾을 수 없습니다.`);
+        spinner.fail(
+          `'${component}' 컴포넌트를 찾을 수 없습니다.\n` +
+          "  사용 가능한 컴포넌트 목록: npx @axis-ds/cli list\n" +
+          "  Agentic UI 컴포넌트는 --agentic 옵션을 추가하세요."
+        );
         process.exit(1);
       }
 
@@ -152,7 +161,11 @@ program
         console.log(chalk.cyan(`  pnpm add ${componentInfo.dependencies.join(" ")}`));
       }
     } catch (error) {
-      spinner.fail(`오류 발생: ${(error as Error).message}`);
+      spinner.fail(
+        `컴포넌트 추가 중 오류 발생: ${(error as Error).message}\n` +
+        "  네트워크 문제인 경우 인터넷 연결을 확인하세요.\n" +
+        "  문제가 지속되면 GitHub 이슈를 생성해 주세요: https://github.com/IDEA-on-Action/AXIS-Design-System/issues"
+      );
       process.exit(1);
     }
   });
@@ -377,7 +390,7 @@ libraryCmd
 
     if (!index) {
       console.log(chalk.yellow("\n⚠️  라이브러리 인덱스가 없습니다."));
-      console.log(chalk.gray("   axis-cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
+      console.log(chalk.gray("   해결: npx @axis-ds/cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
       return;
     }
 
@@ -470,7 +483,7 @@ libraryCmd
 
     if (!index) {
       console.log(chalk.yellow("\n⚠️  라이브러리 인덱스가 없습니다."));
-      console.log(chalk.gray("   axis-cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
+      console.log(chalk.gray("   해결: npx @axis-ds/cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
       return;
     }
 
@@ -508,6 +521,12 @@ libraryCmd
 // Sync 명령어
 // ==========================================
 registerSyncCommand(program);
+
+// ==========================================
+// Template 명령어
+// ==========================================
+registerTemplateCommand(program);
+registerCheckCommand(program);
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)
 async function getComponentInfo(name: string, category: string): Promise<ComponentInfo | null> {

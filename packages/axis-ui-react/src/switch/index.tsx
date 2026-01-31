@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { cn } from "../utils";
 
+/** 켜짐/꺼짐 상태를 전환하는 스위치 컴포넌트. 키보드 접근성과 포커스 링을 지원한다. */
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitive.Root>

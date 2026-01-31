@@ -2,16 +2,32 @@ import * as React from "react";
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { cn } from "../utils";
 
+/** 드롭다운 메뉴의 루트 컴포넌트. 열림/닫힘 상태를 관리한다. */
 const DropdownMenu = DropdownMenuPrimitive.Root;
+
+/** 드롭다운 메뉴를 여는 트리거 버튼 컴포넌트 */
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger;
+
+/** 메뉴 항목들을 논리적으로 그룹화하는 컴포넌트 */
 const DropdownMenuGroup = DropdownMenuPrimitive.Group;
+
+/** 드롭다운 콘텐츠를 포털로 렌더링하는 컴포넌트 */
 const DropdownMenuPortal = DropdownMenuPrimitive.Portal;
+
+/** 중첩 서브 메뉴의 루트 컴포넌트 */
 const DropdownMenuSub = DropdownMenuPrimitive.Sub;
+
+/** 라디오 선택 항목들을 그룹화하는 컴포넌트 */
 const DropdownMenuRadioGroup = DropdownMenuPrimitive.RadioGroup;
 
+/**
+ * 서브 메뉴를 여는 트리거 항목 컴포넌트. 우측에 화살표 아이콘이 표시된다.
+ * @param inset - true일 경우 좌측 패딩을 추가하여 아이콘 없는 항목과 정렬을 맞춘다
+ */
 const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
+    /** true일 경우 좌측 패딩을 추가하여 정렬을 맞춘다 */
     inset?: boolean;
   }
 >(({ className, inset, children, ...props }, ref) => (
@@ -46,6 +62,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
 ));
 DropdownMenuSubTrigger.displayName = "DropdownMenuSubTrigger";
 
+/** 서브 메뉴의 콘텐츠 영역 컴포넌트. 진입/퇴장 애니메이션을 포함한다. */
 const DropdownMenuSubContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubContent>
@@ -62,6 +79,7 @@ const DropdownMenuSubContent = React.forwardRef<
 ));
 DropdownMenuSubContent.displayName = "DropdownMenuSubContent";
 
+/** 드롭다운 메뉴의 본문 콘텐츠 컴포넌트. 포털을 통해 렌더링되며 위치 애니메이션을 포함한다. */
 const DropdownMenuContent = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Content>
@@ -81,9 +99,14 @@ const DropdownMenuContent = React.forwardRef<
 ));
 DropdownMenuContent.displayName = "DropdownMenuContent";
 
+/**
+ * 드롭다운 메뉴의 개별 항목 컴포넌트. 키보드 네비게이션과 포커스 스타일을 지원한다.
+ * @param inset - true일 경우 좌측 패딩을 추가하여 정렬을 맞춘다
+ */
 const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
+    /** true일 경우 좌측 패딩을 추가하여 정렬을 맞춘다 */
     inset?: boolean;
   }
 >(({ className, inset, ...props }, ref) => (
@@ -102,6 +125,7 @@ const DropdownMenuItem = React.forwardRef<
 ));
 DropdownMenuItem.displayName = "DropdownMenuItem";
 
+/** 체크박스 기능이 포함된 메뉴 항목 컴포넌트. 선택 시 좌측에 체크 아이콘이 표시된다. */
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
@@ -139,6 +163,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
 ));
 DropdownMenuCheckboxItem.displayName = "DropdownMenuCheckboxItem";
 
+/** 라디오 선택 기능이 포함된 메뉴 항목 컴포넌트. 선택 시 좌측에 원형 인디케이터가 표시된다. */
 const DropdownMenuRadioItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
@@ -171,9 +196,14 @@ const DropdownMenuRadioItem = React.forwardRef<
 ));
 DropdownMenuRadioItem.displayName = "DropdownMenuRadioItem";
 
+/**
+ * 메뉴 그룹의 레이블 컴포넌트. 비선택 텍스트로 그룹 제목을 표시한다.
+ * @param inset - true일 경우 좌측 패딩을 추가하여 정렬을 맞춘다
+ */
 const DropdownMenuLabel = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
+    /** true일 경우 좌측 패딩을 추가하여 정렬을 맞춘다 */
     inset?: boolean;
   }
 >(({ className, inset, ...props }, ref) => (
@@ -189,6 +219,7 @@ const DropdownMenuLabel = React.forwardRef<
 ));
 DropdownMenuLabel.displayName = "DropdownMenuLabel";
 
+/** 메뉴 항목 사이의 구분선 컴포넌트 */
 const DropdownMenuSeparator = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
@@ -204,6 +235,7 @@ const DropdownMenuSeparator = React.forwardRef<
 ));
 DropdownMenuSeparator.displayName = "DropdownMenuSeparator";
 
+/** 메뉴 항목의 키보드 단축키를 표시하는 보조 텍스트 컴포넌트 */
 const DropdownMenuShortcut = ({
   className,
   ...props

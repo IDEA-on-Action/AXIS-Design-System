@@ -19,6 +19,10 @@ const avatarVariants = cva(
   }
 );
 
+/**
+ * Avatar 컴포넌트 Props
+ * @property size - 아바타 크기 (sm, default, lg, xl)
+ */
 export interface AvatarProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof avatarVariants> {
@@ -30,6 +34,10 @@ export interface AvatarProps
   fallback?: string;
 }
 
+/**
+ * 사용자 프로필 이미지를 표시하는 아바타 컴포넌트
+ * 이미지 로드 실패 시 이니셜 fallback을 표시한다.
+ */
 const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
   ({ className, size, src, alt, fallback, ...props }, ref) => {
     const [hasError, setHasError] = React.useState(false);

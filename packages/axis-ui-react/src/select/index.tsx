@@ -2,10 +2,16 @@ import * as React from "react";
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { cn } from "../utils";
 
+/** 셀렉트의 루트 컴포넌트. 열림/닫힘 및 선택 상태를 관리한다. */
 const Select = SelectPrimitive.Root;
+
+/** 셀렉트 옵션들을 논리적으로 그룹화하는 컴포넌트 */
 const SelectGroup = SelectPrimitive.Group;
+
+/** 셀렉트 트리거 내에서 현재 선택된 값을 표시하는 컴포넌트 */
 const SelectValue = SelectPrimitive.Value;
 
+/** 셀렉트 드롭다운을 여는 트리거 버튼 컴포넌트. 선택된 값과 하향 화살표 아이콘을 표시한다. */
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
@@ -44,6 +50,7 @@ const SelectTrigger = React.forwardRef<
 ));
 SelectTrigger.displayName = "SelectTrigger";
 
+/** 셀렉트 드롭다운의 본문 콘텐츠 컴포넌트. 포털을 통해 렌더링되며 진입/퇴장 애니메이션을 포함한다. */
 const SelectContent = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Content>
@@ -76,6 +83,7 @@ const SelectContent = React.forwardRef<
 ));
 SelectContent.displayName = "SelectContent";
 
+/** 셀렉트 옵션 그룹의 레이블 컴포넌트. 비선택 텍스트로 그룹 제목을 표시한다. */
 const SelectLabel = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Label>
@@ -91,6 +99,7 @@ const SelectLabel = React.forwardRef<
 ));
 SelectLabel.displayName = "SelectLabel";
 
+/** 셀렉트 드롭다운의 개별 선택 항목 컴포넌트. 선택 시 좌측에 체크 아이콘이 표시된다. */
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
@@ -128,6 +137,7 @@ const SelectItem = React.forwardRef<
 ));
 SelectItem.displayName = "SelectItem";
 
+/** 셀렉트 옵션 사이의 구분선 컴포넌트 */
 const SelectSeparator = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof SelectPrimitive.Separator>

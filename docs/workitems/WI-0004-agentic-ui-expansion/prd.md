@@ -36,6 +36,8 @@
 
 ## 3. 수용 기준 (Acceptance Criteria)
 
-- AC1: 추가 Agentic UI 컴포넌트 구현 완료
-- AC2: 타입 체크, 린트, 빌드 통과
-- AC3: 문서 및 사용 예제 포함
+- AC1: 8개 추가 컴포넌트 구현 완료 (MessageBubble, CodeBlock, FeedbackButtons, TokenUsageIndicator, PlanCard, AttachmentCard, ContextPanel, DiffViewer)
+- AC2: 타입 체크(`pnpm type-check`), 빌드(`pnpm build`) 통과
+- AC3: 기존 컴포넌트 패턴 준수 (cn(), CSS 변수, a11y, JSDoc)
+- AC4: package.json exports 서브패스 등록
+- AC5: src/index.ts에서 모든 컴포넌트 및 타입 re-export

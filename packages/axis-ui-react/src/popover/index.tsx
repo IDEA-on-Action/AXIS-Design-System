@@ -2,9 +2,13 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { cn } from "../utils";
 
+/** 팝오버의 루트 컴포넌트. 열림/닫힘 상태를 관리한다. */
 const Popover = PopoverPrimitive.Root;
+
+/** 팝오버를 여는 트리거 요소 컴포넌트 */
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
+/** 팝오버의 본문 콘텐츠 컴포넌트. 포털을 통해 렌더링되며 트리거 요소에 상대적으로 위치한다. */
 const PopoverContent = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>

@@ -1,8 +1,10 @@
 import * as React from "react";
 import { cn } from "../utils";
 
+/** Card 컴포넌트 Props */
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
 
+/** 관련 콘텐츠를 그룹화하여 표시하는 카드 컨테이너 컴포넌트 */
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, ...props }, ref) => (
     <div
@@ -17,6 +19,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
 );
 Card.displayName = "Card";
 
+/** 카드의 헤더 영역 (제목, 설명 등을 포함) */
 const CardHeader = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -29,6 +32,7 @@ const CardHeader = React.forwardRef<
 ));
 CardHeader.displayName = "CardHeader";
 
+/** 카드의 제목을 표시하는 컴포넌트 */
 const CardTitle = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLHeadingElement>
@@ -44,6 +48,7 @@ const CardTitle = React.forwardRef<
 ));
 CardTitle.displayName = "CardTitle";
 
+/** 카드의 부가 설명을 표시하는 컴포넌트 */
 const CardDescription = React.forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
@@ -56,6 +61,7 @@ const CardDescription = React.forwardRef<
 ));
 CardDescription.displayName = "CardDescription";
 
+/** 카드의 본문 콘텐츠 영역 */
 const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
@@ -64,6 +70,7 @@ const CardContent = React.forwardRef<
 ));
 CardContent.displayName = "CardContent";
 
+/** 카드의 하단 영역 (액션 버튼 등을 배치) */
 const CardFooter = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>

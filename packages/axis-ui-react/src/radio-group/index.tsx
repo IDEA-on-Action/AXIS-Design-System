@@ -2,6 +2,7 @@ import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { cn } from "../utils";
 
+/** 라디오 버튼 그룹의 루트 컴포넌트. 단일 선택 상태를 관리하며 키보드 네비게이션을 지원한다. */
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>
@@ -14,6 +15,7 @@ const RadioGroup = React.forwardRef<
 ));
 RadioGroup.displayName = "RadioGroup";
 
+/** 라디오 그룹 내 개별 라디오 버튼 컴포넌트. 선택 시 내부에 원형 인디케이터가 표시된다. */
 const RadioGroupItem = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>

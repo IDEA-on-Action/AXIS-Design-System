@@ -1,0 +1,32 @@
+{
+  "name": "Landing Page",
+  "slug": "landing-page",
+  "description": "AXIS 컴포넌트를 활용한 반응형 랜딩 페이지 템플릿입니다. Hero 섹션, 기능 소개, CTA 버튼이 포함됩니다.",
+  "category": "landing-page",
+  "version": "0.1.0",
+  "author": "AXIS Design System",
+  "tags": ["landing", "hero", "marketing", "responsive"],
+  "features": [
+    "반응형 Hero 섹션",
+    "기능 카드 그리드",
+    "CTA 버튼",
+    "AXIS 디자인 토큰 적용",
+    "다크모드 지원",
+    "Tailwind CSS 설정"
+  ],
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.4.0",
+    "clsx": "^2.1.1"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.7.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}

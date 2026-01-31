@@ -61,6 +61,54 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트"
+    },
+    {
+      "name": "agentic-message-bubble",
+      "type": "registry:ui",
+      "title": "Message Bubble",
+      "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)"
+    },
+    {
+      "name": "agentic-feedback-buttons",
+      "type": "registry:ui",
+      "title": "Feedback Buttons",
+      "description": "좋아요/싫어요 피드백 버튼 컴포넌트"
+    },
+    {
+      "name": "agentic-token-usage-indicator",
+      "type": "registry:ui",
+      "title": "Token Usage Indicator",
+      "description": "토큰 사용량 및 비용 표시 컴포넌트"
+    },
+    {
+      "name": "agentic-context-panel",
+      "type": "registry:ui",
+      "title": "Context Panel",
+      "description": "모델/설정 메타 정보 패널 컴포넌트"
+    },
+    {
+      "name": "agentic-code-block",
+      "type": "registry:ui",
+      "title": "Code Block",
+      "description": "코드 표시 + 복사 버튼 컴포넌트"
+    },
+    {
+      "name": "agentic-plan-card",
+      "type": "registry:ui",
+      "title": "Plan Card",
+      "description": "AI 실행 계획 표시/승인 카드 컴포넌트"
+    },
+    {
+      "name": "agentic-attachment-card",
+      "type": "registry:ui",
+      "title": "Attachment Card",
+      "description": "파일/이미지 첨부 표시 카드 컴포넌트"
+    },
+    {
+      "name": "agentic-diff-viewer",
+      "type": "registry:ui",
+      "title": "Diff Viewer",
+      "description": "코드 변경사항 비교 표시 컴포넌트"
     }
   ]
 }

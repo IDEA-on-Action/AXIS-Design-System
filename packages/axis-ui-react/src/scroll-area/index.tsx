@@ -2,6 +2,7 @@ import * as React from "react";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { cn } from "../utils";
 
+/** 커스텀 스크롤바를 제공하는 스크롤 영역 컴포넌트. 뷰포트, 스크롤바, 코너를 포함한다. */
 const ScrollArea = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>
@@ -20,6 +21,7 @@ const ScrollArea = React.forwardRef<
 ));
 ScrollArea.displayName = "ScrollArea";
 
+/** 스크롤 영역의 스크롤바 컴포넌트. 수직(vertical) 및 수평(horizontal) 방향을 지원한다. */
 const ScrollBar = React.forwardRef<
   React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,
   React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>

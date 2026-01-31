@@ -1,41 +1,26 @@
 /**
  * AXIS Design System - Core UI Components
+ *
+ * React 기반 UI 컴포넌트 라이브러리.
+ * Radix UI 프리미티브와 Tailwind CSS를 기반으로 접근성과 커스터마이징을 지원합니다.
+ *
+ * @example
+ * ```tsx
+ * import { Button, Card, Input } from "@axis-ds/ui-react";
+ * ```
+ *
  * @packageDocumentation
  */
 
-// Utilities
+// --- 유틸리티 ---
 export { cn } from "./utils";
 
-// Components
-export {
-  Accordion,
-  AccordionItem,
-  AccordionTrigger,
-  AccordionContent,
-} from "./accordion";
+// --- 버튼 & 입력 컴포넌트 ---
 export { Button, buttonVariants, type ButtonProps } from "./button";
 export { Input, type InputProps } from "./input";
 export { Label, type LabelProps } from "./label";
-export {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  type CardProps,
-} from "./card";
-export {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "./dialog";
-export { Badge, badgeVariants, type BadgeProps } from "./badge";
+export { Checkbox } from "./checkbox";
+export { RadioGroup, RadioGroupItem } from "./radio-group";
 export {
   Select,
   SelectTrigger,
@@ -46,38 +31,46 @@ export {
   SelectLabel,
   SelectSeparator,
 } from "./select";
-export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+export { Slider } from "./slider";
+export { Switch } from "./switch";
+export { Textarea } from "./textarea";
+export { Toggle, toggleVariants } from "./toggle";
+
+// --- 레이아웃 & 구조 컴포넌트 ---
+export {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "./accordion";
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  type CardProps,
+} from "./card";
+export {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "./collapsible";
 export { Separator, type SeparatorProps } from "./separator";
 export {
-  Toast,
-  ToastProvider,
-  ToastViewport,
-  ToastTitle,
-  ToastDescription,
-  ToastAction,
-  ToastClose,
-} from "./toast";
-export { Avatar, avatarVariants, type AvatarProps } from "./avatar";
-export {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "./tooltip";
-export { Skeleton, type SkeletonProps } from "./skeleton";
-export {
-  Alert,
-  AlertTitle,
-  AlertDescription,
-  alertVariants,
-  type AlertProps,
-} from "./alert";
-export {
-  Progress,
-  progressVariants,
-  progressIndicatorVariants,
-  type ProgressProps,
-} from "./progress";
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+} from "./table";
+export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+
+// --- 네비게이션 컴포넌트 ---
 export {
   Breadcrumb,
   BreadcrumbList,
@@ -87,21 +80,18 @@ export {
   BreadcrumbSeparator,
   BreadcrumbEllipsis,
 } from "./breadcrumb";
-export { Checkbox } from "./checkbox";
+
+// --- 오버레이 & 팝업 컴포넌트 ---
 export {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "./collapsible";
-export {
-  Command,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandSeparator,
-} from "./command";
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogClose,
+} from "./dialog";
 export {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -120,8 +110,6 @@ export {
   DropdownMenuRadioGroup,
 } from "./dropdown-menu";
 export { Popover, PopoverTrigger, PopoverContent } from "./popover";
-export { RadioGroup, RadioGroupItem } from "./radio-group";
-export { ScrollArea, ScrollBar } from "./scroll-area";
 export {
   Sheet,
   SheetPortal,
@@ -134,17 +122,50 @@ export {
   SheetTitle,
   SheetDescription,
 } from "./sheet";
-export { Slider } from "./slider";
-export { Switch } from "./switch";
 export {
-  Table,
-  TableHeader,
-  TableBody,
-  TableFooter,
-  TableRow,
-  TableHead,
-  TableCell,
-  TableCaption,
-} from "./table";
-export { Textarea } from "./textarea";
-export { Toggle, toggleVariants } from "./toggle";
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "./tooltip";
+
+// --- 피드백 & 상태 컴포넌트 ---
+export {
+  Alert,
+  AlertTitle,
+  AlertDescription,
+  alertVariants,
+  type AlertProps,
+} from "./alert";
+export { Badge, badgeVariants, type BadgeProps } from "./badge";
+export {
+  Progress,
+  progressVariants,
+  progressIndicatorVariants,
+  type ProgressProps,
+} from "./progress";
+export { Skeleton, type SkeletonProps } from "./skeleton";
+export {
+  Toast,
+  ToastProvider,
+  ToastViewport,
+  ToastTitle,
+  ToastDescription,
+  ToastAction,
+  ToastClose,
+} from "./toast";
+
+// --- 데이터 표시 컴포넌트 ---
+export { Avatar, avatarVariants, type AvatarProps } from "./avatar";
+export { ScrollArea, ScrollBar } from "./scroll-area";
+
+// --- 커맨드 팔레트 ---
+export {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandSeparator,
+} from "./command";

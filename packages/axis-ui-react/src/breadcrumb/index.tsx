@@ -2,12 +2,20 @@ import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../utils";
 
+/**
+ * 브레드크럼 루트 네비게이션 컴포넌트
+ * 현재 페이지의 계층 구조를 표시한다.
+ */
 const Breadcrumb = React.forwardRef<
   HTMLElement,
-  React.ComponentPropsWithoutRef<"nav"> & { separator?: React.ReactNode }
+  React.ComponentPropsWithoutRef<"nav"> & {
+    /** 항목 사이의 구분자 요소 */
+    separator?: React.ReactNode;
+  }
 >(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />);
 Breadcrumb.displayName = "Breadcrumb";
 
+/** 브레드크럼 항목들을 감싸는 정렬된 목록 */
 const BreadcrumbList = React.forwardRef<
   HTMLOListElement,
   React.ComponentPropsWithoutRef<"ol">
@@ -23,6 +31,7 @@ const BreadcrumbList = React.forwardRef<
 ));
 BreadcrumbList.displayName = "BreadcrumbList";
 
+/** 브레드크럼의 개별 항목 컴포넌트 */
 const BreadcrumbItem = React.forwardRef<
   HTMLLIElement,
   React.ComponentPropsWithoutRef<"li">
@@ -35,9 +44,13 @@ const BreadcrumbItem = React.forwardRef<
 ));
 BreadcrumbItem.displayName = "BreadcrumbItem";
 
+/** 브레드크럼 항목의 클릭 가능한 링크 컴포넌트 */
 const BreadcrumbLink = React.forwardRef<
   HTMLAnchorElement,
-  React.ComponentPropsWithoutRef<"a"> & { asChild?: boolean }
+  React.ComponentPropsWithoutRef<"a"> & {
+    /** Slot 패턴을 사용하여 자식 요소를 링크로 렌더링 */
+    asChild?: boolean;
+  }
 >(({ asChild, className, ...props }, ref) => {
   const Comp = asChild ? Slot : "a";
   return (
@@ -53,6 +66,7 @@ const BreadcrumbLink = React.forwardRef<
 });
 BreadcrumbLink.displayName = "BreadcrumbLink";
 
+/** 현재 페이지를 나타내는 비활성 브레드크럼 항목 */
 const BreadcrumbPage = React.forwardRef<
   HTMLSpanElement,
   React.ComponentPropsWithoutRef<"span">
@@ -68,6 +82,7 @@ const BreadcrumbPage = React.forwardRef<
 ));
 BreadcrumbPage.displayName = "BreadcrumbPage";
 
+/** 브레드크럼 항목 사이의 구분자 (기본: 화살표 아이콘) */
 const BreadcrumbSeparator = ({
   children,
   className,
@@ -98,6 +113,7 @@ const BreadcrumbSeparator = ({
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
 
+/** 생략된 브레드크럼 항목을 나타내는 말줄임 표시 */
 const BreadcrumbEllipsis = ({
   className,
   ...props

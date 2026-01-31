@@ -23,3 +23,19 @@ export { RecoveryBanner, type RecoveryBannerProps } from "./recovery-banner";
 
 // Agent Identity
 export { AgentAvatar, type AgentAvatarProps } from "./agent-avatar";
+
+// Messaging & Feedback
+export { MessageBubble, type MessageBubbleProps, type MessageRole, type MessageStatus } from "./message-bubble";
+export { FeedbackButtons, type FeedbackButtonsProps, type FeedbackType } from "./feedback-buttons";
+
+// Code & Diff
+export { CodeBlock, type CodeBlockProps } from "./code-block";
+export { DiffViewer, type DiffViewerProps, type DiffViewMode } from "./diff-viewer";
+
+// Planning & Context
+export { PlanCard, type PlanCardProps, type PlanStep, type PlanStatus, type PlanStepStatus } from "./plan-card";
+export { ContextPanel, type ContextPanelProps, type ModelInfo } from "./context-panel";
+
+// Token & Attachment
+export { TokenUsageIndicator, type TokenUsageIndicatorProps } from "./token-usage-indicator";
+export { AttachmentCard, type AttachmentCardProps, type AttachmentType, type AttachmentStatus } from "./attachment-card";

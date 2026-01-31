@@ -35,18 +35,24 @@ const progressIndicatorVariants = cva(
   }
 );
 
+/** Progress 컴포넌트의 Props 인터페이스. 크기 및 색상 변형과 불확정 상태를 지원한다. */
 export interface ProgressProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof progressVariants>,
     VariantProps<typeof progressIndicatorVariants> {
-  /** 진행률 (0-100) */
+  /** 진행률 값 (0부터 max까지). 기본값은 0이다. */
   value?: number;
-  /** 최대값 */
+  /** 진행률의 최대값. 기본값은 100이다. */
   max?: number;
-  /** 불확정 상태 (로딩 애니메이션) */
+  /** 불확정 상태 여부. true일 경우 진행률 대신 로딩 애니메이션을 표시한다. */
   indeterminate?: boolean;
 }
 
+/**
+ * 진행 상태를 시각적으로 표시하는 프로그레스 바 컴포넌트.
+ * progressbar 역할(role)과 ARIA 속성을 포함하여 접근성을 보장한다.
+ * 크기(sm, default, lg)와 색상(default, success, warning, destructive) 변형을 지원한다.
+ */
 const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
   (
     {

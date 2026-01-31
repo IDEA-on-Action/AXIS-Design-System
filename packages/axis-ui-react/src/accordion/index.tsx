@@ -2,8 +2,10 @@ import * as React from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { cn } from "../utils";
 
+/** 아코디언 루트 컴포넌트. 하나 이상의 접이식 패널을 관리한다. */
 const Accordion = AccordionPrimitive.Root;
 
+/** 아코디언의 개별 항목 컴포넌트 */
 const AccordionItem = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Item>
@@ -16,6 +18,7 @@ const AccordionItem = React.forwardRef<
 ));
 AccordionItem.displayName = "AccordionItem";
 
+/** 아코디언 항목의 펼침/접힘을 토글하는 트리거 버튼 */
 const AccordionTrigger = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
@@ -52,6 +55,7 @@ const AccordionTrigger = React.forwardRef<
 ));
 AccordionTrigger.displayName = "AccordionTrigger";
 
+/** 아코디언 항목의 펼쳐지는 콘텐츠 영역 */
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof AccordionPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Content>

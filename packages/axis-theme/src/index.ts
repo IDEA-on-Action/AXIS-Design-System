@@ -5,17 +5,24 @@
 
 import * as React from "react";
 
+/** 테마 모드 타입. "light"(라이트), "dark"(다크), "system"(시스템 설정 따름) */
 type Theme = "light" | "dark" | "system";
 
 interface ThemeProviderProps {
+  /** 테마를 적용할 자식 요소 */
   children: React.ReactNode;
+  /** 초기 테마 모드 (기본값: "system") */
   defaultTheme?: Theme;
+  /** localStorage에 테마를 저장할 키 (기본값: "axis-theme") */
   storageKey?: string;
 }
 
 interface ThemeContextValue {
+  /** 현재 설정된 테마 모드 */
   theme: Theme;
+  /** 테마를 변경하는 함수 */
   setTheme: (theme: Theme) => void;
+  /** 실제 적용된 테마 ("system"인 경우 OS 설정에 따라 "light" 또는 "dark") */
   resolvedTheme: "light" | "dark";
 }
 
@@ -97,7 +104,11 @@ export function ThemeProvider({
 export function useTheme(): ThemeContextValue {
   const context = React.useContext(ThemeContext);
   if (!context) {
-    throw new Error("useTheme must be used within a ThemeProvider");
+    throw new Error(
+      "useTheme은 ThemeProvider 내부에서만 사용 가능합니다. " +
+      "앱 루트에 <ThemeProvider>를 추가하세요. " +
+      "예: <ThemeProvider><App /></ThemeProvider>"
+    );
   }
   return context;
 }

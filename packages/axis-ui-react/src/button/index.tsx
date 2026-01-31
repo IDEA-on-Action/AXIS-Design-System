@@ -34,6 +34,11 @@ const buttonVariants = cva(
   }
 );
 
+/**
+ * Button 컴포넌트 Props
+ * @property variant - 버튼 스타일 변형 (default, secondary, ghost, destructive, outline, link)
+ * @property size - 버튼 크기 (sm, default, lg, icon)
+ */
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
@@ -41,6 +46,7 @@ export interface ButtonProps
   asChild?: boolean;
 }
 
+/** 다양한 스타일 변형과 크기를 지원하는 버튼 컴포넌트 */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";

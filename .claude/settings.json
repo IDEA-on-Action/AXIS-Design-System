@@ -46,7 +46,7 @@
       "description": "Git 상태 및 타입 체크"
     },
     "components": {
-      "command": "npx axis-cli list",
+      "command": "npx @axis-ds/cli list",
       "description": "설치된 컴포넌트 목록"
     },
     "registry": {

@@ -52,6 +52,46 @@ const agenticComponents = [
     description: 'AI 생각 중 인디케이터',
     href: '/agentic/thinking-indicator'
   },
+  {
+    name: 'MessageBubble',
+    description: '채팅 메시지 버블',
+    href: '/agentic/message-bubble'
+  },
+  {
+    name: 'FeedbackButtons',
+    description: 'AI 응답 피드백 버튼',
+    href: '/agentic/feedback-buttons'
+  },
+  {
+    name: 'TokenUsageIndicator',
+    description: '토큰 사용량 표시기',
+    href: '/agentic/token-usage-indicator'
+  },
+  {
+    name: 'ContextPanel',
+    description: 'AI 대화 컨텍스트 패널',
+    href: '/agentic/context-panel'
+  },
+  {
+    name: 'CodeBlock',
+    description: 'AI 생성 코드 블록',
+    href: '/agentic/code-block'
+  },
+  {
+    name: 'PlanCard',
+    description: '에이전트 실행 계획 카드',
+    href: '/agentic/plan-card'
+  },
+  {
+    name: 'AttachmentCard',
+    description: '파일 첨부 카드',
+    href: '/agentic/attachment-card'
+  },
+  {
+    name: 'DiffViewer',
+    description: '코드 변경 비교 뷰어',
+    href: '/agentic/diff-viewer'
+  },
 ]
 
 export default function AgenticPage() {

@@ -1,12 +1,17 @@
 import * as React from "react";
 import { cn } from "../utils";
 
+/** Input 컴포넌트의 Props 인터페이스 */
 export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
-  /** 에러 상태 표시 */
+  /** 에러 상태 표시. true일 경우 테두리와 포커스 링이 에러 색상으로 변경된다. */
   error?: boolean;
 }
 
+/**
+ * 텍스트 입력 필드 컴포넌트.
+ * 다양한 HTML input 타입을 지원하며, 에러 상태와 비활성화 상태 스타일을 포함한다.
+ */
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, error, ...props }, ref) => {
     return (

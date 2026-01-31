@@ -3,11 +3,19 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils";
 
+/** 화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소 */
 const Sheet = SheetPrimitive.Root;
+
+/** 시트를 열기 위한 트리거 버튼 컴포넌트 */
 const SheetTrigger = SheetPrimitive.Trigger;
+
+/** 시트를 닫기 위한 닫기 버튼 컴포넌트 */
 const SheetClose = SheetPrimitive.Close;
+
+/** 시트 콘텐츠를 포탈로 렌더링하는 컴포넌트 */
 const SheetPortal = SheetPrimitive.Portal;
 
+/** 시트가 열렸을 때 배경을 덮는 오버레이 컴포넌트. 페이드 인/아웃 애니메이션을 포함한다. */
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
@@ -42,10 +50,15 @@ const sheetVariants = cva(
   }
 );
 
+/**
+ * SheetContent 컴포넌트의 Props 인터페이스
+ * @property side - 시트가 나타나는 방향 (top, bottom, left, right). 기본값은 "right"
+ */
 interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
+/** 시트의 메인 콘텐츠 영역. 오버레이와 닫기 버튼을 포함하며, 지정된 방향에서 슬라이드 인/아웃된다. */
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   SheetContentProps
@@ -80,6 +93,7 @@ const SheetContent = React.forwardRef<
 ));
 SheetContent.displayName = "SheetContent";
 
+/** 시트 상단의 헤더 영역. 제목과 설명을 배치하는 레이아웃 컴포넌트. */
 const SheetHeader = ({
   className,
   ...props
@@ -94,6 +108,7 @@ const SheetHeader = ({
 );
 SheetHeader.displayName = "SheetHeader";
 
+/** 시트 하단의 푸터 영역. 액션 버튼 등을 배치하는 레이아웃 컴포넌트. */
 const SheetFooter = ({
   className,
   ...props
@@ -108,6 +123,7 @@ const SheetFooter = ({
 );
 SheetFooter.displayName = "SheetFooter";
 
+/** 시트의 제목을 표시하는 컴포넌트. 접근성을 위해 aria-labelledby와 연동된다. */
 const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
@@ -123,6 +139,7 @@ const SheetTitle = React.forwardRef<
 ));
 SheetTitle.displayName = "SheetTitle";
 
+/** 시트의 부가 설명을 표시하는 컴포넌트. 접근성을 위해 aria-describedby와 연동된다. */
 const SheetDescription = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Description>

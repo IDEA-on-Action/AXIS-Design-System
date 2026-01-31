@@ -2,7 +2,7 @@
 
 > 프로젝트 문서 네비게이션
 
-**버전**: 0.7.1 | **마지막 업데이트**: 2026-01-24
+**버전**: 0.7.1 | **마지막 업데이트**: 2026-02-01
 
 ---
 
@@ -20,6 +20,10 @@
 
 | 문서 | 설명 |
 |------|------|
+| [quick-start.md](guides/quick-start.md) | 빠른 시작 가이드 (설치, 설정, 첫 사용) |
+| [component-usage.md](guides/component-usage.md) | 컴포넌트 사용법 (Import, asChild, 커스터마이징) |
+| [theme-customization.md](guides/theme-customization.md) | 테마 커스터마이징 (토큰, 다크모드, 커스텀 테마) |
+| [troubleshooting.md](guides/troubleshooting.md) | 트러블슈팅 (에러 해결, FAQ) |
 | [monorepo-setup.md](guides/monorepo-setup.md) | pnpm workspace + Turborepo 설정 가이드 |
 | [agentic-ui-design.md](guides/agentic-ui-design.md) | Agentic UI 디자인 시스템 기획서 |
 

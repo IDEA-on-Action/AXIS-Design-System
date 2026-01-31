@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "../utils";
 
+/** 여러 줄의 텍스트를 입력받는 텍스트 영역 컴포넌트. 최소 높이, 포커스 링, 비활성 상태 스타일을 포함한다. */
 const Textarea = React.forwardRef<
   HTMLTextAreaElement,
   React.ComponentPropsWithoutRef<"textarea">

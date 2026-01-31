@@ -2,6 +2,10 @@ import * as React from "react";
 import { Command as CommandPrimitive } from "cmdk";
 import { cn } from "../utils";
 
+/**
+ * 명령어 팔레트 루트 컴포넌트
+ * cmdk 라이브러리를 기반으로 검색 가능한 명령 목록을 제공한다.
+ */
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
@@ -17,6 +21,7 @@ const Command = React.forwardRef<
 ));
 Command.displayName = "Command";
 
+/** 명령어 팔레트의 검색 입력 필드 */
 const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
@@ -51,6 +56,7 @@ const CommandInput = React.forwardRef<
 ));
 CommandInput.displayName = "CommandInput";
 
+/** 명령어 항목들을 표시하는 스크롤 가능한 목록 영역 */
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
@@ -66,6 +72,7 @@ const CommandList = React.forwardRef<
 ));
 CommandList.displayName = "CommandList";
 
+/** 검색 결과가 없을 때 표시되는 빈 상태 컴포넌트 */
 const CommandEmpty = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Empty>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Empty>
@@ -78,6 +85,7 @@ const CommandEmpty = React.forwardRef<
 ));
 CommandEmpty.displayName = "CommandEmpty";
 
+/** 관련 명령어 항목들을 그룹화하는 컴포넌트 */
 const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
@@ -94,6 +102,7 @@ const CommandGroup = React.forwardRef<
 ));
 CommandGroup.displayName = "CommandGroup";
 
+/** 명령어 그룹 사이의 시각적 구분선 */
 const CommandSeparator = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
@@ -106,6 +115,7 @@ const CommandSeparator = React.forwardRef<
 ));
 CommandSeparator.displayName = "CommandSeparator";
 
+/** 명령어 팔레트의 개별 선택 가능한 항목 */
 const CommandItem = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Item>

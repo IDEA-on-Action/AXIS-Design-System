@@ -31,8 +31,6 @@
 
 | # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 |
 |---|------|-------|--------------|-------|----------|
-| 2 | Agentic UI 추가 구현 | [WI-0004](docs/workitems/WI-0004-agentic-ui-expansion/) | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | P2 |
-| 4 | DX 개발자 경험 향상 | [WI-0006](docs/workitems/WI-0006-dx-improvement/) | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | P3 |
 | 7 | MCP 템플릿 Tools 구현 | [WI-0009](docs/workitems/WI-0009-mcp-template-tools/) | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | P3 |
 | 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 |
 
@@ -51,6 +49,9 @@
 | 9 | axis-cli 기능 확장 | [#42](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/42) | P2 | 2026-02-01 |
 | 10 | Core UI 컴포넌트 확장 (30개) | [#39](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/39) | P1 | 2026-02-01 |
 | 11 | npm 배포 준비 | [#43](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/43) | P2 | 2026-02-01 |
+| 12 | CLI Template 명령어 구현 | [#52](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/52) | P5 | 2026-02-01 |
+| 13 | DX 개발자 경험 향상 | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | 2026-02-01 |
+| 14 | Agentic UI 추가 구현 | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | 2026-02-01 |
 
 ---
 
@@ -63,10 +64,10 @@
 | Phase 2 | 인프라 구축 | 8 | 8 | 100% |
 | Phase 3 | Agentic UI | 10 | 10 | 100% |
 | Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
-| Phase 5 | Template Engine + CLI | 0 | 8 | 0% |
+| Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
 | Phase 6 | MCP 연동 고도화 | 0 | 6 | 0% |
 | Phase 7 | 외부 DS 연합형 확장 | 0 | 4 | 0% |
-| **전체** | - | **35** | **53** | **66%** |
+| **전체** | - | **43** | **53** | **81%** |
 
 ### Phase별 상세
 
@@ -136,16 +137,16 @@
 </details>
 
 <details>
-<summary>Phase 5: Template Engine + CLI (0%) - #52</summary>
+<summary>Phase 5: Template Engine + CLI (100%) ✅ - #52</summary>
 
-- [ ] axis template list 명령어
-- [ ] axis template info 명령어
-- [ ] axis template apply 명령어
-- [ ] axis template init 명령어
-- [ ] axis template diff 명령어
-- [ ] axis check 명령어
-- [ ] postInstall patch 시스템
-- [ ] 샘플 템플릿 추가 (landing/dashboard/agentic)
+- [x] axis template list 명령어
+- [x] axis template info 명령어
+- [x] axis template apply 명령어
+- [x] axis template init 명령어
+- [x] axis template diff 명령어
+- [x] axis check 명령어
+- [x] postInstall patch 시스템
+- [x] 샘플 템플릿 추가 (landing/dashboard)
 
 </details>
 
@@ -175,9 +176,10 @@
 
 ## 🔜 다음 단계
 
-### Phase 5: Template Engine + CLI (#52)
-1. axis template list/info/apply/init/diff 명령어 구현
-2. 샘플 템플릿 추가 (landing/dashboard/agentic)
+### Phase 6: MCP 연동 고도화 (#53)
+1. list_templates / get_template / apply_template MCP tool 구현
+2. diff_template / check_project MCP tool 구현
+3. IDE/Claude Code 워크플로 문서화
 
 ---
 

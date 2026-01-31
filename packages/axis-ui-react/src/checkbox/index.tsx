@@ -2,6 +2,10 @@ import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { cn } from "../utils";
 
+/**
+ * 선택/해제 상태를 토글하는 체크박스 컴포넌트
+ * Radix UI Checkbox 프리미티브를 기반으로 한다.
+ */
 const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root>

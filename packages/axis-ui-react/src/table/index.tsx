@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cn } from "../utils";
 
+/** 데이터를 행과 열로 표시하는 테이블 컴포넌트. 가로 스크롤 가능한 래퍼를 포함한다. */
 const Table = React.forwardRef<
   HTMLTableElement,
   React.HTMLAttributes<HTMLTableElement>
@@ -18,6 +19,7 @@ const Table = React.forwardRef<
 ));
 Table.displayName = "Table";
 
+/** 테이블의 헤더 섹션(thead)을 렌더링하는 컴포넌트 */
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -30,6 +32,7 @@ const TableHeader = React.forwardRef<
 ));
 TableHeader.displayName = "TableHeader";
 
+/** 테이블의 본문 섹션(tbody)을 렌더링하는 컴포넌트 */
 const TableBody = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -42,6 +45,7 @@ const TableBody = React.forwardRef<
 ));
 TableBody.displayName = "TableBody";
 
+/** 테이블의 푸터 섹션(tfoot)을 렌더링하는 컴포넌트. 배경색이 적용된다. */
 const TableFooter = React.forwardRef<
   HTMLTableSectionElement,
   React.HTMLAttributes<HTMLTableSectionElement>
@@ -57,6 +61,7 @@ const TableFooter = React.forwardRef<
 ));
 TableFooter.displayName = "TableFooter";
 
+/** 테이블의 행(tr)을 렌더링하는 컴포넌트. 호버 효과와 선택 상태 스타일을 지원한다. */
 const TableRow = React.forwardRef<
   HTMLTableRowElement,
   React.HTMLAttributes<HTMLTableRowElement>
@@ -74,6 +79,7 @@ const TableRow = React.forwardRef<
 ));
 TableRow.displayName = "TableRow";
 
+/** 테이블 헤더 셀(th)을 렌더링하는 컴포넌트. 보조 텍스트 색상과 중간 굵기 폰트가 적용된다. */
 const TableHead = React.forwardRef<
   HTMLTableCellElement,
   React.ThHTMLAttributes<HTMLTableCellElement>
@@ -90,6 +96,7 @@ const TableHead = React.forwardRef<
 ));
 TableHead.displayName = "TableHead";
 
+/** 테이블 데이터 셀(td)을 렌더링하는 컴포넌트 */
 const TableCell = React.forwardRef<
   HTMLTableCellElement,
   React.TdHTMLAttributes<HTMLTableCellElement>
@@ -105,6 +112,7 @@ const TableCell = React.forwardRef<
 ));
 TableCell.displayName = "TableCell";
 
+/** 테이블의 캡션(caption)을 렌더링하는 컴포넌트. 테이블 하단에 보조 텍스트로 표시된다. */
 const TableCaption = React.forwardRef<
   HTMLTableCaptionElement,
   React.HTMLAttributes<HTMLTableCaptionElement>

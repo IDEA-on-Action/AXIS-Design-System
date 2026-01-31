@@ -2,6 +2,7 @@ import * as React from "react";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import { cn } from "../utils";
 
+/** 범위 내에서 값을 선택할 수 있는 슬라이더 컴포넌트. 트랙, 범위 표시, 드래그 가능한 썸을 포함한다. */
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>

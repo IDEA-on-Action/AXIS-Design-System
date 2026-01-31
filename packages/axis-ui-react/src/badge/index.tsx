@@ -30,10 +30,15 @@ const badgeVariants = cva(
   }
 );
 
+/**
+ * Badge 컴포넌트 Props
+ * @property variant - 배지 스타일 변형 (default, secondary, destructive, success, warning, error, info, outline)
+ */
 export interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
     VariantProps<typeof badgeVariants> {}
 
+/** 상태나 카테고리를 나타내는 작은 라벨 컴포넌트 */
 const Badge = React.forwardRef<HTMLDivElement, BadgeProps>(
   ({ className, variant, ...props }, ref) => (
     <div

@@ -3,8 +3,10 @@ import * as ToastPrimitives from "@radix-ui/react-toast";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils";
 
+/** 토스트 알림 시스템의 프로바이더 컴포넌트. 앱 루트에 배치하여 토스트 기능을 활성화한다. */
 const ToastProvider = ToastPrimitives.Provider;
 
+/** 토스트 알림이 표시되는 뷰포트 영역. 화면 하단 우측에 고정 위치로 렌더링된다. */
 const ToastViewport = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Viewport>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>
@@ -41,6 +43,7 @@ const toastVariants = cva(
   }
 );
 
+/** 토스트 알림의 루트 컴포넌트. default, success, error, warning 변형을 지원하며 스와이프로 닫을 수 있다. */
 const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root> &
@@ -54,6 +57,7 @@ const Toast = React.forwardRef<
 ));
 Toast.displayName = ToastPrimitives.Root.displayName;
 
+/** 토스트 내에 표시되는 액션 버튼 컴포넌트. 사용자 상호작용을 위한 CTA를 제공한다. */
 const ToastAction = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Action>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>
@@ -73,6 +77,7 @@ const ToastAction = React.forwardRef<
 ));
 ToastAction.displayName = ToastPrimitives.Action.displayName;
 
+/** 토스트를 닫는 닫기 버튼 컴포넌트. 호버 시 표시되며 X 아이콘을 포함한다. */
 const ToastClose = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Close>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>
@@ -96,6 +101,7 @@ const ToastClose = React.forwardRef<
 ));
 ToastClose.displayName = ToastPrimitives.Close.displayName;
 
+/** 토스트의 제목을 표시하는 컴포넌트 */
 const ToastTitle = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Title>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>
@@ -108,6 +114,7 @@ const ToastTitle = React.forwardRef<
 ));
 ToastTitle.displayName = ToastPrimitives.Title.displayName;
 
+/** 토스트의 상세 설명을 표시하는 컴포넌트 */
 const ToastDescription = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Description>,
   React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>

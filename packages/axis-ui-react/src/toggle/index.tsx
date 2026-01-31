@@ -25,6 +25,7 @@ const toggleVariants = cva(
   }
 );
 
+/** 눌림/해제 상태를 전환하는 토글 버튼 컴포넌트. variant(default, outline)와 size(sm, default, lg) 변형을 지원한다. */
 const Toggle = React.forwardRef<
   React.ElementRef<typeof TogglePrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof TogglePrimitive.Root> &
