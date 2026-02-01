@@ -10,6 +10,7 @@
     "axis": "./dist/index.js"
   },
   "main": "dist/index.js",
+  "sideEffects": false,
   "files": [
     "dist"
   ],

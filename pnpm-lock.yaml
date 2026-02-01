@@ -107,6 +107,49 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  examples/nextjs-app:
+    dependencies:
+      '@axis-ds/theme':
+        specifier: workspace:*
+        version: link:../../packages/axis-theme
+      '@axis-ds/tokens':
+        specifier: workspace:*
+        version: link:../../packages/axis-tokens
+      '@axis-ds/ui-react':
+        specifier: workspace:*
+        version: link:../../packages/axis-ui-react
+      lucide-react:
+        specifier: ^0.468.0
+        version: 0.468.0(react@19.2.3)
+      next:
+        specifier: ^15.1.0
+        version: 15.1.4(@babel/core@7.28.6)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: ^19.0.0
+        version: 19.2.3
+      react-dom:
+        specifier: ^19.0.0
+        version: 19.2.3(react@19.2.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.19.7
+      '@types/react':
+        specifier: ^19.0.6
+        version: 19.2.9
+      autoprefixer:
+        specifier: ^10.4.0
+        version: 10.4.23(postcss@8.5.6)
+      postcss:
+        specifier: ^8.4.0
+        version: 8.5.6
+      tailwindcss:
+        specifier: ^3.4.0
+        version: 3.4.19(yaml@2.8.2)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
   packages/axis-agentic-ui:
     dependencies:
       '@axis-ds/tokens':
@@ -268,10 +311,20 @@ importers:
         version: 2.1.9(@types/node@22.19.7)(jsdom@27.4.0(@noble/hashes@1.8.0))(terser@5.46.0)
 
   packages/axis-tokens:
+    dependencies:
+      tailwindcss:
+        specifier: '>=3.0.0'
+        version: 3.4.19(yaml@2.8.2)
     devDependencies:
       style-dictionary:
         specifier: ^4.2.0
         version: 4.4.0(tslib@2.8.1)
+      tsup:
+        specifier: ^8.0.0
+        version: 8.5.1(jiti@1.21.7)(postcss@8.5.6)(typescript@5.9.3)(yaml@2.8.2)
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
 
   packages/axis-ui-react:
     dependencies:
@@ -6034,6 +6087,11 @@ packages:
 
   lru-cache@5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}
+
+  lucide-react@0.468.0:
+    resolution: {integrity: sha512-6koYRhnM2N0GGZIdXzSeiNwguv1gt/FAjZOiPl76roBi3xKEXa4WmfpxgQwTTL4KipXjefrnf3oV4IsYhi4JFA==}
+    peerDependencies:
+      react: ^16.5.1 || ^17.0.0 || ^18.0.0 || ^19.0.0-rc
 
   lucide-react@0.469.0:
     resolution: {integrity: sha512-28vvUnnKQ/dBwiCQtwJw7QauYnE7yd2Cyp4tTTJpvglX4EMpbflcdBgrgToX2j71B3YvugK/NH3BGUk+E/p/Fw==}
@@ -14559,6 +14617,10 @@ snapshots:
   lru-cache@5.1.1:
     dependencies:
       yallist: 3.1.1
+
+  lucide-react@0.468.0(react@19.2.3):
+    dependencies:
+      react: 19.2.3
 
   lucide-react@0.469.0(react@19.2.3):
     dependencies:

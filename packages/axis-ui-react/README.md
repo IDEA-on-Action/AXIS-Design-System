@@ -5,9 +5,16 @@ AXIS Design System의 React UI 컴포넌트 라이브러리입니다. Button, In
 ## 설치
 
 ```bash
-npm install @axis-ds/ui-react
+npm install @axis-ds/ui-react @axis-ds/tokens @axis-ds/theme
 # or
-pnpm add @axis-ds/ui-react
+pnpm add @axis-ds/ui-react @axis-ds/tokens @axis-ds/theme
+```
+
+CSS Variables 설정:
+
+```css
+/* globals.css */
+@import '@axis-ds/tokens/css/shadcn';
 ```
 
 ## 사용법
