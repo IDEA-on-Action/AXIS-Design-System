@@ -273,7 +273,22 @@ Refs: WI-NNNN
 
 `commit` 옵션 시 사용자 확인 후 커밋 실행.
 
-### 5. 다음 단계 안내
+### 5. GitHub 동기화
+
+WI 상태 변경 시 GitHub Issue와 wi-mapping.json을 동기화합니다:
+
+1. **wi-mapping.json 갱신**
+   - 해당 WI의 `lastStatus`를 현재 상태로 업데이트
+   - `lastSyncedAt`을 현재 시간으로 갱신
+
+2. **GitHub Issue 상태 업데이트** (gh CLI 사용)
+   - WI 완료 시: `gh issue close <issue-number> --comment "WI-NNNN 완료"`
+   - WI 진행 중 시: 라벨 업데이트만 수행
+
+3. **커밋에 포함**
+   - wi-mapping.json 변경사항을 커밋에 함께 포함
+
+### 6. 다음 단계 안내
 
 1. 남은 TODO 항목 목록
 2. 다음 SSDD Gate 필요 여부:

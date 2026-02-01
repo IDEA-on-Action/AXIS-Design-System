@@ -26,6 +26,7 @@
 | [troubleshooting.md](guides/troubleshooting.md) | 트러블슈팅 (에러 해결, FAQ) |
 | [monorepo-setup.md](guides/monorepo-setup.md) | pnpm workspace + Turborepo 설정 가이드 |
 | [agentic-ui-design.md](guides/agentic-ui-design.md) | Agentic UI 디자인 시스템 기획서 |
+| [claude-workflow.md](guides/claude-workflow.md) | Claude Code 워크플로 가이드 (MCP, 커맨드, Hook) |
 
 ---
 

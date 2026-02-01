@@ -26,7 +26,15 @@
 | testplan.md | 테스트 결과 기록 |
 | release-notes.md | 변경사항 반영 |
 
-### 3. 커밋 메시지 규칙
+### 3. GitHub 동기화
+
+| 상황 | 조치 |
+|------|------|
+| WI 상태 변경 | wi-mapping.json lastStatus 갱신 |
+| WI 완료 | gh issue close + wi-mapping 업데이트 |
+| 커밋 시 | wi-mapping.json을 함께 스테이징 |
+
+### 4. 커밋 메시지 규칙
 
 ```
 <type>(<scope>): <subject>

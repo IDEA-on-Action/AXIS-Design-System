@@ -64,9 +64,9 @@
 | Phase 3 | Agentic UI | 10 | 10 | 100% |
 | Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
 | Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
-| Phase 6 | MCP 연동 고도화 | 5 | 6 | 83% |
+| Phase 6 | MCP 연동 고도화 | 6 | 6 | 100% |
 | Phase 7 | 외부 DS 연합형 확장 | 4 | 4 | 100% |
-| **전체** | - | **52** | **53** | **98%** |
+| **전체** | - | **53** | **53** | **100%** |
 
 ### Phase별 상세
 
@@ -150,14 +150,14 @@
 </details>
 
 <details>
-<summary>Phase 6: MCP 연동 고도화 (83%) - #53</summary>
+<summary>Phase 6: MCP 연동 고도화 (100%) ✅ - #53</summary>
 
 - [x] list_templates MCP tool
 - [x] get_template MCP tool
 - [x] apply_template MCP tool
 - [x] diff_template MCP tool
 - [x] check_project MCP tool
-- [ ] IDE/Claude Code 워크플로 문서화
+- [x] IDE/Claude Code 워크플로 문서화
 
 </details>
 
@@ -174,9 +174,6 @@
 ---
 
 ## 🔜 다음 단계
-
-### Phase 6 잔여: IDE/Claude Code 워크플로 문서화 (#53)
-- IDE/Claude Code 워크플로 문서화
 
 ### v1.0.0 안정화
 - 전체 테스트 커버리지 확보
