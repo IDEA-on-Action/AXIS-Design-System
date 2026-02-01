@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/agentic-ui",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "description": "AXIS Design System - Agentic UI Components for AI/LLM Applications",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
