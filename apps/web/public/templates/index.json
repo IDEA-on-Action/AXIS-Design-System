@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-02-01T04:42:19.656Z",
-  "total": 38,
+  "updatedAt": "2026-02-01T05:06:42.386Z",
+  "total": 39,
   "templates": [
     {
       "name": "Dashboard",
@@ -30,6 +30,49 @@
         "react-dom": "^19.0.0",
         "tailwind-merge": "^3.4.0",
         "clsx": "^2.1.1"
+      },
+      "devDependencies": {
+        "tailwindcss": "^3.4.0",
+        "typescript": "^5.7.0",
+        "@types/react": "^19.0.0",
+        "@types/react-dom": "^19.0.0",
+        "autoprefixer": "^10.4.0",
+        "postcss": "^8.4.0"
+      }
+    },
+    {
+      "name": "HR Dashboard",
+      "slug": "hr-dashboard",
+      "description": "HR 의사결정 지원 대시보드 템플릿입니다. KPI 카드, 도넛 차트, 복합 차트, 트리맵, 데이터 테이블과 Glassmorphism UI를 제공합니다.",
+      "category": "dashboard",
+      "version": "0.1.0",
+      "author": "AXIS Design System",
+      "tags": [
+        "dashboard",
+        "hr",
+        "analytics",
+        "glassmorphism",
+        "chart",
+        "treemap"
+      ],
+      "features": [
+        "3탭 대시보드 (자원 배분 / 인재 정보 / 인력 예측)",
+        "KPI 카드 그리드 (Zone 색상 accent bar)",
+        "SVG 도넛 차트 (프로젝트 현황)",
+        "SVG 바+라인 복합 차트 (인력 유입/유출)",
+        "SVG 트리맵 (스킬 분포)",
+        "정렬/필터 데이터 테이블",
+        "Glassmorphism 패널 디자인",
+        "다크모드 기본 적용",
+        "Stagger 진입 애니메이션"
+      ],
+      "dependencies": {
+        "next": "^15.1.0",
+        "react": "^19.0.0",
+        "react-dom": "^19.0.0",
+        "tailwind-merge": "^3.4.0",
+        "clsx": "^2.1.1",
+        "lucide-react": "^0.469.0"
       },
       "devDependencies": {
         "tailwindcss": "^3.4.0",
