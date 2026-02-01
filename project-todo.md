@@ -25,13 +25,13 @@
 
 ### 진행 중
 
-없음
+| # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 | 상태 |
+|---|------|-------|--------------|-------|----------|------|
+| 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 | 🔄 |
 
 ### 할 일
 
-| # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 |
-|---|------|-------|--------------|-------|----------|
-| 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 |
+없음
 
 ### 완료
 
