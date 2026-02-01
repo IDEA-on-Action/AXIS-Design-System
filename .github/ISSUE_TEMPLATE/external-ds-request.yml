@@ -1,0 +1,82 @@
+name: 외부 DS 통합 요청
+description: 새로운 외부 디자인 시스템 연합 통합을 요청합니다.
+title: "[External DS] "
+labels: ["external-ds", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        외부 디자인 시스템의 연합 통합을 요청해 주셔서 감사합니다.
+        아래 정보를 최대한 정확히 작성해 주세요.
+
+  - type: input
+    id: ds-name
+    attributes:
+      label: 디자인 시스템 이름
+      description: 통합하려는 외부 DS의 이름
+      placeholder: "예: shadcn/ui, Radix Themes"
+    validations:
+      required: true
+
+  - type: input
+    id: ds-url
+    attributes:
+      label: 공식 웹사이트 URL
+      description: 외부 DS의 공식 웹사이트 또는 GitHub URL
+      placeholder: "https://example.com"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: license
+    attributes:
+      label: 라이선스
+      description: 해당 DS의 라이선스를 선택하세요
+      options:
+        - MIT
+        - Apache-2.0
+        - BSD-2-Clause
+        - BSD-3-Clause
+        - ISC
+        - 기타 (아래에 명시)
+    validations:
+      required: true
+
+  - type: input
+    id: license-other
+    attributes:
+      label: 기타 라이선스 (해당 시)
+      description: 위에서 "기타"를 선택한 경우 라이선스를 명시하세요
+      placeholder: "예: GPL-3.0"
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: 카테고리
+      description: 리소스의 주요 카테고리
+      multiple: true
+      options:
+        - minimal
+        - landing-page
+        - dashboard
+        - app
+        - agentic
+    validations:
+      required: true
+
+  - type: textarea
+    id: resources
+    attributes:
+      label: 통합할 리소스 목록
+      description: 연동하려는 리소스의 URL 목록을 작성하세요
+      placeholder: |
+        - https://example.com/components/button
+        - https://example.com/blocks/dashboard
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 추가 설명
+      description: 통합 사유, 기대 효과 등 추가 정보

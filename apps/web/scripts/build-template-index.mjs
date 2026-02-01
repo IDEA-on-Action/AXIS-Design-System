@@ -1,6 +1,7 @@
 /**
  * 템플릿 인덱스 빌드 스크립트
  * templates/ 폴더를 순회하여 public/templates/ 에 인덱스 및 상세 JSON을 생성합니다.
+ * data/ 폴더의 모든 외부 블록 JSON을 자동 탐색·병합합니다.
  */
 import { readdir, readFile, writeFile, mkdir, stat } from 'node:fs/promises'
 import { join, extname, relative } from 'node:path'
@@ -9,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const TEMPLATES_DIR = join(__dirname, '..', 'templates')
 const OUTPUT_DIR = join(__dirname, '..', 'public', 'templates')
-const EXTERNAL_BLOCKS_PATH = join(__dirname, '..', 'data', 'shadcn-blocks.json')
+const EXTERNAL_DATA_DIR = join(__dirname, '..', 'data')
 
 // 파일 타입 매핑
 const typeMap = {
@@ -44,6 +45,47 @@ async function collectFiles(dir, baseDir) {
   return files
 }
 
+async function loadExternalBlocks() {
+  const allBlocks = []
+  const sourceCounts = {}
+
+  try {
+    const entries = await readdir(EXTERNAL_DATA_DIR, { withFileTypes: true })
+    const jsonFiles = entries.filter((e) => e.isFile() && e.name.endsWith('.json'))
+
+    for (const file of jsonFiles) {
+      const filePath = join(EXTERNAL_DATA_DIR, file.name)
+      const raw = await readFile(filePath, 'utf-8')
+      const blocks = JSON.parse(raw)
+
+      if (!Array.isArray(blocks)) {
+        console.warn(`경고: ${file.name}은 배열이 아닙니다. 건너뜁니다.`)
+        continue
+      }
+
+      for (const block of blocks) {
+        const source = block.source || 'unknown'
+        sourceCounts[source] = (sourceCounts[source] || 0) + 1
+      }
+
+      allBlocks.push(...blocks)
+      console.log(`외부 블록 로드: ${blocks.length}개 (${file.name})`)
+    }
+  } catch {
+    console.log('data/ 디렉토리가 없습니다. 외부 블록을 건너뜁니다.')
+  }
+
+  // 소스별 카운트 로그
+  if (Object.keys(sourceCounts).length > 0) {
+    const summary = Object.entries(sourceCounts)
+      .map(([source, count]) => `${source}: ${count}`)
+      .join(', ')
+    console.log(`외부 블록 소스별 카운트: ${summary}`)
+  }
+
+  return allBlocks
+}
+
 async function build() {
   // 출력 디렉토리 생성
   await mkdir(OUTPUT_DIR, { recursive: true })
@@ -54,10 +96,7 @@ async function build() {
     entries = await readdir(TEMPLATES_DIR, { withFileTypes: true })
   } catch {
     console.log('templates/ 디렉토리가 없습니다. 건너뜁니다.')
-    // 빈 인덱스 생성
-    const emptyIndex = { version: '1.0.0', updatedAt: new Date().toISOString(), total: 0, templates: [] }
-    await writeFile(join(OUTPUT_DIR, 'index.json'), JSON.stringify(emptyIndex, null, 2))
-    return
+    entries = []
   }
 
   const templates = []
@@ -102,15 +141,8 @@ async function build() {
     templates.push({ ...meta })
   }
 
-  // 외부 블록 카탈로그 병합
-  let externalBlocks = []
-  try {
-    const blocksRaw = await readFile(EXTERNAL_BLOCKS_PATH, 'utf-8')
-    externalBlocks = JSON.parse(blocksRaw)
-    console.log(`외부 블록 로드: ${externalBlocks.length}개 (shadcn-blocks.json)`)
-  } catch {
-    console.log('외부 블록 파일이 없습니다. 건너뜁니다.')
-  }
+  // 외부 블록 카탈로그 병합 (data/ 폴더 자동 탐색)
+  const externalBlocks = await loadExternalBlocks()
 
   const allTemplates = [...templates, ...externalBlocks]
 

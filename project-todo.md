@@ -25,9 +25,7 @@
 
 ### 진행 중
 
-| # | 항목 | WI ID | GitHub Issue | Phase | 우선순위 | 상태 |
-|---|------|-------|--------------|-------|----------|------|
-| 8 | 외부 DS 연합형 확장 | [WI-0010](docs/workitems/WI-0010-external-ds-federation/) | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | P4 | 🔄 |
+없음
 
 ### 할 일
 
@@ -52,6 +50,7 @@
 | 13 | DX 개발자 경험 향상 | [#44](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/44) | P2 | 2026-02-01 |
 | 14 | Agentic UI 추가 구현 | [#40](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/40) | P3 | 2026-02-01 |
 | 15 | MCP 템플릿 Tools 구현 | [#53](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/53) | P6 | 2026-02-01 |
+| 16 | 외부 DS 연합형 확장 | [#54](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/54) | P7 | 2026-02-01 |
 
 ---
 
@@ -66,8 +65,8 @@
 | Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
 | Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
 | Phase 6 | MCP 연동 고도화 | 5 | 6 | 83% |
-| Phase 7 | 외부 DS 연합형 확장 | 1 | 4 | 25% |
-| **전체** | - | **49** | **53** | **92%** |
+| Phase 7 | 외부 DS 연합형 확장 | 4 | 4 | 100% |
+| **전체** | - | **52** | **53** | **98%** |
 
 ### Phase별 상세
 
@@ -163,12 +162,12 @@
 </details>
 
 <details>
-<summary>Phase 7: 외부 DS 연합형 확장 (25%) - #54</summary>
+<summary>Phase 7: 외부 DS 연합형 확장 (100%) - #54</summary>
 
 - [x] shadcn 블록 링크 템플릿
-- [ ] monet 리소스 link-only 연동
-- [ ] 커뮤니티 기여 가이드
-- [ ] 라이선스 게이트 자동화
+- [x] monet 리소스 link-only 연동
+- [x] 커뮤니티 기여 가이드
+- [x] 라이선스 게이트 자동화
 
 </details>
 
@@ -176,10 +175,13 @@
 
 ## 🔜 다음 단계
 
-### Phase 6: MCP 연동 고도화 (#53)
-1. list_templates / get_template / apply_template MCP tool 구현
-2. diff_template / check_project MCP tool 구현
-3. IDE/Claude Code 워크플로 문서화
+### Phase 6 잔여: IDE/Claude Code 워크플로 문서화 (#53)
+- IDE/Claude Code 워크플로 문서화
+
+### v1.0.0 안정화
+- 전체 테스트 커버리지 확보
+- 문서 최종 검토
+- npm 정식 배포
 
 ---
 

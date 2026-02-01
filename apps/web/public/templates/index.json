@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-02-01T00:29:00.561Z",
-  "total": 8,
+  "updatedAt": "2026-02-01T00:49:13.249Z",
+  "total": 38,
   "templates": [
     {
       "name": "Dashboard",
@@ -114,6 +114,198 @@
       }
     },
     {
+      "name": "Monet Hero Sections",
+      "slug": "monet-hero",
+      "description": "다양한 히어로 섹션 컴포넌트 (랜딩페이지용)",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "hero",
+        "landing",
+        "monet",
+        "section"
+      ],
+      "features": [
+        "Hero Layout",
+        "CTA Button",
+        "Responsive"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/hero",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Feature Sections",
+      "slug": "monet-feature",
+      "description": "기능 소개 섹션 컴포넌트 모음",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "feature",
+        "landing",
+        "monet",
+        "section"
+      ],
+      "features": [
+        "Feature Grid",
+        "Icon Support",
+        "Dark/Light Theme"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/feature",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Feature Showcase",
+      "slug": "monet-feature-showcase",
+      "description": "피처 쇼케이스 컴포넌트 (191+ 변형)",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "feature-showcase",
+        "landing",
+        "monet",
+        "component"
+      ],
+      "features": [
+        "Showcase Layout",
+        "Image Gallery",
+        "Animation"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/feature-showcase",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Pricing Sections",
+      "slug": "monet-pricing",
+      "description": "가격 비교 테이블 및 카드 섹션",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "pricing",
+        "landing",
+        "monet",
+        "table"
+      ],
+      "features": [
+        "Pricing Cards",
+        "Comparison Table",
+        "Toggle"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/pricing",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Testimonial Sections",
+      "slug": "monet-testimonial",
+      "description": "고객 후기 섹션 (47+ 변형)",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "testimonial",
+        "landing",
+        "monet",
+        "review"
+      ],
+      "features": [
+        "Testimonial Cards",
+        "Avatar",
+        "Rating"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/testimonial",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Stats Sections",
+      "slug": "monet-stats",
+      "description": "통계/수치 강조 섹션 (28+ 변형)",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "stats",
+        "landing",
+        "monet",
+        "numbers"
+      ],
+      "features": [
+        "Counter Animation",
+        "Grid Layout",
+        "Icon Support"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/category/stats",
+      "source": "monet"
+    },
+    {
+      "name": "Monet Page Templates",
+      "slug": "monet-pages",
+      "description": "완성형 페이지 템플릿 (28+ 페이지)",
+      "category": "landing-page",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "page",
+        "template",
+        "monet",
+        "full-page"
+      ],
+      "features": [
+        "Full Page Layout",
+        "Multi-section",
+        "Responsive"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/p",
+      "source": "monet"
+    },
+    {
+      "name": "Monet All Components",
+      "slug": "monet-components",
+      "description": "1007+ React UI 컴포넌트 전체 카탈로그",
+      "category": "minimal",
+      "version": "0.0.0",
+      "author": "monet",
+      "tags": [
+        "components",
+        "monet",
+        "catalog",
+        "ui"
+      ],
+      "features": [
+        "1000+ Components",
+        "Tailwind CSS",
+        "Dark/Light Theme"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://www.monet.design/c",
+      "source": "monet"
+    },
+    {
       "name": "Dashboard 01",
       "slug": "shadcn-dashboard-01",
       "description": "사이드바, 차트, 데이터 테이블이 포함된 대시보드 레이아웃",
@@ -135,6 +327,197 @@
       "devDependencies": {},
       "type": "external",
       "externalUrl": "https://ui.shadcn.com/blocks#dashboard-01",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 02",
+      "slug": "shadcn-dashboard-02",
+      "description": "카드 레이아웃 기반 대시보드 (거래 내역, 주문 관리)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "cards",
+        "transactions",
+        "orders"
+      ],
+      "features": [
+        "Card Layout",
+        "Transaction History",
+        "Order Management"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-02",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 03",
+      "slug": "shadcn-dashboard-03",
+      "description": "제품 관리 대시보드 (테이블, 필터, 페이지네이션)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "products",
+        "table",
+        "filter"
+      ],
+      "features": [
+        "Product Table",
+        "Filters",
+        "Pagination"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-03",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 04",
+      "slug": "shadcn-dashboard-04",
+      "description": "설정 페이지가 포함된 대시보드 레이아웃",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "settings",
+        "forms",
+        "layout"
+      ],
+      "features": [
+        "Settings Page",
+        "Form Layout",
+        "Tab Navigation"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-04",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 05",
+      "slug": "shadcn-dashboard-05",
+      "description": "멀티 차트 대시보드 (영역, 바, 라인 차트)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "charts",
+        "analytics",
+        "area-chart"
+      ],
+      "features": [
+        "Area Chart",
+        "Bar Chart",
+        "Line Chart"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-05",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 06",
+      "slug": "shadcn-dashboard-06",
+      "description": "AI 플레이그라운드 대시보드 (모델 설정, 메시지)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "ai",
+        "playground",
+        "model"
+      ],
+      "features": [
+        "AI Playground",
+        "Model Settings",
+        "Message Interface"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-06",
+      "source": "shadcn"
+    },
+    {
+      "name": "Dashboard 07",
+      "slug": "shadcn-dashboard-07",
+      "description": "주문 관리 대시보드 (주문 상세, 배송 추적)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "dashboard",
+        "orders",
+        "shipping",
+        "tracking"
+      ],
+      "features": [
+        "Order Details",
+        "Shipping Tracker",
+        "Status Updates"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#dashboard-07",
+      "source": "shadcn"
+    },
+    {
+      "name": "Login 01",
+      "slug": "shadcn-login-01",
+      "description": "이메일/비밀번호 기본 로그인 폼",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "login",
+        "authentication",
+        "form"
+      ],
+      "features": [
+        "Email Login",
+        "Password Input",
+        "Remember Me"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#login-01",
+      "source": "shadcn"
+    },
+    {
+      "name": "Login 02",
+      "slug": "shadcn-login-02",
+      "description": "소셜 로그인이 포함된 로그인 페이지",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "login",
+        "authentication",
+        "social",
+        "oauth"
+      ],
+      "features": [
+        "Social Login",
+        "OAuth Buttons",
+        "Responsive"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#login-02",
       "source": "shadcn"
     },
     {
@@ -184,6 +567,76 @@
       "source": "shadcn"
     },
     {
+      "name": "Login 05",
+      "slug": "shadcn-login-05",
+      "description": "2단계 인증이 포함된 로그인 페이지",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "login",
+        "authentication",
+        "2fa",
+        "verification"
+      ],
+      "features": [
+        "Two-Factor Auth",
+        "OTP Input",
+        "Secure Login"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#login-05",
+      "source": "shadcn"
+    },
+    {
+      "name": "Sidebar 01",
+      "slug": "shadcn-sidebar-01",
+      "description": "기본 사이드바 레이아웃 (네비게이션, 프로필)",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "sidebar",
+        "navigation",
+        "layout"
+      ],
+      "features": [
+        "Basic Sidebar",
+        "Navigation Links",
+        "User Profile"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#sidebar-01",
+      "source": "shadcn"
+    },
+    {
+      "name": "Sidebar 02",
+      "slug": "shadcn-sidebar-02",
+      "description": "그룹화된 메뉴 사이드바",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "sidebar",
+        "navigation",
+        "grouped-menu"
+      ],
+      "features": [
+        "Grouped Menu",
+        "Section Headers",
+        "Collapsible"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#sidebar-02",
+      "source": "shadcn"
+    },
+    {
       "name": "Sidebar 03",
       "slug": "shadcn-sidebar-03",
       "description": "서브메뉴가 포함된 사이드바 레이아웃",
@@ -228,6 +681,271 @@
       "devDependencies": {},
       "type": "external",
       "externalUrl": "https://ui.shadcn.com/blocks#sidebar-07",
+      "source": "shadcn"
+    },
+    {
+      "name": "Sidebar 10",
+      "slug": "shadcn-sidebar-10",
+      "description": "플로팅 스타일 사이드바 레이아웃",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "sidebar",
+        "navigation",
+        "floating",
+        "modern"
+      ],
+      "features": [
+        "Floating Sidebar",
+        "Modern Design",
+        "Responsive"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#sidebar-10",
+      "source": "shadcn"
+    },
+    {
+      "name": "Sidebar 14",
+      "slug": "shadcn-sidebar-14",
+      "description": "인셋 스타일 사이드바 레이아웃",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "sidebar",
+        "navigation",
+        "inset",
+        "layout"
+      ],
+      "features": [
+        "Inset Sidebar",
+        "Content Area",
+        "Breadcrumbs"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/blocks#sidebar-14",
+      "source": "shadcn"
+    },
+    {
+      "name": "Charts 01",
+      "slug": "shadcn-chart-area-interactive",
+      "description": "인터랙티브 영역 차트 (기간 선택 가능)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "chart",
+        "area",
+        "interactive",
+        "analytics"
+      ],
+      "features": [
+        "Area Chart",
+        "Date Range Picker",
+        "Interactive Tooltip"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/charts#chart-area-interactive",
+      "source": "shadcn"
+    },
+    {
+      "name": "Charts 02",
+      "slug": "shadcn-chart-bar-mixed",
+      "description": "복합 바 차트 (수평/수직 혼합)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "chart",
+        "bar",
+        "mixed",
+        "analytics"
+      ],
+      "features": [
+        "Mixed Bar Chart",
+        "Horizontal & Vertical",
+        "Legend"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/charts#chart-bar-mixed",
+      "source": "shadcn"
+    },
+    {
+      "name": "Charts 03",
+      "slug": "shadcn-chart-pie-donut",
+      "description": "도넛 차트 (파이 차트 변형)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "chart",
+        "pie",
+        "donut",
+        "analytics"
+      ],
+      "features": [
+        "Donut Chart",
+        "Center Label",
+        "Color Coding"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/charts#chart-pie-donut",
+      "source": "shadcn"
+    },
+    {
+      "name": "Charts 04",
+      "slug": "shadcn-chart-radar",
+      "description": "레이더 차트 (다축 비교)",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "chart",
+        "radar",
+        "comparison",
+        "analytics"
+      ],
+      "features": [
+        "Radar Chart",
+        "Multi-axis",
+        "Grid Lines"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/charts#chart-radar-default",
+      "source": "shadcn"
+    },
+    {
+      "name": "Charts 05",
+      "slug": "shadcn-chart-radial-stacked",
+      "description": "스택형 방사형 차트",
+      "category": "dashboard",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "chart",
+        "radial",
+        "stacked",
+        "analytics"
+      ],
+      "features": [
+        "Radial Chart",
+        "Stacked Data",
+        "Progress Indicator"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/charts#chart-radial-stacked",
+      "source": "shadcn"
+    },
+    {
+      "name": "Music App",
+      "slug": "shadcn-music",
+      "description": "음악 플레이어 앱 인터페이스",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "music",
+        "player",
+        "app",
+        "media"
+      ],
+      "features": [
+        "Music Player",
+        "Playlist",
+        "Album View"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/examples/music",
+      "source": "shadcn"
+    },
+    {
+      "name": "Mail App",
+      "slug": "shadcn-mail",
+      "description": "이메일 클라이언트 인터페이스",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "mail",
+        "email",
+        "app",
+        "inbox"
+      ],
+      "features": [
+        "Inbox View",
+        "Email Reader",
+        "Folder Navigation"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/examples/mail",
+      "source": "shadcn"
+    },
+    {
+      "name": "Tasks App",
+      "slug": "shadcn-tasks",
+      "description": "태스크 관리 앱 인터페이스 (데이터 테이블)",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "tasks",
+        "todo",
+        "app",
+        "data-table"
+      ],
+      "features": [
+        "Task Table",
+        "Filters",
+        "Sorting",
+        "Pagination"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/examples/tasks",
+      "source": "shadcn"
+    },
+    {
+      "name": "Forms",
+      "slug": "shadcn-forms",
+      "description": "프로필, 계정, 알림 등 다양한 폼 예제",
+      "category": "app",
+      "version": "0.0.0",
+      "author": "shadcn",
+      "tags": [
+        "forms",
+        "settings",
+        "profile",
+        "validation"
+      ],
+      "features": [
+        "Profile Form",
+        "Account Settings",
+        "Notifications"
+      ],
+      "dependencies": {},
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://ui.shadcn.com/examples/forms",
       "source": "shadcn"
     }
   ]

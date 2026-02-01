@@ -13,6 +13,7 @@ const navItems = [
   { href: '/agentic', label: 'Agentic UI' },
   { href: '/library', label: 'Library' },
   { href: '/templates', label: 'Templates' },
+  { href: '/contribute', label: 'Contribute' },
   { href: '/onboarding', label: 'Onboarding' },
 ]
 

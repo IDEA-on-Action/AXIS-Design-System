@@ -18,10 +18,17 @@ const categoryIconMap: Record<string, React.ComponentType<{ className?: string }
   bot: Bot,
 }
 
+// 소스 라벨 매핑
+const sourceLabels: Record<string, string> = {
+  axis: 'AXIS',
+  shadcn: 'shadcn',
+  monet: 'monet',
+}
+
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all')
-  const [selectedSource, setSelectedSource] = useState<'all' | 'axis' | 'shadcn'>('all')
+  const [selectedSource, setSelectedSource] = useState<string>('all')
   const [data, setData] = useState<TemplateIndex | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -54,12 +61,22 @@ export default function TemplatesPage() {
       }))
   }, [data])
 
-  // 소스별 카운트
-  const sourceCounts = useMemo(() => {
-    if (!data) return { all: 0, axis: 0, shadcn: 0 }
-    const axis = data.templates.filter((t) => !t.source || t.source === 'axis').length
-    const shadcn = data.templates.filter((t) => t.source === 'shadcn').length
-    return { all: data.templates.length, axis, shadcn }
+  // 동적 소스 목록 생성
+  const sources = useMemo(() => {
+    if (!data) return []
+    const sourceMap = new Map<string, number>()
+    for (const t of data.templates) {
+      const src = t.source || 'axis'
+      sourceMap.set(src, (sourceMap.get(src) || 0) + 1)
+    }
+    return [
+      { id: 'all', label: 'All', count: data.templates.length },
+      ...Array.from(sourceMap.entries()).map(([id, count]) => ({
+        id,
+        label: sourceLabels[id] || id,
+        count,
+      })),
+    ]
   }, [data])
 
   // 필터링
@@ -122,13 +139,9 @@ export default function TemplatesPage() {
             />
           </div>
 
-          {/* Source Filter */}
+          {/* Source Filter — 동적 생성 */}
           <div className="flex items-center gap-1.5">
-            {([
-              { id: 'all', label: 'All', count: sourceCounts.all },
-              { id: 'axis', label: 'AXIS', count: sourceCounts.axis },
-              { id: 'shadcn', label: 'shadcn', count: sourceCounts.shadcn },
-            ] as const).map((src) => (
+            {sources.map((src) => (
               <button
                 key={src.id}
                 onClick={() => setSelectedSource(src.id)}
