@@ -7,6 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.0] - 2026-02-01
+
+### 개요
+
+AXIS Design System v1.0.0 최초 안정 릴리스.
+Phase 0~8을 거쳐 디자인 토큰, Core UI 30개, Agentic UI 16개, 테마 시스템,
+CLI, MCP 서버, 문서 사이트를 완성한 첫 정식 버전입니다.
+
+### Added
+
+- **Phase 4: 템플릿 시스템**
+  - 템플릿 갤러리 UI (Dashboard, Landing Page, Theme Only)
+  - `/templates/[slug]` 상세 페이지
+
+- **Phase 5: Template Engine + CLI**
+  - CLI `template` 명령어 구현
+  - DiffViewer, PlanCard, ContextPanel, TokenUsageIndicator, AttachmentCard 추가
+
+- **Phase 6: MCP 연동 고도화**
+  - MCP 템플릿 도구 5종 (list, get, apply, diff, check)
+  - Claude Code 워크플로 가이드 문서화
+
+- **Phase 7: 외부 DS 연합형 확장**
+  - shadcn/monet 외부 블록 연동
+  - 기여 가이드(Contribute 페이지) 및 라이선스 자동화
+
+- **Phase 8: v1.0 안정화**
+  - ui-react 80건, agentic-ui 54건, theme 21건, cli 58건 — 총 213건 단위 테스트 추가
+  - Vitest + Testing Library 테스트 인프라 구축
+  - 문서 사이트 전수 검사 (60+ 페이지) 및 깨진 링크 2건 수정
+  - npm dry-run 배포 검증 (5개 패키지)
+  - CHANGELOG v1.0.0 작성
+
+### Changed
+
+- 전 패키지 버전 0.1.0 → 1.0.0으로 범핑
+- `workspace:*` 내부 의존성 정합성 확인 완료
+
+### Fixed
+
+- 문서 사이트 `/onboarding` 깨진 링크 제거
+- 홈페이지 `/agentic/approval-card` → `/agentic/approval-dialog` 경로 수정
+
+### Breaking Changes
+
+- 해당 없음 (최초 정식 릴리스)
+
+---
+
 ## [0.7.1] - 2026-01-24
 
 ### Added

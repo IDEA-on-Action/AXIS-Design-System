@@ -14,7 +14,6 @@ const navItems = [
   { href: '/library', label: 'Library' },
   { href: '/templates', label: 'Templates' },
   { href: '/contribute', label: 'Contribute' },
-  { href: '/onboarding', label: 'Onboarding' },
 ]
 
 export function SiteHeader() {

@@ -2,7 +2,7 @@
 
 > 프로젝트 진행 상황 및 다음 단계
 
-**현재 버전**: 0.7.0
+**현재 버전**: 1.0.0
 **마지막 업데이트**: 2026-02-01
 **상태**: ✅ Active Development
 
@@ -35,6 +35,7 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 17 | v1.0 안정화 | WI-0011 | P8 | 2026-02-01 |
 | 1 | Monorepo 구조 및 패키지 설정 | [#45](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/45) | P0 | 2026-01-22 |
 | 2 | 디자인 시스템 리소스 연동 | [#46](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/46) | P2 | 2026-01-23 |
 | 3 | 사이트 구현 및 배포 | [#47](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/47) | P2 | 2026-01-23 |
@@ -66,7 +67,8 @@
 | Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
 | Phase 6 | MCP 연동 고도화 | 6 | 6 | 100% |
 | Phase 7 | 외부 DS 연합형 확장 | 4 | 4 | 100% |
-| **전체** | - | **53** | **53** | **100%** |
+| Phase 8 | v1.0 안정화 | 6 | 6 | 100% |
+| **전체** | - | **59** | **59** | **100%** |
 
 ### Phase별 상세
 
@@ -171,12 +173,24 @@
 
 </details>
 
+<details>
+<summary>Phase 8: v1.0 안정화 (0%) 🔄 - WI-0011</summary>
+
+- [ ] 테스트 커버리지 확보 (ui-react, agentic-ui)
+- [ ] 문서 사이트 전수 검수
+- [ ] npm dry-run 배포 검증
+- [ ] CHANGELOG v1.0.0 작성
+- [ ] 전 패키지 버전 1.0.0 범핑
+- [ ] npm 정식 배포
+
+</details>
+
 ---
 
 ## 🔜 다음 단계
 
-### v1.0.0 안정화
-- 전체 테스트 커버리지 확보
+### v1.0.0 안정화 (WI-0011)
+- 테스트 커버리지 확보
 - 문서 최종 검토
 - npm 정식 배포
 

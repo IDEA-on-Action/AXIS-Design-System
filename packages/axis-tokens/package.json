@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/tokens",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AXIS Design System - Design Tokens (CSS Variables + JSON)",
   "main": "dist/js/tokens.js",
   "module": "dist/js/tokens.mjs",

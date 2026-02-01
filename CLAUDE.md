@@ -2,7 +2,7 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: 0.7.0 | **상태**: ✅ Active Development
+**현재 버전**: 1.0.0 | **상태**: ✅ Active Development
 
 ---
 

@@ -77,6 +77,13 @@
       "issueNumber": 54,
       "lastSyncedAt": "2026-02-01T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0011",
+      "slug": "v1-stabilization",
+      "issueNumber": null,
+      "lastSyncedAt": "2026-02-01T00:00:00.000Z",
+      "lastStatus": "✅"
     }
   ],
   "updatedAt": "2026-02-01T00:00:00.000Z"

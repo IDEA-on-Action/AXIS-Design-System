@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/ui-react",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "AXIS Design System - Core React UI Components",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -142,6 +142,8 @@
     "build": "tsup src/index.ts src/*/index.tsx --format cjs,esm --dts --external react",
     "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react",
     "clean": "rm -rf dist",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "type-check": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
@@ -175,10 +177,16 @@
     "tailwind-merge": "^2.5.0"
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
-    "react": "^18.2.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.0.0",
+    "@vitejs/plugin-react": "^5.1.2",
+    "jsdom": "^27.4.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "tsup": "^8.0.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^2.1.0"
   },
   "keywords": [
     "react",

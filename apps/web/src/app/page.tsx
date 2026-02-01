@@ -14,7 +14,7 @@ const coreComponents = [
 
 const agenticComponents = [
   { name: 'StreamingText', description: '실시간 텍스트 스트리밍', href: '/agentic/streaming-text' },
-  { name: 'ApprovalCard', description: '사용자 승인 요청 UI', href: '/agentic/approval-card' },
+  { name: 'ApprovalCard', description: '사용자 승인 요청 UI', href: '/agentic/approval-dialog' },
   { name: 'ToolCallCard', description: 'AI 도구 호출 표시', href: '/agentic/tool-call-card' },
   { name: 'ThinkingIndicator', description: 'AI 생각 중 표시', href: '/agentic/thinking-indicator' },
   { name: 'SourcePanel', description: 'AI 근거/출처 표시', href: '/agentic/source-panel' },
