@@ -66,8 +66,8 @@
 | Phase 4 | 템플릿 골격 + 갤러리 | 4 | 4 | 100% |
 | Phase 5 | Template Engine + CLI | 8 | 8 | 100% |
 | Phase 6 | MCP 연동 고도화 | 5 | 6 | 83% |
-| Phase 7 | 외부 DS 연합형 확장 | 0 | 4 | 0% |
-| **전체** | - | **48** | **53** | **91%** |
+| Phase 7 | 외부 DS 연합형 확장 | 1 | 4 | 25% |
+| **전체** | - | **49** | **53** | **92%** |
 
 ### Phase별 상세
 
@@ -163,9 +163,9 @@
 </details>
 
 <details>
-<summary>Phase 7: 외부 DS 연합형 확장 (0%) - #54</summary>
+<summary>Phase 7: 외부 DS 연합형 확장 (25%) - #54</summary>
 
-- [ ] shadcn 블록 링크 템플릿
+- [x] shadcn 블록 링크 템플릿
 - [ ] monet 리소스 link-only 연동
 - [ ] 커뮤니티 기여 가이드
 - [ ] 라이선스 게이트 자동화
