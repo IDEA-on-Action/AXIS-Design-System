@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url'
 const __dirname = fileURLToPath(new URL('.', import.meta.url))
 const TEMPLATES_DIR = join(__dirname, '..', 'templates')
 const OUTPUT_DIR = join(__dirname, '..', 'public', 'templates')
+const EXTERNAL_BLOCKS_PATH = join(__dirname, '..', 'data', 'shadcn-blocks.json')
 
 // 파일 타입 매핑
 const typeMap = {
@@ -101,15 +102,27 @@ async function build() {
     templates.push({ ...meta })
   }
 
+  // 외부 블록 카탈로그 병합
+  let externalBlocks = []
+  try {
+    const blocksRaw = await readFile(EXTERNAL_BLOCKS_PATH, 'utf-8')
+    externalBlocks = JSON.parse(blocksRaw)
+    console.log(`외부 블록 로드: ${externalBlocks.length}개 (shadcn-blocks.json)`)
+  } catch {
+    console.log('외부 블록 파일이 없습니다. 건너뜁니다.')
+  }
+
+  const allTemplates = [...templates, ...externalBlocks]
+
   // 인덱스 JSON 생성
   const index = {
     version: '1.0.0',
     updatedAt: new Date().toISOString(),
-    total: templates.length,
-    templates,
+    total: allTemplates.length,
+    templates: allTemplates,
   }
   await writeFile(join(OUTPUT_DIR, 'index.json'), JSON.stringify(index, null, 2))
-  console.log(`생성: public/templates/index.json (${templates.length}개 템플릿)`)
+  console.log(`생성: public/templates/index.json (${allTemplates.length}개 템플릿 — 로컬 ${templates.length}, 외부 ${externalBlocks.length})`)
 }
 
 build().catch((err) => {

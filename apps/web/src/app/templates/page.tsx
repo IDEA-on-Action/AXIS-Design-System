@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Badge } from '@axis-ds/ui-react'
 import { Skeleton } from '@/components/skeleton'
-import { Search, FileCode, Layers, Layout, BarChart3, AppWindow, Bot, Filter } from 'lucide-react'
+import { Search, FileCode, Layers, Layout, BarChart3, AppWindow, Bot, Filter, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TemplateIndex, TemplateMetadata, TemplateCategory } from '@/lib/template-types'
 import { templateCategories } from '@/lib/template-types'
@@ -21,6 +21,7 @@ const categoryIconMap: Record<string, React.ComponentType<{ className?: string }
 export default function TemplatesPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<TemplateCategory | 'all'>('all')
+  const [selectedSource, setSelectedSource] = useState<'all' | 'axis' | 'shadcn'>('all')
   const [data, setData] = useState<TemplateIndex | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -53,11 +54,23 @@ export default function TemplatesPage() {
       }))
   }, [data])
 
+  // 소스별 카운트
+  const sourceCounts = useMemo(() => {
+    if (!data) return { all: 0, axis: 0, shadcn: 0 }
+    const axis = data.templates.filter((t) => !t.source || t.source === 'axis').length
+    const shadcn = data.templates.filter((t) => t.source === 'shadcn').length
+    return { all: data.templates.length, axis, shadcn }
+  }, [data])
+
   // 필터링
   const filtered = useMemo(() => {
     if (!data) return []
     return data.templates.filter((t) => {
       if (selectedCategory !== 'all' && t.category !== selectedCategory) return false
+      if (selectedSource !== 'all') {
+        const tSource = t.source || 'axis'
+        if (tSource !== selectedSource) return false
+      }
       if (searchQuery) {
         const q = searchQuery.toLowerCase()
         return (
@@ -68,7 +81,7 @@ export default function TemplatesPage() {
       }
       return true
     })
-  }, [data, searchQuery, selectedCategory])
+  }, [data, searchQuery, selectedCategory, selectedSource])
 
   if (loading) {
     return (
@@ -98,14 +111,39 @@ export default function TemplatesPage() {
 
       {/* Search & Filters */}
       <div className="flex flex-col gap-4 mb-8">
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="템플릿 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="relative max-w-md flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="템플릿 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Source Filter */}
+          <div className="flex items-center gap-1.5">
+            {([
+              { id: 'all', label: 'All', count: sourceCounts.all },
+              { id: 'axis', label: 'AXIS', count: sourceCounts.axis },
+              { id: 'shadcn', label: 'shadcn', count: sourceCounts.shadcn },
+            ] as const).map((src) => (
+              <button
+                key={src.id}
+                onClick={() => setSelectedSource(src.id)}
+                className={cn(
+                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-medium transition-colors',
+                  selectedSource === src.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                )}
+              >
+                {src.label}
+                <span className="opacity-70">({src.count})</span>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Category Tabs */}
@@ -174,42 +212,62 @@ export default function TemplatesPage() {
 
 function TemplateCard({ template }: { template: TemplateMetadata }) {
   const catInfo = templateCategories[template.category]
+  const isExternal = template.type === 'external'
 
-  return (
-    <Link href={`/templates/${template.slug}`}>
-      <Card className="h-full transition-all hover:bg-muted/50 hover:shadow-md">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-2">
+  const cardContent = (
+    <Card className="h-full transition-all hover:bg-muted/50 hover:shadow-md">
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2">
+            {isExternal ? (
+              <ExternalLink className="h-5 w-5 text-muted-foreground" />
+            ) : (
               <FileCode className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-base">{template.name}</CardTitle>
-            </div>
+            )}
+            <CardTitle className="text-base">{template.name}</CardTitle>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {template.source && template.source !== 'axis' && (
+              <Badge variant="outline" className="text-xs">
+                {template.source}
+              </Badge>
+            )}
             <Badge variant="secondary" className="text-xs">
               {catInfo?.name || template.category}
             </Badge>
           </div>
-          <CardDescription className="line-clamp-2">{template.description}</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-3">
-          {/* Features */}
-          <div className="space-y-1">
-            {template.features.slice(0, 3).map((feat) => (
-              <div key={feat} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
-                {feat}
-              </div>
-            ))}
-          </div>
-          {/* Tags */}
-          <div className="flex flex-wrap gap-1">
-            {template.tags.slice(0, 4).map((tag) => (
-              <Badge key={tag} variant="outline" className="text-xs">
-                #{tag}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+        </div>
+        <CardDescription className="line-clamp-2">{template.description}</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-0 space-y-3">
+        {/* Features */}
+        <div className="space-y-1">
+          {template.features.slice(0, 3).map((feat) => (
+            <div key={feat} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="w-1 h-1 rounded-full bg-muted-foreground/50" />
+              {feat}
+            </div>
+          ))}
+        </div>
+        {/* Tags */}
+        <div className="flex flex-wrap gap-1">
+          {template.tags.slice(0, 4).map((tag) => (
+            <Badge key={tag} variant="outline" className="text-xs">
+              #{tag}
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
+
+  if (isExternal && template.externalUrl) {
+    return (
+      <a href={template.externalUrl} target="_blank" rel="noopener noreferrer">
+        {cardContent}
+      </a>
+    )
+  }
+
+  return <Link href={`/templates/${template.slug}`}>{cardContent}</Link>
 }

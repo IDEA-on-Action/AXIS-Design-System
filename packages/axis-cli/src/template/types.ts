@@ -13,6 +13,14 @@ export interface TemplateIndexEntry {
   features: string[];
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  /** 템플릿 유형: local(기본) 또는 external(외부 링크) */
+  type?: 'local' | 'external';
+  /** external 타입 시 외부 링크 URL */
+  externalUrl?: string;
+  /** 출처: 'axis' | 'shadcn' 등 */
+  source?: string;
+  /** 미리보기 이미지 URL */
+  preview?: string;
 }
 
 export interface TemplateIndex {
