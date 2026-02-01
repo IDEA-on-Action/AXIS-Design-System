@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Github, Menu } from 'lucide-react'
+import { Github } from 'lucide-react'
 import { Button } from '@axis-ds/ui-react'
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import { ThemeToggle } from '@/components/theme-toggle'
+import { MobileNav } from '@/components/mobile-nav'
 
 const navItems = [
   { href: '/docs', label: 'Docs' },
@@ -18,14 +19,14 @@ const navItems = [
 
 export function SiteHeader() {
   const pathname = usePathname()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
-        <div className="mr-4 flex">
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 flex items-center">
+          <MobileNav />
           <Link href="/" className="mr-6 flex items-center space-x-2">
-            <span className="font-bold text-xl">AXIS</span>
+            <span className="font-bold text-lg">AXIS</span>
           </Link>
           <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
             {navItems.map((item) => (
@@ -44,51 +45,20 @@ export function SiteHeader() {
             ))}
           </nav>
         </div>
-        <div className="flex flex-1 items-center justify-end space-x-2">
-          <nav className="flex items-center space-x-2">
-            <Link
-              href="https://github.com/IDEA-on-Action/AXIS-Design-System"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Button variant="ghost" size="icon">
-                <Github className="h-5 w-5" />
-                <span className="sr-only">GitHub</span>
-              </Button>
-            </Link>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <Menu className="h-5 w-5" />
+        <div className="flex flex-1 items-center justify-end space-x-1">
+          <ThemeToggle />
+          <Link
+            href="https://github.com/IDEA-on-Action/AXIS-Design-System"
+            target="_blank"
+            rel="noreferrer"
+          >
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Github className="h-4 w-4" />
+              <span className="sr-only">GitHub</span>
             </Button>
-          </nav>
+          </Link>
         </div>
       </div>
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-t">
-          <nav className="flex flex-col p-4 space-y-2">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  'px-3 py-2 rounded-md transition-colors hover:bg-accent',
-                  pathname?.startsWith(item.href)
-                    ? 'bg-accent text-foreground'
-                    : 'text-foreground/60'
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        </div>
-      )}
     </header>
   )
 }
