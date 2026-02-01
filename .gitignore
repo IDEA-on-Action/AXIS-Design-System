@@ -71,6 +71,9 @@ public/worker-*.js
 .claude/cache/
 .claude/settings.local.json
 
+# Playwright MCP
+.playwright-mcp/
+
 # OpenNext build output
 apps/web/.open-next/
 .coverage
