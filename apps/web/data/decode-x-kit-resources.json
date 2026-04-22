@@ -1,0 +1,74 @@
+[
+  {
+    "name": "Spec Source Split View",
+    "slug": "decode-x-spec-source-split-view",
+    "description": "AI 역공학 파이프라인 결과물을 검토하는 엔지니어 워크벤치용 split view. 좌측 정책 목록(Spec Panel)과 우측 재구성 마크다운 패널이 동기화되며, Provenance Inspector와 연동됩니다.",
+    "category": "agentic",
+    "version": "0.1.0",
+    "author": "AXBD-Team",
+    "tags": ["split-view", "spec", "provenance", "ai-pipeline", "engineer"],
+    "features": [
+      "Synchronized Spec/Source Panel",
+      "Policy Card List",
+      "Smooth Section Scroll",
+      "Confidence Badge",
+      "Provenance Inspector Trigger"
+    ],
+    "dependencies": {
+      "react": "^18",
+      "lucide-react": "^0.400.0"
+    },
+    "devDependencies": {},
+    "type": "external",
+    "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/engineer/SpecSourceSplitView.tsx",
+    "source": "decode-x-kit"
+  },
+  {
+    "name": "Provenance Inspector",
+    "slug": "decode-x-provenance-inspector",
+    "description": "AI 역공학 결과물의 출처(provenance)를 소스/파이프라인/용어 3-탭으로 시각화하는 사이드 다이얼로그. 정책 코드별 신뢰도·원본 문서·추출 스테이지를 추적합니다.",
+    "category": "agentic",
+    "version": "0.1.0",
+    "author": "AXBD-Team",
+    "tags": ["provenance", "inspector", "dialog", "tabs", "ai-pipeline"],
+    "features": [
+      "3-Tab Panel (Sources / Pipeline / Terms)",
+      "Confidence Badge",
+      "Document Link List",
+      "Pipeline Stage Timeline",
+      "Ontology Term Browser"
+    ],
+    "dependencies": {
+      "react": "^18",
+      "lucide-react": "^0.400.0"
+    },
+    "devDependencies": {},
+    "type": "external",
+    "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/engineer/ProvenanceInspector.tsx",
+    "source": "decode-x-kit"
+  },
+  {
+    "name": "Stage Replayer",
+    "slug": "decode-x-stage-replayer",
+    "description": "AI 파이프라인의 N-stage 처리 결과를 가로 스크롤 타임라인으로 시각화. 각 스테이지별 상태(completed/pending/failed), AI-Ready Score, 컴플라이언스 항목을 카드로 표시합니다.",
+    "category": "agentic",
+    "version": "0.1.0",
+    "author": "AXBD-Team",
+    "tags": ["timeline", "pipeline", "stages", "ai-ready", "compliance"],
+    "features": [
+      "Horizontal Scroll Timeline",
+      "Stage Status Cards",
+      "AI-Ready Score Badge",
+      "Compliance Checklist",
+      "Progress Bar"
+    ],
+    "dependencies": {
+      "react": "^18",
+      "lucide-react": "^0.400.0"
+    },
+    "devDependencies": {},
+    "type": "external",
+    "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/executive/FoundryXTimeline.tsx",
+    "source": "decode-x-kit"
+  }
+]
