@@ -78,10 +78,10 @@ axis-design-system/
 
 ## ⚠️ 환경 참고
 
-- **OS**: Windows — 경로에 `\` 사용, bash 명령 호환성 주의
+- **OS**: Windows - 경로에 `\` 사용, bash 명령 호환성 주의
 - **Shell**: PowerShell/Git Bash 환경에서 pnpm 스크립트 실행
-- **Shell 격리**: Claude Code Bash 도구는 별도 프로세스 — 사용자 터미널의 환경변수 미공유. `NPM_TOKEN` 등은 시스템 환경변수로 등록하거나 명령에 `export`로 포함 필요
-- **Windows + bash 루프**: `for` 루프에서 Windows 경로 `\`가 변수 보간과 충돌 — 개별 명령으로 분리하여 실행
+- **Shell 격리**: Claude Code Bash 도구는 별도 프로세스 - 사용자 터미널의 환경변수 미공유. `NPM_TOKEN` 등은 시스템 환경변수로 등록하거나 명령에 `export`로 포함 필요
+- **Windows + bash 루프**: `for` 루프에서 Windows 경로 `\`가 변수 보간과 충돌 - 개별 명령으로 분리하여 실행
 - **개발 서버**: `pnpm dev:web` → `localhost:3100`
 - **배포**: Cloudflare Pages (`@opennextjs/cloudflare`)
 - **상태관리**: Zustand 5 + TanStack React Query 5
@@ -123,10 +123,10 @@ pnpm publish -r --access public --no-git-checks  # 수동 배포
 ## 📦 npm 배포 참고
 
 - **npm 스코프**: `@axis-ds` (npmjs.com 조직)
-- **인증**: `.npmrc`에서 `${NPM_TOKEN}` 환경변수 참조 — 미설정 시 모든 npm 명령 401 에러
+- **인증**: `.npmrc`에서 `${NPM_TOKEN}` 환경변수 참조 - 미설정 시 모든 npm 명령 401 에러
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
-- **publish 부수효과**: 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 — 커밋 불필요, 삭제 권장
-- **CI 배포**: `.github/workflows/publish.yml` — `NPM_TOKEN` GitHub Secret 필요
+- **publish 부수효과**: 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
+- **CI 배포**: `.github/workflows/publish.yml` - `NPM_TOKEN` GitHub Secret 필요
 - **현재 배포 버전**: 1.1.1 (2026-02-01 배포 완료)
 
 ---
