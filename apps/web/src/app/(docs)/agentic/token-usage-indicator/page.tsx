@@ -108,6 +108,10 @@ export default function TokenUsageIndicatorPage() {
         <CodeBlock code="npx axis-cli add token-usage-indicator --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-4">
@@ -153,10 +157,6 @@ export default function TokenUsageIndicatorPage() {
             <TokenUsageIndicator current={4015} max={4096} />
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

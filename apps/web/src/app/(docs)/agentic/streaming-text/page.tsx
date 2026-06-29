@@ -98,6 +98,10 @@ export default function StreamingTextPage() {
         <CodeBlock code="npx axis-cli add streaming-text" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <Button onClick={startDemo} disabled={isRunning}>
@@ -105,10 +109,6 @@ export default function StreamingTextPage() {
           </Button>
           {(text || isRunning) && <StreamingText text={text} isComplete={isComplete} />}
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

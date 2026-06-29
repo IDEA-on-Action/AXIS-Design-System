@@ -89,6 +89,10 @@ export default function RecoveryBannerPage() {
         <CodeBlock code="npx axis-cli add recovery-banner --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           {!showBanner && <Button onClick={() => setShowBanner(true)}>배너 다시 표시</Button>}
@@ -127,10 +131,6 @@ export default function RecoveryBannerPage() {
             />
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

@@ -188,6 +188,10 @@ export default function ApprovalDialogPage() {
         <CodeBlock code="npx axis-cli add approval-card" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-2">
@@ -221,10 +225,6 @@ export default function ApprovalDialogPage() {
             }}
           />
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Impact Levels">

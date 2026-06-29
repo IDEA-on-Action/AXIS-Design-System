@@ -221,6 +221,10 @@ export default function PlanCardPage() {
         <CodeBlock code="npx axis-cli add plan-card --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-2">
@@ -272,10 +276,6 @@ export default function PlanCardPage() {
             status="completed"
           />
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

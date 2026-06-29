@@ -111,7 +111,7 @@ export default function ProgressPage() {
         <CodeBlock code={basicExample} />
       </DocSection>
 
-      <DocSection title="Animated Demo">
+      <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-4">
             <Progress value={progress} className="flex-1" />

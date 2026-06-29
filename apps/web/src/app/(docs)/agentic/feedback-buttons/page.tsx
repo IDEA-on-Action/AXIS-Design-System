@@ -104,6 +104,10 @@ export default function FeedbackButtonsPage() {
         <CodeBlock code="npx axis-cli add feedback-buttons --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <p className="text-sm text-muted-foreground">
@@ -153,10 +157,6 @@ export default function FeedbackButtonsPage() {
             </div>
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

@@ -135,6 +135,10 @@ export default function StepTimelinePage() {
         <CodeBlock code="npx axis-cli add step-timeline --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex gap-2">
@@ -157,10 +161,6 @@ export default function StepTimelinePage() {
             <StepTimeline steps={steps} orientation={orientation} />
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

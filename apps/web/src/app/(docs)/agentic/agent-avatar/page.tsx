@@ -101,6 +101,10 @@ export default function AgentAvatarPage() {
         <CodeBlock code="npx axis-cli add agent-avatar --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Sizes">
         <div className="p-6 rounded-lg border">
           <div className="flex items-end gap-4">
@@ -160,10 +164,6 @@ export default function AgentAvatarPage() {
             </div>
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

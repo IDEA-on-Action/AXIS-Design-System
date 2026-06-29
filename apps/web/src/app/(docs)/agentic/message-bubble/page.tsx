@@ -190,6 +190,10 @@ export default function MessageBubblePage() {
         <CodeBlock code="npx axis-cli add message-bubble --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <Button onClick={addMessage}>메시지 추가</Button>
@@ -220,10 +224,6 @@ export default function MessageBubblePage() {
             <MessageBubble role="system" content="시스템 알림: 새로운 세션이 시작되었습니다." />
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">
