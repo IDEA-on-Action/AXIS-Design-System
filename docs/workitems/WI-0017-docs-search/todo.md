@@ -18,15 +18,17 @@
 - [x] site-header에 검색 트리거 배치 + Dialog 포커스 트랩(Radix) + Esc 닫기
 - [x] 다이얼로그 a11y: sr-only DialogTitle
 
-## Phase 4: 검증 ✅(빌드)
+## Phase 4: 검증 ✅
 - [x] 빌드 인덱싱 동작: "Found data-pagefind-body" + **48개 페이지 인덱싱** (표준화 문서 전수)
-- [ ] 배포 후 실제 검색 동작 확인 (Cloudflare Pages preview/production)
+- [x] 배포 후 실제 검색 동작 확인 (production) - 2026-06-30 검증
+  - `/pagefind/pagefind.js`·`pagefind-entry.json` 서빙(200), entry `page_count: 48`
+  - Playwright E2E: ⌘K 버튼 → 다이얼로그(dialog/combobox/listbox ARIA) → "card" 입력 → 7개 랭킹 결과 + `<mark>` 하이라이트 → Enter → `/components/card/` 라우팅 확인
 
 ## Definition of Done
 - [x] 타입 체크 통과
 - [x] 린트 통과
 - [x] 빌드 성공 (정적 214페이지 + Pagefind 인덱스 생성)
-- [ ] Cloudflare Pages 정적 배포 검증 (배포 후)
+- [x] Cloudflare Pages 정적 배포 검증 (production E2E 통과, 2026-06-30)
 - [x] release-notes.md 작성
 
 ## 참고
