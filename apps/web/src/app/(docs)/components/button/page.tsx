@@ -3,8 +3,9 @@
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { PropsTable } from '@/components/props-table'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { Loader2, Mail, ChevronRight } from 'lucide-react'
-import Link from 'next/link'
 
 const buttonProps = [
   { name: 'variant', type: '"default" | "destructive" | "outline" | "secondary" | "ghost" | "link"', default: '"default"', description: '버튼 스타일 변형' },
@@ -49,93 +50,69 @@ const loadingExample = `<Button disabled>
 
 export default function ButtonPage() {
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/components" className="hover:text-foreground">Components</Link>
-            <span>/</span>
-            <span>Button</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Button</h1>
-          <p className="text-lg text-muted-foreground">
-            다양한 스타일과 크기를 지원하는 버튼 컴포넌트입니다.
-          </p>
+    <DocPageLayout
+      category="Components"
+      categoryHref="/components"
+      title="Button"
+      description="다양한 스타일과 크기를 지원하는 버튼 컴포넌트입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add button" language="bash" />
+      </DocSection>
+
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
+      <DocSection title="Variants">
+        <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
+          <Button variant="default">Default</Button>
+          <Button variant="destructive">Destructive</Button>
+          <Button variant="outline">Outline</Button>
+          <Button variant="secondary">Secondary</Button>
+          <Button variant="ghost">Ghost</Button>
+          <Button variant="link">Link</Button>
         </div>
+        <CodeBlock code={variantsExample} />
+      </DocSection>
 
-        {/* Installation */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add button" language="bash" />
-        </section>
+      <DocSection title="Sizes">
+        <div className="mb-4 flex flex-wrap items-center gap-2 p-6 rounded-lg border">
+          <Button size="sm">Small</Button>
+          <Button size="default">Default</Button>
+          <Button size="lg">Large</Button>
+          <Button size="icon"><Mail className="h-4 w-4" /></Button>
+        </div>
+        <CodeBlock code={sizesExample} />
+      </DocSection>
 
-        {/* Basic Usage */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="With Icon">
+        <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
+          <Button>
+            <Mail className="mr-2 h-4 w-4" />
+            Login with Email
+          </Button>
+          <Button>
+            Next
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        </div>
+        <CodeBlock code={withIconExample} />
+      </DocSection>
 
-        {/* Variants */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Variants</h2>
-          <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
-            <Button variant="default">Default</Button>
-            <Button variant="destructive">Destructive</Button>
-            <Button variant="outline">Outline</Button>
-            <Button variant="secondary">Secondary</Button>
-            <Button variant="ghost">Ghost</Button>
-            <Button variant="link">Link</Button>
-          </div>
-          <CodeBlock code={variantsExample} />
-        </section>
+      <DocSection title="Loading State">
+        <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
+          <Button disabled>
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            Please wait
+          </Button>
+        </div>
+        <CodeBlock code={loadingExample} />
+      </DocSection>
 
-        {/* Sizes */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Sizes</h2>
-          <div className="mb-4 flex flex-wrap items-center gap-2 p-6 rounded-lg border">
-            <Button size="sm">Small</Button>
-            <Button size="default">Default</Button>
-            <Button size="lg">Large</Button>
-            <Button size="icon"><Mail className="h-4 w-4" /></Button>
-          </div>
-          <CodeBlock code={sizesExample} />
-        </section>
-
-        {/* With Icon */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">With Icon</h2>
-          <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
-            <Button>
-              <Mail className="mr-2 h-4 w-4" />
-              Login with Email
-            </Button>
-            <Button>
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
-            </Button>
-          </div>
-          <CodeBlock code={withIconExample} />
-        </section>
-
-        {/* Loading */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Loading State</h2>
-          <div className="mb-4 flex flex-wrap gap-2 p-6 rounded-lg border">
-            <Button disabled>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Please wait
-            </Button>
-          </div>
-          <CodeBlock code={loadingExample} />
-        </section>
-
-        {/* Props */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={buttonProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={buttonProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

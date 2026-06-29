@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 type PlanStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'executing' | 'completed'
 type PlanStepStatus = 'pending' | 'running' | 'complete' | 'error' | 'skipped'
@@ -81,11 +82,15 @@ const PlanCard = ({
       <div className="p-4 space-y-2">
         {steps.map((step, i) => (
           <div key={step.id} className="flex items-start gap-2">
-            <span className={`mt-0.5 text-sm ${stepColors[step.status]} ${step.status === 'running' ? 'animate-spin' : ''}`}>
+            <span
+              className={`mt-0.5 text-sm ${stepColors[step.status]} ${step.status === 'running' ? 'animate-spin' : ''}`}
+            >
               {stepIcons[step.status]}
             </span>
             <div className="flex-1 min-w-0">
-              <p className={`text-sm ${step.status === 'skipped' ? 'line-through text-muted-foreground' : ''}`}>
+              <p
+                className={`text-sm ${step.status === 'skipped' ? 'line-through text-muted-foreground' : ''}`}
+              >
                 {step.label}
               </p>
               {step.description && (
@@ -122,7 +127,12 @@ const PlanCard = ({
 const planCardProps = [
   { name: 'title', type: 'string', required: true, description: '계획 제목' },
   { name: 'steps', type: 'PlanStep[]', required: true, description: '단계 목록' },
-  { name: 'status', type: '"draft" | "pending" | "approved" | "rejected" | "executing" | "completed"', default: '"pending"', description: '계획 상태' },
+  {
+    name: 'status',
+    type: '"draft" | "pending" | "approved" | "rejected" | "executing" | "completed"',
+    default: '"pending"',
+    description: '계획 상태',
+  },
   { name: 'onApprove', type: '() => void', default: '-', description: '승인 콜백' },
   { name: 'onEdit', type: '() => void', default: '-', description: '편집 콜백' },
   { name: 'onReject', type: '() => void', default: '-', description: '거절 콜백' },
@@ -132,7 +142,12 @@ const planCardProps = [
 const planStepProps = [
   { name: 'id', type: 'string', required: true, description: '단계 고유 식별자' },
   { name: 'label', type: 'string', required: true, description: '단계 이름' },
-  { name: 'status', type: '"pending" | "running" | "complete" | "error" | "skipped"', required: true, description: '단계 상태' },
+  {
+    name: 'status',
+    type: '"pending" | "running" | "complete" | "error" | "skipped"',
+    required: true,
+    description: '단계 상태',
+  },
   { name: 'description', type: 'string', default: '-', description: '단계 설명' },
 ]
 
@@ -159,7 +174,12 @@ export function Example() {
 export default function PlanCardPage() {
   const [demoSteps, setDemoSteps] = useState<PlanStep[]>([
     { id: '1', label: '환경 설정', status: 'pending', description: '개발 환경 구성' },
-    { id: '2', label: '데이터베이스 마이그레이션', status: 'pending', description: 'Schema 업데이트 실행' },
+    {
+      id: '2',
+      label: '데이터베이스 마이그레이션',
+      status: 'pending',
+      description: 'Schema 업데이트 실행',
+    },
     { id: '3', label: 'API 엔드포인트 구현', status: 'pending', description: 'REST API 추가' },
     { id: '4', label: '테스트 실행', status: 'pending', description: '유닛/통합 테스트' },
     { id: '5', label: '배포', status: 'pending', description: '프로덕션 배포' },
@@ -170,11 +190,13 @@ export default function PlanCardPage() {
     setDemoStatus('executing')
     demoSteps.forEach((_, i) => {
       setTimeout(() => {
-        setDemoSteps(prev => prev.map((step, j) => {
-          if (j === i) return { ...step, status: 'running' as PlanStepStatus }
-          if (j < i) return { ...step, status: 'complete' as PlanStepStatus }
-          return step
-        }))
+        setDemoSteps(prev =>
+          prev.map((step, j) => {
+            if (j === i) return { ...step, status: 'running' as PlanStepStatus }
+            if (j < i) return { ...step, status: 'complete' as PlanStepStatus }
+            return step
+          })
+        )
       }, i * 1200)
     })
     setTimeout(() => {
@@ -189,95 +211,80 @@ export default function PlanCardPage() {
   }
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>PlanCard</span>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="PlanCard"
+      description="AI 에이전트의 실행 계획을 단계별로 표시하고 승인/거절할 수 있는 컴포넌트입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add plan-card --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div className="flex items-center gap-2">
+            <Button onClick={simulateExecution} disabled={demoStatus === 'executing'}>
+              실행 시뮬레이션
+            </Button>
+            <Button variant="outline" onClick={resetDemo}>
+              초기화
+            </Button>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">PlanCard</h1>
-          <p className="text-lg text-muted-foreground">
-            AI 에이전트의 실행 계획을 단계별로 표시하고 승인/거절할 수 있는 컴포넌트입니다.
-          </p>
+          <PlanCard
+            title="배포 파이프라인"
+            steps={demoSteps}
+            status={demoStatus}
+            onApprove={simulateExecution}
+            onReject={resetDemo}
+          />
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add plan-card --agentic" language="bash" />
-        </section>
+      <DocSection title="Status States">
+        <div className="mb-4 p-6 rounded-lg border space-y-6">
+          <PlanCard
+            title="승인 대기 계획"
+            steps={[
+              { id: '1', label: '1단계', status: 'pending' },
+              { id: '2', label: '2단계', status: 'pending' },
+            ]}
+            status="pending"
+            onApprove={() => {}}
+            onReject={() => {}}
+          />
+          <PlanCard
+            title="실행 중 계획"
+            steps={[
+              { id: '1', label: '데이터 로드', status: 'complete' },
+              { id: '2', label: '처리 중', status: 'running' },
+              { id: '3', label: '결과 저장', status: 'pending' },
+            ]}
+            status="executing"
+          />
+          <PlanCard
+            title="완료된 계획"
+            steps={[
+              { id: '1', label: '분석', status: 'complete' },
+              { id: '2', label: '검토', status: 'complete' },
+              { id: '3', label: '배포', status: 'complete' },
+            ]}
+            status="completed"
+          />
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div className="flex items-center gap-2">
-              <Button onClick={simulateExecution} disabled={demoStatus === 'executing'}>
-                실행 시뮬레이션
-              </Button>
-              <Button variant="outline" onClick={resetDemo}>
-                초기화
-              </Button>
-            </div>
-            <PlanCard
-              title="배포 파이프라인"
-              steps={demoSteps}
-              status={demoStatus}
-              onApprove={simulateExecution}
-              onReject={resetDemo}
-            />
-          </div>
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Status States</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-6">
-            <PlanCard
-              title="승인 대기 계획"
-              steps={[
-                { id: '1', label: '1단계', status: 'pending' },
-                { id: '2', label: '2단계', status: 'pending' },
-              ]}
-              status="pending"
-              onApprove={() => {}}
-              onReject={() => {}}
-            />
-            <PlanCard
-              title="실행 중 계획"
-              steps={[
-                { id: '1', label: '데이터 로드', status: 'complete' },
-                { id: '2', label: '처리 중', status: 'running' },
-                { id: '3', label: '결과 저장', status: 'pending' },
-              ]}
-              status="executing"
-            />
-            <PlanCard
-              title="완료된 계획"
-              steps={[
-                { id: '1', label: '분석', status: 'complete' },
-                { id: '2', label: '검토', status: 'complete' },
-                { id: '3', label: '배포', status: 'complete' },
-              ]}
-              status="completed"
-            />
-          </div>
-        </section>
+      <DocSection title="Props">
+        <PropsTable props={planCardProps} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={planCardProps} />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">PlanStep Type</h2>
-          <PropsTable props={planStepProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="PlanStep Type">
+        <PropsTable props={planStepProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

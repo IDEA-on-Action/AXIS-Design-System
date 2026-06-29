@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 type MessageRole = 'user' | 'assistant' | 'system'
 type MessageStatus = 'sending' | 'sent' | 'error'
@@ -52,7 +53,9 @@ const MessageBubble = ({
   }
 
   return (
-    <div className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} ${isSystem ? 'justify-center' : ''}`}>
+    <div
+      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} ${isSystem ? 'justify-center' : ''}`}
+    >
       {!isSystem && (
         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
           {renderAvatar()}
@@ -79,11 +82,26 @@ const MessageBubble = ({
 }
 
 const messageBubbleProps = [
-  { name: 'role', type: '"user" | "assistant" | "system"', required: true, description: '메시지 발신자 역할' },
+  {
+    name: 'role',
+    type: '"user" | "assistant" | "system"',
+    required: true,
+    description: '메시지 발신자 역할',
+  },
   { name: 'content', type: 'React.ReactNode', required: true, description: '메시지 내용' },
   { name: 'timestamp', type: 'Date', default: '-', description: '메시지 타임스탬프' },
-  { name: 'avatar', type: 'React.ReactNode | string', default: '-', description: '아바타 (ReactNode 또는 이미지 URL)' },
-  { name: 'status', type: '"sending" | "sent" | "error"', default: '-', description: '메시지 전송 상태' },
+  {
+    name: 'avatar',
+    type: 'React.ReactNode | string',
+    default: '-',
+    description: '아바타 (ReactNode 또는 이미지 URL)',
+  },
+  {
+    name: 'status',
+    type: '"sending" | "sent" | "error"',
+    default: '-',
+    description: '메시지 전송 상태',
+  },
   { name: 'actions', type: 'React.ReactNode', default: '-', description: '메시지 액션 버튼' },
   { name: 'metadata', type: 'string', default: '-', description: '메타데이터 (모델명 등)' },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
@@ -111,15 +129,38 @@ export function Example() {
 }`
 
 export default function MessageBubblePage() {
-  const [messages, setMessages] = useState<{ role: MessageRole; content: string; timestamp: Date; status?: MessageStatus; metadata?: string }[]>([
-    { role: 'user', content: '안녕하세요! 오늘 날씨가 어때요?', timestamp: new Date(Date.now() - 60000), status: 'sent' },
-    { role: 'assistant', content: '안녕하세요! 오늘 서울은 맑고 기온은 15°C 정도입니다. 야외 활동하기 좋은 날씨네요.', timestamp: new Date(Date.now() - 30000), metadata: 'GPT-4o' },
+  const [messages, setMessages] = useState<
+    {
+      role: MessageRole
+      content: string
+      timestamp: Date
+      status?: MessageStatus
+      metadata?: string
+    }[]
+  >([
+    {
+      role: 'user',
+      content: '안녕하세요! 오늘 날씨가 어때요?',
+      timestamp: new Date(Date.now() - 60000),
+      status: 'sent',
+    },
+    {
+      role: 'assistant',
+      content: '안녕하세요! 오늘 서울은 맑고 기온은 15°C 정도입니다. 야외 활동하기 좋은 날씨네요.',
+      timestamp: new Date(Date.now() - 30000),
+      metadata: 'GPT-4o',
+    },
   ])
 
   const addMessage = () => {
     setMessages(prev => [
       ...prev,
-      { role: 'user' as MessageRole, content: '추가 질문입니다!', timestamp: new Date(), status: 'sending' as MessageStatus },
+      {
+        role: 'user' as MessageRole,
+        content: '추가 질문입니다!',
+        timestamp: new Date(),
+        status: 'sending' as MessageStatus,
+      },
     ])
     setTimeout(() => {
       setMessages(prev => {
@@ -127,72 +168,67 @@ export default function MessageBubblePage() {
         updated[updated.length - 1] = { ...updated[updated.length - 1], status: 'sent' }
         return [
           ...updated,
-          { role: 'assistant', content: '네, 무엇이든 물어보세요! 도와드리겠습니다.', timestamp: new Date(), metadata: 'GPT-4o' },
+          {
+            role: 'assistant',
+            content: '네, 무엇이든 물어보세요! 도와드리겠습니다.',
+            timestamp: new Date(),
+            metadata: 'GPT-4o',
+          },
         ]
       })
     }, 1500)
   }
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>MessageBubble</span>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="MessageBubble"
+      description="채팅 메시지를 표시하는 버블 컴포넌트입니다. user, assistant, system 세 가지 역할을 지원합니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add message-bubble --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <Button onClick={addMessage}>메시지 추가</Button>
+          <div className="space-y-4">
+            {messages.map((msg, i) => (
+              <MessageBubble key={i} {...msg} />
+            ))}
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">MessageBubble</h1>
-          <p className="text-lg text-muted-foreground">
-            채팅 메시지를 표시하는 버블 컴포넌트입니다. user, assistant, system 세 가지 역할을 지원합니다.
-          </p>
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add message-bubble --agentic" language="bash" />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <Button onClick={addMessage}>메시지 추가</Button>
-            <div className="space-y-4">
-              {messages.map((msg, i) => (
-                <MessageBubble key={i} {...msg} />
-              ))}
-            </div>
+      <DocSection title="Roles">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-2">User</p>
+            <MessageBubble role="user" content="사용자 메시지입니다." status="sent" />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Roles</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">User</p>
-              <MessageBubble role="user" content="사용자 메시지입니다." status="sent" />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Assistant</p>
-              <MessageBubble role="assistant" content="AI 어시스턴트의 응답입니다." metadata="GPT-4" />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">System</p>
-              <MessageBubble role="system" content="시스템 알림: 새로운 세션이 시작되었습니다." />
-            </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Assistant</p>
+            <MessageBubble
+              role="assistant"
+              content="AI 어시스턴트의 응답입니다."
+              metadata="GPT-4"
+            />
           </div>
-        </section>
+          <div>
+            <p className="text-sm font-medium mb-2">System</p>
+            <MessageBubble role="system" content="시스템 알림: 새로운 세션이 시작되었습니다." />
+          </div>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={messageBubbleProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={messageBubbleProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

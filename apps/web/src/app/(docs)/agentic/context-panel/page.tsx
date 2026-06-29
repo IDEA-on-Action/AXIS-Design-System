@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 const ContextPanel = ({
   modelInfo,
@@ -23,7 +24,11 @@ const ContextPanel = ({
 }) => {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded)
 
-  const hasContent = modelInfo || systemPrompt || attachedFiles?.length || (settings && Object.keys(settings).length > 0)
+  const hasContent =
+    modelInfo ||
+    systemPrompt ||
+    attachedFiles?.length ||
+    (settings && Object.keys(settings).length > 0)
   if (!hasContent) return null
 
   const header = (
@@ -52,9 +57,19 @@ const ContextPanel = ({
         <div>
           <h5 className="text-xs font-medium text-muted-foreground mb-1">모델 정보</h5>
           <div className="text-sm space-y-0.5">
-            <p><span className="text-muted-foreground">이름:</span> {modelInfo.name}</p>
-            {modelInfo.provider && <p><span className="text-muted-foreground">제공자:</span> {modelInfo.provider}</p>}
-            {modelInfo.version && <p><span className="text-muted-foreground">버전:</span> {modelInfo.version}</p>}
+            <p>
+              <span className="text-muted-foreground">이름:</span> {modelInfo.name}
+            </p>
+            {modelInfo.provider && (
+              <p>
+                <span className="text-muted-foreground">제공자:</span> {modelInfo.provider}
+              </p>
+            )}
+            {modelInfo.version && (
+              <p>
+                <span className="text-muted-foreground">버전:</span> {modelInfo.version}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -87,8 +102,7 @@ const ContextPanel = ({
           <div className="grid grid-cols-2 gap-1">
             {Object.entries(settings).map(([key, value]) => (
               <div key={key} className="text-xs">
-                <span className="text-muted-foreground">{key}:</span>{' '}
-                <span>{value}</span>
+                <span className="text-muted-foreground">{key}:</span> <span>{value}</span>
               </div>
             ))}
           </div>
@@ -136,77 +150,62 @@ export function Example() {
 
 export default function ContextPanelPage() {
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>ContextPanel</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">ContextPanel</h1>
-          <p className="text-lg text-muted-foreground">
-            AI 대화의 컨텍스트 정보(모델, 프롬프트, 파일, 설정)를 표시하는 접이식 패널입니다.
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="ContextPanel"
+      description="AI 대화의 컨텍스트 정보(모델, 프롬프트, 파일, 설정)를 표시하는 접이식 패널입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add context-panel --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <p className="text-sm text-muted-foreground mb-4">
+            패널 헤더를 클릭하여 접기/펼치기를 시도해 보세요.
           </p>
+          <ContextPanel
+            modelInfo={{ name: 'Claude 3.5 Sonnet', provider: 'Anthropic', version: '2024-10' }}
+            systemPrompt="당신은 소프트웨어 아키텍트입니다. 코드 리뷰와 설계 조언을 제공합니다."
+            attachedFiles={['architecture.md', 'diagram.png', 'requirements.pdf']}
+            settings={{ temperature: '0.3', maxTokens: '8192', topP: '0.9' }}
+            defaultExpanded
+          />
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add context-panel --agentic" language="bash" />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <p className="text-sm text-muted-foreground mb-4">
-              패널 헤더를 클릭하여 접기/펼치기를 시도해 보세요.
-            </p>
+      <DocSection title="Variants">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Collapsible (기본)</p>
             <ContextPanel
-              modelInfo={{ name: 'Claude 3.5 Sonnet', provider: 'Anthropic', version: '2024-10' }}
-              systemPrompt="당신은 소프트웨어 아키텍트입니다. 코드 리뷰와 설계 조언을 제공합니다."
-              attachedFiles={['architecture.md', 'diagram.png', 'requirements.pdf']}
-              settings={{ temperature: '0.3', maxTokens: '8192', topP: '0.9' }}
-              defaultExpanded
+              modelInfo={{ name: 'GPT-4o', provider: 'OpenAI' }}
+              settings={{ temperature: '0.7' }}
             />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Variants</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">Collapsible (기본)</p>
-              <ContextPanel
-                modelInfo={{ name: 'GPT-4o', provider: 'OpenAI' }}
-                settings={{ temperature: '0.7' }}
-              />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Non-collapsible</p>
-              <ContextPanel
-                modelInfo={{ name: 'GPT-4o', provider: 'OpenAI' }}
-                systemPrompt="간결하게 답변하세요."
-                collapsible={false}
-              />
-            </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Non-collapsible</p>
+            <ContextPanel
+              modelInfo={{ name: 'GPT-4o', provider: 'OpenAI' }}
+              systemPrompt="간결하게 답변하세요."
+              collapsible={false}
+            />
           </div>
-        </section>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={contextPanelProps} />
-        </section>
+      <DocSection title="Props">
+        <PropsTable props={contextPanelProps} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">ModelInfo Type</h2>
-          <PropsTable props={modelInfoProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="ModelInfo Type">
+        <PropsTable props={modelInfoProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

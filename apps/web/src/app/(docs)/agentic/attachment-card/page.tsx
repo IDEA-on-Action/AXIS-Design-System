@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 type AttachmentType = 'image' | 'document' | 'code' | 'archive' | 'other'
 type AttachmentStatus = 'uploading' | 'complete' | 'error'
@@ -56,9 +57,7 @@ const AttachmentCard = ({
           {status === 'uploading' && (
             <span className="text-xs text-blue-600">{progress ?? 0}%</span>
           )}
-          {status === 'error' && (
-            <span className="text-xs text-red-500">업로드 실패</span>
-          )}
+          {status === 'error' && <span className="text-xs text-red-500">업로드 실패</span>}
         </div>
         {status === 'uploading' && (
           <div className="w-full h-1 rounded-full bg-gray-200 mt-1.5 overflow-hidden">
@@ -83,12 +82,22 @@ const AttachmentCard = ({
 }
 
 const attachmentCardProps = [
-  { name: 'type', type: '"image" | "document" | "code" | "archive" | "other"', required: true, description: '파일 유형' },
+  {
+    name: 'type',
+    type: '"image" | "document" | "code" | "archive" | "other"',
+    required: true,
+    description: '파일 유형',
+  },
   { name: 'name', type: 'string', required: true, description: '파일 이름' },
   { name: 'size', type: 'number', default: '-', description: '파일 크기 (bytes)' },
   { name: 'url', type: 'string', default: '-', description: '파일 URL' },
   { name: 'thumbnail', type: 'string', default: '-', description: '이미지 썸네일 URL' },
-  { name: 'status', type: '"uploading" | "complete" | "error"', default: '"complete"', description: '파일 상태' },
+  {
+    name: 'status',
+    type: '"uploading" | "complete" | "error"',
+    default: '"complete"',
+    description: '파일 상태',
+  },
   { name: 'progress', type: 'number', default: '-', description: '업로드 진행률 (0-100)' },
   { name: 'onRemove', type: '() => void', default: '-', description: '삭제 콜백' },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
@@ -137,90 +146,93 @@ export default function AttachmentCardPage() {
   }
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>AttachmentCard</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">AttachmentCard</h1>
-          <p className="text-lg text-muted-foreground">
-            파일 첨부를 표시하는 카드 컴포넌트입니다. 다양한 파일 타입과 업로드 상태를 지원합니다.
-          </p>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="AttachmentCard"
+      description="파일 첨부를 표시하는 카드 컴포넌트입니다. 다양한 파일 타입과 업로드 상태를 지원합니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add attachment-card --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <Button onClick={simulateUpload} disabled={isUploading}>
+            {isUploading ? '업로드 중...' : '업로드 시뮬레이션'}
+          </Button>
+          {isUploading ? (
+            <AttachmentCard
+              type="document"
+              name="analysis-report.pdf"
+              size={3200000}
+              status="uploading"
+              progress={uploadProgress}
+            />
+          ) : (
+            <AttachmentCard
+              type="document"
+              name="analysis-report.pdf"
+              size={3200000}
+              status={uploadProgress >= 100 ? 'complete' : 'complete'}
+              onRemove={() => setUploadProgress(0)}
+            />
+          )}
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add attachment-card --agentic" language="bash" />
-        </section>
+      <DocSection title="File Types">
+        <div className="mb-4 p-6 rounded-lg border space-y-3">
+          <AttachmentCard type="image" name="photo.png" size={245000} onRemove={() => {}} />
+          <AttachmentCard type="document" name="report.pdf" size={1250000} onRemove={() => {}} />
+          <AttachmentCard type="code" name="index.tsx" size={4200} onRemove={() => {}} />
+          <AttachmentCard type="archive" name="project.zip" size={15600000} onRemove={() => {}} />
+          <AttachmentCard type="other" name="data.bin" size={890000} onRemove={() => {}} />
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <Button onClick={simulateUpload} disabled={isUploading}>
-              {isUploading ? '업로드 중...' : '업로드 시뮬레이션'}
-            </Button>
-            {isUploading ? (
-              <AttachmentCard
-                type="document"
-                name="analysis-report.pdf"
-                size={3200000}
-                status="uploading"
-                progress={uploadProgress}
-              />
-            ) : (
-              <AttachmentCard
-                type="document"
-                name="analysis-report.pdf"
-                size={3200000}
-                status={uploadProgress >= 100 ? 'complete' : 'complete'}
-                onRemove={() => setUploadProgress(0)}
-              />
-            )}
+      <DocSection title="States">
+        <div className="mb-4 p-6 rounded-lg border space-y-3">
+          <div>
+            <p className="text-sm font-medium mb-2">Complete</p>
+            <AttachmentCard
+              type="image"
+              name="done.png"
+              size={500000}
+              status="complete"
+              onRemove={() => {}}
+            />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">File Types</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-3">
-            <AttachmentCard type="image" name="photo.png" size={245000} onRemove={() => {}} />
-            <AttachmentCard type="document" name="report.pdf" size={1250000} onRemove={() => {}} />
-            <AttachmentCard type="code" name="index.tsx" size={4200} onRemove={() => {}} />
-            <AttachmentCard type="archive" name="project.zip" size={15600000} onRemove={() => {}} />
-            <AttachmentCard type="other" name="data.bin" size={890000} onRemove={() => {}} />
+          <div>
+            <p className="text-sm font-medium mb-2">Uploading</p>
+            <AttachmentCard
+              type="document"
+              name="uploading.pdf"
+              size={2000000}
+              status="uploading"
+              progress={45}
+            />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">States</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-3">
-            <div>
-              <p className="text-sm font-medium mb-2">Complete</p>
-              <AttachmentCard type="image" name="done.png" size={500000} status="complete" onRemove={() => {}} />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Uploading</p>
-              <AttachmentCard type="document" name="uploading.pdf" size={2000000} status="uploading" progress={45} />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Error</p>
-              <AttachmentCard type="archive" name="failed.zip" size={50000000} status="error" onRemove={() => {}} />
-            </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Error</p>
+            <AttachmentCard
+              type="archive"
+              name="failed.zip"
+              size={50000000}
+              status="error"
+              onRemove={() => {}}
+            />
           </div>
-        </section>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={attachmentCardProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={attachmentCardProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }
