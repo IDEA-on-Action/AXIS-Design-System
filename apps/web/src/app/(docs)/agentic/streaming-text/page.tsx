@@ -3,11 +3,20 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 // Mock StreamingText 컴포넌트
-const StreamingText = ({ text, isComplete, showCursor = true }: { text: string; isComplete?: boolean; showCursor?: boolean }) => (
+const StreamingText = ({
+  text,
+  isComplete,
+  showCursor = true,
+}: {
+  text: string
+  isComplete?: boolean
+  showCursor?: boolean
+}) => (
   <div className="relative">
     <span className="text-foreground whitespace-pre-wrap">{text}</span>
     {showCursor && !isComplete && (
@@ -63,7 +72,8 @@ export default function StreamingTextPage() {
     setText('')
     setIsComplete(false)
     setIsRunning(true)
-    const fullText = 'AI가 사용자의 질문에 대한 답변을 생성하고 있습니다. 실시간으로 텍스트가 표시되며, 완료되면 커서가 사라집니다.'
+    const fullText =
+      'AI가 사용자의 질문에 대한 답변을 생성하고 있습니다. 실시간으로 텍스트가 표시되며, 완료되면 커서가 사라집니다.'
     let i = 0
     const interval = setInterval(() => {
       if (i < fullText.length) {
@@ -78,52 +88,32 @@ export default function StreamingTextPage() {
   }
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>StreamingText</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">StreamingText</h1>
-          <p className="text-lg text-muted-foreground">
-            실시간 텍스트 스트리밍을 표시하는 컴포넌트입니다. AI 응답 표시에 적합합니다.
-          </p>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="StreamingText"
+      description="실시간 텍스트 스트리밍을 표시하는 컴포넌트입니다. AI 응답 표시에 적합합니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add streaming-text" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <Button onClick={startDemo} disabled={isRunning}>
+            {isRunning ? '스트리밍 중...' : '데모 시작'}
+          </Button>
+          {(text || isRunning) && <StreamingText text={text} isComplete={isComplete} />}
         </div>
+      </DocSection>
 
-        {/* Installation */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add streaming-text" language="bash" />
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        {/* Interactive Demo */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <Button onClick={startDemo} disabled={isRunning}>
-              {isRunning ? '스트리밍 중...' : '데모 시작'}
-            </Button>
-            {(text || isRunning) && (
-              <StreamingText text={text} isComplete={isComplete} />
-            )}
-          </div>
-        </section>
-
-        {/* Basic Usage */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
-
-        {/* Props */}
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={streamingTextProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={streamingTextProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

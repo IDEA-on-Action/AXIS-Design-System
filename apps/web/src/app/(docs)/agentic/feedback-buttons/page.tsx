@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 type FeedbackType = 'like' | 'dislike' | 'none'
 
@@ -58,8 +59,18 @@ const FeedbackButtons = ({
 
 const feedbackProps = [
   { name: 'messageId', type: 'string', required: true, description: '메시지 고유 식별자' },
-  { name: 'initialFeedback', type: '"like" | "dislike" | "none"', default: '"none"', description: '초기 피드백 상태' },
-  { name: 'onFeedback', type: '(messageId: string, feedback: FeedbackType) => void', default: '-', description: '피드백 변경 콜백' },
+  {
+    name: 'initialFeedback',
+    type: '"like" | "dislike" | "none"',
+    default: '"none"',
+    description: '초기 피드백 상태',
+  },
+  {
+    name: 'onFeedback',
+    type: '(messageId: string, feedback: FeedbackType) => void',
+    default: '-',
+    description: '피드백 변경 콜백',
+  },
   { name: 'size', type: '"sm" | "md"', default: '"sm"', description: '버튼 크기' },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
@@ -83,87 +94,74 @@ export default function FeedbackButtonsPage() {
   const [lastFeedback, setLastFeedback] = useState<string>('')
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>FeedbackButtons</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">FeedbackButtons</h1>
-          <p className="text-lg text-muted-foreground">
-            AI 응답에 대한 좋아요/싫어요 피드백을 제공하는 버튼 컴포넌트입니다.
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="FeedbackButtons"
+      description="AI 응답에 대한 좋아요/싫어요 피드백을 제공하는 버튼 컴포넌트입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add feedback-buttons --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <p className="text-sm text-muted-foreground">
+            버튼을 클릭하여 피드백을 토글할 수 있습니다.
           </p>
+          <div className="flex items-center gap-4">
+            <FeedbackButtons
+              messageId="demo-1"
+              onFeedback={(id, fb) => setLastFeedback(`${id}: ${fb}`)}
+            />
+            {lastFeedback && (
+              <span className="text-sm text-muted-foreground">피드백: {lastFeedback}</span>
+            )}
+          </div>
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add feedback-buttons --agentic" language="bash" />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <p className="text-sm text-muted-foreground">버튼을 클릭하여 피드백을 토글할 수 있습니다.</p>
-            <div className="flex items-center gap-4">
-              <FeedbackButtons
-                messageId="demo-1"
-                onFeedback={(id, fb) => setLastFeedback(`${id}: ${fb}`)}
-              />
-              {lastFeedback && (
-                <span className="text-sm text-muted-foreground">피드백: {lastFeedback}</span>
-              )}
+      <DocSection title="Sizes">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="text-sm font-medium mb-2">Small (기본)</p>
+              <FeedbackButtons messageId="size-sm" size="sm" />
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Medium</p>
+              <FeedbackButtons messageId="size-md" size="md" />
             </div>
           </div>
-        </section>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Sizes</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-sm font-medium mb-2">Small (기본)</p>
-                <FeedbackButtons messageId="size-sm" size="sm" />
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-2">Medium</p>
-                <FeedbackButtons messageId="size-md" size="md" />
-              </div>
+      <DocSection title="Initial States">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div className="flex items-center gap-6">
+            <div>
+              <p className="text-sm font-medium mb-2">None</p>
+              <FeedbackButtons messageId="init-none" initialFeedback="none" />
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Liked</p>
+              <FeedbackButtons messageId="init-like" initialFeedback="like" />
+            </div>
+            <div>
+              <p className="text-sm font-medium mb-2">Disliked</p>
+              <FeedbackButtons messageId="init-dislike" initialFeedback="dislike" />
             </div>
           </div>
-        </section>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Initial States</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div className="flex items-center gap-6">
-              <div>
-                <p className="text-sm font-medium mb-2">None</p>
-                <FeedbackButtons messageId="init-none" initialFeedback="none" />
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-2">Liked</p>
-                <FeedbackButtons messageId="init-like" initialFeedback="like" />
-              </div>
-              <div>
-                <p className="text-sm font-medium mb-2">Disliked</p>
-                <FeedbackButtons messageId="init-dislike" initialFeedback="dislike" />
-              </div>
-            </div>
-          </div>
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={feedbackProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={feedbackProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

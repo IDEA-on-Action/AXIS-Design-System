@@ -2,8 +2,9 @@
 
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 const toastProps = [
   { name: 'message', type: 'string', default: '-', description: '토스트 메시지' },
@@ -55,65 +56,44 @@ export default function ToastPage() {
   }
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/components" className="hover:text-foreground">Components</Link>
-            <span>/</span>
-            <span>Toast</span>
-          </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">Toast</h1>
-          <p className="text-lg text-muted-foreground">
-            사용자에게 피드백을 제공하는 알림 메시지 컴포넌트입니다.
-          </p>
+    <DocPageLayout
+      category="Components"
+      categoryHref="/components"
+      title="Toast"
+      description="사용자에게 피드백을 제공하는 알림 메시지 컴포넌트입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add toast" language="bash" />
+      </DocSection>
+
+      <DocSection title="Usage">
+        <div className="mb-4 p-6 rounded-lg border space-x-2">
+          <Button onClick={() => showToast('작업이 완료되었습니다.')}>기본 토스트</Button>
+          <Button
+            variant="outline"
+            onClick={() => showToast('성공적으로 저장되었습니다.', 'success')}
+          >
+            성공 토스트
+          </Button>
+          <Button variant="destructive" onClick={() => showToast('문제가 발생했습니다.', 'error')}>
+            에러 토스트
+          </Button>
         </div>
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add toast" language="bash" />
-        </section>
+      <DocSection title="Variants">
+        <CodeBlock code={variantsExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <div className="mb-4 p-6 rounded-lg border space-x-2">
-            <Button
-              onClick={() => showToast("작업이 완료되었습니다.")}
-            >
-              기본 토스트
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => showToast("성공적으로 저장되었습니다.", 'success')}
-            >
-              성공 토스트
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => showToast("문제가 발생했습니다.", 'error')}
-            >
-              에러 토스트
-            </Button>
-          </div>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="With Action">
+        <CodeBlock code={withActionExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Variants</h2>
-          <CodeBlock code={variantsExample} />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">With Action</h2>
-          <CodeBlock code={withActionExample} />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Setup</h2>
-          <p className="text-muted-foreground mb-4">
-            앱 루트에 Toaster 컴포넌트를 추가해야 합니다.
-          </p>
-          <CodeBlock code={`// app/layout.tsx
+      <DocSection title="Setup">
+        <p className="text-muted-foreground mb-4">앱 루트에 Toaster 컴포넌트를 추가해야 합니다.</p>
+        <CodeBlock
+          code={`// app/layout.tsx
 import { Toaster } from '@axis-ds/ui-react'
 
 export default function RootLayout({ children }) {
@@ -125,14 +105,13 @@ export default function RootLayout({ children }) {
       </body>
     </html>
   )
-}`} />
-        </section>
+}`}
+        />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={toastProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={toastProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

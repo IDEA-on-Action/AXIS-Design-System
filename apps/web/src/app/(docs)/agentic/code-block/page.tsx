@@ -3,8 +3,9 @@
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
 import { CodeBlock as DocCodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 const AgenticCodeBlock = ({
   code,
@@ -47,7 +48,10 @@ const AgenticCodeBlock = ({
           </button>
         </div>
       )}
-      <div className={`overflow-auto ${maxHeight ? '' : ''}`} style={maxHeight ? { maxHeight } : undefined}>
+      <div
+        className={`overflow-auto ${maxHeight ? '' : ''}`}
+        style={maxHeight ? { maxHeight } : undefined}
+      >
         <pre className="p-3 text-sm font-mono leading-relaxed">
           <code>
             {lines.map((line, i) => (
@@ -71,7 +75,12 @@ const codeBlockProps = [
   { name: 'code', type: 'string', required: true, description: '표시할 코드 문자열' },
   { name: 'language', type: 'string', default: '-', description: '언어 힌트 (표시용)' },
   { name: 'filename', type: 'string', default: '-', description: '파일 이름' },
-  { name: 'showLineNumbers', type: 'boolean', default: 'false', description: '라인 번호 표시 여부' },
+  {
+    name: 'showLineNumbers',
+    type: 'boolean',
+    default: 'false',
+    description: '라인 번호 표시 여부',
+  },
   { name: 'onCopy', type: '(code: string) => void', default: '-', description: '복사 콜백' },
   { name: 'maxHeight', type: 'string', default: '-', description: '최대 높이 (CSS 값)' },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
@@ -121,90 +130,76 @@ export default function CodeBlockPage() {
   const [copyCount, setCopyCount] = useState(0)
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>CodeBlock</span>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="CodeBlock"
+      description="AI가 생성한 코드를 표시하는 블록 컴포넌트입니다. 복사 버튼, 라인 번호, 파일명 표시를 지원합니다."
+    >
+      <DocSection title="Installation">
+        <DocCodeBlock code="npx axis-cli add code-block --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowLineNumbers(!showLineNumbers)}
+            >
+              라인 번호 {showLineNumbers ? 'OFF' : 'ON'}
+            </Button>
+            {copyCount > 0 && (
+              <span className="text-sm text-muted-foreground">복사 횟수: {copyCount}</span>
+            )}
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">CodeBlock</h1>
-          <p className="text-lg text-muted-foreground">
-            AI가 생성한 코드를 표시하는 블록 컴포넌트입니다. 복사 버튼, 라인 번호, 파일명 표시를 지원합니다.
-          </p>
+          <AgenticCodeBlock
+            code={sampleCode}
+            language="typescript"
+            filename="use-user.ts"
+            showLineNumbers={showLineNumbers}
+            onCopy={() => setCopyCount(c => c + 1)}
+          />
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <DocCodeBlock code="npx axis-cli add code-block --agentic" language="bash" />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowLineNumbers(!showLineNumbers)}
-              >
-                라인 번호 {showLineNumbers ? 'OFF' : 'ON'}
-              </Button>
-              {copyCount > 0 && (
-                <span className="text-sm text-muted-foreground">복사 횟수: {copyCount}</span>
-              )}
-            </div>
+      <DocSection title="Variants">
+        <div className="mb-4 p-6 rounded-lg border space-y-6">
+          <div>
+            <p className="text-sm font-medium mb-2">파일명 + 라인 번호</p>
             <AgenticCodeBlock
-              code={sampleCode}
-              language="typescript"
-              filename="use-user.ts"
-              showLineNumbers={showLineNumbers}
-              onCopy={() => setCopyCount(c => c + 1)}
+              code={`const greeting = "Hello!"\nconsole.log(greeting)`}
+              filename="example.js"
+              showLineNumbers
             />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Variants</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-6">
-            <div>
-              <p className="text-sm font-medium mb-2">파일명 + 라인 번호</p>
-              <AgenticCodeBlock
-                code={`const greeting = "Hello!"\nconsole.log(greeting)`}
-                filename="example.js"
-                showLineNumbers
-              />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">언어만 표시</p>
-              <AgenticCodeBlock
-                code={`SELECT * FROM users\nWHERE active = true\nORDER BY created_at DESC`}
-                language="sql"
-              />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">최대 높이 제한</p>
-              <AgenticCodeBlock
-                code={sampleCode}
-                filename="scrollable.ts"
-                showLineNumbers
-                maxHeight="120px"
-              />
-            </div>
+          <div>
+            <p className="text-sm font-medium mb-2">언어만 표시</p>
+            <AgenticCodeBlock
+              code={`SELECT * FROM users\nWHERE active = true\nORDER BY created_at DESC`}
+              language="sql"
+            />
           </div>
-        </section>
+          <div>
+            <p className="text-sm font-medium mb-2">최대 높이 제한</p>
+            <AgenticCodeBlock
+              code={sampleCode}
+              filename="scrollable.ts"
+              showLineNumbers
+              maxHeight="120px"
+            />
+          </div>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <DocCodeBlock code={basicExample} />
-        </section>
+      <DocSection title="Usage">
+        <DocCodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={codeBlockProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={codeBlockProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }

@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { CodeBlock } from '@/components/code-block'
+import { DocPageLayout } from '@/components/doc-page-layout'
+import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Link from 'next/link'
 
 const TokenUsageIndicator = ({
   current,
@@ -22,11 +23,7 @@ const TokenUsageIndicator = ({
   const isWarning = ratio >= warningThreshold
   const isCritical = ratio >= 0.95
 
-  const barColor = isCritical
-    ? 'bg-red-500'
-    : isWarning
-      ? 'bg-yellow-500'
-      : 'bg-primary'
+  const barColor = isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-primary'
 
   const formatNumber = (n: number) => {
     if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
@@ -37,9 +34,14 @@ const TokenUsageIndicator = ({
     return (
       <div className="inline-flex items-center gap-2 text-xs">
         <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${ratio * 100}%` }} />
+          <div
+            className={`h-full rounded-full transition-all ${barColor}`}
+            style={{ width: `${ratio * 100}%` }}
+          />
         </div>
-        <span className="text-muted-foreground">{formatNumber(current)}/{formatNumber(max)}</span>
+        <span className="text-muted-foreground">
+          {formatNumber(current)}/{formatNumber(max)}
+        </span>
       </div>
     )
   }
@@ -96,85 +98,70 @@ export default function TokenUsageIndicatorPage() {
   const max = 4096
 
   return (
-    <div className="container py-12">
-      <div className="max-w-4xl">
-        <div className="mb-8">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-            <Link href="/agentic" className="hover:text-foreground">Agentic UI</Link>
-            <span>/</span>
-            <span>TokenUsageIndicator</span>
+    <DocPageLayout
+      category="Agentic UI"
+      categoryHref="/agentic"
+      title="TokenUsageIndicator"
+      description="AI 모델의 토큰 사용량을 시각적으로 표시하는 컴포넌트입니다."
+    >
+      <DocSection title="Installation">
+        <CodeBlock code="npx axis-cli add token-usage-indicator --agentic" language="bash" />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div className="flex items-center gap-4">
+            <label className="text-sm font-medium">토큰: {current}</label>
+            <input
+              type="range"
+              min={0}
+              max={max}
+              value={current}
+              onChange={e => setCurrent(Number(e.target.value))}
+              className="flex-1"
+            />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-4">TokenUsageIndicator</h1>
-          <p className="text-lg text-muted-foreground">
-            AI 모델의 토큰 사용량을 시각적으로 표시하는 컴포넌트입니다.
-          </p>
+          <TokenUsageIndicator current={current} max={max} cost={current * 0.000002} />
         </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Installation</h2>
-          <CodeBlock code="npx axis-cli add token-usage-indicator --agentic" language="bash" />
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Interactive Demo</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div className="flex items-center gap-4">
-              <label className="text-sm font-medium">토큰: {current}</label>
-              <input
-                type="range"
-                min={0}
-                max={max}
-                value={current}
-                onChange={(e) => setCurrent(Number(e.target.value))}
-                className="flex-1"
-              />
-            </div>
-            <TokenUsageIndicator current={current} max={max} cost={current * 0.000002} />
+      <DocSection title="Modes">
+        <div className="mb-4 p-6 rounded-lg border space-y-6">
+          <div>
+            <p className="text-sm font-medium mb-2">Full (기본)</p>
+            <TokenUsageIndicator current={2800} max={4096} cost={0.0056} />
           </div>
-        </section>
-
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Modes</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-6">
-            <div>
-              <p className="text-sm font-medium mb-2">Full (기본)</p>
-              <TokenUsageIndicator current={2800} max={4096} cost={0.0056} />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Compact</p>
-              <TokenUsageIndicator current={2800} max={4096} compact />
-            </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Compact</p>
+            <TokenUsageIndicator current={2800} max={4096} compact />
           </div>
-        </section>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">States</h2>
-          <div className="mb-4 p-6 rounded-lg border space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-2">Normal (50%)</p>
-              <TokenUsageIndicator current={2048} max={4096} />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Warning (85%)</p>
-              <TokenUsageIndicator current={3480} max={4096} />
-            </div>
-            <div>
-              <p className="text-sm font-medium mb-2">Critical (98%)</p>
-              <TokenUsageIndicator current={4015} max={4096} />
-            </div>
+      <DocSection title="States">
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <div>
+            <p className="text-sm font-medium mb-2">Normal (50%)</p>
+            <TokenUsageIndicator current={2048} max={4096} />
           </div>
-        </section>
+          <div>
+            <p className="text-sm font-medium mb-2">Warning (85%)</p>
+            <TokenUsageIndicator current={3480} max={4096} />
+          </div>
+          <div>
+            <p className="text-sm font-medium mb-2">Critical (98%)</p>
+            <TokenUsageIndicator current={4015} max={4096} />
+          </div>
+        </div>
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Usage</h2>
-          <CodeBlock code={basicExample} />
-        </section>
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
 
-        <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Props</h2>
-          <PropsTable props={tokenUsageProps} />
-        </section>
-      </div>
-    </div>
+      <DocSection title="Props">
+        <PropsTable props={tokenUsageProps} />
+      </DocSection>
+    </DocPageLayout>
   )
 }
