@@ -28,12 +28,19 @@ function hexToHsl(hex) {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
+// --- CSS 변수명 안전화: path 세그먼트의 점(.)을 하이픈(-)으로 치환 ---
+// CSS 커스텀 프로퍼티명에 escape 안 된 점은 유효 ident가 아니라 Turbopack 파싱이 깨진다.
+// (예: space.2.5 -> --axis-space-2-5) 핸드오프 가이드(health-pt-manager docs/31) 계약과 일치
+function cssVarName(path) {
+  return `--axis-${path.map(seg => String(seg).replace(/\./g, '-')).join('-')}`;
+}
+
 // --- 커스텀 포맷: CSS Variables ---
 StyleDictionary.registerFormat({
   name: 'css/axis-variables',
   format: async ({ dictionary }) => {
     const tokens = dictionary.allTokens
-      .map(token => `  --axis-${token.path.join('-')}: ${token.value};`)
+      .map(token => `  ${cssVarName(token.path)}: ${token.value};`)
       .join('\n');
 
     return `:root {\n${tokens}\n}\n`;
@@ -45,7 +52,7 @@ StyleDictionary.registerFormat({
   name: 'css/axis-variables-dark',
   format: async ({ dictionary }) => {
     const tokens = dictionary.allTokens
-      .map(token => `  --axis-${token.path.join('-')}: ${token.value};`)
+      .map(token => `  ${cssVarName(token.path)}: ${token.value};`)
       .join('\n');
 
     return `.dark {\n${tokens}\n}\n`;

@@ -21,7 +21,8 @@
     "test": "turbo run test",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "pnpm build && changeset publish",
+    "pack-smoke": "node scripts/pack-smoke.mjs",
+    "release": "pnpm build && pnpm pack-smoke && changeset publish",
     "check-licenses": "node scripts/check-licenses.mjs"
   },
   "devDependencies": {

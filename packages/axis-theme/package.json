@@ -25,7 +25,7 @@
     "clean": "rm -rf dist",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "node ../../scripts/guard-pnpm-publish.mjs && pnpm build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",

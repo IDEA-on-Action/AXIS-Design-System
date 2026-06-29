@@ -86,7 +86,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "node ../../scripts/guard-pnpm-publish.mjs && pnpm build"
   },
   "peerDependencies": {
     "react": ">=18.0.0",
