@@ -7,6 +7,7 @@ import { Button } from '@axis-ds/ui-react'
 import { cn } from '@/lib/utils'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { MobileNav } from '@/components/mobile-nav'
+import { SearchTrigger } from '@/components/search/search-trigger'
 
 const navItems = [
   { href: '/docs', label: 'Docs' },
@@ -46,6 +47,7 @@ export function SiteHeader() {
           </nav>
         </div>
         <div className="flex flex-1 items-center justify-end space-x-1">
+          <SearchTrigger />
           <ThemeToggle />
           <Link
             href="https://github.com/IDEA-on-Action/AXIS-Design-System"

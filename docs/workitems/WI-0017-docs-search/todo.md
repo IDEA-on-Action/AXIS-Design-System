@@ -1,28 +1,35 @@
 # WI-0017: 문서 사이트 검색 (Pagefind) TODO
 
-> PRD: [prd.md](./prd.md) | 상태: 🔄 진행 예정
+> PRD: [prd.md](./prd.md) | 상태: 🔄 구현 완료, 배포 검증 대기
 
-## Phase 1: 빌드 통합
-- [ ] `pagefind` devDependency 설치
-- [ ] `build:web` 후속 인덱싱 단계 추가 (`pagefind --site out`) (AC1)
-- [ ] 인덱싱 산출물 경로 + Cloudflare Pages 배포 정합 확인
-- [ ] `.gitignore`에 Pagefind 산출물 추가
+## Phase 1: 빌드 통합 ✅
+- [x] `pagefind` devDependency 설치 (^1.3.0, 실설치 1.5.2)
+- [x] `build` 스크립트에 `&& pagefind --site out` 체이닝 (turbo lifecycle 보장) (AC1)
+- [x] 산출물 경로 `out/pagefind` 확인 (out/ 이미 gitignore → 별도 처리 불필요)
+- [x] DocPageLayout에 `data-pagefind-body` 부여 → 본문만 인덱싱 (WI-0016 시너지)
 
-## Phase 2: 검색 훅
-- [ ] `src/components/search/use-pagefind.ts` (동적 import + debounce 쿼리)
+## Phase 2: 검색 훅 ✅
+- [x] `src/components/search/use-pagefind.ts` (동적 import + webpackIgnore + debounce + dev graceful)
 
-## Phase 3: 검색 UI
-- [ ] `src/components/search/search-dialog.tsx` (cmdk 모달 재활용) (AC2)
-- [ ] ⌘K / `/` 글로벌 핫키 바인딩
-- [ ] 결과 항목: 제목 + 섹션 + 스니펫, 클릭 시 앵커 이동 (AC3)
-- [ ] 키보드 네비게이션 + Esc 닫기 + 포커스 트랩 (AC4)
+## Phase 3: 검색 UI ✅
+- [x] `src/components/search/search-dialog.tsx` (DS Dialog + Command 조합, shouldFilter=false) (AC2)
+- [x] `src/components/search/search-trigger.tsx` ⌘K / Ctrl+K / `/` 글로벌 핫키 (AC4)
+- [x] 결과 항목: 제목 + excerpt(`<mark>` 하이라이트), 선택 시 router.push (AC3)
+- [x] site-header에 검색 트리거 배치 + Dialog 포커스 트랩(Radix) + Esc 닫기
+- [x] 다이얼로그 a11y: sr-only DialogTitle
 
-## Phase 4: 검증
-- [ ] 51개 문서 페이지 인덱싱 100% 확인
-- [ ] a11y(role/aria/스크린리더) 점검
+## Phase 4: 검증 ✅(빌드)
+- [x] 빌드 인덱싱 동작: "Found data-pagefind-body" + **48개 페이지 인덱싱** (표준화 문서 전수)
+- [ ] 배포 후 실제 검색 동작 확인 (Cloudflare Pages preview/production)
 
 ## Definition of Done
-- [ ] 타입 체크 통과
-- [ ] 린트 통과
-- [ ] 빌드 성공 + Cloudflare Pages 정적 배포 검증
+- [x] 타입 체크 통과
+- [x] 린트 통과
+- [x] 빌드 성공 (정적 214페이지 + Pagefind 인덱스 생성)
+- [ ] Cloudflare Pages 정적 배포 검증 (배포 후)
 - [ ] release-notes.md 작성
+
+## 참고
+- 인덱싱 대상은 `data-pagefind-body`(DocPageLayout) 보유 페이지 = 컴포넌트/Agentic 48개. 인덱스 페이지·랜딩 등은 제외(의도). 더 넓은 검색이 필요하면 해당 레이아웃에도 `data-pagefind-body` 추가.
+- Pagefind는 한국어 stemming 미지원(word 기반 인덱싱은 동작). 컴포넌트명/prop은 영문이라 영향 적음.
+- dev 모드(`next dev`)는 인덱스 미생성 → 검색 다이얼로그가 "프로덕션 빌드에서 동작" 안내(graceful).

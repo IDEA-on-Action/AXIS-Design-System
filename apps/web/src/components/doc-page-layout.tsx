@@ -29,7 +29,8 @@ export function DocPageLayout({
 }: DocPageLayoutProps) {
   return (
     <div className="container py-12">
-      <div className="max-w-4xl">
+      {/* data-pagefind-body: Pagefind가 네비/푸터 제외하고 문서 본문만 인덱싱 (WI-0017) */}
+      <div className="max-w-4xl" data-pagefind-body>
         <div className="mb-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <Link href={categoryHref} className="hover:text-foreground">
