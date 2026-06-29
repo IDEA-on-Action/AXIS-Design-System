@@ -26,7 +26,7 @@
 - [x] 타입 체크 통과
 - [x] 린트 통과
 - [x] 빌드 성공 (정적 페이지 214개 생성, 회귀 없음)
-- [ ] release-notes.md 작성
+- [x] release-notes.md 작성
 
 ## 후속 (심화 표준화 - 별도 WI 후보)
 - [ ] 섹션 순서 표준 정렬 (agentic Demo→Usage 위치 통일)
