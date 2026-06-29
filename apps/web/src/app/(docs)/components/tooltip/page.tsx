@@ -95,7 +95,7 @@ export default function TooltipPage() {
         <CodeBlock code={basicExample} />
       </DocSection>
 
-      <DocSection title="Demo">
+      <DocSection title="Interactive Demo">
         <div className="mb-4 flex items-center justify-center gap-8 p-12 rounded-lg border">
           <TooltipProvider>
             <Tooltip>

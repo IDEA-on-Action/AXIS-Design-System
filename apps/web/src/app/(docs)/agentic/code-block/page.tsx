@@ -140,6 +140,10 @@ export default function CodeBlockPage() {
         <DocCodeBlock code="npx axis-cli add code-block --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <DocCodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-4">
@@ -191,10 +195,6 @@ export default function CodeBlockPage() {
             />
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <DocCodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

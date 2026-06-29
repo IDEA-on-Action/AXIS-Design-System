@@ -63,7 +63,11 @@ export default function ThinkingIndicatorPage() {
         <CodeBlock code="npx axis-cli add thinking-indicator --agentic" language="bash" />
       </DocSection>
 
-      <DocSection title="Demo">
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
+      <DocSection title="Interactive Demo">
         <div className="p-6 rounded-lg border space-y-6">
           <div>
             <p className="text-sm font-medium mb-3">기본</p>
@@ -101,10 +105,6 @@ export default function ThinkingIndicatorPage() {
             </div>
           </div>
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

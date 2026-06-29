@@ -192,7 +192,7 @@ export default function SurfaceRendererPage() {
         />
       </DocSection>
 
-      <DocSection title="SurfaceType">
+      <DocSection title="SurfaceType Type">
         <CodeBlock
           code={`type SurfaceType =
   | 'form'

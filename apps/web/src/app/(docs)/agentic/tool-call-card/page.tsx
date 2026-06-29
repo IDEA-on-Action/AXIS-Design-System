@@ -166,6 +166,10 @@ export default function ToolCallCardPage() {
         <CodeBlock code="npx axis-cli add tool-call-card" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <Button onClick={runDemo} disabled={status === 'running'}>
@@ -211,10 +215,6 @@ export default function ToolCallCardPage() {
           </div>
         </div>
         <CodeBlock code={statusExample} />
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">

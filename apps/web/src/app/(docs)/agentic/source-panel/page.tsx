@@ -178,6 +178,10 @@ export default function SourcePanelPage() {
         <CodeBlock code="npx axis-cli add source-panel --agentic" language="bash" />
       </DocSection>
 
+      <DocSection title="Usage">
+        <CodeBlock code={basicExample} />
+      </DocSection>
+
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <p className="text-sm text-muted-foreground mb-4">
@@ -185,10 +189,6 @@ export default function SourcePanelPage() {
           </p>
           <SourcePanel sources={sources} maxItems={3} />
         </div>
-      </DocSection>
-
-      <DocSection title="Usage">
-        <CodeBlock code={basicExample} />
       </DocSection>
 
       <DocSection title="Props">
