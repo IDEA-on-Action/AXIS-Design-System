@@ -21,15 +21,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # pnpm 버전은 package.json packageManager(pnpm@9.15.4)를 SSOT로 사용한다.
+      # action-setup에 version을 중복 지정하면 ERR_PNPM_BAD_PM_VERSION으로 실패(2026-02-01부터 재현).
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
 
       - name: Install dependencies
