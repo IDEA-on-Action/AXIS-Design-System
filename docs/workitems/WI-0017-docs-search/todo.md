@@ -27,7 +27,7 @@
 - [x] 린트 통과
 - [x] 빌드 성공 (정적 214페이지 + Pagefind 인덱스 생성)
 - [ ] Cloudflare Pages 정적 배포 검증 (배포 후)
-- [ ] release-notes.md 작성
+- [x] release-notes.md 작성
 
 ## 참고
 - 인덱싱 대상은 `data-pagefind-body`(DocPageLayout) 보유 페이지 = 컴포넌트/Agentic 48개. 인덱스 페이지·랜딩 등은 제외(의도). 더 넓은 검색이 필요하면 해당 레이아웃에도 `data-pagefind-body` 추가.
