@@ -16,6 +16,8 @@ jobs:
   publish:
     name: Publish
     runs-on: ubuntu-latest
+    # NPM_TOKEN을 다루는 발행 job은 main 브랜치에서만 동작(workflow_dispatch 포함)
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
       pull-requests: write
