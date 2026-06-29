@@ -84,3 +84,6 @@ loadtest_reports/
 # Large binary files
 *.pdf
 *.docx
+
+# bkit plugin 로컬 상태
+.bkit/
