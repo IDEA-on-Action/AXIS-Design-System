@@ -18,6 +18,9 @@
       "persistent": true
     },
     "test": {
+      "outputs": []
+    },
+    "test:coverage": {
       "outputs": ["coverage/**"]
     },
     "clean": {

@@ -76,7 +76,10 @@ public/worker-*.js
 
 # OpenNext build output
 apps/web/.open-next/
+
+# Test coverage
 .coverage
+coverage/
 
 # Load test reports
 loadtest_reports/
