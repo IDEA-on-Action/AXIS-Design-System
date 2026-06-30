@@ -12,7 +12,8 @@
           {
             "type": "command",
             "command": "pnpm type-check",
-            "on_failure": "warn"
+            "on_failure": "warn",
+            "timeout": 60
           }
         ]
       }
@@ -24,7 +25,8 @@
           {
             "type": "command",
             "command": "pnpm type-check",
-            "on_failure": "warn"
+            "on_failure": "warn",
+            "timeout": 60
           }
         ]
       },
@@ -34,7 +36,8 @@
           {
             "type": "command",
             "command": "pnpm build:registry",
-            "on_failure": "warn"
+            "on_failure": "warn",
+            "timeout": 60
           }
         ]
       }
