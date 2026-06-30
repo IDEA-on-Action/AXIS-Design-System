@@ -140,14 +140,15 @@ export default function RecoveryBannerPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'오류 발생과 복구 액션을 안내하는 배너입니다.'}
+          {
+            '배너는 role="alert"로 즉시 안내되고 aria-labelledby / aria-describedby로 제목·설명이 연결됩니다.'
+          }
         </p>
         <KeyboardTable
           keys={[{ key: 'Enter / Space', description: '포커스된 복구 액션을 실행합니다.' }]}
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'중요 오류는 role="alert"로 즉시 안내하세요.'}</li>
-          <li key={1}>{'복구 버튼에 명확한 접근 가능한 이름을 제공하세요.'}</li>
+          <li key={0}>{'복구 액션 버튼에 접근 가능한 이름이 제공됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

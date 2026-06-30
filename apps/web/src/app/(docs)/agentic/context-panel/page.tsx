@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const ContextPanel = ({
@@ -208,9 +209,14 @@ export default function ContextPanelPage() {
       </DocSection>
 
       <DocSection title="Accessibility">
-        <p className="mb-4 text-muted-foreground">{'모델/컨텍스트 정보를 표시하는 패널입니다.'}</p>
+        <p className="mb-4 text-muted-foreground">
+          {'확장 가능한 영역이 aria-expanded와 aria-controls로 상태·대상을 전달합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[{ key: 'Enter / Space', description: '패널을 펼치거나 접습니다.' }]}
+        />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'정보를 적절한 heading/목록으로 구조화해 스크린리더 탐색을 돕습니다.'}</li>
+          <li key={0}>{'펼침/접힘 상태가 보조기술에 전달됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

@@ -277,7 +277,9 @@ export default function ApprovalDialogPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'사용자가 에이전트 작업을 승인/거부하는 인터랙티브 컴포넌트입니다.'}
+          {
+            '승인 영역은 role="region"으로 그룹화되고 aria-labelledby / aria-describedby로 제목·설명이 연결됩니다.'
+          }
         </p>
         <KeyboardTable
           keys={[
@@ -286,8 +288,8 @@ export default function ApprovalDialogPage() {
           ]}
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'승인/거부 버튼에 명확한 접근 가능한 이름을 제공하세요.'}</li>
-          <li key={1}>{'위험도(impact)는 색상만이 아니라 텍스트로도 전달하세요.'}</li>
+          <li key={0}>{'승인/거부 버튼에 접근 가능한 이름(aria-label)이 제공됩니다.'}</li>
+          <li key={1}>{'위험도(impact)는 색상만이 아니라 텍스트로도 전달됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

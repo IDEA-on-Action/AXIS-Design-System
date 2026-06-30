@@ -201,10 +201,19 @@ export default function SourcePanelPage() {
       </DocSection>
 
       <DocSection title="Accessibility">
-        <p className="mb-4 text-muted-foreground">{'참조 출처 목록을 표시하는 패널입니다.'}</p>
-        <KeyboardTable keys={[{ key: 'Tab', description: '출처 링크 사이를 이동합니다.' }]} />
+        <p className="mb-4 text-muted-foreground">
+          {
+            '출처는 role="list" / "listitem"으로 마크업되고, 확장 영역은 aria-expanded / aria-controls로 상태를 전달합니다.'
+          }
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '출처 링크/토글 사이를 이동합니다.' },
+            { key: 'Enter / Space', description: '확장 영역을 펼치거나 접습니다.' },
+          ]}
+        />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'각 출처 링크에 의미 있는 접근 가능한 이름을 제공하세요.'}</li>
+          <li key={0}>{'각 출처에 접근 가능한 이름(aria-label)이 제공됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>
