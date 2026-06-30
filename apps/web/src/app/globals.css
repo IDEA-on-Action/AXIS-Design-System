@@ -58,3 +58,17 @@
     @apply bg-background text-foreground;
   }
 }
+
+/*
+ * Shiki dual-theme 다크 모드 전환 (WI-0023).
+ * shiki는 themes: { light, dark }로 light 색은 인라인 color, dark 색은 --shiki-dark 변수로 출력한다.
+ * .dark에서 구문 색/배경을 dark 변형으로 덮어쓰지 않으면 다크 배경에 라이트(어두운) 구문색이
+ * 렌더되어 색상 대비가 깨진다. axe E2E(다크)가 이 선존 버그를 표면화.
+ */
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark) !important;
+}
+.dark .shiki {
+  background-color: var(--shiki-dark-bg) !important;
+}
