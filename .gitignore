@@ -74,6 +74,11 @@ public/worker-*.js
 # Playwright MCP
 .playwright-mcp/
 
+# Playwright E2E 산출물
+test-results/
+playwright-report/
+.playwright/
+
 # OpenNext build output
 apps/web/.open-next/
 

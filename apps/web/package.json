@@ -8,7 +8,9 @@
     "build:templates": "node scripts/build-template-index.mjs",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "test:e2e:a11y": "playwright test a11y"
   },
   "dependencies": {
     "@axis-ds/agentic-ui": "workspace:*",
@@ -28,8 +30,10 @@
     "zustand": "^5.0.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
     "@cloudflare/next-on-pages": "^1.13.16",
     "@opennextjs/cloudflare": "^1.14.8",
+    "@playwright/test": "^1.49.1",
     "@types/node": "^22.10.5",
     "@types/react": "^19.0.6",
     "@types/react-dom": "^19.0.2",
