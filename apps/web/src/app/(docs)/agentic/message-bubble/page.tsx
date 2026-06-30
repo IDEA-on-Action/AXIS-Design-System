@@ -229,6 +229,14 @@ export default function MessageBubblePage() {
       <DocSection title="Props">
         <PropsTable props={messageBubbleProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'대화 메시지를 표시하는 말풍선입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'작성자(역할)를 텍스트로 식별 가능하게 노출하세요.'}</li>
+          <li key={1}>{'연속 대화는 의미적 목록/구조로 마크업하면 탐색이 쉬워집니다.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

@@ -14,6 +14,7 @@ import {
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const dropdownMenuProps = [
@@ -168,6 +169,26 @@ export default function DropdownMenuPage() {
         <PropsTable props={dropdownMenuProps} />
         <h3 className="text-lg font-medium mt-6 mb-3">DropdownMenuContent</h3>
         <PropsTable props={dropdownMenuContentProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI DropdownMenu 기반으로 WAI-ARIA Menu 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Enter / Space', description: '메뉴를 열거나 포커스된 항목을 실행합니다.' },
+            { key: '↑ ↓', description: '메뉴 항목 사이를 이동합니다.' },
+            { key: '→ ←', description: '하위 메뉴를 열거나 닫습니다.' },
+            { key: 'Esc', description: '메뉴를 닫고 트리거로 포커스를 복원합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'role="menu" / "menuitem"이 자동 적용되고 포커스가 메뉴 안에서 관리됩니다.'}
+          </li>
+          <li key={1}>{'글자 입력 시 해당 항목으로 type-ahead 이동합니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

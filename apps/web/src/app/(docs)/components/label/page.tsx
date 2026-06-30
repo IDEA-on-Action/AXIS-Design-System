@@ -60,6 +60,16 @@ export default function LabelPage() {
       <DocSection title="Props">
         <PropsTable props={labelProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'htmlFor로 폼 컨트롤과 연결되는 접근 가능한 라벨입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'라벨 클릭 시 연결된 컨트롤로 포커스가 이동합니다.'}</li>
+          <li key={1}>{'htmlFor 값을 컨트롤의 id와 일치시키세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

@@ -110,6 +110,16 @@ export default function ThinkingIndicatorPage() {
       <DocSection title="Props">
         <PropsTable props={thinkingIndicatorProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'에이전트가 처리 중임을 나타내는 표시기입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'상태 변화를 status 역할/aria-live로 전달하세요.'}</li>
+          <li key={1}>{'애니메이션은 장식이므로 의미는 텍스트로도 제공하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

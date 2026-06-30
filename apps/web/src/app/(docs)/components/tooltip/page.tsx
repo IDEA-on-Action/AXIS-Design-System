@@ -4,6 +4,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 // Mock Tooltip 컴포넌트
@@ -158,6 +159,19 @@ export default function TooltipPage() {
 
       <DocSection title="TooltipContent Props">
         <PropsTable props={tooltipContentProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Tooltip 기반으로 role="tooltip"을 제공합니다.'}
+        </p>
+        <KeyboardTable keys={[{ key: 'Esc', description: '표시된 툴팁을 닫습니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'트리거에 포커스하거나 호버하면 툴팁이 나타납니다 (툴팁 자체는 포커스 불가).'}
+          </li>
+          <li key={1}>{'툴팁은 보조 정보 전용이며 필수 정보를 담지 마세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

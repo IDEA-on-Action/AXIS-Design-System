@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const selectProps = [
@@ -96,6 +97,24 @@ export default function SelectPage() {
 
       <DocSection title="Props">
         <PropsTable props={selectProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Select 기반으로 WAI-ARIA Listbox 선택 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Enter / Space', description: '목록을 열고 포커스된 옵션을 선택합니다.' },
+            { key: '↑ ↓', description: '옵션 사이를 이동합니다.' },
+            { key: 'Home / End', description: '첫/마지막 옵션으로 이동합니다.' },
+            { key: 'Esc', description: '목록을 닫습니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'선택된 옵션에 aria-selected가 적용됩니다.'}</li>
+          <li key={1}>{'글자 입력 시 해당 옵션으로 type-ahead 이동합니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

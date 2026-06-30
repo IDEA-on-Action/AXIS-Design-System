@@ -4,6 +4,7 @@ import { Label, Textarea } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const textareaProps = [
@@ -67,6 +68,20 @@ export default function TextareaPage() {
 
       <DocSection title="Props">
         <PropsTable props={textareaProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'네이티브 textarea 요소로 브라우저 기본 접근성을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '표준 텍스트 편집', description: '여러 줄 텍스트 입력과 편집을 지원합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'Label로 연결하거나 aria-label로 접근 가능한 이름을 제공하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

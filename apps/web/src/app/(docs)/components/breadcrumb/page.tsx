@@ -11,6 +11,7 @@ import {
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const breadcrumbProps = [
@@ -117,6 +118,19 @@ export default function BreadcrumbPage_() {
 
       <DocSection title="Props">
         <PropsTable props={breadcrumbProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'nav 랜드마크와 정렬 목록으로 구성된 탐색 경로입니다.'}
+        </p>
+        <KeyboardTable keys={[{ key: 'Tab', description: '경로 내 링크 사이를 이동합니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'nav 요소에 접근 가능한 이름(예: aria-label="Breadcrumb")을 제공하세요.'}
+          </li>
+          <li key={1}>{'현재 페이지 항목에는 aria-current="page"를 지정하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 type FeedbackType = 'like' | 'dislike' | 'none'
@@ -161,6 +162,22 @@ export default function FeedbackButtonsPage() {
 
       <DocSection title="Props">
         <PropsTable props={feedbackProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'응답에 대한 좋아요/싫어요 피드백 버튼입니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '피드백 버튼 사이를 이동합니다.' },
+            { key: 'Enter / Space', description: '피드백을 선택합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'아이콘 버튼에 aria-label(예: 도움이 됨/안 됨)을 제공하세요.'}</li>
+          <li key={1}>{'선택 상태는 aria-pressed로 전달하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

@@ -5,6 +5,7 @@ import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger } from '@ax
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const collapsibleProps = [
@@ -115,6 +116,18 @@ export default function CollapsiblePage() {
 
       <DocSection title="Props">
         <PropsTable props={collapsibleProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Collapsible 기반으로 트리거-콘텐츠 공개 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[{ key: 'Enter / Space', description: '콘텐츠를 펼치거나 접습니다.' }]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'트리거에 aria-expanded와 aria-controls가 자동 연결됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

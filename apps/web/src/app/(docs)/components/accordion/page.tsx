@@ -4,6 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@a
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const accordionProps = [
@@ -132,6 +133,23 @@ export default function AccordionPage() {
 
       <DocSection title="Props">
         <PropsTable props={accordionProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Accordion 기반으로 WAI-ARIA Accordion 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Enter / Space', description: '포커스된 헤더의 패널을 펼치거나 접습니다.' },
+            { key: '↑ ↓', description: '이전/다음 아코디언 헤더로 이동합니다.' },
+            { key: 'Home / End', description: '첫/마지막 헤더로 이동합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'트리거에 aria-expanded, 패널에 region 역할이 자동 적용됩니다.'}</li>
+          <li key={1}>{'type="single" | "multiple"로 동시 열림 동작을 제어할 수 있습니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

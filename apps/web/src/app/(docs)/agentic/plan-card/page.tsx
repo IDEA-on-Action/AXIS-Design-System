@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 type PlanStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'executing' | 'completed'
@@ -284,6 +285,22 @@ export default function PlanCardPage() {
 
       <DocSection title="PlanStep Type">
         <PropsTable props={planStepProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'에이전트 실행 계획을 단계별로 표시하고 승인/거절합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '계획 액션 사이를 이동합니다.' },
+            { key: 'Enter / Space', description: '포커스된 액션을 실행합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'각 단계 상태(대기/진행/완료)를 색상만이 아니라 텍스트로 전달하세요.'}</li>
+          <li key={1}>{'단계는 순서가 의미 있으므로 정렬 목록으로 구조화하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

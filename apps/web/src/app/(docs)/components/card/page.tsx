@@ -148,6 +148,14 @@ export default function CardPage() {
       <DocSection title="Props">
         <PropsTable props={cardProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'콘텐츠를 그룹화하는 컨테이너입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'카드 제목은 적절한 heading 레벨로 마크업해 문서 구조를 유지하세요.'}</li>
+          <li key={1}>{'카드 전체가 링크면 하나의 접근 가능한 이름을 갖도록 구성하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

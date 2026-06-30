@@ -96,6 +96,16 @@ export default function SeparatorPage() {
       <DocSection title="Props">
         <PropsTable props={separatorProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'의미적/장식적 구분선입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'의미가 있는 구분이면 role="separator"와 aria-orientation이 적용됩니다.'}
+          </li>
+          <li key={1}>{'순수 장식이면 decorative 옵션으로 보조기술에서 숨길 수 있습니다.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

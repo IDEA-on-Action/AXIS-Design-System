@@ -220,6 +220,16 @@ export default function ToolCallCardPage() {
       <DocSection title="Props">
         <PropsTable props={toolCallProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'에이전트의 도구 호출 상태를 표시하는 카드입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'호출 상태(대기/실행/완료)를 색상만이 아니라 텍스트로 전달하세요.'}</li>
+          <li key={1}>{'확장 가능한 영역은 aria-expanded로 상태를 전달하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

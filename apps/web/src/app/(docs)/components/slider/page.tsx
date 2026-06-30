@@ -4,6 +4,7 @@ import { Slider } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const sliderProps = [
@@ -60,6 +61,25 @@ export default function SliderPage() {
 
       <DocSection title="Props">
         <PropsTable props={sliderProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Slider 기반으로 WAI-ARIA Slider 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '← ↓', description: '값을 한 단계 감소시킵니다.' },
+            { key: '→ ↑', description: '값을 한 단계 증가시킵니다.' },
+            { key: 'Home / End', description: '최소/최대 값으로 이동합니다.' },
+            { key: 'PageUp / PageDown', description: '큰 단위로 값을 조정합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'role="slider"와 aria-valuenow / aria-valuemin / aria-valuemax가 적용됩니다.'}
+          </li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

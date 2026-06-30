@@ -4,6 +4,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const toastProps = [
@@ -111,6 +112,21 @@ export default function RootLayout({ children }) {
 
       <DocSection title="Props">
         <PropsTable props={toastProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Toast 기반으로 aria-live 영역에 알림을 표시합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'F6', description: '토스트 영역으로 포커스를 이동합니다.' },
+            { key: 'Esc', description: '포커스된 토스트를 닫습니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'스크린리더가 알림을 읽도록 live region이 적용됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

@@ -4,6 +4,7 @@ import { Label, RadioGroup, RadioGroupItem } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const radioGroupProps = [
@@ -94,6 +95,21 @@ export default function RadioGroupPage() {
 
       <DocSection title="Props">
         <PropsTable props={radioGroupProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI RadioGroup 기반으로 WAI-ARIA Radio Group 패턴(roving tabindex)을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '↑ ↓ ← →', description: '그룹 내 항목을 선택하며 이동합니다.' },
+            { key: 'Tab', description: '그룹에 진입/이탈합니다 (선택된 항목으로).' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'role="radiogroup" / "radio"와 aria-checked가 자동 적용됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

@@ -206,6 +206,13 @@ export default function ContextPanelPage() {
       <DocSection title="ModelInfo Type">
         <PropsTable props={modelInfoProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'모델/컨텍스트 정보를 표시하는 패널입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'정보를 적절한 heading/목록으로 구조화해 스크린리더 탐색을 돕습니다.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

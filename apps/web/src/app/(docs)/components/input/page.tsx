@@ -4,6 +4,7 @@ import { Button, Input, Label } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const inputProps = [
@@ -99,6 +100,21 @@ export default function InputPage() {
 
       <DocSection title="Props">
         <PropsTable props={inputProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'네이티브 input 요소로 브라우저 기본 접근성을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '표준 텍스트 편집', description: '네이티브 캐럿 이동/선택/편집을 지원합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'Label로 연결하거나 aria-label로 접근 가능한 이름을 제공하세요.'}</li>
+          <li key={1}>{'오류 상태는 aria-invalid와 설명(aria-describedby)으로 전달하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

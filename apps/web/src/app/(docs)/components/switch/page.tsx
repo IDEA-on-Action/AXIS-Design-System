@@ -4,6 +4,7 @@ import { Label, Switch } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const switchProps = [
@@ -56,6 +57,16 @@ export default function SwitchPage() {
 
       <DocSection title="Props">
         <PropsTable props={switchProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Switch 기반으로 role="switch"와 aria-checked를 제공합니다.'}
+        </p>
+        <KeyboardTable keys={[{ key: 'Space / Enter', description: '켜짐/꺼짐을 토글합니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'Label로 연결해 접근 가능한 이름을 제공하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

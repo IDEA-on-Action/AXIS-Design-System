@@ -13,6 +13,7 @@ import {
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 type Impact = 'low' | 'medium' | 'high' | 'critical'
@@ -272,6 +273,22 @@ export default function ApprovalDialogPage() {
 
       <DocSection title="Props">
         <PropsTable props={approvalDialogProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'사용자가 에이전트 작업을 승인/거부하는 인터랙티브 컴포넌트입니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '승인/거부 버튼 사이를 이동합니다.' },
+            { key: 'Enter / Space', description: '포커스된 액션을 실행합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'승인/거부 버튼에 명확한 접근 가능한 이름을 제공하세요.'}</li>
+          <li key={1}>{'위험도(impact)는 색상만이 아니라 텍스트로도 전달하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )
