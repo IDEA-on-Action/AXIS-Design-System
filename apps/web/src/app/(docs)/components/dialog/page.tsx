@@ -15,6 +15,7 @@ import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
+import { KeyboardTable } from '@/components/keyboard-table'
 
 const dialogProps = [
   { name: 'open', type: 'boolean', default: '-', description: '다이얼로그 열림 상태 (controlled)' },
@@ -165,6 +166,51 @@ export default function DialogPage() {
 
       <DocSection title="Props">
         <PropsTable props={dialogProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          Radix UI Dialog 기반으로 WAI-ARIA{' '}
+          <a
+            href="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-foreground"
+          >
+            Dialog (Modal) 패턴
+          </a>
+          을 따릅니다. 열릴 때 포커스가 다이얼로그 내부로 이동하고 갇히며(focus trap), 닫히면
+          트리거로 포커스가 복원됩니다.
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Esc', description: '다이얼로그를 닫습니다.' },
+            {
+              key: 'Tab',
+              description: '다이얼로그 내 포커스 가능 요소를 순환합니다 (밖으로 나가지 않음).',
+            },
+            { key: 'Shift + Tab', description: '역방향으로 포커스를 순환합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li>
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">{'role="dialog"'}</code> +{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">{'aria-modal="true"'}</code>가
+            자동 적용됩니다.
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">DialogTitle</code>은{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">aria-labelledby</code>로
+            연결되므로 필수입니다. 시각적으로 숨기려면{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">sr-only</code>를 사용하세요.
+          </li>
+          <li>
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">DialogDescription</code>은{' '}
+            <code className="rounded bg-muted px-1 py-0.5 text-xs">aria-describedby</code>로
+            연결됩니다.
+          </li>
+          <li>열린 동안 배경 콘텐츠는 비활성화되고 스크린리더에서 가려집니다.</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

@@ -12,6 +12,7 @@ import {
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const commandProps = [
@@ -134,6 +135,22 @@ export default function CommandPage() {
 
       <DocSection title="Props">
         <PropsTable props={commandProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'cmdk 기반 명령 팔레트로 combobox/listbox 시맨틱을 제공합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '문자 입력', description: '항목을 필터링합니다.' },
+            { key: '↑ ↓', description: '결과 항목 사이를 이동합니다.' },
+            { key: 'Enter', description: '포커스된 항목을 선택합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'선택된 항목에 aria-selected가 적용됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

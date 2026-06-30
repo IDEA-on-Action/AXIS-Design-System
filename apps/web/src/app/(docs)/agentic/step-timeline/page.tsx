@@ -170,6 +170,16 @@ export default function StepTimelinePage() {
       <DocSection title="TimelineStep Type">
         <PropsTable props={timelineStepProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'작업 단계를 시간 순으로 표시하는 타임라인입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'단계 상태를 색상만이 아니라 텍스트/아이콘으로 전달하세요.'}</li>
+          <li key={1}>{'순서가 의미 있으므로 정렬 목록으로 구조화하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

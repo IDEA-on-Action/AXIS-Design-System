@@ -207,6 +207,16 @@ export default function SurfaceRendererPage() {
   | 'approval_request'`}
         />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'서버가 정의한 surface를 동적으로 렌더링합니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'렌더링되는 surface 타입에 맞는 시맨틱(목록/표/버튼 등)을 보장하세요.'}</li>
+          <li key={1}>{'인터랙티브 surface는 키보드 조작과 접근 가능한 이름을 제공하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

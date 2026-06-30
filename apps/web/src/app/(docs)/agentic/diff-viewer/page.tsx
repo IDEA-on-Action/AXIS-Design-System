@@ -307,6 +307,16 @@ export default function DiffViewerPage() {
       <DocSection title="Props">
         <PropsTable props={diffViewerProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'추가/삭제 변경을 시각화하는 diff 뷰어입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'추가/삭제는 색상만이 아니라 기호(+/-)나 텍스트로도 구분하세요.'}</li>
+          <li key={1}>{'변경 요약을 텍스트로 제공해 색상 인식이 어려운 사용자를 지원하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

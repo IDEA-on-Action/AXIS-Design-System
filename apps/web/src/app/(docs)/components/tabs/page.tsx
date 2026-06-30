@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const tabsProps = [
@@ -95,6 +96,25 @@ export default function TabsPage() {
 
       <DocSection title="Props">
         <PropsTable props={tabsProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Tabs 기반으로 WAI-ARIA Tabs 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: '← →', description: '탭 사이를 이동합니다.' },
+            { key: 'Home / End', description: '첫/마지막 탭으로 이동합니다.' },
+            { key: 'Tab', description: '탭 목록에서 활성 패널로 이동합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'role="tablist" / "tab" / "tabpanel"과 aria-selected가 자동 적용됩니다.'}
+          </li>
+          <li key={1}>{'activationMode로 자동/수동 활성화를 제어할 수 있습니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

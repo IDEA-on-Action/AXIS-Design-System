@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock as DocCodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const AgenticCodeBlock = ({
@@ -199,6 +200,22 @@ export default function CodeBlockPage() {
 
       <DocSection title="Props">
         <PropsTable props={codeBlockProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'구문 강조된 코드를 표시하고 복사 버튼을 제공합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '복사 버튼으로 이동합니다.' },
+            { key: 'Enter / Space', description: '코드를 클립보드에 복사합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'복사 버튼에 aria-label로 의미를 제공하세요.'}</li>
+          <li key={1}>{'코드는 pre/code로 마크업되어 스크린리더가 구조를 보존합니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

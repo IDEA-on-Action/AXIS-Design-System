@@ -14,6 +14,7 @@ import {
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const sheetContentProps = [
@@ -171,6 +172,24 @@ export default function SheetPage() {
         <PropsTable props={sheetProps} />
         <h3 className="text-lg font-medium mt-6 mb-3">SheetContent</h3>
         <PropsTable props={sheetContentProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Dialog 기반의 측면 패널로 Dialog (Modal) 패턴을 따릅니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Esc', description: '시트를 닫습니다.' },
+            { key: 'Tab', description: '시트 내부에서 포커스를 순환합니다 (focus trap).' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'role="dialog" + aria-modal="true"가 적용되고 열릴 때 포커스가 내부로 이동합니다.'}
+          </li>
+          <li key={1}>{'제목(Title)을 제공해 aria-labelledby로 연결하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

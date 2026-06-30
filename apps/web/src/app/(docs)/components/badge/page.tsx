@@ -59,6 +59,16 @@ export default function BadgePage() {
       <DocSection title="Props">
         <PropsTable props={badgeProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'상태/분류를 나타내는 장식적 라벨입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'뱃지가 상태를 전달하면 텍스트로도 동일 정보를 제공해 색상 의존을 피하세요.'}
+          </li>
+          <li key={1}>{'인터랙티브하지 않으므로 클릭 동작이 필요하면 Button을 사용하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

@@ -211,6 +211,14 @@ export default function RunProgressPage() {
       <DocSection title="Step Type">
         <PropsTable props={stepTypeProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'실행 진행 상태를 단계별로 표시합니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'진행 표시기에 progressbar 시맨틱과 접근 가능한 이름을 제공하세요.'}</li>
+          <li key={1}>{'단계 상태를 텍스트로도 전달하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

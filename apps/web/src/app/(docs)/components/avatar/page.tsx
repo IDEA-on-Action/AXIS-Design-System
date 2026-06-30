@@ -147,6 +147,18 @@ export default function AvatarPage() {
       <DocSection title="Props">
         <PropsTable props={avatarProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'이미지 또는 폴백 이니셜로 표시되는 아바타입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'이미지에 의미가 있으면 alt 텍스트를, 장식이면 빈 alt를 제공하세요.'}</li>
+          <li key={1}>
+            {'폴백 이니셜은 접근 가능한 이름을 대체하지 못하므로 맥락에서 이름을 함께 노출하세요.'}
+          </li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

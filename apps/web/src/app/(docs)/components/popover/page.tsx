@@ -4,6 +4,7 @@ import { Button, Input, Label, Popover, PopoverContent, PopoverTrigger } from '@
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const popoverProps = [
@@ -135,6 +136,22 @@ export default function PopoverPage() {
         <PropsTable props={popoverProps} />
         <h3 className="text-lg font-medium mt-6 mb-3">PopoverContent</h3>
         <PropsTable props={popoverContentProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Popover 기반으로 포커스 관리와 외부 클릭/Esc 닫힘을 제공합니다.'}
+        </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Enter / Space', description: '트리거에서 팝오버를 엽니다.' },
+            { key: 'Esc', description: '팝오버를 닫고 트리거로 포커스를 복원합니다.' },
+            { key: 'Tab', description: '팝오버 내부 포커스 가능 요소로 이동합니다.' },
+          ]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'트리거와 콘텐츠가 aria 속성으로 연결됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

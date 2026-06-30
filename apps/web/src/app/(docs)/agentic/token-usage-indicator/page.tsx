@@ -162,6 +162,13 @@ export default function TokenUsageIndicatorPage() {
       <DocSection title="Props">
         <PropsTable props={tokenUsageProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'토큰 사용량을 표시하는 표시기입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'수치를 시각 요소만이 아니라 텍스트로 접근 가능하게 제공하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

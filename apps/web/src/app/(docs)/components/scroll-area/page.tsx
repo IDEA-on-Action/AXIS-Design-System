@@ -4,6 +4,7 @@ import { ScrollArea, Separator } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const scrollAreaProps = [
@@ -90,6 +91,18 @@ export default function ScrollAreaPage() {
 
       <DocSection title="Props">
         <PropsTable props={scrollAreaProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI ScrollArea 기반의 스크롤 컨테이너입니다.'}
+        </p>
+        <KeyboardTable
+          keys={[{ key: '↑ ↓ ← →', description: '뷰포트에 포커스가 있을 때 스크롤합니다.' }]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'네이티브 스크롤을 유지하므로 키보드/스크린리더 스크롤이 동작합니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

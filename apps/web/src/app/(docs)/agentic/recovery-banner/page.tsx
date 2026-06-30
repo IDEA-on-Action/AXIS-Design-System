@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 // Mock RecoveryBanner 컴포넌트
@@ -135,6 +136,19 @@ export default function RecoveryBannerPage() {
 
       <DocSection title="Props">
         <PropsTable props={recoveryBannerProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'오류 발생과 복구 액션을 안내하는 배너입니다.'}
+        </p>
+        <KeyboardTable
+          keys={[{ key: 'Enter / Space', description: '포커스된 복구 액션을 실행합니다.' }]}
+        />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'중요 오류는 role="alert"로 즉시 안내하세요.'}</li>
+          <li key={1}>{'복구 버튼에 명확한 접근 가능한 이름을 제공하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

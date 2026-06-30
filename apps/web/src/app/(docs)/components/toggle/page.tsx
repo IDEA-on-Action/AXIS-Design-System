@@ -4,6 +4,7 @@ import { Toggle } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const toggleProps = [
@@ -67,6 +68,16 @@ export default function TogglePage() {
 
       <DocSection title="Props">
         <PropsTable props={toggleProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Toggle 기반으로 aria-pressed로 눌림 상태를 표현합니다.'}
+        </p>
+        <KeyboardTable keys={[{ key: 'Space / Enter', description: '눌림 상태를 토글합니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'아이콘 전용 토글은 aria-label로 의미를 제공하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

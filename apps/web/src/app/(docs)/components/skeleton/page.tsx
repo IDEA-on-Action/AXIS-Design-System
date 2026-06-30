@@ -109,6 +109,20 @@ export default function SkeletonPage() {
       <DocSection title="Props">
         <PropsTable props={skeletonProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'콘텐츠 로딩 중 표시되는 장식적 플레이스홀더입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {
+              '스켈레톤 자체는 장식이므로 보조기술에서 숨기고, 로딩 영역에 aria-busy="true"를 적용하세요.'
+            }
+          </li>
+          <li key={1}>{'로딩 완료 시 실제 콘텐츠로 교체해 상태 변화를 알리세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

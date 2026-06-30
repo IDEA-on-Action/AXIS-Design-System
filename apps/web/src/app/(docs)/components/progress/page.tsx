@@ -163,6 +163,18 @@ export default function ProgressPage() {
       <DocSection title="Props">
         <PropsTable props={progressProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'진행 상태를 나타내는 표시기입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'role="progressbar"와 aria-valuenow / aria-valuemin / aria-valuemax를 제공하세요.'}
+          </li>
+          <li key={1}>
+            {'의미를 보조기술에 전달하도록 접근 가능한 이름(aria-label)을 부여하세요.'}
+          </li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

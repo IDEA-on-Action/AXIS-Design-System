@@ -4,6 +4,7 @@ import { Checkbox, Label } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 const checkboxProps = [
@@ -80,6 +81,19 @@ export default function CheckboxPage() {
 
       <DocSection title="Props">
         <PropsTable props={checkboxProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'Radix UI Checkbox 기반으로 role="checkbox"와 aria-checked를 제공합니다.'}
+        </p>
+        <KeyboardTable keys={[{ key: 'Space', description: '체크 상태를 토글합니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'Label 컴포넌트로 연결하면 라벨 클릭으로도 토글되고 접근 가능한 이름이 부여됩니다.'}
+          </li>
+          <li key={1}>{'indeterminate 상태는 aria-checked="mixed"로 표현됩니다.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

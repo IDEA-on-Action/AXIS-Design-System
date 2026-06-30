@@ -136,6 +136,18 @@ export default function AlertPage() {
       <DocSection title="Props">
         <PropsTable props={alertProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'중요한 메시지를 전달하는 알림 영역입니다.'}</p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {
+              '즉각적 주의가 필요하면 role="alert"(assertive)를, 보조 정보면 role="status"를 사용하세요.'
+            }
+          </li>
+          <li key={1}>{'색상만이 아니라 아이콘/텍스트로 의미(정보/경고/오류)를 전달하세요.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

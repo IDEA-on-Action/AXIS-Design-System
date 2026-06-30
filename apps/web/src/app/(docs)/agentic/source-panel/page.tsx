@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 // Mock SourcePanel 컴포넌트
@@ -197,6 +198,14 @@ export default function SourcePanelPage() {
 
       <DocSection title="Source Type">
         <PropsTable props={sourceTypeProps} />
+      </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">{'참조 출처 목록을 표시하는 패널입니다.'}</p>
+        <KeyboardTable keys={[{ key: 'Tab', description: '출처 링크 사이를 이동합니다.' }]} />
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'각 출처 링크에 의미 있는 접근 가능한 이름을 제공하세요.'}</li>
+        </ul>
       </DocSection>
     </DocPageLayout>
   )

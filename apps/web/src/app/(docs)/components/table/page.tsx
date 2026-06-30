@@ -174,6 +174,16 @@ export default function TablePage() {
       <DocSection title="Props">
         <PropsTable props={tableProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'네이티브 table 시맨틱을 사용하는 데이터 표입니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>{'헤더 셀은 th와 scope로 행/열 관계를 명확히 하세요.'}</li>
+          <li key={1}>{'표의 목적을 caption으로 제공하면 스크린리더 탐색에 도움이 됩니다.'}</li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }

@@ -169,6 +169,20 @@ export default function AgentAvatarPage() {
       <DocSection title="Props">
         <PropsTable props={agentAvatarProps} />
       </DocSection>
+
+      <DocSection title="Accessibility">
+        <p className="mb-4 text-muted-foreground">
+          {'에이전트를 나타내는 아바타로 name으로 식별됩니다.'}
+        </p>
+        <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          <li key={0}>
+            {'name prop이 접근 가능한 이름의 근거가 되므로 의미 있는 값을 제공하세요.'}
+          </li>
+          <li key={1}>
+            {'type(assistant/tool/system)은 색상만이 아니라 맥락 텍스트로도 구분되게 하세요.'}
+          </li>
+        </ul>
+      </DocSection>
     </DocPageLayout>
   )
 }
