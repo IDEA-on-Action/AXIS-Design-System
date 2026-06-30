@@ -59,7 +59,7 @@ export function ComponentShowcase() {
               <CardDescription>실시간 텍스트 스트리밍</CardDescription>
             </CardHeader>
             <CardContent>
-              <span className="text-sm animate-pulse">AI가 응답을 생성하고 있습니다...</span>
+              <span className="text-sm text-muted-foreground">AI가 응답을 생성하고 있습니다...</span>
             </CardContent>
           </Card>
 

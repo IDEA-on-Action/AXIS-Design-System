@@ -34,8 +34,8 @@ export function CodeBlock({
         const html = hl.codeToHtml(code, {
           lang,
           themes: {
-            light: 'github-light',
-            dark: 'github-dark',
+            light: 'github-light-high-contrast',
+            dark: 'github-dark-high-contrast',
           },
           transformers: [
             {
@@ -72,7 +72,13 @@ export function CodeBlock({
         <span className="text-xs text-muted-foreground font-mono">
           {filename || language}
         </span>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={handleCopy}>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          onClick={handleCopy}
+          aria-label={copied ? '코드 복사됨' : '코드 복사'}
+        >
           {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
         </Button>
       </div>

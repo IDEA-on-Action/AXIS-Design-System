@@ -33,7 +33,7 @@ export function PropsTable({ props }: PropsTableProps) {
                       {prop.name}
                     </code>
                     {prop.required && (
-                      <span className="inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                      <span className="inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:text-red-300">
                         Required
                       </span>
                     )}
@@ -65,7 +65,7 @@ export function PropsTable({ props }: PropsTableProps) {
                 {prop.name}
               </code>
               {prop.required && (
-                <span className="inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive">
+                <span className="inline-flex items-center rounded-full bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-red-700 dark:text-red-300">
                   Required
                 </span>
               )}
