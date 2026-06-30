@@ -236,7 +236,11 @@ export default function AttachmentCardPage() {
       </DocSection>
 
       <DocSection title="Accessibility">
-        <p className="mb-4 text-muted-foreground">{'파일 첨부를 표시하는 카드입니다.'}</p>
+        <p className="mb-4 text-muted-foreground">
+          {
+            '카드는 role="article"로 마크업되고, 업로드 진행은 role="progressbar" + aria-valuenow / aria-valuemin / aria-valuemax로 전달됩니다.'
+          }
+        </p>
         <KeyboardTable
           keys={[
             { key: 'Tab', description: '카드 내 액션(삭제 등)으로 이동합니다.' },
@@ -244,8 +248,8 @@ export default function AttachmentCardPage() {
           ]}
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'파일명을 접근 가능한 이름으로 노출하세요.'}</li>
-          <li key={1}>{'업로드 상태(진행/실패)는 텍스트로도 전달하세요.'}</li>
+          <li key={0}>{'파일명이 접근 가능한 이름으로 노출됩니다.'}</li>
+          <li key={1}>{'액션 버튼에 aria-label이 제공됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

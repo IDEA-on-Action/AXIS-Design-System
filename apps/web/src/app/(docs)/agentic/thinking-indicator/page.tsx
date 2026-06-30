@@ -113,11 +113,13 @@ export default function ThinkingIndicatorPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'에이전트가 처리 중임을 나타내는 표시기입니다.'}
+          {
+            '처리 상태를 role="status" + aria-live로 전달하고, 애니메이션은 aria-hidden으로 처리됩니다.'
+          }
         </p>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'상태 변화를 status 역할/aria-live로 전달하세요.'}</li>
-          <li key={1}>{'애니메이션은 장식이므로 의미는 텍스트로도 제공하세요.'}</li>
+          <li key={0}>{'상태 변화가 스크린리더에 안내됩니다.'}</li>
+          <li key={1}>{'의미는 aria-label로도 제공됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

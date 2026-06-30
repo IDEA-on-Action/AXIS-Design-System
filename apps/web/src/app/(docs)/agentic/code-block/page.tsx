@@ -204,7 +204,9 @@ export default function CodeBlockPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'구문 강조된 코드를 표시하고 복사 버튼을 제공합니다.'}
+          {
+            '복사 버튼에 aria-label이 제공되고, 장식 요소는 role="presentation" / aria-hidden 처리됩니다.'
+          }
         </p>
         <KeyboardTable
           keys={[
@@ -213,8 +215,7 @@ export default function CodeBlockPage() {
           ]}
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'복사 버튼에 aria-label로 의미를 제공하세요.'}</li>
-          <li key={1}>{'코드는 pre/code로 마크업되어 스크린리더가 구조를 보존합니다.'}</li>
+          <li key={0}>{'코드는 pre/code 구조로 보존되어 스크린리더가 인식합니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

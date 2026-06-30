@@ -166,7 +166,9 @@ export default function FeedbackButtonsPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'응답에 대한 좋아요/싫어요 피드백 버튼입니다.'}
+          {
+            '버튼 그룹은 role="group"으로 묶이고, 각 버튼은 aria-label과 aria-pressed(선택 상태)를 가집니다.'
+          }
         </p>
         <KeyboardTable
           keys={[
@@ -175,8 +177,8 @@ export default function FeedbackButtonsPage() {
           ]}
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'아이콘 버튼에 aria-label(예: 도움이 됨/안 됨)을 제공하세요.'}</li>
-          <li key={1}>{'선택 상태는 aria-pressed로 전달하세요.'}</li>
+          <li key={0}>{'좋아요/싫어요 버튼에 접근 가능한 이름(aria-label)이 제공됩니다.'}</li>
+          <li key={1}>{'선택 상태가 aria-pressed로 전달됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

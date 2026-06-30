@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 type ToolStatus = 'pending' | 'running' | 'success' | 'error'
@@ -223,11 +224,15 @@ export default function ToolCallCardPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'에이전트의 도구 호출 상태를 표시하는 카드입니다.'}
+          {
+            '확장 가능한 카드가 aria-expanded / aria-controls로 펼침 상태·대상을 전달하고, 액션에 aria-label이 제공됩니다.'
+          }
         </p>
+        <KeyboardTable
+          keys={[{ key: 'Enter / Space', description: '카드 상세를 펼치거나 접습니다.' }]}
+        />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'호출 상태(대기/실행/완료)를 색상만이 아니라 텍스트로 전달하세요.'}</li>
-          <li key={1}>{'확장 가능한 영역은 aria-expanded로 상태를 전달하세요.'}</li>
+          <li key={0}>{'호출 상태(대기/실행/완료)가 텍스트로도 전달됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

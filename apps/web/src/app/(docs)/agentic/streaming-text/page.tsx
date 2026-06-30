@@ -116,10 +116,14 @@ export default function StreamingTextPage() {
       </DocSection>
 
       <DocSection title="Accessibility">
-        <p className="mb-4 text-muted-foreground">{'점진적으로 출력되는 스트리밍 텍스트입니다.'}</p>
+        <p className="mb-4 text-muted-foreground">
+          {
+            '스트리밍 영역은 role="region" + aria-live(기본 polite)로 갱신을 전달하고, 생성 중에는 aria-busy로 상태를 표시합니다.'
+          }
+        </p>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'스트리밍 갱신을 스크린리더가 인지하도록 aria-live 영역을 사용하세요.'}</li>
-          <li key={1}>{'과도한 갱신 알림을 피하려면 적절한 live 정책(polite)을 적용하세요.'}</li>
+          <li key={0}>{'aria-live 정책을 polite / assertive / off로 제어할 수 있습니다.'}</li>
+          <li key={1}>{'스크린리더가 점진적 출력을 인지합니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

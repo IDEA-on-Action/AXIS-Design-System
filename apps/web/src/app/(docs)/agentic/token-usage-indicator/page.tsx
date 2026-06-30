@@ -164,9 +164,11 @@ export default function TokenUsageIndicatorPage() {
       </DocSection>
 
       <DocSection title="Accessibility">
-        <p className="mb-4 text-muted-foreground">{'토큰 사용량을 표시하는 표시기입니다.'}</p>
+        <p className="mb-4 text-muted-foreground">
+          {'사용량을 role="meter" + aria-valuenow / aria-valuemin / aria-valuemax로 전달합니다.'}
+        </p>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'수치를 시각 요소만이 아니라 텍스트로 접근 가능하게 제공하세요.'}</li>
+          <li key={0}>{'수치가 aria-label로 보조기술에 접근 가능하게 노출됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

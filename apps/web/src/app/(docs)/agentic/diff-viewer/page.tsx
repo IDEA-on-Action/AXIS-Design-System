@@ -5,6 +5,7 @@ import { Button } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
+import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
 
 type DiffViewMode = 'unified' | 'split'
@@ -310,11 +311,19 @@ export default function DiffViewerPage() {
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'추가/삭제 변경을 시각화하는 diff 뷰어입니다.'}
+          {
+            'diff 영역은 role="region"으로 그룹화되고, 뷰 모드 토글은 aria-pressed로 상태를 전달합니다.'
+          }
         </p>
+        <KeyboardTable
+          keys={[
+            { key: 'Tab', description: '뷰 모드 토글로 이동합니다.' },
+            { key: 'Enter / Space', description: '뷰 모드를 전환합니다.' },
+          ]}
+        />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'추가/삭제는 색상만이 아니라 기호(+/-)나 텍스트로도 구분하세요.'}</li>
-          <li key={1}>{'변경 요약을 텍스트로 제공해 색상 인식이 어려운 사용자를 지원하세요.'}</li>
+          <li key={0}>{'추가/삭제는 색상만이 아니라 마크업으로 구분됩니다.'}</li>
+          <li key={1}>{'장식 요소는 role="presentation"으로 처리됩니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>
