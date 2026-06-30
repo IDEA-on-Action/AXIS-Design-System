@@ -25,7 +25,7 @@ export default function DocsPage() {
                 <Terminal className="h-4 w-4" />
                 <span>Terminal</span>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="명령어 복사">
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
@@ -47,7 +47,7 @@ export default function DocsPage() {
                 <Terminal className="h-4 w-4" />
                 <span>Terminal</span>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="명령어 복사">
                 <Copy className="h-4 w-4" />
               </Button>
             </div>
@@ -69,7 +69,7 @@ export default function DocsPage() {
                 <Terminal className="h-4 w-4" />
                 <span>Terminal</span>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="명령어 복사">
                 <Copy className="h-4 w-4" />
               </Button>
             </div>

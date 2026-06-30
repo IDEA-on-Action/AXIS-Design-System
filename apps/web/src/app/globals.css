@@ -15,7 +15,8 @@
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
+    /* WI-0022: muted 배경 위 텍스트 대비 4.5:1 충족 위해 46.1% -> 43% (a11y color-contrast) */
+    --muted-foreground: 240 3.8% 43%;
     --accent: 240 4.8% 95.9%;
     --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;

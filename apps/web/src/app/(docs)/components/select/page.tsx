@@ -57,7 +57,7 @@ export default function SelectPage() {
       <DocSection title="Usage">
         <div className="mb-4 p-6 rounded-lg border">
           <Select>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[180px]" aria-label="테마 선택">
               <SelectValue placeholder="Theme" />
             </SelectTrigger>
             <SelectContent>

@@ -54,7 +54,13 @@ export function InstallCommand() {
             {/* 명령어 */}
             <div className="flex items-center justify-between px-4 py-4">
               <code className="text-sm font-mono">{activeManager.command}</code>
-              <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={handleCopy}>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 shrink-0"
+                onClick={handleCopy}
+                aria-label={copied ? '복사됨' : '명령어 복사'}
+              >
                 {copied ? (
                   <Check className="h-3.5 w-3.5" />
                 ) : (
