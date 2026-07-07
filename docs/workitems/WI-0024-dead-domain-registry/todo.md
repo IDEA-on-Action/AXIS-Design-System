@@ -21,7 +21,9 @@
 ## Phase 4: 검증 ✅
 - [x] typecheck(force) / lint / CLI test(58) / build:web 회귀 0
 - [x] 로컬 out/ 반영 검증 (index.json 생성, /ui/ 0, ds 0)
-- [ ] axis.minu.best SSL 완료 + 배포 후 실 URL 200 재검증 (후속)
+- [x] PR #76 머지 + Deploy Production success
+- [x] pages.dev 실 검증: `/r/index.json` 200(homepage=axis), `/components/button/` 200, 라이브러리 url=`/components/`
+- [ ] ⚠️ **axis.minu.best 커스텀 도메인 403** - CF Pages "Custom domains"에 `axis.minu.best`가 이 프로젝트(axis-design-system)로 바인딩됐는지 확인 필요 (사용자 CF 대시보드). 바인딩 전까지 CLI가 axis.minu.best/r로 403
 
 ## DoD
 - [x] release-notes.md
