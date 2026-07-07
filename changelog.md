@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.3] - 2026-07-07
+
+### 개요
+
+WI-0024: 죽은 커스텀 도메인 참조 정리 및 레지스트리/CLI 경로 정합.
+`@axis-ds/cli`, `@axis-ds/mcp` 패치 릴리스 (프로덕션 점검에서 CLI가 죽은 도메인을 참조해 실사용자 설치가 깨지던 문제 해소).
+
+### Fixed
+
+- **죽은 도메인 참조 제거**: CLI `REGISTRY_URL`/`$schema`, 템플릿 URL, 레지스트리 `homepage`가 참조하던 `ds.minu.best`(NXDOMAIN)를 `axis.minu.best`로 통합. 미설정 시 `npx @axis-ds/cli`의 컴포넌트/템플릿 fetch가 실패하던 문제 해소
+- **문서 URL 경로 정합**: `getDocsUrl`이 UI 컴포넌트를 `/ui/`(실 라우트 404)로 생성하던 것을 `/components/`로 수정 (agentic은 `/agentic/` 유지). 커밋된 라이브러리 메타 26파일 코드모드 반영
+- **레지스트리 index.json 방출**: 병합 레지스트리가 `registry.json`만 배포하고 `index.json`을 누락해 collector가 `${registryUrl}/index.json`에서 404 나던 문제 수정
+- **CI 워크플로 정상화**: 만성 실패하던 `Sync Project Board`의 3중 결함 수정 (pnpm 버전 이중 지정 / `npx axis-cli` 오호출 → `node dist` / 빌드 필터 `axis-cli` → `@axis-ds/cli`). `Publish Packages`의 EOTP(npm 2FA)는 Automation 토큰으로 해소
+
+### Changed
+
+- `@axis-ds/cli` 1.1.2 → 1.1.3, `@axis-ds/mcp` 1.1.2 → 1.1.3 (changeset patch)
+- npm 배포 인증을 Automation 토큰으로 전환 - CI 릴리스가 OTP 없이 자동 배포
+
+### Breaking Changes
+
+- 해당 없음 (내부 참조 URL/경로 정정, 공개 API 무변경)
+
+---
+
 ## [1.0.0] - 2026-02-01
 
 ### 개요
