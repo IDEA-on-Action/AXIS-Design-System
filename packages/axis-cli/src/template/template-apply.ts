@@ -185,7 +185,7 @@ export async function initTemplate(
   const configPath = path.join(resolved, "axis.config.json");
   if (!(await fs.pathExists(configPath))) {
     const axisConfig = {
-      $schema: "https://ds.minu.best/schema.json",
+      $schema: "https://axis.minu.best/schema.json",
       template: selectedSlug,
       componentsDir: "./components/ui",
       tailwindConfig: "./tailwind.config.ts",

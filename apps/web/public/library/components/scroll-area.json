@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/scroll-area"
+    "url": "https://axis.minu.best/components/scroll-area"
   },
   "tags": [
     "forwardRef"

@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "axis",
-  "homepage": "https://ds.minu.best",
+  "homepage": "https://axis.minu.best",
   "items": [
     {
       "name": "button",

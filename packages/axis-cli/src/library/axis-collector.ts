@@ -316,6 +316,8 @@ export class AxisCollector extends BaseCollector {
    */
   private getDocsUrl(slug: string, category: ComponentCategory): string {
     const baseUrl = "https://axis.minu.best";
-    return `${baseUrl}/${category}/${slug}`;
+    // 문서 사이트 라우트: agentic 컴포넌트만 /agentic/, 그 외 전 카테고리는 /components/
+    const route = category === "agentic" ? "agentic" : "components";
+    return `${baseUrl}/${route}/${slug}`;
   }
 }

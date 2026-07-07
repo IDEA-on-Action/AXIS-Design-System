@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/accordion"
+    "url": "https://axis.minu.best/components/accordion"
   },
   "tags": [
     "forwardRef",

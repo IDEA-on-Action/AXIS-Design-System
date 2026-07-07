@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/separator"
+    "url": "https://axis.minu.best/components/separator"
   },
   "tags": [
     "forwardRef"

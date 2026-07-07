@@ -12,7 +12,7 @@ import { LibraryCurator, Publisher } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
 import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
 
-const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://ds.minu.best/r";
+const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
 
 interface ComponentInfo {
   name: string;
@@ -66,7 +66,7 @@ program
 
     // axis.config.json 생성
     const axisConfig = {
-      $schema: "https://ds.minu.best/schema.json",
+      $schema: "https://axis.minu.best/schema.json",
       componentsDir: config.componentsDir,
       tailwindConfig: config.tailwindConfig,
       globalCss: config.globalCss,

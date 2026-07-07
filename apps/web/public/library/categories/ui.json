@@ -793,7 +793,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/badge"
+        "url": "https://axis.minu.best/components/badge"
       },
       "tags": [
         "forwardRef",
@@ -825,7 +825,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/button"
+        "url": "https://axis.minu.best/components/button"
       },
       "tags": [
         "forwardRef",
@@ -859,7 +859,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/card"
+        "url": "https://axis.minu.best/components/card"
       },
       "tags": [
         "forwardRef",
@@ -889,7 +889,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/dialog"
+        "url": "https://axis.minu.best/components/dialog"
       },
       "tags": [
         "forwardRef",
@@ -921,7 +921,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/input"
+        "url": "https://axis.minu.best/components/input"
       },
       "tags": [
         "forwardRef",
@@ -952,7 +952,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/label"
+        "url": "https://axis.minu.best/components/label"
       },
       "tags": [
         "forwardRef"
@@ -984,7 +984,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/select"
+        "url": "https://axis.minu.best/components/select"
       },
       "tags": [
         "forwardRef",
@@ -1016,7 +1016,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/separator"
+        "url": "https://axis.minu.best/components/separator"
       },
       "tags": [
         "forwardRef"
@@ -1047,7 +1047,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/tabs"
+        "url": "https://axis.minu.best/components/tabs"
       },
       "tags": [
         "forwardRef",
@@ -1079,7 +1079,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/ui/toast"
+        "url": "https://axis.minu.best/components/toast"
       },
       "tags": [
         "forwardRef",
