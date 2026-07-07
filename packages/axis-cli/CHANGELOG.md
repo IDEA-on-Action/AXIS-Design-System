@@ -1,5 +1,13 @@
 # @axis-ds/cli
 
+## 1.1.3
+
+### Patch Changes
+
+- fix: 죽은 도메인 `ds.minu.best` 참조를 `axis.minu.best`로 통합
+  - CLI 기본 `REGISTRY_URL`/`$schema`, 템플릿 URL을 살아있는 도메인으로 교체 (기존 `ds.minu.best`는 NXDOMAIN이라 컴포넌트/템플릿 fetch 실패)
+  - 문서 URL 경로 정합: `getDocsUrl`이 `agentic`은 `/agentic/`, 그 외 카테고리는 `/components/`로 매핑 (기존 `/ui/`는 실 라우트 404)
+
 ## 1.1.0
 
 ### Minor Changes
