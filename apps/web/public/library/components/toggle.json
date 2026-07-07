@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/toggle"
+    "url": "https://axis.minu.best/components/toggle"
   },
   "tags": [
     "forwardRef",

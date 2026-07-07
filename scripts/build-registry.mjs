@@ -166,7 +166,14 @@ async function buildMergedRegistry() {
   const mergedRegistry = {
     $schema: "https://ui.shadcn.com/schema/registry.json",
     name: "axis",
-    homepage: "https://ds.minu.best",
+    homepage: "https://axis.minu.best",
+    items: allItems
+  };
+
+  // 컬렉터(shadcn-collector 등)가 ${registryUrl}/index.json 을 조회하므로 동일 데이터를 index.json 으로도 방출
+  const mergedIndex = {
+    name: "axis",
+    homepage: "https://axis.minu.best",
     items: allItems
   };
 
@@ -184,6 +191,10 @@ async function buildMergedRegistry() {
     // registry.json 저장
     const registryPath = path.join(outputDir, 'registry.json');
     await fs.writeFile(registryPath, JSON.stringify(mergedRegistry, null, 2));
+
+    // index.json 저장 (컬렉터 조회 경로)
+    const indexPath = path.join(outputDir, 'index.json');
+    await fs.writeFile(indexPath, JSON.stringify(mergedIndex, null, 2));
 
     console.log(`  📁 ${deployDir}/`);
   }

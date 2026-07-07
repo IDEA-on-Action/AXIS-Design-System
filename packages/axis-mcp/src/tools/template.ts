@@ -70,7 +70,7 @@ interface CheckResult {
 // --- 레지스트리 클라이언트 ---
 
 const TEMPLATE_REGISTRY_URL =
-  process.env.AXIS_TEMPLATE_URL || "https://ds.minu.best/templates";
+  process.env.AXIS_TEMPLATE_URL || "https://axis.minu.best/templates";
 
 async function fetchTemplateIndex(): Promise<TemplateIndex> {
   const url = `${TEMPLATE_REGISTRY_URL}/index.json`;

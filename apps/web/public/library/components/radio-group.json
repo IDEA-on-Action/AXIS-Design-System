@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/radio-group"
+    "url": "https://axis.minu.best/components/radio-group"
   },
   "tags": [
     "forwardRef",

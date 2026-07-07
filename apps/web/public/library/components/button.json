@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/ui/button"
+    "url": "https://axis.minu.best/components/button"
   },
   "tags": [
     "forwardRef",
