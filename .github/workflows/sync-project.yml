@@ -36,23 +36,22 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Install dependencies
         run: pnpm install
 
       - name: Build axis-cli
-        run: pnpm --filter axis-cli build
+        run: pnpm --filter @axis-ds/cli build
 
       - name: Sync to GitHub Project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            npx axis-cli sync --dry-run --verbose
+          if [ "$DRY_RUN" = "true" ]; then
+            node packages/axis-cli/dist/index.js sync --dry-run --verbose
           else
-            npx axis-cli sync --verbose
+            node packages/axis-cli/dist/index.js sync --verbose
           fi
 
       - name: Update mapping file
