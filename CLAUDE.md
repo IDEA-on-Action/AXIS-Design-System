@@ -3,7 +3,7 @@
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
 **현재 버전**: 1.0.0 | **상태**: ✅ Active Development
-**npm 배포**: v1.1.1 배포 완료 (2026-02-01)
+**npm 배포**: v1.1.3 배포 완료 (2026-07-07)
 
 ---
 
@@ -127,7 +127,7 @@ pnpm publish -r --access public --no-git-checks  # 수동 배포
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
 - **publish 부수효과**: 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
 - **CI 배포**: `.github/workflows/publish.yml` - `NPM_TOKEN` GitHub Secret 필요
-- **현재 배포 버전**: 1.1.1 (2026-02-01 배포 완료)
+- **현재 배포 버전**: 1.1.3 (2026-07-07 배포 완료, WI-0024 도메인 fix)
 
 ---
 

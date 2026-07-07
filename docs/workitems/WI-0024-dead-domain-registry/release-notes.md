@@ -34,6 +34,13 @@
 - 로컬 산출물: `out/r/index.json` 생성 + homepage=`axis.minu.best`, 라이브러리 `/ui/` 잔여 0, `ds.minu.best` 잔여 0(changelog 제외)
 - 경로 정합 예시: `button`(ui)→`/components/button`, `agent-avatar`(agentic)→`/agentic/agent-avatar`
 
+## npm 릴리스 (2026-07-07)
+
+- `@axis-ds/cli` 1.1.2 → **1.1.3**, `@axis-ds/mcp` 1.1.2 → **1.1.3** (PR #77, changeset patch)
+- CI publish EOTP(2FA) 이슈는 npm **Automation 토큰**으로 `NPM_TOKEN` 교체하여 해소 → 이후 릴리스 OTP 불필요
+- 부수 효과: 그동안 EOTP로 밀려있던 linked 그룹(tokens/ui-react/agentic-ui/theme) 로컬 1.1.3도 함께 배포됨 → 6패키지 전부 npm 1.1.3
+- 배포본 실측: `@axis-ds/cli@1.1.3` tarball에 `ds.minu.best` 0건, `REGISTRY_URL=https://axis.minu.best/r`, getDocsUrl 경로 매핑 확인
+
 ## 후속 (backlog)
 
 - 배포 후 실 URL 200 재검증: `axis.minu.best/components/<slug>`, `/r/index.json`, `/r/registry.json` (axis.minu.best SSL 프로비저닝 완료 후)
