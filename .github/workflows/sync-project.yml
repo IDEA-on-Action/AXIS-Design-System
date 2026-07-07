@@ -46,11 +46,12 @@ jobs:
       - name: Sync to GitHub Project
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run }}
         run: |
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            npx axis-cli sync --dry-run --verbose
+          if [ "$DRY_RUN" = "true" ]; then
+            node packages/axis-cli/dist/index.js sync --dry-run --verbose
           else
-            npx axis-cli sync --verbose
+            node packages/axis-cli/dist/index.js sync --verbose
           fi
 
       - name: Update mapping file
