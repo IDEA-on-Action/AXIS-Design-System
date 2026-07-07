@@ -1,6 +1,6 @@
 # WI-0024: 죽은 도메인 참조 정리 + 레지스트리 URL/경로 정합 TODO
 
-> PRD: [prd.md](./prd.md) | 상태: ✅ 코드 완료 (배포 후 실 URL 재검증 후속)
+> PRD: [prd.md](./prd.md) | 상태: ✅ 완료 (배포·검증 완료, PR #76)
 
 ## Phase 1: ds.minu.best → axis.minu.best 통합 ✅
 - [x] `axis-cli/src/index.ts:15` REGISTRY_URL 기본값 → `https://axis.minu.best/r`
@@ -23,7 +23,10 @@
 - [x] 로컬 out/ 반영 검증 (index.json 생성, /ui/ 0, ds 0)
 - [x] PR #76 머지 + Deploy Production success
 - [x] pages.dev 실 검증: `/r/index.json` 200(homepage=axis), `/components/button/` 200, 라이브러리 url=`/components/`
-- [ ] ⚠️ **axis.minu.best 커스텀 도메인 403** - CF Pages "Custom domains"에 `axis.minu.best`가 이 프로젝트(axis-design-system)로 바인딩됐는지 확인 필요 (사용자 CF 대시보드). 바인딩 전까지 CLI가 axis.minu.best/r로 403
+- [x] axis.minu.best 커스텀 도메인 바인딩 완료 (사용자 확인, 브라우저 정상 접속). 샌드박스는 CF WAF("Attention Required")로 자동화 요청 차단되어 독립 검증 불가 - 배포 문제 아님, pages.dev 200으로 등가 검증됨
+
+## 후속 (별도 backlog)
+- [ ] 🔎 CF WAF/Bot Fight Mode가 `/r/*.json` 레지스트리 프로그램 요청도 차단하는지 확인 권장. CLI가 `axis.minu.best/r`를 fetch하므로, 사용자 CI/자동화 환경에서 챌린지되면 설치 실패 가능 → 레지스트리 경로 WAF skip rule 검토
 
 ## DoD
 - [x] release-notes.md
