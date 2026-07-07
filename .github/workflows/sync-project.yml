@@ -41,7 +41,7 @@ jobs:
         run: pnpm install
 
       - name: Build axis-cli
-        run: pnpm --filter axis-cli build
+        run: pnpm --filter @axis-ds/cli build
 
       - name: Sync to GitHub Project
         env:
