@@ -168,12 +168,13 @@ jobs:
             });
 
   # ===========================================
-  # CD: Production 배포 (main push)
+  # CD: Production 배포 (main push 또는 main 수동 dispatch)
+  # workflow_dispatch 허용: GitHub Actions 이벤트 장애 시 수동 재배포 경로 (2026-08-07)
   # ===========================================
   deploy-production:
     name: Deploy Production
     needs: ci
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-latest
 
     steps:
