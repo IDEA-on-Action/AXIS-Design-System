@@ -4,6 +4,12 @@ const axisPreset: Partial<Config> = {
   darkMode: ['class'],
   theme: {
     extend: {
+      fontFamily: {
+        // 토큰 SSOT(--axis-font-family-*) 참조. 변수 미로드 환경 대비 fallback 포함
+        sans: "var(--axis-font-family-sans, 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif)",
+        serif: "var(--axis-font-family-serif, ui-serif, Georgia, serif)",
+        mono: "var(--axis-font-family-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace)",
+      },
       colors: {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
