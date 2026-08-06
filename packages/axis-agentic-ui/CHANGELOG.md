@@ -1,5 +1,13 @@
 # @axis-ds/agentic-ui
 
+## 1.2.0
+
+### Patch Changes
+
+- Updated dependencies [8c36953]
+  - @axis-ds/tokens@1.2.0
+  - @axis-ds/ui-react@1.2.0
+
 ## 1.1.3
 
 ### Patch Changes
