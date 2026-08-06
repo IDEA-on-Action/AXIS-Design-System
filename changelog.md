@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-08-07
+
+### 개요
+
+Pretendard를 디자인 시스템 대표 폰트로 채택.
+`@axis-ds/tokens`, `@axis-ds/ui-react`, `@axis-ds/agentic-ui`, `@axis-ds/theme` linked minor 릴리스 (1.1.3 → 1.2.0).
+
+### Added
+
+- **Pretendard 대표 폰트**: `font.family.sans` 토큰을 Pretendard Variable 우선 스택(`'Pretendard Variable', Pretendard, -apple-system, …, 'Noto Sans KR', …`)으로 변경, `--axis-font-family-sans` CSS 변수로 방출
+- **tailwind preset fontFamily**: sans/serif/mono 매핑 추가 - 토큰 CSS 변수 참조 + 변수 미로드 환경 fallback. 프리셋 소비자는 `font-sans`로 Pretendard 스택 적용
+- **문서 사이트 폰트 번들**: Inter(next/font/google) 제거, `pretendard@1.3.9` 동적 서브셋(unicode-range) CSS 적용
+
+### Changed
+
+- npm 인증 구조 정리: 프로젝트 `.npmrc`의 authToken 라인 제거 (로컬은 `~/.npmrc`, CI는 changesets/action이 `NPM_TOKEN` secret으로 자동 생성 - 본 릴리스에서 실측 검증 완료)
+- `deploy-production` job에 workflow_dispatch 허용 (GitHub Actions 이벤트 장애 시 수동 재배포 경로, main ref 가드 유지)
+
+### Breaking Changes
+
+- 해당 없음 (폰트 미설치 소비 환경은 시스템 폰트·Noto Sans KR로 자연 강등)
+
+---
+
 ## [1.1.3] - 2026-07-07
 
 ### 개요
