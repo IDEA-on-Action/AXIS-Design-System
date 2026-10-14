@@ -26,7 +26,9 @@
     "secondary": { "value": "{color.gray.700}" },
     "focus": { "value": "{color.blue.400}" },
     "error": { "value": "{color.red.400}" },
-    "success": { "value": "{color.green.400}" }
+    "success": { "value": "{color.green.400}" },
+    "info": { "value": "{color.blue.400}" },
+    "warning": { "value": "{color.yellow.400}" }
   },
   "icon": {
     "default": { "value": "{color.gray.400}" },
@@ -35,6 +37,38 @@
     "brand": { "value": "{color.blue.400}" },
     "success": { "value": "{color.green.400}" },
     "warning": { "value": "{color.yellow.400}" },
-    "error": { "value": "{color.red.400}" }
+    "error": { "value": "{color.red.400}" },
+    "info": { "value": "{color.blue.400}" }
+  },
+  "interactive": {
+    "primary": { "value": "{color.blue.500}" }
+  },
+  "status": {
+    "running": { "value": "{color.blue.500}" },
+    "running-strong": { "value": "{color.blue.600}" },
+    "success": { "value": "{color.green.500}" },
+    "success-strong": { "value": "{color.green.600}" },
+    "error": { "value": "{color.red.500}" },
+    "error-strong": { "value": "{color.red.600}" },
+    "error-border": { "value": "{color.red.200}" },
+    "warning": { "value": "{color.yellow.500}" },
+    "warning-strong": { "value": "{color.yellow.600}" },
+    "info": { "value": "{color.blue.500}" },
+    "neutral": { "value": "{color.gray.400}" },
+    "neutral-muted": { "value": "{color.gray.300}" },
+    "neutral-strong": { "value": "{color.gray.600}" },
+    "neutral-bg": { "value": "{color.gray.100}" }
+  },
+  "diff": {
+    "added": { "value": "{color.green.500}" },
+    "removed": { "value": "{color.red.500}" },
+    "added-text": { "value": "{color.green.600}" },
+    "removed-text": { "value": "{color.red.600}" }
+  },
+  "agent": {
+    "avatar-assistant": { "value": "{color.purple.500}" },
+    "avatar-tool": { "value": "{color.blue.500}" },
+    "avatar-system": { "value": "{color.gray.600}" },
+    "message-user-bg": { "value": "{color.blue.500}" }
   }
 }

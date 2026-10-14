@@ -18,7 +18,7 @@ describe("Badge", () => {
   it("variant=secondary 시 secondary 클래스 포함", () => {
     const { container } = render(<Badge variant="secondary">보조</Badge>);
     const badge = container.firstElementChild!;
-    expect(badge.className).toContain("bg-[var(--axis-bg-muted)]");
+    expect(badge.className).toContain("bg-[var(--axis-surface-secondary)]");
   });
 
   it("variant=destructive 시 destructive 클래스 포함", () => {

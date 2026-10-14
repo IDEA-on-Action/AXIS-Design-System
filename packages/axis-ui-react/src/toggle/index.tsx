@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils";
 
 const toggleVariants = cva(
-  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-[var(--axis-surface-primary)] transition-colors hover:bg-[var(--axis-surface-secondary)] hover:text-[var(--axis-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-ring)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-[var(--axis-surface-secondary)] data-[state=on]:text-[var(--axis-text-primary)] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-[var(--axis-surface-default)] transition-colors hover:bg-[var(--axis-surface-secondary)] hover:text-[var(--axis-text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=on]:bg-[var(--axis-surface-secondary)] data-[state=on]:text-[var(--axis-text-primary)] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {

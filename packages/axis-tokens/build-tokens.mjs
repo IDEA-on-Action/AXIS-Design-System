@@ -116,6 +116,10 @@ declare const tokens: {
   text: Record<string, string>;
   border: Record<string, string>;
   icon: Record<string, string>;
+  interactive: Record<string, string>;
+  status: Record<string, string>;
+  diff: Record<string, string>;
+  agent: Record<string, string>;
   button: Record<string, Record<string, string>>;
   input: Record<string, Record<string, string>>;
   card: Record<string, Record<string, string>>;

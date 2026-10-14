@@ -59,7 +59,7 @@ export function FeedbackButtons({
           "rounded-md transition-colors",
           sizeStyles[size],
           feedback === "like"
-            ? "text-[var(--axis-color-green-500)] bg-[var(--axis-color-green-500)]/10"
+            ? "text-[var(--axis-status-success)] bg-[var(--axis-status-success)]/10"
             : "text-[var(--axis-text-tertiary)] hover:text-[var(--axis-text-secondary)] hover:bg-[var(--axis-surface-secondary)]"
         )}
       >
@@ -75,7 +75,7 @@ export function FeedbackButtons({
           "rounded-md transition-colors",
           sizeStyles[size],
           feedback === "dislike"
-            ? "text-[var(--axis-color-red-500)] bg-[var(--axis-color-red-500)]/10"
+            ? "text-[var(--axis-status-error)] bg-[var(--axis-status-error)]/10"
             : "text-[var(--axis-text-tertiary)] hover:text-[var(--axis-text-secondary)] hover:bg-[var(--axis-surface-secondary)]"
         )}
       >

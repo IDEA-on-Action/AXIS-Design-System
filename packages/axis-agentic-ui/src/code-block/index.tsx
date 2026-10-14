@@ -74,7 +74,7 @@ export function CodeBlock({
         >
           {copied ? (
             <>
-              <svg className="w-3.5 h-3.5 text-[var(--axis-color-green-500)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-[var(--axis-status-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>복사됨</span>

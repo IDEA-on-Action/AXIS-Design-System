@@ -19,6 +19,7 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'turbo.json'
+      - 'scripts/**'
       - '.github/workflows/frontend.yml'
   pull_request:
     branches: [main]
@@ -28,6 +29,7 @@ on:
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'turbo.json'
+      - 'scripts/**'
       - '.github/workflows/frontend.yml'
   workflow_dispatch:
 
@@ -72,6 +74,10 @@ jobs:
 
       - name: Type check
         run: pnpm type-check
+
+      # tokens dist는 앞 단계(type-check의 ^build)에서 생성된다. dist가 없으면 종료 코드 2(측정 실패)
+      - name: Token reference check
+        run: pnpm check-token-refs
 
       - name: Test
         run: pnpm test

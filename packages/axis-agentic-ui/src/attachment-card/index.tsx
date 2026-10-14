@@ -83,7 +83,7 @@ export function AttachmentCard({
       className={cn(
         "flex items-center gap-3 rounded-lg border p-3",
         "bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]",
-        status === "error" && "border-[var(--axis-color-red-500)]/30",
+        status === "error" && "border-[var(--axis-status-error)]/30",
         className
       )}
     >
@@ -138,7 +138,7 @@ export function AttachmentCard({
         {status === "uploading" && progress !== undefined && (
           <div className="mt-1.5 h-1 rounded-full bg-[var(--axis-surface-secondary)] overflow-hidden">
             <div
-              className="h-full rounded-full bg-[var(--axis-color-blue-500)] transition-all"
+              className="h-full rounded-full bg-[var(--axis-status-running)] transition-all"
               style={{ width: `${progress}%` }}
               role="progressbar"
               aria-valuenow={progress}

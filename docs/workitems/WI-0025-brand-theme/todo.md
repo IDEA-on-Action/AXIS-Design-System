@@ -40,12 +40,12 @@
 - [ ] primitive 오버라이드 안내(`theme-customization.md` 92~97행, `component-usage.md` 175행) 동작 변경을 1.2.1 릴리스 노트에 적을지, 가이드 정정을 FR-10과 묶을지 (2.5 D-7)
 
 ### 3절 M2 브랜드 빌드 · ThemeProvider (M2)
-- [ ] exports 방식: 명시형 `./css/brands/ontology`(권장) vs 패턴형 `./css/brands/*`(pack-smoke 수정 필요) (3 결정 1, 사용자 판단 필수)
+- [x] exports 방식: 명시형 `./css/brands/ontology`(권장) vs 패턴형 `./css/brands/*`(pack-smoke 수정 필요) (3 결정 1, 사용자 판단 필수) → ✅ 2026-10-15: 명시형 확정
 - [ ] `brand.json` 최종 경로(`dist/brands/<brand>/brand.json` 제안)와 목록 파일 `dist/brands/index.json` 생성 여부, WI-0028 통보 (3 결정 2)
-- [ ] shadcn 층 생성 방식: 브랜드 JSON `shadcn` 섹션 그대로 출력(권장) vs `buildShadcnVars` 유도 (3 결정 3, 사용자 판단 필수)
-- [ ] 다크 선택자 수: PRD FR-5의 3개 vs 초안의 `[data-theme="dark"] [data-brand]` 포함 4개 (3 결정 4, 사용자 판단 필수)
+- [x] shadcn 층 생성 방식: 브랜드 JSON `shadcn` 섹션 그대로 출력(권장) vs `buildShadcnVars` 유도 (3 결정 3, 사용자 판단 필수) → ✅ 2026-10-15: shadcn 섹션 출력 확정
+- [x] 다크 선택자 수: PRD FR-5의 3개 vs 초안의 `[data-theme="dark"] [data-brand]` 포함 4개 (3 결정 4, 사용자 판단 필수) → ✅ 2026-10-15: PRD FR-5 3종 확정
 - [ ] 토큰 아닌 규칙(초안 221줄 `word-break: keep-all`) 처리: 문서 안내 vs `brand.json` 부가 CSS 필드 (3 결정 5)
-- [ ] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수)
+- [x] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수) → ✅ 2026-10-15: removeItem 확정
 - [ ] FOUC 방지 인라인 스크립트를 theme 패키지에서 제공할지 (PRD 범위 밖) (3 결정 7)
 - [ ] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8)
 - [ ] V7 "색 값" 판정 기준: 값 형식 판정 vs component 토큰 테마 무관 표지 (3 결정 9)
@@ -69,66 +69,66 @@
 ## Phase M1: 트랙 A 토큰 정합 (1.2.1 patch)
 
 ### M1-1 토큰 추가 (`packages/axis-tokens`)
-- [ ] `src/semantic/light.json` · `dark.json`에 `interactive.primary` = `{color.blue.500}` 두 벌 추가 (FR-1 · AC1)
-- [ ] Alert용 `border.info` · `border.warning` · `icon.info` 신설, 라이트 · 다크 값은 기존 같은 계열(`border.success|error`, `icon.success|warning|error`) 규칙을 따름 (D-a · FR-1 · AC1)
-- [ ] `light.json` · `dark.json` `icon` 다음에 `status` 범주 14개 추가 (running · running-strong · success · success-strong · error · error-strong · error-border · warning · warning-strong · info · neutral · neutral-muted · neutral-strong · neutral-bg, 2단 구조) (FR-2 · AC2)
-- [ ] 같은 위치에 `diff` 범주 4개 추가 (added · removed · added-text · removed-text) (FR-2 · AC2)
-- [ ] 같은 위치에 `agent` 범주 4개 추가 (avatar-assistant · avatar-tool · avatar-system · message-user-bg) (FR-2 · AC2)
-- [ ] `build-tokens.mjs` `typescript/axis-declarations` 하드코딩 범주에 `status` · `diff` · `agent` 추가해 `dist/js/tokens.d.ts` 정합 (FR-2)
-- [ ] `pnpm build` 후 `variables.css`에 신설 23개 이름 출현, 기존 223개 이름 값 불변, `shadcn-compat.css` sha256 불변 확인 (FR-1 · FR-2 · AC1)
+- [x] `src/semantic/light.json` · `dark.json`에 `interactive.primary` = `{color.blue.500}` 두 벌 추가 (FR-1 · AC1)
+- [x] Alert용 `border.info` · `border.warning` · `icon.info` 신설, 라이트 · 다크 값은 기존 같은 계열(`border.success|error`, `icon.success|warning|error`) 규칙을 따름 (D-a · FR-1 · AC1)
+- [x] `light.json` · `dark.json` `icon` 다음에 `status` 범주 14개 추가 (running · running-strong · success · success-strong · error · error-strong · error-border · warning · warning-strong · info · neutral · neutral-muted · neutral-strong · neutral-bg, 2단 구조) (FR-2 · AC2)
+- [x] 같은 위치에 `diff` 범주 4개 추가 (added · removed · added-text · removed-text) (FR-2 · AC2)
+- [x] 같은 위치에 `agent` 범주 4개 추가 (avatar-assistant · avatar-tool · avatar-system · message-user-bg) (FR-2 · AC2)
+- [x] `build-tokens.mjs` `typescript/axis-declarations` 하드코딩 범주에 `status` · `diff` · `agent` 추가해 `dist/js/tokens.d.ts` 정합 (FR-2)
+- [x] `pnpm build` 후 `variables.css`에 신설 23개 이름 출현, 기존 223개 이름 값 불변, `shadcn-compat.css` sha256 불변 확인 (FR-1 · FR-2 · AC1)
 
 ### M1-2 ui-react 정의 누락 해소 (`packages/axis-ui-react/src`)
-- [ ] `alert/index.tsx`: 11행 `surface-primary` → `surface-default`, 12 · 14 · 16 · 18행 접두 누락 16개 → semantic `surface-*` · `text-*` · `border-*` · `icon-*`(info · success · warning · error) 매핑 (D-a) (FR-1 · AC1)
-- [ ] `alert/alert.test.tsx`: 17 · 24 · 25 · 31 · 32 · 38 · 39 · 45 · 46행 단언을 새 이름으로 수정 (FR-1 · AC1)
-- [ ] `badge/index.tsx` 13행 `bg-muted` → `surface-secondary` (FR-1 · AC1)
-- [ ] `badge/badge.test.tsx` 21행 단언 수정 (FR-1 · AC1)
-- [ ] `progress`: 26행 `brand-500` → `surface-brand`(D-b 결정 반영), 27~29행 `green|yellow|red-500` → `--axis-color-*` (FR-1 · AC1)
-- [ ] `checkbox` 17 · 18행: `surface-primary` → `surface-default`, `ring` → `border-focus` (20행 `interactive-primary`는 신설 토큰으로 유지) (FR-1 · AC1)
-- [ ] `radio-group` 27 · 28행: `surface-primary` · `ring` 교체 (30행 유지) (FR-1 · AC1)
-- [ ] `switch` 13행: `surface-primary` · `ring` 교체 (15행 유지) (FR-1 · AC1)
-- [ ] `slider` 34행: `surface-primary` 2회 · `ring` 교체 (28 · 34행 `interactive-primary` 유지) (FR-1 · AC1)
-- [ ] `textarea` 11 · 13 · 15행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
-- [ ] `toggle` 7행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
-- [ ] `sheet` 35 · 73행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
-- [ ] `popover` 22행, `command` 16행, `dropdown-menu` 73 · 92행: `surface-primary` → `surface-default` (FR-1 · AC1)
+- [x] `alert/index.tsx`: 11행 `surface-primary` → `surface-default`, 12 · 14 · 16 · 18행 접두 누락 16개 → semantic `surface-*` · `text-*` · `border-*` · `icon-*`(info · success · warning · error) 매핑 (D-a) (FR-1 · AC1) → 아이콘은 icon 토큰 대신 `text-current`(변형 글자색)로 둠: 라이트 success 2.18:1 · warning 1.85:1 비텍스트 대비 미달 (78eca9a)
+- [x] `alert/alert.test.tsx`: 17 · 24 · 25 · 31 · 32 · 38 · 39 · 45 · 46행 단언을 새 이름으로 수정 (FR-1 · AC1)
+- [x] `badge/index.tsx` 13행 `bg-muted` → `surface-secondary` (FR-1 · AC1)
+- [x] `badge/badge.test.tsx` 21행 단언 수정 (FR-1 · AC1)
+- [x] `progress`: 26행 `brand-500` → `surface-brand`(D-b 결정 반영), 27~29행 `green|yellow|red-500` → `--axis-color-*` (FR-1 · AC1)
+- [x] `checkbox` 17 · 18행: `surface-primary` → `surface-default`, `ring` → `border-focus` (20행 `interactive-primary`는 신설 토큰으로 유지) (FR-1 · AC1)
+- [x] `radio-group` 27 · 28행: `surface-primary` · `ring` 교체 (30행 유지) (FR-1 · AC1)
+- [x] `switch` 13행: `surface-primary` · `ring` 교체 (15행 유지) (FR-1 · AC1)
+- [x] `slider` 34행: `surface-primary` 2회 · `ring` 교체 (28 · 34행 `interactive-primary` 유지) (FR-1 · AC1)
+- [x] `textarea` 11 · 13 · 15행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
+- [x] `toggle` 7행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
+- [x] `sheet` 35 · 73행: `surface-primary` · `ring` 교체 (FR-1 · AC1)
+- [x] `popover` 22행, `command` 16행, `dropdown-menu` 73 · 92행: `surface-primary` → `surface-default` (FR-1 · AC1)
 
 ### M1-3 agentic-ui primitive 직접 참조 교체 (`packages/axis-agentic-ui/src/*/index.tsx`)
-- [ ] `plan-card` 28건: 상태 색 선 · 뱃지 · 단계 아이콘 · 진행 막대 · 승인/거절 버튼 → `status.*` (FR-2 · AC2)
-- [ ] `run-progress` 8건: 단계 점 · 헤더 점 · 진행 막대 → `status.*`, 163행 재시도 버튼 → `--axis-button-bg-default|hover` (FR-2 · AC2)
-- [ ] `agent-avatar` 6건: 접속 점 → `status.*`, 아바타 배경 → `agent.avatar-*` (FR-2 · AC2)
-- [ ] `approval-card` 6건: 색 선 · 아이콘 → `status.info|warning|error` (FR-2 · AC2)
-- [ ] `diff-viewer` 6건: 줄 배경 · 글자 · 줄 수 → `diff.*` (FR-2 · AC2)
-- [ ] `step-timeline` 5건, `token-usage-indicator` 5건, `tool-call-card` 4건 → `status.*` (FR-2 · AC2)
-- [ ] `recovery-banner` 4건: 테두리 → `status.error-border`, 아이콘 → `status.error`, 69행 버튼 → `--axis-button-destructive-bg-default|hover` (FR-2 · AC2)
-- [ ] `feedback-buttons` 4건, `attachment-card` 2건, `code-block` 1건 → `status.*` (FR-2 · AC2)
-- [ ] `message-bubble` 30행 → `agent.message-user-bg` (FR-2 · AC2)
-- [ ] Tailwind 불투명도 수식어(`/10` · `/30`) 유지 확인 (FR-2)
-- [ ] 버튼 글자 `text-white` 4곳(run-progress 163 · recovery-banner 69 · approval-card 67 · 70) → `--axis-button-text-default` · `--axis-button-destructive-text-default` (기본값 #FFFFFF, 화면 불변) (D-5 · FR-2)
-- [ ] `grep -rn 'var(--axis-color-' packages/axis-agentic-ui/src` 0건 확인 (FR-2 · AC2)
+- [x] `plan-card` 28건: 상태 색 선 · 뱃지 · 단계 아이콘 · 진행 막대 · 승인/거절 버튼 → `status.*` (FR-2 · AC2)
+- [x] `run-progress` 8건: 단계 점 · 헤더 점 · 진행 막대 → `status.*`, 163행 재시도 버튼 → `--axis-button-bg-default|hover` (FR-2 · AC2)
+- [x] `agent-avatar` 6건: 접속 점 → `status.*`, 아바타 배경 → `agent.avatar-*` (FR-2 · AC2)
+- [x] `approval-card` 6건: 색 선 · 아이콘 → `status.info|warning|error` (FR-2 · AC2)
+- [x] `diff-viewer` 6건: 줄 배경 · 글자 · 줄 수 → `diff.*` (FR-2 · AC2)
+- [x] `step-timeline` 5건, `token-usage-indicator` 5건, `tool-call-card` 4건 → `status.*` (FR-2 · AC2)
+- [x] `recovery-banner` 4건: 테두리 → `status.error-border`, 아이콘 → `status.error`, 69행 버튼 → `--axis-button-destructive-bg-default|hover` (FR-2 · AC2)
+- [x] `feedback-buttons` 4건, `attachment-card` 2건, `code-block` 1건 → `status.*` (FR-2 · AC2)
+- [x] `message-bubble` 30행 → `agent.message-user-bg` (FR-2 · AC2)
+- [ ] Tailwind 불투명도 수식어(`/10` · `/30`) 유지 확인 (FR-2) → 유지는 확인했으나 Tailwind 3.4.19가 `bg-[var(..)]/10` 형태의 CSS를 만들지 않아 main부터 효과 없음(agentic 11곳). 수정 여부 결정 대기
+- [x] 버튼 글자 `text-white` 4곳(run-progress 163 · recovery-banner 69 · approval-card 67 · 70) → `--axis-button-text-default` · `--axis-button-destructive-text-default` (기본값 #FFFFFF, 화면 불변) (D-5 · FR-2)
+- [x] `grep -rn 'var(--axis-color-' packages/axis-agentic-ui/src` 0건 확인 (FR-2 · AC2)
 
 ### M1-4 참조 검사 스크립트 · CI (FR-3)
-- [ ] `scripts/check-token-refs.mjs` 작성: 판정 1 정의 누락 · 판정 2 fallback · 판정 3 동적 이름 · 판정 4 agentic-ui primitive, `--css-dir` · `--src` 옵션, `[test]` 표지, 요약 줄 (FR-3 · AC1 · AC2)
-- [ ] 종료 코드 0(통과) · 1(위반) · 2(측정 실패: CSS 없음 · 정의 0 · 검사 파일 0 · 참조 0) 구현, `GITHUB_ACTIONS=true`면 `::error file=…,line=…::` 출력 (FR-3)
-- [ ] 루트 `package.json`에 `"check-token-refs": "node scripts/check-token-refs.mjs"` 추가 (FR-3)
-- [ ] `frontend.yml` `ci` job 「Type check」 다음에 `pnpm check-token-refs` step 추가 (FR-3 · AC1)
-- [ ] `frontend.yml` push · pull_request paths에 `'scripts/**'` 추가 (FR-3)
-- [ ] `publish.yml` 「Build」 다음 · 「Pack smoke」 앞에 같은 step 추가, paths `scripts/**`는 4절 결정 7 반영 (FR-3)
-- [ ] 착수 전 상태 실행: rc 1, 위반 140건(정의 누락 60 · primitive 80) 재현 확인 (FR-3 · AC1 · AC2)
-- [ ] 음성 대조군: `variables.css`에서 정의 1줄 삭제한 사본(`shadcn-compat.css` 함께 복사)으로 rc 1 · 참조 위치 전수 출력 확인 (FR-3)
-- [ ] 판정 규칙 대조군: fixture 4건(미정의 · fallback 미정의 · 템플릿 리터럴 · agentic `--axis-color-`)이 각각 정의 누락 · 정의 누락 · 판정 불가 · primitive 참조로 잡히는지 확인 (FR-3)
-- [ ] 측정 실패 대조군: 없는 `--css-dir`, 빈 `--src`에서 rc 2 확인 (FR-3)
-- [ ] 양성 대조군: M1 수정 후 rc 0, 요약 줄 검사 파일 67 · 참조 492건 규모 확인 (FR-3 · AC1 · AC2)
+- [x] `scripts/check-token-refs.mjs` 작성: 판정 1 정의 누락 · 판정 2 fallback · 판정 3 동적 이름 · 판정 4 agentic-ui primitive, `--css-dir` · `--src` 옵션, `[test]` 표지, 요약 줄 (FR-3 · AC1 · AC2)
+- [x] 종료 코드 0(통과) · 1(위반) · 2(측정 실패: CSS 없음 · 정의 0 · 검사 파일 0 · 참조 0) 구현, `GITHUB_ACTIONS=true`면 `::error file=…,line=…::` 출력 (FR-3)
+- [x] 루트 `package.json`에 `"check-token-refs": "node scripts/check-token-refs.mjs"` 추가 (FR-3)
+- [x] `frontend.yml` `ci` job 「Type check」 다음에 `pnpm check-token-refs` step 추가 (FR-3 · AC1)
+- [x] `frontend.yml` push · pull_request paths에 `'scripts/**'` 추가 (FR-3)
+- [ ] `publish.yml` 「Build」 다음 · 「Pack smoke」 앞에 같은 step 추가, paths `scripts/**`는 4절 결정 7 반영 (FR-3) → step 추가 완료, paths `scripts/**`는 결정 7 미결로 보류
+- [x] 착수 전 상태 실행: rc 1, 위반 140건(정의 누락 60 · primitive 80) 재현 확인 (FR-3 · AC1 · AC2)
+- [x] 음성 대조군: `variables.css`에서 정의 1줄 삭제한 사본(`shadcn-compat.css` 함께 복사)으로 rc 1 · 참조 위치 전수 출력 확인 (FR-3)
+- [x] 판정 규칙 대조군: fixture 4건(미정의 · fallback 미정의 · 템플릿 리터럴 · agentic `--axis-color-`)이 각각 정의 누락 · 정의 누락 · 판정 불가 · primitive 참조로 잡히는지 확인 (FR-3)
+- [x] 측정 실패 대조군: 없는 `--css-dir`, 빈 `--src`에서 rc 2 확인 (FR-3)
+- [x] 양성 대조군: M1 수정 후 rc 0, 요약 줄 검사 파일 67 · 참조 492건 규모 확인 (FR-3 · AC1 · AC2)
 - [ ] CI 배선 확인: 위반 1건 넣은 확인용 PR에서 「Token reference check」 step 실패 확인 후 되돌림 (FR-3)
 
 ### M1-5 생성 사본 재생성
-- [ ] `pnpm build:registry`로 `packages/axis-ui-react/registry/r` · `packages/axis-agentic-ui/registry/r` · `public/r` · `apps/web/public/r` 재생성 후 커밋 (badge.json `bg-muted` 3곳, agentic `--axis-color-` 80건 해소) (FR-1 · FR-2)
-- [ ] `apps/web/public/library` 재출력: axis-cli `publisher.ts` 명령 확인 후 components(ui-react 10 · agentic 6) · `categories/agentic.json` 갱신 (D-e 결정 반영) (FR-1 · FR-2)
-- [ ] 재생성 사본에서 미정의 24개 이름 · agentic `var(--axis-color-` 0건 grep 확인 (FR-1 · FR-2)
+- [x] `pnpm build:registry`로 `packages/axis-ui-react/registry/r` · `packages/axis-agentic-ui/registry/r` · `public/r` · `apps/web/public/r` 재생성 후 커밋 (badge.json `bg-muted` 3곳, agentic `--axis-color-` 80건 해소) (FR-1 · FR-2)
+- [x] `apps/web/public/library` 재출력: axis-cli `publisher.ts` 명령 확인 후 components(ui-react 10 · agentic 6) · `categories/agentic.json` 갱신 (D-e 결정 반영) (FR-1 · FR-2) → 생성기(library collect · publish)는 외부 소스까지 재수집해 쓰지 않고, src 변경 줄을 사본의 같은 줄에 적용 (4411bd3)
+- [x] 재생성 사본에서 미정의 24개 이름 · agentic `var(--axis-color-` 0건 grep 확인 (FR-1 · FR-2)
 
 ### M1-6 화면 변화 검증 (Q2)
-- [ ] 별도 Playwright 하네스(tokens CSS 로드)로 13개 컴포넌트 전후 스크린샷 비교, 라이트 · 다크, Tab 포커스 상태 포함 (D-d · FR-1 · Q2)
-- [ ] 정의 후 계산값이 plan 1.3 표 대상 값과 일치하는지 확인 (포커스 box-shadow 라이트 `rgb(59,130,246)` · 다크 `rgb(96,165,250)`) (FR-1 · AC1)
-- [ ] agentic-ui 13개 컴포넌트 라이트 · 다크 계산값 교체 전후 동일 확인 (FR-2 · AC2)
+- [x] 별도 Playwright 하네스(tokens CSS 로드)로 13개 컴포넌트 전후 스크린샷 비교, 라이트 · 다크, Tab 포커스 상태 포함 (D-d · FR-1 · Q2)
+- [x] 정의 후 계산값이 plan 1.3 표 대상 값과 일치하는지 확인 (포커스 box-shadow 라이트 `rgb(59,130,246)` · 다크 `rgb(96,165,250)`) (FR-1 · AC1)
+- [x] agentic-ui 13개 컴포넌트 라이트 · 다크 계산값 교체 전후 동일 확인 (FR-2 · AC2)
 
 ### M1-7 1.2.1 릴리스
 - [ ] `release-notes.md` 1.2.1 절: 화면 변화 컴포넌트 13개(Alert · Badge · Progress · Checkbox · RadioGroup · Switch · Slider · Textarea · Toggle · Sheet · Popover · DropdownMenu · Command), agentic-ui 화면 불변 명시 (FR-1 · Q2)
@@ -139,15 +139,16 @@
 - [ ] M1 PR(#83) 머지
 - [ ] 릴리스 PR을 다른 changeset보다 먼저 머지, publish 성공 확인 (D3)
 - [ ] `npm view @axis-ds/theme@1.2.1 dependencies` → `{ '@axis-ds/tokens': '1.2.1' }` 확인 (D5)
+- [ ] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
 - [ ] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
 - [ ] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3)
 - [ ] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화
 
 ### M1 DoD
-- [ ] `pnpm type-check` 통과
-- [ ] `pnpm lint` 통과
-- [ ] `pnpm build` 성공 (`build:registry` 포함)
-- [ ] `pnpm test` 통과 (alert · badge 수정 테스트 포함), `pnpm check-token-refs` rc 0
+- [x] `pnpm type-check` 통과
+- [x] `pnpm lint` 통과
+- [x] `pnpm build` 성공 (`build:registry` 포함)
+- [x] `pnpm test` 통과 (alert · badge 수정 테스트 포함), `pnpm check-token-refs` rc 0
 - [ ] 문서: plan.md 1 · 2 · 4절 결정 반영, release-notes.md 1.2.1 절, todo.md 체크
 
 ---
@@ -155,37 +156,37 @@
 ## Phase M2: 트랙 B 브랜드 빌드 · ThemeProvider (1.3.0)
 
 ### M2-1 브랜드 빌드 (`packages/axis-tokens`)
-- [ ] 브랜드 소스 구조 `src/brands/<brand>/{light,dark,brand}.json` 규약 확정 (`shadcn` 최상위 예약 키, `brand.json`: name · description · themes · a11y) (FR-4)
-- [ ] B0 `cssVarName` 공유 (3 결정 10 반영) (FR-5)
-- [ ] B1 `build-tokens.mjs` 60줄 다음에 `css/axis-brand` 포맷 등록 (`file.options.selector`) (FR-5)
-- [ ] B2 신규 `scripts/brands.mjs`: `listBrands` · `loadBrand` · `collectBasePaths` · `validateBrand` · `renderShadcnBlock` · `brandSelectors` 순수 함수 (FR-4 · FR-5)
-- [ ] V8용 shadcn 변수 25개 이름: `build-tokens.mjs`에서 상수 배열로 추출해 공유(조건: `shadcn-compat.css` sha256 불변) vs 복제 중 택1 (FR-5)
-- [ ] `validateBrand` V1~V8 구현 (kebab-case · 파일 3종 · 기본 경로 존재 · 최상위 범위 · leaf 형태와 참조 · 변수명 충돌 · 라이트/다크 짝 · shadcn 키와 값 형식) (FR-4)
-- [ ] `brandSelectors`: 라이트 `[data-brand="<b>"]`, 다크 `[data-brand="<b>"].dark` · `[data-brand="<b>"][data-theme="dark"]` · `.dark [data-brand="<b>"]` (3 결정 4 반영) (FR-5)
-- [ ] B3 333줄 다음 5단계: 검증 실패 시 exit 1, SD 인스턴스 2개(다크에도 component 포함, `transformGroup: 'css'`, 브랜드 경로 필터), `dist/css/brands/<brand>.css` 출력 (FR-5 · AC4)
-- [ ] B3 ⑤ `src/brands/<brand>/brand.json` → `dist/brands/<brand>/brand.json` 복사 (D6 · FR-5)
-- [ ] B3 임시 파일 정리 (try/finally 또는 dist 밖, 3 결정 11 반영) (FR-5)
-- [ ] B4 브랜드 SD 인스턴스 `log: { verbosity: 'silent' }` (FR-5)
-- [ ] B5 `src/brands/*`마다 `package.json` exports 항목 존재 검사, 누락 시 빌드 실패 (3 결정 1 반영) (FR-5 · AC4)
-- [ ] 기존 1~4단계 무변경: M1 반영 기준선 대비 `variables.css` · `shadcn-compat.css` sha256 동일 확인 (AC3 · NFR 번들 크기)
-- [ ] 미사용 `build-tokens.js`는 수정하지 않음 확인 (FR-5)
+- [x] 브랜드 소스 구조 `src/brands/<brand>/{light,dark,brand}.json` 규약 확정 (`shadcn` 최상위 예약 키, `brand.json`: name · description · themes · a11y) (FR-4)
+- [x] B0 `cssVarName` 공유 (3 결정 10 반영) (FR-5)
+- [x] B1 `build-tokens.mjs` 60줄 다음에 `css/axis-brand` 포맷 등록 (`file.options.selector`) (FR-5)
+- [x] B2 신규 `scripts/brands.mjs`: `listBrands` · `loadBrand` · `collectBasePaths` · `validateBrand` · `renderShadcnBlock` · `brandSelectors` 순수 함수 (FR-4 · FR-5)
+- [x] V8용 shadcn 변수 25개 이름: `build-tokens.mjs`에서 상수 배열로 추출해 공유(조건: `shadcn-compat.css` sha256 불변) vs 복제 중 택1 (FR-5)
+- [x] `validateBrand` V1~V8 구현 (kebab-case · 파일 3종 · 기본 경로 존재 · 최상위 범위 · leaf 형태와 참조 · 변수명 충돌 · 라이트/다크 짝 · shadcn 키와 값 형식) (FR-4)
+- [x] `brandSelectors`: 라이트 `[data-brand="<b>"]`, 다크 `[data-brand="<b>"].dark` · `[data-brand="<b>"][data-theme="dark"]` · `.dark [data-brand="<b>"]` (3 결정 4 반영) (FR-5)
+- [x] B3 333줄 다음 5단계: 검증 실패 시 exit 1, SD 인스턴스 2개(다크에도 component 포함, `transformGroup: 'css'`, 브랜드 경로 필터), `dist/css/brands/<brand>.css` 출력 (FR-5 · AC4)
+- [x] B3 ⑤ `src/brands/<brand>/brand.json` → `dist/brands/<brand>/brand.json` 복사 (D6 · FR-5)
+- [x] B3 임시 파일 정리 (try/finally 또는 dist 밖, 3 결정 11 반영) (FR-5)
+- [x] B4 브랜드 SD 인스턴스 `log: { verbosity: 'silent' }` (FR-5)
+- [x] B5 `src/brands/*`마다 `package.json` exports 항목 존재 검사, 누락 시 빌드 실패 (3 결정 1 반영) (FR-5 · AC4)
+- [x] 기존 1~4단계 무변경: M1 반영 기준선 대비 `variables.css` · `shadcn-compat.css` sha256 동일 확인 (AC3 · NFR 번들 크기)
+- [x] 미사용 `build-tokens.js`는 수정하지 않음 확인 (FR-5)
 
 ### M2-2 tokens 테스트
-- [ ] B6 `packages/axis-tokens/package.json`에 `test` 스크립트 추가 (3 결정 12 반영) (FR-4 · FR-5)
-- [ ] 신규 `test/brands.test.mjs`: V1~V8 양성 · 음성 fixture (`test/fixtures/brands/`, dist 미의존) (FR-4 · FR-5)
+- [x] B6 `packages/axis-tokens/package.json`에 `test` 스크립트 추가 (3 결정 12 반영) (FR-4 · FR-5)
+- [x] 신규 `test/brands.test.mjs`: V1~V8 양성 · 음성 fixture (`test/fixtures/brands/`, dist 미의존) (FR-4 · FR-5)
 - [ ] CI(Node 20)에서 `pnpm test`가 tokens `test`를 실제 실행하는지 로그로 확인 (미실측 축) (FR-4)
 
 ### M2-3 ThemeProvider brand (`packages/axis-theme/src/index.ts`)
-- [ ] `ThemeProviderProps`에 `defaultBrand?: string` · `brandStorageKey?: string`(기본 `"axis-brand"`) 추가 (FR-6 · AC5)
-- [ ] `ThemeContextValue`에 `brand` · `setBrand` 추가, `value` · deps 반영 (FR-6 · AC5)
-- [ ] `readBrand` · `writeBrand` 헬퍼 (window 가드 · try/catch · 빈 문자열 = undefined) (FR-6)
-- [ ] brand 상태 초기화 (저장값 우선, SSR 가드) (FR-6 · AC5)
-- [ ] `[brand]` 의존 effect로 `data-brand` set/remove, 기존 theme effect · 시스템 감지 effect 무변경 (FR-6 · AC5)
-- [ ] `setBrand`: undefined면 `removeItem` (3 결정 6 반영) (FR-6 · AC5)
-- [ ] `theme.test.tsx` `beforeEach`에 `removeAttribute("data-brand")` 추가 (FR-6)
-- [ ] `describe("brand")` 7건: defaultBrand 부착 · 미지정 시 없음 · setBrand 저장 · setBrand(undefined) 삭제 · 저장값 복원 · 커스텀 storageKey · setTheme 비간섭 (FR-6 · AC5)
-- [ ] 신규 `src/theme.ssr.test.tsx` (`@vitest-environment node`, `renderToString` 무예외) (FR-6)
-- [ ] 기존 theme 테스트 21건 회귀 없음 (FR-6)
+- [x] `ThemeProviderProps`에 `defaultBrand?: string` · `brandStorageKey?: string`(기본 `"axis-brand"`) 추가 (FR-6 · AC5)
+- [x] `ThemeContextValue`에 `brand` · `setBrand` 추가, `value` · deps 반영 (FR-6 · AC5)
+- [x] `readBrand` · `writeBrand` 헬퍼 (window 가드 · try/catch · 빈 문자열 = undefined) (FR-6)
+- [x] brand 상태 초기화 (저장값 우선, SSR 가드) (FR-6 · AC5)
+- [x] `[brand]` 의존 effect로 `data-brand` set/remove, 기존 theme effect · 시스템 감지 effect 무변경 (FR-6 · AC5)
+- [x] `setBrand`: undefined면 `removeItem` (3 결정 6 반영) (FR-6 · AC5)
+- [x] `theme.test.tsx` `beforeEach`에 `removeAttribute("data-brand")` 추가 (FR-6)
+- [x] `describe("brand")` 7건: defaultBrand 부착 · 미지정 시 없음 · setBrand 저장 · setBrand(undefined) 삭제 · 저장값 복원 · 커스텀 storageKey · setTheme 비간섭 (FR-6 · AC5)
+- [x] 신규 `src/theme.ssr.test.tsx` (`@vitest-environment node`, `renderToString` 무예외) (FR-6)
+- [x] 기존 theme 테스트 21건 회귀 없음 (FR-6)
 
 ### M2-4 머지 절차
 - [ ] 1.2.1 publish 확인 후 M2 브랜치 rebase (D3)
@@ -194,10 +195,10 @@
 - [ ] `brand.json` 최종 경로를 WI-0028에 통보 (D6)
 
 ### M2 DoD
-- [ ] `pnpm type-check` 통과
-- [ ] `pnpm lint` 통과
-- [ ] `pnpm build` 성공 (브랜드 0개 상태에서도 정상)
-- [ ] `pnpm test` 통과 (tokens · theme)
+- [x] `pnpm type-check` 통과
+- [x] `pnpm lint` 통과
+- [x] `pnpm build` 성공 (브랜드 0개 상태에서도 정상)
+- [x] `pnpm test` 통과 (tokens · theme)
 - [ ] 문서: plan.md 3절 결정 반영, todo.md 체크
 
 ---
@@ -206,6 +207,7 @@
 
 - [ ] **M3 착수 게이트**: 부록 B 라이트 AA 보정 내역 디자인 오너 승인 (Q6 제품 화면 적용 여부 포함) (D1 · FR-8 · AC8)
 - [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8)
+- [ ] 불투명도 수식어 결함 수정: agentic-ui 11곳(plan-card 6 · diff-viewer 2 · feedback-buttons 2 · attachment-card 1)의 `bg-[var(..)]/10` · `border-[var(..)]/30`을 `color-mix()` 형태로 교체해 의도된 옅은 바탕 복원(화면 변화, 1.3.0 릴리스 노트 기재), `check-token-refs`에 CSS 미생성 패턴 검출 추가 (2026-10-15 결정)
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
 - [ ] FR-9 그림자 primitive `--axis-shadow-sm` · `--axis-shadow-lg` 신설 (기본값 = Tailwind `shadow-sm` · `shadow-lg`) (FR-9 · AC3)
 - [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3)
