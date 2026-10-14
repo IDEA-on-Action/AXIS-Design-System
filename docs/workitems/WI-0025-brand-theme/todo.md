@@ -40,12 +40,12 @@
 - [ ] primitive 오버라이드 안내(`theme-customization.md` 92~97행, `component-usage.md` 175행) 동작 변경을 1.2.1 릴리스 노트에 적을지, 가이드 정정을 FR-10과 묶을지 (2.5 D-7)
 
 ### 3절 M2 브랜드 빌드 · ThemeProvider (M2)
-- [ ] exports 방식: 명시형 `./css/brands/ontology`(권장) vs 패턴형 `./css/brands/*`(pack-smoke 수정 필요) (3 결정 1, 사용자 판단 필수)
+- [x] exports 방식: 명시형 `./css/brands/ontology`(권장) vs 패턴형 `./css/brands/*`(pack-smoke 수정 필요) (3 결정 1, 사용자 판단 필수) → ✅ 2026-10-15: 명시형 확정
 - [ ] `brand.json` 최종 경로(`dist/brands/<brand>/brand.json` 제안)와 목록 파일 `dist/brands/index.json` 생성 여부, WI-0028 통보 (3 결정 2)
-- [ ] shadcn 층 생성 방식: 브랜드 JSON `shadcn` 섹션 그대로 출력(권장) vs `buildShadcnVars` 유도 (3 결정 3, 사용자 판단 필수)
-- [ ] 다크 선택자 수: PRD FR-5의 3개 vs 초안의 `[data-theme="dark"] [data-brand]` 포함 4개 (3 결정 4, 사용자 판단 필수)
+- [x] shadcn 층 생성 방식: 브랜드 JSON `shadcn` 섹션 그대로 출력(권장) vs `buildShadcnVars` 유도 (3 결정 3, 사용자 판단 필수) → ✅ 2026-10-15: shadcn 섹션 출력 확정
+- [x] 다크 선택자 수: PRD FR-5의 3개 vs 초안의 `[data-theme="dark"] [data-brand]` 포함 4개 (3 결정 4, 사용자 판단 필수) → ✅ 2026-10-15: PRD FR-5 3종 확정
 - [ ] 토큰 아닌 규칙(초안 221줄 `word-break: keep-all`) 처리: 문서 안내 vs `brand.json` 부가 CSS 필드 (3 결정 5)
-- [ ] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수)
+- [x] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수) → ✅ 2026-10-15: removeItem 확정
 - [ ] FOUC 방지 인라인 스크립트를 theme 패키지에서 제공할지 (PRD 범위 밖) (3 결정 7)
 - [ ] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8)
 - [ ] V7 "색 값" 판정 기준: 값 형식 판정 vs component 토큰 테마 무관 표지 (3 결정 9)
@@ -139,6 +139,7 @@
 - [ ] M1 PR(#83) 머지
 - [ ] 릴리스 PR을 다른 changeset보다 먼저 머지, publish 성공 확인 (D3)
 - [ ] `npm view @axis-ds/theme@1.2.1 dependencies` → `{ '@axis-ds/tokens': '1.2.1' }` 확인 (D5)
+- [ ] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
 - [ ] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
 - [ ] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3)
 - [ ] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화
@@ -206,6 +207,7 @@
 
 - [ ] **M3 착수 게이트**: 부록 B 라이트 AA 보정 내역 디자인 오너 승인 (Q6 제품 화면 적용 여부 포함) (D1 · FR-8 · AC8)
 - [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8)
+- [ ] 불투명도 수식어 결함 수정: agentic-ui 11곳(plan-card 6 · diff-viewer 2 · feedback-buttons 2 · attachment-card 1)의 `bg-[var(..)]/10` · `border-[var(..)]/30`을 `color-mix()` 형태로 교체해 의도된 옅은 바탕 복원(화면 변화, 1.3.0 릴리스 노트 기재), `check-token-refs`에 CSS 미생성 패턴 검출 추가 (2026-10-15 결정)
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
 - [ ] FR-9 그림자 primitive `--axis-shadow-sm` · `--axis-shadow-lg` 신설 (기본값 = Tailwind `shadow-sm` · `shadow-lg`) (FR-9 · AC3)
 - [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3)
