@@ -48,6 +48,9 @@ jobs:
       - name: Build
         run: pnpm build
 
+      - name: Token reference check
+        run: pnpm check-token-refs
+
       - name: Pack smoke (외부 npm 소비 검증)
         run: pnpm pack-smoke
 
