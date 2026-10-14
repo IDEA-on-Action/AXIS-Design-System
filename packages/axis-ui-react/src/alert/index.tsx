@@ -8,14 +8,14 @@ const alertVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[var(--axis-surface-primary)] text-[var(--axis-text-primary)] border-[var(--axis-border-default)]",
-        info: "bg-[var(--axis-blue-100)] text-[var(--axis-blue-900)] border-[var(--axis-blue-200)] [&>svg]:text-[var(--axis-blue-600)]",
+          "bg-[var(--axis-surface-default)] text-[var(--axis-text-primary)] border-[var(--axis-border-default)]",
+        info: "bg-[var(--axis-surface-info)] text-[var(--axis-text-info)] border-[var(--axis-border-info)] [&>svg]:text-[var(--axis-icon-info)]",
         success:
-          "bg-[var(--axis-green-100)] text-[var(--axis-green-900)] border-[var(--axis-green-200)] [&>svg]:text-[var(--axis-green-600)]",
+          "bg-[var(--axis-surface-success)] text-[var(--axis-text-success)] border-[var(--axis-border-success)] [&>svg]:text-[var(--axis-icon-success)]",
         warning:
-          "bg-[var(--axis-yellow-100)] text-[var(--axis-yellow-900)] border-[var(--axis-yellow-200)] [&>svg]:text-[var(--axis-yellow-600)]",
+          "bg-[var(--axis-surface-warning)] text-[var(--axis-text-warning)] border-[var(--axis-border-warning)] [&>svg]:text-[var(--axis-icon-warning)]",
         destructive:
-          "bg-[var(--axis-red-100)] text-[var(--axis-red-900)] border-[var(--axis-red-200)] [&>svg]:text-[var(--axis-red-600)]",
+          "bg-[var(--axis-surface-error)] text-[var(--axis-text-error)] border-[var(--axis-border-error)] [&>svg]:text-[var(--axis-icon-error)]",
       },
     },
     defaultVariants: {
