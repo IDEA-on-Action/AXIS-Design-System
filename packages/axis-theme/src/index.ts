@@ -15,6 +15,10 @@ interface ThemeProviderProps {
   defaultTheme?: Theme;
   /** localStorage에 테마를 저장할 키 (기본값: "axis-theme") */
   storageKey?: string;
+  /** 초기 브랜드 이름. `<html data-brand>`에 붙는다 (기본값: 없음) */
+  defaultBrand?: string;
+  /** localStorage에 브랜드를 저장할 키 (기본값: "axis-brand") */
+  brandStorageKey?: string;
 }
 
 interface ThemeContextValue {
@@ -24,6 +28,10 @@ interface ThemeContextValue {
   setTheme: (theme: Theme) => void;
   /** 실제 적용된 테마 ("system"인 경우 OS 설정에 따라 "light" 또는 "dark") */
   resolvedTheme: "light" | "dark";
+  /** 현재 브랜드 이름 (없으면 undefined, 기본 토큰 사용) */
+  brand: string | undefined;
+  /** 브랜드를 변경하는 함수. undefined를 주면 속성과 저장값을 지운다 */
+  setBrand: (brand: string | undefined) => void;
 }
 
 const ThemeContext = React.createContext<ThemeContextValue | undefined>(undefined);
@@ -37,6 +45,36 @@ function getSystemTheme(): "light" | "dark" {
 }
 
 /**
+ * 저장된 브랜드 읽기. 서버 렌더와 localStorage 예외(사생활 보호 모드 등)에서는 undefined.
+ * 빈 문자열은 브랜드 없음으로 본다.
+ */
+function readBrand(key: string): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  try {
+    return window.localStorage.getItem(key) || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 브랜드 저장. 값이 없으면(undefined · 빈 문자열) 저장값을 지운다.
+ * localStorage 예외는 무시한다(저장 실패해도 현재 화면의 브랜드 전환은 유지).
+ */
+function writeBrand(key: string, value: string | undefined): void {
+  if (typeof window === "undefined") return;
+  try {
+    if (value) {
+      window.localStorage.setItem(key, value);
+    } else {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // 저장 실패는 무시한다
+  }
+}
+
+/**
  * AXIS 테마 프로바이더
  * 라이트/다크 모드 및 시스템 테마 지원
  */
@@ -44,6 +82,8 @@ export function ThemeProvider({
   children,
   defaultTheme = "system",
   storageKey = "axis-theme",
+  defaultBrand,
+  brandStorageKey = "axis-brand",
 }: ThemeProviderProps) {
   const [theme, setThemeState] = React.useState<Theme>(() => {
     if (typeof window === "undefined") return defaultTheme;
@@ -53,6 +93,12 @@ export function ThemeProvider({
   const [resolvedTheme, setResolvedTheme] = React.useState<"light" | "dark">(() =>
     theme === "system" ? getSystemTheme() : theme
   );
+
+  // 저장값이 기본값보다 우선한다(theme 초기화와 같은 규칙). 서버에서는 기본값만 쓴다
+  const [brand, setBrandState] = React.useState<string | undefined>(() => {
+    if (typeof window === "undefined") return defaultBrand || undefined;
+    return readBrand(brandStorageKey) ?? (defaultBrand || undefined);
+  });
 
   React.useEffect(() => {
     const root = window.document.documentElement;
@@ -64,6 +110,16 @@ export function ThemeProvider({
     root.setAttribute("data-theme", resolved);
     setResolvedTheme(resolved);
   }, [theme]);
+
+  // 브랜드 속성은 theme effect 와 따로 둔다(theme 동작 불변)
+  React.useEffect(() => {
+    const root = window.document.documentElement;
+    if (brand) {
+      root.setAttribute("data-brand", brand);
+    } else {
+      root.removeAttribute("data-brand");
+    }
+  }, [brand]);
 
   React.useEffect(() => {
     if (theme !== "system") return;
@@ -90,9 +146,17 @@ export function ThemeProvider({
     [storageKey]
   );
 
+  const setBrand = React.useCallback(
+    (newBrand: string | undefined) => {
+      writeBrand(brandStorageKey, newBrand);
+      setBrandState(newBrand || undefined);
+    },
+    [brandStorageKey]
+  );
+
   const value = React.useMemo(
-    () => ({ theme, setTheme, resolvedTheme }),
-    [theme, setTheme, resolvedTheme]
+    () => ({ theme, setTheme, resolvedTheme, brand, setBrand }),
+    [theme, setTheme, resolvedTheme, brand, setBrand]
   );
 
   return React.createElement(ThemeContext.Provider, { value }, children);
