@@ -1,0 +1,1 @@
+{ "name": "broken-json", "description": "V2 음성 fixture(light.json 문법 오류)", "themes": ["light", "dark"], "a11y": { "status": "unchecked" } }

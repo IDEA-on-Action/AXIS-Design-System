@@ -32,6 +32,7 @@
   "scripts": {
     "build": "node build-tokens.mjs && tsup src/tailwind-preset.ts --format cjs,esm --dts --out-dir dist",
     "clean": "rm -rf dist",
+    "test": "node --test test/brands.test.mjs",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
