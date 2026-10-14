@@ -7,12 +7,11 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash(git commit*)",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm type-check",
-            "on_failure": "warn",
+            "command": "jq -r '.tool_input.command // \"\"' | grep -qE '(^|[;&|[:space:]])git[[:space:]]+commit' || exit 0; cd \"$CLAUDE_PROJECT_DIR\" && pnpm type-check >&2 || exit 1",
             "timeout": 60
           }
         ]
@@ -20,23 +19,16 @@
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit(packages/axis-*/src/**/*.tsx)",
+        "matcher": "Edit|MultiEdit|Write",
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm type-check",
-            "on_failure": "warn",
+            "command": "f=$(jq -r '.tool_input.file_path // \"\"'); case \"$f\" in */packages/axis-*/src/*.tsx) ;; *) exit 0;; esac; d=${f#*/packages/}; d=${d%%/*}; cd \"$CLAUDE_PROJECT_DIR\" && n=$(jq -r '.name // empty' \"packages/$d/package.json\") && [ -n \"$n\" ] && pnpm turbo run type-check --filter=\"$n\" >&2 || exit 1",
             "timeout": 60
-          }
-        ]
-      },
-      {
-        "matcher": "Edit(**/registry.json)",
-        "hooks": [
+          },
           {
             "type": "command",
-            "command": "pnpm build:registry",
-            "on_failure": "warn",
+            "command": "f=$(jq -r '.tool_input.file_path // \"\"'); case \"$f\" in */packages/*/registry/registry.json) ;; *) exit 0;; esac; cd \"$CLAUDE_PROJECT_DIR\" && pnpm build:registry >&2 || exit 1",
             "timeout": 60
           }
         ]
