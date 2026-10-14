@@ -24,9 +24,9 @@ describe("Alert", () => {
     expect(alert.className).toContain("bg-[var(--axis-surface-info)]");
     expect(alert.className).toContain("border-[var(--axis-border-info)]");
     expect(alert.className).toContain("text-[var(--axis-text-info)]");
-    expect(alert.className).toContain("[&>svg]:text-[var(--axis-icon-info)]");
-    // cn()의 tailwind-merge가 기본 클래스 [&>svg]:text-current를 지워야 아이콘 색이 적용된다
-    expect(alert.className).not.toContain("[&>svg]:text-current");
+    // 아이콘은 글자색을 따른다: 기본 클래스 [&>svg]:text-current가 남고 상태 아이콘 토큰 클래스는 없어야 한다
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=success 시 success 클래스 포함", () => {
@@ -35,7 +35,8 @@ describe("Alert", () => {
     expect(alert.className).toContain("bg-[var(--axis-surface-success)]");
     expect(alert.className).toContain("border-[var(--axis-border-success)]");
     expect(alert.className).toContain("text-[var(--axis-text-success)]");
-    expect(alert.className).toContain("[&>svg]:text-[var(--axis-icon-success)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=warning 시 warning 클래스 포함", () => {
@@ -44,7 +45,8 @@ describe("Alert", () => {
     expect(alert.className).toContain("bg-[var(--axis-surface-warning)]");
     expect(alert.className).toContain("border-[var(--axis-border-warning)]");
     expect(alert.className).toContain("text-[var(--axis-text-warning)]");
-    expect(alert.className).toContain("[&>svg]:text-[var(--axis-icon-warning)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=destructive 시 destructive 클래스 포함", () => {
@@ -53,7 +55,8 @@ describe("Alert", () => {
     expect(alert.className).toContain("bg-[var(--axis-surface-error)]");
     expect(alert.className).toContain("border-[var(--axis-border-error)]");
     expect(alert.className).toContain("text-[var(--axis-text-error)]");
-    expect(alert.className).toContain("[&>svg]:text-[var(--axis-icon-error)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("커스텀 className 병합", () => {

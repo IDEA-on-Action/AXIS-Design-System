@@ -5,17 +5,20 @@ import { cn } from "../utils";
 const alertVariants = cva(
   "relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-current",
   {
+    // 아이콘은 기본 클래스 [&>svg]:text-current로 변형의 글자색(text-*)을 따른다.
+    // 라이트 icon-success(#22C55E) · icon-warning(#EAB308)은 상태 배경 대비가 2.18:1 · 1.85:1로
+    // 비텍스트 기준 3:1에 못 미치므로 아이콘 색에 쓰지 않는다(글자색은 4.76:1 이상).
     variants: {
       variant: {
         default:
           "bg-[var(--axis-surface-default)] text-[var(--axis-text-primary)] border-[var(--axis-border-default)]",
-        info: "bg-[var(--axis-surface-info)] text-[var(--axis-text-info)] border-[var(--axis-border-info)] [&>svg]:text-[var(--axis-icon-info)]",
+        info: "bg-[var(--axis-surface-info)] text-[var(--axis-text-info)] border-[var(--axis-border-info)]",
         success:
-          "bg-[var(--axis-surface-success)] text-[var(--axis-text-success)] border-[var(--axis-border-success)] [&>svg]:text-[var(--axis-icon-success)]",
+          "bg-[var(--axis-surface-success)] text-[var(--axis-text-success)] border-[var(--axis-border-success)]",
         warning:
-          "bg-[var(--axis-surface-warning)] text-[var(--axis-text-warning)] border-[var(--axis-border-warning)] [&>svg]:text-[var(--axis-icon-warning)]",
+          "bg-[var(--axis-surface-warning)] text-[var(--axis-text-warning)] border-[var(--axis-border-warning)]",
         destructive:
-          "bg-[var(--axis-surface-error)] text-[var(--axis-text-error)] border-[var(--axis-border-error)] [&>svg]:text-[var(--axis-icon-error)]",
+          "bg-[var(--axis-surface-error)] text-[var(--axis-text-error)] border-[var(--axis-border-error)]",
       },
     },
     defaultVariants: {
