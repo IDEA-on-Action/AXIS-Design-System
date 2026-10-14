@@ -68,14 +68,14 @@ function computeDiff(before: string, after: string): DiffLine[] {
 }
 
 const lineTypeStyles: Record<DiffLineType, string> = {
-  added: "bg-[var(--axis-color-green-500)]/10",
-  removed: "bg-[var(--axis-color-red-500)]/10",
+  added: "bg-[var(--axis-diff-added)]/10",
+  removed: "bg-[var(--axis-diff-removed)]/10",
   unchanged: "",
 };
 
 const lineTypeTextStyles: Record<DiffLineType, string> = {
-  added: "text-[var(--axis-color-green-600)]",
-  removed: "text-[var(--axis-color-red-600)]",
+  added: "text-[var(--axis-diff-added-text)]",
+  removed: "text-[var(--axis-diff-removed-text)]",
   unchanged: "text-[var(--axis-text-primary)]",
 };
 
@@ -120,10 +120,10 @@ export function DiffViewer({
           {filename && (
             <code className="text-xs font-mono text-[var(--axis-text-primary)] truncate">{filename}</code>
           )}
-          <span className="text-xs text-[var(--axis-color-green-500)]" aria-label={`${addedCount}줄 ${DIFF_LABELS.added}`}>
+          <span className="text-xs text-[var(--axis-diff-added)]" aria-label={`${addedCount}줄 ${DIFF_LABELS.added}`}>
             +{addedCount}
           </span>
-          <span className="text-xs text-[var(--axis-color-red-500)]" aria-label={`${removedCount}줄 ${DIFF_LABELS.removed}`}>
+          <span className="text-xs text-[var(--axis-diff-removed)]" aria-label={`${removedCount}줄 ${DIFF_LABELS.removed}`}>
             -{removedCount}
           </span>
         </div>

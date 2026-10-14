@@ -31,14 +31,14 @@ export function TokenUsageIndicator({
   const percentage = Math.min(Math.round(ratio * 100), 100);
 
   const getColor = () => {
-    if (ratio >= 1) return "bg-[var(--axis-color-red-500)]";
-    if (ratio >= warningThreshold) return "bg-[var(--axis-color-yellow-500)]";
-    return "bg-[var(--axis-color-green-500)]";
+    if (ratio >= 1) return "bg-[var(--axis-status-error)]";
+    if (ratio >= warningThreshold) return "bg-[var(--axis-status-warning)]";
+    return "bg-[var(--axis-status-success)]";
   };
 
   const getTextColor = () => {
-    if (ratio >= 1) return "text-[var(--axis-color-red-500)]";
-    if (ratio >= warningThreshold) return "text-[var(--axis-color-yellow-500)]";
+    if (ratio >= 1) return "text-[var(--axis-status-error)]";
+    if (ratio >= warningThreshold) return "text-[var(--axis-status-warning)]";
     return "text-[var(--axis-text-secondary)]";
   };
 

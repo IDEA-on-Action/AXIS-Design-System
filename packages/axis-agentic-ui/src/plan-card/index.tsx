@@ -31,55 +31,55 @@ export interface PlanCardProps {
 
 const planStatusStyles: Record<PlanStatus, { border: string; badge: string }> = {
   draft: {
-    border: "border-l-[var(--axis-color-gray-400)]",
-    badge: "bg-[var(--axis-color-gray-100)] text-[var(--axis-color-gray-600)]",
+    border: "border-l-[var(--axis-status-neutral)]",
+    badge: "bg-[var(--axis-status-neutral-bg)] text-[var(--axis-status-neutral-strong)]",
   },
   pending: {
-    border: "border-l-[var(--axis-color-yellow-500)]",
-    badge: "bg-[var(--axis-color-yellow-500)]/10 text-[var(--axis-color-yellow-600)]",
+    border: "border-l-[var(--axis-status-warning)]",
+    badge: "bg-[var(--axis-status-warning)]/10 text-[var(--axis-status-warning-strong)]",
   },
   approved: {
-    border: "border-l-[var(--axis-color-green-500)]",
-    badge: "bg-[var(--axis-color-green-500)]/10 text-[var(--axis-color-green-600)]",
+    border: "border-l-[var(--axis-status-success)]",
+    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
   },
   rejected: {
-    border: "border-l-[var(--axis-color-red-500)]",
-    badge: "bg-[var(--axis-color-red-500)]/10 text-[var(--axis-color-red-600)]",
+    border: "border-l-[var(--axis-status-error)]",
+    badge: "bg-[var(--axis-status-error)]/10 text-[var(--axis-status-error-strong)]",
   },
   executing: {
-    border: "border-l-[var(--axis-color-blue-500)]",
-    badge: "bg-[var(--axis-color-blue-500)]/10 text-[var(--axis-color-blue-600)]",
+    border: "border-l-[var(--axis-status-running)]",
+    badge: "bg-[var(--axis-status-running)]/10 text-[var(--axis-status-running-strong)]",
   },
   completed: {
-    border: "border-l-[var(--axis-color-green-500)]",
-    badge: "bg-[var(--axis-color-green-500)]/10 text-[var(--axis-color-green-600)]",
+    border: "border-l-[var(--axis-status-success)]",
+    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
   },
 };
 
 const stepStatusIcons: Record<PlanStepStatus, React.ReactNode> = {
   pending: (
-    <svg className="w-4 h-4 text-[var(--axis-color-gray-400)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-status-neutral)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" strokeWidth={2} />
     </svg>
   ),
   running: (
-    <svg className="w-4 h-4 text-[var(--axis-color-blue-500)] animate-spin" viewBox="0 0 24 24" fill="none">
+    <svg className="w-4 h-4 text-[var(--axis-status-running)] animate-spin" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   ),
   complete: (
-    <svg className="w-4 h-4 text-[var(--axis-color-green-500)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-status-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
   ),
   error: (
-    <svg className="w-4 h-4 text-[var(--axis-color-red-500)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-status-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
   skipped: (
-    <svg className="w-4 h-4 text-[var(--axis-color-gray-400)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-status-neutral)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
     </svg>
   ),
@@ -135,7 +135,7 @@ export function PlanCard({
           {steps.length > 0 && (
             <div className="flex-1 h-1 rounded-full bg-[var(--axis-surface-secondary)] overflow-hidden">
               <div
-                className="h-full rounded-full bg-[var(--axis-color-green-500)] transition-all"
+                className="h-full rounded-full bg-[var(--axis-status-success)] transition-all"
                 style={{ width: `${(completedCount / steps.length) * 100}%` }}
                 aria-hidden="true"
               />
@@ -176,7 +176,7 @@ export function PlanCard({
           {onApprove && (
             <button
               onClick={onApprove}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-color-green-500)] text-white hover:bg-[var(--axis-color-green-600)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-white hover:bg-[var(--axis-status-success-strong)] transition-colors"
             >
               승인
             </button>
@@ -192,7 +192,7 @@ export function PlanCard({
           {onReject && (
             <button
               onClick={onReject}
-              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-color-red-500)] hover:bg-[var(--axis-color-red-500)]/10 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:bg-[var(--axis-status-error)]/10 transition-colors"
             >
               거절
             </button>

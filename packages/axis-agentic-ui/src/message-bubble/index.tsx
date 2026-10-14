@@ -27,7 +27,7 @@ export interface MessageBubbleProps {
 const roleStyles: Record<MessageRole, { container: string; bubble: string }> = {
   user: {
     container: "flex-row-reverse",
-    bubble: "bg-[var(--axis-color-blue-500)] text-white rounded-br-sm",
+    bubble: "bg-[var(--axis-agent-message-user-bg)] text-white rounded-br-sm",
   },
   assistant: {
     container: "flex-row",
