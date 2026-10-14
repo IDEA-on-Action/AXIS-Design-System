@@ -11,7 +11,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.command // \"\"' | grep -qE '(^|[;&|[:space:]])git[[:space:]]+commit' || exit 0; cd \"$CLAUDE_PROJECT_DIR\" && pnpm type-check >&2 || exit 1",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 1; node .claude/hooks/hook-filter.mjs commit; r=$?; [ $r -eq 1 ] && exit 0; [ $r -ne 0 ] && { echo \"hook-filter 실패(rc=$r) - 커밋 전 타입 검사를 건너뜀\" >&2; exit 1; }; pnpm type-check >&2 || exit 1",
             "timeout": 60
           }
         ]
@@ -23,12 +23,12 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // \"\"'); case \"$f\" in */packages/axis-*/src/*.tsx) ;; *) exit 0;; esac; d=${f#*/packages/}; d=${d%%/*}; cd \"$CLAUDE_PROJECT_DIR\" && n=$(jq -r '.name // empty' \"packages/$d/package.json\") && [ -n \"$n\" ] && pnpm turbo run type-check --filter=\"$n\" >&2 || exit 1",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 1; n=$(node .claude/hooks/hook-filter.mjs tsx); r=$?; [ $r -eq 1 ] && exit 0; [ $r -ne 0 ] && { echo \"hook-filter 실패(rc=$r) - .tsx 타입 검사를 건너뜀\" >&2; exit 1; }; pnpm turbo run type-check --filter=\"$n\" >&2 || exit 1",
             "timeout": 60
           },
           {
             "type": "command",
-            "command": "f=$(jq -r '.tool_input.file_path // \"\"'); case \"$f\" in */packages/*/registry/registry.json) ;; *) exit 0;; esac; cd \"$CLAUDE_PROJECT_DIR\" && pnpm build:registry >&2 || exit 1",
+            "command": "cd \"$CLAUDE_PROJECT_DIR\" || exit 1; node .claude/hooks/hook-filter.mjs registry; r=$?; [ $r -eq 1 ] && exit 0; [ $r -ne 0 ] && { echo \"hook-filter 실패(rc=$r) - registry 빌드를 건너뜀\" >&2; exit 1; }; pnpm build:registry >&2 || exit 1",
             "timeout": 60
           }
         ]
