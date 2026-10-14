@@ -1,0 +1,36 @@
+{
+  "surface": {
+    "default": { "value": "#FFFFFF" },
+    "secondary": { "value": "{color.gray.50}" }
+  },
+  "text": {
+    "primary": { "value": "#1F2933" }
+  },
+  "border": {
+    "focus": { "value": "#0B8F8F" }
+  },
+  "button": {
+    "bg": {
+      "default": { "value": "#15C7C7" },
+      "hover": { "value": "{color.blue.700}" }
+    }
+  },
+  "card": {
+    "shadow": {
+      "default": { "value": "0 2px 8px 0 rgb(15 23 36 / 0.08)" }
+    }
+  },
+  "radius": {
+    "md": { "value": "10px" }
+  },
+  "font": {
+    "family": {
+      "sans": { "value": "'Pretendard Variable', Pretendard, sans-serif" }
+    }
+  },
+  "shadcn": {
+    "background": "210 22% 96%",
+    "primary": "#15C7C7",
+    "radius": "12px"
+  }
+}

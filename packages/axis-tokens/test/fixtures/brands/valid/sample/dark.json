@@ -1,0 +1,22 @@
+{
+  "surface": {
+    "default": { "value": "#172030" },
+    "secondary": { "value": "{color.gray.800}" }
+  },
+  "text": {
+    "primary": { "value": "#E6EBF1" }
+  },
+  "border": {
+    "focus": { "value": "{button.border.focus}" }
+  },
+  "button": {
+    "bg": {
+      "default": { "value": "#15C7C7" },
+      "hover": { "value": "{color.blue.400}" }
+    }
+  },
+  "shadcn": {
+    "background": "217 41% 10%",
+    "primary": "180 81% 43%"
+  }
+}
