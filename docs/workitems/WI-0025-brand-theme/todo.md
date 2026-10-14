@@ -133,6 +133,7 @@
 ### M1-7 1.2.1 릴리스
 - [ ] `release-notes.md` 1.2.1 절: 화면 변화 컴포넌트 13개(Alert · Badge · Progress · Checkbox · RadioGroup · Switch · Slider · Textarea · Toggle · Sheet · Popover · DropdownMenu · Command), agentic-ui 화면 불변 명시 (FR-1 · Q2)
 - [ ] 1.2.1 릴리스 노트에 primitive 오버라이드 동작 변경 안내 (D-7 결정 시) (FR-2)
+- [ ] 소비 프로젝트(Minu · Discovery-X 등 `^1.2.0` 설치처) 영향 확인: 13개 컴포넌트 사용처를 찾아 1.2.1 로컬 빌드(`pnpm pack` 또는 link)로 화면 확인, patch 자동 반영으로 알림 없이 바뀌는 점을 각 프로젝트에 공지 (3.2 하위 호환 · A3)
 - [ ] patch changeset 1개 작성: tokens · ui-react · agentic-ui · theme 4개 직접 기재 (D5)
 - [ ] `pnpm changeset status --verbose`로 4개 패키지 1.2.1 확인 (D5)
 - [ ] M1 PR(#83) 머지
