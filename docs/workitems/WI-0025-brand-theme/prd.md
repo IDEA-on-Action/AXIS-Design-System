@@ -42,6 +42,8 @@
 | D4 | 범위 밖 항목 | 밀도 토큰 · 온톨로지 콘솔 템플릿 · CLI · MCP 브랜드 명령을 후속 WI로 바로 등록합니다 | 2장, 다음 단계 |
 | D5 | 1.2.1 patch에 `@axis-ds/theme` 포함 여부 (Gate 2) | **포함합니다.** 배포된 theme 1.2.0이 `@axis-ds/tokens`를 1.2.0 정확 버전으로 고정하므로(`workspace:*`가 배포 시 정확 버전으로 바뀜), theme을 빼면 theme 사용자는 tokens 1.2.1을 받을 수 없습니다 | 3.2, 4장 |
 | D6 | 브랜드 메타데이터 `brand.json`의 담당 WI와 위치 (Gate 2) | **이 WI가 만듭니다.** 소스는 `brands/<brand>/brand.json`(name · description · themes · a11y 상태)이고, 빌드가 dist에 복사해 npm 배포본에 넣습니다(1.3.0). WI-0028 CLI · MCP 브랜드 명령이 이 파일을 읽습니다 | FR-4, FR-5 |
+| D8 | M1 · M2 진행 방식 (착수, 2026-10-15) | **M1과 M2를 병렬로 개발하고 머지 순서만 고정합니다.** M1 머지 → 1.2.1 배포 → M2 머지 순서이며, minor changeset이 먼저 들어가면 1.2.1이 1.3.0이 되므로 M2 PR은 1.2.1 배포 뒤에 머지합니다 | 4장 |
+| D9 | Q7 a11y CI 배선 (착수, 2026-10-15) | **M3에 포함합니다.** ontology 프리셋이 생기는 M3에서 `frontend.yml`에 Playwright a11y 단계를 추가해 AC8을 자동 게이트로 만듭니다 | AC8, Q7 |
 
 ---
 
@@ -105,10 +107,10 @@
 |---|---|---|---|
 | M1 | 트랙 A 전체(FR-1~3) | 토큰 추가 · 컴포넌트 수정 · 참조 검사 CI · 전후 스크린샷 비교 · tokens 의존 버전을 올린 theme 재배포(D5) | **1.2.1** (tokens · ui-react · agentic-ui · theme) |
 | M2 | 트랙 B의 빌드와 Provider(FR-4~6) | `dist/css/brands/*`, `brand.json` dist 복사, `ThemeProvider` brand 옵션, 단위 테스트 | 1.3.0 |
-| M3 | 트랙 C(FR-8~9)와 FR-7 | `brands/ontology`, PlanCard 토큰, 그림자 토큰과 Card · Dialog 참조 변경, a11y 검증 | 1.3.0 |
+| M3 | 트랙 C(FR-8~9)와 FR-7 | `brands/ontology`, PlanCard 토큰, 그림자 토큰과 Card · Dialog 참조 변경, a11y 검증과 CI 배선(D9) | 1.3.0 |
 | M4 | 문서와 데모(FR-10) | 문서 절 · 전환 데모 · 1.3.0 릴리스 노트 | 1.3.0 |
 
-M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M1 → M2 → M3 → M4 순서로 진행합니다.
+M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M3는 M1 · M2 뒤에, M4는 M3 뒤에 진행합니다. M1과 M2는 병렬로 개발하되 머지는 M1 → 1.2.1 배포 → M2 순서로 고정합니다(D8).
 
 ---
 
@@ -121,7 +123,7 @@ M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M1 → M2 �
 - AC5: `ThemeProvider defaultBrand="ontology"`로 렌더하면 `<html data-brand="ontology">`가 붙고, `setBrand(undefined)`로 지워지며, 값이 `localStorage["axis-brand"]`에 남습니다(단위 테스트).
 - AC6: `data-brand="ontology"`에서 라이트 · 다크 각각 `--axis-button-bg-default`, `--axis-button-text-default`, `--axis-surface-default`, `--axis-text-primary`, `--axis-text-secondary`, `--axis-border-focus`, `--primary`(HSL)의 계산값이 부록 A와 일치합니다(Playwright 계산 스타일 검사). shadcn HSL 변수(`--background` · `--primary` 등)는 퍼센트를 정수로 적어 hex와 한 단계씩 어긋나므로, HSL 원문 문자열로 비교하거나 렌더된 rgb를 채널당 ±1 허용 오차로 비교합니다(예: `--primary`는 rgb(21,198,198)로 렌더됩니다).
 - AC7: 문서 사이트에서 브랜드(기본 · ontology, `data-brand` 직접 전환)와 테마(라이트 · 다크, `next-themes`)를 바꾸면 Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 함께 바뀝니다.
-- AC8: 9개 대표 페이지 axe 위반 0건을 기본 · ontology 브랜드 × 라이트 · 다크 네 조합에서 모두 만족합니다. 온톨로지 전용 예외 항목은 없습니다. 색 대비는 `test:e2e:a11y`로만 검증되며(단위 axe는 `color-contrast` 비활성), 현재는 로컬 수동 실행 결과를 근거로 삼습니다. CI 자동 게이트 여부는 Q7 결정을 따릅니다.
+- AC8: 9개 대표 페이지 axe 위반 0건을 기본 · ontology 브랜드 × 라이트 · 다크 네 조합에서 모두 만족합니다. 온톨로지 전용 예외 항목은 없습니다. 색 대비는 `test:e2e:a11y`로만 검증되며(단위 axe는 `color-contrast` 비활성), M3에서 CI에 연결하며(D9), 그 전까지는 로컬 수동 실행 결과를 근거로 삼습니다.
 - 비기능: 단위 테스트 · typecheck · lint · build · 기존 E2E 회귀가 없습니다.
 
 ---
@@ -145,7 +147,7 @@ M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M1 → M2 �
 | Q4 | 프리셋 공개 여부 | 중간 | **결정됨(D2)**: AXIS에 함께 공개 |
 | Q5 | 코드 글꼴: AXIS 기본 mono 스택은 `ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace`이고(D2Coding 없음), 온톨로지는 `JetBrains Mono` 우선입니다. D2Coding은 온톨로지 초안 스택에만 있습니다 | 낮음 | 열림. 프리셋에서 `--axis-font-family-mono` 스택만 바꾸고 웹폰트 로드는 소비자 책임으로 둡니다 |
 | Q6 | AA 보정으로 주 버튼 글자가 흰색에서 어두운 색으로 바뀌고 포커스 링이 한 단계 진해집니다. 제품 화면(원본 가이드)과 AXIS 프리셋의 인상이 달라집니다 | 중간 | 열림. 디자인 오너가 부록 B를 승인할 때 제품 화면에도 같은 보정을 적용할지 함께 정합니다 |
-| Q7 | AC8의 대비 검증(`test:e2e:a11y`)이 CI에 연결되어 있지 않아 자동 게이트가 아닙니다 | 중간 | 열림. CI 배선(`frontend.yml`에 Playwright 단계 추가, 브라우저 설치 · 빌드 시간 포함)을 이 WI 범위에 넣을지, 별도 WI로 둘지 정해야 합니다 |
+| Q7 | AC8의 대비 검증(`test:e2e:a11y`)이 CI에 연결되어 있지 않아 자동 게이트가 아닙니다 | 중간 | **결정됨(D9)**: M3에서 `frontend.yml`에 Playwright a11y 단계를 추가합니다 |
 
 ---
 
