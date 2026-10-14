@@ -1,3 +1,4 @@
+import type { ComponentProps, ReactNode } from "react";
 import { render, screen, renderHook, act } from "@testing-library/react";
 import { ThemeProvider, useTheme } from "./index";
 
@@ -29,6 +30,7 @@ beforeEach(() => {
   // documentElement 클래스 초기화
   document.documentElement.classList.remove("light", "dark");
   document.documentElement.removeAttribute("data-theme");
+  document.documentElement.removeAttribute("data-brand");
 
   // localStorage 초기화
   localStorage.clear();
@@ -297,5 +299,88 @@ describe("시스템 테마 변경 감지", () => {
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(document.documentElement.classList.contains("light")).toBe(false);
+  });
+});
+
+// ─── brand (WI-0025 FR-6) ────────────────────────────────────────
+
+describe("brand", () => {
+  const wrapper =
+    (props: Partial<ComponentProps<typeof ThemeProvider>> = {}) =>
+    ({ children }: { children: ReactNode }) =>
+      <ThemeProvider {...props}>{children}</ThemeProvider>;
+
+  it("defaultBrand를 주면 documentElement에 data-brand가 붙는다", () => {
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: wrapper({ defaultBrand: "ontology" }),
+    });
+    expect(document.documentElement.getAttribute("data-brand")).toBe("ontology");
+    expect(result.current.brand).toBe("ontology");
+  });
+
+  it("defaultBrand를 주지 않으면 data-brand 속성이 없다", () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrapper() });
+    expect(document.documentElement.hasAttribute("data-brand")).toBe(false);
+    expect(result.current.brand).toBeUndefined();
+  });
+
+  it("setBrand 호출 시 data-brand와 localStorage를 갱신한다", () => {
+    const { result } = renderHook(() => useTheme(), { wrapper: wrapper() });
+    act(() => {
+      result.current.setBrand("ontology");
+    });
+    expect(document.documentElement.getAttribute("data-brand")).toBe("ontology");
+    expect(localStorage.getItem("axis-brand")).toBe("ontology");
+    expect(result.current.brand).toBe("ontology");
+  });
+
+  it("setBrand(undefined) 호출 시 data-brand와 저장값을 지운다", () => {
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: wrapper({ defaultBrand: "ontology" }),
+    });
+    act(() => {
+      result.current.setBrand("ontology");
+    });
+    expect(localStorage.getItem("axis-brand")).toBe("ontology");
+    act(() => {
+      result.current.setBrand(undefined);
+    });
+    expect(document.documentElement.hasAttribute("data-brand")).toBe(false);
+    expect(localStorage.getItem("axis-brand")).toBeNull();
+    expect(result.current.brand).toBeUndefined();
+  });
+
+  it("localStorage에 저장된 브랜드를 defaultBrand보다 우선해 복원한다", () => {
+    localStorage.setItem("axis-brand", "saved");
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: wrapper({ defaultBrand: "ontology" }),
+    });
+    expect(document.documentElement.getAttribute("data-brand")).toBe("saved");
+    expect(result.current.brand).toBe("saved");
+  });
+
+  it("커스텀 brandStorageKey로 저장 · 복원한다", () => {
+    localStorage.setItem("my-brand", "saved");
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: wrapper({ brandStorageKey: "my-brand" }),
+    });
+    expect(result.current.brand).toBe("saved");
+    act(() => {
+      result.current.setBrand("ontology");
+    });
+    expect(localStorage.getItem("my-brand")).toBe("ontology");
+    expect(localStorage.getItem("axis-brand")).toBeNull();
+  });
+
+  it("setTheme은 data-brand를 건드리지 않는다", () => {
+    const { result } = renderHook(() => useTheme(), {
+      wrapper: wrapper({ defaultTheme: "light", defaultBrand: "ontology" }),
+    });
+    act(() => {
+      result.current.setTheme("dark");
+    });
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+    expect(document.documentElement.getAttribute("data-brand")).toBe("ontology");
+    expect(localStorage.getItem("axis-brand")).toBeNull();
   });
 });
