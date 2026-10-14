@@ -3,7 +3,7 @@
  *
  * build-tokens.mjs 는 최상위 await 스크립트라 import 하는 순간 빌드가 실행된다.
  * 그래서 브랜드 검증 · 선택자 · shadcn 블록 생성처럼 파일을 쓰지 않는 로직은 이 모듈에 두고,
- * build-tokens.mjs 와 test/brands.test.mjs 가 함께 import 한다.
+ * build-tokens.mjs(scripts/build-brands.mjs 경유)와 test/brands.test.mjs 가 함께 import 한다.
  * 이 모듈은 파일을 읽기만 하고 쓰지 않는다.
  */
 
@@ -418,6 +418,41 @@ export function renderShadcnBlock(map) {
       return `  --${key}: ${out};`;
     })
     .join('\n');
+}
+
+/**
+ * 브랜드 CSS 블록 하나를 만든다. css/axis-brand 포맷과, SD 가 0건 파일의 output 을 비워 돌려줄 때의
+ * 대체 경로가 함께 쓴다. 선언이 하나도 없으면 빈 블록 대신 빈 문자열을 돌려준다.
+ * @param selector 선택자(여러 개면 ',\n' 로 이은 문자열)
+ * @param tokenLines `  --axis-...: 값;` 형태의 줄 배열
+ * @param extra renderShadcnBlock 결과(여러 줄 문자열, 없으면 빈 문자열)
+ */
+export function renderBrandBlock(selector, tokenLines, extra) {
+  const lines = [...tokenLines];
+  if (extra) lines.push(extra);
+  if (lines.length === 0) return '';
+  return `${selector} {\n${lines.join('\n')}\n}\n`;
+}
+
+/**
+ * 산출물 블록에 브랜드가 적은 선언이 모두 들어갔는지 대조한다. 빠진 항목 이름 배열을 돌려준다.
+ * --axis-* 는 SD 가 값을 변환하므로 이름만, shadcn 은 renderShadcnBlock 이 낸 줄 그대로 본다.
+ */
+export function missingBrandDeclarations(css, { selector, tree, shadcn }) {
+  const missing = [];
+  const declLines = [];
+  walkTokens(tree, ({ path, malformed }) => {
+    if (!malformed) declLines.push({ label: cssVarName(path), test: `  ${cssVarName(path)}: ` });
+  });
+  for (const line of renderShadcnBlock(shadcn).split('\n').filter(Boolean)) {
+    declLines.push({ label: line.trim().split(':')[0], test: line });
+  }
+  if (declLines.length === 0) return missing;
+  if (!css.includes(`${selector} {\n`)) missing.push(`선택자 ${selector.replace(/\n/g, ' ')}`);
+  for (const { label, test } of declLines) {
+    if (!css.includes(test)) missing.push(label);
+  }
+  return missing;
 }
 
 /** 브랜드 토큰 파일에 적힌 leaf 경로 키 집합 (SD 출력 필터용) */
