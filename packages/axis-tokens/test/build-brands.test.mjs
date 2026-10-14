@@ -233,7 +233,8 @@ describe('build-tokens.mjs 5단계 배선 (패키지 사본에서 실행)', () =
     for (const entry of ['build-tokens.mjs', 'scripts', 'src', 'package.json']) {
       cpSync(join(pkgDir, entry), join(copy, entry), { recursive: true });
     }
-    symlinkSync(join(pkgDir, 'node_modules'), join(copy, 'node_modules'), 'dir');
+    // junction: Windows 에서 관리자 권한 없이 만들 수 있다(Linux 는 type 인자를 무시)
+    symlinkSync(join(pkgDir, 'node_modules'), join(copy, 'node_modules'), 'junction');
   });
 
   function runBuild() {
