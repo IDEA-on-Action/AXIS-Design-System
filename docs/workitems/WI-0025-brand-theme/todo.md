@@ -131,16 +131,16 @@
 - [x] agentic-ui 13개 컴포넌트 라이트 · 다크 계산값 교체 전후 동일 확인 (FR-2 · AC2)
 
 ### M1-7 1.2.1 릴리스
-- [ ] `release-notes.md` 1.2.1 절: 화면 변화 컴포넌트 13개(Alert · Badge · Progress · Checkbox · RadioGroup · Switch · Slider · Textarea · Toggle · Sheet · Popover · DropdownMenu · Command), agentic-ui 화면 불변 명시 (FR-1 · Q2)
-- [ ] 1.2.1 릴리스 노트에 primitive 오버라이드 동작 변경 안내 (D-7 결정 시) (FR-2)
-- [ ] 소비 프로젝트(Minu · Discovery-X 등 `^1.2.0` 설치처) 영향 확인: 13개 컴포넌트 사용처를 찾아 1.2.1 로컬 빌드(`pnpm pack` 또는 link)로 화면 확인, patch 자동 반영으로 알림 없이 바뀌는 점을 각 프로젝트에 공지 (3.2 하위 호환 · A3)
-- [ ] patch changeset 1개 작성: tokens · ui-react · agentic-ui · theme 4개 직접 기재 (D5)
-- [ ] `pnpm changeset status --verbose`로 4개 패키지 1.2.1 확인 (D5)
-- [ ] M1 PR(#83) 머지
+- [x] `release-notes.md` 1.2.1 절: 화면 변화 컴포넌트 13개(Alert · Badge · Progress · Checkbox · RadioGroup · Switch · Slider · Textarea · Toggle · Sheet · Popover · DropdownMenu · Command), agentic-ui 화면 불변 명시 (FR-1 · Q2)
+- [x] 1.2.1 릴리스 노트에 primitive 오버라이드 동작 변경 안내 (D-7 결정 시) (FR-2)
+- [x] 소비 프로젝트(Minu · Discovery-X 등 `^1.2.0` 설치처) 영향 확인: 13개 컴포넌트 사용처를 찾아 1.2.1 로컬 빌드(`pnpm pack` 또는 link)로 화면 확인, patch 자동 반영으로 알림 없이 바뀌는 점을 각 프로젝트에 공지 (3.2 하위 호환 · A3) → RFP-X(1.1.2) · Discovery-X(1.1.1) 모두 정확 버전 고정이라 자동 반영 없음, 영향은 Badge secondary 8곳 · Textarea 3곳(릴리스 노트 기재). Minu는 로컬 미발견
+- [x] patch changeset 1개 작성: tokens · ui-react · agentic-ui · theme 4개 직접 기재 (D5)
+- [x] `pnpm changeset status --verbose`로 4개 패키지 1.2.1 확인 (D5) → 4개 1.2.1 확인(private 예제 axis-nextjs-example 0.1.4는 배포 대상 아님)
+- [x] M1 PR(#83) 머지 → PR #90 squash 머지 (f465d2b)
 - [ ] 릴리스 PR을 다른 changeset보다 먼저 머지, publish 성공 확인 (D3)
 - [ ] `npm view @axis-ds/theme@1.2.1 dependencies` → `{ '@axis-ds/tokens': '1.2.1' }` 확인 (D5)
-- [ ] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
-- [ ] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
+- [x] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
+- [x] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
 - [ ] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3)
 - [ ] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화
 
