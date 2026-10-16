@@ -58,6 +58,21 @@ describe('collectBasePaths', () => {
     assert.ok(base.componentTops.has('button'));
     assert.ok(base.varNames.size > 100, `기본 변수 수가 너무 적습니다: ${base.varNames.size}`);
   });
+
+  test('M3 G1 신규 변수(흰 글자 짝 토큰 6개 · FR-7)가 기본 집합에 든다', () => {
+    for (const name of [
+      '--axis-status-success-contrast',
+      '--axis-status-running-contrast',
+      '--axis-status-error-contrast',
+      '--axis-status-neutral-muted-contrast',
+      '--axis-agent-message-user-text',
+      '--axis-agent-avatar-text',
+      '--axis-plan-card-accent-width',
+    ]) {
+      assert.ok(base.varNames.has(name), `기본 집합에 없음: ${name}`);
+    }
+    assert.ok(base.componentTops.has('plan-card'));
+  });
 });
 
 describe('listBrands', () => {

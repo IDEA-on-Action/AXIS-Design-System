@@ -57,7 +57,11 @@
     "neutral": { "value": "{color.gray.400}" },
     "neutral-muted": { "value": "{color.gray.300}" },
     "neutral-strong": { "value": "{color.gray.600}" },
-    "neutral-bg": { "value": "{color.gray.100}" }
+    "neutral-bg": { "value": "{color.gray.100}" },
+    "success-contrast": { "value": "{color.white}" },
+    "running-contrast": { "value": "{color.white}" },
+    "error-contrast": { "value": "{color.white}" },
+    "neutral-muted-contrast": { "value": "{color.white}" }
   },
   "diff": {
     "added": { "value": "{color.green.500}" },
@@ -69,6 +73,8 @@
     "avatar-assistant": { "value": "{color.purple.500}" },
     "avatar-tool": { "value": "{color.blue.500}" },
     "avatar-system": { "value": "{color.gray.600}" },
-    "message-user-bg": { "value": "{color.blue.500}" }
+    "message-user-bg": { "value": "{color.blue.500}" },
+    "message-user-text": { "value": "{color.white}" },
+    "avatar-text": { "value": "{color.white}" }
   }
 }
