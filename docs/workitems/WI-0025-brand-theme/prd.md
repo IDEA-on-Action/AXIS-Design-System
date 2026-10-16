@@ -1,7 +1,7 @@
 # WI-0025: 브랜드 테마 축 도입과 온톨로지 테마 PRD
 
 > 작성일: 2026-10-15 | 버전: v0.4 (2026-10-16, 디자인 기준 v0.24 교체) | 작성자: Sinclair Seo | WI: WI-0025 | GitHub: #83 (M1) · #84 (M2~M4) | 상태: Draft (Gate 1 · Gate 2 결정 반영)
-> v0.4 변경: 온톨로지 디자인 기준을 프로토타입 v0.22에서 v0.24(디자인 시스템 v1)로 교체했습니다. 배경 · D1 · FR-8 · FR-9 · Non-goals · AC6 예시 · 허용 오차(±1 → ±2, 확인 대기) · A1(출처 v0.24) · Q1 · Q3 · Q6 · 부록 A · B를 v1 값으로 다시 쓰고, Q8 · Q9와 부록 C를 추가했으며, 다음 단계의 부록 B 승인 항목에 승인자(김정원 책임)와 입력 테두리 대비를 넣었습니다. 트랙 A · B와 Gate 2 결정은 바뀌지 않았고, 부록 B는 아직 승인 전입니다.
+> v0.4 변경: 온톨로지 디자인 기준을 프로토타입 v0.22에서 v0.24(디자인 시스템 v1)로 교체했습니다. 배경 · D1 · FR-8 · FR-9 · Non-goals · AC6 예시 · shadcn HSL 소수 퍼센트 표기(±1 유지) · A1(출처 v0.24) · Q1 · Q3 · Q6 · 부록 A · B를 v1 값으로 다시 쓰고, Q8 · Q9와 부록 C를 추가했으며, 다음 단계의 부록 B 승인 항목에 승인자(김정원 책임)와 입력 테두리 대비를 넣었습니다. 트랙 A · B와 Gate 2 결정은 바뀌지 않았고, 부록 B는 아직 승인 전입니다.
 > 선행: 없음. 기준 버전 `@axis-ds/*` 1.2.0 (cli · mcp 1.1.3)
 > 참조: 디자인 시스템 「온톨로지 플랫폼」(claude.ai Design System 아티팩트), 테마 초안 `axis-theme-ontology.css`(초안 2, 디자인 시스템 v1 기준)
 > 후속: WI-0026 밀도 토큰, WI-0027 온톨로지 콘솔 템플릿, WI-0028 CLI · MCP 브랜드 명령
@@ -87,16 +87,16 @@
 - FR-9: 온톨로지 프리셋은 글꼴, 둥글기, 그림자, PlanCard 색 선 두께 0을 함께 지정합니다.
   - 글꼴: `--axis-font-family-sans`(`Pretendard Variable` 우선) · `--axis-font-family-mono`(`JetBrains Mono` 우선). 초안의 `--axis-font-sans` · `--axis-font-mono`는 정의된 토큰 이름이 아니어서 바로잡았고, JSON에서는 primitive `font.family.sans` · `font.family.mono` 경로에 넣습니다.
   - 둥글기: `--radius: 12px`만 실제 화면에 반영됩니다(Tailwind preset의 `rounded-*`가 `--radius`에서 계산하므로 카드 `rounded-lg`는 12px, 버튼 · 입력 `rounded-md`는 10px이 되어 v1의 8px과 2px 차이가 납니다. Q3 참고). `--axis-radius-md: 8px` · `--axis-radius-lg: 12px` · `--axis-radius-sm: 6px`는 컴포넌트가 참조하지 않아 이번 WI에서는 효과가 없으며, WI-0026의 단계별 radius 변수화에 대비한 값으로만 둡니다.
-  - 그림자: `--axis-shadow-sm` · `--axis-shadow-lg`는 덮어쓸 기존 토큰이 없으므로 primitive로 **신설**합니다. 기본값은 현재 Tailwind `shadow-sm` · `shadow-lg`와 같은 값으로 두어 브랜드 미지정 화면이 바뀌지 않게 하고, Card(`shadow-sm` 하드코딩) · Dialog(`shadow-lg` 하드코딩)가 이 변수를 참조하도록 컴포넌트를 고칩니다. 이 변경이 없으면 프리셋의 그림자 값은 화면에 반영되지 않습니다. 온톨로지 프리셋 값은 `--axis-shadow-sm`이 v1 `sh-1`, `--axis-shadow-lg`가 `sh-2`이며, v1은 카드에 그림자를 쓰지 않습니다(팝오버 · 고른 탭만). 이 구조에서는 Card가 `--axis-shadow-sm`을 참조하므로 `sh-1`을 넣으면 카드에도 그림자가 생깁니다. 카드를 그림자 없이 둘 방법은 plan.md에서 정합니다.
+  - 그림자: `--axis-shadow-sm` · `--axis-shadow-lg`는 덮어쓸 기존 토큰이 없으므로 primitive로 **신설**합니다. 기본값은 현재 Tailwind `shadow-sm` · `shadow-lg`와 같은 값으로 두어 브랜드 미지정 화면이 바뀌지 않게 하고, Card(`shadow-sm` 하드코딩) · Dialog(`shadow-lg` 하드코딩)가 이 변수를 참조하도록 컴포넌트를 고칩니다. 이 변경이 없으면 프리셋의 그림자 값은 화면에 반영되지 않습니다. 온톨로지 프리셋 값은 `--axis-shadow-sm`이 v1 `sh-1`, `--axis-shadow-lg`가 `sh-2`이며, v1은 카드에 그림자를 쓰지 않습니다(팝오버 · 고른 탭만). 이 구조에서는 Card가 `--axis-shadow-sm`을 참조하므로 `sh-1`을 넣으면 카드에도 그림자가 생깁니다. 이를 피하려고 Card는 component 토큰 `--axis-card-shadow`(기본값 `var(--axis-shadow-sm)`)를 참조하고, 온톨로지 프리셋은 이 토큰을 `none`으로 둡니다. 팝오버 · 탭은 `--axis-shadow-sm`(`sh-1`)을 그대로 씁니다(2026-10-16 결정).
   - PlanCard 색 선 두께 0: FR-7에서 만드는 `--axis-plan-card-accent-width`를 `0`으로 지정합니다. 이 값은 FR-7 이후에 생기는 토큰이므로 초안 CSS에도 같은 줄을 추가해 FR-8의 「초안 그대로 옮기기」에 포함되게 했습니다.
 - FR-10: 문서 사이트(`apps/web`)에 브랜드 전환 데모를 추가합니다. 문서 사이트의 테마 전환은 `@axis-ds/theme`가 아니라 `next-themes`(`attribute="class"`)가 맡아 `<html>`에 `.dark` 클래스만 붙이고 `data-theme` · `data-brand`는 붙이지 않습니다. 따라서 데모는 브랜드 선택 시 `document.documentElement`에 `data-brand`를 직접 붙이고 지우는 방식으로 구현하고, 다크는 `next-themes`의 `.dark`로 계속 동작하게 둡니다(브랜드 CSS의 `[data-brand].dark` 갈래). 문서 사이트 Provider를 `@axis-ds/theme`로 바꾸는 일은 이번 범위에 넣지 않습니다. 테마 문서(`docs/guides/theme-customization.md`)에 「브랜드 테마」 절을 추가하고, 기존 「4. 커스텀 테마 생성」 예시를 브랜드 디렉터리 방식으로 갱신합니다. 부록 B의 원본 대비 보정 내역도 문서에 싣습니다.
 
 ### 3.2 비기능 요구사항
-- **하위 호환**: `data-brand`가 없으면 모든 CSS 변수의 계산값이 1.2.0과 같아야 합니다. 단, 트랙 A에서 정의 누락을 채운 변수는 예외이며 1.2.1 릴리스 노트에 바뀐 컴포넌트를 적습니다. 1.3.0에서 새로 생기는 변수(FR-7 `--axis-plan-card-accent-width`, FR-9 `--axis-shadow-*`)도 예외이며, 이 변수들의 기본값은 기존 화면 모습(색 선 4px, Tailwind `shadow-sm` · `shadow-lg`)과 같아야 합니다.
+- **하위 호환**: `data-brand`가 없으면 모든 CSS 변수의 계산값이 1.2.0과 같아야 합니다. 단, 트랙 A에서 정의 누락을 채운 변수는 예외이며 1.2.1 릴리스 노트에 바뀐 컴포넌트를 적습니다. 1.3.0에서 새로 생기는 변수(FR-7 `--axis-plan-card-accent-width`, FR-9 `--axis-shadow-*` · `--axis-card-shadow`, D-5 흰 글자 짝 토큰)도 예외이며, 이 변수들의 기본값은 기존 화면 모습(색 선 4px, Tailwind `shadow-sm` · `shadow-lg`, 흰 글자 #FFFFFF)과 같아야 합니다.
 - **접근성**: 온톨로지 프리셋(라이트 · 다크)은 기존 a11y 게이트(axe 단위 테스트, `test:e2e:a11y` 엄격 모드)를 **예외 없이** 통과해야 합니다. 의미를 지닌 아이콘 · 포커스 링은 3:1 이상입니다.
   - 단위 axe 테스트(`src/test-utils/axe.ts`)는 jsdom 한계로 `color-contrast` 규칙을 꺼 두었으므로 색 대비는 검증하지 못합니다. 대비 검증은 `apps/web`의 `test:e2e:a11y`(Playwright)뿐입니다.
   - `test:e2e:a11y`는 현재 수동 실행 스크립트이며 CI에 연결되어 있지 않습니다(`frontend.yml`의 `pnpm test`는 `apps/web`에 `test` 스크립트가 없어 Playwright를 실행하지 않습니다). CI 배선을 이 WI 범위에 넣을지는 Q7에서 정합니다.
-- **번들 크기**: 브랜드 값은 `dist/css/brands/<brand>.css`에만 두고 `variables.css`에는 넣지 않습니다. 단, 트랙 A에서 정의 누락을 채우는 토큰(FR-1 · FR-2), FR-7의 `--axis-plan-card-accent-width`, FR-9의 `--axis-shadow-*` 기본값은 `variables.css`에 추가되므로 그만큼은 늘어납니다. 이 외의 증가는 없어야 합니다.
+- **번들 크기**: 브랜드 값은 `dist/css/brands/<brand>.css`에만 두고 `variables.css`에는 넣지 않습니다. 단, 트랙 A에서 정의 누락을 채우는 토큰(FR-1 · FR-2), FR-7의 `--axis-plan-card-accent-width`, FR-9의 `--axis-shadow-*` · `--axis-card-shadow`, D-5 흰 글자 짝 토큰의 기본값은 `variables.css`에 추가되므로 그만큼은 늘어납니다. 이 외의 증가는 없어야 합니다.
 - **릴리스**: changesets linked 릴리스를 두 번 냅니다.
   - 1.2.1 patch: 트랙 A(`@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme`). theme은 코드 변경이 없어도 함께 냅니다. 배포된 theme 1.2.0이 tokens를 1.2.0 정확 버전으로 고정하기 때문입니다(D5).
   - 1.3.0 minor: 트랙 B · C(`@axis-ds/tokens` · `@axis-ds/theme` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui`)
@@ -121,10 +121,10 @@ M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M3는 M1 · 
 
 - AC1: 참조 검사 스크립트가 0건으로 통과합니다. `axis-ui-react` · `axis-agentic-ui`의 모든 `var(--axis-*)`가 빌드된 `variables.css`에 정의되어 있습니다.
 - AC2: `axis-agentic-ui` 소스에 `var(--axis-color-` 참조가 0건입니다.
-- AC3: 브랜드를 지정하지 않은 상태에서 `variables.css`의 라이트 · 다크 계산값이 1.2.1 스냅샷과 일치합니다(스냅샷 테스트, 1.3.0 기준). 비교 대상은 1.2.1에 있던 변수이며, 1.3.0에서 새로 생긴 변수(FR-7 · FR-9)는 별도로 기본값만 검사합니다.
+- AC3: 브랜드를 지정하지 않은 상태에서 `variables.css`의 라이트 · 다크 계산값이 1.2.1 스냅샷과 일치합니다(스냅샷 테스트, 1.3.0 기준). 비교 대상은 1.2.1에 있던 변수이며, 1.3.0에서 새로 생긴 변수(FR-7 · FR-9 · D-5 짝 토큰)는 별도로 기본값만 검사합니다.
 - AC4: `pnpm build` 후 `dist/css/brands/ontology.css`가 생기고 `import "@axis-ds/tokens/css/brands/ontology"`가 동작합니다.
 - AC5: `ThemeProvider defaultBrand="ontology"`로 렌더하면 `<html data-brand="ontology">`가 붙고, `setBrand(undefined)`로 지워지며, 값이 `localStorage["axis-brand"]`에 남습니다(단위 테스트).
-- AC6: `data-brand="ontology"`에서 라이트 · 다크 각각 `--axis-button-bg-default`, `--axis-button-text-default`, `--axis-surface-default`, `--axis-text-primary`, `--axis-text-secondary`, `--axis-border-focus`, `--primary`(HSL)의 계산값이 부록 A와 일치합니다(Playwright 계산 스타일 검사). shadcn HSL 변수(`--background` · `--primary` 등)는 퍼센트를 정수로 적어 hex와 어긋나므로, HSL 원문 문자열로 비교하거나 렌더된 rgb를 채널당 ±2 허용 오차로 비교합니다(예: 라이트 `--primary`는 rgb(52,108,218)로 렌더되어 `key` #326ADA와 R · G가 2씩 어긋납니다). 허용 오차 ±2는 v0.3의 ±1이 v1 값에서 성립하지 않아 넓힌 값이며 확인 대기입니다. 대안은 HSL 원문 비교만 쓰거나 CSS의 HSL을 소수 퍼센트로 적어 ±1을 유지하는 것입니다.
+- AC6: `data-brand="ontology"`에서 라이트 · 다크 각각 `--axis-button-bg-default`, `--axis-button-text-default`, `--axis-surface-default`, `--axis-text-primary`, `--axis-text-secondary`, `--axis-border-focus`, `--primary`(HSL)의 계산값이 부록 A와 일치합니다(Playwright 계산 스타일 검사). shadcn HSL 변수(`--background` · `--primary` 등)는 정수 퍼센트로 적으면 원본 hex와 채널당 최대 2 어긋나므로(예: `220 69% 53%`는 rgb(52,108,218)), 프리셋은 원본 hex로 정확히 렌더되는 소수 퍼센트(예: 라이트 `--primary` `220 69.4% 52.5%` = #326ADA)로 적고, 렌더된 rgb를 채널당 ±1 허용 오차로 비교합니다(2026-10-16 결정).
 - AC7: 문서 사이트에서 브랜드(기본 · ontology, `data-brand` 직접 전환)와 테마(라이트 · 다크, `next-themes`)를 바꾸면 Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 함께 바뀝니다.
 - AC8: 9개 대표 페이지 axe 위반 0건을 기본 · ontology 브랜드 × 라이트 · 다크 네 조합에서 모두 만족합니다. 온톨로지 전용 예외 항목은 없습니다. 색 대비는 `test:e2e:a11y`로만 검증되며(단위 axe는 `color-contrast` 비활성), M3에서 CI에 연결하며(D9), 그 전까지는 로컬 수동 실행 결과를 근거로 삼습니다.
 - 비기능: 단위 테스트 · typecheck · lint · build · 기존 E2E 회귀가 없습니다.
@@ -181,10 +181,10 @@ M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M3는 M1 · 
 | `--axis-badge-warning-bg` / `-text` | `bad-light` / `bad` (주의) | #FDE8E8 / #C8332E | #3A1A1A / #F07A72 |
 | `--axis-badge-error-bg` / `-text` | `bad` / `on-key` (오류) | #C8332E / #FFFFFF | #F07A72 / #0E1013 |
 | `--axis-badge-info-bg` / `-text` | `key-light` / `key-dark` (봐야 할 것) | #E8EFFC / #2757B8 | #1C2A45 / #9DBBF6 |
-| `--background`(shadcn) | `bg` | `0 0% 97%` (렌더 #F7F7F7, 원본 #F7F7F7) | `216 15% 6%` (렌더 #0D0F12, 원본 #0E1013) |
-| `--primary`(shadcn) | `key` | `220 69% 53%` (렌더 rgb(52,108,218) #346CDA, 원본 #326ADA) | `220 82% 68%` (렌더 #6A97F0, 원본 #6B98F0) |
+| `--background`(shadcn) | `bg` | `0 0% 97%` (렌더 #F7F7F7) | `216 15.2% 6.5%` (렌더 #0E1013) |
+| `--primary`(shadcn) | `key` | `220 69.4% 52.5%` (렌더 #326ADA) | `219.7 81.6% 68%` (렌더 #6B98F0) |
 
-shadcn 행은 HSL 원문 값입니다. 퍼센트를 정수로 적기 때문에 렌더 값이 원본 hex와 채널당 최대 2 어긋나며, AC6은 이 차이를 허용 오차로 다룹니다(±2는 확인 대기, AC6 참고).
+shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 소수 퍼센트로 적었습니다(초안 2 원본은 정수 퍼센트라 최대 2 어긋났습니다, AC6 참고).
 
 주요 대비(라이트): 흰 글자/`key` 4.99:1, 흰 글자/`bad` 5.29:1, `key-dark`/`key-light` 5.79:1, `bad`/`bad-light` 4.51:1, `bad-dark`/`bad-light` 5.98:1, `ink-2`/`panel-2` 11.39:1. 다크는 글자 대비가 모두 4.5:1 이상이고 입력 테두리 `line-2`는 `card` 위 3.12:1입니다.
 

@@ -13,14 +13,15 @@
 
 [data-brand="ontology"] {
   /* 글꼴 · 둥글기 · 그림자 (v1: 카드 그림자 없음) */
-  --axis-font-sans: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
-  --axis-font-mono: "JetBrains Mono", "Cascadia Code", "D2Coding", Consolas, monospace;
-  --radius: 12px;               /* rounded-lg 12(카드) · rounded-md 8(버튼 · 입력) · rounded-sm 6 */
+  --axis-font-family-sans: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+  --axis-font-family-mono: "JetBrains Mono", "Cascadia Code", "D2Coding", Consolas, monospace;
+  --radius: 12px;               /* rounded-lg 12(카드) · rounded-md 10(버튼 · 입력, v1 8과 2px 차이, PRD Q3) · rounded-sm 8 */
   --axis-radius-md: 8px;
   --axis-radius-lg: 12px;
   --axis-radius-sm: 6px;
   --axis-shadow-sm: 0 1px 2px rgba(17,20,24,.06);
   --axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10);
+  --axis-plan-card-accent-width: 0; /* FR-7 토큰(기본 4px), 온톨로지는 한쪽 색 선 없음 */
   /* surface */
   --axis-surface-default: #FFFFFF; /* card */
   --axis-surface-secondary: #F3F4F6; /* panel */
@@ -101,19 +102,19 @@
   --card-foreground: 214 17% 8%;
   --popover: 0 0% 100%;
   --popover-foreground: 214 17% 8%;
-  --primary: 220 69% 53%;
+  --primary: 220 69.4% 52.5%;
   --primary-foreground: 0 0% 100%;
-  --secondary: 216 14% 93%;
+  --secondary: 216 13.5% 92.7%;
   --secondary-foreground: 214 17% 8%;
   --muted: 220 14% 96%;
-  --muted-foreground: 219 10% 41%; /* AA 보정 */
+  --muted-foreground: 219 9.5% 41.2%; /* AA 보정 */
   --accent: 219 77% 95%;
-  --accent-foreground: 220 65% 44%;
-  --destructive: 2 63% 48%;
+  --accent-foreground: 220.1 65% 43.7%;
+  --destructive: 1.9 62.6% 48.2%;
   --destructive-foreground: 0 0% 100%;
   --border: 216 11% 91%;
-  --input: 213 12% 86%;
-  --ring: 220 69% 53%;
+  --input: 213.3 12.3% 85.7%;
+  --ring: 220 69.4% 52.5%;
 }
 
 [data-brand="ontology"].dark,
@@ -179,7 +180,7 @@
   --axis-input-bg-default: #17191D; /* card */
   --axis-input-text-default: #F1F3F5; /* ink */
   --axis-input-text-placeholder: #7A828D; /* muted */
-  --axis-input-border-default: #5F6874; /* line-2 · 3.0:1 */
+  --axis-input-border-default: #5F6874; /* line-2 · card 위 3.12:1 */
   --axis-input-border-hover: #7A828D; /* muted */
   --axis-input-border-focus: #6B98F0; /* key */
   --axis-input-border-error: #F07A72; /* bad */
@@ -196,25 +197,25 @@
   --axis-badge-info-text: #9DBBF6; /* key-dark */
   --axis-bg-muted: #1F2227; /* panel */
   /* shadcn HSL 호환 층 (apps/web 의 hsl(var(--…)) 용) */
-  --background: 216 15% 6%;
-  --foreground: 210 17% 95%;
-  --card: 220 12% 10%;
-  --card-foreground: 210 17% 95%;
-  --popover: 220 12% 10%;
-  --popover-foreground: 210 17% 95%;
-  --primary: 220 82% 68%;
-  --primary-foreground: 216 15% 6%;
-  --secondary: 216 11% 18%;
-  --secondary-foreground: 210 17% 95%;
-  --muted: 218 11% 14%;
-  --muted-foreground: 215 9% 65%;
+  --background: 216 15.2% 6.5%;
+  --foreground: 210 16.7% 95.3%;
+  --card: 220 11.5% 10.2%;
+  --card-foreground: 210 16.7% 95.3%;
+  --popover: 220 11.5% 10.2%;
+  --popover-foreground: 210 16.7% 95.3%;
+  --primary: 219.7 81.6% 68%;
+  --primary-foreground: 216 15.2% 6.5%;
+  --secondary: 216 10.6% 18.4%;
+  --secondary-foreground: 210 16.7% 95.3%;
+  --muted: 217.5 11.4% 13.7%;
+  --muted-foreground: 215.3 9.4% 64.5%;
   --accent: 220 42% 19%;
   --accent-foreground: 220 83% 79%;
-  --destructive: 4 81% 69%;
-  --destructive-foreground: 216 15% 6%;
-  --border: 216 10% 19%;
-  --input: 214 10% 41%;
-  --ring: 220 82% 68%;
+  --destructive: 3.8 80.8% 69.4%;
+  --destructive-foreground: 216 15.2% 6.5%;
+  --border: 216 10.4% 18.8%;
+  --input: 214.3 10% 41.4%;
+  --ring: 219.7 81.6% 68%;
 }
 
 /* 한국어 줄바꿈 (가이드 필수 규칙) */
