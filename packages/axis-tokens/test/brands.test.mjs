@@ -206,6 +206,43 @@ describe('validateBrand 음성', () => {
     const errors = validateBrand(sample(b => { b.shadcn.light.radius = '0 0% 0%'; }), base);
     assert.deepEqual(rules(errors), ['V8']);
   });
+
+  test('V8 소수 퍼센트 HSL 허용(AC6 결정, U14)', () => {
+    const brand = sample(b => {
+      b.shadcn.light.primary = '220 69.4% 52.5%';
+      b.shadcn.light.background = '1.9 62.6% 48.2%';
+      b.shadcn.dark.primary = '219.7 81.6% 68%';
+    });
+    assert.deepEqual(validateBrand(brand, base), []);
+  });
+
+  test('V8 정수 HSL 은 계속 통과', () => {
+    const brand = sample(b => {
+      b.shadcn.light.primary = '220 69% 52%';
+      b.shadcn.light.background = '0 0% 100%';
+      b.shadcn.dark.primary = '360 100% 0%';
+    });
+    assert.deepEqual(validateBrand(brand, base), []);
+  });
+
+  for (const bad of [
+    '220 69.% 52%',     // 소수점 뒤 숫자 없음
+    '220 .4% 52%',      // 소수점 앞 숫자 없음
+    '220 69,4% 52%',    // 쉼표 소수점
+    '220 69.4 52.5%',   // % 누락
+    '220.1.2 69% 52%',  // 소수점 두 번
+    '220 69.4%  52.5%', // 공백 두 칸
+    'hsl(220 69.4% 52.5%)',
+  ]) {
+    test(`V8 형식 위반 거부: "${bad}"`, () => {
+      const errors = validateBrand(sample(b => { b.shadcn.light.primary = bad; }), base);
+      assert.deepEqual(rules(errors), ['V8']);
+    });
+  }
+
+  test('소수 HSL 은 renderShadcnBlock 이 그대로 낸다', () => {
+    assert.equal(renderShadcnBlock({ primary: '220 69.4% 52.5%' }), '  --primary: 220 69.4% 52.5%;');
+  });
 });
 
 describe('checkBrandExports (B5)', () => {
