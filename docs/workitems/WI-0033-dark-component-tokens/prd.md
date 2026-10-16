@@ -70,9 +70,9 @@
 - FR-2: 테마 무관 leaf 14개(채움 버튼 · 흰 글자 · `transparent` · 포커스 테두리 · 오버레이 · 그림자)에는 `"$extensions": { "axis": { "themeIndependent": true } }` 마커를 둡니다(D2).
 - FR-3: 공용 모듈 `packages/axis-tokens/scripts/theme-modes.mjs`에 Style Dictionary preprocessor `axis/theme-dark` 등록(`registerThemePreprocessors`), 테마별 preprocessor 목록(`themePreprocessorsFor`), 색 판정(`isNonColorValue`), 선언 검사(`findThemeDeclarationViolations`)를 둡니다. preprocessor는 `$extensions.axis.dark`가 있는 leaf의 `value`를 그 값으로 바꾸고, `$`로 시작하는 키 아래로는 내려가지 않으며, 확장이 없는 leaf는 건드리지 않습니다. 모듈에는 최상위 실행 코드가 없습니다.
 - FR-4: `build-tokens.mjs`의 다크 빌드(`sdDark`)에 `src/component/**/*.json`과 `preprocessors: themePreprocessorsFor('dark')`를 추가하고, 빌드 시작 전에 선언 검사를 실행해 위반이 있으면 rc 1로 끝냅니다. 라이트 빌드 · JS · JSON 플랫폼 · 포맷은 바꾸지 않습니다. L180 주석을 새 동작에 맞게 고칩니다.
-- FR-5: `scripts/check-token-refs.mjs`에 판정 5(`variables.css`의 `:root` 이름 집합 = `.dark` 이름 집합, `:root` 전용 0 · `.dark` 전용 0)와 판정 6(component 색 leaf의 `axis.dark` 또는 `axis.themeIndependent` 선언, 형식 오류 포함)을 추가합니다. 위반은 rc 1, `.dark` 정의 0 · component leaf 0은 측정 실패 rc 2입니다.
+- FR-5: `scripts/check-token-refs.mjs`에 판정 5(`variables.css`의 `:root` 이름 집합 = `.dark` 이름 집합, `:root` 전용 0 · `.dark` 전용 0, 그리고 `axis.dark`가 있고 소스로 푼 다크 값이 라이트와 다른 component 토큰은 `.dark` 값이 `:root` 값과 달라야 함)와 판정 6(component 색 leaf의 `axis.dark` 또는 `axis.themeIndependent` 선언, 형식 오류 포함)을 추가합니다. 위반은 rc 1, `.dark` 정의 0 · component leaf 0 · 토큰 소스 없음 · 풀 수 없는 참조는 측정 실패 rc 2입니다. 다크 값 축은 다크 빌드의 preprocessor 배선만 빠지는 회귀(이름 집합은 그대로)를 CI 에서 잡기 위한 것입니다.
 - FR-6: 색 판정은 보수적으로 합니다. 길이 · 숫자 · 그림자 리터럴 · 비색 범주 참조(`space` · `radius` · `font` · `shadow` 등)만 비색이고, `transparent` · `currentColor` 같은 이름 색과 알 수 없는 참조는 색으로 봅니다.
-- FR-7: 회귀 테스트를 둡니다. (a) `@axis-ds/tokens` `test`(node --test): preprocessor · 색 판정 · 선언 검사 · Style Dictionary 해석 · 변이 대조 · check-token-refs fixture (b) `@ax/web` `test:e2e:tokens`: Chromium `getComputedStyle` 계산값(`html.dark` · 하위 `div.dark` 두 시나리오, 라이트 변경 0 · 다크 변경 29개 단언).
+- FR-7: 회귀 테스트를 둡니다. (a) `@axis-ds/tokens` `test`(node --test): preprocessor · 색 판정 · 선언 검사 · build-tokens 와 같은 다크 설정(`darkBuildConfig`)의 Style Dictionary 해석 · 변이 대조 · 다크 값 기대값 계산 · check-token-refs fixture (b) `@ax/web` `test:e2e:tokens`: Chromium `getComputedStyle` 계산값(라이트 component 45개가 M1 반영 빌드 3b52976 고정 기준값과 같음, `html.dark` · 하위 `div.dark` 두 시나리오에서 다크 변경 29개의 이름과 다크 hex 단언). (b)는 CI 에 배선하지 않습니다(WI-0025 M3 a11y CI 배선 때 함께 검토).
 
 ### 3.2 비기능 요구사항
 - **라이트 불변**: 기본 빌드의 `:root` 블록과 `tokens.js` · `tokens.mjs` · `tokens.d.ts` · `tokens.json` · `shadcn-compat.css` · `tailwind-preset.*`가 수정 전 빌드와 바이트 단위로 같아야 합니다.
@@ -96,8 +96,8 @@
 - AC1: 기본 빌드에서 `:root` 블록과 JS · JSON · d.ts · shadcn-compat · tailwind-preset 산출물이 수정 전과 바이트 단위로 같습니다(sha256 일치).
 - AC2: `variables.css`에서 `:root` 전용 이름이 0개, `.dark` 전용 이름이 0개입니다(main 249 = 249).
 - AC3: 기존 `.dark` 204줄의 텍스트가 바뀌지 않습니다(diff에 삭제 줄 0, 추가 줄 45).
-- AC4: Chromium 계산값 기준으로 라이트는 변경 0, `html.dark`와 하위 `div.dark`는 각각 29개가 바뀝니다. 바뀌는 29개는 plan.md 4.1 분류표와 일치합니다.
-- AC5: preprocessor를 뺀 변이 빌드에서는 AC4의 다크 변경 단언이 실패합니다(변이 대조).
+- AC4: Chromium 계산값 기준으로 라이트 component 45개는 M1 반영 빌드 3b52976 의 값과 같고, `html.dark`와 하위 `div.dark`는 각각 29개가 바뀝니다. 바뀌는 29개의 이름과 다크 값은 plan.md 4.1 분류표와 일치합니다.
+- AC5: preprocessor를 뺀 변이 빌드에서는 AC4의 다크 변경 단언이 실패하고, CI 가 실행하는 `check-token-refs`도 rc 1(다크 값 미반영)입니다(변이 대조).
 - AC6: `node scripts/check-token-refs.mjs`가 수정 산출물에서 rc 0이고, 음성 fixture(`.dark` 줄 누락 · `.dark` 전용 이름 · `transparent` 선언 누락)에서 각각 rc 1입니다.
 - AC7: 다크에서 Card · Dialog 바탕 / `text-primary`, button-secondary 바탕 / 글자, Input 바탕 / placeholder 대비가 4.5:1 이상입니다.
 - AC8: `tokens.json` · `tokens.js` · `tokens.mjs`에 `$extensions`가 나타나지 않습니다.
@@ -118,9 +118,9 @@
 | # | 내용 | 영향 | 상태 · 대응 |
 |---|---|---|---|
 | Q1 | 릴리스 단위 | 높음 | 해결(D6): changeset 없이 1.2.1에 포함합니다 |
-| Q2 | `components.json` 변경 줄이 WI-0025 M3 hunk(L106)와 2줄 간격입니다 | 중간 | 열림. 줄 단위 제자리 수정만 했습니다. M3 rebase 때 L99-110을 확인합니다(이 브랜치에서는 실제 rebase를 측정하지 않았습니다) |
+| Q2 | `components.json` 변경 줄이 WI-0025 M3 hunk(L106)와 2줄 간격입니다 | 중간 | 해결: 실제 rebase 에서 `components.json`은 자동 병합, 충돌 0 이었습니다. 실측 충돌은 M2 가 `package.json` `test` 줄 2회, M3 가 같은 2회 + `scripts/check-token-refs.mjs` 1회이고, `build-tokens.mjs`는 둘 다 자동 병합됐습니다(plan 6장) |
 | Q3 | 브랜드 다크 빌드는 preprocessor를 쓰지 않아, 브랜드 `dark.json`의 component 참조가 라이트 값으로 풀립니다(종전 동작) | 중간 | 해결(D5): M2 rebase 때 `renderTheme`에 한 줄을 추가합니다 |
 | Q4 | 다크 placeholder | 낮음 | 해결(D4): gray.400(7.93:1) |
 | Q5 | 채움 버튼(primary · destructive) 다크 대비 3.68 · 3.76:1 | 낮음 | 해결(D3): 테마 무관 유지, WI-0029 소관 |
 | Q6 | 하위 요소 `.dark` 아래에서는 이제 기본 다크 component 값이 브랜드 라이트 component 값을 이깁니다 | 낮음 | semantic 토큰의 현재 동작과 같습니다. 릴리스 노트에 적습니다 |
-| Q7 | `@axis-ds/tokens` `package.json`의 `test` 줄이 M2의 같은 자리 추가와 겹칩니다 | 낮음 | 열림. M2 rebase 때 두 목록을 합칩니다(plan 5장) |
+| Q7 | `@axis-ds/tokens` `package.json`의 `test` 줄이 M2의 같은 자리 추가와 겹칩니다 | 낮음 | 열림. M2 rebase 때 두 목록을 합칩니다(plan 6장) |

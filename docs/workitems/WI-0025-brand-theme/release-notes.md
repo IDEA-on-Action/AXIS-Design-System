@@ -35,7 +35,7 @@
 13개 컴포넌트의 상태 · diff · 아바타 색을 semantic 토큰으로 교체했습니다. 라이트 · 다크 계산값이 1.2.0과 같음을 측정으로 확인했습니다. 버튼 글자의 `text-white` 4곳은 `--axis-button-text-default` · `--axis-button-destructive-text-default`(기본 #FFFFFF)로 바꿨습니다.
 
 #### tokens: 다크 모드 component 토큰 재정의 (WI-0033)
-1.2.0까지 다크 빌드가 component 토큰을 빼고 있어, `variables.css`의 `.dark`에 component 변수 45개(button · input · card · badge · dialog)가 없었습니다. 그래서 다크에서도 라이트 값이 그대로 쓰여 Card · Dialog 바탕이 흰색으로 남았습니다. 1.2.1부터 `.dark`가 45개를 모두 재정의하고, 그중 29개의 다크 값이 바뀝니다. 라이트(`:root`) 출력과 JS · JSON · `shadcn-compat.css` · tailwind preset은 1.2.0과 바이트 단위로 같습니다.
+1.2.0까지 다크 빌드가 component 토큰을 빼고 있어, `variables.css`의 `.dark`에 component 변수 45개(button · input · card · badge · dialog)가 없었습니다. 그래서 다크에서도 라이트 값이 그대로 쓰여 Card · Dialog 바탕이 흰색으로 남았습니다. 1.2.1부터 `.dark`가 45개를 모두 재정의하고, 그중 29개의 다크 값이 바뀝니다. WI-0033 은 라이트 출력을 바꾸지 않습니다. M1 반영 빌드 3b52976 대비 `variables.css`의 `:root` 블록과 나머지 산출물 9개(JS · JSON · d.ts · `shadcn-compat.css` · tailwind preset)의 sha256 이 일치합니다. 1.2.0 대비 `:root`가 달라지는 부분은 M1(f465d2b, 위 tokens 항목)에서 온 것입니다(v1.2.0..3b52976 에서 토큰 소스를 바꾼 커밋은 f465d2b 하나입니다).
 
 | 소비처 (다크) | 1.2.0 | 1.2.1 |
 |---|---|---|
@@ -72,4 +72,4 @@ component 토큰 JSON에는 `$extensions.axis.dark`(다크 값) 또는 `$extensi
 - `check-token-refs`: 1.2.0 소스에서 위반 140건(정의 누락 60 · primitive 80) 재현, 1.2.1에서 0건. 정의 1줄 삭제 · 판정 fixture · 측정 실패 대조군 통과. CI 로그에서 단계 실행 확인
 - 화면 비교(Playwright 하네스, 라이트 · 다크 · 포커스 208장): ui-react 13개 변화가 plan 1.3 대상 값과 일치, agentic-ui 13개 차이 0
 - Breaking change 없음: 공개 export와 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분뿐
-- WI-0033 (2026-10-16): tokens dist 10개 중 `variables.css`만 변경(나머지 9개 sha256 일치), `:root` 블록 바이트 동일, `.dark` 204 → 249(삭제 0 · 추가 45), Chromium 계산값 라이트 변경 0 · `html.dark` · `div.dark` 변경 29. preprocessor를 뺀 변이 빌드에서 다크 단언 실패 확인. type-check · build · test(turbo `--force`, 캐시 0): tokens 12 · ui-react 100 · agentic-ui 72 · cli 58 · theme 21 통과
+- WI-0033 (2026-10-16): M1 반영 빌드 3b52976 대비 tokens dist 10개 중 `variables.css`만 변경(나머지 9개 sha256 일치), `:root` 블록 바이트 동일, `.dark` 204 → 249(삭제 0 · 추가 45). Chromium 계산값: 라이트 component 45개가 3b52976 고정 기준값과 같음, `html.dark` · `div.dark` 변경 29개의 이름과 다크 값이 기대 맵과 같음. preprocessor를 뺀 변이 빌드에서 Chromium 다크 단언 2건 실패, `check-token-refs` rc 1(다크 값 미반영 29) 확인. type-check · build · test(turbo `--force`, 캐시 0, build 를 먼저 단독 실행): tokens 16 · ui-react 100 · agentic-ui 72 · cli 58 · theme 21 통과

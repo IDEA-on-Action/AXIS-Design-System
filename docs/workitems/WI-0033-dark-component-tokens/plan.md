@@ -7,13 +7,13 @@
 
 | # | 파일 | 변경 |
 |---|---|---|
-| 1 | `packages/axis-tokens/scripts/theme-modes.mjs` (신규) | `THEME_DARK_PREPROCESSOR` · `registerThemePreprocessors(StyleDictionary)` · `themePreprocessorsFor(theme)` · `applyThemeValues` · `isNonColorValue` · `findThemeDeclarationViolations` export. 최상위 실행 코드 없음, style-dictionary를 직접 import하지 않음 |
+| 1 | `packages/axis-tokens/scripts/theme-modes.mjs` (신규) | `THEME_DARK_PREPROCESSOR` · `registerThemePreprocessors(StyleDictionary)` · `themePreprocessorsFor(theme)` · `applyThemeValues` · `isNonColorValue` · `findThemeDeclarationViolations` export. 기본 다크 빌드 설정 `darkBuildConfig({ root })`와 다크 값 기대값 계산(`cssVarNameOf` · `flattenTokens` · `resolveTokenValue` · `findDarkValueExpectations`)도 둠. 최상위 실행 코드 없음, style-dictionary를 직접 import하지 않음 |
 | 2 | `packages/axis-tokens/src/component/components.json` | 테마 의존 31줄에 `axis.dark`, 테마 무관 14줄에 `axis.themeIndependent` 덧붙임. 줄 단위 제자리 수정, 재포맷 없음(45줄 변경) |
-| 3 | `packages/axis-tokens/build-tokens.mjs` | L180-199에 theme-modes import · 등록 · 선언 검사(위반 시 rc 1), `sdDark`에 `preprocessors: themePreprocessorsFor('dark')`와 `src/component/**/*.json` 추가, L180 주석 정정(긴 줄표 제거) |
-| 4 | `scripts/check-token-refs.mjs` | 판정 5(이름 집합 동일) · 판정 6(테마 선언) 추가, `--component-dir` 옵션, 요약 줄 1줄 추가. 기존 판정 1~4는 그대로 둠 |
-| 5 | `packages/axis-tokens/test/theme-modes.test.mjs` · `dark-completeness.test.mjs` (신규) | node --test. fixture는 `test/fixtures/dark-completeness/`(양성 1 · 음성 3) |
+| 3 | `packages/axis-tokens/build-tokens.mjs` | L180-199에 theme-modes import · 등록 · 선언 검사(위반 시 rc 1), `sdDark`를 `new StyleDictionary(darkBuildConfig())`로 만듦(설정에 `preprocessors: themePreprocessorsFor('dark')`와 `src/component/**/*.json` 포함), L180 주석 정정(긴 줄표 제거) |
+| 4 | `scripts/check-token-refs.mjs` | 판정 5(이름 집합 동일 + 다크 값 미반영) · 판정 6(테마 선언) 추가, `--component-dir` · `--token-dir` 옵션, 요약 줄 1줄 추가. 기존 판정 1~4는 그대로 둠 |
+| 5 | `packages/axis-tokens/test/theme-modes.test.mjs` · `dark-completeness.test.mjs` (신규) | node --test. fixture는 `test/fixtures/dark-completeness/`(양성 1 · 음성 4, 토큰 소스 `tokens/`) |
 | 6 | `packages/axis-tokens/package.json` | `"test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs"` |
-| 7 | `apps/web/e2e/dark-tokens.spec.ts` · `apps/web/playwright.tokens.config.ts` (신규), `apps/web/package.json` | Chromium 계산값 회귀 테스트, `test:e2e:tokens` 스크립트(개발 서버 없이 실행) |
+| 7 | `apps/web/e2e/dark-tokens.spec.ts` · `apps/web/e2e/fixtures/dark-tokens-light-3b52976.json` · `apps/web/playwright.tokens.config.ts` (신규), `apps/web/package.json` | Chromium 계산값 회귀 테스트, 라이트 고정 기준값(M1 반영 빌드 3b52976 의 component 45개 `:root` 값), `test:e2e:tokens` 스크립트(개발 서버 없이 실행) |
 | 8 | `docs/workitems/WI-0025-brand-theme/release-notes.md`, `packages/axis-{tokens,ui-react,agentic-ui,theme}/CHANGELOG.md` | 1.2.1 절에 이 수정 추가(changeset 없음, D6) |
 
 손대지 않는 파일: 라이트 빌드 source(L136-141), 포맷 L39-60, JS · JSON 플랫폼, `scripts/build-brands.mjs` · `scripts/brands.mjs`(M2 소유), `project-todo.md` · `.github/wi-mapping.json`(PR #98과 충돌 방지)
@@ -38,12 +38,14 @@
 | V2 | 라이트 바이트 동일 | dist 10개 파일 sha256 비교: `variables.css`만 다르고 9개 일치. `:root` 블록 문자열 동일 | 같은 소스 재빌드 sha 전부 일치(결정성), `variables.css` 전체는 달라야 함 |
 | V3 | 다크 추가만 | `diff base new variables.css`에 `<` 줄 0, `>` 줄 45 | - |
 | V4 | 이름 집합 | `:root` 전용 0 · `.dark` 전용 0 (249 / 249) | 수정 전 base에서 `:root` 전용 45 |
-| V5 | 계산값 | `pnpm --filter @ax/web test:e2e:tokens`: 라이트 0, `html.dark` 29, `div.dark` 29 | 기준선(`.dark`에서 component 줄을 지운 CSS)이 수정 전 실제 `variables.css`와 문자열 동일 |
-| V6 | 변이(음성) | `preprocessors`를 `[]`로 바꾼 빌드 CSS로 V5 실행 → 다크 단언 2건 실패. 같은 변이에서 V4는 통과(이름 집합만으로는 못 잡음) | 수정 전 CSS로 V5 실행 → 3건 실패 |
-| V7 | 가드 | `pnpm check-token-refs` rc 0 | fixture 음성 3종 rc 1, 실제 산출물에서 `.dark` 1줄 삭제 사본 rc 1, 수정 전 dist · components 사본 rc 1(`:root` 전용 45 · 선언 위반 43) |
+| V5 | 계산값 | `pnpm --filter @ax/web test:e2e:tokens`: 라이트 component 45개가 고정 기준값(3b52976)과 같음, `html.dark` · `div.dark` 각 29개의 이름과 다크 hex 가 4.1 표와 같음 | 기준선(`.dark`에서 component 줄을 지운 CSS)이 수정 전 실제 `variables.css`와 문자열 동일 |
+| V6 | 변이(음성) | `preprocessors`를 `[]`로 바꾼 빌드 CSS로 V5 실행 → 다크 단언 2건 실패. 같은 변이에서 V4 이름 집합은 통과하지만 V7 다크 값 축이 rc 1 | 수정 전 CSS로 V5 실행 → 3건 실패. 라이트 값 변이 → 라이트 단언 실패, 다크 값을 다른 다크 값으로 바꾼 변이 → 다크 단언 2건 실패 |
+| V7 | 가드 | `pnpm check-token-refs` rc 0, 요약에 `다크 값 대상 29 · 미반영 0` | fixture 음성 4종 rc 1(다크 값 미반영 포함), 실제 산출물에서 `.dark` 1줄 삭제 사본 rc 1, 수정 전 dist · components 사본 rc 1(`:root` 전용 45 · 선언 위반 43), `sdDark` preprocessor 제거 빌드 rc 1(미반영 29) |
 | V8 | 누수 | `grep -c '$extensions'` `tokens.json` · `tokens.js` · `tokens.mjs` 각 0 | 소스 `components.json`에는 45 |
 | V9 | 대비 | V5 안의 대비 단언(≥ 4.5) | 수정 전 값 1.10 · 2.54가 재현되는지(대비 계산 스크립트) |
 | V10 | 품질 게이트 | `pnpm turbo run type-check build test --force` · `pnpm lint` | `Cached: 0 cached` 확인 |
+
+CI 가 실행하는 것은 V7(`pnpm check-token-refs`: 이름 집합 · 다크 값 · 테마 선언)과 tokens test(`pnpm test`)입니다. V5 · V6 의 Chromium 계산값 테스트는 CI 에 배선하지 않습니다(CI 에 Playwright 브라우저 설치 단계가 없음). WI-0025 M3 의 a11y CI 배선 때 함께 검토합니다.
 
 ## 4. 45개 분류표 (main)
 
@@ -123,9 +125,17 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
 
 ## 6. WI-0025 M2 · M3 rebase 체크리스트
 
-- M3: `components.json` L99-110 수동 확인(plan-card · card-shadow는 비색이라 선언 필수 아님), `check-token-refs` 요약 줄에서 `:root` 전용 47→0, 브랜드 테스트 64/64
-- M3: `dark-tokens.spec.ts`의 `:root` 249 · 기준선 `.dark` 204 · 변경 29 단언은 M3에서 숫자가 달라집니다(`:root` 259 등). rebase 때 실측값으로 고칩니다
-- M2: `scripts/build-brands.mjs` `renderTheme`에 아래 두 줄을 추가합니다(공용 모듈 덕분에 등록은 한 번, 설정은 한 줄)
+> 충돌 위치는 38ecea7 을 기준으로 임시 rebase 해서 잰 값입니다(2026-10-16). 그 뒤 리뷰 반영(다크 값 축 · `darkBuildConfig`)으로 `scripts/check-token-refs.mjs` · `build-tokens.mjs`가 더 바뀌었으므로, 실제 rebase 에서 hunk 수를 다시 확인합니다.
+
+### 공통
+
+- 실측 충돌: M2 는 `packages/axis-tokens/package.json` `test` 줄 2회(커밋 24cc10f · 9c7eb5b, 각 1 hunk)입니다. M3 는 같은 `test` 줄 2회(101f879 · 7227b4c)와 `scripts/check-token-refs.mjs` 1회(9f8c18c, 2 hunk)입니다. `build-tokens.mjs` · `components.json`은 둘 다 자동 병합됐습니다
+- `test` 줄 해소값: `node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/brands.test.mjs test/build-brands.test.mjs`
+- 둘 다 `pnpm check-token-refs` rc 0, `pnpm --filter @axis-ds/tokens test` 통과, `pnpm --filter @ax/web test:e2e:tokens` 통과를 확인합니다
+
+### M2
+
+- `scripts/build-brands.mjs` `renderTheme`에 아래 두 줄을 추가합니다(공용 모듈 덕분에 등록은 한 번, 설정은 한 줄)
 
   ```js
   import { registerThemePreprocessors, themePreprocessorsFor } from './theme-modes.mjs'
@@ -133,10 +143,24 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
   // new StyleDictionary({ ..., preprocessors: themePreprocessorsFor(theme) })
   ```
 
-  fixture 브랜드 `dark.json`에 `{card.bg.default}` 참조를 넣은 프로브가 #030712로 풀리는지(미반영 시 #FFFFFF 대조), 순환 참조 Reference Errors가 없는지 확인합니다
-- M2: `packages/axis-tokens/package.json` `test` 줄이 겹칩니다. 두 목록을 합칩니다(`node --test test/brands.test.mjs test/build-brands.test.mjs test/theme-modes.test.mjs test/dark-completeness.test.mjs`)
-- M2: `build-tokens.mjs`는 M2가 L31-36 · L58 · L114-122 · 끝부분을, 이 WI가 L180-205를 바꿉니다. 겹치는 hunk는 없을 것으로 보지만 실제 rebase로 확인합니다
-- 둘 다 `pnpm check-token-refs` rc 0, `pnpm --filter @axis-ds/tokens test` 통과 확인
+  fixture 브랜드 `dark.json`에 `{card.bg.default}` 참조를 넣은 프로브의 기대값은 다음과 같습니다. 브랜드가 `surface.default`를 덮어쓰면 그 값(sample 브랜드는 #172030), 덮어쓰지 않으면 기본 다크 #030712 입니다. preprocessor 가 빠지면 라이트 값 #FFFFFF 가 나옵니다(음성 대조). 순환 참조 Reference Errors 가 없는지도 확인합니다
+- 실측(38ecea7 기준) tokens test 는 62/62(WI-0033 12 + 브랜드 50)였습니다. 리뷰 반영으로 WI-0033 테스트가 16개가 되었으므로 기대값은 WI-0033 16 + 브랜드 50 입니다
+
+### M3
+
+- `scripts/check-token-refs.mjs` 판정 번호(2026-10-16 사용자 결정): WI-0033 의 판정 5(이름 집합 · 다크 값) · 6(테마 선언)을 유지하고, M3 의 CSS 미생성을 판정 7 로 바꿉니다. 해소 방법은 다음과 같습니다
+  - 상단 주석의 판정 목록은 양쪽을 모두 남기고, M3 의 「6. CSS 미생성 …」을 「7. CSS 미생성 …」으로 고칩니다
+  - M3 주석의 「(번호 5는 비워 둡니다. WI-0025 plan.md 결정 U7 의 번호를 그대로 씁니다.)」 줄은 지웁니다
+  - M3 의 함수 주석 「판정 6: Tailwind 3.4가 CSS를 만들지 않는 …」도 「판정 7」로 고칩니다
+  - `const violations` 식은 `counts.missing + counts.primitive + counts.dynamic + counts.noCss + darkViolations + theme.violations.length`로 합칩니다
+  - WI-0025 plan.md 의 U7(L654) · G2(L678)에 적힌 「판정 6」도 M3 쪽에서 「판정 7」로 고칩니다
+- `components.json`: 실측에서 자동 병합, 충돌 0 이었습니다. M3 전용 2개(plan-card · card-shadow)는 비색이라 선언이 필요 없습니다(실측 leaf 47 · 색 leaf 43 · 위반 0)
+- 고정 수치
+  - `theme-modes.test.mjs`의 component leaf 수는 소스에서 센 값과 비교하도록 바꿨으므로 고칠 것이 없습니다(M3 47). 색 leaf 43 은 고정값이고 M3 에서도 43 이라 그대로 둡니다
+  - `dark-tokens.spec.ts`의 `:root` 수와 기준선 `.dark` 수는 산출물과 `components.json`에서 센 값으로 비교하므로 고칠 것이 없습니다. M3 실측 기대값은 `:root` 249 → 259, 기준선 `.dark` 204 → 212(259 - 47)이며 rebase 뒤 테스트를 실행해 확인합니다
+  - `dark-tokens.spec.ts`의 다크 기대 맵 29개(`EXPECTED_DARK`)와 라이트 고정 기준값 45개(`fixtures/dark-tokens-light-3b52976.json`)는 고정값입니다. M3 에서도 다크 값이 바뀌는 것은 29개이고(실측), M3 추가 2개는 라이트 기준값에 없어 검사 대상이 아니므로 그대로 둡니다
+  - `check-token-refs` 요약 줄 기대값: `:root 259 · .dark 259 · :root 전용 0 · .dark 전용 0 · 다크 값 대상 29 · 미반영 0`, 테마 선언 `leaf 47 · 색 leaf 43 · 위반 0`
+- 브랜드 테스트 64/64 유지를 확인합니다
 
 ## 7. 실측 결과 (2026-10-16, main 3b52976 위)
 
@@ -146,3 +170,13 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
 - 다크 계산값 변경 29개(4.1표에서 #2 · #13 제외), 라이트 변경 0
 - 변이(preprocessor 제거): 추가 45 · 다크 값 변경 0. 이름 집합 검사는 통과하고 Chromium 다크 단언 2건이 실패
 - 대비(다크, 수정 전 → 후): Card / text-primary 1.10 → 18.30, Card / text-secondary 2.54 → 7.93, Input / placeholder 2.54 → 7.93, ghost 글자 1.95 → 13.66, Badge success 4.57 → 8.55 · warning 4.58 → 9.52 · error 5.30 → 5.84 · info 5.49 → 5.78 · default 9.37 → 12.04, 채움 버튼 3.68 · 3.76 유지
+
+### 7.1 리뷰 반영 뒤 재측정 (2026-10-16)
+
+- `sdDark` 설정을 `darkBuildConfig()`로 옮긴 뒤 dist 10개 sha256 이 38ecea7 빌드와 모두 일치합니다. `:root` 블록 8,917바이트는 38ecea7 · 3b52976 빌드와 바이트 동일합니다
+- `pnpm check-token-refs` rc 0: `:root 249 · .dark 249 · :root 전용 0 · .dark 전용 0 · 다크 값 대상 29 · 미반영 0`, 테마 선언 `leaf 45 · 색 leaf 43 · 위반 0`
+- 변이 A(`build-tokens.mjs`에서 `{ ...darkBuildConfig(), preprocessors: [] }`): 빌드 rc 0, `check-token-refs` rc 1(미반영 29), Chromium 다크 단언 2건 실패
+- 변이 B(`darkBuildConfig`의 `preprocessors`를 `[]`): 빌드 rc 0, `check-token-refs` rc 1(미반영 29), tokens test 1건 실패(`darkBuildConfig` 해석)
+- 변이 L(`card.bg.default` 라이트 값을 `{color.gray.50}`): Chromium 라이트 단언 1건 실패. 변이 D(`card.bg.default` 다크 값을 `{surface.secondary}`): 바뀌는 이름 목록은 같지만 Chromium 다크 단언 2건 실패
+- tokens test 16/16, `pnpm --filter @ax/web test:e2e:tokens` 4/4
+- `pnpm turbo run type-check build test --force`를 한 번에 돌리면 `@ax/web#type-check`가 TS6053 61건(`.next/types` 누락)으로 실패합니다. build 와 type-check 의 실행 순서 경합입니다. `pnpm turbo run build --force`(8/8, 캐시 0)를 먼저 단독으로 돌린 뒤 `pnpm turbo run type-check test --force`(12/12, 캐시 0)는 rc 0 입니다

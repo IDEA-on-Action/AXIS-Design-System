@@ -53,19 +53,20 @@
 - [x] 요약 줄 추가: `다크 완전성: :root N · .dark N · :root 전용 N · .dark 전용 N | 테마 선언: JSON N · leaf N · 색 leaf N · 위반 N` (FR-5)
 
 ### M1-5 테스트
-- [x] `packages/axis-tokens/test/theme-modes.test.mjs`: 색 판정 · preprocessor · 선언 검사 · 실제 components.json(leaf 45 · 색 leaf 43 · 위반 0) · Style Dictionary 해석(29개) · 변이 대조(preprocessor 없으면 0개) (FR-7)
-- [x] `packages/axis-tokens/test/dark-completeness.test.mjs`: fixture 양성 rc 0, 음성(`:root` 전용 · `.dark` 전용 · transparent 선언 누락) rc 1, component 디렉터리 없음 rc 2 (FR-7 · AC6)
+- [x] `packages/axis-tokens/test/theme-modes.test.mjs`: 색 판정 · preprocessor · 선언 검사 · 실제 components.json(leaf 수는 소스에서 센 값 · 색 leaf 43 · 위반 0) · `darkBuildConfig` 해석(바뀌는 목록이 다크 값 기대값과 같음) · 변이 대조(preprocessor 없으면 0개) · `resolveTokenValue` · `findDarkValueExpectations` (FR-7)
+- [x] `packages/axis-tokens/test/dark-completeness.test.mjs`: fixture 양성 rc 0, 음성(`:root` 전용 · `.dark` 전용 · 다크 값 미반영 · transparent 선언 누락) rc 1, 토큰 소스 · component 디렉터리 없음 rc 2 (FR-7 · AC6)
+- [x] `scripts/check-token-refs.mjs` 판정 5 다크 값 축: `sdDark` preprocessor 제거 빌드에서 rc 1(미반영 29) 확인 (AC5)
 - [x] `packages/axis-tokens/package.json` `test` 스크립트 (FR-7)
-- [x] `apps/web/e2e/dark-tokens.spec.ts` + `playwright.tokens.config.ts` + `test:e2e:tokens`: Chromium 라이트 0 · `html.dark` 29 · `div.dark` 29, 다크 대비 ≥ 4.5 (FR-7 · AC4 · AC7)
+- [x] `apps/web/e2e/dark-tokens.spec.ts` + `playwright.tokens.config.ts` + `test:e2e:tokens`: Chromium 라이트 component 45개 = 3b52976 고정 기준값(`e2e/fixtures/dark-tokens-light-3b52976.json`), `html.dark` · `div.dark` 29개 이름 · 다크 hex 맵 일치, 다크 대비 ≥ 4.5 (FR-7 · AC4 · AC7)
 - [x] 테스트 변이 확인: preprocessor 본체 무력화 시 2건 실패, transparent를 비색으로 바꾸면 5건 실패
-- [ ] Chromium 계산값 테스트 CI 배선 (WI-0025 M3 a11y CI 배선 때 함께 검토)
+- [ ] Chromium 계산값 테스트 CI 배선: 이번 WI 에서는 배선하지 않습니다(CI 에 Playwright 브라우저 설치 단계가 없음). WI-0025 M3 a11y CI 배선 때 함께 검토합니다
 
 ### M1-6 검증
 - [x] dist sha256: `variables.css`만 변경, 9개 일치, 재빌드 결정성 확인 (AC1)
 - [x] `:root` 블록 문자열 동일(8,917바이트), `.dark` 249 = `:root` 249 (AC1 · AC2)
 - [x] `variables.css` diff 삭제 0 · 추가 45 (AC3)
 - [x] 다크 계산값 변경 29개가 plan 4.1과 일치 (AC4)
-- [x] 변이(preprocessor 제거) CSS에서 Chromium 다크 단언 2건 실패, 수정 전 CSS에서 3건 실패 (AC5)
+- [x] 변이(preprocessor 제거) CSS에서 Chromium 다크 단언 2건 실패, 수정 전 CSS에서 3건 실패, 같은 변이에서 `check-token-refs` rc 1 (AC5)
 - [x] `pnpm check-token-refs` rc 0, 실제 산출물 `.dark` 1줄 삭제 사본 rc 1, 수정 전 dist · components 사본 rc 1 (AC6)
 - [x] `tokens.json` · `tokens.js` · `tokens.mjs`에 `$extensions` 0건 (소스 45건 대조) (AC8)
 - [x] `pnpm turbo run type-check build test --force` (캐시 0) · `pnpm lint` 통과 (비기능)
