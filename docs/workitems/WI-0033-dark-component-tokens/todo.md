@@ -50,7 +50,7 @@
 - [x] 판정 5: `variables.css` `:root` 이름 집합 = `.dark` 이름 집합 (`:root` 전용 · `.dark` 전용 각각 위반) (FR-5)
 - [x] 판정 6: component 색 leaf 테마 선언 (theme-modes 함수 재사용, `--component-dir` 옵션) (FR-5)
 - [x] 측정 실패 rc 2: `.dark` 정의 0, component 디렉터리 없음 · JSON 0 · leaf 0 (FR-5)
-- [x] 요약 줄 추가: `다크 완전성: :root N · .dark N · :root 전용 N · .dark 전용 N | 테마 선언: JSON N · leaf N · 색 leaf N · 위반 N` (FR-5)
+- [x] 요약 줄 추가: `다크 완전성: :root N · .dark N · :root 전용 N · .dark 전용 N · 다크 값 대상 N · 미반영 N | 테마 선언: JSON N · leaf N · 색 leaf N · 위반 N` (FR-5)
 
 ### M1-5 테스트
 - [x] `packages/axis-tokens/test/theme-modes.test.mjs`: 색 판정 · preprocessor · 선언 검사 · 실제 components.json(leaf 수는 소스에서 센 값 · 색 leaf 43 · 위반 0) · `darkBuildConfig` 해석(바뀌는 목록이 다크 값 기대값과 같음) · 변이 대조(preprocessor 없으면 0개) · `resolveTokenValue` · `findDarkValueExpectations` (FR-7)

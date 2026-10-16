@@ -56,7 +56,7 @@ component 토큰 JSON에는 `$extensions.axis.dark`(다크 값) 또는 `$extensi
 
 #### CI
 - `pnpm check-token-refs`: ui-react · agentic-ui의 `var(--axis-*)`가 모두 정의됐는지, agentic-ui에 primitive 참조가 없는지 검사 (frontend · publish 워크플로)
-- 같은 검사에 다크 완전성 추가 (WI-0033): `variables.css`의 `:root` 이름 집합과 `.dark` 이름 집합이 같은지, component 색 토큰이 다크 값 또는 테마 무관을 선언했는지. 선언 검사는 토큰 빌드에서도 실행되어 누락 시 빌드가 실패합니다
+- 같은 검사에 다크 완전성 추가 (WI-0033): `variables.css`의 `:root` 이름 집합과 `.dark` 이름 집합이 같은지, 다크 값이 라이트와 달라야 하는 component 토큰의 `.dark` 값이 실제로 다른지, component 색 토큰이 다크 값 또는 테마 무관을 선언했는지. 선언 검사는 토큰 빌드에서도 실행되어 누락 시 빌드가 실패합니다
 - `pnpm --filter @axis-ds/tokens test` 신설(CI `pnpm test`에 포함), `pnpm --filter @ax/web test:e2e:tokens`(Chromium 계산값 회귀, 로컬 실행)
 
 ### 소비 프로젝트 영향 (2026-10-15 확인)
