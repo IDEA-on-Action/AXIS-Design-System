@@ -637,3 +637,47 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 
 ---
 
+
+## 5. M3 설계 결정 (2026-10-16)
+
+> 근거: M3 설계 워크플로(묶음 G1~G5 명세, 묶음별 적대 검증, 최종 점검). 디자인 기준 v0.24 교체(PRD v0.4) 뒤에 G3 · G4 · 최종 점검을 다시 실행한 결과입니다. 부록 B는 미승인 상태입니다.
+
+### 5.1 사용자 결정
+
+| # | 항목 | 결정 |
+|---|---|---|
+| U1 | Card 그림자 토큰 위치 | `components.json` 최상위 `card-shadow`(산출 `--axis-card-shadow`). 1.2.1 변수는 지우거나 값을 바꾸지 않습니다 |
+| U2 | ontology Card 그림자 끄기 값 | `0 0 #0000` (2026-10-16 결정 `none`을 변경. `none`은 Tailwind ring 그림자까지 지웁니다) |
+| U3 | Card 그림자 기본값 | `{shadow.sm}` 참조(빌드가 리터럴로 풉니다) |
+| U4 | `cn()` 병합 규칙 | `extendTailwindMerge`에 그림자 변수 클래스를 등록합니다 |
+| U5 | 그 밖의 하드코딩 그림자 | 이번에 열지 않고, PRD FR-9의 「팝오버 · 탭」 서술만 실제 범위에 맞게 고칩니다 |
+| U6 | agentic-ui 불투명도 수식어 11곳 | 혼합안: PlanCard 배지는 `--axis-badge-*`, AttachmentCard 테두리는 `--axis-status-error-border`, 나머지 5곳은 `color-mix()` (2026-10-15 「전부 color-mix」 결정의 부분 변경) |
+| U7 | `check-token-refs` | Tailwind가 CSS를 만들지 않는 패턴(임의값 `var()` + 불투명도 수식어)을 판정 6으로 추가합니다 |
+| U8 | ontology PlanCard 색 선 두께 | 디자인 오너 확인 항목(0이면 왼쪽 테두리선도 사라짐, 권고 1px). 확인 전까지 초안 값 0 유지 |
+| U9 | a11y 기본 브랜드 18건 | `apps/web` 정비 직후 실측하고, 그 결과를 보기 전에는 CI 게이트를 켜지 않습니다 |
+| U10 | a11y CI 서버 방식 | CI는 `apps/web/out` 정적 서버, 로컬은 `next dev` 기본에 `E2E_SERVER=static` 선택 (4 결정 1) |
+| U11 | 3 결정 13 · 결정 8 | 브랜드 CSS는 tokens CSS 다음에 import하고, AC6에서 `--primary`를 검사합니다. 결정 8은 문서 안내로 처리합니다 |
+| U12 | 실행 명령 · 기준선 | `test:e2e`는 spec 전체 실행, 비텍스트 대비 검사는 spec으로 자동화, AC3 기준선은 `3b52976` 빌드 결과를 fixture로 고정하고 npm 1.2.1 배포 뒤 `cmp`로 교차 확인합니다 |
+| U13 | 부록 B 승인 전 진행 범위 | 기본 화면 불변 묶음(G1 · G2 · G3 · `apps/web` 정비)과 ontology 브랜드 구조(빌드 · exports · 검사)까지 진행합니다. ontology 색 값 확정과 M3 머지는 승인 뒤에 합니다 |
+| U14 | 브랜드 검증 V8 | HSL 소수 퍼센트를 받도록 정규식을 넓히고 테스트를 추가합니다 |
+| U15 | ontology 상태 색 접기 값 | 권고: warning = `bad`, success = `ink-2`, diff.added = 회색. 부록 B 승인 때 함께 확인받습니다 |
+| U16 | 초안에 없는 토큰(interactive · dialog 등) | ontology 값을 추가합니다. 다크 interactive는 기본값을 유지합니다 |
+| U17 | 초안의 `word-break` 규칙 | 토큰이 아니므로 M4 문서 안내로 처리합니다 |
+| U18 | 구현 중 바뀐 값의 초안 역반영 | 부록 B 승인 뒤에 합니다 |
+| U19 | d.ts 선언 | `plan-card` · `card-shadow`를 추가합니다 |
+| U20 | 기본 테마의 흰 글자 대비 미달 | 이번에 손대지 않고 백로그에 등록합니다 |
+| U21 | tailwind content에 `./src/lib` 추가 | 별건으로 분리합니다 |
+| U22 | 1.3.0 릴리스 노트 · changeset | 노트 초안은 M3에서 한 명이 맡아 쓰고, changeset은 M4에서 만듭니다 |
+
+### 5.2 구현 순서
+
+같은 파일(`components.json` · `plan-card/index.tsx` · `dist` · `public/r`)을 여러 묶음이 고치므로 구현은 직렬로 합니다.
+
+1. V8 정규식 확장과 테스트 (U14)
+2. G1: 흰 글자 짝 토큰 6개(기본값 #FFFFFF) · FR-7 `--axis-plan-card-accent-width`(`border-l-[length:…]` 타입 힌트 필수)
+3. G3: 그림자 primitive · `--axis-card-shadow` · Card · Dialog 참조 (U1 · U3 · U4)
+4. G2: 불투명도 11곳 혼합안과 `check-token-refs` 판정 6 (U6 · U7)
+5. `apps/web` 정비와 기본 브랜드 18건 실측 (U9 · U11). G3보다 먼저 머지되어야 합니다
+6. ontology 브랜드 구조: `brands/ontology` JSON(초안 2 이식, 부록 B 승인 전 값), `brand.json`(a11y 미승인 기록), exports
+7. AC3 · AC6 · 비텍스트 대비 · a11y 36건 · CI 배선 (U10 · U12)
+8. 마무리: `build:registry` 1회, library 사본 치환, 문서 현행화, DoD, 머지 직전 `npm view` 확인
