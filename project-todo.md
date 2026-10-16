@@ -3,7 +3,7 @@
 > 프로젝트 진행 상황 및 다음 단계
 
 **현재 버전**: 1.2.0 (npm 패키지 v1.2.0)
-**마지막 업데이트**: 2026-10-15
+**마지막 업데이트**: 2026-10-16
 **상태**: ✅ Active Development
 
 ---
@@ -37,6 +37,10 @@
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ⏳ |
+| 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
+| 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ⏳ |
+| 43 | NPM_TOKEN 만료 사전 감지 (publish 전 인증 선검사 · 만료 임박 알림) | WI-0031 (#96) | P18 | P2 | ⏳ |
+| 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 
 ### 완료
 
