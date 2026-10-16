@@ -2,9 +2,10 @@
 
 > PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
 
-## 1.2.1 (patch) - 토큰 정합 (M1, PR #90)
+## 1.2.1 (patch) - 토큰 정합 (M1, PR #90) · 다크 component 토큰 (WI-0033)
 
 > 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.2.0 → 1.2.1 (linked)
+> WI-0033(#99)은 changeset 없이 1.2.1 배포 전에 main에 머지해 같은 버전에 포함합니다. 상세는 [WI-0033 PRD](../WI-0033-dark-component-tokens/prd.md)
 
 ### 배경
 
@@ -33,11 +34,30 @@
 #### agentic-ui: 화면 변화 없음
 13개 컴포넌트의 상태 · diff · 아바타 색을 semantic 토큰으로 교체했습니다. 라이트 · 다크 계산값이 1.2.0과 같음을 측정으로 확인했습니다. 버튼 글자의 `text-white` 4곳은 `--axis-button-text-default` · `--axis-button-destructive-text-default`(기본 #FFFFFF)로 바꿨습니다.
 
+#### tokens: 다크 모드 component 토큰 재정의 (WI-0033)
+1.2.0까지 다크 빌드가 component 토큰을 빼고 있어, `variables.css`의 `.dark`에 component 변수 45개(button · input · card · badge · dialog)가 없었습니다. 그래서 다크에서도 라이트 값이 그대로 쓰여 Card · Dialog 바탕이 흰색으로 남았습니다. 1.2.1부터 `.dark`가 45개를 모두 재정의하고, 그중 29개의 다크 값이 바뀝니다. 라이트(`:root`) 출력과 JS · JSON · `shadcn-compat.css` · tailwind preset은 1.2.0과 바이트 단위로 같습니다.
+
+| 소비처 (다크) | 1.2.0 | 1.2.1 |
+|---|---|---|
+| ui-react Card · Dialog | 흰 바탕, 제목 대비 1.10:1 · 설명 2.54:1 | `surface-default` 바탕, 18.30:1 · 7.93:1 |
+| agentic-ui ApprovalCard · PlanCard secondary 버튼 | 바탕과 글자가 같은 색 (1.00:1) | 16.12:1 |
+| ui-react Button ghost · secondary | ghost 글자 1.95:1, secondary 밝은 회색 바탕 | ghost 글자 13.66:1, secondary 어두운 바탕 |
+| ui-react Input · Select 트리거 | 흰 입력칸, placeholder 2.54:1 | 어두운 입력칸, placeholder 7.93:1, 테두리 · 포커스 · 오류 테두리 다크 값 |
+| ui-react Badge 6변형 | 밝은 칩 | 어두운 바탕 · 밝은 글자 칩 (대비 5.78~12.04:1) |
+
+바뀌지 않는 것: primary · destructive 채움 버튼 바탕과 흰 글자, `transparent` 테두리, Dialog 오버레이, 그림자는 다크에서도 같은 값입니다(채움 버튼 대비 3.68 · 3.76:1은 WI-0029에서 다룹니다).
+
+하위 요소에 `.dark`를 거는 구성(`<div class="dark">`)에서는 이제 기본 다크 component 값이 브랜드 라이트 component 값보다 우선합니다. semantic 토큰이 1.2.0부터 이미 이렇게 동작하므로 같은 규칙입니다.
+
+component 토큰 JSON에는 `$extensions.axis.dark`(다크 값) 또는 `$extensions.axis.themeIndependent`(테마 무관) 선언이 붙습니다. 이 확장은 `tokens.json` · `tokens.js` 출력에는 나타나지 않습니다.
+
 #### 동작이 달라지는 사용 방식
 `:root { --axis-color-blue-500: ... }`처럼 primitive 색을 덮어써 브랜드 색을 바꾸던 방식(`theme-customization.md` 92~97행 안내)은 이제 agentic-ui에도 닿지 않습니다. semantic · component 토큰은 빌드 때 값으로 풀려 나가므로, 1.2.0에서도 이 방식이 닿던 곳은 agentic-ui뿐이었습니다. 1.3.0의 브랜드 축(`data-brand`)이 대체 수단이며, 가이드는 1.3.0(M4)에서 고칩니다.
 
 #### CI
 - `pnpm check-token-refs`: ui-react · agentic-ui의 `var(--axis-*)`가 모두 정의됐는지, agentic-ui에 primitive 참조가 없는지 검사 (frontend · publish 워크플로)
+- 같은 검사에 다크 완전성 추가 (WI-0033): `variables.css`의 `:root` 이름 집합과 `.dark` 이름 집합이 같은지, component 색 토큰이 다크 값 또는 테마 무관을 선언했는지. 선언 검사는 토큰 빌드에서도 실행되어 누락 시 빌드가 실패합니다
+- `pnpm --filter @axis-ds/tokens test` 신설(CI `pnpm test`에 포함), `pnpm --filter @ax/web test:e2e:tokens`(Chromium 계산값 회귀, 로컬 실행)
 
 ### 소비 프로젝트 영향 (2026-10-15 확인)
 | 프로젝트 | 설치 버전 | 영향 컴포넌트 사용처 |
@@ -52,3 +72,4 @@
 - `check-token-refs`: 1.2.0 소스에서 위반 140건(정의 누락 60 · primitive 80) 재현, 1.2.1에서 0건. 정의 1줄 삭제 · 판정 fixture · 측정 실패 대조군 통과. CI 로그에서 단계 실행 확인
 - 화면 비교(Playwright 하네스, 라이트 · 다크 · 포커스 208장): ui-react 13개 변화가 plan 1.3 대상 값과 일치, agentic-ui 13개 차이 0
 - Breaking change 없음: 공개 export와 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분뿐
+- WI-0033 (2026-10-16): tokens dist 10개 중 `variables.css`만 변경(나머지 9개 sha256 일치), `:root` 블록 바이트 동일, `.dark` 204 → 249(삭제 0 · 추가 45), Chromium 계산값 라이트 변경 0 · `html.dark` · `div.dark` 변경 29. preprocessor를 뺀 변이 빌드에서 다크 단언 실패 확인. type-check · build · test(turbo `--force`, 캐시 0): tokens 12 · ui-react 100 · agentic-ui 72 · cli 58 · theme 21 통과
