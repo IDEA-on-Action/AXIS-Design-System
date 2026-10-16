@@ -40,7 +40,7 @@
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
 | 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ⏳ |
 | 43 | NPM_TOKEN 만료 사전 감지 (publish 전 인증 선검사 · 만료 임박 알림) | WI-0031 (#96) | P18 | P2 | ⏳ |
-| 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ⏳ |
+| 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 
 ### 완료
 
