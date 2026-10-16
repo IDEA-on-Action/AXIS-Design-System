@@ -23,7 +23,15 @@ describe("Card", () => {
     const card = container.firstElementChild!;
     expect(card.className).toContain("rounded-lg");
     expect(card.className).toContain("border");
-    expect(card.className).toContain("shadow-sm");
+    expect(card.className).toContain("shadow-[shadow:var(--axis-card-shadow)]");
+    expect(card.className).not.toContain("shadow-sm");
+  });
+
+  it("className 그림자가 기본 그림자를 대체 (U4)", () => {
+    const { container } = render(<Card className="shadow-none">내용</Card>);
+    const card = container.firstElementChild!;
+    expect(card.className).toContain("shadow-none");
+    expect(card.className).not.toContain("shadow-[shadow:var(--axis-card-shadow)]");
   });
 
   it("커스텀 className 병합", () => {
