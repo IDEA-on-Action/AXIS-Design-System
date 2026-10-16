@@ -1,5 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
+// WI-0025: AXIS 토큰 변수(--axis-*)를 globals.css(shadcn 변수)보다 먼저 로드한다.
+// 브랜드 CSS를 추가할 때는 globals.css 뒤에 import 한다(명시도가 같은 :root 정의를 이겨야 함).
+import '@axis-ds/tokens/css'
 import './globals.css'
 import { Providers } from './providers'
 import { SiteHeader } from '@/components/site-header'
