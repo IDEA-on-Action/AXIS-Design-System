@@ -208,7 +208,8 @@ function inAllowedScope(path, base) {
   return PRIMITIVE_ALLOW_PREFIXES.some(prefix => path.length > prefix.length && startsWithPath(path, prefix));
 }
 
-const SHADCN_HSL = /^\d{1,3} \d{1,3}% \d{1,3}%$/;
+// H · S · L 각각 정수 또는 소수(예 "220 69.4% 52.5%", "1.9 62.6% 48.2%"). 2026-10-16 AC6 결정(U14)
+const SHADCN_HSL = /^\d{1,3}(\.\d+)? \d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/;
 const SHADCN_HEX = /^#[0-9a-fA-F]{6}$/;
 const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem))$/;
 
@@ -316,7 +317,7 @@ export function validateBrand(brand, base) {
           at('V8', `${file} shadcn.radius: CSS 길이(px · rem)가 아닙니다: "${value}"`);
         }
       } else if (!SHADCN_HSL.test(value.trim()) && !SHADCN_HEX.test(value.trim())) {
-        at('V8', `${file} shadcn.${key}: HSL 삼중값("H S% L%") 또는 6자리 hex 가 아닙니다: "${value}"`);
+        at('V8', `${file} shadcn.${key}: HSL 삼중값("H S% L%", 소수 허용) 또는 6자리 hex 가 아닙니다: "${value}"`);
       }
     }
   }
