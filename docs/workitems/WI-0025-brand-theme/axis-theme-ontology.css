@@ -1,220 +1,220 @@
 /* ==========================================================================
-   AXIS 테마: 온톨로지 플랫폼(가칭) v0.22  (초안)
+   AXIS 테마: 온톨로지 플랫폼(가칭) 디자인 시스템 v1 (프로토타입 v0.24 기준, 초안 2)
    - AXIS 토큰(@axis-ds/tokens/css) 다음에 import 합니다.
-   - <html data-brand="ontology"> 를 붙이면 적용되고, 다크는 @axis-ds/theme ThemeProvider 가 붙이는
-     .dark / [data-theme="dark"] 와 함께 동작합니다(이 선택자 규칙은 이 브랜드 CSS 에만 해당).
-     기본 토큰 CSS 의 다크 선택자는 .dark 하나뿐이므로 data-theme 만 붙이면 기본 토큰은 라이트로 남습니다.
-     문서 사이트(apps/web, next-themes)는 .dark 클래스만 붙이므로 .dark 갈래만 걸립니다.
-   - 값의 정본: 디자인 시스템 「온톨로지 플랫폼」 tokens.json (light 는 원본 가이드 값, dark 는 이 시스템에서 정의)
-   - 라이트는 WCAG AA 보정판입니다(WI-0025 Q1 결정). 원본과 다른 값에는 「AA 보정」 주석을 달았고, 다크는 원본 정의 그대로입니다.
-   - 이 파일이 바꾸지 못하는 것(컴포넌트 클래스에 박힌 높이 · 글자 크기, primitive 직접 참조 등)은 검토 메모를 참고합니다.
+   - <html data-brand="ontology"> 를 붙이면 적용되고, 다크는 ThemeProvider 가 붙이는
+     .dark / [data-theme="dark"] 와 함께 동작합니다.
+   - 값의 정본: 디자인 시스템 「온톨로지 플랫폼」 tokens.json (light 는 v1 원본 값, dark 는 이 시스템에서 정의)
+   - 색은 세 계열뿐입니다: 무채색 + key 파랑(#326ADA) + bad 빨강(#C8332E).
+     AXIS 의 success · warning · info 의미는 v1 상태 다섯 가지에 맞춰 회색 · 빨강 연한 단계 · 파랑으로 접었습니다.
+   - 라이트 AA 보정은 한 값뿐입니다(text-secondary · text-tertiary · muted-foreground: sub #6B7280 → #5F6673).
+     나머지는 v1 원본 값으로 통과하거나, 통과하는 단계 토큰(key-dark 등)을 골라 맞췄습니다.
+   - 주석의 단어는 원본 토큰 이름입니다.
    ========================================================================== */
 
 [data-brand="ontology"] {
-  /* 글꼴 · 둥글기 · 그림자 */
-  --axis-font-family-sans: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
-  --axis-font-family-mono: "JetBrains Mono", "Cascadia Code", "D2Coding", Consolas, monospace;
-  --radius: 12px;               /* rounded-lg 12 · rounded-md 10(버튼) · rounded-sm 8 */
-  --axis-radius-md: 10px;       /* --axis-radius-* 는 현재 컴포넌트가 참조하지 않음(WI-0026 대비) */
-  --axis-radius-lg: 14px;
+  /* 글꼴 · 둥글기 · 그림자 (v1: 카드 그림자 없음) */
+  --axis-font-sans: "Pretendard Variable", "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕", sans-serif;
+  --axis-font-mono: "JetBrains Mono", "Cascadia Code", "D2Coding", Consolas, monospace;
+  --radius: 12px;               /* rounded-lg 12(카드) · rounded-md 8(버튼 · 입력) · rounded-sm 6 */
+  --axis-radius-md: 8px;
+  --axis-radius-lg: 12px;
   --axis-radius-sm: 6px;
-  /* --axis-shadow-* 는 WI-0025 FR-9 에서 신설, Card · Dialog 참조 변경 후 반영 */
-  --axis-shadow-sm: 0 1px 2px rgba(16,24,40,.04), 0 1px 3px rgba(16,24,40,.06);
-  --axis-shadow-lg: 0 8px 24px rgba(16,24,40,.10);
-  --axis-plan-card-accent-width: 0; /* FR-7 토큰(기본 4px), 온톨로지는 한쪽 색 선 없음 */
-
-  /* Semantic · surface */
-  --axis-surface-default: #FFFFFF;
-  --axis-surface-secondary: #F0F3F6;
-  --axis-surface-tertiary: #E7EBEF;
-  --axis-surface-inverse: #1F2933;
-  --axis-surface-brand: #15C7C7;
-  --axis-surface-success: #DDF7F6;
-  --axis-surface-warning: #FBF1DE;
-  --axis-surface-error: #FDE8E8;
-  --axis-surface-info: #E6EFFC;
-  /* Semantic · text */
-  --axis-text-primary: #1F2933;
-  --axis-text-secondary: #5E6975; /* AA 보정 */
-  --axis-text-tertiary: #5E6975; /* AA 보정 */
-  --axis-text-inverse: #FFFFFF;
-  --axis-text-brand: #097777; /* AA 보정 */
-  --axis-text-success: #0B7979; /* AA 보정 */
-  --axis-text-warning: #9C5E00; /* AA 보정 */
-  --axis-text-error: #C92C2C; /* AA 보정 */
-  --axis-text-info: #2867CB; /* AA 보정 */
-  /* Semantic · border */
-  --axis-border-default: #E3E7EB;
-  --axis-border-secondary: #D2D8DE;
-  --axis-border-focus: #0B8F8F; /* AA 보정 */
-  --axis-border-error: #D64545;
-  --axis-border-success: #0FA3A3;
-  /* Semantic · icon */
-  --axis-icon-default: #3E4A57;
-  --axis-icon-secondary: #9AA5B1;
-  --axis-icon-inverse: #FFFFFF;
-  --axis-icon-brand: #097777; /* AA 보정 */
-  --axis-icon-success: #0FA3A3;
-  --axis-icon-warning: #B06A00;
-  --axis-icon-error: #D64545;
-  /* Component · button (주 = 민트, 화면당 하나) */
-  --axis-button-bg-default: #15C7C7;
-  --axis-button-bg-hover: #0FA3A3;
-  --axis-button-bg-active: #0FA3A3;
-  --axis-button-text-default: #0F1724; /* AA 보정 */
-  --axis-button-border-focus: #0B8F8F; /* AA 보정 */
-  --axis-button-secondary-bg-default: #E7EBEF;
-  --axis-button-secondary-bg-hover: #DCE2E8;
-  --axis-button-secondary-bg-active: #DCE2E8;
-  --axis-button-secondary-text-default: #1F2933;
-  --axis-button-ghost-bg-hover: #F0F3F6;
-  --axis-button-ghost-bg-active: #E7EBEF;
-  --axis-button-ghost-text-default: #3E4A57;
-  --axis-button-destructive-bg-default: #FDE8E8;
-  --axis-button-destructive-bg-hover: #F9D6D6;
-  --axis-button-destructive-bg-active: #F9D6D6;
-  --axis-button-destructive-text-default: #C92C2C; /* AA 보정 */
-  /* Component · card · input · badge */
-  --axis-card-bg-default: #FFFFFF;
-  --axis-card-border-default: #E3E7EB;
-  --axis-input-bg-default: #FFFFFF;
-  --axis-input-text-default: #1F2933;
-  --axis-input-text-placeholder: #9AA5B1;
-  --axis-input-border-default: #D2D8DE;
-  --axis-input-border-hover: #6B7785;
-  --axis-input-border-focus: #0B8F8F; /* AA 보정 */
-  --axis-input-border-error: #D64545;
-  --axis-input-bg-disabled: #F0F3F6;
-  --axis-badge-default-bg: #E7EBEF;
-  --axis-badge-default-text: #3E4A57;
-  --axis-badge-success-bg: #DDF7F6;
-  --axis-badge-success-text: #0B7979; /* AA 보정 */
-  --axis-badge-warning-bg: #FBF1DE;
-  --axis-badge-warning-text: #9C5E00; /* AA 보정 */
-  --axis-badge-error-bg: #FDE8E8;
-  --axis-badge-error-text: #C92C2C; /* AA 보정 */
-  --axis-badge-info-bg: #E6EFFC;
-  --axis-badge-info-text: #2867CB; /* AA 보정 */
-  --axis-bg-muted: #F0F3F6;
+  --axis-shadow-sm: 0 1px 2px rgba(17,20,24,.06);
+  --axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10);
+  /* surface */
+  --axis-surface-default: #FFFFFF; /* card */
+  --axis-surface-secondary: #F3F4F6; /* panel */
+  --axis-surface-tertiary: #EAECEF; /* panel-2 */
+  --axis-surface-inverse: #111418; /* ink */
+  --axis-surface-brand: #326ADA; /* key */
+  --axis-surface-success: #EAECEF; /* panel-2 · v1: 정상은 색 없이 회색 */
+  --axis-surface-warning: #FDE8E8; /* bad-light · v1: 주의는 빨강 연한 단계 */
+  --axis-surface-error: #FDE8E8; /* bad-light */
+  --axis-surface-info: #E8EFFC; /* key-light · v1: 「봐야 할 것」 */
+  /* text */
+  --axis-text-primary: #111418; /* ink */
+  --axis-text-secondary: #5F6673; /* sub-aa · AA 보정: panel-2 위 4.08 → 4.88 */
+  --axis-text-tertiary: #5F6673; /* sub-aa · AA 보정: muted 대신 sub 계열 */
+  --axis-text-inverse: #FFFFFF; /* on-key */
+  --axis-text-brand: #2757B8; /* key-dark · key-light 위에서도 통과 */
+  --axis-text-success: #2A2F36; /* ink-2 · v1: 정상은 회색 */
+  --axis-text-warning: #C8332E; /* bad */
+  --axis-text-error: #C8332E; /* bad */
+  --axis-text-info: #2757B8; /* key-dark */
+  /* border */
+  --axis-border-default: #E6E8EB; /* line */
+  --axis-border-secondary: #D6DADF; /* line-2 */
+  --axis-border-focus: #326ADA; /* key */
+  --axis-border-error: #C8332E; /* bad */
+  --axis-border-success: #D6DADF; /* line-2 · v1: 정상은 회색 */
+  /* icon */
+  --axis-icon-default: #2A2F36; /* ink-2 */
+  --axis-icon-secondary: #9AA1AB; /* muted */
+  --axis-icon-inverse: #FFFFFF; /* on-key */
+  --axis-icon-brand: #326ADA; /* key */
+  --axis-icon-success: #6B7280; /* sub · v1: 정상은 회색 */
+  --axis-icon-warning: #F5C6C6; /* bad-line · v1: 주의 점 */
+  --axis-icon-error: #C8332E; /* bad */
+  /* button (주 = key, 화면당 하나) */
+  --axis-button-bg-default: #326ADA; /* key */
+  --axis-button-bg-hover: #2757B8; /* key-dark */
+  --axis-button-bg-active: #2757B8; /* key-dark */
+  --axis-button-text-default: #FFFFFF; /* on-key */
+  --axis-button-border-focus: #326ADA; /* key */
+  --axis-button-secondary-bg-default: #FFFFFF; /* card · v1: 보조 버튼은 흰 바탕 + line-2 테두리 */
+  --axis-button-secondary-bg-hover: #F3F4F6; /* panel */
+  --axis-button-secondary-bg-active: #EAECEF; /* panel-2 */
+  --axis-button-secondary-text-default: #111418; /* ink */
+  --axis-button-ghost-bg-hover: #F3F4F6; /* panel */
+  --axis-button-ghost-bg-active: #EAECEF; /* panel-2 */
+  --axis-button-ghost-text-default: #2A2F36; /* ink-2 */
+  --axis-button-destructive-bg-default: #FDE8E8; /* bad-light */
+  --axis-button-destructive-bg-hover: #F5C6C6; /* bad-line */
+  --axis-button-destructive-bg-active: #F5C6C6; /* bad-line */
+  --axis-button-destructive-text-default: #A8281F; /* bad-dark */
+  /* card · input · badge */
+  --axis-card-bg-default: #FFFFFF; /* card */
+  --axis-card-border-default: #E6E8EB; /* line */
+  --axis-input-bg-default: #FFFFFF; /* card */
+  --axis-input-text-default: #111418; /* ink */
+  --axis-input-text-placeholder: #9AA1AB; /* muted */
+  --axis-input-border-default: #D6DADF; /* line-2 · 라이트 1.40:1(v1 원본), 포커스 때 key */
+  --axis-input-border-hover: #9AA1AB; /* muted */
+  --axis-input-border-focus: #326ADA; /* key */
+  --axis-input-border-error: #C8332E; /* bad */
+  --axis-input-bg-disabled: #F3F4F6; /* panel */
+  --axis-badge-default-bg: #EAECEF; /* panel-2 */
+  --axis-badge-default-text: #2A2F36; /* ink-2 */
+  --axis-badge-success-bg: #EAECEF; /* panel-2 · v1: 정상은 기본 뱃지 */
+  --axis-badge-success-text: #2A2F36; /* ink-2 */
+  --axis-badge-warning-bg: #FDE8E8; /* bad-light */
+  --axis-badge-warning-text: #C8332E; /* bad */
+  --axis-badge-error-bg: #C8332E; /* bad · v1: 오류는 진한 바탕 */
+  --axis-badge-error-text: #FFFFFF; /* on-key */
+  --axis-badge-info-bg: #E8EFFC; /* key-light */
+  --axis-badge-info-text: #2757B8; /* key-dark */
+  --axis-bg-muted: #F3F4F6; /* panel */
   /* shadcn HSL 호환 층 (apps/web 의 hsl(var(--…)) 용) */
-  --background: 210 22% 96%;
-  --foreground: 210 24% 16%;
+  --background: 0 0% 97%;
+  --foreground: 214 17% 8%;
   --card: 0 0% 100%;
-  --card-foreground: 210 24% 16%;
+  --card-foreground: 214 17% 8%;
   --popover: 0 0% 100%;
-  --popover-foreground: 210 24% 16%;
-  --primary: 180 81% 43%;
-  --primary-foreground: 217 41% 10%; /* AA 보정 */
-  --secondary: 210 20% 92%;
-  --secondary-foreground: 210 24% 16%;
-  --muted: 210 25% 95%;
-  --muted-foreground: 211 11% 41%; /* AA 보정 */
-  --accent: 178 62% 92%;
-  --accent-foreground: 180 86% 25%; /* AA 보정 */
-  --destructive: 0 64% 55%;
+  --popover-foreground: 214 17% 8%;
+  --primary: 220 69% 53%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 216 14% 93%;
+  --secondary-foreground: 214 17% 8%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 219 10% 41%; /* AA 보정 */
+  --accent: 219 77% 95%;
+  --accent-foreground: 220 65% 44%;
+  --destructive: 2 63% 48%;
   --destructive-foreground: 0 0% 100%;
-  --border: 210 17% 91%;
-  --input: 210 15% 85%;
-  --ring: 180 86% 30%; /* AA 보정 */
+  --border: 216 11% 91%;
+  --input: 213 12% 86%;
+  --ring: 220 69% 53%;
 }
 
 [data-brand="ontology"].dark,
 [data-brand="ontology"][data-theme="dark"],
 .dark [data-brand="ontology"],
 [data-theme="dark"] [data-brand="ontology"] {
-  /* Semantic · surface */
-  --axis-surface-default: #172030;
-  --axis-surface-secondary: #1E293A;
-  --axis-surface-tertiary: #273447;
-  --axis-surface-inverse: #E6EBF1;
-  --axis-surface-brand: #15C7C7;
-  --axis-surface-success: #123A3D;
-  --axis-surface-warning: #3A2A12;
-  --axis-surface-error: #3D1C1F;
-  --axis-surface-info: #1A2B48;
-  /* Semantic · text */
-  --axis-text-primary: #E6EBF1;
-  --axis-text-secondary: #9AA5B1;
-  --axis-text-tertiary: #6B7785;
-  --axis-text-inverse: #0F1724;
-  --axis-text-brand: #4FD8D6;
-  --axis-text-success: #4FD8D6;
-  --axis-text-warning: #F0A94A;
-  --axis-text-error: #F28B8B;
-  --axis-text-info: #7EAAF2;
-  /* Semantic · border */
-  --axis-border-default: #2A3648;
-  --axis-border-secondary: #5B6B82;
-  --axis-border-focus: #15C7C7;
-  --axis-border-error: #F28B8B;
-  --axis-border-success: #4FD8D6;
-  /* Semantic · icon */
-  --axis-icon-default: #C3CCD7;
-  --axis-icon-secondary: #6B7785;
-  --axis-icon-inverse: #0F1724;
-  --axis-icon-brand: #15C7C7;
-  --axis-icon-success: #4FD8D6;
-  --axis-icon-warning: #F0A94A;
-  --axis-icon-error: #F28B8B;
-  /* Component · button (주 = 민트, 화면당 하나) */
-  --axis-button-bg-default: #15C7C7;
-  --axis-button-bg-hover: #3DD6D6;
-  --axis-button-bg-active: #3DD6D6;
-  --axis-button-text-default: #0F1724;
-  --axis-button-border-focus: #15C7C7;
-  --axis-button-secondary-bg-default: #273447;
-  --axis-button-secondary-bg-hover: #2F3C50;
-  --axis-button-secondary-bg-active: #2F3C50;
-  --axis-button-secondary-text-default: #E6EBF1;
-  --axis-button-ghost-bg-hover: #1E293A;
-  --axis-button-ghost-bg-active: #273447;
-  --axis-button-ghost-text-default: #C3CCD7;
-  --axis-button-destructive-bg-default: #3D1C1F;
-  --axis-button-destructive-bg-hover: #4A2226;
-  --axis-button-destructive-bg-active: #4A2226;
-  --axis-button-destructive-text-default: #F28B8B;
-  /* Component · card · input · badge */
-  --axis-card-bg-default: #172030;
-  --axis-card-border-default: #2A3648;
-  --axis-input-bg-default: #172030;
-  --axis-input-text-default: #E6EBF1;
-  --axis-input-text-placeholder: #6B7785;
-  --axis-input-border-default: #5B6B82;
-  --axis-input-border-hover: #9AA5B1;
-  --axis-input-border-focus: #15C7C7;
-  --axis-input-border-error: #F28B8B;
-  --axis-input-bg-disabled: #1E293A;
-  --axis-badge-default-bg: #273447;
-  --axis-badge-default-text: #C3CCD7;
-  --axis-badge-success-bg: #123A3D;
-  --axis-badge-success-text: #4FD8D6;
-  --axis-badge-warning-bg: #3A2A12;
-  --axis-badge-warning-text: #F0A94A;
-  --axis-badge-error-bg: #3D1C1F;
-  --axis-badge-error-text: #F28B8B;
-  --axis-badge-info-bg: #1A2B48;
-  --axis-badge-info-text: #7EAAF2;
-  --axis-bg-muted: #1E293A;
+  --axis-shadow-sm: 0 1px 2px rgba(0,0,0,.30);
+  --axis-shadow-lg: 0 8px 24px rgba(0,0,0,.50);
+  /* surface */
+  --axis-surface-default: #17191D; /* card */
+  --axis-surface-secondary: #1F2227; /* panel */
+  --axis-surface-tertiary: #2A2E34; /* panel-2 */
+  --axis-surface-inverse: #F1F3F5; /* ink */
+  --axis-surface-brand: #6B98F0; /* key */
+  --axis-surface-success: #2A2E34; /* panel-2 · v1: 정상은 색 없이 회색 */
+  --axis-surface-warning: #3A1A1A; /* bad-light · v1: 주의는 빨강 연한 단계 */
+  --axis-surface-error: #3A1A1A; /* bad-light */
+  --axis-surface-info: #1C2A45; /* key-light · v1: 「봐야 할 것」 */
+  /* text */
+  --axis-text-primary: #F1F3F5; /* ink */
+  --axis-text-secondary: #9CA3AD; /* sub */
+  --axis-text-tertiary: #9CA3AD; /* sub */
+  --axis-text-inverse: #0E1013; /* on-key */
+  --axis-text-brand: #9DBBF6; /* key-dark · key-light 위에서도 통과 */
+  --axis-text-success: #D0D4D9; /* ink-2 · v1: 정상은 회색 */
+  --axis-text-warning: #F07A72; /* bad */
+  --axis-text-error: #F07A72; /* bad */
+  --axis-text-info: #9DBBF6; /* key-dark */
+  /* border */
+  --axis-border-default: #2B2F35; /* line */
+  --axis-border-secondary: #5F6874; /* line-2 */
+  --axis-border-focus: #6B98F0; /* key */
+  --axis-border-error: #F07A72; /* bad */
+  --axis-border-success: #5F6874; /* line-2 · v1: 정상은 회색 */
+  /* icon */
+  --axis-icon-default: #D0D4D9; /* ink-2 */
+  --axis-icon-secondary: #7A828D; /* muted */
+  --axis-icon-inverse: #0E1013; /* on-key */
+  --axis-icon-brand: #6B98F0; /* key */
+  --axis-icon-success: #9CA3AD; /* sub · v1: 정상은 회색 */
+  --axis-icon-warning: #7A3330; /* bad-line · v1: 주의 점 */
+  --axis-icon-error: #F07A72; /* bad */
+  /* button (주 = key, 화면당 하나) */
+  --axis-button-bg-default: #6B98F0; /* key */
+  --axis-button-bg-hover: #9DBBF6; /* key-dark */
+  --axis-button-bg-active: #9DBBF6; /* key-dark */
+  --axis-button-text-default: #0E1013; /* on-key */
+  --axis-button-border-focus: #6B98F0; /* key */
+  --axis-button-secondary-bg-default: #17191D; /* card · v1: 보조 버튼은 흰 바탕 + line-2 테두리 */
+  --axis-button-secondary-bg-hover: #1F2227; /* panel */
+  --axis-button-secondary-bg-active: #2A2E34; /* panel-2 */
+  --axis-button-secondary-text-default: #F1F3F5; /* ink */
+  --axis-button-ghost-bg-hover: #1F2227; /* panel */
+  --axis-button-ghost-bg-active: #2A2E34; /* panel-2 */
+  --axis-button-ghost-text-default: #D0D4D9; /* ink-2 */
+  --axis-button-destructive-bg-default: #3A1A1A; /* bad-light */
+  --axis-button-destructive-bg-hover: #7A3330; /* bad-line */
+  --axis-button-destructive-bg-active: #7A3330; /* bad-line */
+  --axis-button-destructive-text-default: #F49890; /* bad-dark */
+  /* card · input · badge */
+  --axis-card-bg-default: #17191D; /* card */
+  --axis-card-border-default: #2B2F35; /* line */
+  --axis-input-bg-default: #17191D; /* card */
+  --axis-input-text-default: #F1F3F5; /* ink */
+  --axis-input-text-placeholder: #7A828D; /* muted */
+  --axis-input-border-default: #5F6874; /* line-2 · 3.0:1 */
+  --axis-input-border-hover: #7A828D; /* muted */
+  --axis-input-border-focus: #6B98F0; /* key */
+  --axis-input-border-error: #F07A72; /* bad */
+  --axis-input-bg-disabled: #1F2227; /* panel */
+  --axis-badge-default-bg: #2A2E34; /* panel-2 */
+  --axis-badge-default-text: #D0D4D9; /* ink-2 */
+  --axis-badge-success-bg: #2A2E34; /* panel-2 · v1: 정상은 기본 뱃지 */
+  --axis-badge-success-text: #D0D4D9; /* ink-2 */
+  --axis-badge-warning-bg: #3A1A1A; /* bad-light */
+  --axis-badge-warning-text: #F07A72; /* bad */
+  --axis-badge-error-bg: #F07A72; /* bad · v1: 오류는 진한 바탕 */
+  --axis-badge-error-text: #0E1013; /* on-key */
+  --axis-badge-info-bg: #1C2A45; /* key-light */
+  --axis-badge-info-text: #9DBBF6; /* key-dark */
+  --axis-bg-muted: #1F2227; /* panel */
   /* shadcn HSL 호환 층 (apps/web 의 hsl(var(--…)) 용) */
-  --background: 217 41% 10%;
-  --foreground: 213 28% 92%;
-  --card: 218 35% 14%;
-  --card-foreground: 213 28% 92%;
-  --popover: 218 35% 14%;
-  --popover-foreground: 213 28% 92%;
-  --primary: 180 81% 43%;
-  --primary-foreground: 217 41% 10%;
-  --secondary: 216 29% 22%;
-  --secondary-foreground: 213 28% 92%;
-  --muted: 216 32% 17%;
-  --muted-foreground: 211 13% 65%;
-  --accent: 184 54% 15%;
-  --accent-foreground: 179 64% 58%;
-  --destructive: 0 80% 75%;
-  --destructive-foreground: 217 41% 10%;
-  --border: 216 26% 22%;
-  --input: 215 18% 43%;
-  --ring: 180 81% 43%;
+  --background: 216 15% 6%;
+  --foreground: 210 17% 95%;
+  --card: 220 12% 10%;
+  --card-foreground: 210 17% 95%;
+  --popover: 220 12% 10%;
+  --popover-foreground: 210 17% 95%;
+  --primary: 220 82% 68%;
+  --primary-foreground: 216 15% 6%;
+  --secondary: 216 11% 18%;
+  --secondary-foreground: 210 17% 95%;
+  --muted: 218 11% 14%;
+  --muted-foreground: 215 9% 65%;
+  --accent: 220 42% 19%;
+  --accent-foreground: 220 83% 79%;
+  --destructive: 4 81% 69%;
+  --destructive-foreground: 216 15% 6%;
+  --border: 216 10% 19%;
+  --input: 214 10% 41%;
+  --ring: 220 82% 68%;
 }
 
 /* 한국어 줄바꿈 (가이드 필수 규칙) */

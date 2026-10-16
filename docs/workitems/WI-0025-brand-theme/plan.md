@@ -109,7 +109,7 @@
 - **D-e 생성 사본 갱신**: FR-3 검사는 `src`만 보므로 아래 사본은 잡지 못합니다.
   - registry `badge.json` 3곳(`packages/axis-ui-react/registry/r`, `public/r`, `apps/web/public/r`)에 `--axis-bg-muted`가 있습니다. `pnpm build:registry`로 다시 만듭니다.
   - `apps/web/public/library/components/*.json` 10개에 `surface-primary` · `ring` · `interactive-primary`가 있습니다. 이 파일을 만드는 스크립트는 `scripts/` · `apps/web/package.json`에서 찾지 못했습니다. 수동 갱신 여부를 정해야 합니다.
-- **D-f 온톨로지 초안 정리(FR-8)**: `bg-muted`를 참조 교체하면 초안의 `--axis-bg-muted`(98행 #F0F3F6, 197행 #1E293A)는 쓰이지 않습니다. 이 값은 초안의 `--axis-surface-secondary`(28행 · 127행)와 같으므로 지워도 화면 변화가 없습니다.
+- **D-f 온톨로지 초안 정리(FR-8)**: `bg-muted`를 참조 교체하면 초안 2의 `--axis-bg-muted`(96행 #F3F4F6, 197행 #1F2227)는 쓰이지 않습니다. 이 값은 초안 2의 `--axis-surface-secondary`(26행 · 127행)와 같으므로 지워도 화면 변화가 없습니다(2026-10-16 초안 2 기준으로 갱신, 초안 1에서는 98 · 197행과 28 · 127행).
 
 ### 1.8 실측 근거
 
@@ -133,7 +133,7 @@
    - `build-tokens.mjs` 176~181행에서 다크 소스는 primitives와 `semantic/dark.json`뿐입니다.
    - `variables.css`의 리터럴 값은 156 · 157 · 160 · 176행(라이트)과 382 · 383 · 386 · 402행(다크)에 있습니다.
    - dist 수정 시각은 2026-10-15 04:34이고, tokens `src` 마지막 커밋은 8c36953(2026-08-07)이므로 dist가 src보다 새것입니다.
-7. 온톨로지 초안: `grep -nE 'bg-muted|surface-primary|interactive|--axis-ring|brand-500' axis-theme-ontology.css`의 결과는 `bg-muted` 2줄(98, 197행)뿐이고 나머지는 0건입니다.
+7. 온톨로지 초안: `grep -nE 'bg-muted|surface-primary|interactive|--axis-ring|brand-500' axis-theme-ontology.css`의 결과는 `bg-muted` 2줄(98, 197행)뿐이고 나머지는 0건입니다. 2026-10-16 초안 2로 다시 실행한 결과도 `bg-muted` 2줄(96, 197행)뿐입니다.
 8. 문서 사이트:
    - `tailwind.config.ts` 9행이 `'../../packages/ui/src/**/*'`를 가리키는데, `ls packages/ui`는 "No such file"입니다.
    - `grep -c -e '--axis-' apps/web/src/app/globals.css`는 0입니다.
@@ -307,7 +307,9 @@
   - `--axis-button-text-default` · `--axis-button-destructive-text-default`는 기본값이 #FFFFFF이므로, 글자도 이 토큰으로 바꿔도 기본 화면은 그대로입니다. 이 교체를 FR-2 범위에 넣을지 정해야 합니다.
   - 신설 토큰 배경 위에 흰 글자·아이콘이 고정된 줄도 같은 문제를 갖습니다. message-bubble 30, plan-card 179, step-timeline 76(68행 `status.success` 점 위 체크 아이콘), run-progress 127(30~33행 `statusColors` 원 위 번호·아이콘), agent-avatar 80(34~36행 `typeColors` 위 이니셜)입니다.
   - 이 줄들에 짝 토큰(예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`)을 신설할지도 정해야 합니다. AC2는 `--axis-color-`만 검사하므로 이 항목은 AC로 잡히지 않습니다.
+  - 2026-10-16 기준 교체 메모: 위 근거의 값은 초안 1(v0.22) 기준입니다. 초안 2(v0.24 · 디자인 시스템 v1)는 버튼 배경을 라이트 #326ADA · 다크 #6B98F0로, 버튼 글자를 라이트 #FFFFFF · 다크 #0E1013로, 위험 버튼을 라이트 #FDE8E8 / #A8281F · 다크 #3A1A1A / #F49890로 바꿉니다. 흰 글자가 남으면 다크 주 버튼 위 2.85:1, 라이트 위험 버튼 위 1.17:1이므로 M1에서 끝낸 버튼 글자 토큰 교체의 근거는 그대로입니다. 나머지 5곳 짝 토큰(M3)은 배경이 되는 `status` · `agent` 값을 초안 2도 정하지 않으므로, 필요 범위는 D-6 재결정에 따릅니다.
 - **D-6 ontology 프리셋 값**: 초안 `axis-theme-ontology.css`에는 신설 22개 토큰의 값이 없습니다. 보완하지 않으면 `data-brand="ontology"`에서 agentic-ui 상태색이 AXIS 기본값으로 남습니다. FR-8에서 초안에 값을 추가할지 정해야 하고, 추가한다면 라이트 AA 보정 대상에 넣을지도 정해야 합니다.
+  - **재결정 필요(2026-10-16 기준 교체)**: 초안 2에도 신설 22개 토큰 값은 없습니다(grep 0건). 그런데 질문의 전제가 바뀌었습니다. v1은 색이 무채색 · `key` · `bad` 세 계열뿐이라 AXIS의 success · warning · info를 회색 · `bad` 연한 단계 · `key`로 접고(PRD FR-8), PRD Q8은 `status.*`가 온톨로지에서 이 매핑을 따르게 하는 방향을 적었습니다. 부록 B도 8개 역할 보정에서 `sub` 한 값 보정과 미달 쌍 처리(통과하는 단계 토큰 선택)로 바뀌어 "AA 보정 대상에 넣을지"라는 선택지가 그대로 성립하지 않습니다. 22개 값을 접기 매핑으로 추가할지, 추가한다면 미달 쌍 처리 방식을 따를지, D-5의 흰 글자 짝 토큰과 어떻게 맞출지를 다시 정해야 합니다.
 - **D-7 primitive 오버라이드 안내 문서**: `docs/guides/theme-customization.md` 92~97행과 `docs/guides/component-usage.md` 175행은 `:root { --axis-color-blue-500: ... }` 오버라이드로 브랜드 색을 바꾸라고 안내합니다. semantic·component 토큰은 hex로 풀려 나가므로 지금 이 오버라이드가 닿는 곳은 primitive를 직접 참조하는 agentic-ui뿐입니다. FR-2 이후에는 agentic-ui 상태색·말풍선·아바타가 이 오버라이드를 따르지 않습니다. 3.2 하위 호환(브랜드 미지정 시 계산값 동일)에는 걸리지 않지만 사용자 오버라이드 동작이 바뀝니다. 릴리스 노트에 적을지, 가이드를 고칠지(FR-10 테마 문서 작업과 묶을지) 정해야 합니다.
 
 ### 실측 근거
@@ -327,7 +329,7 @@
 - `ls -l --time-style=full-iso`: dist `variables.css`의 수정 시각(2026-10-15)이 소스 json(2026-02-26)보다 뒤입니다. `git log -1 -- src`는 2026-08-07입니다. dist 값을 소스와 같은 기준으로 참고했습니다.
 - `src/semantic/light.json` · `dark.json`(각 40줄)과 `src/component/components.json`(107줄)을 열람했습니다. 최상위 범주는 semantic이 `surface` · `text` · `border` · `icon`이고, component가 `button` · `button-secondary` · `button-ghost` · `button-destructive` · `input` · `card` · `badge` · `dialog`입니다.
 - `grep -rnoE -- '--axis-(status|diff|agent|...)' packages apps`(`node_modules` 제외): 신설 이름과 겹치는 정의나 참조는 0건입니다. 걸린 것은 `--axis-interactive-primary`(FR-1 대상)뿐입니다.
-- `grep -nE -- '--axis-(status|diff|agent|color)' docs/workitems/WI-0025-brand-theme/axis-theme-ontology.css`: 0건이 나왔습니다. 같은 파일에서 `--axis-button-text-default`는 #0F1724, `--axis-button-destructive-bg-default`는 라이트 #FDE8E8 / 다크 #3D1C1F, `--axis-button-destructive-text-default`는 #C92C2C / #F28B8B입니다.
+- `grep -nE -- '--axis-(status|diff|agent|color)' docs/workitems/WI-0025-brand-theme/axis-theme-ontology.css`: 0건이 나왔습니다. 같은 파일에서 `--axis-button-text-default`는 #0F1724, `--axis-button-destructive-bg-default`는 라이트 #FDE8E8 / 다크 #3D1C1F, `--axis-button-destructive-text-default`는 #C92C2C / #F28B8B입니다. 2026-10-16 초안 2 재실측: `--axis-(status|diff|agent|color)`는 0건으로 같고, `--axis-button-text-default`는 #FFFFFF / #0E1013, `--axis-button-destructive-bg-default`는 #FDE8E8 / #3A1A1A, `--axis-button-destructive-text-default`는 #A8281F / #F49890입니다.
 - `grep -rn 'text-white' packages/axis-agentic-ui/src --include=*.tsx`: 7개 파일, 9줄에서 나왔습니다. 그중 이 매핑과 맞물리는 줄은 run-progress 127 · 163, recovery-banner 69, plan-card 179, message-bubble 30, step-timeline 76, agent-avatar 80이고, 같은 문제가 이미 있는 줄은 approval-card 67 · 70입니다.
 - `grep -rhoE 'var\(--axis-color-[a-z0-9-]+' <dir> | wc -l`: `packages/axis-agentic-ui/registry/r` · `public/r` · `apps/web/public/r`는 각각 13개 파일 80건, `apps/web/public/library`는 7개 파일 66건입니다. `scripts/build-registry.mjs`의 `DEPLOY_DIRS`는 `public/r` · `apps/web/public/r`이고, `packages/axis-cli/src/library/publisher.ts`의 기본 출력은 `apps/web/public/library`입니다.
 - 미검증: Tailwind 불투명도 수식어(`/10` · `/30`)가 `var()` 임의값에서 실제로 어떤 CSS를 만드는지는 빌드 산출물로 확인하지 않았습니다. 다만 변수 이름만 바꾸므로 교체 전후 결과는 같습니다.
@@ -349,7 +351,7 @@
 | 결합 | 204-225 | `_light.css`와 `_dark.css`를 합쳐 `dist/css/variables.css`를 만들고 임시 파일을 지웁니다 | |
 | shadcn 해석 | 230-263 | JSON을 직접 읽고 `colors.json`으로만 참조를 풉니다. `resolveSemanticJson`은 `카테고리 → 키` 2단계만 처리합니다(255-256줄) | 3단계 항목은 예외 없이 조용히 무시됩니다(`token.value`가 undefined라 `resolveRef`가 undefined를 돌려줌). `buildShadcnVars`가 읽는 `surface` · `text` · `border`를 3단계로 바꿀 때만 shadcn 값이 `0 0% 0%`로 떨어집니다(3.5 표 참고) |
 | (미사용) `build-tokens.js` | - | SD v3 `formatter` API와 `require`를 쓰는 구판 스크립트로, 초기 커밋 `f57de7d` 이후 그대로 남아 있습니다. `package.json` build 스크립트는 `.mjs`만 실행합니다 | 이름이 비슷해 잘못 고칠 위험이 있습니다. M2 변경은 `build-tokens.mjs`에만 넣고 이 파일은 무시합니다 |
-| shadcn 생성 | 274-302, 304-333 | `--primary` = `text.primary`(282줄), `--radius: 0.5rem` 고정(295줄)입니다. `:root`와 `.dark` 두 블록을 `dist/css/shadcn-compat.css`에 씁니다 | 초안의 shadcn 값(`--primary` = 민트, `--card` ≠ `--background`, `--radius: 12px`)은 이 매핑에서 나오지 않습니다. 브랜드가 shadcn 값을 직접 지정해야 합니다 |
+| shadcn 생성 | 274-302, 304-333 | `--primary` = `text.primary`(282줄), `--radius: 0.5rem` 고정(295줄)입니다. `:root`와 `.dark` 두 블록을 `dist/css/shadcn-compat.css`에 씁니다 | 초안의 shadcn 값(`--primary` = 민트, `--card` ≠ `--background`, `--radius: 12px`)은 이 매핑에서 나오지 않습니다. 브랜드가 shadcn 값을 직접 지정해야 합니다. 초안 2(2026-10-16)도 `--primary` = `key` `220 69% 53%`, `--card` `0 0% 100%` ≠ `--background` `0 0% 97%`, `--radius: 12px`라 결론이 같습니다 |
 
 ### 3.2 빌드 변경 설계 (FR-4 · FR-5)
 
@@ -401,6 +403,8 @@ packages/axis-tokens/src/brands/<brand>/
 V8의 25개 이름을 복제하지 않으려면 276-300줄의 이름을 상수 배열로 빼야 합니다. 그러면 기존 4단계 코드를 건드리게 되므로, 리팩터링 전후 `shadcn-compat.css`의 `sha256sum`이 같다는 조건에서만 리팩터링합니다.
 
 **초안 CSS를 이 규칙에 대 본 결과**: 초안의 `--axis-*` 변수는 고유 75개입니다. 그중 현재 소스에 없는 이름은 `--axis-bg-muted` · `--axis-plan-card-accent-width` · `--axis-shadow-lg` · `--axis-shadow-sm` 4개입니다. `bg-muted`는 M1(FR-1)에서, 나머지 셋은 M3(FR-7 · FR-9)에서 기본 토큰으로 생기므로 순서를 지키면 V3를 통과합니다. 라이트에만 있는 키는 9개(`font-family-sans|mono`, `radius-sm|md|lg`, `shadow-sm|lg`, `plan-card-accent-width`, `--radius`)이고, 모두 테마와 무관한 값이라 V7을 통과합니다. `--radius: 12px`(17줄)는 길이 값이라 V8의 `radius` 길이 규칙으로 통과합니다(색 형식 규칙을 모든 키에 적용하면 여기서 빌드가 실패합니다). 다크에만 있는 키는 없습니다. 초안 마지막 줄의 `word-break` 규칙(221줄)은 토큰이 아니라서 JSON으로 옮길 수 없습니다(결정 필요 5).
+
+**초안 2(2026-10-16, v0.24 · 디자인 시스템 v1)를 다시 대 본 결과**: 위 문단은 초안 1 기준이며, M3 이식은 초안 2를 대상으로 합니다. 초안 2의 `--axis-*` 변수는 고유 74개입니다. M1이 반영된 현재 빌드(`dist/css/variables.css`)에 없는 이름은 `--axis-bg-muted` · `--axis-font-sans` · `--axis-font-mono` · `--axis-shadow-sm` · `--axis-shadow-lg` 5개입니다. `shadow-*`는 M3(FR-9)에서 기본 토큰으로 생기고, `bg-muted`는 D-f대로 이식에서 뺍니다. `font-sans` · `font-mono`는 정의된 토큰 이름이 아니므로(정의된 이름은 `--axis-font-family-sans|mono`) 그대로 옮기면 V3 · V6에 걸립니다. PRD FR-9의 정정 이름(`font.family.sans|mono`)으로 옮깁니다. PRD FR-9가 전제하는 `--axis-plan-card-accent-width: 0` 줄은 초안 2에 없으므로 이식할 때 추가합니다. 라이트에만 있는 키는 6개(`font-sans|mono`, `radius-sm|md|lg`, `--radius`)이고 모두 테마와 무관한 값이라 V7을 통과합니다. 그림자는 초안 2에서 다크 값도 있어(라이트 · 다크 모두 정의) 라이트 전용 키에서 빠졌습니다. 다크에만 있는 키는 없고, `--radius: 12px`는 18줄, `word-break` 규칙은 221줄입니다.
 
 ### 3.4 `ThemeProvider` brand 설계 (FR-6, `packages/axis-theme/src/index.ts` 116줄)
 
@@ -484,6 +488,7 @@ V8의 25개 이름을 복제하지 않으려면 276-300줄의 이름을 상수 �
 - `node --test test/`(node v22.22.0, 스크래치패드) → `# fail 1`(디렉터리를 모듈로 해석)입니다. `node --test test/brands.test.mjs` → `# pass 1`입니다. `grep -n node-version .github/workflows/*.yml` → `frontend.yml` 56 · 119 · 190줄 `'20'`, `publish.yml` 36줄 `22`입니다.
 - `components.json`의 참조는 모두 `{color.*}` primitive입니다(B3 ③ 근거).
 - `grep` 초안 `axis-theme-ontology.css` → 221줄입니다. 라이트 블록 선언은 95개(`--axis-*` 75 + shadcn 20), 다크 블록은 86개입니다. 현재 소스에 없는 `--axis-*`는 `bg-muted` · `plan-card-accent-width` · `shadow-lg` · `shadow-sm` 4개입니다. 라이트에만 있는 키는 9개, 다크에만 있는 키는 0개, 다크 선택자는 4개(121-124줄)입니다.
+- 2026-10-16 초안 2 재실측(`awk`로 블록별 선언 추출 후 `comm`) → 221줄입니다. 라이트 블록 선언은 94개(`--axis-*` 74 + shadcn 20), 다크 블록은 88개입니다. M1 반영 빌드에 없는 `--axis-*`는 `bg-muted` · `font-sans` · `font-mono` · `shadow-sm` · `shadow-lg` 5개입니다. 라이트에만 있는 키는 6개, 다크에만 있는 키는 0개, 다크 선택자는 4개(119-122줄)입니다.
 - `cat -n packages/axis-theme/src/index.ts` → 116줄입니다. theme effect는 57-66줄, 시스템 감지는 68-83줄, `setTheme`은 85-91줄, value는 93-96줄입니다. tokens import는 없습니다.
 - `find ... -name '*.test.*'` (axis-theme · axis-tokens) → `packages/axis-theme/src/theme.test.tsx` 1개(301줄, `it` 21개)입니다. tokens 테스트는 0개입니다. `vitest.config.ts`는 jsdom 환경에 `src/**/*.test.{ts,tsx}`입니다.
 - `cat .changeset/config.json` → 3.6에 적은 설정값입니다. `ls .changeset` → `config.json`만 있어 대기 changeset은 0개입니다.

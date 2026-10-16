@@ -28,7 +28,7 @@
 - [ ] Slider Range 라이트 대비 2.97:1 허용 여부 (썸이 3.68:1로 값 전달) (1.7 D-c)
 - [x] Q2 전후 스크린샷 장소: 별도 하네스 vs `apps/web` 설정 수정(tailwind content 경로 · tokens CSS import)을 범위에 포함 (AC7 영향) (1.7 D-d) → ✅ 2026-10-15: M1은 별도 Playwright 하네스, `apps/web` 정비는 M3
 - [ ] `apps/web/public/library/components/*.json` 10개 갱신 방식: 생성 스크립트 미확인 상태에서 수동 갱신 여부 (1.7 D-e)
-- [ ] 온톨로지 초안의 `--axis-bg-muted`(98 · 197행) 삭제 확정 (참조 교체 시 미사용, 화면 변화 없음) (1.7 D-f)
+- [ ] 온톨로지 초안 2의 `--axis-bg-muted`(96 · 197행) 삭제 확정 (참조 교체 시 미사용, 화면 변화 없음) (1.7 D-f)
 
 ### 2절 FR-2 agentic-ui primitive 매핑 (M1)
 - [x] 기존 semantic(`icon.success` · `border.error` · `surface.brand` 등) 재사용 vs 신설 22개 (재사용 시 다크 화면 변경, 하위 호환 위반) (2.5 D-1) → ✅ 2026-10-15: 신설 22개(다크 화면 불변)
@@ -36,7 +36,7 @@
 - [x] `status.info`와 `status.running` 분리 유지 여부 (현재 둘 다 blue-500) (2.5 D-3) → ✅ 2026-10-15: 분리 유지
 - [x] `diff.*`를 primitive 직접 참조로 둘지, `{status.*}` 별칭으로 둘지 (참조가 hex로 풀려 연쇄 안 됨) (2.5 D-4) → ✅ 2026-10-15: primitive 직접 참조
 - [x] `text-white` 하드코딩 짝 처리: run-progress 163 · recovery-banner 69(버튼 글자 토큰 교체), approval-card 67 · 70, message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80(짝 토큰 신설)을 FR-2 범위에 넣을지 (2.5 D-5) → ✅ 2026-10-15: 버튼 4곳(run-progress 163 · recovery-banner 69 · approval-card 67 · 70)은 M1에서 button-text 토큰으로, 나머지 5곳 짝 토큰은 M3
-- [ ] 온톨로지 프리셋에 신설 22개 토큰 값 추가 여부와 라이트 AA 보정 대상 포함 여부 (FR-8 연계) (2.5 D-6)
+- [ ] 온톨로지 프리셋에 신설 22개 토큰 값 추가 여부와 라이트 AA 보정 대상 포함 여부 (FR-8 연계) (2.5 D-6) → 재결정 필요(2026-10-16 기준 교체): 초안 2는 상태를 무채색 · `key` · `bad` 세 계열로 접고(PRD FR-8 · Q8) 부록 B가 `sub` 1개 값 보정 + 미달 쌍 처리로 바뀌어, 질문이 "22개 값을 접기 매핑으로 추가할지, 흰 글자 짝 토큰(D-5 M3분)과 어떻게 맞출지"로 바뀜
 - [ ] primitive 오버라이드 안내(`theme-customization.md` 92~97행, `component-usage.md` 175행) 동작 변경을 1.2.1 릴리스 노트에 적을지, 가이드 정정을 FR-10과 묶을지 (2.5 D-7)
 
 ### 3절 M2 브랜드 빌드 · ThemeProvider (M2)
@@ -205,23 +205,24 @@
 
 ## Phase M3: 트랙 C 온톨로지 프리셋 + FR-7 + a11y CI (1.3.0)
 
-- [ ] **M3 착수 게이트**: 부록 B 라이트 AA 보정 내역 디자인 오너 승인 (Q6 제품 화면 적용 여부 포함) (D1 · FR-8 · AC8)
-- [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8)
+- [ ] **M3 착수 게이트**: 부록 B(2026-10-16, v0.24 · 디자인 시스템 v1 기준) 디자인 오너 김정원 책임 승인. 승인 범위: ① 라이트 보조 · 흐린 글자 `sub` #6B7280 → #5F6673 1개 값 보정 ② 미달 쌍 처리(`key`/`key-light` → brand · info 글자는 `key-dark`, `muted`는 글자에 쓰지 않음, `bad-line` 주의 점은 warning 아이콘에만) ③ 라이트 입력 테두리 `line-2`/`card` 1.40:1 원본 유지 여부 ④ Q6 제품 화면 적용 여부 (D1 · FR-8 · AC8)
+- [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8) → 필요 범위는 D-6 재결정에 따름(초안 2에는 짝 배경인 `status` · `agent` 값이 없음, 다크 `key` #6B98F0 위 흰 글자는 2.85:1)
 - [ ] 불투명도 수식어 결함 수정: agentic-ui 11곳(plan-card 6 · diff-viewer 2 · feedback-buttons 2 · attachment-card 1)의 `bg-[var(..)]/10` · `border-[var(..)]/30`을 `color-mix()` 형태로 교체해 의도된 옅은 바탕 복원(화면 변화, 1.3.0 릴리스 노트 기재), `check-token-refs`에 CSS 미생성 패턴 검출 추가 (2026-10-15 결정)
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
 - [ ] FR-9 그림자 primitive `--axis-shadow-sm` · `--axis-shadow-lg` 신설 (기본값 = Tailwind `shadow-sm` · `shadow-lg`) (FR-9 · AC3)
-- [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3)
-- [ ] FR-8 `src/brands/ontology/light.json` · `dark.json` 작성 (초안 `axis-theme-ontology.css` 이식, `bg-muted` 줄 제외, 신설 22개 status · diff · agent 값은 D-6 결정 반영) (FR-8 · AC6)
+- [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3) → 재결정 필요(2026-10-16 기준 교체): v1은 카드 그림자 없음(팝오버 · 고른 탭만)인데 Card가 `--axis-shadow-sm`을 참조하면 초안 2의 `sh-1`이 카드에도 생김. 카드 전용 토큰 vs `sm` 값 조정 중 택1 (PRD FR-9, plan에서 결정)
+- [ ] FR-8 `src/brands/ontology/light.json` · `dark.json` 작성 (초안 2 `axis-theme-ontology.css` 이식(v0.24 · 디자인 시스템 v1 기준), `bg-muted` 줄 제외(D-f), 신설 22개 status · diff · agent 값은 D-6 재결정 필요) (FR-8 · AC6)
+- [ ] 초안 2 CSS 정정: 글꼴 변수 이름을 `--axis-font-family-sans|mono`로, `--axis-plan-card-accent-width: 0` 줄 추가 (PRD FR-9 전제, 초안 2에는 정정 전 이름이 들어 있고 이 줄이 없음, plan 3.3 초안 2 대조) (FR-8 · FR-9)
 - [ ] FR-8 `shadcn` 섹션 이식 (`--radius: 12px` 포함) (FR-8 · AC6)
-- [ ] FR-9 글꼴 `font.family.sans|mono`, 둥글기 `radius.sm|md|lg`, 그림자, `plan-card` accent width `0` 지정 (FR-9)
-- [ ] `src/brands/ontology/brand.json` 작성 (a11y 상태 기록) (FR-4 · D6)
+- [ ] FR-9 글꼴 `font.family.sans|mono`, 둥글기 `radius.sm|md|lg`(초안 2: 6 · 8 · 12px, 컴포넌트 미참조라 이번 WI에서는 효과 없음), 그림자(초안 2는 라이트 · 다크 값 모두 있음), `plan-card` accent width `0` 지정 (FR-9)
+- [ ] `src/brands/ontology/brand.json` 작성 (a11y 상태 기록, 부록 B 승인 전이면 미승인으로 기록) (FR-4 · D6)
 - [ ] `package.json` exports에 `./css/brands/ontology` · `./brands/ontology/brand.json` 추가 (FR-5 · AC4)
 - [ ] AC4: `pnpm build` 후 `dist/css/brands/ontology.css` 생성, `import "@axis-ds/tokens/css/brands/ontology"` 동작, `pnpm pack-smoke` 통과 (AC4)
 - [ ] AC3 스냅샷 테스트: 브랜드 미지정 `variables.css` 라이트 · 다크가 1.2.1과 일치, 신규 변수는 기본값만 검사 (AC3)
-- [ ] AC6 Playwright 계산 스타일 검사: `data-brand="ontology"` 라이트 · 다크 7개 변수가 부록 A와 일치 (shadcn HSL은 원문 비교 또는 rgb ±1) (AC6)
+- [ ] AC6 Playwright 계산 스타일 검사: `data-brand="ontology"` 라이트 · 다크 7개 변수가 부록 A(v1 기준)와 일치 (shadcn HSL은 원문 비교 또는 rgb 채널당 ±2, 예: 라이트 `--primary` rgb(52,108,218)) (AC6) → 허용 오차 재결정 필요(2026-10-16 기준 교체): v1 값에서 ±1이 성립하지 않음. ±2 · HSL 원문 비교만 · CSS HSL 소수 퍼센트(±1 유지) 중 택1 (PRD AC6 확인 대기)
 - [ ] `apps/web`이 AXIS 토큰 색을 그리도록 설정 정비 (`tailwind.config.ts` content 경로, tokens CSS import, `globals.css` shadcn 정의와 브랜드 CSS 순서, D-d · 3 결정 13 반영). M4에서 M3로 당김: 이 정비 없이 a11y를 돌리면 브랜드 값이 화면에 닿지 않은 채 통과함 (AC8 · FR-10)
 - [ ] `apps/web`에서 브랜드 CSS 로드 (4 결정 2 반영) (AC8)
-- [ ] ontology 라이트 · 다크 비텍스트 대비 측정: 포커스 링 · 의미 아이콘 3:1 이상 (axe는 비텍스트 대비를 판정하지 않음) (3.2 접근성)
+- [ ] ontology 라이트 · 다크 비텍스트 대비 측정: 포커스 링 · 의미 아이콘 3:1 이상 (axe는 비텍스트 대비를 판정하지 않음), 라이트 입력 테두리 `line-2` 1.40:1은 포커스 때 `key` 테두리로 바뀌는지 확인 (3.2 접근성 · 부록 A · B)
 - [ ] `apps/web/e2e/a11y.spec.ts`에 브랜드 축 추가: 기본 · ontology × 라이트 · 다크 × 9페이지 = 36건, ontology는 `addInitScript`로 `data-brand` 부착 (AC8)
 - [ ] Q7 CI 배선: `frontend.yml` 「Build」 다음에 Playwright 캐시 · `playwright install --with-deps chromium` · `test:e2e:a11y` · 실패 시 `test-results` 업로드 (4 결정 1 서버 방식 반영) (AC8 · Q7)
 - [ ] AC8: 4조합 axe 위반 0, 온톨로지 전용 예외 0 (CI 결과로 확인) (AC8)
@@ -241,10 +242,10 @@
 
 - [ ] FR-10 `apps/web` 브랜드 전환 데모: `document.documentElement`에 `data-brand` 직접 부착 · 제거, 다크는 `next-themes` `.dark` 유지 (FR-10 · AC7)
 - [ ] M4 PR 머지 전 1.2.1 배포 · patch changeset 잔여 없음 재확인 (D3 · plan 3.6)
-- [ ] AC7: Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 브랜드 · 테마 전환에 함께 바뀌는지 확인 (AC7)
+- [ ] AC7: Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 브랜드 · 테마 전환에 함께 바뀌는지 확인, v1에서 접힌 상태(성공 · 경고)가 늘 글자 · 아이콘과 함께 보이는지(Q8), 상태 뱃지 · 둥글기 · 그림자 차이가 함께 보이는 화면 구성(Q9) (AC7)
 - [ ] FR-10 `docs/guides/theme-customization.md`에 「브랜드 테마」 절 추가 (import 순서 안내 포함) (FR-10)
 - [ ] FR-10 같은 문서 「4. 커스텀 테마 생성」 예시를 브랜드 디렉터리 방식으로 갱신, primitive 오버라이드 안내(92~97행) · `component-usage.md` 175행 정정 (D-7 반영) (FR-10)
-- [ ] FR-10 부록 B 원본 대비 보정 내역 문서 게재 (FR-10 · D1)
+- [ ] FR-10 부록 B 원본 대비 보정 내역 문서 게재 (v1 기준 `sub` 1개 값 보정과 미달 쌍 처리) (FR-10 · D1)
 - [ ] `release-notes.md` 1.3.0 절 작성 (브랜드 축 · ontology 프리셋 · 신규 변수 기본값 불변 명시)
 - [ ] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3)
 - [ ] 1.3.0 Breaking change 없음 확인: 브랜드 미지정 시 기존 변수 계산값 불변(AC3), 공개 API 추가만 (3.2 릴리스)

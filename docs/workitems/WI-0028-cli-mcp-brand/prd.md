@@ -1,6 +1,7 @@
 # WI-0028: CLI · MCP 브랜드 명령 PRD
 
-> 작성일: 2026-10-15 | 버전: v0.3(2026-10-15) | 작성자: Sinclair Seo | WI: WI-0028 | GitHub: #87 | 상태: Draft
+> 작성일: 2026-10-15 | 버전: v0.4(2026-10-16, 디자인 기준 v0.24 교체) | 작성자: Sinclair Seo | WI: WI-0028 | GitHub: #87 | 상태: Draft
+> v0.4 변경 요지(v0.3(2026-10-15) 이후): 온톨로지 디자인 기준이 프로토타입 v0.22에서 v0.24(디자인 시스템 v1)로 바뀌었습니다. 이 WI는 색 · 둥글기 같은 토큰 값을 직접 정하지 않으므로 요구사항 · 수용 기준은 바뀌지 않았고, FR-3 보정 내역의 근거 문서가 WI-0025 부록 B라는 점만 명시했습니다. 보정 전 값의 데이터 출처는 Q6으로 남겼습니다.
 > 선행: WI-0025 FR-4 · FR-5(브랜드 토큰 소스, `dist/css/brands/*`, `brand.json`)와 FR-6(`ThemeProvider` brand 옵션). 모두 WI-0025 M2(1.3.0)에서 나오므로 그 배포 이후 착수합니다.
 > 기준 버전: `@axis-ds/cli` · `@axis-ds/mcp` 1.1.3, `@axis-ds/tokens` · `@axis-ds/theme` 1.2.0(2026-10-15 실측)
 
@@ -33,7 +34,7 @@
   - 의존성: `package.json`에 `@axis-ds/tokens`가 없으면 dependencies에 추가하고 설치 명령(`pnpm install` 등)을 안내합니다. 설치 자체는 실행하지 않습니다.
   - 설정: `axis.config.json`에 `"brand": "<brand>"`를 기록합니다. `axis.config.json`은 이 저장소에 있는 파일이 아니라 CLI가 소비 프로젝트에 생성하는 파일이고 공식 스키마(스키마 파일 · TS 타입)가 없습니다. 생성 경로가 둘이고 필드가 서로 다릅니다(`axis init`: `$schema` · `componentsDir` · `tailwindConfig` · `globalCss` · `registry`, `axis template init`: `$schema` · `template` · `componentsDir` · `tailwindConfig` · `globalCss`). 이 WI에서 `brand`를 선택 필드로 정의하고 두 경로가 같은 필드 정의를 따르게 합니다. 파일이 없으면 `brand`만 담아 새로 만들지 않고 `axis init` 실행을 안내합니다.
   - Provider: `ThemeProvider`에 `defaultBrand`를 넣는 방법을 안내합니다(WI-0025 FR-6 완료 전제). 브랜드 CSS는 `[data-brand="<brand>"]` 선택자로 적용되므로 `ThemeProvider`(또는 `<html data-brand>`)가 없으면 import만으로는 화면이 바뀌지 않는다는 점도 함께 출력합니다.
-- FR-3: `axis theme info <brand>`는 주요 토큰 값과 원본 대비 보정 내역(예: ontology의 AA 보정)을 출력합니다.
+- FR-3: `axis theme info <brand>`는 주요 토큰 값과 원본 대비 보정 내역(예: ontology의 AA 보정)을 출력합니다. 보정 내역의 근거 문서는 WI-0025 부록 B(디자인 오너 승인 대상, 미승인)이며, 이 문서에 값을 옮겨 적지 않습니다. 보정 전 값을 어디서 읽을지는 Q6에서 정합니다.
 - FR-4: MCP `axis.list_brands`는 FR-1과 같은 목록을, `axis.get_brand`는 import 경로 · Provider 설정 예시(`defaultBrand`, WI-0025 FR-6 전제) · 주요 토큰을 돌려줍니다.
   - 데이터 출처: 기존 MCP 도구 가운데 컴포넌트 · 토큰 도구는 패키지에 번들한 정적 JSON(`src/registry/data/components.json` · `tokens.json`, 빌드 때 `dist/registry/data`로 복사)을 읽고, 템플릿 도구 4개는 원격 레지스트리를 조회하며(`src/tools/template.ts`), `axis.check_project`는 대상 디렉터리의 파일을 읽습니다. `@axis-ds/mcp`는 `@axis-ds/tokens`에 의존하지 않습니다. 브랜드 도구는 정적 번들을 새로 만들지 않고, CLI FR-1과 같은 방식으로 대상 프로젝트(`axis.check_project`처럼 디렉터리 인자를 받음)에 설치된 `@axis-ds/tokens`의 `brand.json`을 읽습니다. 설치돼 있지 않으면 빈 목록 대신 설치 안내를 돌려줍니다. 이렇게 해야 AC3의 CLI · MCP 동일성이 한 출처에서 보장됩니다.
 - FR-5: `axis check`가 `axis.config.json`의 `brand`와 실제 import가 맞는지 검사합니다. 현재 검사기(CLI `template-check.ts`, MCP `axis.check_project`의 `tools/template.ts`)는 `axis.config.json`의 존재 여부만 보므로, 두 검사기 모두 config 내용(`brand`)을 읽고 FR-2와 같은 탐색 순서로 찾은 CSS 파일의 import와 대조하도록 확장합니다. `brand`가 없는 기존 프로젝트에서는 지금과 같은 결과를 냅니다.
@@ -69,3 +70,4 @@
 - Q3: cli · mcp 1.2.0이 linked 패키지 1.2.0과 번호가 겹쳐, 같은 1.2.0이라도 서로 다른 시점 · 내용이라는 점이 사용자에게 혼동을 줄 수 있습니다. 그대로 1.2.0으로 낼지, 버전 정책을 따로 정할지 결정이 필요합니다.
 - Q4: theme-only 템플릿은 `axis template init` 시 `globals.css` · `layout.tsx` · `page.tsx`가 `app/` 없이 루트에 놓입니다. 이 구조의 `pnpm build` 기준선(미실행)과, 템플릿 구조를 App Router로 고칠지는 이 WI 밖에서 정해야 합니다.
 - Q5: MCP 브랜드 도구가 대상 프로젝트에 `@axis-ds/tokens`가 설치되지 않았을 때 번들 스냅샷으로 대신 응답할지 정해야 합니다(현재 안: 설치 안내만 반환).
+- Q6: FR-3의 「원본 대비 보정 내역」에 필요한 보정 전 값의 데이터 출처를 정해야 합니다. WI-0025 D6 · FR-4의 `brand.json`은 name · description · themes · a11y 상태만 담고, 배포 토큰에는 보정 후 값만 있어 지금 출처만으로는 원본 대비 차이를 낼 수 없습니다. `brand.json`에 보정 내역 필드를 두는 안은 WI-0025 D6 변경이 필요합니다.
