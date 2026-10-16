@@ -10,7 +10,9 @@
  *      (템플릿 리터럴, 문자열 조합, 인라인 정의, 주석 속 이름 등)
  *   4. primitive 참조: axis-agentic-ui 소스의 `var(--axis-color-*)` 참조
  *   5. 다크 재정의 누락 (WI-0033): <css-dir>/variables.css 의 `:root` 이름 집합과 `.dark` 이름 집합이 다름
- *      (`:root` 전용 이름 · `.dark` 전용 이름 모두 위반)
+ *      (`:root` 전용 이름 · `.dark` 전용 이름 모두 위반), 또는 다크 값 미반영: `axis.dark` 가 있고 소스로 푼
+ *      다크 값이 라이트 값과 다른 component 토큰의 `.dark` 값이 `:root` 값과 같음(다크 빌드의 preprocessor 배선 누락 등)
+ *      (기대값 계산은 packages/axis-tokens/scripts/theme-modes.mjs 의 findDarkValueExpectations)
  *   6. 테마 선언 (WI-0033): component 토큰의 색 leaf 에 `$extensions.axis.dark` 도
  *      `$extensions.axis.themeIndependent` 도 없음, 또는 선언 형식 오류
  *      (판정 규칙은 packages/axis-tokens/scripts/theme-modes.mjs 의 findThemeDeclarationViolations)
@@ -22,17 +24,19 @@
  *   --src <dir>            검사 대상 디렉터리, 여러 번 지정 가능
  *                          (기본: packages/axis-ui-react/src, packages/axis-agentic-ui/src)
  *   --component-dir <dir>  component 토큰 JSON 디렉터리 (기본: packages/axis-tokens/src/component)
+ *   --token-dir <dir>      다크 값 기대값을 풀 토큰 소스 디렉터리, primitives/ · semantic/light.json · semantic/dark.json
+ *                          (기본: packages/axis-tokens/src)
  *
  * 종료 코드
  *   0: 위반 0건이면서 검사 파일 1개 이상 · 참조 1건 이상 · 정의 1개 이상 · `.dark` 정의 1개 이상 · component leaf 1개 이상
  *   1: 위반 있음
  *   2: 측정 실패 (CSS 파일 없음, 정의 0개, `.dark` 정의 0개, 검사 대상 디렉터리 없음, 검사 파일 0개, 참조 0건,
- *      component 디렉터리 없음 · JSON 0개 · leaf 0개)
+ *      component 디렉터리 없음 · JSON 0개 · leaf 0개, 토큰 소스 파일 없음 · 풀 수 없는 참조)
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { findThemeDeclarationViolations } from '../packages/axis-tokens/scripts/theme-modes.mjs'
+import { findDarkValueExpectations, findThemeDeclarationViolations } from '../packages/axis-tokens/scripts/theme-modes.mjs'
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const TAG = '[token-refs]'
@@ -50,16 +54,17 @@ function measurementFailure(message) {
 }
 
 function parseArgs(argv) {
-  const opts = { cssDir: null, src: [], componentDir: null }
+  const opts = { cssDir: null, src: [], componentDir: null, tokenDir: null }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
-    if (arg === '--css-dir' || arg === '--src' || arg === '--component-dir') {
+    if (arg === '--css-dir' || arg === '--src' || arg === '--component-dir' || arg === '--token-dir') {
       const value = argv[i + 1]
       if (value === undefined || value.startsWith('--')) {
         measurementFailure(`${arg} 다음에 경로가 없습니다`)
       }
       if (arg === '--css-dir') opts.cssDir = value
       else if (arg === '--component-dir') opts.componentDir = value
+      else if (arg === '--token-dir') opts.tokenDir = value
       else opts.src.push(value)
       i++
     } else {
@@ -73,6 +78,7 @@ function parseArgs(argv) {
       : [join(ROOT, 'packages/axis-ui-react/src'), join(ROOT, 'packages/axis-agentic-ui/src')]
     ).map((d) => resolve(d)),
     componentDir: resolve(opts.componentDir ?? join(ROOT, 'packages/axis-tokens/src/component')),
+    tokenDir: resolve(opts.tokenDir ?? join(ROOT, 'packages/axis-tokens/src')),
   }
 }
 
@@ -114,19 +120,73 @@ function jsonPathLine(text, path) {
   return lineOf(text, at - 1)
 }
 
-/** 판정 5: variables.css 의 `:root` 이름 집합과 `.dark` 이름 집합 비교 */
-function checkDarkCompleteness(cssPath) {
+/** 선택자 블록 안의 `--이름: 값;` 선언을 Map 으로 모읍니다(같은 이름이 여러 번 나오면 마지막 값). */
+function collectBlockValues(css, selector) {
+  const values = new Map()
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
+  const blockRe = /(^|[}\s;])([^{}]*?)\{([^{}]*)\}/g
+  let m
+  while ((m = blockRe.exec(withoutComments)) !== null) {
+    const selectors = m[2].split(',').map((s) => s.trim())
+    if (!selectors.includes(selector)) continue
+    for (const d of m[3].matchAll(/(--[A-Za-z0-9_-]+)\s*:\s*([^;]*);/g)) values.set(d[1], d[2].trim())
+  }
+  return values
+}
+
+/** 다크 값 기대값을 풀 토큰 소스(primitives · 라이트 · 다크 semantic)를 읽습니다. 없으면 측정 실패입니다. */
+function loadTokenSources(tokenDir) {
+  const primitivesDir = join(tokenDir, 'primitives')
+  if (!existsSync(primitivesDir) || !statSync(primitivesDir).isDirectory()) {
+    measurementFailure(`토큰 소스 primitives 디렉터리 없음: ${display(primitivesDir)}`)
+  }
+  const read = (abs) => {
+    if (!existsSync(abs)) measurementFailure(`토큰 소스 파일 없음: ${display(abs)}`)
+    try {
+      return JSON.parse(readFileSync(abs, 'utf-8'))
+    } catch (e) {
+      measurementFailure(`JSON 파싱 실패: ${display(abs)} (${e.message})`)
+    }
+  }
+  const base = readdirSync(primitivesDir, { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .map((f) => read(join(primitivesDir, f)))
+  if (base.length === 0) measurementFailure(`토큰 소스 primitives JSON 0개: ${display(primitivesDir)}`)
+  return { base, light: read(join(tokenDir, 'semantic/light.json')), dark: read(join(tokenDir, 'semantic/dark.json')) }
+}
+
+/** 판정 5: variables.css 의 `:root` 이름 집합과 `.dark` 이름 집합 비교, 다크 값 미반영 */
+function checkDarkCompleteness(cssPath, expectations) {
   const css = readFileSync(cssPath, 'utf-8')
   const root = collectBlockDefinitions(css, ':root')
   const dark = collectBlockDefinitions(css, '.dark')
   if (dark.size === 0) measurementFailure(`.dark 정의 0개: ${display(cssPath)}`)
   const rootOnly = [...root].filter((n) => !dark.has(n))
   const darkOnly = [...dark].filter((n) => !root.has(n))
+  // 다크 값 축: `.dark` 에 이름이 없으면 위의 이름 집합 판정이 잡으므로, 양쪽에 있는 이름만 값을 비교합니다
+  const rootValues = collectBlockValues(css, ':root')
+  const darkValues = collectBlockValues(css, '.dark')
+  const unapplied = []
+  for (const e of expectations.changed) {
+    if (!rootValues.has(e.name)) {
+      unapplied.push({ ...e, line: 1, detail: `${e.name} (:root 에 없어 다크 값을 비교할 수 없음, 기대 다크 ${e.dark})` })
+    } else if (darkValues.has(e.name) && darkValues.get(e.name) === rootValues.get(e.name)) {
+      unapplied.push({
+        ...e,
+        line: declarationLine(css, '.dark', e.name),
+        detail: `${e.name} (.dark 값 ${darkValues.get(e.name)} 이 :root 와 같음, 기대 다크 ${e.dark})`,
+      })
+    }
+  }
   return {
     root: root.size,
     dark: dark.size,
     rootOnly: rootOnly.map((name) => ({ name, line: declarationLine(css, ':root', name) })),
     darkOnly: darkOnly.map((name) => ({ name, line: declarationLine(css, '.dark', name) })),
+    valueTargets: expectations.changed.length,
+    unapplied,
   }
 }
 
@@ -140,7 +200,7 @@ function checkThemeDeclarations(componentDir) {
     .filter((f) => f.endsWith('.json'))
     .sort()
   if (files.length === 0) measurementFailure(`component JSON 0개: ${display(componentDir)}`)
-  const result = { files: files.length, leaves: 0, colorLeaves: 0, violations: [] }
+  const result = { files: files.length, leaves: 0, colorLeaves: 0, violations: [], trees: [] }
   for (const f of files) {
     const abs = join(componentDir, f)
     const text = readFileSync(abs, 'utf-8')
@@ -150,6 +210,7 @@ function checkThemeDeclarations(componentDir) {
     } catch (e) {
       measurementFailure(`JSON 파싱 실패: ${display(abs)} (${e.message})`)
     }
+    result.trees.push(tree)
     const r = findThemeDeclarationViolations(tree)
     result.leaves += r.leaves
     result.colorLeaves += r.colorLeaves
@@ -220,7 +281,7 @@ function report(kind, file, line, detail, isTest) {
 }
 
 function main() {
-  const { cssDir, src, componentDir } = parseArgs(process.argv.slice(2))
+  const { cssDir, src, componentDir, tokenDir } = parseArgs(process.argv.slice(2))
 
   // 정의 집합
   const defined = new Set()
@@ -269,21 +330,30 @@ function main() {
     }
   }
 
-  // 판정 5: 다크 재정의 누락
+  // 판정 6의 component JSON 을 판정 5의 다크 값 기대값 계산에도 씁니다(보고 순서는 5 → 6)
+  const theme = checkThemeDeclarations(componentDir)
+  let expectations
+  try {
+    expectations = findDarkValueExpectations({ ...loadTokenSources(tokenDir), components: theme.trees })
+  } catch (e) {
+    measurementFailure(`다크 값 기대값 계산 실패: ${e.message}`)
+  }
+
+  // 판정 5: 다크 재정의 누락 · 다크 값 미반영
   const variablesPath = join(cssDir, 'variables.css')
-  const dark = checkDarkCompleteness(variablesPath)
+  const dark = checkDarkCompleteness(variablesPath, expectations)
   for (const d of dark.rootOnly) {
     report('다크 재정의 누락', display(variablesPath), d.line, `${d.name} (:root 에만 있음)`, false)
   }
   for (const d of dark.darkOnly) {
     report('다크 재정의 누락', display(variablesPath), d.line, `${d.name} (.dark 에만 있음)`, false)
   }
+  for (const d of dark.unapplied) report('다크 값 미반영', display(variablesPath), d.line, d.detail, false)
 
   // 판정 6: component 토큰 테마 선언
-  const theme = checkThemeDeclarations(componentDir)
   for (const v of theme.violations) report('테마 선언', v.file, v.line, `${v.path}: ${v.reason}`, false)
 
-  const darkViolations = dark.rootOnly.length + dark.darkOnly.length
+  const darkViolations = dark.rootOnly.length + dark.darkOnly.length + dark.unapplied.length
   const violations = counts.missing + counts.primitive + counts.dynamic + darkViolations + theme.violations.length
   console.log(
     `${TAG} 검사 파일 ${files.length} · 참조 보유 파일 ${counts.refFiles} · 참조 ${counts.refs} · 정의 ${defined.size}` +
@@ -292,6 +362,7 @@ function main() {
   )
   console.log(
     `${TAG} 다크 완전성: :root ${dark.root} · .dark ${dark.dark} · :root 전용 ${dark.rootOnly.length} · .dark 전용 ${dark.darkOnly.length}` +
+      ` · 다크 값 대상 ${dark.valueTargets} · 미반영 ${dark.unapplied.length}` +
       ` | 테마 선언: JSON ${theme.files} · leaf ${theme.leaves} · 색 leaf ${theme.colorLeaves} · 위반 ${theme.violations.length}`
   )
 

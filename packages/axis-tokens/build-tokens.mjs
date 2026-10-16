@@ -182,7 +182,7 @@ const sdLight = new StyleDictionary({
 // 참조 해석 전에 value를 그 값으로 바꾼다. 다크에서도 같은 값인 leaf는 axis.themeIndependent 마커만 둔다.
 // 등록 · 선언 검사는 브랜드 빌드와 CI 검사도 쓰도록 scripts/theme-modes.mjs에 있다.
 import { readdirSync } from 'fs';
-import { registerThemePreprocessors, themePreprocessorsFor, findThemeDeclarationViolations } from './scripts/theme-modes.mjs';
+import { registerThemePreprocessors, darkBuildConfig, findThemeDeclarationViolations } from './scripts/theme-modes.mjs';
 
 registerThemePreprocessors(StyleDictionary);
 
@@ -197,24 +197,9 @@ if (themeViolations.length > 0) {
   process.exit(1);
 }
 
-const sdDark = new StyleDictionary({
-  preprocessors: themePreprocessorsFor('dark'),
-  source: [
-    'src/primitives/**/*.json',
-    'src/semantic/dark.json',
-    'src/component/**/*.json',
-  ],
-  platforms: {
-    css: {
-      transformGroup: 'css',
-      buildPath: 'dist/css/',
-      files: [{
-        destination: '_dark.css',
-        format: 'css/axis-variables-dark'
-      }]
-    }
-  }
-});
+// 설정은 테스트가 같은 것을 쓰도록 theme-modes.mjs 의 darkBuildConfig 에 있다.
+// preprocessor 배선 누락은 check-token-refs 판정 5의 다크 값 축이 산출물에서 잡는다.
+const sdDark = new StyleDictionary(darkBuildConfig());
 
 console.log('Building AXIS Design Tokens...');
 

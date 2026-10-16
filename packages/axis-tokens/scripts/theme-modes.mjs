@@ -14,6 +14,8 @@
  * 이 모듈은 최상위 실행 코드가 없고 style-dictionary를 직접 import하지 않습니다.
  * build-tokens.mjs(최상위 await)를 import할 수 없는 곳(브랜드 빌드 · 테스트 · CI 검사)에서 그대로 씁니다.
  *
+ * 기본 다크 빌드 설정(darkBuildConfig)과, 산출물 `.dark` 값을 검사할 기대값 계산(findDarkValueExpectations)도 여기에 둡니다.
+ *
  * 브랜드 다크 빌드에 붙일 때(WI-0025 M2 rebase):
  *   registerThemePreprocessors(StyleDictionary)
  *   new StyleDictionary({ ..., preprocessors: themePreprocessorsFor(theme) })
@@ -95,6 +97,108 @@ export function registerThemePreprocessors(StyleDictionary) {
 /** 테마 이름에 맞는 preprocessor 목록 (`new StyleDictionary({ preprocessors })`에 그대로 넣습니다) */
 export function themePreprocessorsFor(theme) {
   return theme === 'dark' ? [THEME_DARK_PREPROCESSOR] : []
+}
+
+/**
+ * 기본 다크 빌드(build-tokens.mjs 의 sdDark) 설정입니다.
+ * build-tokens.mjs 와 테스트가 같은 설정을 쓰도록 여기에 둡니다(build-tokens.mjs 는 최상위 await 라 import 하지 않습니다).
+ * `root`를 주면 source · buildPath 앞에 붙입니다(테스트용). 주지 않으면 패키지 디렉터리 기준 상대 경로입니다.
+ */
+export function darkBuildConfig({ root } = {}) {
+  const at = (p) => (root ? `${root}/${p}` : p)
+  return {
+    preprocessors: themePreprocessorsFor('dark'),
+    source: [
+      at('src/primitives/**/*.json'),
+      at('src/semantic/dark.json'),
+      at('src/component/**/*.json'),
+    ],
+    platforms: {
+      css: {
+        transformGroup: 'css',
+        buildPath: at('dist/css/'),
+        files: [{
+          destination: '_dark.css',
+          format: 'css/axis-variables-dark'
+        }]
+      }
+    }
+  }
+}
+
+/** 토큰 경로를 CSS 변수 이름으로 바꿉니다(build-tokens.mjs 의 cssVarName 과 같은 규칙: 세그먼트의 점은 하이픈) */
+export function cssVarNameOf(path) {
+  return `--axis-${path.map((seg) => String(seg).replace(/\./g, '-')).join('-')}`
+}
+
+/** 토큰 트리 여러 개를 { 'a.b.c': value } Map 으로 펼칩니다. `$`로 시작하는 키 아래로는 내려가지 않습니다. */
+export function flattenTokens(trees) {
+  const out = new Map()
+  for (const tree of trees) {
+    ;(function walk(node, path) {
+      if (!isPlainObject(node)) return
+      if (isLeaf(node)) {
+        out.set(path.join('.'), node.value)
+        return
+      }
+      for (const [key, child] of Object.entries(node)) {
+        if (!key.startsWith('$')) walk(child, [...path, key])
+      }
+    })(tree, [])
+  }
+  return out
+}
+
+/**
+ * `{a.b}` 참조를 끝까지 풉니다. 풀 수 없는 참조나 순환은 예외를 던집니다(측정 실패로 다룹니다).
+ * Style Dictionary 의 값 변환(transform)은 하지 않으므로, 라이트 · 다크 값이 같은지 비교하는 데에만 씁니다.
+ */
+export function resolveTokenValue(map, value, seen = []) {
+  if (typeof value !== 'string') return String(value)
+  return value.replace(/\{([^{}]+)\}/g, (_, ref) => {
+    if (seen.includes(ref)) throw new Error(`순환 참조: ${[...seen, ref].join(' -> ')}`)
+    if (!map.has(ref)) throw new Error(`풀 수 없는 참조: {${ref}}`)
+    return resolveTokenValue(map, map.get(ref), [...seen, ref])
+  })
+}
+
+/**
+ * 다크 값이 라이트 값과 달라야 하는 component leaf 목록을 소스에서 계산합니다.
+ *
+ * 대상: `axis.dark`가 있고, 다크 소스(primitives + 다크 semantic + 다크 값을 넣은 component)로 푼 값이
+ * 라이트 소스(primitives + 라이트 semantic + component)로 푼 값과 다른 leaf. 산출물 `.dark` 값이 `:root` 값과
+ * 같다면 다크 빌드가 다크 선언을 반영하지 않은 것입니다(preprocessor 배선 누락 같은 회귀).
+ *
+ * 돌려주는 값: { declared: axis.dark leaf 수, changed: [{ path, name, light, dark }] }
+ */
+export function findDarkValueExpectations({ base, light, dark, components }) {
+  const darkComponents = components.map((tree) => {
+    const copy = structuredClone(tree)
+    applyThemeValues(copy, 'dark')
+    return copy
+  })
+  const lightMap = flattenTokens([...base, light, ...components])
+  const darkMap = flattenTokens([...base, dark, ...darkComponents])
+  const changed = []
+  let declared = 0
+  for (const tree of components) {
+    ;(function walk(node, path) {
+      if (!isPlainObject(node)) return
+      if (isLeaf(node)) {
+        if (node.$extensions?.axis?.dark === undefined) return
+        declared++
+        const key = path.join('.')
+        const l = resolveTokenValue(lightMap, lightMap.get(key))
+        const d = resolveTokenValue(darkMap, darkMap.get(key))
+        if (l !== d) changed.push({ path: key, name: cssVarNameOf(path), light: l, dark: d })
+        return
+      }
+      for (const [k, child] of Object.entries(node)) {
+        if (!k.startsWith('$')) walk(child, [...path, k])
+      }
+    })(tree, [])
+  }
+  return { declared, changed }
 }
 
 /**
