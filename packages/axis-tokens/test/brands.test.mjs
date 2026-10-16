@@ -73,6 +73,27 @@ describe('collectBasePaths', () => {
     }
     assert.ok(base.componentTops.has('plan-card'));
   });
+
+  test('M3 G3 신규 변수(그림자 primitive 2개 · card-shadow)가 기본 집합에 들고 1.2.1 변수는 남는다', () => {
+    for (const name of ['--axis-shadow-sm', '--axis-shadow-lg', '--axis-card-shadow', '--axis-card-shadow-default']) {
+      assert.ok(base.varNames.has(name), `기본 집합에 없음: ${name}`);
+    }
+    assert.ok(base.componentTops.has('card-shadow'));
+    // U3: 기본값은 shadow.sm 참조, 1.2.1 card.shadow.default 값은 그대로(U1)
+    assert.equal(base.refs.get('card-shadow'), '{shadow.sm}');
+    assert.equal(base.refs.get('card.shadow.default'), '0 1px 3px 0 rgb(0 0 0 / 0.1)');
+  });
+
+  test('브랜드가 shadow.sm · shadow.lg · card-shadow 를 라이트에만 덮어써도 위반 0건 (V3 · V4 · V7)', () => {
+    const brand = sample(b => {
+      b.light.shadow = {
+        sm: { value: '0 1px 2px 0 rgb(15 23 36 / 0.06)' },
+        lg: { value: '0 8px 24px -6px rgb(15 23 36 / 0.16)' },
+      };
+      b.light['card-shadow'] = { value: '0 0 #0000' };
+    });
+    assert.deepEqual(validateBrand(brand, base), []);
+  });
 });
 
 describe('listBrands', () => {

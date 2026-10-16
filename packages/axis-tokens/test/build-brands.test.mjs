@@ -249,6 +249,22 @@ describe('build-tokens.mjs 5단계 배선 (패키지 사본에서 실행)', () =
     assert.ok(existsSync(join(copy, 'dist', 'css', 'variables.css')));
   });
 
+  test('M3 G3 그림자 변수: 기본값이 Tailwind shadow-sm · shadow-lg 와 같고 1.2.1 변수는 그대로', () => {
+    const css = readFileSync(join(copy, 'dist', 'css', 'variables.css'), 'utf-8');
+    const root = blockOf(css, [':root']);
+    const dark = blockOf(css, ['.dark']);
+    assert.ok(root && dark, 'variables.css 에서 :root · .dark 블록을 찾지 못함');
+    const SM = '0 1px 2px 0 rgb(0 0 0 / 0.05)';
+    const LG = '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)';
+    for (const block of [root, dark]) {
+      assert.ok(block.includes(`--axis-shadow-sm: ${SM};`), block);
+      assert.ok(block.includes(`--axis-shadow-lg: ${LG};`), block);
+    }
+    assert.ok(root.includes(`--axis-card-shadow: ${SM};`), root);
+    assert.ok(root.includes('--axis-card-shadow-default: 0 1px 3px 0 rgb(0 0 0 / 0.1);'), root);
+    assert.ok(root.includes('--axis-dialog-content-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);'), root);
+  });
+
   test('유효 브랜드 + exports: rc 0, 브랜드 CSS 와 brand.json 생성', () => {
     cpSync(join(fixtures, 'valid', 'sample'), join(copy, 'src', 'brands', 'sample'), { recursive: true });
     const pkg = JSON.parse(readFileSync(join(copy, 'package.json'), 'utf-8'));
