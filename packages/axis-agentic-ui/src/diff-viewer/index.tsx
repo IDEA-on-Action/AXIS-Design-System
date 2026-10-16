@@ -68,8 +68,8 @@ function computeDiff(before: string, after: string): DiffLine[] {
 }
 
 const lineTypeStyles: Record<DiffLineType, string> = {
-  added: "bg-[var(--axis-diff-added)]/10",
-  removed: "bg-[var(--axis-diff-removed)]/10",
+  added: "bg-[color:color-mix(in_srgb,var(--axis-diff-added)_10%,transparent)]",
+  removed: "bg-[color:color-mix(in_srgb,var(--axis-diff-removed)_10%,transparent)]",
   unchanged: "",
 };
 
