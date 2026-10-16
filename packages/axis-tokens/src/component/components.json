@@ -1,107 +1,107 @@
 {
   "button": {
     "bg": {
-      "default": { "value": "{color.blue.500}" },
-      "hover": { "value": "{color.blue.600}" },
-      "active": { "value": "{color.blue.700}" },
-      "disabled": { "value": "{color.gray.300}" }
+      "default": { "value": "{color.blue.500}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.blue.600}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "active": { "value": "{color.blue.700}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "disabled": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{color.gray.700}" } } }
     },
     "text": {
-      "default": { "value": "{color.white}" },
-      "disabled": { "value": "{color.gray.500}" }
+      "default": { "value": "{color.white}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "disabled": { "value": "{color.gray.500}", "$extensions": { "axis": { "dark": "{text.tertiary}" } } }
     },
     "border": {
-      "default": { "value": "transparent" },
-      "focus": { "value": "{color.blue.400}" }
+      "default": { "value": "transparent", "$extensions": { "axis": { "themeIndependent": true } } },
+      "focus": { "value": "{color.blue.400}", "$extensions": { "axis": { "themeIndependent": true } } }
     }
   },
   "button-secondary": {
     "bg": {
-      "default": { "value": "{color.gray.100}" },
-      "hover": { "value": "{color.gray.200}" },
-      "active": { "value": "{color.gray.300}" }
+      "default": { "value": "{color.gray.100}", "$extensions": { "axis": { "dark": "{surface.secondary}" } } },
+      "hover": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{surface.tertiary}" } } },
+      "active": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{color.gray.700}" } } }
     },
     "text": {
-      "default": { "value": "{color.gray.900}" }
+      "default": { "value": "{color.gray.900}", "$extensions": { "axis": { "dark": "{text.primary}" } } }
     }
   },
   "button-ghost": {
     "bg": {
-      "default": { "value": "transparent" },
-      "hover": { "value": "{color.gray.100}" },
-      "active": { "value": "{color.gray.200}" }
+      "default": { "value": "transparent", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.gray.100}", "$extensions": { "axis": { "dark": "{surface.secondary}" } } },
+      "active": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{surface.tertiary}" } } }
     },
     "text": {
-      "default": { "value": "{color.gray.700}" }
+      "default": { "value": "{color.gray.700}", "$extensions": { "axis": { "dark": "{color.gray.300}" } } }
     }
   },
   "button-destructive": {
     "bg": {
-      "default": { "value": "{color.red.500}" },
-      "hover": { "value": "{color.red.600}" },
-      "active": { "value": "{color.red.700}" }
+      "default": { "value": "{color.red.500}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.red.600}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "active": { "value": "{color.red.700}", "$extensions": { "axis": { "themeIndependent": true } } }
     },
     "text": {
-      "default": { "value": "{color.white}" }
+      "default": { "value": "{color.white}", "$extensions": { "axis": { "themeIndependent": true } } }
     }
   },
   "input": {
     "bg": {
-      "default": { "value": "{color.white}" },
-      "disabled": { "value": "{color.gray.100}" }
+      "default": { "value": "{color.white}", "$extensions": { "axis": { "dark": "{surface.default}" } } },
+      "disabled": { "value": "{color.gray.100}", "$extensions": { "axis": { "dark": "{surface.secondary}" } } }
     },
     "text": {
-      "default": { "value": "{color.gray.900}" },
-      "placeholder": { "value": "{color.gray.400}" }
+      "default": { "value": "{color.gray.900}", "$extensions": { "axis": { "dark": "{text.primary}" } } },
+      "placeholder": { "value": "{color.gray.400}", "$extensions": { "axis": { "dark": "{text.secondary}" } } }
     },
     "border": {
-      "default": { "value": "{color.gray.300}" },
-      "hover": { "value": "{color.gray.400}" },
-      "focus": { "value": "{color.blue.500}" },
-      "error": { "value": "{color.red.500}" }
+      "default": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{border.secondary}" } } },
+      "hover": { "value": "{color.gray.400}", "$extensions": { "axis": { "dark": "{color.gray.500}" } } },
+      "focus": { "value": "{color.blue.500}", "$extensions": { "axis": { "dark": "{border.focus}" } } },
+      "error": { "value": "{color.red.500}", "$extensions": { "axis": { "dark": "{border.error}" } } }
     }
   },
   "card": {
     "bg": {
-      "default": { "value": "{color.white}" }
+      "default": { "value": "{color.white}", "$extensions": { "axis": { "dark": "{surface.default}" } } }
     },
     "border": {
-      "default": { "value": "{color.gray.200}" }
+      "default": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{border.default}" } } }
     },
     "shadow": {
-      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)" }
+      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)", "$extensions": { "axis": { "themeIndependent": true } } }
     }
   },
   "badge": {
     "default": {
-      "bg": { "value": "{color.gray.100}" },
-      "text": { "value": "{color.gray.700}" }
+      "bg": { "value": "{color.gray.100}", "$extensions": { "axis": { "dark": "{surface.secondary}" } } },
+      "text": { "value": "{color.gray.700}", "$extensions": { "axis": { "dark": "{color.gray.300}" } } }
     },
     "success": {
-      "bg": { "value": "{color.green.100}" },
-      "text": { "value": "{color.green.700}" }
+      "bg": { "value": "{color.green.100}", "$extensions": { "axis": { "dark": "{surface.success}" } } },
+      "text": { "value": "{color.green.700}", "$extensions": { "axis": { "dark": "{text.success}" } } }
     },
     "warning": {
-      "bg": { "value": "{color.yellow.100}" },
-      "text": { "value": "{color.yellow.700}" }
+      "bg": { "value": "{color.yellow.100}", "$extensions": { "axis": { "dark": "{surface.warning}" } } },
+      "text": { "value": "{color.yellow.700}", "$extensions": { "axis": { "dark": "{text.warning}" } } }
     },
     "error": {
-      "bg": { "value": "{color.red.100}" },
-      "text": { "value": "{color.red.700}" }
+      "bg": { "value": "{color.red.100}", "$extensions": { "axis": { "dark": "{surface.error}" } } },
+      "text": { "value": "{color.red.700}", "$extensions": { "axis": { "dark": "{text.error}" } } }
     },
     "info": {
-      "bg": { "value": "{color.blue.100}" },
-      "text": { "value": "{color.blue.700}" }
+      "bg": { "value": "{color.blue.100}", "$extensions": { "axis": { "dark": "{surface.info}" } } },
+      "text": { "value": "{color.blue.700}", "$extensions": { "axis": { "dark": "{text.info}" } } }
     }
   },
   "dialog": {
     "overlay": {
-      "bg": { "value": "rgba(0, 0, 0, 0.5)" }
+      "bg": { "value": "rgba(0, 0, 0, 0.5)", "$extensions": { "axis": { "themeIndependent": true } } }
     },
     "content": {
-      "bg": { "value": "{color.white}" },
-      "border": { "value": "{color.gray.200}" },
-      "shadow": { "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)" }
+      "bg": { "value": "{color.white}", "$extensions": { "axis": { "dark": "{surface.default}" } } },
+      "border": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{border.default}" } } },
+      "shadow": { "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)", "$extensions": { "axis": { "themeIndependent": true } } }
     }
   }
 }
