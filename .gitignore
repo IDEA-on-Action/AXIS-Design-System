@@ -70,6 +70,7 @@ public/worker-*.js
 .claude/state/
 .claude/cache/
 .claude/settings.local.json
+.claude/worktrees/
 
 # Playwright MCP
 .playwright-mcp/
