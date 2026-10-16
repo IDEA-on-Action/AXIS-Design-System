@@ -231,7 +231,7 @@
 
 ### M3 DoD
 - [ ] `pnpm type-check` 통과
-- [ ] `pnpm lint` 통과
+- [ ] `pnpm lint` 통과 (측정 범위: WI-0034(#104) 이후 lint 태스크는 tokens · ui-react · agentic-ui · `@ax/web` 4개, type-check 태스크도 4개)
 - [ ] `pnpm build` 성공
 - [ ] `pnpm test` 통과, `test:e2e:a11y` 36건 통과, `pnpm check-token-refs` rc 0
 - [ ] 문서: 부록 B 승인 기록, todo.md 체크
