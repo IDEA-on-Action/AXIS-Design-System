@@ -41,6 +41,7 @@
 | 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ⏳ |
 | 43 | NPM_TOKEN 만료 사전 감지 (publish 전 인증 선검사 · 만료 임박 알림) | WI-0031 (#96) | P18 | P2 | ⏳ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
+| 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ⏳ |
 
 ### 완료
 

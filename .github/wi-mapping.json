@@ -148,6 +148,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBKRSs",
       "lastSyncedAt": "2026-10-16T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0033",
+      "slug": "dark-component-tokens",
+      "issueNumber": 99,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhBK-Ms",
+      "lastSyncedAt": "2026-10-16T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-16T00:00:00.000Z"
