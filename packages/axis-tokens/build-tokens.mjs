@@ -177,11 +177,32 @@ const sdLight = new StyleDictionary({
   }
 });
 
-// --- 2. Dark 토큰 빌드 (semantic만 — component 토큰은 light 참조 기반이라 제외) ---
+// --- 2. Dark 토큰 빌드 (semantic + component, WI-0033) ---
+// component leaf는 다크 값을 $extensions.axis.dark에 적고, preprocessor axis/theme-dark가
+// 참조 해석 전에 value를 그 값으로 바꾼다. 다크에서도 같은 값인 leaf는 axis.themeIndependent 마커만 둔다.
+// 등록 · 선언 검사는 브랜드 빌드와 CI 검사도 쓰도록 scripts/theme-modes.mjs에 있다.
+import { readdirSync } from 'fs';
+import { registerThemePreprocessors, themePreprocessorsFor, findThemeDeclarationViolations } from './scripts/theme-modes.mjs';
+
+registerThemePreprocessors(StyleDictionary);
+
+const themeViolations = readdirSync('src/component', { recursive: true })
+  .filter(f => String(f).endsWith('.json'))
+  .sort()
+  .flatMap(f => findThemeDeclarationViolations(loadJson(`src/component/${f}`)).violations
+    .map(v => `${f} ${v.path}: ${v.reason}`));
+if (themeViolations.length > 0) {
+  console.error(`  ✗ component 토큰 테마 선언 검사 실패 (${themeViolations.length}건)`);
+  themeViolations.forEach(v => console.error(`    - ${v}`));
+  process.exit(1);
+}
+
 const sdDark = new StyleDictionary({
+  preprocessors: themePreprocessorsFor('dark'),
   source: [
     'src/primitives/**/*.json',
     'src/semantic/dark.json',
+    'src/component/**/*.json',
   ],
   platforms: {
     css: {

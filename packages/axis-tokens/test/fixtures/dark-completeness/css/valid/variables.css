@@ -1,0 +1,10 @@
+/* 다크 완전성 fixture: 양성 대조군 (:root 와 .dark 이름 집합이 같음) */
+:root {
+  --axis-fixture-bg: #FFFFFF;
+  --axis-fixture-text: #111827;
+}
+
+.dark {
+  --axis-fixture-bg: #030712;
+  --axis-fixture-text: #F3F4F6;
+}

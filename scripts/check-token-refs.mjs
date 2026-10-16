@@ -9,22 +9,30 @@
  *   3. 판정 불가: `var(--axis-이름)` 정적 참조로 읽을 수 없는 `--axis-` 출현
  *      (템플릿 리터럴, 문자열 조합, 인라인 정의, 주석 속 이름 등)
  *   4. primitive 참조: axis-agentic-ui 소스의 `var(--axis-color-*)` 참조
+ *   5. 다크 재정의 누락 (WI-0033): <css-dir>/variables.css 의 `:root` 이름 집합과 `.dark` 이름 집합이 다름
+ *      (`:root` 전용 이름 · `.dark` 전용 이름 모두 위반)
+ *   6. 테마 선언 (WI-0033): component 토큰의 색 leaf 에 `$extensions.axis.dark` 도
+ *      `$extensions.axis.themeIndependent` 도 없음, 또는 선언 형식 오류
+ *      (판정 규칙은 packages/axis-tokens/scripts/theme-modes.mjs 의 findThemeDeclarationViolations)
  *
  * 정의 집합: <css-dir>/variables.css 와 <css-dir>/shadcn-compat.css 의 `:root` 블록 선언
  *
  * 옵션
- *   --css-dir <dir>  정의 CSS 디렉터리 (기본: packages/axis-tokens/dist/css)
- *   --src <dir>      검사 대상 디렉터리, 여러 번 지정 가능
- *                    (기본: packages/axis-ui-react/src, packages/axis-agentic-ui/src)
+ *   --css-dir <dir>        정의 CSS 디렉터리 (기본: packages/axis-tokens/dist/css)
+ *   --src <dir>            검사 대상 디렉터리, 여러 번 지정 가능
+ *                          (기본: packages/axis-ui-react/src, packages/axis-agentic-ui/src)
+ *   --component-dir <dir>  component 토큰 JSON 디렉터리 (기본: packages/axis-tokens/src/component)
  *
  * 종료 코드
- *   0: 위반 0건이면서 검사 파일 1개 이상 · 참조 1건 이상 · 정의 1개 이상
+ *   0: 위반 0건이면서 검사 파일 1개 이상 · 참조 1건 이상 · 정의 1개 이상 · `.dark` 정의 1개 이상 · component leaf 1개 이상
  *   1: 위반 있음
- *   2: 측정 실패 (CSS 파일 없음, 정의 0개, 검사 대상 디렉터리 없음, 검사 파일 0개, 참조 0건)
+ *   2: 측정 실패 (CSS 파일 없음, 정의 0개, `.dark` 정의 0개, 검사 대상 디렉터리 없음, 검사 파일 0개, 참조 0건,
+ *      component 디렉터리 없음 · JSON 0개 · leaf 0개)
  */
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { findThemeDeclarationViolations } from '../packages/axis-tokens/scripts/theme-modes.mjs'
 
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..')
 const TAG = '[token-refs]'
@@ -42,15 +50,16 @@ function measurementFailure(message) {
 }
 
 function parseArgs(argv) {
-  const opts = { cssDir: null, src: [] }
+  const opts = { cssDir: null, src: [], componentDir: null }
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
-    if (arg === '--css-dir' || arg === '--src') {
+    if (arg === '--css-dir' || arg === '--src' || arg === '--component-dir') {
       const value = argv[i + 1]
       if (value === undefined || value.startsWith('--')) {
         measurementFailure(`${arg} 다음에 경로가 없습니다`)
       }
       if (arg === '--css-dir') opts.cssDir = value
+      else if (arg === '--component-dir') opts.componentDir = value
       else opts.src.push(value)
       i++
     } else {
@@ -63,21 +72,93 @@ function parseArgs(argv) {
       ? opts.src
       : [join(ROOT, 'packages/axis-ui-react/src'), join(ROOT, 'packages/axis-agentic-ui/src')]
     ).map((d) => resolve(d)),
+    componentDir: resolve(opts.componentDir ?? join(ROOT, 'packages/axis-tokens/src/component')),
   }
 }
 
-/** CSS 텍스트에서 `:root { ... }` 블록 안의 `--이름:` 선언을 모읍니다. */
-function collectRootDefinitions(css) {
+/** CSS 텍스트에서 선택자가 `selector`인 블록 안의 `--이름:` 선언을 모읍니다. */
+function collectBlockDefinitions(css, selector) {
   const names = new Set()
   const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, '')
   const blockRe = /(^|[}\s;])([^{}]*?)\{([^{}]*)\}/g
   let m
   while ((m = blockRe.exec(withoutComments)) !== null) {
     const selectors = m[2].split(',').map((s) => s.trim())
-    if (!selectors.includes(':root')) continue
+    if (!selectors.includes(selector)) continue
     for (const d of m[3].matchAll(/(--[A-Za-z0-9_-]+)\s*:/g)) names.add(d[1])
   }
   return names
+}
+
+/** CSS 텍스트에서 `:root { ... }` 블록 안의 `--이름:` 선언을 모읍니다. */
+function collectRootDefinitions(css) {
+  return collectBlockDefinitions(css, ':root')
+}
+
+/** 선택자 블록 안에서 `name` 선언이 있는 줄 번호 (못 찾으면 1) */
+function declarationLine(css, selector, name) {
+  const start = css.indexOf(`${selector} {`)
+  if (start < 0) return 1
+  const at = css.indexOf(`${name}:`, start)
+  return at < 0 ? 1 : lineOf(css, at)
+}
+
+/** JSON 텍스트에서 경로(키 목록)의 마지막 키가 나오는 줄 번호 (키를 문서 순서대로 따라갑니다, 못 찾으면 1) */
+function jsonPathLine(text, path) {
+  let at = 0
+  for (const key of path) {
+    const next = text.indexOf(JSON.stringify(key), at)
+    if (next < 0) return 1
+    at = next + 1
+  }
+  return lineOf(text, at - 1)
+}
+
+/** 판정 5: variables.css 의 `:root` 이름 집합과 `.dark` 이름 집합 비교 */
+function checkDarkCompleteness(cssPath) {
+  const css = readFileSync(cssPath, 'utf-8')
+  const root = collectBlockDefinitions(css, ':root')
+  const dark = collectBlockDefinitions(css, '.dark')
+  if (dark.size === 0) measurementFailure(`.dark 정의 0개: ${display(cssPath)}`)
+  const rootOnly = [...root].filter((n) => !dark.has(n))
+  const darkOnly = [...dark].filter((n) => !root.has(n))
+  return {
+    root: root.size,
+    dark: dark.size,
+    rootOnly: rootOnly.map((name) => ({ name, line: declarationLine(css, ':root', name) })),
+    darkOnly: darkOnly.map((name) => ({ name, line: declarationLine(css, '.dark', name) })),
+  }
+}
+
+/** 판정 6: component 토큰 JSON 의 테마 선언 검사 */
+function checkThemeDeclarations(componentDir) {
+  if (!existsSync(componentDir) || !statSync(componentDir).isDirectory()) {
+    measurementFailure(`component 디렉터리 없음: ${display(componentDir)}`)
+  }
+  const files = readdirSync(componentDir, { recursive: true })
+    .map(String)
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+  if (files.length === 0) measurementFailure(`component JSON 0개: ${display(componentDir)}`)
+  const result = { files: files.length, leaves: 0, colorLeaves: 0, violations: [] }
+  for (const f of files) {
+    const abs = join(componentDir, f)
+    const text = readFileSync(abs, 'utf-8')
+    let tree
+    try {
+      tree = JSON.parse(text)
+    } catch (e) {
+      measurementFailure(`JSON 파싱 실패: ${display(abs)} (${e.message})`)
+    }
+    const r = findThemeDeclarationViolations(tree)
+    result.leaves += r.leaves
+    result.colorLeaves += r.colorLeaves
+    for (const v of r.violations) {
+      result.violations.push({ file: display(abs), line: jsonPathLine(text, v.path.split('.')), ...v })
+    }
+  }
+  if (result.leaves === 0) measurementFailure(`component leaf 0개: ${display(componentDir)}`)
+  return result
 }
 
 function walk(dir, out) {
@@ -139,7 +220,7 @@ function report(kind, file, line, detail, isTest) {
 }
 
 function main() {
-  const { cssDir, src } = parseArgs(process.argv.slice(2))
+  const { cssDir, src, componentDir } = parseArgs(process.argv.slice(2))
 
   // 정의 집합
   const defined = new Set()
@@ -188,11 +269,30 @@ function main() {
     }
   }
 
-  const violations = counts.missing + counts.primitive + counts.dynamic
+  // 판정 5: 다크 재정의 누락
+  const variablesPath = join(cssDir, 'variables.css')
+  const dark = checkDarkCompleteness(variablesPath)
+  for (const d of dark.rootOnly) {
+    report('다크 재정의 누락', display(variablesPath), d.line, `${d.name} (:root 에만 있음)`, false)
+  }
+  for (const d of dark.darkOnly) {
+    report('다크 재정의 누락', display(variablesPath), d.line, `${d.name} (.dark 에만 있음)`, false)
+  }
+
+  // 판정 6: component 토큰 테마 선언
+  const theme = checkThemeDeclarations(componentDir)
+  for (const v of theme.violations) report('테마 선언', v.file, v.line, `${v.path}: ${v.reason}`, false)
+
+  const darkViolations = dark.rootOnly.length + dark.darkOnly.length
+  const violations = counts.missing + counts.primitive + counts.dynamic + darkViolations + theme.violations.length
   console.log(
     `${TAG} 검사 파일 ${files.length} · 참조 보유 파일 ${counts.refFiles} · 참조 ${counts.refs} · 정의 ${defined.size}` +
       ` · 정의 누락 ${counts.missing} · primitive 참조 ${counts.primitive} · 판정 불가 ${counts.dynamic}` +
       ` (그중 [test] ${counts.testViolations})`
+  )
+  console.log(
+    `${TAG} 다크 완전성: :root ${dark.root} · .dark ${dark.dark} · :root 전용 ${dark.rootOnly.length} · .dark 전용 ${dark.darkOnly.length}` +
+      ` | 테마 선언: JSON ${theme.files} · leaf ${theme.leaves} · 색 leaf ${theme.colorLeaves} · 위반 ${theme.violations.length}`
   )
 
   if (counts.refs === 0) measurementFailure('참조 0건: 검사 대상에서 var(--axis-*) 참조를 찾지 못했습니다')
