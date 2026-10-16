@@ -107,7 +107,7 @@ export function PlanCard({
       role="region"
       aria-labelledby={titleId}
       className={cn(
-        "rounded-lg border border-l-4 overflow-hidden",
+        "rounded-lg border border-l-[length:var(--axis-plan-card-accent-width)] overflow-hidden",
         "bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]",
         styles.border,
         className
@@ -176,7 +176,7 @@ export function PlanCard({
           {onApprove && (
             <button
               onClick={onApprove}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-white hover:bg-[var(--axis-status-success-strong)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)] hover:bg-[var(--axis-status-success-strong)] transition-colors"
             >
               승인
             </button>
