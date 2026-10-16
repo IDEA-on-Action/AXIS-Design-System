@@ -123,6 +123,7 @@ declare const tokens: {
   card: Record<string, Record<string, string>>;
   badge: Record<string, Record<string, string>>;
   dialog: Record<string, Record<string, string>>;
+  'plan-card': Record<string, string>;
 };
 
 export = tokens;

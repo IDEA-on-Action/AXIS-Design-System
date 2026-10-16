@@ -103,5 +103,8 @@
       "border": { "value": "{color.gray.200}" },
       "shadow": { "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)" }
     }
+  },
+  "plan-card": {
+    "accent-width": { "value": "4px" }
   }
 }
