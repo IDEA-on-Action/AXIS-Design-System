@@ -231,7 +231,7 @@
 
 ### M3 DoD
 - [ ] `pnpm type-check` 통과
-- [ ] `pnpm lint` 통과
+- [ ] `pnpm lint` 통과 (측정 범위 주의: 현재 lint 스크립트는 `@ax/web`에만 있어 라이브러리 3개 패키지는 검사되지 않음, WI-0034)
 - [ ] `pnpm build` 성공
 - [ ] `pnpm test` 통과, `test:e2e:a11y` 36건 통과, `pnpm check-token-refs` rc 0
 - [ ] 문서: 부록 B 승인 기록, todo.md 체크
