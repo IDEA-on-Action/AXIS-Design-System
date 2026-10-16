@@ -1,6 +1,6 @@
 # WI-0025: 브랜드 테마 축 도입과 온톨로지 테마 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M1)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M3, M1 배포 대기 · M2 #91 머지 대기)
 
 ## 진행 순서
 
@@ -205,7 +205,7 @@
 
 ## Phase M3: 트랙 C 온톨로지 프리셋 + FR-7 + a11y CI (1.3.0)
 
-- [ ] **M3 착수 게이트**: 부록 B 라이트 AA 보정 내역 디자인 오너 승인 (Q6 제품 화면 적용 여부 포함) (D1 · FR-8 · AC8)
+- [x] **M3 착수 게이트**: 부록 B 라이트 AA 보정 내역 디자인 오너 승인 (Q6 제품 화면 적용 여부 포함) (D1 · FR-8 · AC8) → ✅ 2026-10-16: 부록 B 그대로 승인(대비 수치 18조합 재계산 일치), Q6 제품 화면에도 적용
 - [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8)
 - [ ] 불투명도 수식어 결함 수정: agentic-ui 11곳(plan-card 6 · diff-viewer 2 · feedback-buttons 2 · attachment-card 1)의 `bg-[var(..)]/10` · `border-[var(..)]/30`을 `color-mix()` 형태로 교체해 의도된 옅은 바탕 복원(화면 변화, 1.3.0 릴리스 노트 기재), `check-token-refs`에 CSS 미생성 패턴 검출 추가 (2026-10-15 결정)
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
