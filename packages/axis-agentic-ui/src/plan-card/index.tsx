@@ -36,23 +36,23 @@ const planStatusStyles: Record<PlanStatus, { border: string; badge: string }> = 
   },
   pending: {
     border: "border-l-[var(--axis-status-warning)]",
-    badge: "bg-[var(--axis-status-warning)]/10 text-[var(--axis-status-warning-strong)]",
+    badge: "bg-[var(--axis-badge-warning-bg)] text-[var(--axis-badge-warning-text)]",
   },
   approved: {
     border: "border-l-[var(--axis-status-success)]",
-    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
+    badge: "bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]",
   },
   rejected: {
     border: "border-l-[var(--axis-status-error)]",
-    badge: "bg-[var(--axis-status-error)]/10 text-[var(--axis-status-error-strong)]",
+    badge: "bg-[var(--axis-badge-error-bg)] text-[var(--axis-badge-error-text)]",
   },
   executing: {
     border: "border-l-[var(--axis-status-running)]",
-    badge: "bg-[var(--axis-status-running)]/10 text-[var(--axis-status-running-strong)]",
+    badge: "bg-[var(--axis-badge-info-bg)] text-[var(--axis-badge-info-text)]",
   },
   completed: {
     border: "border-l-[var(--axis-status-success)]",
-    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
+    badge: "bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]",
   },
 };
 
@@ -192,7 +192,7 @@ export function PlanCard({
           {onReject && (
             <button
               onClick={onReject}
-              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:bg-[var(--axis-status-error)]/10 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:bg-[color:color-mix(in_srgb,var(--axis-status-error)_10%,transparent)] transition-colors"
             >
               거절
             </button>
