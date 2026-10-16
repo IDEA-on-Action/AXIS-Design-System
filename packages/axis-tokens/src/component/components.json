@@ -106,5 +106,6 @@
   },
   "plan-card": {
     "accent-width": { "value": "4px" }
-  }
+  },
+  "card-shadow": { "value": "{shadow.sm}" }
 }

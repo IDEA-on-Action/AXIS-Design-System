@@ -103,6 +103,7 @@ declare const tokens: {
   color: Record<string, Record<string, string> | string>;
   space: Record<string, string>;
   radius: Record<string, string>;
+  shadow: Record<string, string>;
   font: {
     family: Record<string, string>;
     size: Record<string, string>;
@@ -123,6 +124,7 @@ declare const tokens: {
   badge: Record<string, Record<string, string>>;
   dialog: Record<string, Record<string, string>>;
   'plan-card': Record<string, string>;
+  'card-shadow': string;
 };
 
 export = tokens;
