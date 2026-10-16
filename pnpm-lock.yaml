@@ -36,6 +36,9 @@ importers:
       '@axis-ds/agentic-ui':
         specifier: workspace:*
         version: link:../../packages/axis-agentic-ui
+      '@axis-ds/tokens':
+        specifier: workspace:*
+        version: link:../../packages/axis-tokens
       '@axis-ds/ui-react':
         specifier: workspace:*
         version: link:../../packages/axis-ui-react
