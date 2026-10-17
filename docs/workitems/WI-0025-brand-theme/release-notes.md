@@ -6,6 +6,7 @@
 
 > 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.2.0 → 1.2.1 (linked)
 > WI-0033(#99)은 changeset 없이 1.2.1 배포 전에 main에 머지해 같은 버전에 포함합니다. 상세는 [WI-0033 PRD](../WI-0033-dark-component-tokens/prd.md)
+> 배포: 2026-10-17 10:49 KST, NPM_TOKEN 대신 npm Trusted Publishing(OIDC)으로 처음 발행했습니다(WI-0031, run 38992207088, provenance 4/4)
 
 ### 배경
 

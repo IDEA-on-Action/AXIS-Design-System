@@ -2,8 +2,8 @@
 
 > 프로젝트 진행 상황 및 다음 단계
 
-**현재 버전**: 1.2.0 (npm 패키지 v1.2.0)
-**마지막 업데이트**: 2026-10-16
+**현재 버전**: 1.2.1 (npm 패키지 v1.2.1)
+**마지막 업데이트**: 2026-10-17
 **상태**: ✅ Active Development
 
 ---
@@ -25,9 +25,7 @@
 
 ### 진행 중
 
-| # | 항목 | WI ID | Phase | 우선순위 | 상태 |
-|---|------|-------|-------|----------|------|
-| 36 | 토큰 정합: 정의 누락 변수 · agentic-ui primitive 직접 참조 해소 + 참조 검사 CI (1.2.1 patch) | WI-0025(#83) | P16 | P1 | 🔄 |
+없음
 
 ### 할 일
 
@@ -39,15 +37,16 @@
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ⏳ |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
 | 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ⏳ |
-| 43 | NPM_TOKEN 만료 사전 감지 (publish 전 인증 선검사 · 만료 임박 알림) | WI-0031 (#96) | P18 | P2 | ⏳ |
+| 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
-| 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ⏳ |
+| 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ⏳ |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 36 | 토큰 정합: 정의 누락 변수 · agentic-ui primitive 직접 참조 해소 + 참조 검사 CI, npm v1.2.1 릴리스 (linked 4패키지, Trusted Publishing OIDC, WI-0033 다크 수정 포함) | WI-0025 M1 (#83) | P16 | 2026-10-17 |
 | 35 | npm v1.2.0 릴리스 (linked 4패키지, CI NPM_TOKEN 인증 실측 검증) | #80 | P15 | 2026-08-07 |
 | 34 | Pretendard 대표 폰트 적용 (tokens sans 스택 + preset fontFamily + web 동적 서브셋 번들) | #79 | P15 | 2026-08-07 |
 | 33 | Publish/Sync 워크플로 결함 수정 (npm EOTP 토큰 + pnpm/CLI 3중) | #78 | P14 | 2026-07-07 |
@@ -279,11 +278,13 @@
 ### 브랜드 테마 · 온톨로지 실행 계획 (Phase 16·17, 2026-10-15 수립, 2026-10-16 재계획)
 
 > 2026-10-16 재계획: M1은 머지됐으나 1.2.1 publish가 NPM_TOKEN 만료로 실패해 npm은 1.2.0입니다. 다크 모드 component 토큰 결함(WI-0033)을 1.2.1에 포함하기로 해 실패한 publish run은 다시 돌리지 않고, WI-0033 머지 push로 새 publish를 실행합니다. M3는 `feat/wi-0025-m3-ontology`에서 구현 중이고, WI-0028은 PRD v0.4의 「M2 이후 착수」 조건에 따라 배치 2에 둡니다.
+>
+> 2026-10-17: 배치 0 · 0' 완료. NPM_TOKEN 교체 대신 WI-0031(npm Trusted Publishing, OIDC) 머지 push로 publish가 실행되어 1.2.1이 배포됐습니다(run 38992207088, provenance 4/4). npm은 1.2.1입니다.
 
 | 배치 | 단위 | 형태 | 선행 조건 | 릴리스 |
 |------|------|------|----------|--------|
-| 0 | NPM_TOKEN 교체(사용자) → WI-0033 PR 머지 → publish 자동 실행 → 1.2.1 확인 · M1 후속 정리 | 순차 | WI-0033 보정 완료 | 1.2.1 (tokens · ui-react · agentic-ui · theme, WI-0033 포함) |
-| 0' | PR #98 머지 · WI-0031(publish 전 인증 선검사) | 배치 0과 독립 | 없음 | - |
+| 0 ✅ | NPM_TOKEN 교체(사용자) → WI-0033 PR 머지 → publish 자동 실행 → 1.2.1 확인 · M1 후속 정리 (2026-10-17 완료, 토큰 교체 대신 WI-0031 OIDC로 배포) | 순차 | WI-0033 보정 완료 | 1.2.1 (tokens · ui-react · agentic-ui · theme, WI-0033 포함) |
+| 0' ✅ | PR #98 머지 · WI-0031(Trusted Publishing 전환, #102) (2026-10-17 완료) | 배치 0과 독립 | 없음 | - |
 | 1 | WI-0025 M2(#91) rebase(WI-0033 위, 다크 전처리 한 줄) · 머지 | 순차 | 배치 0 | 1.3.0 누적 |
 | 1' | WI-0034 라이브러리 lint · type-check 스크립트 | 순차 (M2와 같은 `package.json`) | 배치 1 | - |
 | 2 | WI-0025 M3 rebase(check-token-refs 판정 7, leaf 47) · 머지 ∥ WI-0028 착수 | 병렬 (패키지 겹침 없음) | 배치 1 · 1', M3는 부록 B 승인 | cli · mcp 1.2.0 |
@@ -291,7 +292,7 @@
 | 4 | WI-0027 | 순차 | M3 · WI-0026 · WI-0028 | 템플릿 배포 |
 | 백로그 | WI-0029(기본 테마 흰 글자 대비, M3 기본 브랜드 a11y 실측 15건 확보) · WI-0030 | 언제든 | 없음 | - |
 
-- 임계 경로: WI-0033 보정 → NPM_TOKEN 교체(사용자) → WI-0033 머지 · 1.2.1 배포 → M2 → WI-0034 → M3(부록 B 승인 필요) → M4 · WI-0026 → WI-0027
+- 임계 경로: ~~WI-0033 보정 → NPM_TOKEN 교체(사용자) → WI-0033 머지 · 1.2.1 배포~~ ✅ → M2 → WI-0034 → M3(부록 B 승인 필요) → M4 · WI-0026 → WI-0027
 - 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준: 라이트 보조 글자 `sub` 1개 값 보정, 미달 쌍 처리, 입력 테두리 1.40:1 유지 여부, PlanCard 색 선 두께, 에이전트 상태 색 접기) 디자인 오너(김정원 책임) 승인 (M3 머지 전까지, 현재 미승인)
 - 착수: `/ax-wi start <WI>` 로 WI마다 진행
 

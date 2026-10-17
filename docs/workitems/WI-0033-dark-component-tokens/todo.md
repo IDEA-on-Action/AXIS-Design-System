@@ -1,6 +1,6 @@
 # WI-0033: 다크 모드 component 토큰 재정의 누락 해소 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M1 구현 완료, PR 리뷰 대기)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: ✅ 완료 (2026-10-17, 1.2.1 배포. 남은 항목은 WI-0025 M2 · M3 rebase 때 수행)
 
 ## 진행 순서
 
@@ -77,7 +77,7 @@
 
 - [x] `docs/workitems/WI-0025-brand-theme/release-notes.md` 1.2.1 절에 다크 component 토큰 수정 추가 (D6)
 - [x] `packages/axis-{tokens,ui-react,agentic-ui,theme}/CHANGELOG.md` 1.2.1 절에 같은 내용 추가 (changeset 없음, D6)
-- [ ] PR 생성 · 리뷰 · main 머지
-- [ ] 1.2.1 npm 배포 후 소비 화면(Card · Dialog · Badge · Input 다크) 확인
+- [x] PR 생성 · 리뷰 · main 머지 → PR #101 머지(b548748, 2026-10-16), Issue #99 종료
+- [ ] 1.2.1 npm 배포 후 소비 화면(Card · Dialog · Badge · Input 다크) 확인 → 미확인. 배포는 확인(run 38992207088, npm `latest` 1.2.1, provenance 4/4)했고, 빈 디렉터리에 설치한 `@axis-ds/tokens@1.2.1` `dist/css/variables.css`에서 `:root` 249 · `.dark` 249, `.dark`의 `--axis-card-bg-default` #030712를 확인했습니다. 화면 렌더링은 보지 않아 체크하지 않습니다
 - [ ] WI-0025 M2 · M3 rebase 시 plan 6장 체크리스트 수행
-- [ ] 머지 뒤 `project-todo.md` · `.github/wi-mapping.json` 현행화 (PR #98 머지 후)
+- [x] 머지 뒤 `project-todo.md` · `.github/wi-mapping.json` 현행화 (PR #98 머지 후) → 2026-10-17 `chore/post-121-cleanup`에서 ✅ 반영

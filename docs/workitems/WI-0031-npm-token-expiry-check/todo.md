@@ -1,6 +1,6 @@
 # WI-0031: npm Trusted Publishing(OIDC) 전환 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M1 구현 완료, PR 리뷰 대기)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: ✅ 완료 (2026-10-17, 1.2.1 OIDC 배포 확인. cli · mcp 등록과 토큰 차단 상태 publish 실측은 다음 릴리스)
 
 ## 진행 순서
 
@@ -49,22 +49,22 @@
 
 ## Phase M2: 첫 OIDC publish (사람)
 
-- [ ] npm 계정 2FA 활성 · linked 4개 maintainer 권한 확인 (Publishing access 는 아직 바꾸지 않음)
-- [ ] 머지 직전 linked 4개 Trusted Publisher 등록 (prd 4.1 표: `IDEA-on-Action` · `AXIS-Design-System` · `publish.yml` · Environment 비움 · direct `npm publish` 허용)
-- [ ] 4개 등록을 화면에서 대조 (하나라도 빠지면 부분 배포)
-- [ ] 등록 직후 머지 (48시간 안에 첫 publish 성공 필요)
-- [ ] 검증 축 ① 로그: `npm=11.19.1` · `npm_path` 전역 경로 · `No NPM_TOKEN found, but OIDC is available` · 4개 publish 성공 · exit 0
-- [ ] 검증 축 ② 레지스트리: 4개 `latest=1.2.1`, ui-react@1.2.1 의 tokens 의존이 `1.2.1`, provenance 표시
-- [ ] 검증 축 ③ 소비: 빈 디렉터리 `npm install @axis-ds/ui-react@1.2.1 @axis-ds/agentic-ui@1.2.1` 성공, `npm audit signatures`
-- [ ] 실패 시 prd 8장 대응 (revert 머지 금지, unpublish 는 사람 판단)
+- [ ] npm 계정 2FA 활성 · linked 4개 maintainer 권한 확인 (Publishing access 는 아직 바꾸지 않음) → maintainer 는 `npm view @axis-ds/tokens maintainers` = `sinclairseo` 로 확인. 2FA 활성은 npmjs.com 계정 화면에서만 보여 에이전트가 확인하지 못해 체크하지 않습니다
+- [x] 머지 직전 linked 4개 Trusted Publisher 등록 (prd 4.1 표: `IDEA-on-Action` · `AXIS-Design-System` · `publish.yml` · Environment 비움 · direct `npm publish` 허용) → 사용자 등록(Status Valid), OIDC publish 4/4 성공으로 설정 일치 확인
+- [x] 4개 등록을 화면에서 대조 (하나라도 빠지면 부분 배포) → 사용자 화면 대조(4개 Status Valid), 부분 배포 없음(4개 모두 1.2.1)
+- [x] 등록 직후 머지 (48시간 안에 첫 publish 성공 필요) → PR #102 머지(014e8ac, 2026-10-17 01:45 UTC), 같은 push 의 run 38992207088 성공(01:49 UTC)
+- [x] 검증 축 ① 로그: `npm=11.19.1` · `npm_path` 전역 경로 · `No NPM_TOKEN found, but OIDC is available` · 4개 publish 성공 · exit 0 → run 38992207088 로그에서 `node=v22.23.3 npm=11.19.1 npm_path=/opt/hostedtoolcache/node/22.23.3/x64/bin/npm`, `No NPM_TOKEN found, but OIDC is available - using npm trusted publishing`, `New tag` 4개(cli · mcp 는 1.1.3 기발행으로 건너뜀), conclusion success
+- [x] 검증 축 ② 레지스트리: 4개 `latest=1.2.1`, ui-react@1.2.1 의 tokens 의존이 `1.2.1`, provenance 표시 → `npm view` 로 4개 `latest` 1.2.1, ui-react · theme 의 tokens 의존 1.2.1, 4개 모두 `dist.attestations.provenance` SLSA v1 확인
+- [x] 검증 축 ③ 소비: 빈 디렉터리 `npm install @axis-ds/ui-react@1.2.1 @axis-ds/agentic-ui@1.2.1` 성공, `npm audit signatures` → theme 포함 3개 설치 rc 0(71 패키지, `@axis-ds/*` 4개 모두 1.2.1), `npm audit signatures` 서명 71 · attestation 55 검증
+- [x] 실패 시 prd 8장 대응 (revert 머지 금지, unpublish 는 사람 판단) → 해당 없음(첫 실행 성공)
 
 ## Phase M3: 정리 (머지 뒤)
 
-- [ ] `NPM_CONFIG_LOGLEVEL: verbose` 제거 후속 PR
-- [ ] `.npmrc` 주석 · `CLAUDE.md` npm 배포 절(116 · 126 · 129행 「CI는 NPM_TOKEN secret」)을 OIDC 기준으로 현행화(머지 시점부터 사실과 달라짐, `CLAUDE.md` 수정 여부는 사람이 정합니다)
-- [ ] linked 4개 Publishing access → "Require two-factor authentication and disallow tokens"
-- [ ] GitHub secret `NPM_TOKEN` 삭제
-- [ ] npm granular 토큰 회수
+- [x] `NPM_CONFIG_LOGLEVEL: verbose` 제거 후속 PR → `chore/post-121-cleanup` 에서 그 줄과 주석만 삭제
+- [x] `.npmrc` 주석 · `CLAUDE.md` npm 배포 절(116 · 126 · 129행 「CI는 NPM_TOKEN secret」)을 OIDC 기준으로 현행화(머지 시점부터 사실과 달라짐, `CLAUDE.md` 수정 여부는 사람이 정합니다) → `chore/post-121-cleanup` 에서 OIDC 기준으로 현행화
+- [ ] linked 4개 Publishing access → "Require two-factor authentication and disallow tokens" → 2026-10-17 사용자가 「disallow bypass 2fa tokens」로 변경했다고 전달받았습니다. npmjs.com 화면 설정이라 에이전트가 확인하지 못했고, 전달된 문구가 이 항목의 목표 문구와 같은 선택지인지도 화면에서 확인이 필요해 체크하지 않습니다
+- [x] GitHub secret `NPM_TOKEN` 삭제 → `gh secret list` 결과 3개(CLOUDFLARE_ACCOUNT_ID · CLOUDFLARE_API_TOKEN · RENDER_PRODUCTION_DEPLOY_HOOK)에 `NPM_TOKEN` 없음, REST API `total_count` 3 으로 교차 확인
+- [x] npm granular 토큰 회수 → 2026-10-17 사용자가 npmjs.com Access Tokens 에서 삭제 완료(사용자 확인, 에이전트는 계정 화면을 볼 수 없음)
 - [ ] 다음 릴리스 changeset 머지 직전 cli · mcp Trusted Publisher 등록, publish 확인 뒤 Publishing access 변경
 - [ ] 다음 릴리스에서 "disallow tokens" 상태의 OIDC publish 실측 (prd 11장 U5)
-- [ ] `project-todo.md` · `.github/wi-mapping.json` 현행화, Issue #96 종료
+- [x] `project-todo.md` · `.github/wi-mapping.json` 현행화, Issue #96 종료 → Issue #96 은 PR #102 머지로 종료(2026-10-17 01:45 UTC), 현행화는 `chore/post-121-cleanup`

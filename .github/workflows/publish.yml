@@ -76,5 +76,3 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # NPM_TOKEN 은 넘기지 않는다(있으면 action 이 ~/.npmrc 에 토큰을 써서 OIDC 실패가 가려진다)
-          # 첫 전환 실행에서 OIDC 실패 사유를 보기 위한 설정이다. 검증 후 제거한다(WI-0031)
-          NPM_CONFIG_LOGLEVEL: verbose
