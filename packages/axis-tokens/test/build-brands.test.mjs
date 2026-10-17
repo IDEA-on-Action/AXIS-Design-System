@@ -213,7 +213,13 @@ describe('buildBrands 다크 component 참조 (WI-0033 preprocessor)', () => {
   test('브랜드 다크가 component 를 역참조해 순환이 생기면 조용히 넘어가지 않고 실패한다', async () => {
     await assert.rejects(
       darkOf('dark-ref-cycle', { surface: { default: { value: '{card.bg.default}' } } }),
-      /Reference Errors/,
+      (err) => {
+        // SD 원 오류와 build-brands 가 덧붙인 원인 안내가 함께 있어야 한다
+        assert.match(err.message, /Reference Errors/);
+        assert.match(err.message, /\[sample\] dark: 토큰 참조를 풀지 못했습니다/);
+        assert.match(err.message, /순환/);
+        return true;
+      },
     );
   });
 });

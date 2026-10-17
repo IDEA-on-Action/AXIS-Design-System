@@ -88,7 +88,22 @@ async function renderTheme({ brand, theme, srcDir, tmpRoot, selector }) {
     },
   });
 
-  const results = await sd.formatPlatform('css');
+  let results;
+  try {
+    results = await sd.formatPlatform('css');
+  } catch (err) {
+    // SD 4.4.0 은 순환 참조도 「Some token references (N) could not be found」로만 알린다.
+    // 브랜드가 component 를 역참조한 경우가 가장 흔하므로 원인 후보를 함께 적는다.
+    if (err instanceof Error && /Reference Errors/.test(err.message)) {
+      throw new Error(
+        `[${brand.name}] ${theme}: 토큰 참조를 풀지 못했습니다. 참조 대상이 없거나, `
+        + `브랜드 ${theme}.json 이 component 토큰을 참조하고 그 component 값이 다시 같은 브랜드 토큰을 `
+        + `가리켜 순환이 생겼을 수 있습니다(예: surface.default = {card.bg.default}).\n${err.message}`,
+        { cause: err },
+      );
+    }
+    throw err;
+  }
   let output = results[0]?.output;
   if (output === undefined) {
     if (paths.size > 0) {
