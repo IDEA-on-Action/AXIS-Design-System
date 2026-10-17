@@ -668,6 +668,7 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 | U20 | 기본 테마의 흰 글자 대비 미달 | 이번에 손대지 않고 백로그에 등록합니다 |
 | U21 | tailwind content에 `./src/lib` 추가 | 별건으로 분리합니다 |
 | U22 | 1.3.0 릴리스 노트 · changeset | 노트 초안은 M3에서 한 명이 맡아 쓰고, changeset은 M4에서 만듭니다 |
+| U23 | `--axis-card-shadow-default` 역할 (2026-10-17 추가) | **폐기 예정**: 1.x 동안 이름 · 값(`0 1px 3px 0 rgb(0 0 0 / 0.1)`)을 유지하고 어떤 컴포넌트도 참조하지 않습니다. Card 그림자의 공개 조정점은 `--axis-card-shadow` 하나입니다. 토큰 원본에 `$extensions.axis.deprecated: "card-shadow"`(대체 토큰 경로) 마커를 두고 `theme-modes.mjs`가 대체 경로를 검사합니다. CSS · JSON · JS 산출물은 바뀌지 않습니다. ontology 브랜드는 `card-shadow` · `card.shadow.default` 둘 다 `0 0 #0000`을 넣습니다. 2.0 제거 후보이며, 브랜드가 이 변수를 덮어써도 Card에는 효과가 없다는 점은 문서로만 안내합니다(검증 규칙 변경 없음) |
 
 ### 5.2 구현 순서
 

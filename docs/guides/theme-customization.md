@@ -126,10 +126,12 @@ CSS 변수 예시:
   --axis-button-bg-active: #4338CA;
 
   /* 카드 스타일 조정 */
-  --axis-card-shadow-default: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  --axis-card-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
   --axis-card-border-default: transparent;
 }
 ```
+
+> Card 그림자는 `--axis-card-shadow`로 조정합니다(1.3.0부터, 기본값은 `--axis-shadow-sm`과 같은 값). 기존 `--axis-card-shadow-default`는 1.3.0부터 폐기 예정이며 Card에 반영되지 않습니다. 1.x 동안 이름과 값은 그대로 남습니다.
 
 ---
 
