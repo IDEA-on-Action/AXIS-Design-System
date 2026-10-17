@@ -142,7 +142,7 @@
 - [x] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
 - [x] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
 - [ ] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3) → 미수행. `packages/axis-tokens/test/fixtures/`에 1.2.1 `variables.css` 스냅샷이 없습니다(있는 `variables.css`는 `dark-completeness` 판정용 합성 fixture). `apps/web/e2e/fixtures/dark-tokens-light-3b52976.json`은 라이트 component 45개만 담은 WI-0033 기준값이라 이 기준선을 대신하지 않습니다. M3 머지 전에 npm 1.2.1 산출물 기준으로 수행합니다
-- [x] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화 → 패키지 4개 `CHANGELOG.md` 1.2.1 절은 PR #93 에 포함(루트 `CHANGELOG.md`는 없음). `project-todo.md` #36 완료 · 현재 버전 1.2.1 반영(2026-10-17), `wi-mapping.json` WI-0025 는 M2~M4 가 남아 🔄 유지
+- [x] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화 → 패키지 4개 `CHANGELOG.md` 1.2.1 절은 PR #93(버전 절)과 PR #101(WI-0033 줄)에 포함(루트 `CHANGELOG.md`는 없음). `project-todo.md` #36 완료 · 현재 버전 1.2.1 반영(2026-10-17), `wi-mapping.json` WI-0025 는 M2~M4 가 남아 🔄 유지
 
 ### M1 DoD
 - [x] `pnpm type-check` 통과

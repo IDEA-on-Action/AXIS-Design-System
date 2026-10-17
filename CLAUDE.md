@@ -113,7 +113,7 @@ pnpm build:web
 # 레지스트리 빌드
 pnpm build:registry
 
-# npm 배포 (CI는 publish.yml의 npm Trusted Publishing(OIDC), 토큰 publish는 막혀 있음)
+# npm 배포 (CI는 publish.yml의 npm Trusted Publishing(OIDC), npm 토큰은 모두 삭제됨)
 pnpm release                    # build + changeset publish (전체 패키지)
 pnpm publish -r --access public --no-git-checks  # 수동 배포
 ```
@@ -123,7 +123,7 @@ pnpm publish -r --access public --no-git-checks  # 수동 배포
 ## 📦 npm 배포 참고
 
 - **npm 스코프**: `@axis-ds` (npmjs.com 조직)
-- **인증**: npm Trusted Publishing(OIDC). `publish.yml`이 `id-token: write`와 `npm@11.19.1`로 발행 (1.2.1에서 실측, 2026-10-17). `NPM_TOKEN` secret과 npm granular 토큰은 삭제했고, Publishing access 설정으로 토큰 publish는 막혀 있음. 프로젝트 `.npmrc`에는 인증 라인 없음
+- **인증**: npm Trusted Publishing(OIDC). `publish.yml`이 `id-token: write`와 `npm@11.19.1`로 발행 (1.2.1에서 실측, 2026-10-17). `NPM_TOKEN` secret과 npm granular 토큰은 삭제함(2026-10-17). Publishing access는 linked 4패키지만 「disallow bypass 2fa tokens」로 바꿨고(사용자 설정, 2026-10-17), cli · mcp는 다음 릴리스 publish 확인 뒤 변경. 프로젝트 `.npmrc`에는 인증 라인 없음
 - **Trusted publisher**: linked 4패키지(tokens · ui-react · agentic-ui · theme) 등록(`IDEA-on-Action/AXIS-Design-System` · `publish.yml`). cli · mcp는 미등록, 다음 릴리스 직전 등록
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
 - **publish 부수효과**: 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
