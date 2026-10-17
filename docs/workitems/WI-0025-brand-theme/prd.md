@@ -83,7 +83,7 @@
 - FR-8: `brands/ontology/{light,dark}.json`을 작성합니다. 값은 초안 `axis-theme-ontology.css`를 그대로 옮깁니다.
   - 라이트: 디자인 시스템 「온톨로지 플랫폼」 v1 원본 값에 부록 B의 AA 보정(한 값)을 적용한 값
   - 다크: 디자인 시스템의 다크 값(이미 AA 통과, 보정 없음)
-  - AXIS의 success · warning · error · info 의미는 v1의 상태 다섯 가지에 맞춰 접습니다: success → 기본(회색), warning → `bad` 연한 단계, error → `bad`(뱃지는 진한 바탕 + `on-key` 글자), info → `key`. 매핑 표는 부록 A에 있습니다.
+  - AXIS의 success · warning · error · info 의미는 v1의 상태 다섯 가지에 맞춰 접습니다: success → 기본(회색), warning → `bad` 연한 단계, error → `bad`(뱃지는 진한 바탕 + `on-key` 글자), info → `key`. 매핑 표는 부록 A에 있습니다. (변경 주석: 「`bad` 연한 단계」는 바탕 역할(`surface.warning` · `badge.warning.bg` = `bad-light`)의 서술이고, 표식 · 글자 역할 `status.warning`은 `bad`, 강조 `status.warning-strong`은 `bad-dark`입니다(plan U25 · 5.3). 초안에 없던 기본 토큰 42개의 값은 plan 5.3 표에 있고 초안에도 역반영합니다(plan U18).)
 - FR-9: 온톨로지 프리셋은 글꼴, 둥글기, 그림자, PlanCard 색 선 두께 0을 함께 지정합니다.
   - 글꼴: `--axis-font-family-sans`(`Pretendard Variable` 우선) · `--axis-font-family-mono`(`JetBrains Mono` 우선). 초안의 `--axis-font-sans` · `--axis-font-mono`는 정의된 토큰 이름이 아니어서 바로잡았고, JSON에서는 primitive `font.family.sans` · `font.family.mono` 경로에 넣습니다.
   - 둥글기: `--radius: 12px`만 실제 화면에 반영됩니다(Tailwind preset의 `rounded-*`가 `--radius`에서 계산하므로 카드 `rounded-lg`는 12px, 버튼 · 입력 `rounded-md`는 10px이 되어 v1의 8px과 2px 차이가 납니다. Q3 참고). `--axis-radius-md: 8px` · `--axis-radius-lg: 12px` · `--axis-radius-sm: 6px`는 컴포넌트가 참조하지 않아 이번 WI에서는 효과가 없으며, WI-0026의 단계별 radius 변수화에 대비한 값으로만 둡니다.
@@ -211,6 +211,14 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 | `line-2`/`card` (입력 테두리) | 1.40:1 | 원본 유지, 포커스 때 `key`로 구분합니다(부록 A 끝 참고) |
 | `bad-line`/`card` (주의 점) | 1.52:1 | warning 아이콘에만 쓰고, 상태는 늘 글자와 함께 보입니다 |
 
+디자인 오너 사후 확인 대상 (2026-10-17 사용자 결정): 위 부록 B ①~⑥에 더해, M3 구현에서 정한 아래 화면 색 결정도 함께 확인받습니다. 값 표와 대비 검산은 plan.md 5.3, 확인 체크는 todo.md M3 「디자인 오너 사후 확인 목록」에 있습니다.
+
+- warning 단계: 바탕 역할(`surface.warning` · `badge.warning.bg`)은 `bad-light`, 표식 · 글자(`status.warning`)는 `bad`, 강조(`status.warning-strong`)는 `bad-dark`
+- 에이전트 아바타 3색: tool = `key`, assistant = `ink-2`, system = `sub`(라이트 `sub-aa`)
+- Dialog overlay: v1 팔레트에 없어 기본값 `rgba(0, 0, 0, 0.5)` 유지
+- 위 승인 범위에 맞추려고 바꾼 값: destructive 버튼 hover · active 바탕 `bad-line` → `bad-light`, Alert warning 테두리 · `status.error-border` `bad-line` → `bad`, 비활성 버튼 글자 `muted` → `sub-aa`
+- 초안 역반영: 초안 2에 없던 42개 값(상태 · diff · 에이전트 · interactive · dialog · 버튼 비활성 등)을 `axis-theme-ontology.css`에 추가
+
 ---
 
 ## 부록 C. v0.22 기준 초안과 달라진 점 (2026-10-16)
@@ -233,5 +241,5 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 ## 다음 단계
 
 - GitHub 이슈 발급 후 이 문서의 `GitHub` 칸을 채우고, `project-todo.md`의 「할 일」에 WI-0025 ~ WI-0028을 추가합니다.
-- 부록 B는 2026-10-16 사용자가 대리 승인했습니다. 디자인 오너(김정원 책임)의 사후 확인을 받습니다.
+- 부록 B는 2026-10-16 사용자가 대리 승인했습니다. 디자인 오너(김정원 책임)의 사후 확인을 받습니다. 확인 대상은 부록 B 끝의 「디자인 오너 사후 확인 대상」 목록 전체입니다.
 - `/wi-todo.md WI-0025 brand-theme`로 실행 체크리스트를 만듭니다.
