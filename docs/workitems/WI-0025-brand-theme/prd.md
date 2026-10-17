@@ -220,6 +220,7 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 - 에이전트 아바타 3색: tool = `key`, assistant = `ink-2`, system = `sub`(라이트 `sub-aa`)
 - Dialog overlay: v1 팔레트에 없어 기본값 `rgba(0, 0, 0, 0.5)` 유지
 - 위 승인 범위에 맞추려고 바꾼 값: destructive 버튼 hover · active 바탕 `bad-line` → `bad-light`, Alert warning 테두리 · `status.error-border` `bad-line` → `bad`, 비활성 버튼 글자 `muted` → `sub-aa`
+- 대기 · 건너뜀 상태 점 `status.neutral-muted`(2026-10-18 추가): 라이트 `line-2` 1.40:1 · 1.28:1, 다크 3.12:1 · 2.83:1(surface-default · surface-secondary 위)로 비텍스트 3:1 미달 바탕이 있어요. 값은 유지하고 비텍스트 spec이 하한 회귀 가드로 기록합니다
 - 초안 역반영: 초안 2에 없던 42개 값(상태 · diff · 에이전트 · interactive · dialog · 버튼 비활성 등)을 `axis-theme-ontology.css`에 추가
 
 ---

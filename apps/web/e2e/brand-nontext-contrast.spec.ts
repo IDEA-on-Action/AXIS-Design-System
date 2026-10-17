@@ -13,6 +13,10 @@ import { applyBrand } from './helpers/brand'
  *   ② Button 포커스 링: 링 색이 `key`(= `--axis-button-border-focus`)이고 바탕 대비 3:1 이상.
  *   ③ 상태 아이콘 색(컴포넌트가 아이콘에 쓰는 `--axis-status-*` 6개): surface-default · surface-secondary 위 3:1 이상(결정 22).
  *      문서 페이지가 패키지 컴포넌트를 그리지 않아 같은 페이지에 svg 프로브를 넣어 잽니다.
+ *   ④ 대기 · 건너뜀 상태 점 `--axis-status-neutral-muted`(step-timeline 71 · 72, run-progress 30 의 바탕 채움):
+ *      같은 바탕 2종 위에서 재고 기록합니다. 라이트 `line-2`(#D6DADF)는 1.40:1 로 3:1 에 못 미치지만
+ *      (다크 #5F6874 도 surface-secondary 위 2.83:1) 값은 바꾸지 않고 디자인 오너 사후 확인 대상으로 둡니다(2026-10-18 사용자 결정, 기본 테마 gray-300 도 1.47:1 수준의 기존 미달).
+ *      그래서 3:1 로 실패시키지 않고, 측정값이 아래 `NEUTRAL_MUTED_FLOOR` 하한보다 낮아지면 실패하는 회귀 가드로 둡니다.
  * 판정 쌍은 링 대 바탕(가장 가까운 불투명 바탕을 합성한 색)이고, 링 오프셋 색은 기록만 합니다(결정 21).
  * 측정 대상 요소가 0개면 실패합니다(미측정 0 을 통과로 읽지 않음).
  * 앱 수준 7변수(`--primary` 포함, AC6 결정 23)는 a11y.spec.ts 의 브랜드 양성 대조가 모든 페이지에서 확인합니다.
@@ -40,6 +44,24 @@ const STATUS_ICON_VARS = [
   '--axis-status-warning',
 ] as const
 const ICON_BACKGROUNDS = ['--axis-surface-default', '--axis-surface-secondary'] as const
+
+/**
+ * 대기 · 건너뜀 상태 점(바탕 채움) 색. 3:1 미달을 알고 두는 값이라 판정은 하한 고정 회귀 가드입니다.
+ * 바탕은 run-progress 컨테이너(surface-default, 76행)와 현재 단계 행(surface-secondary, 122행)입니다.
+ */
+const NEUTRAL_MUTED_VAR = '--axis-status-neutral-muted'
+/**
+ * 하한 = 2026-10-18 실측값(소수 둘째 자리, static out · chromium). 측정값이 이보다 낮아지면 실패합니다.
+ *   ontology 라이트 #D6DADF: surface-default #FFFFFF 위 1.40, surface-secondary #F3F4F6 위 1.28
+ *   ontology 다크  #5F6874: surface-default #17191D 위 3.12, surface-secondary #1F2227 위 2.83
+ * 다크도 surface-secondary 위에서는 3:1 에 못 미칩니다(2.83). 함께 사후 확인 대상입니다.
+ * 값을 올리는 변경(대비 개선)은 통과하므로, 개선했으면 이 하한도 새 측정값으로 올립니다.
+ * 디자인 오너 확인으로 값이 바뀌면 plan 5.3 과 todo 「디자인 오너 사후 확인 목록」을 함께 고칩니다.
+ */
+const NEUTRAL_MUTED_FLOOR: Record<ThemeName, Record<(typeof ICON_BACKGROUNDS)[number], number>> = {
+  light: { '--axis-surface-default': 1.4, '--axis-surface-secondary': 1.28 },
+  dark: { '--axis-surface-default': 3.12, '--axis-surface-secondary': 2.83 },
+}
 
 type Rgb = [number, number, number]
 
@@ -76,8 +98,9 @@ interface Measured {
 /**
  * 브라우저 안에서 색을 잰다. 색 문자열은 1x1 캔버스에 칠해 rgba 로 정규화한다(color-mix 결과 등 표기와 무관).
  * mode: ring = box-shadow 에서 링 · 오프셋 색, 바탕은 부모부터 / icon = 요소 color, 바탕은 요소부터 / border = border-top-color
+ *   / fill = 요소 background-color(상태 점), 바탕은 부모부터
  */
-async function measure(locator: Locator, mode: 'ring' | 'icon' | 'border'): Promise<Omit<Measured, 'label'>> {
+async function measure(locator: Locator, mode: 'ring' | 'icon' | 'border' | 'fill'): Promise<Omit<Measured, 'label'>> {
   return locator.evaluate((el, m) => {
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 1
@@ -94,7 +117,7 @@ async function measure(locator: Locator, mode: 'ring' | 'icon' | 'border'): Prom
     const over = (top: [number, number, number, number], under: [number, number, number]) =>
       [0, 1, 2].map((i) => Math.round(top[i] * top[3] + under[i] * (1 - top[3]))) as [number, number, number]
 
-    const start = m === 'ring' ? el.parentElement : el
+    const start = m === 'ring' || m === 'fill' ? el.parentElement : el
     const chain: Element[] = []
     for (let n: Element | null = start; n; n = n.parentElement) chain.push(n)
     let bg: [number, number, number] = [255, 255, 255] // 캔버스(브라우저 기본) 바탕
@@ -128,6 +151,8 @@ async function measure(locator: Locator, mode: 'ring' | 'icon' | 'border'): Prom
       offsetCss = offset ? offset.color : null
     } else if (m === 'icon') {
       colorCss = cs.color
+    } else if (m === 'fill') {
+      colorCss = cs.backgroundColor
     } else {
       colorCss = cs.borderTopColor
     }
@@ -232,7 +257,7 @@ for (const theme of THEMES) {
       // 그래서 같은 페이지(브랜드 CSS 가 실제로 걸린 문서)에 컴포넌트와 같은 구조의 svg 를 넣어 잽니다.
       // 바탕은 PlanCard · ToolCallCard 컨테이너(surface-default)와 hover · 하단 영역(surface-secondary)입니다.
       const statuses = await page.evaluate(
-        ({ vars, backgrounds }) => {
+        ({ vars, backgrounds, dotVar }) => {
           const main = document.querySelector('main')
           if (!main) return 0
           const root = document.createElement('div')
@@ -242,6 +267,14 @@ for (const theme of THEMES) {
             box.style.background = `var(${bg})`
             box.style.padding = '8px'
             box.setAttribute('data-bg', bg)
+            // 상태 점 프로브(step-timeline 점과 같은 크기의 바탕 채움)
+            const dot = document.createElement('span')
+            dot.style.display = 'inline-block'
+            dot.style.width = dot.style.height = '12px'
+            dot.style.borderRadius = '9999px'
+            dot.style.background = `var(${dotVar})`
+            dot.setAttribute('data-nontext-dot', dotVar)
+            box.appendChild(dot)
             for (const v of vars) {
               const host = document.createElement('span')
               host.style.color = `var(${v})`
@@ -255,7 +288,7 @@ for (const theme of THEMES) {
           main.prepend(root)
           return root.querySelectorAll('svg').length
         },
-        { vars: STATUS_ICON_VARS, backgrounds: ICON_BACKGROUNDS },
+        { vars: STATUS_ICON_VARS, backgrounds: ICON_BACKGROUNDS, dotVar: NEUTRAL_MUTED_VAR },
       )
       expect(statuses, '측정할 아이콘 프로브가 없음').toBe(STATUS_ICON_VARS.length * ICON_BACKGROUNDS.length)
 
@@ -268,11 +301,39 @@ for (const theme of THEMES) {
         )
         rows.push({ label, ...(await measure(svg, 'icon')) })
       }
-      report(testInfo, rows)
+
+      // ④ 대기 · 건너뜀 상태 점: 기록 + 하한 회귀 가드(3:1 로 판정하지 않음)
+      const dots = page.locator('[data-nontext-probe] [data-nontext-dot]')
+      expect(await dots.count(), '측정할 상태 점 프로브가 없음').toBe(ICON_BACKGROUNDS.length)
+      const dotRows: (Measured & { bg: (typeof ICON_BACKGROUNDS)[number] })[] = []
+      for (let i = 0; i < ICON_BACKGROUNDS.length; i++) {
+        const dot = dots.nth(i)
+        const bg = (await dot.evaluate((el) => el.closest('[data-bg]')?.getAttribute('data-bg'))) as (typeof ICON_BACKGROUNDS)[number]
+        expect(ICON_BACKGROUNDS, '상태 점 바탕').toContain(bg)
+        dotRows.push({ label: `${NEUTRAL_MUTED_VAR} dot on ${bg} (기록 · 하한 가드)`, bg, ...(await measure(dot, 'fill')) })
+      }
+      report(testInfo, [...rows, ...dotRows])
+
       for (const r of rows) {
         expect(r.alpha, `${r.label} 알파`).toBe(1)
         expect(contrast(r.color, r.background), `${r.label} ${hex(r.color)} 대 ${hex(r.background)}`).toBeGreaterThanOrEqual(
           MIN_NONTEXT,
+        )
+      }
+      const ratioOf = (r: Measured) => Math.round(contrast(r.color, r.background) * 100) / 100
+      // 판정 전에 전부 출력해 하나가 실패해도 나머지 측정값이 로그(list reporter stdout)에 남게 합니다
+      for (const r of dotRows) {
+        console.log(
+          `[nontext-record] ${BRAND}/${theme} ${r.label}: ${hex(r.color)} 대 ${hex(r.background)} = ${ratioOf(r)}:1 (하한 ${NEUTRAL_MUTED_FLOOR[theme][r.bg]}, 기준 ${MIN_NONTEXT}:1 미적용)`,
+        )
+      }
+      for (const r of dotRows) {
+        const ratio = ratioOf(r)
+        const floor = NEUTRAL_MUTED_FLOOR[theme][r.bg]
+        expect(r.alpha, `${r.label} 알파`).toBe(1)
+        expect(floor, `${r.label} 하한이 설정되지 않음`).toBeGreaterThan(1)
+        expect(ratio, `${r.label} ${hex(r.color)} 대 ${hex(r.background)} 가 기록된 하한 ${floor} 보다 낮아짐`).toBeGreaterThanOrEqual(
+          floor,
         )
       }
     })
