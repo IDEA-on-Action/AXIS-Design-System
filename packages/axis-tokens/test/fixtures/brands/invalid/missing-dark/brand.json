@@ -1,0 +1,1 @@
+{ "name": "missing-dark", "description": "V2 음성 fixture(dark.json 없음)", "themes": ["light", "dark"], "a11y": { "status": "unchecked" } }

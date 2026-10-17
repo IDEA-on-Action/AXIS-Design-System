@@ -28,12 +28,8 @@ function hexToHsl(hex) {
   return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
 }
 
-// --- CSS 변수명 안전화: path 세그먼트의 점(.)을 하이픈(-)으로 치환 ---
-// CSS 커스텀 프로퍼티명에 escape 안 된 점은 유효 ident가 아니라 Turbopack 파싱이 깨진다.
-// (예: space.2.5 -> --axis-space-2-5) 핸드오프 가이드(health-pt-manager docs/31) 계약과 일치
-function cssVarName(path) {
-  return `--axis-${path.map(seg => String(seg).replace(/\./g, '-')).join('-')}`;
-}
+// --- CSS 변수명 안전화: scripts/brands.mjs 로 옮겨 브랜드 검증과 함께 쓴다 (WI-0025 B0) ---
+import { cssVarName } from './scripts/brands.mjs';
 
 // --- 커스텀 포맷: CSS Variables ---
 StyleDictionary.registerFormat({
@@ -58,6 +54,8 @@ StyleDictionary.registerFormat({
     return `.dark {\n${tokens}\n}\n`;
   }
 });
+
+// 브랜드 CSS 포맷(css/axis-brand, WI-0025 B1)은 scripts/build-brands.mjs 에서 등록한다
 
 // --- 커스텀 포맷: TypeScript 모듈 ---
 StyleDictionary.registerFormat({
@@ -341,5 +339,24 @@ body {
 mkdirSync('dist/css', { recursive: true });
 writeFileSync('dist/css/shadcn-compat.css', shadcnCss);
 console.log('  ✓ shadcn-compat.css generated');
+
+// --- 5. 브랜드 CSS 빌드 (WI-0025 FR-4 · FR-5) ---
+// 1~4단계 산출물은 건드리지 않는다. 브랜드가 0개이면 아무 파일도 만들지 않는다.
+// 본체는 테스트가 같은 경로를 타도록 scripts/build-brands.mjs 에 있다.
+import { buildBrands } from './scripts/build-brands.mjs';
+
+const brandResult = await buildBrands({
+  srcDir: 'src',
+  brandsDir: 'src/brands',
+  distDir: 'dist',
+  pkg: loadJson('package.json'),
+  shadcnCss,
+});
+if (brandResult.violations.length > 0) {
+  console.error(`  ✗ 브랜드 검증 실패 (${brandResult.violations.length}건)`);
+  brandResult.violations.forEach(v => console.error(`    - ${v}`));
+  process.exit(1);
+}
+brandResult.brands.forEach(name => console.log(`  ✓ brands/${name}.css generated`));
 
 console.log('Done!');

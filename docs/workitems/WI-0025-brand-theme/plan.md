@@ -437,7 +437,7 @@ V8의 25개 이름을 복제하지 않으려면 276-300줄의 이름을 상수 �
 | `packages/axis-tokens/src/semantic/{light,dark}.json` | 토큰 추가(FR-1 `interactive.primary`, FR-2 `status.*` · `diff.*` · `agent.*`) | 수정하지 않습니다. V3 · V4가 키를 읽습니다 | 텍스트 충돌은 없지만 좁은 **논리 의존**이 있습니다. M1이 새 카테고리(`status.*` · `diff.*` · `agent.*`)를 3단계로 넣어도 `resolveSemanticJson`(255-256줄)은 그 항목을 조용히 무시하고, `buildShadcnVars`가 `surface` · `text` · `border`만 읽으므로 `shadcn-compat.css`는 바뀌지 않습니다. M1이 `surface` · `text` · `border` 자체를 3단계로 바꿀 때만 shadcn 값이 `0 0% 0%`로 떨어지므로, 그 경우에만 함수를 함께 고쳐야 합니다 |
 | `packages/axis-tokens/src/component/components.json` | `bg-muted` 처리 방식(FR-1)에 따라 수정할 수 있음 | 수정하지 않습니다 | 논리 의존입니다. M1이 `bg-muted`를 정의하지 않고 컴포넌트 쪽 교체로 끝내면, M3에서 초안의 `--axis-bg-muted` 줄이 V3에 걸립니다. 그 경우 초안에서 이 줄을 빼야 합니다 |
 | `packages/axis-tokens/build-tokens.mjs` | FR-3 참조 검사를 빌드에 넣으면 수정 | 60줄 다음과 333줄 다음에 추가. B0에서 이동을 고르면 34-36줄도 수정 | M1은 FR-3을 별도 스크립트(예: `scripts/check-token-refs.mjs`)로 두고 이 파일은 건드리지 않기를 권합니다 |
-| `packages/axis-tokens/package.json` | 릴리스 PR이 `version`(3줄)을 바꿉니다 | `exports`(8-22줄), `scripts`(32-36줄) | 서로 다른 hunk라 위험이 낮습니다. M2 브랜치는 1.2.1 릴리스 뒤에 rebase합니다 |
+| `packages/axis-tokens/package.json` | 릴리스 PR이 `version`(3줄)을 바꿉니다 | `exports`(8-22줄), `scripts`(32-36줄) | 서로 다른 hunk라 위험이 낮습니다. M2 브랜치는 1.2.1 릴리스 뒤에 `main`을 반영합니다(3.6 절차 5) |
 | `packages/axis-theme/src/index.ts` · `theme.test.tsx` | 없음(D5는 버전만 올림) | 주 변경 | 없음 |
 | `packages/axis-theme/package.json` · `CHANGELOG.md` | 릴리스 PR이 1.2.1로 갱신 | 없음(1.3.0 릴리스 때 갱신) | 없음 |
 | `scripts/pack-smoke.mjs` | 없음 | 패턴 exports를 고를 때만 77줄 수정 | 결정 필요 1 |
@@ -457,6 +457,7 @@ V8의 25개 이름을 복제하지 않으려면 276-300줄의 이름을 상수 �
 2. M1을 머지한 뒤 생긴 릴리스 PR을 **다른 어떤 changeset보다 먼저** 머지하고, publish를 확인합니다. 확인 명령은 `npm view @axis-ds/theme@1.2.1 dependencies`이고, 기대값은 `{ '@axis-ds/tokens': '1.2.1' }`입니다. 현재 1.2.0은 `{ '@axis-ds/tokens': '1.2.0' }`임을 실측했습니다.
 3. M2~M4 PR을 1.2.1 publish 전에 `main`에 머지한다면 **changeset 파일 없이** 머지합니다. minor changeset(tokens · theme · ui-react · agentic-ui)은 1.2.1 publish를 확인한 뒤에 추가합니다. 각 M2~M4 PR을 머지하기 전에 두 가지를 확인합니다. `npm view @axis-ds/tokens version`이 `1.2.1`인지, 그리고 `main`의 `.changeset/`에 config 외의 patch 파일이 남아 있지 않은지입니다.
 4. 1.3.0 릴리스 PR에서 linked 4개 패키지가 모두 1.3.0인지 확인하고 머지합니다. 이때 `pack-smoke`가 브랜드 exports 타깃이 실제로 있는지 검사합니다.
+5. M2~M4 브랜치는 1.2.1 publish를 확인한 뒤 `main`을 반영합니다. 처음에는 rebase로 계획했지만, 이미 원격에 올린 브랜치를 rebase하면 force push가 필요하므로 **merge로 바꿨습니다**(2026-10-17). M2는 `origin/main`(014e8ac)을 merge했습니다(0151d6a).
 
 ### 결정 필요
 
