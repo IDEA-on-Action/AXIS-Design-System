@@ -3,6 +3,9 @@
     "sm": { "value": "0 1px 2px rgba(0,0,0,.30)" },
     "lg": { "value": "0 8px 24px rgba(0,0,0,.50)" }
   },
+  "plan-card": {
+    "reject-hover-text": { "value": "#F49890" }
+  },
   "surface": {
     "default": { "value": "#17191D" },
     "secondary": { "value": "#1F2227" },

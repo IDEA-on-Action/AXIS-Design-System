@@ -105,7 +105,8 @@
     }
   },
   "plan-card": {
-    "accent-width": { "value": "4px", "$extensions": { "axis": { "themeIndependent": true } } }
+    "accent-width": { "value": "4px", "$extensions": { "axis": { "themeIndependent": true } } },
+    "reject-hover-text": { "value": "{status.error}", "$extensions": { "axis": { "themeIndependent": true } } }
   },
   "card-shadow": { "value": "{shadow.sm}", "$extensions": { "axis": { "themeIndependent": true } } }
 }

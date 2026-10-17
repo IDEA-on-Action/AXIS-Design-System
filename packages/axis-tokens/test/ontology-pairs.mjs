@@ -5,6 +5,8 @@
  * - V1_PALETTE: 디자인 시스템 v1 팔레트(초안 2 주석의 원본 토큰 이름). 브랜드 hex 값은 이 안에서만 고른다.
  * - CONTRAST_PAIRS: 글자 · 비텍스트가 실제로 놓이는 바탕 짝과 최소 대비. 짝이 바뀌면 이 표를 먼저 고친다.
  *   bg 가 { mix, pct } 이면 `color-mix(in srgb, var(mix) pct%, transparent)` 를 surface-default 위에 깐 색이다.
+ *   { mix, pct, over } 이면 surface-default 대신 over(부모 바탕 변수) 위에 깐다. 부모 바탕은 소스 한 문자열에서
+ *   뽑을 수 없으므로 check-contrast-pairs 의 짝 키에는 over 가 들어가지 않는다(over 는 손으로 확인해 적는다).
  *
  * 이 파일은 test/ 아래라 npm 배포본(files: dist)에 들어가지 않는다.
  */
@@ -66,7 +68,9 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-diff-added-text', bg: { mix: '--axis-diff-added', pct: 10 }, min: TEXT, where: 'diff-viewer:71 · 77' },
   { fg: '--axis-diff-removed-text', bg: { mix: '--axis-diff-removed', pct: 10 }, min: TEXT, where: 'diff-viewer:72 · 78' },
   { fg: '--axis-status-success', bg: { mix: '--axis-status-success', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:62' },
-  { fg: '--axis-status-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:78 · plan-card:195 hover' },
+  { fg: '--axis-status-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:78' },
+  // PlanCard 거절 버튼 hover: 하단 영역(surface-secondary) 위 옅은 바탕, 글자는 전용 component 토큰(기본값 status-error)
+  { fg: '--axis-plan-card-reject-hover-text', bg: { mix: '--axis-status-error', pct: 10, over: '--axis-surface-secondary' }, min: TEXT, sameString: true, where: 'plan-card:195 hover' },
   // 비활성 버튼 글자 (WCAG 예외지만 D2 에 따라 sub-aa 로 통과시킨다)
   { fg: '--axis-button-text-disabled', bg: '--axis-button-bg-disabled', min: TEXT, where: '소비처 없음' },
   // 비텍스트 (테두리 · 아이콘)

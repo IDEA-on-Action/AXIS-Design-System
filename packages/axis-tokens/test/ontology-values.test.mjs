@@ -88,7 +88,7 @@ const mixOver = (fg, under, pct) => '#' + [1, 3, 5].map(i => Math.round(
 
 function bgOf(theme, bg) {
   if (typeof bg === 'string') return effective(theme, bg);
-  return mixOver(effective(theme, bg.mix), effective(theme, '--axis-surface-default'), bg.pct);
+  return mixOver(effective(theme, bg.mix), effective(theme, bg.over ?? '--axis-surface-default'), bg.pct);
 }
 
 /** CSS 블록(선택자 정확 일치)의 선언 이름 -> 값. check-token-refs collectBlockValues 와 같은 방식 */
@@ -213,6 +213,14 @@ describe('ontology 접기 값 (U15 · D4 · D2)', () => {
     }
   });
 
+  test('PlanCard 거절 hover 글자는 bad-dark(status-error-strong), 기본값은 status.error 참조 (리뷰 f1)', () => {
+    assert.equal(base.refs.get('plan-card.reject-hover-text'), '{status.error}');
+    for (const theme of ['light', 'dark']) {
+      assert.equal(effective(theme, '--axis-plan-card-reject-hover-text'), P('bad-dark')[theme]);
+      assert.equal(effective(theme, '--axis-plan-card-reject-hover-text'), effective(theme, '--axis-status-error-strong'));
+    }
+  });
+
   test('라이트에만 두는 값은 테마 무관 값(transparent · 그림자)뿐이다', () => {
     const lightOnly = [...light.keys()].filter(n => !dark.has(n) && n.startsWith('--axis-'));
     for (const n of lightOnly) {
@@ -228,7 +236,7 @@ describe('ontology 짝 대비 (plan 5.3 검산)', () => {
 
   for (const pair of CONTRAST_PAIRS) {
     for (const theme of ['light', 'dark']) {
-      const bgLabel = typeof pair.bg === 'string' ? pair.bg : `${pair.bg.mix} ${pair.bg.pct}%`;
+      const bgLabel = typeof pair.bg === 'string' ? pair.bg : `${pair.bg.mix} ${pair.bg.pct}% over ${pair.bg.over ?? '--axis-surface-default'}`;
       test(`${theme} ${pair.fg} / ${bgLabel} >= ${pair.min}`, () => {
         const fg = effective(theme, pair.fg);
         const bg = bgOf(theme, pair.bg);

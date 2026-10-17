@@ -9,6 +9,8 @@
  * - 소스에만 있는 짝: 대비를 검산하지 않은 새 조합이므로 위반입니다(표에 행을 더하고 tokens 테스트로 대비를 확인).
  * - 표에만 있는 짝: 소스가 바뀌어 표가 낡았으므로 위반입니다.
  * - 변형 접두는 `hover:bg-*` 와 접두 없는 `text-*` 를 짝으로 보고, 같은 접두끼리도 짝으로 봅니다.
+ *   단 같은 접두의 글자(`hover:text-*`)가 있으면 그 상태에서는 접두 없는 글자가 덮이므로 같은 접두 글자만 짝으로 봅니다.
+ * - 옅은 바탕의 부모 바탕(표의 bg.over)은 한 문자열에서 뽑을 수 없어 짝 키에 넣지 않습니다.
  * - 부모 · 자식으로 나뉜 짝(아바타 바탕과 글자, 타임라인 점과 아이콘)은 잡지 못합니다. 그런 짝은 표에 손으로 둡니다.
  *
  * tokens 패키지 테스트가 agentic-ui 소스를 읽으면 turbo 캐시 키(패키지 입력)에 agentic-ui 변경이 들어가지 않아
@@ -65,8 +67,10 @@ function pairsInString(str) {
   const texts = [...str.matchAll(TEXT_RE)].map(m => ({ variant: m[1], fg: m[2] }))
   const pairs = []
   for (const b of bgs) {
+    const overridden = b.variant !== '' && texts.some(t => t.variant === b.variant)
     for (const t of texts) {
       if (t.variant !== '' && t.variant !== b.variant) continue
+      if (overridden && t.variant === '') continue
       const bgVar = typeof b.bg === 'string' ? b.bg : b.bg.mix
       if (!SCOPE.test(t.fg) && !SCOPE.test(bgVar)) continue
       pairs.push({ fg: t.fg, bg: b.bg })

@@ -14,6 +14,8 @@
      역반영했습니다(plan U18 · U25 · 5.3). 디자인 오너 사후 확인을 기다립니다.
    - [사후 확인 대기] destructive 버튼 hover · active 는 이 초안에 bad-line 이 남아 있지만 브랜드 JSON 은
      bad-light 입니다(D2: 부록 B 는 bad-line 을 warning 아이콘에만 허용). 확인 뒤 한쪽으로 맞춥니다.
+   - [사후 확인 대기] plan-card-reject-hover-text(라이트 · 다크 bad-dark)는 M3 적대 검증 보정(2026-10-18)에서
+     더한 component 토큰입니다. 기본값은 status-error 와 같아 기본 화면은 바뀌지 않습니다.
    ========================================================================== */
 
 [data-brand="ontology"] {
@@ -27,6 +29,7 @@
   --axis-shadow-sm: 0 1px 2px rgba(17,20,24,.06);
   --axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10);
   --axis-plan-card-accent-width: 1px; /* FR-7 토큰(기본 4px). 온톨로지는 색 선 대신 다른 변과 같은 1px 테두리(부록 B ⑤, 2026-10-16 대리 승인) */
+  --axis-plan-card-reject-hover-text: #A8281F; /* bad-dark · PlanCard 거절 hover 글자(기본은 status-error). panel 위 bad 10% 바탕에서 bad 4.17 미달이라 5.53 */
   /* surface */
   --axis-surface-default: #FFFFFF; /* card */
   --axis-surface-secondary: #F3F4F6; /* panel */
@@ -171,6 +174,7 @@
 [data-theme="dark"] [data-brand="ontology"] {
   --axis-shadow-sm: 0 1px 2px rgba(0,0,0,.30);
   --axis-shadow-lg: 0 8px 24px rgba(0,0,0,.50);
+  --axis-plan-card-reject-hover-text: #F49890; /* bad-dark · PlanCard 거절 hover 글자, panel 위 bad 10% 바탕 6.36 */
   /* surface */
   --axis-surface-default: #17191D; /* card */
   --axis-surface-secondary: #1F2227; /* panel */

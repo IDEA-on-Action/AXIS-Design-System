@@ -15,7 +15,8 @@
     "lg": { "value": "0 8px 24px rgba(17,20,24,.10)" }
   },
   "plan-card": {
-    "accent-width": { "value": "1px" }
+    "accent-width": { "value": "1px" },
+    "reject-hover-text": { "value": "#A8281F" }
   },
   "surface": {
     "default": { "value": "#FFFFFF" },

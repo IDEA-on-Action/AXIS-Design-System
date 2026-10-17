@@ -70,6 +70,7 @@ describe('collectBasePaths', () => {
       '--axis-agent-message-user-text',
       '--axis-agent-avatar-text',
       '--axis-plan-card-accent-width',
+      '--axis-plan-card-reject-hover-text',
     ]) {
       assert.ok(base.varNames.has(name), `기본 집합에 없음: ${name}`);
     }
