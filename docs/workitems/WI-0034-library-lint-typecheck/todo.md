@@ -42,6 +42,7 @@
 - [x] agentic-ui no-useless-escape 6건 (tool-call-card.test.tsx 60 · 61행) (FR-4)
 - [x] agentic-ui no-case-declarations 1건 (surface-renderer `case "table"` 블록) (FR-4)
 - [x] tokens `build-tokens.mjs` 미사용 `dirname` 1건 · 빈 catch 2건 주석 (FR-4)
+- [x] 레지스트리 JSON 9개 재생성 커밋 (card · separator · agentic-surface-renderer, FR-4a)
 - [ ] `packages/axis-tokens/build-tokens.js` 삭제 → 보류(prd Q1, 사용자 확인 필요)
 
 ### M1-4 tokens type-check · opt-in
@@ -70,5 +71,5 @@
 - [ ] theme · cli · mcp lint 는 미측정. 추가하려면 먼저 위반 수를 잽니다
 - [ ] M3 머지 뒤 opt-in 확대: `build-tokens.mjs`(16건) · `scripts/brands.mjs` · `scripts/build-brands.mjs`(9건) · `test/brands.test.mjs` · `test/build-brands.test.mjs` (D4)
 - [ ] opt-in 최종 목표 결정: strict 전수(201건) vs noImplicitAny off(20건) → 미정. 정해지면 가드를 「미적용 0 요구」로 바꿀지도 함께 정합니다
-- [ ] 빈 interface → type alias 의 선언 병합 영향(TS2300)을 릴리스 노트에 적을지 결정 (prd Q2)
+- [ ] 빈 interface → type alias 의 선언 병합 영향(TS2300)과 `Separator` 공개 시그니처 펼침(이름 표시 소실)을 릴리스 노트에 적을지, interface 유지(`allowInterfaces: 'with-single-extends'`)로 돌릴지 결정 (prd Q2)
 - [ ] `eslint@9.39.2` deprecated 표시 대응(업그레이드 여부) (prd Q3)

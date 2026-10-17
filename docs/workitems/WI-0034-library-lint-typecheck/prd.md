@@ -49,7 +49,6 @@
 - **theme(12건) · cli(20건, 실코드 2건 포함) · mcp 의 type-check 와 lint**: D3.
 - **apps/web lint 변경**: `next lint` 를 그대로 둡니다. 루트 설정은 `apps/web/**` 를 무시합니다.
 - **CI workflow 수정**: 이미 `pnpm lint` · `pnpm type-check` 를 실행하므로 고칠 것이 없습니다.
-- **레지스트리 JSON(`registry/r/*.json` · `public/r/*.json`) 재생성**: 소스 사본이며 CI `build:registry` 단계에서 다시 만듭니다.
 
 ---
 
@@ -60,6 +59,7 @@
 - FR-2: 루트 `eslint.config.mjs` 를 둡니다. `ignores` 에 `**/dist/**` · `**/node_modules/**` · `apps/web/**` 를 넣습니다. ESLint 9 flat config 는 `.gitignore` 를 따르지 않으므로 빌드 뒤에도 dist 가 검사되지 않아야 합니다.
 - FR-3: tokens · ui-react · agentic-ui 에 `"lint": "eslint ."` 를 넣습니다.
 - FR-4: 위반 13건을 동작 변화 없이 정리합니다. 빈 interface 3개(card · separator · skeleton)는 type alias, 정규식의 불필요한 이스케이프 6건은 제거, case 안 선언 1건은 블록으로 감쌉니다. `build-tokens.mjs` 는 미사용 `dirname` import 를 지우고 빈 catch 2건에 의도 주석을 넣습니다.
+- FR-4a: FR-4 가 바꾼 소스(card · separator · surface-renderer)의 사본인 레지스트리 JSON 9개(`apps/web/public/r` · `public/r` · 각 패키지 `registry/r` 의 `card` · `separator` · `agentic-surface-renderer`)를 `pnpm build:registry` 로 다시 만들어 함께 커밋합니다. CI 배포 단계도 `build:registry` 를 실행하지만, 저장소에 커밋된 사본이 소스와 어긋난 채로 남지 않게 하기 위해서입니다.
 - FR-5: tokens 에 `tsconfig.typecheck.json`(extends `./tsconfig.json`, rootDir `.`, allowJs, checkJs false, include `src` · `build-tokens.mjs` · `scripts/*.mjs` · `test/*.mjs`)을 두고 `"type-check": "tsc --noEmit -p tsconfig.typecheck.json && node scripts/check-ts-optin.mjs"` 를 넣습니다. 빌드용 tsconfig(tsup dts)는 바꾸지 않습니다.
 - FR-6: opt-in 첫 묶음 `scripts/theme-modes.mjs` · `test/theme-modes.test.mjs` · `test/dark-completeness.test.mjs` 에 JSDoc 을 보강하고 `// @ts-check` 를 붙입니다. 세 파일 모두 M3 diff 에 없습니다.
 - FR-7: `scripts/check-ts-optin.mjs` 가드는 tsc 와 같은 tsconfig 를 TypeScript API 로 해석해, 대상 파일 중 JS 수와 `@ts-check` 미적용 수 · 파일 목록을 출력합니다. 미적용이 있어도 rc 0 이고, tsconfig 를 읽지 못하거나 대상 JS 가 0개이면 측정 실패 rc 2 입니다.
@@ -103,6 +103,6 @@
 | # | 내용 | 영향 | 상태 · 대응 |
 |---|---|---|---|
 | Q1 | `build-tokens.js` 를 가리키는 문서 언급이 3건 있습니다(`docs/axis-ds-implementation-plan.md` 178행 코드 예시 주석, WI-0025 plan 351행 · todo 172행의 「미사용, 수정하지 않음」 기록). 코드 · 설정 · CI 참조는 0건입니다 | 낮음 | 열림. D2 조건(참조가 있으면 삭제하지 않고 보고)에 따라 삭제하지 않았고, ESLint ignores 와 tsconfig exclude 로 검사에서 뺐습니다. 문서 언급을 참조로 볼지 사용자 확인이 필요합니다 |
-| Q2 | 빈 interface 를 type alias 로 바꾸면 소비자가 `declare module '@axis-ds/ui-react' { interface CardProps { ... } }` 로 선언 병합하던 코드는 TS2300(Duplicate identifier)이 됩니다. 일반 사용(확장 · 인덱스 접근 · Omit)은 그대로입니다 | 낮음 | 열림. 저장소 안에는 병합 사용이 0건입니다. 대안은 interface 를 두고 규칙 옵션 `allowInterfaces: 'with-single-extends'` 를 쓰는 것입니다. 릴리스 노트에 적을지 사용자 확인이 필요합니다 |
+| Q2 | 빈 interface 를 type alias 로 바꾸면 소비자가 `declare module '@axis-ds/ui-react' { interface CardProps { ... } }` 로 선언 병합하던 코드는 TS2300(Duplicate identifier)이 됩니다. 일반 사용(확장 · 인덱스 접근 · Omit)은 그대로입니다. 또 dist `separator/index.d.ts` 의 `Separator` 선언이 이름 참조(`ForwardRefExoticComponent<SeparatorProps & RefAttributes<HTMLDivElement>>`)에서 펼친 형태(`ForwardRefExoticComponent<Omit<SeparatorPrimitive.SeparatorProps & RefAttributes<HTMLDivElement>, "ref"> & RefAttributes<HTMLDivElement>>`)로 바뀝니다. 구조는 같은 타입이라 할당 호환은 그대로이지만, IDE 호버와 문서 도구에서 `SeparatorProps` 이름이 보이지 않습니다. card · skeleton 의 선언은 이름 참조가 유지되고 Props 정의 줄만 바뀝니다 | 낮음 | 열림. 저장소 안에는 병합 사용이 0건입니다. 대안은 interface 를 두고 규칙 옵션 `allowInterfaces: 'with-single-extends'` 를 쓰는 것이며, 이 경우 선언 병합과 `SeparatorProps` 이름 표시가 모두 유지됩니다. 릴리스 노트에 적을지 사용자 확인이 필요합니다 |
 | Q3 | `eslint@9.39.2` 가 lockfile 재기록 때 deprecated 로 표시됐습니다 | 낮음 | 열림. 버전 고정은 이번 결정(lockfile 기존 버전만)에 따른 것이고, 업그레이드는 별도로 판단합니다 |
 | Q4 | M3 rebase 때 tokens `package.json` scripts 블록과 `build-tokens.mjs` 에서 텍스트 충돌이 날 수 있습니다 | 중간 | 해소 방법은 plan 5장에 적었습니다. M3 브랜치 소스에 같은 lint 설정을 적용하면 위반은 main 과 같은 13건뿐이고 M3 가 새로 만든 위반은 0건입니다 |

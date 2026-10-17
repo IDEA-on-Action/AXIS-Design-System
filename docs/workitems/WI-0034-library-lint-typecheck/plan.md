@@ -65,6 +65,8 @@
 | 회귀(ui-react) | type-check · build · `node scripts/pack-smoke.mjs` | 모두 rc 0, pack-smoke 6/6 |
 | 회귀(소비 측 타입) | dist `index.d.ts` 를 쓰는 소비 파일(skipLibCheck false): `interface X extends CardProps` · `SeparatorProps` · `SkeletonProps`, 인덱스 접근, `Omit`, `React.ComponentProps<typeof Card>`, 래퍼 컴포넌트, `@ts-expect-error` 음성 1건 | rc 0 (`@ts-expect-error` 가 소비되어 검사가 실제로 수행됨) |
 | 회귀(선언 병합) | `declare module '@axis-ds/ui-react' { interface CardProps { ... } }` | rc 2, TS2300. prd Q2 |
+| 회귀(공개 .d.ts 시그니처) | src 를 origin/main 판으로 바꿔 빌드한 dist 와 브랜치 dist 의 `declare const` 줄 비교 | `Separator` 는 `ForwardRefExoticComponent<SeparatorProps & RefAttributes<HTMLDivElement>>` 에서 `ForwardRefExoticComponent<Omit<SeparatorPrimitive.SeparatorProps & RefAttributes<HTMLDivElement>, "ref"> & RefAttributes<HTMLDivElement>>` 로 펼쳐집니다(구조 동일, 이름 표시 소실). `Card` 는 `CardProps` 이름 참조가 유지됩니다. prd Q2 |
+| 레지스트리 사본 동기화 | `pnpm build:registry` 뒤 `git status --short` | 커밋 전 9파일 M(각 +1/-1, 이 WI 가 바꾼 줄뿐), 재생성본 커밋 뒤 0파일. prd FR-4a |
 | lockfile | `git diff --stat pnpm-lock.yaml`, `pnpm install --offline`, `pnpm install --frozen-lockfile --offline` | +30/-8, 오프라인 설치 rc 0(새 다운로드 0), frozen rc 0. 변경 내용은 1장 4행 |
 | 원복 확인 | 음성 대조군 전후 `git diff` sha256 | 동일 |
 
