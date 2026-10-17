@@ -177,14 +177,47 @@ describe('src/brands/ontology (FR-8)', () => {
     assert.deepEqual(validateBrand(ontology, base), []);
   });
 
-  test('초안 2 선언(bg-muted 제외)이 모두 같은 값으로 들어 있다', () => {
+  // 2026-10-17 D2: 초안 2 는 bad-line 을 destructive 버튼 hover · active 바탕에도 썼어요.
+  // 부록 B(prd.md 211행)는 bad-line 을 warning 아이콘에만 허용하므로 bad-light 로 바꿨어요
+  // (다크 #F49890/#7A3330 4.16:1 미달 해소). 초안과 다른 값은 이 표에만 둡니다.
+  const D2_OVERRIDES = {
+    light: { '--axis-button-destructive-bg-hover': '#FDE8E8', '--axis-button-destructive-bg-active': '#FDE8E8' },
+    dark: { '--axis-button-destructive-bg-hover': '#3A1A1A', '--axis-button-destructive-bg-active': '#3A1A1A' },
+  };
+
+  test('초안 2 선언(bg-muted 제외)이 모두 같은 값으로 들어 있다 (D2 교체분 제외)', () => {
     const draft = draftBlocks();
     assert.ok(draft.light.size > 90 && draft.dark.size > 80, `초안을 읽지 못했습니다: ${draft.light.size}/${draft.dark.size}`);
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
       for (const [name, value] of draft[theme]) {
         if (name === '--axis-bg-muted') continue; // D-f
-        assert.equal(mine.get(name), value, `${theme} ${name}`);
+        const expected = D2_OVERRIDES[theme][name] ?? value;
+        assert.equal(mine.get(name), expected, `${theme} ${name}`);
+      }
+    }
+  });
+
+  test('D2: bad-line 값은 warning 아이콘에만 쓰이고, destructive 버튼 글자는 모든 바탕 상태에서 4.5:1 이상', () => {
+    const lum = hex => {
+      const c = [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16) / 255)
+        .map(v => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+      return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+    };
+    const ratio = (a, b) => {
+      const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p);
+      return (x + 0.05) / (y + 0.05);
+    };
+    const BAD_LINE = { light: '#F5C6C6', dark: '#7A3330' };
+    for (const theme of ['light', 'dark']) {
+      const mine = brandDecls(theme);
+      const users = [...mine].filter(([, v]) => String(v).toUpperCase() === BAD_LINE[theme]).map(([k]) => k);
+      assert.deepEqual(users, ['--axis-icon-warning'], `${theme} bad-line 사용처`);
+      const fg = mine.get('--axis-button-destructive-text-default');
+      for (const state of ['default', 'hover', 'active']) {
+        const bg = mine.get(`--axis-button-destructive-bg-${state}`);
+        const r = ratio(fg, bg);
+        assert.ok(r >= 4.5, `${theme} ${state} ${fg}/${bg} = ${r.toFixed(2)}:1`);
       }
     }
   });

@@ -90,8 +90,8 @@
   "button-destructive": {
     "bg": {
       "default": { "value": "#FDE8E8" },
-      "hover": { "value": "#F5C6C6" },
-      "active": { "value": "#F5C6C6" }
+      "hover": { "value": "#FDE8E8" },
+      "active": { "value": "#FDE8E8" }
     },
     "text": {
       "default": { "value": "#A8281F" }

@@ -76,8 +76,8 @@
   "button-destructive": {
     "bg": {
       "default": { "value": "#3A1A1A" },
-      "hover": { "value": "#7A3330" },
-      "active": { "value": "#7A3330" }
+      "hover": { "value": "#3A1A1A" },
+      "active": { "value": "#3A1A1A" }
     },
     "text": {
       "default": { "value": "#F49890" }
