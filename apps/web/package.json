@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test a11y",
+    "test:e2e:nontext": "playwright test brand-nontext-contrast",
     "test:e2e:tokens": "playwright test -c playwright.tokens.config.ts"
   },
   "dependencies": {
