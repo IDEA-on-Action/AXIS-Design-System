@@ -69,7 +69,7 @@
       "default": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{border.default}" } } }
     },
     "shadow": {
-      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)", "$extensions": { "axis": { "themeIndependent": true } } }
+      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)", "$extensions": { "axis": { "themeIndependent": true, "deprecated": "card-shadow" } } }
     }
   },
   "badge": {

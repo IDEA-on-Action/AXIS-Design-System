@@ -84,6 +84,18 @@ describe('collectBasePaths', () => {
     assert.equal(base.refs.get('card.shadow.default'), '0 1px 3px 0 rgb(0 0 0 / 0.1)');
   });
 
+  test('card.shadow.default 는 폐기 예정 마커를 가지고 대체 대상은 card-shadow (U23)', () => {
+    const comp = JSON.parse(readFileSync(join(pkgDir, 'src', 'component', 'components.json'), 'utf-8'));
+    // 폐기 예정 표기는 메타만 더한다: 값과 테마 마커는 1.2.1 그대로(U1)
+    assert.deepEqual(comp.card.shadow.default, {
+      value: '0 1px 3px 0 rgb(0 0 0 / 0.1)',
+      $extensions: { axis: { themeIndependent: true, deprecated: 'card-shadow' } },
+    });
+    // 대체 대상은 Card 가 실제로 참조하는 공개 조정점이고, 그 자신은 폐기 예정이 아니다
+    assert.ok(base.refs.has('card-shadow'));
+    assert.equal(comp['card-shadow'].$extensions?.axis?.deprecated, undefined);
+  });
+
   test('브랜드가 shadow.sm · shadow.lg · card-shadow 를 라이트에만 덮어써도 위반 0건 (V3 · V4 · V7)', () => {
     const brand = sample(b => {
       b.light.shadow = {

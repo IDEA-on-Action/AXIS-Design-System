@@ -9,6 +9,9 @@
  * 다크에서도 같은 값을 쓰는 leaf(채움 버튼 · transparent · 그림자 등)는 같은 값을 두 번 적지 않고
  * `$extensions.axis.themeIndependent: true` 마커만 붙입니다.
  *
+ * 폐기 예정 leaf(WI-0025 U23)는 `$extensions.axis.deprecated`에 대체 토큰 경로(점 결합, 예: "card-shadow")를 둡니다.
+ * 이 마커는 테마 값에 영향이 없고 CSS 출력도 바꾸지 않습니다(커스텀 포맷은 이름과 값만 냅니다).
+ *
  * 다크 빌드는 preprocessor `axis/theme-dark`로 참조 해석 전에 `value`를 다크 값으로 바꿉니다.
  * 확장이 없는 leaf는 건드리지 않으므로, 이 preprocessor를 쓰지 않는 빌드(라이트 · 브랜드)는 종전과 같습니다.
  *
@@ -24,8 +27,8 @@
 
 export const THEME_DARK_PREPROCESSOR = 'axis/theme-dark'
 
-/** `$extensions.axis` 안에서 허용하는 키 */
-const THEME_KEYS = new Set(['dark', 'themeIndependent'])
+/** `$extensions.axis` 안에서 허용하는 키 (테마 키 2개 + 폐기 예정 메타 1개, WI-0025 U23) */
+const THEME_KEYS = new Set(['dark', 'themeIndependent', 'deprecated'])
 
 /** 색이 아닌 값으로 풀리는 참조의 최상위 범주 (그 밖의 참조는 색으로 봅니다) */
 const NON_COLOR_REF_ROOTS = new Set(['space', 'radius', 'font', 'shadow', 'size', 'duration', 'opacity', 'z', 'zIndex'])
@@ -258,6 +261,7 @@ export function findDarkValueExpectations({ base, light, dark, components }) {
  *   - `axis.dark`와 `axis.themeIndependent`를 함께 선언
  *   - `axis.dark`가 문자열이 아니거나 라이트 `value`와 같은 문자열 (같은 값이면 마커를 씁니다)
  *   - `axis.themeIndependent`가 true가 아님, `axis`에 알 수 없는 키 (오타 방지)
+ *   - `axis.deprecated`가 빈 문자열 · 문자열이 아님, 대체 경로가 같은 트리의 leaf가 아니거나 그 자신 · 폐기 예정 leaf
  *
  * 돌려주는 값: { leaves, colorLeaves, violations: [{ path, reason }] }
  *
@@ -269,11 +273,16 @@ export function findThemeDeclarationViolations(tree) {
   const violations = []
   let leaves = 0
   let colorLeaves = 0
+  /** @type {Set<string>} 같은 트리의 leaf 경로 (폐기 예정 대체 경로 판정용) */
+  const leafPaths = new Set()
+  /** @type {Map<string, string>} 폐기 예정 leaf 경로 -> 대체 경로 */
+  const deprecated = new Map()
   ;(/** @param {unknown} node @param {string[]} path */ function walk(node, path) {
     if (!isPlainObject(node)) return
     if (isLeaf(node)) {
       leaves++
       const name = path.join('.')
+      leafPaths.add(name)
       const isColor = !isNonColorValue(node.value)
       if (isColor) colorLeaves++
       const axis = node.$extensions?.axis
@@ -300,11 +309,27 @@ export function findThemeDeclarationViolations(tree) {
       if (isColor && !hasDark && !hasIndependent) {
         violations.push({ path: name, reason: `색 leaf(${JSON.stringify(node.value)})에 axis.dark도 axis.themeIndependent도 없습니다` })
       }
+      if (axis !== undefined && Object.prototype.hasOwnProperty.call(axis, 'deprecated')) {
+        if (typeof axis.deprecated !== 'string' || axis.deprecated.trim() === '') {
+          violations.push({ path: name, reason: 'axis.deprecated는 대체 토큰 경로(비어 있지 않은 문자열)여야 합니다' })
+        } else {
+          deprecated.set(name, axis.deprecated)
+        }
+      }
       return
     }
     for (const [key, child] of Object.entries(node)) {
       if (!key.startsWith('$')) walk(child, [...path, key])
     }
   })(tree, [])
+  for (const [name, target] of deprecated) {
+    if (target === name) {
+      violations.push({ path: name, reason: 'axis.deprecated가 자기 자신을 가리킵니다' })
+    } else if (!leafPaths.has(target)) {
+      violations.push({ path: name, reason: `axis.deprecated 대체 경로가 같은 트리의 leaf가 아닙니다: ${target}` })
+    } else if (deprecated.has(target)) {
+      violations.push({ path: name, reason: `axis.deprecated 대체 경로도 폐기 예정입니다: ${target}` })
+    }
+  }
   return { leaves, colorLeaves, violations }
 }

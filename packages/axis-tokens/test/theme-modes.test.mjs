@@ -82,6 +82,32 @@ test('선언 검사: 누락 · 형식 오류를 잡습니다', () => {
   assert.equal(findThemeDeclarationViolations({ w: { value: '4px' }, s: { value: '{shadow.sm}' } }).violations.length, 0)
 })
 
+test('선언 검사: axis.deprecated 는 허용 키이고 대체 경로를 같은 트리에서 확인합니다 (WI-0025 U23)', () => {
+  const fixed = { value: '0 1px 2px 0 rgb(0 0 0 / 0.05)', $extensions: { axis: { themeIndependent: true } } }
+  // 양성: 대체 경로가 같은 트리의 leaf 이면 위반 0
+  const ok = {
+    old: { value: '0 1px 3px 0 rgb(0 0 0 / 0.1)', $extensions: { axis: { themeIndependent: true, deprecated: 'new' } } },
+    new: fixed,
+  }
+  assert.deepEqual(findThemeDeclarationViolations(ok).violations, [])
+  // 비색 leaf 는 테마 키 없이 deprecated 만 있어도 됩니다
+  assert.deepEqual(findThemeDeclarationViolations({ a: { value: '4px', $extensions: { axis: { deprecated: 'b' } } }, b: { value: '8px' } }).violations, [])
+  // 음성: 오타 · 형식 · 대상 오류
+  /** @type {Array<[unknown, RegExp]>} */
+  const cases = [
+    [{ old: { value: '4px', $extensions: { axis: { deprecatd: 'new' } } }, new: fixed }, /알 수 없는 키: deprecatd/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: '' } } } }, /비어 있지 않은 문자열/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: true } } } }, /비어 있지 않은 문자열/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: 'nope' } } } }, /leaf가 아닙니다: nope/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: 'old' } } } }, /자기 자신/],
+    [{ a: { value: '4px', $extensions: { axis: { deprecated: 'b' } } }, b: { value: '4px', $extensions: { axis: { deprecated: 'c' } } }, c: { value: '1px' } }, /대체 경로도 폐기 예정입니다: b/],
+  ]
+  for (const [tree, reason] of cases) {
+    const { violations } = findThemeDeclarationViolations(tree)
+    assert.ok(violations.some((v) => reason.test(v.reason)), `${JSON.stringify(tree)} -> ${JSON.stringify(violations)}`)
+  }
+})
+
 test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에서 센 값, 색 leaf 43)', () => {
   const r = findThemeDeclarationViolations(components())
   assert.deepEqual(r.violations, [])
