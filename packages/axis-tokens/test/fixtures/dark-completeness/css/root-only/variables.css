@@ -1,0 +1,9 @@
+/* 다크 완전성 fixture: 음성 (--axis-fixture-text 의 .dark 재정의 누락) */
+:root {
+  --axis-fixture-bg: #FFFFFF;
+  --axis-fixture-text: #111827;
+}
+
+.dark {
+  --axis-fixture-bg: #030712;
+}

@@ -1,0 +1,10 @@
+/* 다크 완전성 fixture: 음성 (--axis-fixture-bg 의 .dark 값이 :root 와 같음, 다크 빌드 preprocessor 배선 누락 재현) */
+:root {
+  --axis-fixture-bg: #FFFFFF;
+  --axis-fixture-text: #111827;
+}
+
+.dark {
+  --axis-fixture-bg: #FFFFFF;
+  --axis-fixture-text: #F3F4F6;
+}
