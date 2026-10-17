@@ -7,7 +7,8 @@
  * - shadcn-compat.css 는 바이트 일치를 본다.
  * - 실제 대조는 dist/css 를 읽는다. dist 가 없으면 건너뛰지 않고 실패한다(미측정 0 금지).
  *   CI 는 type-check(^build) 다음에 test 가 돌아 dist 가 있다.
- * - dist stale 가드: 로컬에서는 src · scripts · build-tokens.mjs 중 가장 늦은 mtime 보다 dist 가 오래되면
+ * - dist stale 가드: 로컬에서는 src · scripts · build-tokens.mjs 중 가장 늦은 mtime 보다 dist 산출물
+ *   (variables.css · shadcn-compat.css 중 가장 오래된 것)이 오래되면
  *   '재빌드 필요'로 실패한다. CI(env CI) 에서는 checkout 이 mtime 을 바꿔 거짓 실패를 낼 수 있어 생략한다.
  *   AXIS_BASELINE_CSS_DIR 로 비교 대상을 바꿨을 때도 생략한다(음성 대조용 사본은 src 와 무관).
  *
@@ -26,6 +27,8 @@ const pkgDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const fixtureDir = join(pkgDir, 'test', 'fixtures', 'baseline-1.2.1');
 const SOURCE = JSON.parse(readFileSync(join(fixtureDir, 'SOURCE.json'), 'utf8'));
 const BLOCKS = [':root', '.dark'];
+/** 아래 '실제 기본 출력 대조'가 읽는 dist/css 산출물. stale 가드도 이 목록 전부를 본다. */
+const DIST_OUTPUTS = ['variables.css', 'shadcn-compat.css'];
 
 const overrideDir = process.env.AXIS_BASELINE_CSS_DIR;
 const cssDir = overrideDir ? resolve(overrideDir) : join(pkgDir, 'dist', 'css');
@@ -249,8 +252,15 @@ describe('실제 기본 출력 대조 (dist/css)', () => {
     if (process.env.CI) { t.diagnostic('CI 환경: mtime 가드 생략(checkout 이 mtime 을 바꿔 거짓 실패 가능)'); return; }
     if (overrideDir) { t.diagnostic('AXIS_BASELINE_CSS_DIR 지정: mtime 가드 생략'); return; }
     const newest = newestMtime([join(pkgDir, 'src'), join(pkgDir, 'scripts'), join(pkgDir, 'build-tokens.mjs')]);
-    const distMtime = statSync(varsPath).mtimeMs;
-    assert.ok(distMtime >= newest.t, `재빌드 필요: dist 가 ${newest.p} 보다 오래됐다`);
+    // 대조하는 산출물 전부(variables.css · shadcn-compat.css) 중 가장 오래된 것을 기준으로 본다
+    const outputs = DIST_OUTPUTS.map(f => {
+      const p = join(cssDir, f);
+      assert.ok(existsSync(p), `${p} 없음: pnpm --filter @axis-ds/tokens build 를 먼저 실행한다`);
+      return { t: statSync(p).mtimeMs, p };
+    });
+    const oldest = outputs.reduce((a, b) => (b.t < a.t ? b : a));
+    t.diagnostic(`dist 산출물 ${outputs.length}개 중 가장 오래된 것: ${oldest.p}`);
+    assert.ok(oldest.t >= newest.t, `재빌드 필요: dist ${oldest.p} 가 ${newest.p} 보다 오래됐다`);
   });
 
   test('variables.css: 1.2.1 변수 불변 + 신규 변수는 기본값만', t => {
