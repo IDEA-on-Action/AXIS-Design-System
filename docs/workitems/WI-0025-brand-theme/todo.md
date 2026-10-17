@@ -212,6 +212,7 @@
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
 - [ ] FR-9 그림자 primitive `--axis-shadow-sm` · `--axis-shadow-lg` 신설 (기본값 = Tailwind `shadow-sm` · `shadow-lg`) (FR-9 · AC3)
 - [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3). 2026-10-16 결정: Card는 component 토큰 `--axis-card-shadow`(기본값 `var(--axis-shadow-sm)`)를 참조하고 ontology는 `none`, Dialog는 `--axis-shadow-lg` 직접 참조
+- [ ] Card 그림자 변수 2개 역할 정리: 새 `--axis-card-shadow`(0 1px 2px, `shadow.sm`)와 기존 `--axis-card-shadow-default`(0 1px 3px)가 공존합니다. 대체 · 별칭 · 폐기 예정 중 하나로 정하고 문서화합니다 (2026-10-17 사용자 결정: M3 2차 구현 범위)
 - [ ] FR-8 `src/brands/ontology/light.json` · `dark.json` 작성 (초안 2 `axis-theme-ontology.css` 이식(v0.24 · 디자인 시스템 v1 기준), `bg-muted` 줄 제외(D-f), 신설 22개 status · diff · agent 값은 D-6 접기 매핑(2026-10-16 결정)) (FR-8 · AC6)
 - [x] 초안 2 CSS 정정: 글꼴 변수 이름을 `--axis-font-family-sans|mono`로, `--axis-plan-card-accent-width: 0` 줄 추가 (PRD FR-9 전제, 초안 2에는 정정 전 이름이 들어 있고 이 줄이 없음, plan 3.3 초안 2 대조) (FR-8 · FR-9) → ✅ 2026-10-16: 글꼴 이름 · PlanCard 0 줄 · 주석 2곳(rounded-md 10, line-2 3.12:1) 정정, shadcn HSL 30곳을 소수 퍼센트로 바꿔 원본 hex와 정확히 일치(AC6 결정)
 - [ ] FR-8 `shadcn` 섹션 이식 (`--radius: 12px` 포함) (FR-8 · AC6)
