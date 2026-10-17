@@ -234,6 +234,17 @@ describe('ontology 짝 대비 (plan 5.3 검산)', () => {
     assert.ok(CONTRAST_PAIRS.length >= 20);
   });
 
+  test('부모 바탕 근거(parent)가 있는 행은 형식이 맞고 부모 바탕을 적었다 (리뷰 f2, 소스 대조는 check-contrast-pairs)', () => {
+    const rows = CONTRAST_PAIRS.filter(p => p.parent);
+    assert.ok(rows.length >= 5, `parent 행 ${rows.length}개`);
+    for (const p of rows) {
+      for (const loc of [p.parent.at, p.parent.fgAt]) assert.match(loc, /^[\w-]+\/index\.tsx:\d+$/, `${p.fg} ${loc}`);
+      const parentBg = typeof p.bg === 'string' ? p.bg : p.bg.over;
+      assert.match(parentBg ?? '', /^--axis-surface-/, `${p.fg} 부모 바탕 ${parentBg}`);
+      assert.ok(p.parent.variant === undefined || /^[a-z-]+:$/.test(p.parent.variant), `${p.fg} variant ${p.parent.variant}`);
+    }
+  });
+
   for (const pair of CONTRAST_PAIRS) {
     for (const theme of ['light', 'dark']) {
       const bgLabel = typeof pair.bg === 'string' ? pair.bg : `${pair.bg.mix} ${pair.bg.pct}% over ${pair.bg.over ?? '--axis-surface-default'}`;

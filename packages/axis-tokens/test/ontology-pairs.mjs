@@ -7,6 +7,11 @@
  *   bg 가 { mix, pct } 이면 `color-mix(in srgb, var(mix) pct%, transparent)` 를 surface-default 위에 깐 색이다.
  *   { mix, pct, over } 이면 surface-default 대신 over(부모 바탕 변수) 위에 깐다. 부모 바탕은 소스 한 문자열에서
  *   뽑을 수 없으므로 check-contrast-pairs 의 짝 키에는 over 가 들어가지 않는다(over 는 손으로 확인해 적는다).
+ * - 글자 · 아이콘이 부모 요소의 바탕 위에 놓이면 bg 에 그 부모 바탕 변수를 직접 적고(불투명 바탕), 옅은 바탕이면
+ *   over 에 적는다. 이때 parent 에 근거 위치를 남긴다: { at: '부모 바탕 클래스가 있는 파일:행', fgAt: '글자 클래스가
+ *   있는 파일:행', variant?: 'hover:' }. 값은 손으로 적고, check-contrast-pairs 가 그 두 행에 실제로
+ *   `<variant>bg-[var(부모 바탕)]` 과 `var(fg)` 가 있는지 단언한다(행이 밀리거나 부모 바탕이 바뀌면 실패).
+ *   부모 바탕 = 문자열 bg 이면 bg, 옅은 바탕이면 bg.over 다. 경로는 packages/axis-agentic-ui/src 기준.
  *
  * 이 파일은 test/ 아래라 npm 배포본(files: dist)에 들어가지 않는다.
  */
@@ -54,28 +59,47 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-tool', min: TEXT, where: 'agent-avatar:35 · 80' },
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-assistant', min: TEXT, where: 'agent-avatar:34 · 80' },
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-system', min: TEXT, where: 'agent-avatar:36 · 80' },
+  // PlanCard 상태 배지 (불투명 배지 바탕이라 부모 바탕과 무관). ontology 라이트 warning 은 4.51:1 로 여유 0.01 (리뷰 f2)
   { fg: '--axis-status-neutral-strong', bg: '--axis-status-neutral-bg', min: TEXT, sameString: true, where: 'plan-card:35 배지' },
+  { fg: '--axis-badge-warning-text', bg: '--axis-badge-warning-bg', min: TEXT, sameString: true, where: 'plan-card:39 배지' },
+  { fg: '--axis-badge-success-text', bg: '--axis-badge-success-bg', min: TEXT, sameString: true, where: 'plan-card:43 · 55 배지' },
+  { fg: '--axis-badge-error-text', bg: '--axis-badge-error-bg', min: TEXT, sameString: true, where: 'plan-card:47 배지' },
+  { fg: '--axis-badge-info-text', bg: '--axis-badge-info-bg', min: TEXT, sameString: true, where: 'plan-card:51 배지' },
   // 상태 색을 글자로 쓰는 곳 (surface-default 위)
-  { fg: '--axis-status-success', bg: '--axis-surface-default', min: TEXT, where: 'code-block:77 · tool-call-card:49 · plan-card:72' },
-  { fg: '--axis-status-error', bg: '--axis-surface-default', min: TEXT, where: 'approval-card:43 · recovery-banner:42 · token-usage-indicator:40' },
+  { fg: '--axis-status-success', bg: '--axis-surface-default', min: TEXT, where: 'tool-call-card:49 · plan-card:72' },
+  { fg: '--axis-status-error', bg: '--axis-surface-default', min: TEXT, where: 'approval-card:43 · token-usage-indicator:40 · tool-call-card:57' },
   { fg: '--axis-status-warning', bg: '--axis-surface-default', min: TEXT, where: 'token-usage-indicator:41 · approval-card:38' },
   { fg: '--axis-status-running', bg: '--axis-surface-default', min: TEXT, where: 'plan-card:66 · tool-call-card:40' },
   { fg: '--axis-status-info', bg: '--axis-surface-default', min: TEXT, where: 'approval-card:33' },
   { fg: '--axis-status-neutral', bg: '--axis-surface-default', min: TEXT, where: 'plan-card:61 · tool-call-card:32' },
-  { fg: '--axis-diff-added', bg: '--axis-surface-default', min: TEXT, where: 'diff-viewer:123' },
-  { fg: '--axis-diff-removed', bg: '--axis-surface-default', min: TEXT, where: 'diff-viewer:126' },
+  // 부모 바탕이 surface-default 가 아닌 곳 (리뷰 f2: 이전에는 surface-default 로 가정해 여유를 크게 셌다)
+  // DiffViewer 헤더 +N / -N: 헤더 div 가 surface-secondary
+  { fg: '--axis-diff-added', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:123 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:123' } },
+  { fg: '--axis-diff-removed', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:126 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:126' } },
+  // RecoveryBanner 아이콘: 배너 루트가 surface-error. 아이콘이지만 이전 행과 같이 글자 기준(4.5)으로 둔다
+  { fg: '--axis-status-error', bg: '--axis-surface-error', min: TEXT, where: 'recovery-banner:42 (루트 :34)', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:42' } },
+  // CodeBlock 복사 완료 아이콘: 헤더(surface-secondary) 안 버튼, hover 때는 버튼이 surface-tertiary
+  { fg: '--axis-status-success', bg: '--axis-surface-secondary', min: TEXT, where: 'code-block:77 (헤더 :57)', parent: { at: 'code-block/index.tsx:57', fgAt: 'code-block/index.tsx:77' } },
+  { fg: '--axis-status-success', bg: '--axis-surface-tertiary', min: TEXT, where: 'code-block:77 hover (버튼 :73)', parent: { at: 'code-block/index.tsx:73', fgAt: 'code-block/index.tsx:77', variant: 'hover:' } },
+  // ToolCallCard 상태 아이콘: 평소는 카드 루트(surface-default, :90), hover 때는 헤더 버튼이 surface-secondary(:100)
+  { fg: '--axis-status-neutral', bg: '--axis-surface-secondary', min: TEXT, where: 'tool-call-card:32 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:32', variant: 'hover:' } },
+  { fg: '--axis-status-running', bg: '--axis-surface-secondary', min: TEXT, where: 'tool-call-card:40 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:40', variant: 'hover:' } },
+  { fg: '--axis-status-success', bg: '--axis-surface-secondary', min: TEXT, where: 'tool-call-card:49 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:49', variant: 'hover:' } },
+  { fg: '--axis-status-error', bg: '--axis-surface-secondary', min: TEXT, where: 'tool-call-card:57 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:57', variant: 'hover:' } },
   // 옅은 바탕(color-mix 10%) 위 글자
   { fg: '--axis-diff-added-text', bg: { mix: '--axis-diff-added', pct: 10 }, min: TEXT, where: 'diff-viewer:71 · 77' },
   { fg: '--axis-diff-removed-text', bg: { mix: '--axis-diff-removed', pct: 10 }, min: TEXT, where: 'diff-viewer:72 · 78' },
   { fg: '--axis-status-success', bg: { mix: '--axis-status-success', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:62' },
   { fg: '--axis-status-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:78' },
   // PlanCard 거절 버튼 hover: 하단 영역(surface-secondary) 위 옅은 바탕, 글자는 전용 component 토큰(기본값 status-error)
-  { fg: '--axis-plan-card-reject-hover-text', bg: { mix: '--axis-status-error', pct: 10, over: '--axis-surface-secondary' }, min: TEXT, sameString: true, where: 'plan-card:195 hover' },
+  { fg: '--axis-plan-card-reject-hover-text', bg: { mix: '--axis-status-error', pct: 10, over: '--axis-surface-secondary' }, min: TEXT, sameString: true, where: 'plan-card:195 hover (하단 영역 :175)', parent: { at: 'plan-card/index.tsx:175', fgAt: 'plan-card/index.tsx:195' } },
   // 비활성 버튼 글자 (WCAG 예외지만 D2 에 따라 sub-aa 로 통과시킨다)
   { fg: '--axis-button-text-disabled', bg: '--axis-button-bg-disabled', min: TEXT, where: '소비처 없음' },
   // 비텍스트 (테두리 · 아이콘)
   { fg: '--axis-border-warning', bg: '--axis-surface-warning', min: NON_TEXT, where: 'alert:19' },
   { fg: '--axis-border-info', bg: '--axis-surface-info', min: NON_TEXT, where: 'alert:15' },
-  { fg: '--axis-status-error-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'recovery-banner:34 · attachment-card:86' },
+  { fg: '--axis-status-error-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'attachment-card:86' },
+  // RecoveryBanner 테두리: 같은 요소의 바탕 surface-error 와 맞닿는다(바깥 쪽 바탕은 소비처마다 달라 표에 두지 않는다)
+  { fg: '--axis-status-error-border', bg: '--axis-surface-error', min: NON_TEXT, where: 'recovery-banner:34', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:34' } },
   { fg: '--axis-icon-info', bg: '--axis-surface-default', min: NON_TEXT, where: '소비처 없음' },
 ];
