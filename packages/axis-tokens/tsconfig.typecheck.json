@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "noEmit": true,
+    "allowJs": true,
+    "checkJs": false,
+    "types": ["node"]
+  },
+  "include": [
+    "src/**/*",
+    "build-tokens.mjs",
+    "scripts/*.mjs",
+    "test/*.mjs"
+  ],
+  "exclude": ["node_modules", "dist", "test/fixtures"]
+}

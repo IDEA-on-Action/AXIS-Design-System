@@ -43,7 +43,7 @@ export function SurfaceRenderer({
           </pre>
         );
 
-      case "table":
+      case "table": {
         const tableData = surface.content as { headers: string[]; rows: string[][] };
         return (
           <div className="overflow-x-auto">
@@ -84,6 +84,7 @@ export function SurfaceRenderer({
             </table>
           </div>
         );
+      }
 
       case "chart":
         return (

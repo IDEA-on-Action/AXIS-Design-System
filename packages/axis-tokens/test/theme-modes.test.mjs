@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * 테마 모드 공용 모듈 테스트 (WI-0033)
  *
@@ -28,7 +29,7 @@ import {
 } from '../scripts/theme-modes.mjs'
 
 const PKG = join(dirname(fileURLToPath(import.meta.url)), '..')
-const readJson = (rel) => JSON.parse(readFileSync(join(PKG, rel), 'utf-8'))
+const readJson = (/** @type {string} */ rel) => JSON.parse(readFileSync(join(PKG, rel), 'utf-8'))
 const components = () => readJson('src/component/components.json')
 
 test('색 판정: 이름 색 · 함수 색 · 색 참조는 색, 길이 · 그림자 · 비색 참조만 비색', () => {
@@ -63,6 +64,7 @@ test('themePreprocessorsFor: 다크에만 preprocessor를 붙입니다', () => {
 })
 
 test('선언 검사: 누락 · 형식 오류를 잡습니다', () => {
+  /** @type {Array<[unknown, RegExp]>} */
   const cases = [
     [{ x: { value: 'transparent' } }, /axis.dark도 axis.themeIndependent도 없습니다/],
     [{ x: { value: 'rgba(0, 0, 0, 0.5)' } }, /axis.dark도 axis.themeIndependent도 없습니다/],
@@ -115,7 +117,11 @@ test('findDarkValueExpectations: axis.dark 가 있고 풀린 값이 다른 leaf�
   assert.equal(comp.k.changed.value, '{color.white}', '입력 트리를 바꾸지 않습니다')
 })
 
-/** Style Dictionary 설정으로 CSS 플랫폼 토큰을 { 'card.bg.default': 값 } 형태로 돌려줍니다. */
+/**
+ * Style Dictionary 설정으로 CSS 플랫폼 토큰을 { 'card.bg.default': 값 } 형태로 돌려줍니다.
+ *
+ * @param {{ platforms: Record<string, object> } & Record<string, any>} config
+ */
 async function resolveTokens(config) {
   registerThemePreprocessors(StyleDictionary)
   // 파일을 쓰지 않으므로 files(커스텀 포맷은 build-tokens.mjs 에서만 등록)는 빼고 해석만 합니다
@@ -149,8 +155,9 @@ function expectations() {
 
 /** components.json leaf 경로 목록 */
 function componentPaths() {
+  /** @type {string[]} */
   const out = []
-  ;(function walk(node, path) {
+  ;(/** @param {any} node @param {string[]} path */ function walk(node, path) {
     if (node && typeof node === 'object' && 'value' in node) return out.push(path.join('.'))
     for (const [k, c] of Object.entries(node)) if (!k.startsWith('$')) walk(c, [...path, k])
   })(components(), [])
