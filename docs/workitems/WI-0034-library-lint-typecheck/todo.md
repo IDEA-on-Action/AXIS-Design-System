@@ -18,7 +18,7 @@
 > 2026-10-17 사용자 결정. prd 1.5 표와 같습니다.
 
 - [x] 범위: 1안(최소) vs 2안(opt-in) vs 3안(strict 전수) → ✅ 2026-10-17: 2안, 미적용 파일 수 가드 포함 (D1)
-- [x] `build-tokens.js`: ignore vs 삭제 → ✅ 2026-10-17: 삭제, 단 참조 0건 확인 후 (D2) → 문서 언급 3건이 있어 삭제하지 않음(prd Q1)
+- [x] `build-tokens.js`: ignore vs 삭제 → ✅ 2026-10-17: 삭제 (D2). 문서 언급 3건은 이력으로 보고 유지(prd Q1)
 - [x] theme · cli type-check 포함 여부 → ✅ 2026-10-17: 제외, 후속 항목 (D3)
 - [x] M3 와의 순서 → ✅ 2026-10-17: WI-0034 먼저, opt-in 첫 묶음은 M3 비중첩 파일만 (D4)
 - [ ] opt-in 최종 목표: strict 전수(201건) vs noImplicitAny off(20건) → 미정
@@ -31,19 +31,19 @@
 - [x] 루트 devDependencies 6개, lockfile 기존 정확한 버전 (FR-1)
 - [x] tokens devDependencies `@types/node` 22.19.7 (FR-1)
 - [x] `pnpm install --offline` rc 0 (새 다운로드 0), lockfile +30/-8 (FR-1)
-- [x] 루트 `eslint.config.mjs`, ignores 에 dist · node_modules · apps/web · build-tokens.js (FR-2)
+- [x] 루트 `eslint.config.mjs`, ignores 에 dist · node_modules · apps/web, `no-empty-object-type` 에 `allowInterfaces: 'with-single-extends'` (FR-2 · D5)
 
 ### M1-2 스크립트
 - [x] tokens · ui-react · agentic-ui `"lint": "eslint ."` (FR-3)
 - [x] tokens `"type-check": "tsc --noEmit -p tsconfig.typecheck.json && node scripts/check-ts-optin.mjs"` (FR-5)
 
 ### M1-3 위반 정리 (13건)
-- [x] ui-react 빈 interface 3개 → type alias (card · separator · skeleton) (FR-4 · D5)
+- [x] ui-react 빈 interface 3개(card · separator · skeleton)는 interface 유지, 규칙 옵션으로 허용 (FR-4 · D5). type alias 로 바꿨다가 선언 병합 · 공개 시그니처 영향으로 되돌림(2026-10-17 사용자 결정)
 - [x] agentic-ui no-useless-escape 6건 (tool-call-card.test.tsx 60 · 61행) (FR-4)
 - [x] agentic-ui no-case-declarations 1건 (surface-renderer `case "table"` 블록) (FR-4)
 - [x] tokens `build-tokens.mjs` 미사용 `dirname` 1건 · 빈 catch 2건 주석 (FR-4)
-- [x] 레지스트리 JSON 9개 재생성 커밋 (card · separator · agentic-surface-renderer, FR-4a)
-- [ ] `packages/axis-tokens/build-tokens.js` 삭제 → 보류(prd Q1, 사용자 확인 필요)
+- [x] 레지스트리 JSON 재생성 커밋. interface 를 되돌린 뒤 card · separator 사본 6개는 main 과 같아졌고, agentic-surface-renderer 사본 3개만 남음 (FR-4a)
+- [x] `packages/axis-tokens/build-tokens.js` 삭제, eslint ignores · tsconfig.typecheck exclude 에서도 제거 (D2)
 
 ### M1-4 tokens type-check · opt-in
 - [x] `tsconfig.typecheck.json` (allowJs, checkJs false, 대상 10파일 `--listFilesOnly` 확인) (FR-5)
@@ -71,5 +71,5 @@
 - [ ] theme · cli · mcp lint 는 미측정. 추가하려면 먼저 위반 수를 잽니다
 - [ ] M3 머지 뒤 opt-in 확대: `build-tokens.mjs`(16건) · `scripts/brands.mjs` · `scripts/build-brands.mjs`(9건) · `test/brands.test.mjs` · `test/build-brands.test.mjs` (D4)
 - [ ] opt-in 최종 목표 결정: strict 전수(201건) vs noImplicitAny off(20건) → 미정. 정해지면 가드를 「미적용 0 요구」로 바꿀지도 함께 정합니다
-- [ ] 빈 interface → type alias 의 선언 병합 영향(TS2300)과 `Separator` 공개 시그니처 펼침(이름 표시 소실)을 릴리스 노트에 적을지, interface 유지(`allowInterfaces: 'with-single-extends'`)로 돌릴지 결정 (prd Q2)
+- [x] 빈 interface 처리 결정 → ✅ 2026-10-17 사용자 결정: interface 로 되돌림, 공개 API 가 1.2.1 과 같아 릴리스 노트 기재 불필요 (prd Q2)
 - [ ] `eslint@9.39.2` deprecated 표시 대응(업그레이드 여부) (prd Q3)

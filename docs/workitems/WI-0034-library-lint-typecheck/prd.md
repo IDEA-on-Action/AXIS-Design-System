@@ -36,10 +36,10 @@
 | # | 결정 | 내용 |
 |---|---|---|
 | D1 | 범위 | 2안. 세 패키지에 lint 를 넣고 위반을 전부 정리합니다. tokens type-check 는 별도 `tsconfig.typecheck.json` 으로 mjs 를 opt-in 합니다(`// @ts-check` 를 붙인 파일만 검사, checkJs 기본 off). include 대상 중 `@ts-check` 가 없는 파일 수를 출력하는 가드를 함께 둡니다(정보 출력, CI 를 막지 않음) |
-| D2 | `build-tokens.js` | 삭제합니다. 단, 삭제 전에 저장소 전체에서 참조 0건을 grep 으로 확인하고, 참조가 있으면 삭제하지 않고 보고합니다 |
+| D2 | `build-tokens.js` | 삭제합니다. 코드 · 설정 · CI 참조는 0건이고, 문서 언급 3건(`docs/axis-ds-implementation-plan.md` 178행 예시 주석, WI-0025 plan 351행 · todo 172행)은 당시 상황을 적은 이력이라 그대로 둡니다(2026-10-17 사용자 결정) |
 | D3 | theme · cli type-check | 이번 범위가 아닙니다. todo 후속 항목으로만 남깁니다 |
 | D4 | M3 와의 순서 | WI-0034 를 M3 보다 먼저 머지합니다. 그래서 opt-in 첫 묶음은 M3 가 고치지 않는 파일만 고릅니다. `build-brands.mjs` · `brands.mjs` 와 그 테스트는 M3 머지 뒤로 미룹니다 |
-| D5 | 빈 interface | type alias 로 바꿉니다. 공개 `.d.ts` 의 소비 측 호환은 pack-smoke · type-check 로 확인합니다 |
+| D5 | 빈 interface | `interface X extends Y {}` 형태를 유지하고, 규칙 옵션을 `allowInterfaces: 'with-single-extends'` 로 둡니다. 한때 type alias 로 바꿨으나 소비자의 선언 병합(TS2300)과 `Separator` 공개 시그니처의 이름 표시가 깨져 되돌렸습니다(2026-10-17 사용자 결정). 공개 API 는 1.2.1 과 같습니다 |
 
 ---
 
@@ -58,8 +58,8 @@
 - FR-1: 루트 devDependencies 에 lockfile 에 이미 있는 정확한 버전만 넣습니다(caret 없음): `eslint@9.39.2` · `@eslint/js@9.39.2` · `@typescript-eslint/eslint-plugin@8.53.1` · `@typescript-eslint/parser@8.53.1` · `eslint-plugin-react-hooks@5.2.0` · `globals@14.0.0`. tokens devDependencies 에 `@types/node@22.19.7` 을 명시합니다.
 - FR-2: 루트 `eslint.config.mjs` 를 둡니다. `ignores` 에 `**/dist/**` · `**/node_modules/**` · `apps/web/**` 를 넣습니다. ESLint 9 flat config 는 `.gitignore` 를 따르지 않으므로 빌드 뒤에도 dist 가 검사되지 않아야 합니다.
 - FR-3: tokens · ui-react · agentic-ui 에 `"lint": "eslint ."` 를 넣습니다.
-- FR-4: 위반 13건을 동작 변화 없이 정리합니다. 빈 interface 3개(card · separator · skeleton)는 type alias, 정규식의 불필요한 이스케이프 6건은 제거, case 안 선언 1건은 블록으로 감쌉니다. `build-tokens.mjs` 는 미사용 `dirname` import 를 지우고 빈 catch 2건에 의도 주석을 넣습니다.
-- FR-4a: FR-4 가 바꾼 소스(card · separator · surface-renderer)의 사본인 레지스트리 JSON 9개(`apps/web/public/r` · `public/r` · 각 패키지 `registry/r` 의 `card` · `separator` · `agentic-surface-renderer`)를 `pnpm build:registry` 로 다시 만들어 함께 커밋합니다. CI 배포 단계도 `build:registry` 를 실행하지만, 저장소에 커밋된 사본이 소스와 어긋난 채로 남지 않게 하기 위해서입니다.
+- FR-4: 위반 13건을 동작 변화 없이 정리합니다. 빈 interface 3개(card · separator · skeleton)는 `extends` 하나만 있는 형태라 규칙 옵션으로 허용하고 코드는 바꾸지 않습니다, 정규식의 불필요한 이스케이프 6건은 제거, case 안 선언 1건은 블록으로 감쌉니다. `build-tokens.mjs` 는 미사용 `dirname` import 를 지우고 빈 catch 2건에 의도 주석을 넣습니다.
+- FR-4a: FR-4 가 바꾼 소스(card · separator · surface-renderer)의 사본인 레지스트리 JSON 9개(`apps/web/public/r` · `public/r` · 각 패키지 `registry/r` 의 `card` · `separator` · `agentic-surface-renderer`)를 `pnpm build:registry` 로 다시 만들어 함께 커밋합니다. CI 배포 단계도 `build:registry` 를 실행하지만, 저장소에 커밋된 사본이 소스와 어긋난 채로 남지 않게 하기 위해서입니다. interface 를 되돌린 뒤에는 card · separator 사본이 main 과 같아져, 이 WI 가 남기는 레지스트리 변경은 agentic-surface-renderer 사본 3개입니다.
 - FR-5: tokens 에 `tsconfig.typecheck.json`(extends `./tsconfig.json`, rootDir `.`, allowJs, checkJs false, include `src` · `build-tokens.mjs` · `scripts/*.mjs` · `test/*.mjs`)을 두고 `"type-check": "tsc --noEmit -p tsconfig.typecheck.json && node scripts/check-ts-optin.mjs"` 를 넣습니다. 빌드용 tsconfig(tsup dts)는 바꾸지 않습니다.
 - FR-6: opt-in 첫 묶음 `scripts/theme-modes.mjs` · `test/theme-modes.test.mjs` · `test/dark-completeness.test.mjs` 에 JSDoc 을 보강하고 `// @ts-check` 를 붙입니다. 세 파일 모두 M3 diff 에 없습니다.
 - FR-7: `scripts/check-ts-optin.mjs` 가드는 tsc 와 같은 tsconfig 를 TypeScript API 로 해석해, 대상 파일 중 JS 수와 `@ts-check` 미적용 수 · 파일 목록을 출력합니다. 미적용이 있어도 rc 0 이고, tsconfig 를 읽지 못하거나 대상 JS 가 0개이면 측정 실패 rc 2 입니다.
@@ -86,7 +86,7 @@
 - AC3: ESLint 검사 파일이 `find` 목록과 1:1 이고(tokens 10 · ui-react 43 · agentic-ui 29), build 뒤에도 dist 0 입니다.
 - AC4: 음성 대조군에서 각 검사가 실제로 실패합니다. lint 는 세 패키지 각각 조건부 `useState` 주입 시 rc 1, tokens src 에 TS2322 주입 시 rc 2, `@ts-check` 파일에 타입 없는 매개변수 주입 시 rc 2(TS7006)입니다. 주입을 지우면 다시 rc 0 입니다.
 - AC5: 가드 출력이 opt-in 변화에 따라 움직이고(미적용 5 → `@ts-check` 제거 시 6, 추가 시 4), 측정 실패 경로가 rc 2 입니다.
-- AC6: ui-react type alias 변경 뒤 type-check · build · pack-smoke 가 통과하고, 소비 측 타입 사용(확장 interface · 인덱스 접근 · Omit · ComponentProps)이 컴파일됩니다.
+- AC6: ui-react 공개 타입이 1.2.1 과 같습니다. dist 의 `CardProps` · `SeparatorProps` · `SkeletonProps` 가 interface 이고 `Separator` 시그니처가 `SeparatorProps` 이름을 씁니다. type-check · build · pack-smoke 가 통과하고, 확장 없는 빈 interface(`interface X {}`)는 여전히 lint 오류입니다(음성 대조).
 - AC7: lockfile 변경이 importers 추가 · resolver 키 재기록 · deprecated 표시로 한정됩니다.
 
 ---
@@ -102,7 +102,7 @@
 
 | # | 내용 | 영향 | 상태 · 대응 |
 |---|---|---|---|
-| Q1 | `build-tokens.js` 를 가리키는 문서 언급이 3건 있습니다(`docs/axis-ds-implementation-plan.md` 178행 코드 예시 주석, WI-0025 plan 351행 · todo 172행의 「미사용, 수정하지 않음」 기록). 코드 · 설정 · CI 참조는 0건입니다 | 낮음 | 열림. D2 조건(참조가 있으면 삭제하지 않고 보고)에 따라 삭제하지 않았고, ESLint ignores 와 tsconfig exclude 로 검사에서 뺐습니다. 문서 언급을 참조로 볼지 사용자 확인이 필요합니다 |
-| Q2 | 빈 interface 를 type alias 로 바꾸면 소비자가 `declare module '@axis-ds/ui-react' { interface CardProps { ... } }` 로 선언 병합하던 코드는 TS2300(Duplicate identifier)이 됩니다. 일반 사용(확장 · 인덱스 접근 · Omit)은 그대로입니다. 또 dist `separator/index.d.ts` 의 `Separator` 선언이 이름 참조(`ForwardRefExoticComponent<SeparatorProps & RefAttributes<HTMLDivElement>>`)에서 펼친 형태(`ForwardRefExoticComponent<Omit<SeparatorPrimitive.SeparatorProps & RefAttributes<HTMLDivElement>, "ref"> & RefAttributes<HTMLDivElement>>`)로 바뀝니다. 구조는 같은 타입이라 할당 호환은 그대로이지만, IDE 호버와 문서 도구에서 `SeparatorProps` 이름이 보이지 않습니다. card · skeleton 의 선언은 이름 참조가 유지되고 Props 정의 줄만 바뀝니다 | 낮음 | 열림. 저장소 안에는 병합 사용이 0건입니다. 대안은 interface 를 두고 규칙 옵션 `allowInterfaces: 'with-single-extends'` 를 쓰는 것이며, 이 경우 선언 병합과 `SeparatorProps` 이름 표시가 모두 유지됩니다. 릴리스 노트에 적을지 사용자 확인이 필요합니다 |
-| Q3 | `eslint@9.39.2` 가 lockfile 재기록 때 deprecated 로 표시됐습니다 | 낮음 | 열림. 버전 고정은 이번 결정(lockfile 기존 버전만)에 따른 것이고, 업그레이드는 별도로 판단합니다 |
+| Q1 | `build-tokens.js` 문서 언급 3건을 참조로 볼지 | 낮음 | **해결(2026-10-17 사용자 결정)**: 참조가 아닌 이력으로 보고 파일을 삭제했습니다. 이력 문서는 고치지 않습니다 |
+| Q2 | 빈 interface 를 type alias 로 바꾸면 소비자의 선언 병합이 TS2300 으로 깨지고 `Separator` 공개 시그니처에서 `SeparatorProps` 이름이 사라집니다 | 중간 | **해결(2026-10-17 사용자 결정)**: interface 로 되돌리고 `allowInterfaces: 'with-single-extends'` 를 씁니다 |
+| Q3 | `eslint@9.39.2` 가 lockfile 재기록 때 deprecated 로 표시됐습니다 | 낮음 | 열림(2026-10-17 사용자 결정: 이번에는 유지하고 후속으로 검토). 버전 고정은 이번 결정(lockfile 기존 버전만)에 따른 것이고, 업그레이드는 별도로 판단합니다 |
 | Q4 | M3 rebase 때 tokens `package.json` scripts 블록과 `build-tokens.mjs` 에서 텍스트 충돌이 날 수 있습니다 | 중간 | 해소 방법은 plan 5장에 적었습니다. M3 브랜치 소스에 같은 lint 설정을 적용하면 위반은 main 과 같은 13건뿐이고 M3 가 새로 만든 위반은 0건입니다 |
