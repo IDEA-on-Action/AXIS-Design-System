@@ -205,7 +205,7 @@
 | plan-card/index.tsx:82 | `--axis-color-gray-400` | 단계 아이콘(skipped) | `--axis-status-neutral` | 신설 | #9CA3AF | #9CA3AF (불변) |
 | plan-card/index.tsx:138 | `--axis-color-green-500` | 완료 진행 막대 | `--axis-status-success` | 신설 | #22C55E | #22C55E (불변) |
 | plan-card/index.tsx:179 | `--axis-color-green-500` / `--axis-color-green-600` | 승인 버튼 배경 / hover | `--axis-status-success` / `--axis-status-success-strong` | 신설 | #22C55E / #16A34A | #22C55E / #16A34A (불변) |
-| plan-card/index.tsx:195 | `--axis-color-red-500` ×2 (글자, hover `/10` 배경) | 거절 버튼 | `--axis-status-error` | 신설 | #EF4444 | #EF4444 (불변) |
+| plan-card/index.tsx:195 | `--axis-color-red-500` ×2 (글자, hover `/10` 배경) | 거절 버튼 (평상시 글자 · hover 바탕 / hover 글자) | `--axis-status-error` / `--axis-plan-card-reject-hover-text` (component `plan-card.reject-hover-text`, 기본값 `{status.error}`, 2026-10-18 95e8547 신설: ontology 라이트 hover 대비 4.17:1 미달 보정) | 신설 | #EF4444 / #EF4444 | #EF4444 / #EF4444 (불변) |
 | recovery-banner/index.tsx:34 | `--axis-color-red-200` | 배너 테두리 | `--axis-status-error-border` | 신설 | #FECACA | #FECACA (불변) |
 | recovery-banner/index.tsx:42 | `--axis-color-red-500` | 경고 아이콘 | `--axis-status-error` | 신설 | #EF4444 | #EF4444 (불변) |
 | recovery-banner/index.tsx:69 | `--axis-color-red-500` / `--axis-color-red-600` | 재시도 버튼 배경 / hover | `--axis-button-destructive-bg-default` / `--axis-button-destructive-bg-hover` | 기존(component) | #EF4444 / #DC2626 | #EF4444 / #DC2626 (component 토큰은 `.dark`에 없어 라이트 값 유지) |
@@ -241,7 +241,7 @@
 | 상태 아이콘 · 글자 | approval-card 33 · 38 · 43, code-block 77, plan-card 61~82, recovery-banner 42, token-usage-indicator 40~41, tool-call-card 32~57 | `status.*` |
 | 상태 왼쪽 색 선 · 테두리 | approval-card 32 · 37 · 42, attachment-card 86, plan-card 34~54(짝수 줄), recovery-banner 34 | `status.*`, `status.error-border` |
 | 상태 뱃지 | plan-card 35 · 39 · 43 · 47 · 51 · 55 | `status.*`, `status.*-strong`, `status.neutral-bg` |
-| 피드백 · 승인 · 거절 동작 | feedback-buttons 62 · 78, plan-card 179 · 195 | `status.success|error(-strong)` |
+| 피드백 · 승인 · 거절 동작 | feedback-buttons 62 · 78, plan-card 179 · 195 | `status.success|error(-strong)`, 거절 버튼 hover 글자는 component `plan-card.reject-hover-text` |
 | 버튼(기존 버튼과 같은 역할) | recovery-banner 69, run-progress 163 | 기존 component `button-*` |
 | diff | diff-viewer 71 · 72 · 77 · 78 · 123 · 126 | `diff.*` |
 | 아바타 배경 | agent-avatar 34~36 | `agent.avatar-*` |

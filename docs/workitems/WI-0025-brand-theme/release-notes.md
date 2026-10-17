@@ -25,11 +25,11 @@
 - 값의 출처는 디자인 시스템 「온톨로지 플랫폼」 v1입니다. 라이트는 WCAG AA를 맞추려고 보조 글자 한 값(`sub` #6B7280 → #5F6673)만 보정했고, 다크는 원본 그대로입니다
 - AXIS의 상태 의미는 v1의 상태 다섯 가지로 접습니다: success → 회색 계열, warning · error → `bad` 계열(바탕은 연한 단계), running · info → `key` 계열. 상태가 색만으로 구분되지 않으므로, 상태는 글자 · 아이콘과 함께 표시해 주세요
 - 글꼴(`Pretendard Variable` · `JetBrains Mono` 우선), `--radius: 12px`, 그림자(`--axis-shadow-sm` · `--axis-shadow-lg`), PlanCard 색 선 1px, Card 그림자 없음(`0 0 #0000`)을 함께 지정합니다
-- 산출 CSS: 라이트 블록 `--axis-*` 116 · shadcn 20, 다크 블록 `--axis-*` 106 · shadcn 19
+- 산출 CSS: 라이트 블록 `--axis-*` 117 · shadcn 20, 다크 블록 `--axis-*` 107 · shadcn 19
 - 접근성: 문서 사이트 9페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음), 포커스 링 · 상태 아이콘 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)을 로컬에서 확인했습니다. 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
 
 #### tokens: 새 변수 (기본값은 기존 화면과 같음)
-브랜드를 지정하지 않은 `variables.css`에는 아래 10개 변수만 `:root` · `.dark`에 새로 생깁니다. 1.2.1에 있던 변수 249개의 값은 바뀌지 않습니다.
+브랜드를 지정하지 않은 `variables.css`에는 아래 11개 변수만 `:root` · `.dark`에 새로 생깁니다. 1.2.1에 있던 변수 249개의 값은 바뀌지 않습니다.
 
 | 변수 | 기본값 | 쓰는 곳 |
 |---|---|---|
@@ -37,6 +37,7 @@
 | `--axis-shadow-lg` | `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)` (Tailwind `shadow-lg`) | Dialog |
 | `--axis-card-shadow` | `--axis-shadow-sm`과 같은 값 | Card |
 | `--axis-plan-card-accent-width` | `4px` | PlanCard 왼쪽 색 선 |
+| `--axis-plan-card-reject-hover-text` | `--axis-status-error`와 같은 값(`#EF4444`) | PlanCard 거절 버튼 hover 글자 |
 | `--axis-status-{success,running,error,neutral-muted}-contrast` | `#FFFFFF` | 상태 바탕 위 글자 · 아이콘(RunProgress · StepTimeline · PlanCard) |
 | `--axis-agent-message-user-text` | `#FFFFFF` | MessageBubble 사용자 말풍선 글자 |
 | `--axis-agent-avatar-text` | `#FFFFFF` | AgentAvatar 이니셜 |
@@ -56,7 +57,7 @@
 | 컴포넌트 | 1.2.1 | 1.3.0 |
 |---|---|---|
 | PlanCard 상태 배지 (`pending` · `approved` · `rejected` · `executing` · `completed`) | 바탕 투명, 글자 `status-*-strong` | `badge-{warning,success,error,info}` 바탕 · 글자 (기본 브랜드 대비 라이트 4.57~5.49:1 · 다크 5.78~9.52:1) |
-| PlanCard 거절 버튼 hover | 바탕 변화 없음 | `status-error` 10% 옅은 바탕 |
+| PlanCard 거절 버튼 hover | 바탕 변화 없음 | `status-error` 10% 옅은 바탕, 글자는 `--axis-plan-card-reject-hover-text`(기본 브랜드는 `status-error`와 같아 글자 불변. ontology는 진한 빨강으로 바꿔 하단 영역 위 대비 라이트 5.53:1 · 다크 6.36:1) |
 | DiffViewer 추가 · 삭제 줄 | 바탕 투명 | `diff-added` · `diff-removed` 10% 옅은 바탕 |
 | FeedbackButtons 선택 상태 | 바탕 투명 | `status-success` · `status-error` 10% 옅은 바탕 |
 | AttachmentCard `status="error"` | 기본 테두리(`border-default`) | `status-error-border` 테두리 |
@@ -77,14 +78,14 @@
 - `frontend.yml`: pack-smoke, Playwright a11y(4조합 36건, 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선) · 비텍스트 대비 · AC6 계산 스타일 검사. 첫 배선은 결과만 보고하고, 결과를 확인한 뒤 실패 시 배포를 막는 게이트로 켭니다
 
 ### Breaking change
-없습니다. 공개 export와 CSS 변수 이름 삭제 0건, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션). 브랜드 미지정 출력은 npm 1.2.1 배포본 대비 `variables.css` `:root` · `.dark` 각 249개 값이 같고 새 변수 10개만 늘며, `shadcn-compat.css`는 바이트까지 같습니다(AC3 테스트). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」을 확인해 주세요.
+없습니다. 공개 export와 CSS 변수 이름 삭제 0건, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션). 브랜드 미지정 출력은 npm 1.2.1 배포본 대비 `variables.css` `:root` · `.dark` 각 249개 값이 같고 새 변수 11개만 늘며, `shadcn-compat.css`는 바이트까지 같습니다(AC3 테스트). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」을 확인해 주세요.
 
 ### 검증 (M3 시점)
-- 2026-10-18 M3 브랜치(turbo `--force`, 캐시 0, build 를 먼저 단독 실행): build 8/8 · type-check 8/8 · lint 4/4 rc 0, test 5/5 rc 0(tokens 187 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과)
-- `check-token-refs` 위반 0(검사 파일 68 · 참조 513, `:root` · `.dark` 259 · 미반영 0), `check-contrast-pairs` 위반 0(짝 9)
-- 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `fa637a54…` · `dd374eca…`(ontology 브랜드 추가 전 빌드와 같음), AC3 테스트 통과
+- 2026-10-18 M3 브랜치 95e8547(PlanCard 거절 버튼 hover 글자 토큰 반영 뒤, turbo `--force`, 캐시 0, build 를 먼저 단독 실행): build 8/8 · type-check 8/8 · lint 4/4 rc 0, test 5/5 rc 0(tokens 190 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과)
+- `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(짝 10)
+- 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`. `variables.css`는 npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11(위 새 변수 표), `shadcn-compat.css`는 1.2.1과 바이트까지 같음, AC3 테스트 통과
 - `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과
-- 레지스트리 사본 content 와 src 대조 84/84 일치
+- 레지스트리 사본 content 와 src 대조 84/84 일치(a8fe0a0 시점). 95e8547 뒤 PlanCard 사본 3벌(`public/r` · `apps/web/public/r` · `packages/axis-agentic-ui/registry/r`)이 src 와 일치
 
 > M4 에서 채울 것: 문서 사이트 브랜드 전환 데모(AC7) · 가이드 절, CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
 

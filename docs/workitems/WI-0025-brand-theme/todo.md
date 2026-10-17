@@ -244,8 +244,8 @@
 ### M3 DoD
 - [x] `pnpm type-check` 통과 → 2026-10-18 `pnpm turbo run type-check --force` rc 0, 8/8(type-check 4 + 의존 build 4, 캐시 0), build 를 먼저 단독 실행한 뒤
 - [x] `pnpm lint` 통과 (측정 범위: WI-0034(#104) 이후 lint 태스크는 tokens · ui-react · agentic-ui · `@ax/web` 4개, type-check 태스크도 4개) → 2026-10-18 `pnpm turbo run lint --force` rc 0, 4/4(캐시 0)
-- [x] `pnpm build` 성공 → 2026-10-18 `pnpm turbo run build --force` rc 0, 8/8(캐시 0). 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `fa637a54…` · `dd374eca…`(이전 기록과 같음). `build:registry`는 a8fe0a0 에서 1회 실행
-- [x] `pnpm test` 통과, `test:e2e:a11y` 36건 통과, `pnpm check-token-refs` rc 0 → 2026-10-18 `pnpm turbo run test --force` rc 0, 5/5(tokens 187 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31), 위 빌드의 `out`으로 `E2E_SERVER=static` a11y 36 passed(rc 0), `check-token-refs` rc 0(검사 파일 68 · 참조 513 · 위반 0), `check-contrast-pairs` 위반 0. CI 결과(게이트)는 Q7 줄에서 따로 확인
+- [x] `pnpm build` 성공 → 2026-10-18 `pnpm turbo run build --force` rc 0, 8/8(캐시 0). 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `fa637a54…` · `dd374eca…`(이전 기록과 같음). `build:registry`는 a8fe0a0 에서 1회 실행 → 2026-10-18 95e8547(PlanCard 거절 버튼 hover 글자 토큰 `plan-card.reject-hover-text` 신설) 뒤 재측정: `pnpm turbo run build --force` rc 0, 8/8(캐시 0). `variables.css` sha256 `e3ced2d8…`(새 변수 1개만큼 바뀜, npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11), `shadcn-compat.css` `dd374eca…`(불변). `build:registry`는 95e8547 에서 다시 실행해 PlanCard 사본 3벌만 바뀜
+- [x] `pnpm test` 통과, `test:e2e:a11y` 36건 통과, `pnpm check-token-refs` rc 0 → 2026-10-18 `pnpm turbo run test --force` rc 0, 5/5(tokens 187 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31), 위 빌드의 `out`으로 `E2E_SERVER=static` a11y 36 passed(rc 0), `check-token-refs` rc 0(검사 파일 68 · 참조 513 · 위반 0), `check-contrast-pairs` 위반 0. CI 결과(게이트)는 Q7 줄에서 따로 확인 → 2026-10-18 95e8547 뒤 재측정: `pnpm turbo run test --force` rc 0, 5/5(캐시 0, tokens 190 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31), type-check 8/8 · lint 4/4 rc 0(`--force`, 캐시 0), 위 재빌드의 `out`으로 a11y 36 passed(rc 0), `check-token-refs` rc 0(검사 파일 68 · 참조 514 · `:root` · `.dark` 260 · 위반 0), `check-contrast-pairs` rc 0(짝 10)
 - [ ] 문서: 부록 B 승인 기록, todo.md 체크
 
 ---
@@ -259,7 +259,7 @@
 - [ ] FR-10 `docs/guides/theme-customization.md`에 「브랜드 테마」 절 추가 (import 순서 안내 포함) (FR-10)
 - [ ] FR-10 같은 문서 「4. 커스텀 테마 생성」 예시를 브랜드 디렉터리 방식으로 갱신, primitive 오버라이드 안내(92~97행) · `component-usage.md` 175행 정정 (D-7 반영) (FR-10)
 - [ ] FR-10 부록 B 원본 대비 보정 내역 문서 게재 (v1 기준 `sub` 1개 값 보정과 미달 쌍 처리) (FR-10 · D1)
-- [ ] `release-notes.md` 1.3.0 절 작성 (브랜드 축 · ontology 프리셋 · 신규 변수 기본값 불변 명시) → 🔄 2026-10-18 M3 에서 초안 작성(plan U22, 실명 없음). M2 브랜드 빌드 · ThemeProvider, ontology 프리셋, 새 변수 10개 기본값, agentic-ui 화면 변화 표, 폐기 예정, 동작이 달라지는 사용 방식(tokens CSS 미로드 시 그림자 없음 · import 순서), M3 검증 수치. M4 에서 데모 · 가이드 · 배포 정보 · 소비 프로젝트 영향을 채움
+- [ ] `release-notes.md` 1.3.0 절 작성 (브랜드 축 · ontology 프리셋 · 신규 변수 기본값 불변 명시) → 🔄 2026-10-18 M3 에서 초안 작성(plan U22, 실명 없음). M2 브랜드 빌드 · ThemeProvider, ontology 프리셋, 새 변수 11개 기본값(2026-10-18 95e8547 에서 `plan-card-reject-hover-text` 추가로 10 → 11), agentic-ui 화면 변화 표, 폐기 예정, 동작이 달라지는 사용 방식(tokens CSS 미로드 시 그림자 없음 · import 순서), M3 검증 수치. M4 에서 데모 · 가이드 · 배포 정보 · 소비 프로젝트 영향을 채움
 - [ ] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3) → 2026-10-18 M3 에서 한 번 작성(13c6c36, `pnpm changeset status --verbose` 로 linked 4개 1.3.0 확인)했다가 같은 날 사용자 결정으로 M3 에서 뺐습니다(plan U22). M4 에서 13c6c36 의 본문으로 다시 작성합니다
 - [ ] 1.3.0 Breaking change 없음 확인: 브랜드 미지정 시 기존 변수 계산값 불변(AC3), 공개 API 추가만 (3.2 릴리스)
 - [ ] 1.3.0 릴리스 PR에서 linked 4개 1.3.0 확인 후 머지, `pack-smoke` 브랜드 exports 통과, npm 배포 확인 (D3)
