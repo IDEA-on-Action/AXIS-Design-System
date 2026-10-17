@@ -55,7 +55,7 @@
 
 | 컴포넌트 | 1.2.1 | 1.3.0 |
 |---|---|---|
-| PlanCard 상태 배지 (`pending` · `approved` · `rejected` · `executing` · `completed`) | 바탕 투명, 글자 `status-*-strong` | `badge-{warning,success,error,info}` 바탕 · 글자 (대비 4.57~5.49:1) |
+| PlanCard 상태 배지 (`pending` · `approved` · `rejected` · `executing` · `completed`) | 바탕 투명, 글자 `status-*-strong` | `badge-{warning,success,error,info}` 바탕 · 글자 (기본 브랜드 대비 라이트 4.57~5.49:1 · 다크 5.78~9.52:1) |
 | PlanCard 거절 버튼 hover | 바탕 변화 없음 | `status-error` 10% 옅은 바탕 |
 | DiffViewer 추가 · 삭제 줄 | 바탕 투명 | `diff-added` · `diff-removed` 10% 옅은 바탕 |
 | FeedbackButtons 선택 상태 | 바탕 투명 | `status-success` · `status-error` 10% 옅은 바탕 |
@@ -69,7 +69,7 @@
 #### 동작이 달라지는 사용 방식
 - Card · Dialog 그림자가 tokens CSS 변수를 참조하므로, `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
 - 브랜드 CSS는 `@axis-ds/tokens/css` **다음에** import합니다. 앱이 shadcn 변수(`--primary` 등)를 직접 정의한다면(예: `globals.css`의 `:root`) 브랜드 CSS를 그 정의보다 뒤에 둬야 합니다. 라이트 `[data-brand]`와 `:root`의 명시도가 같아 나중에 온 쪽이 이깁니다
-- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 다크 블록에 없는 8개 변수(radius 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다
+- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 다크 블록에 없는 변수 10개 가운데 값이 달라지는 8개(radius 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다
 
 #### CI
 - `check-token-refs` 판정 7: Tailwind가 CSS를 만들지 않는 클래스 패턴(임의값 `var()` + 불투명도 수식어)을 위반으로 잡습니다

@@ -300,6 +300,7 @@
 - E2E a11y 별도 워크플로우(야간/수동, 브라우저 설치 비용으로 main CI 미포함)
 - 검색 인덱싱 확장 (인덱스/랜딩 페이지)
 - 레지스트리(`registry/r` · `public/r`) · `apps/web/public/library` 사본과 src 의 일치 검사 상설화 (WI-0025 4 결정 6, 2026-10-18 M3 에서는 일회성 대조만 수행: 레지스트리 84/84 일치, library 사본 `check-token-refs` 위반 0). library 사본은 생성기 대신 줄 단위로 갱신해 와서 src 와 다른 줄이 경고 없이 쌓일 수 있음
+- `apps/web/public/templates/*.json` 5개(index.json · dashboard · hr-dashboard · landing-page · theme-only)가 생성기와 어긋남: `pnpm build`(@ax/web `build:web`의 template index 생성)가 매번 다시 써서 `updatedAt`과 index.json `total` 39 → 42가 바뀜. 커밋된 색인이 소스보다 낡았다는 신호이고, 지금은 로컬 build 뒤마다 되돌리는 중 (2026-10-18 WI-0025 M3 에서 반복 관찰, 이번 WI 범위 밖)
 
 ---
 
