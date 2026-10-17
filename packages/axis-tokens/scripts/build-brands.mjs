@@ -27,6 +27,7 @@ import {
   cssVarName,
   SHADCN_KEYS,
 } from './brands.mjs';
+import { registerThemePreprocessors, themePreprocessorsFor } from './theme-modes.mjs';
 
 export const BRAND_FORMAT = 'css/axis-brand';
 
@@ -40,6 +41,10 @@ StyleDictionary.registerFormat({
     file.options?.extra,
   ),
 });
+
+// WI-0033 다크 preprocessor: component 의 $extensions.axis.dark 를 다크 빌드에서 value 로 바꾼다.
+// 이게 없으면 브랜드 다크가 component 를 참조할 때 라이트 값이 나온다.
+registerThemePreprocessors(StyleDictionary);
 
 /** SD 소스 글롭은 슬래시 구분자여야 한다(Windows 경로 대비) */
 function globPath(...parts) {
@@ -62,6 +67,7 @@ async function renderTheme({ brand, theme, srcDir, tmpRoot, selector }) {
 
   // 다크도 component 를 넣어 브랜드 다크의 component 참조가 풀리게 한다 (B3 ③)
   const sd = new StyleDictionary({
+    preprocessors: themePreprocessorsFor(theme),
     source: [
       globPath(srcDir, 'primitives', '**', '*.json'),
       globPath(srcDir, 'semantic', `${theme}.json`),

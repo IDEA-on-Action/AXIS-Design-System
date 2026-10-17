@@ -181,6 +181,43 @@ describe('buildBrands 0토큰 테마 (회귀: SD 가 output 을 비워 돌려줌
   });
 });
 
+// WI-0033 다크 preprocessor 배선(WI-0033 plan.md 6장 M2). 브랜드 다크가 component 를 참조하면
+// component 의 $extensions.axis.dark 값으로 풀려야 한다. preprocessor 가 빠지면 라이트 값 #FFFFFF 가 나온다.
+describe('buildBrands 다크 component 참조 (WI-0033 preprocessor)', () => {
+  async function darkOf(label, dark) {
+    const s = scratch(label);
+    const brandsDir = join(s.dir, 'brands');
+    writeBrand(brandsDir, 'sample', { light: { radius: { md: { value: '10px' } } }, dark });
+    const result = await buildBrands({
+      srcDir, brandsDir, distDir: s.distDir, pkg: pkgFor('sample'), shadcnCss: SHADCN_CSS, tmpParent: s.tmpParent,
+    });
+    assert.deepEqual(result.violations, []);
+    const css = readFileSync(join(s.distDir, 'css', 'brands', 'sample.css'), 'utf-8');
+    return blockOf(css, brandSelectors('sample').dark);
+  }
+
+  test('브랜드가 surface.default 를 덮어쓰면 card.bg.default 다크 값이 브랜드 값으로 풀린다', async () => {
+    const dark = await darkOf('dark-ref-override', {
+      surface: { default: { value: '#172030' } },
+      text: { secondary: { value: '{card.bg.default}' } },
+    });
+    assert.ok(dark.includes('  --axis-text-secondary: #172030;'), dark);
+  });
+
+  test('덮어쓰지 않으면 기본 다크 surface.default 로 풀린다(라이트 #FFFFFF 아님)', async () => {
+    const dark = await darkOf('dark-ref-plain', { text: { secondary: { value: '{card.bg.default}' } } });
+    assert.ok(dark.includes('  --axis-text-secondary: #030712;'), dark);
+    assert.ok(!dark.includes('#FFFFFF'), dark);
+  });
+
+  test('브랜드 다크가 component 를 역참조해 순환이 생기면 조용히 넘어가지 않고 실패한다', async () => {
+    await assert.rejects(
+      darkOf('dark-ref-cycle', { surface: { default: { value: '{card.bg.default}' } } }),
+      /Reference Errors/,
+    );
+  });
+});
+
 describe('buildBrands 브랜드 0개 · 검증 실패', () => {
   test('브랜드 디렉터리가 없으면 아무것도 만들지 않고 잔여만 지운다', async () => {
     const s = scratch('none');

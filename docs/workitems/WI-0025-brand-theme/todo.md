@@ -189,8 +189,8 @@
 - [x] 기존 theme 테스트 21건 회귀 없음 (FR-6)
 
 ### M2-4 머지 절차
-- [ ] 1.2.1 publish 확인 후 M2 브랜치 rebase (D3)
-- [ ] 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3)
+- [x] 1.2.1 publish 확인 후 M2 브랜치 rebase (D3) → ✅ 2026-10-17: force push 금지라 rebase 대신 `origin/main`(014e8ac) merge, 충돌은 tokens `package.json` `test` 줄 1곳. WI-0033 plan.md 6장대로 `build-brands.mjs` `renderTheme`에 다크 preprocessor 배선, 브랜드 미지정 `variables.css` `:root` · `.dark` 블록이 014e8ac 빌드와 바이트 동일
+- [x] 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3) → ✅ 2026-10-17: `1.2.1`, `.changeset/`는 `config.json`만 있음
 - [ ] 1.2.1 배포 전 머지 시 changeset 없이 머지 (minor changeset은 M4에서 추가) (D3)
 - [ ] `brand.json` 최종 경로를 WI-0028에 통보 (D6)
 
