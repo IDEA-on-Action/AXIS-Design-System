@@ -60,7 +60,7 @@
 - [x] ui-react type-check · build · pack-smoke, 소비 측 타입 컴파일 (AC6)
 - [x] lockfile diff 범위, frozen-lockfile rc 0 (AC7)
 - [x] 빌드가 다시 만든 `apps/web/public/templates/*.json` 원복
-- [ ] PR 생성 · 리뷰 · main 머지
+- [x] PR 생성 · 리뷰 · main 머지 → PR #104 머지(988294a, 2026-10-17), Issue #100 종료
 
 ---
 
