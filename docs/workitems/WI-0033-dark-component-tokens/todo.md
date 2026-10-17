@@ -77,7 +77,7 @@
 
 - [x] `docs/workitems/WI-0025-brand-theme/release-notes.md` 1.2.1 절에 다크 component 토큰 수정 추가 (D6)
 - [x] `packages/axis-{tokens,ui-react,agentic-ui,theme}/CHANGELOG.md` 1.2.1 절에 같은 내용 추가 (changeset 없음, D6)
-- [x] PR 생성 · 리뷰 · main 머지 → PR #101 머지(b548748, 2026-10-17 01:39 KST), Issue #99 종료. GitHub 리뷰 없이 머지했습니다(남은 리뷰는 Greptile 체험 종료 안내 코멘트 1건뿐입니다)
+- [x] PR 생성 · 리뷰 · main 머지 → PR #101 머지(b548748, 2026-10-17 01:39 KST), Issue #99 종료. GitHub 상의 사람 리뷰는 없었고(남은 리뷰는 Greptile 체험 종료 안내 1건), 대신 머지 전 독립 검증을 거쳤습니다: 설계 3안 · 심사 2명, 구현 후 독립 검증 2명(정확성 · rebase 문서), major 4건 보정, 변이 주입 재검증(preprocessor 제거 · 라이트 값 변조 · 다크 값 변조)
 - [ ] 1.2.1 npm 배포 후 소비 화면(Card · Dialog · Badge · Input 다크) 확인 → 미확인. 배포는 확인(run 38992207088, npm `latest` 1.2.1, provenance 4/4)했고, 빈 디렉터리에 설치한 `@axis-ds/tokens@1.2.1` `dist/css/variables.css`에서 `:root` 249 · `.dark` 249, `.dark`의 `--axis-card-bg-default` #030712를 확인했습니다. 화면 렌더링은 보지 않아 체크하지 않습니다
 - [ ] WI-0025 M2 · M3 rebase 시 plan 6장 체크리스트 수행
 - [x] 머지 뒤 `project-todo.md` · `.github/wi-mapping.json` 현행화 (PR #98 머지 후) → 2026-10-17 `chore/post-121-cleanup`에서 ✅ 반영

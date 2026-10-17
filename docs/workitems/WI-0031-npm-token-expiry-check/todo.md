@@ -62,7 +62,7 @@
 
 - [x] `NPM_CONFIG_LOGLEVEL: verbose` 제거 후속 PR → `chore/post-121-cleanup` 에서 그 줄과 주석만 삭제
 - [x] `.npmrc` 주석 · `CLAUDE.md` npm 배포 절(116 · 126 · 129행 「CI는 NPM_TOKEN secret」)을 OIDC 기준으로 현행화(머지 시점부터 사실과 달라짐, `CLAUDE.md` 수정 여부는 사람이 정합니다) → `chore/post-121-cleanup` 에서 OIDC 기준으로 현행화
-- [ ] linked 4개 Publishing access → "Require two-factor authentication and disallow tokens" → 2026-10-17 사용자가 「disallow bypass 2fa tokens」로 변경했다고 전달받았습니다. npmjs.com 화면 설정이라 에이전트가 확인하지 못했고, 전달된 문구가 이 항목의 목표 문구와 같은 선택지인지도 화면에서 확인이 필요해 체크하지 않습니다
+- [x] linked 4개 Publishing access → "Require two-factor authentication and disallow tokens" → 2026-10-17 사용자가 변경. npmjs.com 4개 패키지 Settings 화면 캡처에서 「Require two-factor authentication and disallow bypass 2fa tokens (recommended)」 선택을 확인했습니다(npm 화면의 표기이고 문서의 「disallow tokens」와 같은 선택지). 같은 화면에서 Trusted Publisher Status 는 4개 모두 Valid 입니다
 - [x] GitHub secret `NPM_TOKEN` 삭제 → `gh secret list` 결과 3개(CLOUDFLARE_ACCOUNT_ID · CLOUDFLARE_API_TOKEN · RENDER_PRODUCTION_DEPLOY_HOOK)에 `NPM_TOKEN` 없음, REST API `total_count` 3 으로 교차 확인
 - [x] npm granular 토큰 회수 → 2026-10-17 사용자가 npmjs.com Access Tokens 에서 삭제 완료(사용자 확인, 에이전트는 계정 화면을 볼 수 없음)
 - [ ] 다음 릴리스 changeset 머지 직전 cli · mcp Trusted Publisher 등록, publish 확인 뒤 Publishing access 변경
