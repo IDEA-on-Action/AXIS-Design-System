@@ -144,7 +144,7 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
   ```
 
   fixture 브랜드 `dark.json`에 `{card.bg.default}` 참조를 넣은 프로브의 기대값은 다음과 같습니다. 브랜드가 `surface.default`를 덮어쓰면 그 값(sample 브랜드는 #172030), 덮어쓰지 않으면 기본 다크 #030712 입니다. preprocessor 가 빠지면 라이트 값 #FFFFFF 가 나옵니다(음성 대조). 순환 참조 Reference Errors 가 없는지도 확인합니다
-- 실측(38ecea7 기준) tokens test 는 62/62(WI-0033 12 + 브랜드 50)였습니다. 리뷰 반영으로 WI-0033 테스트가 16개가 되었으므로 기대값은 WI-0033 16 + 브랜드 50 입니다
+- 실측(38ecea7 기준) tokens test 는 62/62(WI-0033 12 + 브랜드 50)였습니다. 리뷰 반영으로 WI-0033 테스트가 16개가 되었으므로 기대값은 WI-0033 16 + 브랜드 50 입니다. 실제 M2 반영(2026-10-17)에서는 위 프로브 3건(브랜드 값 · 기본 다크 · 순환 실패)을 `build-brands.test.mjs` 회귀 테스트로 남겨 기대값이 WI-0033 16 + 브랜드 53 = 69 입니다. preprocessor 를 뺀 변이에서 3건이 모두 실패함을 확인했습니다
 
 ### M3
 
@@ -160,7 +160,7 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
   - `dark-tokens.spec.ts`의 `:root` 수와 기준선 `.dark` 수는 산출물과 `components.json`에서 센 값으로 비교하므로 고칠 것이 없습니다. M3 실측 기대값은 `:root` 249 → 259, 기준선 `.dark` 204 → 212(259 - 47)이며 rebase 뒤 테스트를 실행해 확인합니다
   - `dark-tokens.spec.ts`의 다크 기대 맵 29개(`EXPECTED_DARK`)와 라이트 고정 기준값 45개(`fixtures/dark-tokens-light-3b52976.json`)는 고정값입니다. M3 에서도 다크 값이 바뀌는 것은 29개이고(실측), M3 추가 2개는 라이트 기준값에 없어 검사 대상이 아니므로 그대로 둡니다
   - `check-token-refs` 요약 줄 기대값: `:root 259 · .dark 259 · :root 전용 0 · .dark 전용 0 · 다크 값 대상 29 · 미반영 0`, 테마 선언 `leaf 47 · 색 leaf 43 · 위반 0`
-- 브랜드 테스트 64/64 유지를 확인합니다
+- 브랜드 테스트 64/64 유지를 확인합니다. M2 에서 브랜드 회귀 테스트 3건이 늘었으므로, M3 를 M2 위에 반영하면 이 기대값을 다시 셉니다
 
 ## 7. 실측 결과 (2026-10-16, main 3b52976 위)
 

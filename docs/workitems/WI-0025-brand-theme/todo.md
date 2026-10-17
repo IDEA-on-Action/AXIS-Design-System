@@ -13,7 +13,7 @@
 
 - 배치 1: M1과 M2를 병렬로 개발 (2026-10-15 결정 D8). 겹치는 파일은 plan 3.5 충돌 표 기준 `packages/axis-tokens/build-tokens.mjs`(M2: 60줄 · 333줄 다음, B0 이동안 선택 시 34-36줄)와 `packages/axis-tokens/package.json`(M2: exports 8-22줄 · scripts 32-36줄)이며, M2 신규 파일(`scripts/brands.mjs`, `test/brands.test.mjs`, fixtures)과 `packages/axis-theme`는 M1과 겹치지 않음
 - 배치 1 동안 `plan.md` · `todo.md` · `project-todo.md` 갱신은 M1 브랜치에서만 수행 (M2 브랜치는 참조만, plan 3.5)
-- 머지 순서: **M1 머지 → 1.2.1 릴리스 PR 머지 · npm 배포 확인 → M2 머지** (M2 브랜치는 1.2.1 배포 후 rebase, plan 3.6)
+- 머지 순서: **M1 머지 → 1.2.1 릴리스 PR 머지 · npm 배포 확인 → M2 머지** (M2 브랜치는 1.2.1 배포 후 `main`을 반영합니다. force push 금지라 rebase 대신 merge, plan 3.6)
 - 배치 2: M3 → M4 순차 (M3는 M1 매핑과 M2 빌드 위에서만 성립)
 
 ---
@@ -189,7 +189,7 @@
 - [x] 기존 theme 테스트 21건 회귀 없음 (FR-6)
 
 ### M2-4 머지 절차
-- [x] 1.2.1 publish 확인 후 M2 브랜치 rebase (D3) → ✅ 2026-10-17: force push 금지라 rebase 대신 `origin/main`(014e8ac) merge, 충돌은 tokens `package.json` `test` 줄 1곳. WI-0033 plan.md 6장대로 `build-brands.mjs` `renderTheme`에 다크 preprocessor 배선, 브랜드 미지정 `variables.css` `:root` · `.dark` 블록이 014e8ac 빌드와 바이트 동일
+- [x] 1.2.1 publish 확인 후 M2 브랜치에 `main` 반영(rebase 또는 merge, force push 금지 시 merge) (D3 · plan 3.6) → ✅ 2026-10-17: force push 금지라 rebase 대신 `origin/main`(014e8ac) merge(0151d6a). 병합 커밋 제목의 type `merge`는 06-sync 타입 목록 밖이지만, amend · force push 금지라 고치지 않고 허용 예외로 둡니다. 충돌은 tokens `package.json` `test` 줄 1곳. WI-0033 plan.md 6장대로 `build-brands.mjs` `renderTheme`에 다크 preprocessor 배선, 브랜드 미지정 `variables.css` `:root` · `.dark` 블록이 014e8ac 빌드와 바이트 동일
 - [x] 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3) → ✅ 2026-10-17: `1.2.1`, `.changeset/`는 `config.json`만 있음
 - [ ] 1.2.1 배포 전 머지 시 changeset 없이 머지 (minor changeset은 M4에서 추가) (D3)
 - [ ] `brand.json` 최종 경로를 WI-0028에 통보 (D6)
