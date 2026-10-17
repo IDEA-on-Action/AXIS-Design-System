@@ -134,12 +134,12 @@ jobs:
       - name: Install Playwright chromium
         run: pnpm --filter @ax/web exec playwright install --with-deps chromium
 
-      # 아래 세 E2E step 은 첫 배선이라 continue-on-error 로 결과만 본다(U9).
-      # 게이트를 켜는 조건과 방법은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
+      # 아래 세 E2E step 은 게이트 켬(2026-10-18, run 39072471115 확인). 실패하면 ci job 이 실패해 deploy-* (needs: ci) 를 막는다.
+      # 확인 기록은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
+      # nontext · tokens 는 앞 E2E step 이 실패해도 돌도록 if 를 둔다(세 결과를 한 run 에서 모두 보고, 건수 가드가 JSON 없음으로 오판하지 않게).
       # --output 을 나누는 이유: Playwright 는 실행마다 출력 디렉터리를 비우므로 같은 test-results 를 쓰면 앞 실행의 실패 산출물이 지워진다.
       - name: E2E a11y (브랜드 2 x 테마 2 x 9페이지, AC8)
         id: e2e-a11y
-        continue-on-error: true
         env:
           E2E_SERVER: static
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/a11y.json
@@ -147,7 +147,7 @@ jobs:
 
       - name: E2E 비텍스트 대비 (포커스 링 · 상태 아이콘 3:1)
         id: e2e-nontext
-        continue-on-error: true
+        if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
         env:
           E2E_SERVER: static
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/nontext.json
@@ -155,12 +155,12 @@ jobs:
 
       - name: E2E 토큰 계산값 (다크 · 브랜드, AC6)
         id: e2e-tokens
-        continue-on-error: true
+        if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
         env:
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/tokens.json
         run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
 
-      # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다(continue-on-error 없음).
+      # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
       # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-18, playwright --list): a11y 36 · nontext 6 · tokens 17.
       # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 9건인지도 본다.
       - name: E2E 실행 건수 가드
@@ -204,6 +204,8 @@ jobs:
           fi
           exit $fail
 
+      # outcome 은 continue-on-error 와 무관하게 step 자체의 결과라 게이트를 켠 뒤에도 실패 때 'failure' 다.
+      # !cancelled() 가 암묵 success() 를 대신하므로 앞 step 이 실패한 job 에서도 이 step 은 평가된다.
       - name: Upload E2E results (실패 시)
         if: ${{ !cancelled() && (steps.e2e-a11y.outcome == 'failure' || steps.e2e-nontext.outcome == 'failure' || steps.e2e-tokens.outcome == 'failure' || steps.e2e-count.outcome == 'failure') }}
         uses: actions/upload-artifact@v4
