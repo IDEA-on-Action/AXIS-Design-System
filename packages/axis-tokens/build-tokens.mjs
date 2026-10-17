@@ -1,6 +1,5 @@
 import StyleDictionary from 'style-dictionary';
 import { writeFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
 
 // --- HEX → HSL 변환 유틸 ---
 function hexToHsl(hex) {
@@ -229,8 +228,8 @@ console.log('  ✓ variables.css (light + dark) merged');
 
 // 임시 파일 삭제
 import { unlinkSync } from 'fs';
-try { unlinkSync('dist/css/_light.css'); } catch {}
-try { unlinkSync('dist/css/_dark.css'); } catch {}
+try { unlinkSync('dist/css/_light.css'); } catch { /* 임시 파일이 없으면 지울 것도 없으므로 무시합니다 */ }
+try { unlinkSync('dist/css/_dark.css'); } catch { /* 임시 파일이 없으면 지울 것도 없으므로 무시합니다 */ }
 
 // --- 4. shadcn-compat.css 생성 ---
 // JSON을 직접 파싱하여 토큰 참조를 resolve → HEX → HSL

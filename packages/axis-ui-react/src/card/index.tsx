@@ -2,7 +2,7 @@ import * as React from "react";
 import { cn } from "../utils";
 
 /** Card 컴포넌트 Props */
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type CardProps = React.HTMLAttributes<HTMLDivElement>;
 
 /** 관련 콘텐츠를 그룹화하여 표시하는 카드 컨테이너 컴포넌트 */
 const Card = React.forwardRef<HTMLDivElement, CardProps>(

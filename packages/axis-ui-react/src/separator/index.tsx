@@ -2,9 +2,10 @@ import * as React from "react";
 import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import { cn } from "../utils";
 
-/** Separator 컴포넌트의 Props 인터페이스. Radix Separator 프리미티브의 속성을 확장한다. */
-export interface SeparatorProps
-  extends React.ComponentPropsWithoutRef<typeof SeparatorPrimitive.Root> {}
+/** Separator 컴포넌트의 Props 타입. Radix Separator 프리미티브의 속성을 확장한다. */
+export type SeparatorProps = React.ComponentPropsWithoutRef<
+  typeof SeparatorPrimitive.Root
+>;
 
 /**
  * 콘텐츠 사이의 시각적 구분선 컴포넌트.

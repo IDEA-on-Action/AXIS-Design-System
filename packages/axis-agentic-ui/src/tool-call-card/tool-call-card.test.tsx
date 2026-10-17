@@ -57,8 +57,8 @@ describe("ToolCallCard", () => {
         defaultExpanded
       />
     );
-    expect(screen.getByText(/\"query\": \"hello\"/)).toBeInTheDocument();
-    expect(screen.getByText(/\"limit\": 10/)).toBeInTheDocument();
+    expect(screen.getByText(/"query": "hello"/)).toBeInTheDocument();
+    expect(screen.getByText(/"limit": 10/)).toBeInTheDocument();
   });
 
   it("펼침 시 output을 표시한다", () => {

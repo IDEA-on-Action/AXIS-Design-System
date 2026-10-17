@@ -1,3 +1,4 @@
+// @ts-check
 /**
  * 다크 완전성 가드 fixture 테스트 (WI-0033)
  *
@@ -15,6 +16,11 @@ const PKG = join(dirname(fileURLToPath(import.meta.url)), '..')
 const SCRIPT = join(PKG, '../../scripts/check-token-refs.mjs')
 const FIX = join(PKG, 'test/fixtures/dark-completeness')
 
+/**
+ * @param {string} css
+ * @param {string} component
+ * @param {string} [tokens]
+ */
 function run(css, component, tokens = 'tokens') {
   const r = spawnSync(process.execPath, [
     SCRIPT,
