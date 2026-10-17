@@ -141,7 +141,7 @@
 - [x] `npm view @axis-ds/theme@1.2.1 dependencies` → `{ '@axis-ds/tokens': '1.2.1' }` 확인 (D5) → 2026-10-17 일치 확인(ui-react · agentic-ui 의 tokens 의존도 1.2.1)
 - [x] 릴리스 노트에 라이트 Alert success · warning 테두리 대비(2.18 · 1.85:1)는 장식 요소라 비텍스트 기준 대상이 아니라는 판단 기록 (2026-10-15 결정)
 - [x] 1.2.1 Breaking change 없음 확인: 공개 export · 기존 CSS 변수 이름 삭제 0건, 화면 변화는 정의 누락 보완분만 (3.2 릴리스)
-- [ ] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3) → 미수행. `packages/axis-tokens/test/fixtures/`에 1.2.1 `variables.css` 스냅샷이 없습니다(있는 `variables.css`는 `dark-completeness` 판정용 합성 fixture). `apps/web/e2e/fixtures/dark-tokens-light-3b52976.json`은 라이트 component 45개만 담은 WI-0033 기준값이라 이 기준선을 대신하지 않습니다. M3 머지 전에 npm 1.2.1 산출물 기준으로 수행합니다
+- [x] AC3 기준선 고정: 1.2.1 배포 직후 `variables.css` 라이트 · 다크 계산값 스냅샷을 tokens 테스트 fixture로 커밋 (M3 AC3 비교 기준) (AC3) → 2026-10-17 수행. 원천은 npm `@axis-ds/tokens@1.2.1` tarball(shasum `2332e344…2f5b` = `npm view dist.shasum`)의 `package/dist/css/variables.css` · `shadcn-compat.css` 원문을 `cp`로 고정했어요(`packages/axis-tokens/test/fixtures/baseline-1.2.1/`, 출처 · sha256 · 신규 변수 기본값은 같은 폴더 `SOURCE.json`). U12 문구의 3b52976 빌드 대신 배포본을 쓴 것은 AC3 정의가 '1.2.1 스냅샷과 일치'이고 1.2.1 이 WI-0033 포함 main 에서 발행됐기 때문이에요. `variables.css` 1.2.1 에는 `var(` 0건이라 텍스트 값 비교가 계산값 비교와 같아요(테스트가 `var(` 를 만나면 실패)
 - [x] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화 → 패키지 4개 `CHANGELOG.md` 1.2.1 절은 PR #93(버전 절)과 PR #101(WI-0033 줄)에 포함(루트 `CHANGELOG.md`는 없음). `project-todo.md` #36 완료 · 현재 버전 1.2.1 반영(2026-10-17), `wi-mapping.json` WI-0025 는 M2~M4 가 남아 🔄 유지
 
 ### M1 DoD
@@ -220,7 +220,7 @@
 - [ ] `src/brands/ontology/brand.json` 작성 (a11y 상태 기록: 부록 B 2026-10-16 대리 승인, 디자인 오너 사후 확인 대기) (FR-4 · D6)
 - [ ] `package.json` exports에 `./css/brands/ontology` · `./brands/ontology/brand.json` 추가 (FR-5 · AC4)
 - [ ] AC4: `pnpm build` 후 `dist/css/brands/ontology.css` 생성, `import "@axis-ds/tokens/css/brands/ontology"` 동작, `pnpm pack-smoke` 통과 (AC4)
-- [ ] AC3 스냅샷 테스트: 브랜드 미지정 `variables.css` 라이트 · 다크가 1.2.1과 일치, 신규 변수는 기본값만 검사 (AC3)
+- [x] AC3 스냅샷 테스트: 브랜드 미지정 `variables.css` 라이트 · 다크가 1.2.1과 일치, 신규 변수는 기본값만 검사 (AC3) → 2026-10-17 `test/baseline-1.2.1.test.mjs` 추가 · `scripts.test` 등록. HEAD f181716 재빌드(`--force`) 기준 `:root 249/249 · .dark 249/249 일치 · 신규 10`(전부 `SOURCE.json` 기본값), `shadcn-compat.css` 1897/1897 바이트 일치, tokens 테스트 83 → 98 pass. 음성 대조 8종(`:root` 값 · `.dark` 만 값 · 대문자 이름 줄 삭제 · 미지 변수 · 신규 변수에 1px · `.dark` 헤더 변경 · shadcn 1줄 · 없는 경로)이 전부 rc 1. dist stale 가드(src · scripts · build-tokens.mjs 보다 dist 가 오래되면 실패)는 로컬 전용이고 env `CI` 에서는 생략해요(checkout mtime 거짓 실패 방지, turbo 경유로 CI 변수 전달 확인). FR-8 브랜드 추가 뒤 재빌드에서 다시 돌려 기본 출력 불변을 재증명해요
 - [ ] AC6 Playwright 계산 스타일 검사: `data-brand="ontology"` 라이트 · 다크 7개 변수가 부록 A(v1 기준)와 일치 (shadcn HSL은 원본 hex로 정확히 렌더되는 소수 퍼센트로 적고 렌더 rgb 채널당 ±1 비교, 2026-10-16 결정) (AC6)
 - [ ] `apps/web`이 AXIS 토큰 색을 그리도록 설정 정비 (`tailwind.config.ts` content 경로, tokens CSS import, `globals.css` shadcn 정의와 브랜드 CSS 순서, D-d · 3 결정 13 반영). M4에서 M3로 당김: 이 정비 없이 a11y를 돌리면 브랜드 값이 화면에 닿지 않은 채 통과함 (AC8 · FR-10)
 - [ ] `apps/web`에서 브랜드 CSS 로드 (4 결정 2 반영) (AC8)
