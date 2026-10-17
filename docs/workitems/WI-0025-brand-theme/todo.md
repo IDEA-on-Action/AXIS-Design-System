@@ -239,7 +239,7 @@
 - [ ] Q7 CI 게이트 켜기 (U9, M3 2차 결정 15): **조건** ① M3 PR의 `frontend.yml` run에서 E2E 3 step이 모두 성공(a11y 36 · nontext 6 · tokens 17 통과, D1 기준선 적용 뒤 기본 브랜드 기준선 밖 위반 0 · ontology 위반 0)이고 「E2E 실행 건수 가드」 표가 기대 건수와 같을 것 ② CI static 기준선 노드 수를 job 로그에서 읽어 로컬 실측(기본 라이트 13 · 다크 13, 12건 · 26노드)과 비교하고, 다르면 측정 조건(runner OS · Playwright 버전 · run id)과 함께 PRD AC8 상한 기록을 갱신할 것 ③ 확인 PR(4 결정 4)에서 대비 위반 주입 커밋이 a11y step 실패와 `e2e-test-results` 업로드를 일으키고, 되돌린 커밋에서 초록으로 돌아올 것. **방법** 별도 커밋에서 `frontend.yml`의 세 E2E step의 `continue-on-error: true` 줄과 위 「첫 배선」 주석 두 줄을 지우고, 그 커밋의 PR run에서 세 step 성공을 다시 확인해요. 게이트를 켜면 E2E 실패가 `deploy-preview` · `deploy-production`(`needs: ci`)을 막는 것이 의도된 동작이에요. 세 step을 따로 켤 수도 있지만, 켜지 않은 step은 실패해도 job이 초록이므로 그 사이에는 run 결과를 직접 확인해야 해요. 켠 뒤 `brand.json` `a11y.gate`를 게이트 이름으로 갱신해요(위 brand.json 줄)
 - [ ] AC8: 4조합 axe 위반 0, 온톨로지 전용 예외 0 (CI 결과로 확인) (AC8)
 - [x] 레지스트리 · library 사본 재생성 (Card · Dialog · PlanCard 변경분) (FR-7 · FR-9) → ✅ 2026-10-18 (a8fe0a0): `pnpm build:registry` 1회로 10개 컴포넌트 x 3벌 30개 파일 갱신, 사본 content 와 src 대조 84/84 일치(사본 변조 시 rc 1). library 는 M1(4411bd3)처럼 988294a..HEAD `index.tsx`의 1:1 줄 쌍 23개를 같은 줄에만 적용(18곳: components 5개 파일 9곳 · categories/agentic 7곳 · categories/ui 2곳, 재실행 0건). 사본을 풀어 `check-token-refs` 검사 파일 69 · 위반 0(오타 변수 주입 시 rc 1). surface-renderer 의 case 중괄호(WI-0034 lint 수정)는 토큰 변경이 아니라 library 사본에 적용하지 않음
-- [ ] M3 PR 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3 · plan 3.6) → 2026-10-18 중간 확인: `npm view @axis-ds/tokens version` = 1.2.1. 이 브랜치에 1.3.0 minor changeset(`.changeset/wi-0025-brand-theme.md`)이 있으므로 `main`에 patch 잔여가 없는지는 머지 직전에 다시 확인
+- [ ] M3 PR 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3 · plan 3.6) → 2026-10-18 중간 확인: `npm view @axis-ds/tokens version` = 1.2.1. 1.3.0 minor changeset은 2026-10-18 사용자 결정으로 M4로 되돌려 이 브랜치에 없습니다(plan U22). `main`에 patch 잔여가 없는지는 머지 직전에 다시 확인
 
 ### M3 DoD
 - [x] `pnpm type-check` 통과 → 2026-10-18 `pnpm turbo run type-check --force` rc 0, 8/8(type-check 4 + 의존 build 4, 캐시 0), build 를 먼저 단독 실행한 뒤
@@ -259,7 +259,7 @@
 - [ ] FR-10 같은 문서 「4. 커스텀 테마 생성」 예시를 브랜드 디렉터리 방식으로 갱신, primitive 오버라이드 안내(92~97행) · `component-usage.md` 175행 정정 (D-7 반영) (FR-10)
 - [ ] FR-10 부록 B 원본 대비 보정 내역 문서 게재 (v1 기준 `sub` 1개 값 보정과 미달 쌍 처리) (FR-10 · D1)
 - [ ] `release-notes.md` 1.3.0 절 작성 (브랜드 축 · ontology 프리셋 · 신규 변수 기본값 불변 명시) → 🔄 2026-10-18 M3 에서 초안 작성(plan U22, 실명 없음). M2 브랜드 빌드 · ThemeProvider, ontology 프리셋, 새 변수 10개 기본값, agentic-ui 화면 변화 표, 폐기 예정, 동작이 달라지는 사용 방식(tokens CSS 미로드 시 그림자 없음 · import 순서), M3 검증 수치. M4 에서 데모 · 가이드 · 배포 정보 · 소비 프로젝트 영향을 채움
-- [x] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3) → ✅ 2026-10-18 M3 에서 작성(`.changeset/wi-0025-brand-theme.md`, plan U22 의 「M4」보다 당김). `npm view @axis-ds/tokens version` = 1.2.1, `pnpm changeset status --verbose` 로 linked 4개 1.3.0 확인. M3 머지 뒤 publish.yml 이 1.3.0 릴리스 PR 을 열지만, 그 PR 은 M4 머지 뒤에 머지합니다
+- [ ] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3) → 2026-10-18 M3 에서 한 번 작성(13c6c36, `pnpm changeset status --verbose` 로 linked 4개 1.3.0 확인)했다가 같은 날 사용자 결정으로 M3 에서 뺐습니다(plan U22). M4 에서 13c6c36 의 본문으로 다시 작성합니다
 - [ ] 1.3.0 Breaking change 없음 확인: 브랜드 미지정 시 기존 변수 계산값 불변(AC3), 공개 API 추가만 (3.2 릴리스)
 - [ ] 1.3.0 릴리스 PR에서 linked 4개 1.3.0 확인 후 머지, `pack-smoke` 브랜드 exports 통과, npm 배포 확인 (D3)
 - [ ] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화, #84 close
