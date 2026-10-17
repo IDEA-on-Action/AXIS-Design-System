@@ -44,7 +44,9 @@
     "secondary": { "value": "#D6DADF" },
     "focus": { "value": "#326ADA" },
     "error": { "value": "#C8332E" },
-    "success": { "value": "#D6DADF" }
+    "success": { "value": "#D6DADF" },
+    "info": { "value": "#326ADA" },
+    "warning": { "value": "#C8332E" }
   },
   "icon": {
     "default": { "value": "#2A2F36" },
@@ -53,19 +55,60 @@
     "brand": { "value": "#326ADA" },
     "success": { "value": "#6B7280" },
     "warning": { "value": "#F5C6C6" },
-    "error": { "value": "#C8332E" }
+    "error": { "value": "#C8332E" },
+    "info": { "value": "#326ADA" }
+  },
+  "interactive": {
+    "primary": { "value": "#326ADA" }
+  },
+  "status": {
+    "running": { "value": "#326ADA" },
+    "running-strong": { "value": "#2757B8" },
+    "success": { "value": "#2A2F36" },
+    "success-strong": { "value": "#111418" },
+    "error": { "value": "#C8332E" },
+    "error-strong": { "value": "#A8281F" },
+    "error-border": { "value": "#C8332E" },
+    "warning": { "value": "#C8332E" },
+    "warning-strong": { "value": "#A8281F" },
+    "info": { "value": "#326ADA" },
+    "neutral": { "value": "#5F6673" },
+    "neutral-muted": { "value": "#D6DADF" },
+    "neutral-strong": { "value": "#2A2F36" },
+    "neutral-bg": { "value": "#EAECEF" },
+    "success-contrast": { "value": "#FFFFFF" },
+    "running-contrast": { "value": "#FFFFFF" },
+    "error-contrast": { "value": "#FFFFFF" },
+    "neutral-muted-contrast": { "value": "#2A2F36" }
+  },
+  "diff": {
+    "added": { "value": "#5F6673" },
+    "removed": { "value": "#C8332E" },
+    "added-text": { "value": "#2A2F36" },
+    "removed-text": { "value": "#A8281F" }
+  },
+  "agent": {
+    "avatar-assistant": { "value": "#2A2F36" },
+    "avatar-tool": { "value": "#326ADA" },
+    "avatar-system": { "value": "#5F6673" },
+    "message-user-bg": { "value": "#326ADA" },
+    "message-user-text": { "value": "#FFFFFF" },
+    "avatar-text": { "value": "#FFFFFF" }
   },
   "button": {
     "bg": {
       "default": { "value": "#326ADA" },
       "hover": { "value": "#2757B8" },
-      "active": { "value": "#2757B8" }
+      "active": { "value": "#2757B8" },
+      "disabled": { "value": "#EAECEF" }
     },
     "text": {
-      "default": { "value": "#FFFFFF" }
+      "default": { "value": "#FFFFFF" },
+      "disabled": { "value": "#5F6673" }
     },
     "border": {
-      "focus": { "value": "#326ADA" }
+      "focus": { "value": "#326ADA" },
+      "default": { "value": "transparent" }
     }
   },
   "button-secondary": {
@@ -81,7 +124,8 @@
   "button-ghost": {
     "bg": {
       "hover": { "value": "#F3F4F6" },
-      "active": { "value": "#EAECEF" }
+      "active": { "value": "#EAECEF" },
+      "default": { "value": "transparent" }
     },
     "text": {
       "default": { "value": "#2A2F36" }
@@ -144,6 +188,16 @@
     "info": {
       "bg": { "value": "#E8EFFC" },
       "text": { "value": "#2757B8" }
+    }
+  },
+  "dialog": {
+    "overlay": {
+      "bg": { "value": "rgba(0, 0, 0, 0.5)" }
+    },
+    "content": {
+      "bg": { "value": "#FFFFFF" },
+      "border": { "value": "#E6E8EB" },
+      "shadow": { "value": "0 8px 24px rgba(17,20,24,.10)" }
     }
   },
   "card-shadow": { "value": "0 0 #0000" },
