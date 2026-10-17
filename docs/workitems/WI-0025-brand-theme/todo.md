@@ -1,6 +1,6 @@
 # WI-0025: 브랜드 테마 축 도입과 온톨로지 테마 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M1 완료 · 1.2.1 배포 2026-10-17, 다음 M2)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | 상태: 🔄 진행 중 (M1 · M2 완료, 1.2.1 배포 2026-10-17, M3 진행 중)
 
 ## 진행 순서
 
@@ -206,6 +206,7 @@
 ## Phase M3: 트랙 C 온톨로지 프리셋 + FR-7 + a11y CI (1.3.0)
 
 - [x] **M3 착수 게이트**: 부록 B(2026-10-16, v0.24 · 디자인 시스템 v1 기준) 디자인 오너 김정원 책임 승인. 승인 범위: ① 라이트 보조 · 흐린 글자 `sub` #6B7280 → #5F6673 1개 값 보정 ② 미달 쌍 처리(`key`/`key-light` → brand · info 글자는 `key-dark`, `muted`는 글자에 쓰지 않음, `bad-line` 주의 점은 warning 아이콘에만) ③ 라이트 입력 테두리 `line-2`/`card` 1.40:1 원본 유지 여부 ④ Q6 제품 화면 적용 여부 (D1 · FR-8 · AC8) → ✅ 2026-10-16 사용자(Sinclair Seo) 대리 승인, 디자인 오너(김정원 책임) 사후 확인 대기. 권장안 전부(③ 입력 테두리 원본 유지 + 포커스 key, ④ 제품 적용, ⑤ PlanCard 색 선 1px, ⑥ 상태 색 접기)
+- [x] M3 브랜치를 새 `main`(988294a, M2 #91 · WI-0033 #101 · WI-0031 #102 · #103 · WI-0034 #104 포함) 위로 옮김 (D3 · plan 3.6) → ✅ 2026-10-17: 원격 브랜치를 덮어쓰지 않도록 새 브랜치 `feat/wi-0025-m3-ontology-v2`에서 M2 원본 커밋 4개(8cfcc1c까지)를 빼고 M3 고유 커밋만 rebase 했습니다. 문서 커밋 4개(db0c7ad · cbf0b7e · e32e776 · e72b97f)는 main 이 같은 내용을 더 최신 상태로 갖고 있어 빈 커밋이 되어 건너뛰었습니다. 후속 커밋으로 `check-token-refs` CSS 미생성 판정을 판정 7 로 옮기고(WI-0033 plan 6장), M3 추가 component 토큰 2개(plan-card.accent-width · card-shadow)에 `themeIndependent` 마커를 붙였습니다. 실측: `check-token-refs` `:root 259 · .dark 259 · 다크 값 대상 29 · 미반영 0`, 테마 선언 `leaf 47 · 색 leaf 43 · 위반 0`, CSS 미생성 0, tokens test 83/83(WI-0033 16 + 브랜드 67), 브랜드 미지정 `variables.css`는 988294a 빌드 대비 `:root` · `.dark` 각각 M3 신규 변수 10개만 늘고 기존 249개 값은 같습니다
 - [ ] 흰 글자 짝 토큰 신설과 교체: message-bubble 30 · plan-card 179 · step-timeline 76 · run-progress 127 · agent-avatar 80 (예: `agent.message-user-text`, `status.*-contrast`, `agent.avatar-text`, 기본값 #FFFFFF) (D-5 · FR-8) → ontology 값은 D-6 접기 매핑 표에서 대비 검산 후 결정(2026-10-16 결정, 초안 2에는 짝 배경인 `status` · `agent` 값이 없음, 다크 `key` #6B98F0 위 흰 글자는 2.85:1)
 - [ ] 불투명도 수식어 결함 수정: agentic-ui 11곳(plan-card 6 · diff-viewer 2 · feedback-buttons 2 · attachment-card 1)의 `bg-[var(..)]/10` · `border-[var(..)]/30`을 `color-mix()` 형태로 교체해 의도된 옅은 바탕 복원(화면 변화, 1.3.0 릴리스 노트 기재), `check-token-refs`에 CSS 미생성 패턴 검출 추가 (2026-10-15 결정)
 - [ ] FR-7 PlanCard 색 선 두께 component 토큰 `--axis-plan-card-accent-width`(기본 4px) 신설과 plan-card 참조 변경, 기본 화면 불변 (FR-7 · AC3)
