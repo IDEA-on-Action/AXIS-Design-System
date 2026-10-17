@@ -61,6 +61,7 @@
 ## Phase M3: 정리 (머지 뒤)
 
 - [ ] `NPM_CONFIG_LOGLEVEL: verbose` 제거 후속 PR
+- [ ] `.npmrc` 주석 · `CLAUDE.md` npm 배포 절(116 · 126 · 129행 「CI는 NPM_TOKEN secret」)을 OIDC 기준으로 현행화(머지 시점부터 사실과 달라짐, `CLAUDE.md` 수정 여부는 사람이 정합니다)
 - [ ] linked 4개 Publishing access → "Require two-factor authentication and disallow tokens"
 - [ ] GitHub secret `NPM_TOKEN` 삭제
 - [ ] npm granular 토큰 회수

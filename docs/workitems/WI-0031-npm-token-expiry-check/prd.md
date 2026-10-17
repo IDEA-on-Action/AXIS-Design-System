@@ -1,7 +1,7 @@
 # WI-0031: npm Trusted Publishing(OIDC) 전환으로 토큰 만료 위험 제거 PRD
 
 > 작성일: 2026-10-17 | 버전: v1.0 (2026-10-17) | 작성자: Sinclair Seo | WI: WI-0031 | GitHub: #96 | 상태: Approved (2026-10-17 결정 반영)
-> 기준: `origin/main` 91bbf65 (`@axis-ds/*` linked 4개 1.2.1 버전 표기, npm 미배포 · cli · mcp 1.1.3 배포됨)
+> 기준: `origin/main` b548748 (`@axis-ds/*` linked 4개 1.2.1 버전 표기, npm 미배포 · cli · mcp 1.1.3 배포됨). 이 브랜치는 b548748 을 병합했으므로 머지 뒤 publish 되는 1.2.1 에는 WI-0033(다크 모드 component 토큰 재정의, #101) 변경이 포함됩니다
 > 관련: WI-0025 1.2.1 배포 대기(이 WI 머지가 곧 1.2.1 publish 실행입니다)
 
 ---
@@ -191,7 +191,7 @@ npm 문서의 Migration 조언("trusted publisher 를 먼저 검증한 다음 �
 | U4 | 미등록 패키지가 토큰 없이 실패할 때의 정확한 오류 코드(ENEEDAUTH 로 추정) | 미정 |
 | U5 | "disallow tokens" 를 켠 뒤에도 OIDC publish 가 되는지 | 다음 릴리스 |
 | U6 | 2026-10-16 EOTP 의 실제 원인(토큰 Bypass 2FA 미체크 또는 Publishing access 설정). npm 계정 설정에서만 확인할 수 있습니다 | 사람 확인 |
-| U7 | npm 12.x 와 changesets 2.29.8 · pnpm 9 조합의 호환성(그래서 11.x 로 고정했습니다) | 미정 |
+| U7 | npm 12.x 와 changesets 2.29.8 · pnpm 9 조합의 호환성(그래서 11.x 로 고정했습니다). 근거: `@changesets/cli` 2.29.8 은 pnpm 일 때 `--no-git-checks` 를 붙이고(dist `changesets-cli.cjs.js` L755), npm 11.19.1 은 이를 모르는 설정으로 보고 `npm warn Unknown cli config "--git-checks". This will stop working in the next major version of npm.` 를 냅니다(2026-10-17 로컬 실측, 플래그를 뺀 대조 실행에서는 경고 없음). 11.x 에서는 경고뿐이라 무해하지만 npm 12 에서는 오류가 될 수 있으므로, npm 을 12 로 올리기 전에 이 플래그가 publish 를 막지 않는지 먼저 확인합니다 | npm 12 업그레이드 전 |
 | U8 | provenance 확인 명령의 정확한 형식 | 첫 publish 뒤 |
 | U9 | pnpm 이 native OIDC 를 처음 지원한 버전(pnpm 업그레이드 때 필요) | 미정 |
 | U10 | 설정이 맞지 않을 때 403 이 난다는 진술과, 빈 `NPM_TOKEN` · `NODE_AUTH_TOKEN` 이 OIDC 를 방해한다는 진술은 서드파티 출처뿐이라 설계 근거로 쓰지 않았습니다 | 미정 |
