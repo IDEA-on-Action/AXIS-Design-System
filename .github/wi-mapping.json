@@ -138,8 +138,8 @@
       "slug": "npm-token-expiry-check",
       "issueNumber": 96,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBKRRo",
-      "lastSyncedAt": "2026-10-16T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-17T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0032",
@@ -154,8 +154,8 @@
       "slug": "dark-component-tokens",
       "issueNumber": 99,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBK-Ms",
-      "lastSyncedAt": "2026-10-16T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-17T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0034",
@@ -166,5 +166,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-16T00:00:00.000Z"
+  "updatedAt": "2026-10-17T00:00:00.000Z"
 }

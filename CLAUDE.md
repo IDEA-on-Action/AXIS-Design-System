@@ -2,8 +2,8 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: 1.2.0 | **상태**: ✅ Active Development
-**npm 배포**: v1.2.0 배포 완료 (2026-08-07, Pretendard 대표 폰트)
+**현재 버전**: 1.2.1 | **상태**: ✅ Active Development
+**npm 배포**: v1.2.1 배포 완료 (2026-10-17, 토큰 정합 · 다크 component 토큰, npm Trusted Publishing 첫 배포)
 
 ---
 
@@ -80,7 +80,7 @@ axis-design-system/
 
 - **OS**: Windows - 경로에 `\` 사용, bash 명령 호환성 주의
 - **Shell**: PowerShell/Git Bash 환경에서 pnpm 스크립트 실행
-- **Shell 격리**: Claude Code Bash 도구는 별도 프로세스 - 사용자 터미널의 환경변수 미공유. `NPM_TOKEN` 등은 시스템 환경변수로 등록하거나 명령에 `export`로 포함 필요
+- **Shell 격리**: Claude Code Bash 도구는 별도 프로세스 - 사용자 터미널의 환경변수 미공유. 인증 토큰 등은 시스템 환경변수로 등록하거나 명령에 `export`로 포함 필요
 - **Windows + bash 루프**: `for` 루프에서 Windows 경로 `\`가 변수 보간과 충돌 - 개별 명령으로 분리하여 실행
 - **개발 서버**: `pnpm dev:web` → `localhost:3100`
 - **배포**: Cloudflare Pages (`@opennextjs/cloudflare`)
@@ -113,9 +113,9 @@ pnpm build:web
 # 레지스트리 빌드
 pnpm build:registry
 
-# npm 배포 (로컬은 ~/.npmrc authToken 사용, CI는 NPM_TOKEN secret)
-pnpm release                    # build + changeset publish (전체 패키지)
-pnpm publish -r --access public --no-git-checks  # 수동 배포
+# npm 배포 (CI는 publish.yml의 npm Trusted Publishing(OIDC), npm 토큰은 모두 삭제됨)
+pnpm release                    # build + changeset publish (전체 패키지)  (평소 배포는 CI 경로)
+pnpm publish -r --access public --no-git-checks  # 비상용 수동 배포: 로컬은 대화형 2FA(OTP) 필요, provenance 없음. 평소에는 CI(OIDC) 경로를 씀
 ```
 
 ---
@@ -123,11 +123,12 @@ pnpm publish -r --access public --no-git-checks  # 수동 배포
 ## 📦 npm 배포 참고
 
 - **npm 스코프**: `@axis-ds` (npmjs.com 조직)
-- **인증**: 프로젝트 `.npmrc`에는 인증 라인 없음(2026-08-07 제거 - pnpm 9.15.4 기본값 문법 미지원으로 미설정 WARN 유발). 로컬 publish는 `~/.npmrc` authToken, CI publish는 changesets/action이 `NPM_TOKEN` secret으로 `$HOME/.npmrc` 자동 생성 (v1.2.0 릴리스에서 CI 인증 실측 검증 완료, 2026-08-07)
+- **인증**: npm Trusted Publishing(OIDC). `publish.yml`이 `id-token: write`와 `npm@11.19.1`로 발행 (1.2.1에서 실측, 2026-10-17). `NPM_TOKEN` secret과 npm granular 토큰은 삭제함(2026-10-17). Publishing access는 linked 4패키지만 「disallow bypass 2fa tokens」로 바꿨고(사용자 설정, 2026-10-17), cli · mcp는 다음 릴리스 publish 확인 뒤 변경. 프로젝트 `.npmrc`에는 인증 라인 없음
+- **Trusted publisher**: linked 4패키지(tokens · ui-react · agentic-ui · theme) 등록(`IDEA-on-Action/AXIS-Design-System` · `publish.yml`). cli · mcp는 미등록, 다음 릴리스 직전 등록
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
-- **publish 부수효과**: 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
-- **CI 배포**: `.github/workflows/publish.yml` - `NPM_TOKEN` GitHub Secret 필요
-- **현재 배포 버전**: 1.2.0 (2026-08-07 배포 완료, Pretendard 대표 폰트 - linked 4패키지 minor)
+- **publish 부수효과**(로컬 수동 배포 때만): 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
+- **CI 배포**: `.github/workflows/publish.yml` - main push 시 changesets/action이 OIDC로 발행 (npm 인증용 GitHub Secret 불필요)
+- **현재 배포 버전**: 1.2.1 (2026-10-17 배포, run 38992207088, linked 4패키지 patch, provenance 4/4). cli · mcp는 1.1.3
 
 ---
 
