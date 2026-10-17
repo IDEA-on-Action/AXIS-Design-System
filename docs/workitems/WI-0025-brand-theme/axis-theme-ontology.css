@@ -9,6 +9,11 @@
    - 라이트 AA 보정은 한 값뿐입니다(text-secondary · text-tertiary · muted-foreground: sub #6B7280 → #5F6673).
      나머지는 v1 원본 값으로 통과하거나, 통과하는 단계 토큰(key-dark 등)을 골라 맞췄습니다.
    - 주석의 단어는 원본 토큰 이름입니다.
+   - [사후 확인 대기] 초안 2에 없던 기본 토큰 42개(상태 · diff · 에이전트 · interactive · dialog ·
+     버튼 비활성 · Card 그림자)의 값은 2026-10-16 · 2026-10-17 사용자 대리 승인 기준으로 M3 구현에서
+     역반영했습니다(plan U18 · U25 · 5.3). 디자인 오너 사후 확인을 기다립니다.
+   - [사후 확인 대기] destructive 버튼 hover · active 는 이 초안에 bad-line 이 남아 있지만 브랜드 JSON 은
+     bad-light 입니다(D2: 부록 B 는 bad-line 을 warning 아이콘에만 허용). 확인 뒤 한쪽으로 맞춥니다.
    ========================================================================== */
 
 [data-brand="ontology"] {
@@ -94,6 +99,49 @@
   --axis-badge-error-text: #FFFFFF; /* on-key */
   --axis-badge-info-bg: #E8EFFC; /* key-light */
   --axis-badge-info-text: #2757B8; /* key-dark */
+  /* 초안 2에 없던 기본 토큰 (M3 역반영, plan U18 · 5.3, 디자인 오너 사후 확인 대기) */
+  --axis-interactive-primary: #326ADA; /* key */
+  --axis-border-info: #326ADA; /* key */
+  --axis-border-warning: #C8332E; /* bad · 부록 B: bad-line 은 warning 아이콘에만(D2) */
+  --axis-icon-info: #326ADA; /* key */
+  --axis-status-running: #326ADA; /* key */
+  --axis-status-running-strong: #2757B8; /* key-dark */
+  --axis-status-success: #2A2F36; /* ink-2 */
+  --axis-status-success-strong: #111418; /* ink */
+  --axis-status-error: #C8332E; /* bad */
+  --axis-status-error-strong: #A8281F; /* bad-dark */
+  --axis-status-error-border: #C8332E; /* bad · 부록 B: bad-line 은 warning 아이콘에만(D2) */
+  --axis-status-warning: #C8332E; /* bad */
+  --axis-status-warning-strong: #A8281F; /* bad-dark */
+  --axis-status-info: #326ADA; /* key */
+  --axis-status-neutral: #5F6673; /* sub-aa */
+  --axis-status-neutral-muted: #D6DADF; /* line-2 */
+  --axis-status-neutral-strong: #2A2F36; /* ink-2 */
+  --axis-status-neutral-bg: #EAECEF; /* panel-2 */
+  --axis-status-success-contrast: #FFFFFF; /* on-key */
+  --axis-status-running-contrast: #FFFFFF; /* on-key */
+  --axis-status-error-contrast: #FFFFFF; /* on-key */
+  --axis-status-neutral-muted-contrast: #2A2F36; /* ink-2 */
+  --axis-diff-added: #5F6673; /* sub-aa */
+  --axis-diff-removed: #C8332E; /* bad */
+  --axis-diff-added-text: #2A2F36; /* ink-2 */
+  --axis-diff-removed-text: #A8281F; /* bad-dark */
+  --axis-agent-avatar-assistant: #2A2F36; /* ink-2 */
+  --axis-agent-avatar-tool: #326ADA; /* key */
+  --axis-agent-avatar-system: #5F6673; /* sub-aa */
+  --axis-agent-message-user-bg: #326ADA; /* key */
+  --axis-agent-message-user-text: #FFFFFF; /* on-key */
+  --axis-agent-avatar-text: #FFFFFF; /* on-key */
+  --axis-button-bg-disabled: #EAECEF; /* panel-2 */
+  --axis-button-text-disabled: #5F6673; /* sub-aa · 부록 B: muted 는 글자에 쓰지 않음(D2) */
+  --axis-button-border-default: transparent; /* 기본값 명시(테마 무관) */
+  --axis-button-ghost-bg-default: transparent; /* 기본값 명시(테마 무관) */
+  --axis-dialog-overlay-bg: rgba(0, 0, 0, 0.5); /* 기본값 유지(v1 팔레트에 오버레이 색 없음) */
+  --axis-dialog-content-bg: #FFFFFF; /* card */
+  --axis-dialog-content-border: #E6E8EB; /* line */
+  --axis-dialog-content-shadow: 0 8px 24px rgba(17,20,24,.10); /* sh-2 */
+  --axis-card-shadow: 0 0 #0000; /* v1: 카드 그림자 없음 (U2, 테마 무관이라 라이트에만) */
+  --axis-card-shadow-default: 0 0 #0000; /* 폐기 예정 변수, Card 미참조 (U23) */
   --axis-bg-muted: #F3F4F6; /* panel */
   /* shadcn HSL 호환 층 (apps/web 의 hsl(var(--…)) 용) */
   --background: 0 0% 97%;
@@ -195,6 +243,45 @@
   --axis-badge-error-text: #0E1013; /* on-key */
   --axis-badge-info-bg: #1C2A45; /* key-light */
   --axis-badge-info-text: #9DBBF6; /* key-dark */
+  /* 초안 2에 없던 기본 토큰 (M3 역반영, plan U18 · 5.3, 디자인 오너 사후 확인 대기) */
+  --axis-interactive-primary: #3B82F6; /* 기본값 유지(AXIS blue-500, U16) */
+  --axis-border-info: #6B98F0; /* key */
+  --axis-border-warning: #F07A72; /* bad · 부록 B: bad-line 은 warning 아이콘에만(D2) */
+  --axis-icon-info: #6B98F0; /* key */
+  --axis-status-running: #6B98F0; /* key */
+  --axis-status-running-strong: #9DBBF6; /* key-dark */
+  --axis-status-success: #D0D4D9; /* ink-2 */
+  --axis-status-success-strong: #F1F3F5; /* ink */
+  --axis-status-error: #F07A72; /* bad */
+  --axis-status-error-strong: #F49890; /* bad-dark */
+  --axis-status-error-border: #F07A72; /* bad · 부록 B: bad-line 은 warning 아이콘에만(D2) */
+  --axis-status-warning: #F07A72; /* bad */
+  --axis-status-warning-strong: #F49890; /* bad-dark */
+  --axis-status-info: #6B98F0; /* key */
+  --axis-status-neutral: #9CA3AD; /* sub */
+  --axis-status-neutral-muted: #5F6874; /* line-2 */
+  --axis-status-neutral-strong: #D0D4D9; /* ink-2 */
+  --axis-status-neutral-bg: #2A2E34; /* panel-2 */
+  --axis-status-success-contrast: #0E1013; /* on-key */
+  --axis-status-running-contrast: #0E1013; /* on-key */
+  --axis-status-error-contrast: #0E1013; /* on-key */
+  --axis-status-neutral-muted-contrast: #F1F3F5; /* ink · ink-2 는 line-2 위 3.79:1 미달 */
+  --axis-diff-added: #9CA3AD; /* sub */
+  --axis-diff-removed: #F07A72; /* bad */
+  --axis-diff-added-text: #D0D4D9; /* ink-2 */
+  --axis-diff-removed-text: #F49890; /* bad-dark */
+  --axis-agent-avatar-assistant: #D0D4D9; /* ink-2 */
+  --axis-agent-avatar-tool: #6B98F0; /* key */
+  --axis-agent-avatar-system: #9CA3AD; /* sub */
+  --axis-agent-message-user-bg: #6B98F0; /* key */
+  --axis-agent-message-user-text: #0E1013; /* on-key */
+  --axis-agent-avatar-text: #0E1013; /* on-key */
+  --axis-button-bg-disabled: #2A2E34; /* panel-2 */
+  --axis-button-text-disabled: #9CA3AD; /* sub · 부록 B: muted 는 글자에 쓰지 않음(D2) */
+  --axis-dialog-overlay-bg: rgba(0, 0, 0, 0.5); /* 기본값 유지(v1 팔레트에 오버레이 색 없음) */
+  --axis-dialog-content-bg: #17191D; /* card */
+  --axis-dialog-content-border: #2B2F35; /* line */
+  --axis-dialog-content-shadow: 0 8px 24px rgba(0,0,0,.50); /* sh-2 */
   --axis-bg-muted: #1F2227; /* panel */
   /* shadcn HSL 호환 층 (apps/web 의 hsl(var(--…)) 용) */
   --background: 216 15.2% 6.5%;

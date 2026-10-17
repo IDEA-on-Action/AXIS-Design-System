@@ -157,6 +157,13 @@ describe('src/brands/ontology (FR-8)', () => {
     };
   }
 
+  /** `{a.b}` 참조를 기본 소스로 끝까지 풀어 hex 로 비교한다(대문자). 참조가 아니면 그대로 */
+  function resolveRef(value, depth = 0) {
+    const m = /^\{([^{}]+)\}$/.exec(String(value));
+    if (!m || depth > 20 || !base.refs.has(m[1])) return depth > 0 ? String(value).toUpperCase() : value;
+    return resolveRef(base.refs.get(m[1]), depth + 1);
+  }
+
   /** 브랜드 JSON 을 이름 -> 값 맵으로(--axis-* 는 cssVarName, shadcn 은 --키) */
   function brandDecls(theme) {
     const map = new Map();
@@ -193,7 +200,21 @@ describe('src/brands/ontology (FR-8)', () => {
       for (const [name, value] of draft[theme]) {
         if (name === '--axis-bg-muted') continue; // D-f
         const expected = D2_OVERRIDES[theme][name] ?? value;
-        assert.equal(mine.get(name), expected, `${theme} ${name}`);
+        assert.equal(resolveRef(mine.get(name)), expected, `${theme} ${name}`);
+      }
+    }
+  });
+
+  // U18 역반영(2026-10-17) 뒤에는 반대 방향도 성립해야 해요: 브랜드 JSON 선언은 모두 초안에 같은 값으로 있다.
+  // 참조(다크 interactive.primary = {color.blue.500})는 기본 소스로 풀어 초안의 hex 와 비교해요.
+  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 제외)', () => {
+    const draft = draftBlocks();
+    for (const theme of ['light', 'dark']) {
+      const mine = brandDecls(theme);
+      assert.ok(mine.size > 100, `${theme} 브랜드 선언 ${mine.size}개`);
+      for (const [name, value] of mine) {
+        if (D2_OVERRIDES[theme][name] !== undefined) continue;
+        assert.equal(draft[theme].get(name), resolveRef(value), `${theme} ${name}`);
       }
     }
   });
