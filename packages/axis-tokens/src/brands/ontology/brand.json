@@ -1,0 +1,10 @@
+{
+  "name": "ontology",
+  "description": "디자인 시스템 v1 기반 ontology 브랜드 프리셋",
+  "themes": ["light", "dark"],
+  "a11y": {
+    "status": "부록 B 2026-10-16 대리 승인, 디자인 오너 사후 확인 대기",
+    "checkedAt": "2026-10-16",
+    "gate": "WI-0025 부록 B"
+  }
+}

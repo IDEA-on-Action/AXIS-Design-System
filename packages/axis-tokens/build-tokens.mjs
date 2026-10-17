@@ -360,5 +360,6 @@ if (brandResult.violations.length > 0) {
   process.exit(1);
 }
 brandResult.brands.forEach(name => console.log(`  ✓ brands/${name}.css generated`));
+if (brandResult.brands.length > 0) console.log('  ✓ brands/index.json generated');
 
 console.log('Done!');

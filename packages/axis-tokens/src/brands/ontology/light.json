@@ -1,0 +1,172 @@
+{
+  "font": {
+    "family": {
+      "sans": { "value": "\"Pretendard Variable\", \"Pretendard\", \"Apple SD Gothic Neo\", \"Malgun Gothic\", \"맑은 고딕\", sans-serif" },
+      "mono": { "value": "\"JetBrains Mono\", \"Cascadia Code\", \"D2Coding\", Consolas, monospace" }
+    }
+  },
+  "radius": {
+    "md": { "value": "8px" },
+    "lg": { "value": "12px" },
+    "sm": { "value": "6px" }
+  },
+  "shadow": {
+    "sm": { "value": "0 1px 2px rgba(17,20,24,.06)" },
+    "lg": { "value": "0 8px 24px rgba(17,20,24,.10)" }
+  },
+  "plan-card": {
+    "accent-width": { "value": "1px" }
+  },
+  "surface": {
+    "default": { "value": "#FFFFFF" },
+    "secondary": { "value": "#F3F4F6" },
+    "tertiary": { "value": "#EAECEF" },
+    "inverse": { "value": "#111418" },
+    "brand": { "value": "#326ADA" },
+    "success": { "value": "#EAECEF" },
+    "warning": { "value": "#FDE8E8" },
+    "error": { "value": "#FDE8E8" },
+    "info": { "value": "#E8EFFC" }
+  },
+  "text": {
+    "primary": { "value": "#111418" },
+    "secondary": { "value": "#5F6673" },
+    "tertiary": { "value": "#5F6673" },
+    "inverse": { "value": "#FFFFFF" },
+    "brand": { "value": "#2757B8" },
+    "success": { "value": "#2A2F36" },
+    "warning": { "value": "#C8332E" },
+    "error": { "value": "#C8332E" },
+    "info": { "value": "#2757B8" }
+  },
+  "border": {
+    "default": { "value": "#E6E8EB" },
+    "secondary": { "value": "#D6DADF" },
+    "focus": { "value": "#326ADA" },
+    "error": { "value": "#C8332E" },
+    "success": { "value": "#D6DADF" }
+  },
+  "icon": {
+    "default": { "value": "#2A2F36" },
+    "secondary": { "value": "#9AA1AB" },
+    "inverse": { "value": "#FFFFFF" },
+    "brand": { "value": "#326ADA" },
+    "success": { "value": "#6B7280" },
+    "warning": { "value": "#F5C6C6" },
+    "error": { "value": "#C8332E" }
+  },
+  "button": {
+    "bg": {
+      "default": { "value": "#326ADA" },
+      "hover": { "value": "#2757B8" },
+      "active": { "value": "#2757B8" }
+    },
+    "text": {
+      "default": { "value": "#FFFFFF" }
+    },
+    "border": {
+      "focus": { "value": "#326ADA" }
+    }
+  },
+  "button-secondary": {
+    "bg": {
+      "default": { "value": "#FFFFFF" },
+      "hover": { "value": "#F3F4F6" },
+      "active": { "value": "#EAECEF" }
+    },
+    "text": {
+      "default": { "value": "#111418" }
+    }
+  },
+  "button-ghost": {
+    "bg": {
+      "hover": { "value": "#F3F4F6" },
+      "active": { "value": "#EAECEF" }
+    },
+    "text": {
+      "default": { "value": "#2A2F36" }
+    }
+  },
+  "button-destructive": {
+    "bg": {
+      "default": { "value": "#FDE8E8" },
+      "hover": { "value": "#F5C6C6" },
+      "active": { "value": "#F5C6C6" }
+    },
+    "text": {
+      "default": { "value": "#A8281F" }
+    }
+  },
+  "card": {
+    "bg": {
+      "default": { "value": "#FFFFFF" }
+    },
+    "border": {
+      "default": { "value": "#E6E8EB" }
+    },
+    "shadow": {
+      "default": { "value": "0 0 #0000" }
+    }
+  },
+  "input": {
+    "bg": {
+      "default": { "value": "#FFFFFF" },
+      "disabled": { "value": "#F3F4F6" }
+    },
+    "text": {
+      "default": { "value": "#111418" },
+      "placeholder": { "value": "#9AA1AB" }
+    },
+    "border": {
+      "default": { "value": "#D6DADF" },
+      "hover": { "value": "#9AA1AB" },
+      "focus": { "value": "#326ADA" },
+      "error": { "value": "#C8332E" }
+    }
+  },
+  "badge": {
+    "default": {
+      "bg": { "value": "#EAECEF" },
+      "text": { "value": "#2A2F36" }
+    },
+    "success": {
+      "bg": { "value": "#EAECEF" },
+      "text": { "value": "#2A2F36" }
+    },
+    "warning": {
+      "bg": { "value": "#FDE8E8" },
+      "text": { "value": "#C8332E" }
+    },
+    "error": {
+      "bg": { "value": "#C8332E" },
+      "text": { "value": "#FFFFFF" }
+    },
+    "info": {
+      "bg": { "value": "#E8EFFC" },
+      "text": { "value": "#2757B8" }
+    }
+  },
+  "card-shadow": { "value": "0 0 #0000" },
+  "shadcn": {
+    "radius": "12px",
+    "background": "0 0% 97%",
+    "foreground": "214 17% 8%",
+    "card": "0 0% 100%",
+    "card-foreground": "214 17% 8%",
+    "popover": "0 0% 100%",
+    "popover-foreground": "214 17% 8%",
+    "primary": "220 69.4% 52.5%",
+    "primary-foreground": "0 0% 100%",
+    "secondary": "216 13.5% 92.7%",
+    "secondary-foreground": "214 17% 8%",
+    "muted": "220 14% 96%",
+    "muted-foreground": "219 9.5% 41.2%",
+    "accent": "219 77% 95%",
+    "accent-foreground": "220.1 65% 43.7%",
+    "destructive": "1.9 62.6% 48.2%",
+    "destructive-foreground": "0 0% 100%",
+    "border": "216 11% 91%",
+    "input": "213.3 12.3% 85.7%",
+    "ring": "220 69.4% 52.5%"
+  }
+}

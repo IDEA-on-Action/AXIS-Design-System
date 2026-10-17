@@ -354,9 +354,37 @@ export function brandExportEntries(name) {
   };
 }
 
+/**
+ * 브랜드 목록 파일 exports 항목 (plan 3 결정 2, 2026-10-17: A안).
+ * 브랜드가 하나 이상일 때만 dist/brands/index.json 이 생기므로 그때만 검사한다.
+ */
+export const BRAND_INDEX_EXPORT = { './brands': './dist/brands/index.json' };
+
+/**
+ * dist/brands/index.json 내용. 이름순으로 정렬해 결정적으로 만든다.
+ * css · meta 는 패키지 exports 하위 경로(`@axis-ds/tokens` 뒤에 붙는 부분)다.
+ * 스키마: { "brands": [{ "name", "css", "meta" }] } (1.3.0 공개 API)
+ */
+export function brandIndex(brandNames) {
+  return {
+    brands: [...brandNames].sort().map(name => ({
+      name,
+      css: `./css/brands/${name}`,
+      meta: `./brands/${name}/brand.json`,
+    })),
+  };
+}
+
 export function checkBrandExports(pkg, brandNames) {
   const errors = [];
   const exportsField = isPlainObject(pkg?.exports) ? pkg.exports : {};
+  if (brandNames.length > 0) {
+    for (const [key, target] of Object.entries(BRAND_INDEX_EXPORT)) {
+      if (exportsField[key] !== target) {
+        errors.push(`B5 package.json exports 에 "${key}": "${target}" 항목이 없습니다(브랜드 목록 파일)`);
+      }
+    }
+  }
   for (const name of brandNames) {
     for (const [key, target] of Object.entries(brandExportEntries(name))) {
       if (exportsField[key] !== target) {

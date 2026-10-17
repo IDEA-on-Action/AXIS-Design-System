@@ -18,7 +18,10 @@
       "import": "./dist/tailwind-preset.mjs",
       "require": "./dist/tailwind-preset.js"
     },
-    "./json": "./dist/json/tokens.json"
+    "./json": "./dist/json/tokens.json",
+    "./brands": "./dist/brands/index.json",
+    "./css/brands/ontology": "./dist/css/brands/ontology.css",
+    "./brands/ontology/brand.json": "./dist/brands/ontology/brand.json"
   },
   "sideEffects": [
     "*.css"

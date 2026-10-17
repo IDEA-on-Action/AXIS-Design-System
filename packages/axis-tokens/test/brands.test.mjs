@@ -20,6 +20,8 @@ import {
   validateBrand,
   checkBrandExports,
   brandExportEntries,
+  brandIndex,
+  BRAND_INDEX_EXPORT,
   brandSelectors,
   renderShadcnBlock,
   hexToHslTriple,
@@ -131,6 +133,85 @@ describe('loadBrand', () => {
 describe('validateBrand 양성', () => {
   test('유효 fixture 는 위반 0건', () => {
     assert.deepEqual(validateBrand(sample(), base), []);
+  });
+});
+
+// FR-8: 실제 배포 브랜드 src/brands/ontology. 값을 추가하는 후속 작업(상태 색 접기 등)과 충돌하지 않게
+// 선언 수를 고정하지 않고 「초안 2 이식분이 모두 같은 값으로 들어 있다」(부분집합)로 단언한다.
+describe('src/brands/ontology (FR-8)', () => {
+  const brandsDir = join(pkgDir, 'src', 'brands');
+  const draftPath = join(pkgDir, '..', '..', 'docs', 'workitems', 'WI-0025-brand-theme', 'axis-theme-ontology.css');
+  const ontology = loadBrand(brandsDir, 'ontology');
+
+  /** 초안 CSS 의 라이트 · 다크 블록 선언을 이름 -> 값 맵으로 */
+  function draftBlocks() {
+    const css = readFileSync(draftPath, 'utf-8').replace(/\/\*[\s\S]*?\*\//g, '');
+    const blocks = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map(m => ({ sel: m[1].trim(), body: m[2] }));
+    const decls = sel => new Map(
+      [...(blocks.find(b => sel(b.sel))?.body ?? '').matchAll(/(--[A-Za-z0-9-]+)\s*:\s*([^;]+);/g)]
+        .map(m => [m[1], m[2].trim()]),
+    );
+    return {
+      light: decls(s => s === '[data-brand="ontology"]'),
+      dark: decls(s => s.startsWith('[data-brand="ontology"].dark')),
+    };
+  }
+
+  /** 브랜드 JSON 을 이름 -> 값 맵으로(--axis-* 는 cssVarName, shadcn 은 --키) */
+  function brandDecls(theme) {
+    const map = new Map();
+    const walk = (node, path) => {
+      for (const [k, v] of Object.entries(node)) {
+        if (v && typeof v === 'object' && 'value' in v) map.set(cssVarName([...path, k]), v.value);
+        else walk(v, [...path, k]);
+      }
+    };
+    walk(ontology[theme], []);
+    for (const [k, v] of Object.entries(ontology.shadcn[theme])) map.set(`--${k}`, v);
+    return map;
+  }
+
+  test('파일 3종이 있고 검증 V1~V8 위반 0건', () => {
+    assert.deepEqual(ontology.missing, []);
+    assert.deepEqual(ontology.parseErrors, []);
+    assert.deepEqual(validateBrand(ontology, base), []);
+  });
+
+  test('초안 2 선언(bg-muted 제외)이 모두 같은 값으로 들어 있다', () => {
+    const draft = draftBlocks();
+    assert.ok(draft.light.size > 90 && draft.dark.size > 80, `초안을 읽지 못했습니다: ${draft.light.size}/${draft.dark.size}`);
+    for (const theme of ['light', 'dark']) {
+      const mine = brandDecls(theme);
+      for (const [name, value] of draft[theme]) {
+        if (name === '--axis-bg-muted') continue; // D-f
+        assert.equal(mine.get(name), value, `${theme} ${name}`);
+      }
+    }
+  });
+
+  test('bg-muted 는 빠져 있다 (D-f)', () => {
+    for (const theme of ['light', 'dark']) {
+      assert.equal(brandDecls(theme).has('--axis-bg-muted'), false, theme);
+    }
+  });
+
+  test('Card 그림자 두 변수 모두 라이트에 0 0 #0000 (U2 · U23 · 2026-10-17 결정)', () => {
+    assert.deepEqual(ontology.light['card-shadow'], { value: '0 0 #0000' });
+    assert.deepEqual(ontology.light.card.shadow.default, { value: '0 0 #0000' });
+  });
+
+  test('shadcn: 라이트에 --radius 12px 포함, 다크는 radius 없음', () => {
+    assert.equal(ontology.shadcn.light.radius, '12px');
+    assert.equal(ontology.shadcn.dark.radius, undefined);
+    assert.equal(ontology.light['plan-card']['accent-width'].value, '1px'); // U8
+  });
+
+  test('brand.json: 스키마 필드와 a11y 상태, 개인 이름 없음', () => {
+    assert.deepEqual(Object.keys(ontology.meta).sort(), ['a11y', 'description', 'name', 'themes']);
+    assert.deepEqual(Object.keys(ontology.meta.a11y).sort(), ['checkedAt', 'gate', 'status']);
+    assert.match(ontology.meta.a11y.status, /사후 확인 대기/);
+    assert.equal(ontology.meta.a11y.checkedAt, '2026-10-16');
+    assert.doesNotMatch(JSON.stringify(ontology.meta), /책임|가칭/);
   });
 });
 
@@ -294,13 +375,28 @@ describe('validateBrand 음성', () => {
 });
 
 describe('checkBrandExports (B5)', () => {
-  test('명시형 exports 2개가 모두 있으면 통과', () => {
-    const pkg = { exports: { ...brandExportEntries('sample') } };
+  test('명시형 exports 2개와 목록 파일 ./brands 가 모두 있으면 통과', () => {
+    const pkg = { exports: { ...BRAND_INDEX_EXPORT, ...brandExportEntries('sample') } };
     assert.deepEqual(checkBrandExports(pkg, ['sample']), []);
   });
-  test('누락되면 항목마다 위반', () => {
+  test('누락되면 항목마다 위반(브랜드별 2개 + 목록 파일 1개)', () => {
     const pkg = { exports: { './css': './dist/css/variables.css' } };
-    assert.equal(checkBrandExports(pkg, ['sample']).length, 2);
+    assert.equal(checkBrandExports(pkg, ['sample']).length, 3);
+    assert.equal(checkBrandExports(pkg, ['a', 'b']).length, 5);
+  });
+  test('목록 파일 ./brands 만 빠져도 위반 (plan 3 결정 2 A안)', () => {
+    const pkg = { exports: { ...brandExportEntries('sample') } };
+    const errors = checkBrandExports(pkg, ['sample']);
+    assert.equal(errors.length, 1);
+    assert.match(errors[0], /B5 .*"\.\/brands": "\.\/dist\/brands\/index\.json"/);
+  });
+  test('brandIndex 는 이름순 정렬, exports 하위 경로를 담는다', () => {
+    assert.deepEqual(brandIndex(['zeta', 'alpha']), {
+      brands: [
+        { name: 'alpha', css: './css/brands/alpha', meta: './brands/alpha/brand.json' },
+        { name: 'zeta', css: './css/brands/zeta', meta: './brands/zeta/brand.json' },
+      ],
+    });
   });
   test('브랜드 0개면 검사할 것이 없다', () => {
     assert.deepEqual(checkBrandExports({ exports: {} }, []), []);

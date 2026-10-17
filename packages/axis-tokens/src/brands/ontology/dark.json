@@ -1,0 +1,153 @@
+{
+  "shadow": {
+    "sm": { "value": "0 1px 2px rgba(0,0,0,.30)" },
+    "lg": { "value": "0 8px 24px rgba(0,0,0,.50)" }
+  },
+  "surface": {
+    "default": { "value": "#17191D" },
+    "secondary": { "value": "#1F2227" },
+    "tertiary": { "value": "#2A2E34" },
+    "inverse": { "value": "#F1F3F5" },
+    "brand": { "value": "#6B98F0" },
+    "success": { "value": "#2A2E34" },
+    "warning": { "value": "#3A1A1A" },
+    "error": { "value": "#3A1A1A" },
+    "info": { "value": "#1C2A45" }
+  },
+  "text": {
+    "primary": { "value": "#F1F3F5" },
+    "secondary": { "value": "#9CA3AD" },
+    "tertiary": { "value": "#9CA3AD" },
+    "inverse": { "value": "#0E1013" },
+    "brand": { "value": "#9DBBF6" },
+    "success": { "value": "#D0D4D9" },
+    "warning": { "value": "#F07A72" },
+    "error": { "value": "#F07A72" },
+    "info": { "value": "#9DBBF6" }
+  },
+  "border": {
+    "default": { "value": "#2B2F35" },
+    "secondary": { "value": "#5F6874" },
+    "focus": { "value": "#6B98F0" },
+    "error": { "value": "#F07A72" },
+    "success": { "value": "#5F6874" }
+  },
+  "icon": {
+    "default": { "value": "#D0D4D9" },
+    "secondary": { "value": "#7A828D" },
+    "inverse": { "value": "#0E1013" },
+    "brand": { "value": "#6B98F0" },
+    "success": { "value": "#9CA3AD" },
+    "warning": { "value": "#7A3330" },
+    "error": { "value": "#F07A72" }
+  },
+  "button": {
+    "bg": {
+      "default": { "value": "#6B98F0" },
+      "hover": { "value": "#9DBBF6" },
+      "active": { "value": "#9DBBF6" }
+    },
+    "text": {
+      "default": { "value": "#0E1013" }
+    },
+    "border": {
+      "focus": { "value": "#6B98F0" }
+    }
+  },
+  "button-secondary": {
+    "bg": {
+      "default": { "value": "#17191D" },
+      "hover": { "value": "#1F2227" },
+      "active": { "value": "#2A2E34" }
+    },
+    "text": {
+      "default": { "value": "#F1F3F5" }
+    }
+  },
+  "button-ghost": {
+    "bg": {
+      "hover": { "value": "#1F2227" },
+      "active": { "value": "#2A2E34" }
+    },
+    "text": {
+      "default": { "value": "#D0D4D9" }
+    }
+  },
+  "button-destructive": {
+    "bg": {
+      "default": { "value": "#3A1A1A" },
+      "hover": { "value": "#7A3330" },
+      "active": { "value": "#7A3330" }
+    },
+    "text": {
+      "default": { "value": "#F49890" }
+    }
+  },
+  "card": {
+    "bg": {
+      "default": { "value": "#17191D" }
+    },
+    "border": {
+      "default": { "value": "#2B2F35" }
+    }
+  },
+  "input": {
+    "bg": {
+      "default": { "value": "#17191D" },
+      "disabled": { "value": "#1F2227" }
+    },
+    "text": {
+      "default": { "value": "#F1F3F5" },
+      "placeholder": { "value": "#7A828D" }
+    },
+    "border": {
+      "default": { "value": "#5F6874" },
+      "hover": { "value": "#7A828D" },
+      "focus": { "value": "#6B98F0" },
+      "error": { "value": "#F07A72" }
+    }
+  },
+  "badge": {
+    "default": {
+      "bg": { "value": "#2A2E34" },
+      "text": { "value": "#D0D4D9" }
+    },
+    "success": {
+      "bg": { "value": "#2A2E34" },
+      "text": { "value": "#D0D4D9" }
+    },
+    "warning": {
+      "bg": { "value": "#3A1A1A" },
+      "text": { "value": "#F07A72" }
+    },
+    "error": {
+      "bg": { "value": "#F07A72" },
+      "text": { "value": "#0E1013" }
+    },
+    "info": {
+      "bg": { "value": "#1C2A45" },
+      "text": { "value": "#9DBBF6" }
+    }
+  },
+  "shadcn": {
+    "background": "216 15.2% 6.5%",
+    "foreground": "210 16.7% 95.3%",
+    "card": "220 11.5% 10.2%",
+    "card-foreground": "210 16.7% 95.3%",
+    "popover": "220 11.5% 10.2%",
+    "popover-foreground": "210 16.7% 95.3%",
+    "primary": "219.7 81.6% 68%",
+    "primary-foreground": "216 15.2% 6.5%",
+    "secondary": "216 10.6% 18.4%",
+    "secondary-foreground": "210 16.7% 95.3%",
+    "muted": "217.5 11.4% 13.7%",
+    "muted-foreground": "215.3 9.4% 64.5%",
+    "accent": "220 42% 19%",
+    "accent-foreground": "220 83% 79%",
+    "destructive": "3.8 80.8% 69.4%",
+    "destructive-foreground": "216 15.2% 6.5%",
+    "border": "216 10.4% 18.8%",
+    "input": "214.3 10% 41.4%",
+    "ring": "219.7 81.6% 68%"
+  }
+}
