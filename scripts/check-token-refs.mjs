@@ -16,14 +16,13 @@
  *   6. 테마 선언 (WI-0033): component 토큰의 색 leaf 에 `$extensions.axis.dark` 도
  *      `$extensions.axis.themeIndependent` 도 없음, 또는 선언 형식 오류
  *      (판정 규칙은 packages/axis-tokens/scripts/theme-modes.mjs 의 findThemeDeclarationViolations)
- *   6. CSS 미생성: 임의값이 `var(` · `--` · `color-mix(` 로 시작하고(`color:` 타입 힌트 포함)
+ *   7. CSS 미생성: 임의값이 `var(` · `--` · `color-mix(` 로 시작하고(`color:` 타입 힌트 포함)
  *      불투명도 수식어(`/10` · `/[0.1]` 등)가 붙은 클래스. 예: `bg-[var(--axis-x)]/10`,
  *      `hover:border-[color:var(--axis-x)]/30`. Tailwind 3.4(3.4.19 실측)는 이런 클래스의 CSS 규칙을
  *      만들지 않아 의도한 옅은 바탕·테두리가 투명해집니다.
  *      대신 `bg-[color:color-mix(in_srgb,var(--axis-x)_10%,transparent)]` 나 짝 토큰을 씁니다.
  *      검출 범위는 위 세 접두로 시작하는 임의값뿐이고 `rgb()` · `theme()` 등은 보지 않습니다.
  *      검사 범위는 다른 판정과 같은 --src 디렉터리입니다(기본 2곳, apps/web 과 레지스트리 JSON 은 제외).
- *      (번호 5는 비워 둡니다. WI-0025 plan.md 결정 U7 의 번호를 그대로 씁니다.)
  *
  * 정의 집합: <css-dir>/variables.css 와 <css-dir>/shadcn-compat.css 의 `:root` 블록 선언
  *
@@ -55,7 +54,7 @@ const IS_TEST = /(\.(test|spec)\.[jt]sx?$)|([\\/]__tests__[\\/])/
 const AGENTIC_SEGMENT = `axis-agentic-ui${sep}`
 const IN_CI = process.env.GITHUB_ACTIONS === 'true'
 /**
- * 판정 6: Tailwind 3.4가 CSS를 만들지 않는 `임의값 + 불투명도 수식어` 클래스.
+ * 판정 7: Tailwind 3.4가 CSS를 만들지 않는 `임의값 + 불투명도 수식어` 클래스.
  * 변형 접두(`hover:` · `dark:` 등) 뒤 유틸리티 이름의 `[` 다음이 `var(` · `--` · `color-mix(`
  * (앞에 `color:` 힌트 허용)이고 `]` 바로 뒤가 `/숫자` 또는 `/[임의값]` 이면 위반입니다.
  * CSS가 생성되는 형태(`bg-[#ff0000]/10`, `bg-[hsl(var(--x))]/10`, 수식어 없는 임의값)는 잡지 않습니다.

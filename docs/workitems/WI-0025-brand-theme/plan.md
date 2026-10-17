@@ -652,7 +652,7 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 | U4 | `cn()` 병합 규칙 | `extendTailwindMerge`에 그림자 변수 클래스를 등록합니다 |
 | U5 | 그 밖의 하드코딩 그림자 | 이번에 열지 않고, PRD FR-9의 「팝오버 · 탭」 서술만 실제 범위에 맞게 고칩니다 |
 | U6 | agentic-ui 불투명도 수식어 11곳 | 혼합안: PlanCard 배지는 `--axis-badge-*`, AttachmentCard 테두리는 `--axis-status-error-border`, 나머지 5곳은 `color-mix()` (2026-10-15 「전부 color-mix」 결정의 부분 변경) |
-| U7 | `check-token-refs` | Tailwind가 CSS를 만들지 않는 패턴(임의값 `var()` + 불투명도 수식어)을 판정 6으로 추가합니다 |
+| U7 | `check-token-refs` | Tailwind가 CSS를 만들지 않는 패턴(임의값 `var()` + 불투명도 수식어)을 판정 7로 추가합니다 |
 | U8 | ontology PlanCard 색 선 두께 | **1px** (2026-10-16 사용자(Sinclair Seo) 대리 승인, 디자인 오너(김정원 책임) 사후 확인 대기. 0이면 왼쪽 테두리선까지 사라지므로 다른 변과 같은 1px로 둡니다) |
 | U9 | a11y 기본 브랜드 18건 | `apps/web` 정비 직후 실측하고, 그 결과를 보기 전에는 CI 게이트를 켜지 않습니다 |
 | U10 | a11y CI 서버 방식 | CI는 `apps/web/out` 정적 서버, 로컬은 `next dev` 기본에 `E2E_SERVER=static` 선택 (4 결정 1) |
@@ -676,7 +676,7 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 1. V8 정규식 확장과 테스트 (U14)
 2. G1: 흰 글자 짝 토큰 6개(기본값 #FFFFFF) · FR-7 `--axis-plan-card-accent-width`(`border-l-[length:…]` 타입 힌트 필수)
 3. G3: 그림자 primitive · `--axis-card-shadow` · Card · Dialog 참조 (U1 · U3 · U4)
-4. G2: 불투명도 11곳 혼합안과 `check-token-refs` 판정 6 (U6 · U7)
+4. G2: 불투명도 11곳 혼합안과 `check-token-refs` 판정 7 (U6 · U7)
 5. `apps/web` 정비와 기본 브랜드 18건 실측 (U9 · U11). G3보다 먼저 머지되어야 합니다
 6. ontology 브랜드 구조: `brands/ontology` JSON(초안 2 이식, 부록 B 대리 승인 값: PlanCard 색 선 1px · 상태 색 접기 확정), `brand.json`(a11y 대리 승인 · 사후 확인 대기 기록), exports
 7. AC3 · AC6 · 비텍스트 대비 · a11y 36건 · CI 배선 (U10 · U12)
