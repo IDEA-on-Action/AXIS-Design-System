@@ -672,7 +672,7 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 | U21 | tailwind content에 `./src/lib` 추가 | 별건으로 분리합니다 |
 | U22 | 1.3.0 릴리스 노트 · changeset | 노트 초안은 M3에서 한 명이 맡아 쓰고, changeset은 M4에서 만듭니다 (2026-10-18: M3에서 linked 4개 minor changeset을 한 번 만들었다가(13c6c36), 같은 날 사용자 결정으로 원안대로 M4로 되돌렸습니다. M3 머지가 1.3.0 릴리스 PR을 열어 데모 · 가이드 없이 배포될 위험을 없애기 위해서입니다. 본문은 13c6c36의 `.changeset/wi-0025-brand-theme.md`를 M4에서 다시 씁니다) |
 | U23 | `--axis-card-shadow-default` 역할 (2026-10-17 추가) | **폐기 예정**: 1.x 동안 이름 · 값(`0 1px 3px 0 rgb(0 0 0 / 0.1)`)을 유지하고 어떤 컴포넌트도 참조하지 않습니다. Card 그림자의 공개 조정점은 `--axis-card-shadow` 하나입니다. 토큰 원본에 `$extensions.axis.deprecated: "card-shadow"`(대체 토큰 경로) 마커를 두고 `theme-modes.mjs`가 대체 경로를 검사합니다. CSS · JSON · JS 산출물은 바뀌지 않습니다. ontology 브랜드는 `card-shadow` · `card.shadow.default` 둘 다 `0 0 #0000`을 넣습니다. 2.0 제거 후보이며, 브랜드가 이 변수를 덮어써도 Card에는 효과가 없다는 점은 문서로만 안내합니다(검증 규칙 변경 없음) |
-| U24 | `brand.json` 최종 경로와 브랜드 목록 파일 (3 결정 2, 2026-10-17 추가) | **A안**: 메타는 `dist/brands/<brand>/brand.json`(exports `./brands/<brand>/brand.json`), 목록은 `dist/brands/index.json`(exports `./brands`)을 1.3.0에 함께 냅니다. 목록 스키마는 `{ "brands": [{ "name", "css", "meta" }] }`이고, `css` · `meta`는 `@axis-ds/tokens` 뒤에 붙는 exports 하위 경로(`./css/brands/<b>` · `./brands/<b>/brand.json`)입니다. 이름순으로 정렬해 결정적으로 만들고, 브랜드가 0개이면 만들지 않습니다(그때는 B5도 `./brands`를 보지 않습니다). 브랜드가 있으면 B5가 `./brands` 항목 누락을 빌드 실패로 막습니다. 공개 API가 하나 늘어나므로 이후 제거는 breaking입니다. ontology `card-shadow` · `card.shadow.default`는 라이트에만 둡니다(그림자는 테마 무관 값이라 V7 허용, 초안 2의 `plan-card.accent-width`와 같은 방식, 다크는 import 순서 U11에 의존). import 순서 의존 범위는 Card 그림자 2개만이 아닙니다. 기본 `variables.css`의 `.dark` 블록이 다시 선언하는데 ontology 다크 블록에는 없는 변수는 8개(`radius-sm|md|lg` · `font-family-sans|mono` · `plan-card-accent-width` · `card-shadow` · `card-shadow-default`)이고, `[data-brand].dark`가 `.dark`와 같은 요소에 붙으면 명시도가 같아 순서로만 승패가 갈립니다. 문서 안내대로 `variables.css` 뒤에 브랜드 CSS를 import하면 8개 모두 라이트 값(Card 그림자는 `0 0 #0000`)이 다크에서도 유지됩니다(2026-10-17 dist 실측: 기본 `.dark` 이름 집합 ∩ 브랜드 라이트 − 브랜드 다크 = 8. 2026-10-18 재실측(13c6c36 dist): 이름 기준 10개이고, 늘어난 `button-border-default` · `button-ghost-bg-default` 2개는 기본 `.dark`와 브랜드 라이트가 모두 `transparent`라 값이 달라지는 것은 8개 그대로입니다) |
+| U24 | `brand.json` 최종 경로와 브랜드 목록 파일 (3 결정 2, 2026-10-17 추가) | **A안**: 메타는 `dist/brands/<brand>/brand.json`(exports `./brands/<brand>/brand.json`), 목록은 `dist/brands/index.json`(exports `./brands`)을 1.3.0에 함께 냅니다. 목록 스키마는 `{ "brands": [{ "name", "css", "meta" }] }`이고, `css` · `meta`는 `@axis-ds/tokens` 뒤에 붙는 exports 하위 경로(`./css/brands/<b>` · `./brands/<b>/brand.json`)입니다. 이름순으로 정렬해 결정적으로 만들고, 브랜드가 0개이면 만들지 않습니다(그때는 B5도 `./brands`를 보지 않습니다). 브랜드가 있으면 B5가 `./brands` 항목 누락을 빌드 실패로 막습니다. 공개 API가 하나 늘어나므로 이후 제거는 breaking입니다. ontology `card-shadow` · `card.shadow.default`는 라이트에만 둡니다(그림자는 테마 무관 값이라 V7 허용, 초안 2의 `plan-card.accent-width`와 같은 방식, 다크는 import 순서 U11에 의존). import 순서 의존 범위는 Card 그림자 2개만이 아닙니다. 기본 `variables.css` · `shadcn-compat.css`의 `.dark` 블록이 다시 선언하는데 ontology 다크 블록에는 없고 값이 달라지는 변수는 9개(`radius-sm|md|lg` · `font-family-sans|mono` · `plan-card-accent-width` · `card-shadow` · `card-shadow-default` · shadcn `--radius`, 아래 재실측 주석 참고)이고, `[data-brand].dark`가 `.dark`와 같은 요소에 붙으면 명시도가 같아 순서로만 승패가 갈립니다. 문서 안내대로 tokens CSS 뒤에 브랜드 CSS를 import하면 9개 모두 라이트 값(Card 그림자는 `0 0 #0000`, `--radius`는 12px)이 다크에서도 유지됩니다(2026-10-17 dist 실측: 기본 `.dark` 이름 집합 ∩ 브랜드 라이트 − 브랜드 다크 = 8. 2026-10-18 재실측(13c6c36 dist): 이름 기준 10개이고, 늘어난 `button-border-default` · `button-ghost-bg-default` 2개는 기본 `.dark`와 브랜드 라이트가 모두 `transparent`라 값이 달라지는 것은 8개 그대로입니다. 변경 주석, 2026-10-18 리뷰 정정: 위 두 측정은 `--axis-*`만 셌고 shadcn `--radius`를 빠뜨렸습니다. b9f225f HEAD에서 다시 빌드한 dist를 `variables.css` · `shadcn-compat.css`의 `.dark`와 `brands/ontology.css` 라이트(137개 = `--axis-*` 117 · shadcn 20) · 다크(126개 = 107 · 19) 블록으로 재면, 브랜드 라이트에만 있는 이름은 11개(`--axis-*` 10 · `--radius` 1)이고 기본 `.dark`와 값이 달라지는 것은 9개(위 8개 + `--radius` 12px 대 `.dark` 0.5rem)입니다. 95e8547에서 늘어난 `plan-card-reject-hover-text`는 라이트 · 다크 블록 모두에 있어 이 수에 들지 않습니다) |
 | U25 | ontology 접기 값 결정 묶음 (2026-10-17 추가) | warning = `bad` · warning-strong = `bad-dark`(바탕 역할 surface · badge-bg는 `bad-light` 유지), 아바타 tool = `key` · assistant = `ink-2` · system = `sub`, overlay는 기본값 `rgba(0, 0, 0, 0.5)`를 라이트 · 다크에 명시, 기본값과 같은 값도 모두 명시(완전성 제외 목록 0). 부록 B 승인 범위 밖 사용은 승인 범위 안 단계로 바꿉니다(D2: 테두리는 `line-2` 또는 `bad`, 비활성 글자는 `sub-aa`). 값 표 · 대비 검산은 5.3. 모두 디자인 오너 사후 확인 대상입니다 |
 | U26 | 대비 짝 표 드리프트 가드의 위치 (2026-10-17 추가) | 루트 `scripts/check-contrast-pairs.mjs`(`pnpm check-contrast-pairs`, frontend.yml 배선). tokens 패키지 테스트가 agentic-ui 소스를 읽으면 turbo 캐시 키에 agentic-ui 변경이 들어가지 않아 낡은 초록이 날 수 있어서, 패키지 경계를 넘는 검사는 `check-token-refs`처럼 루트에 둡니다. 짝 표 자체(`packages/axis-tokens/test/ontology-pairs.mjs`)와 대비 계산은 tokens 테스트에 둡니다 |
 
@@ -756,13 +756,13 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 
 **warning 단계 정리 (U25)**: 바탕 역할(`surface.warning` · `badge.warning.bg`)은 `bad-light`, 표식 · 글자 역할(`status.warning` · `text.warning` · `badge.warning.text`)은 `bad`, 강조(`status.warning-strong`)는 `bad-dark`입니다. PRD FR-8의 「warning → `bad` 연한 단계」는 바탕 역할의 서술입니다. `status.warning`을 `bad-light`나 `bad-line`으로 「바로잡으면」 token-usage-indicator 41행 글자가 1.52:1(다크 1.96:1)로 미달이 됩니다.
 
-**짝 토큰 대비 검산** (WCAG 2.x 상대휘도, `test/ontology-values.test.mjs`가 같은 표를 단언, 2026-10-17 실측)
+**짝 토큰 대비 검산** (WCAG 2.x 상대휘도, `test/ontology-values.test.mjs`가 같은 표를 단언, 2026-10-17 실측, 2026-10-18 리뷰 보정 f1 · f2 반영 뒤 재측정)
 
 | 글자 · 표식 / 바탕 | 라이트 | 다크 | 기준 | 소비처 |
 |---|---|---|---|---|
 | `status-success-contrast` / `status-success` | 13.48 | 12.79 | 4.5:1 | run-progress 32 · plan-card 179 |
 | `status-success-contrast` / `status-success-strong` | 18.47 | 17.13 | 4.5:1 | plan-card 179 hover |
-| `status-success-contrast` / `status-success` (아이콘) | 13.48 | 12.79 | 3:1 | step-timeline 68 · 76 |
+| `status-success-contrast` / `status-success` | 13.48 | 12.79 | 3:1 | step-timeline 68 · 76 (점 위 아이콘) |
 | `status-running-contrast` / `status-running` | 4.99 | 6.69 | 4.5:1 | run-progress 31 |
 | `status-error-contrast` / `status-error` | 5.29 | 7.01 | 4.5:1 | run-progress 33 |
 | `status-neutral-muted-contrast` / `status-neutral-muted` | 9.60 | 5.08 | 4.5:1 | run-progress 30 |
@@ -770,28 +770,41 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 | `agent-avatar-text` / `agent-avatar-tool` | 4.99 | 6.69 | 4.5:1 | agent-avatar 35 · 80 |
 | `agent-avatar-text` / `agent-avatar-assistant` | 13.48 | 12.79 | 4.5:1 | agent-avatar 34 · 80 |
 | `agent-avatar-text` / `agent-avatar-system` | 5.78 | 7.49 | 4.5:1 | agent-avatar 36 · 80 |
-| `status-neutral-strong` / `status-neutral-bg` | 11.39 | 9.16 | 4.5:1 | plan-card 35 |
-| `status-success` / `surface-default` | 13.48 | 11.82 | 4.5:1 | code-block 77 · tool-call-card 49 · plan-card 72 |
-| `status-error` / `surface-default` | 5.29 | 6.48 | 4.5:1 | approval-card 43 · recovery-banner 42 · token-usage-indicator 40 |
+| `status-neutral-strong` / `status-neutral-bg` | 11.39 | 9.16 | 4.5:1 | plan-card 35 배지 |
+| `badge-warning-text` / `badge-warning-bg` | 4.51 | 5.76 | 4.5:1 | plan-card 39 배지 |
+| `badge-success-text` / `badge-success-bg` | 11.39 | 9.16 | 4.5:1 | plan-card 43 · 55 배지 |
+| `badge-error-text` / `badge-error-bg` | 5.29 | 7.01 | 4.5:1 | plan-card 47 배지 |
+| `badge-info-text` / `badge-info-bg` | 5.79 | 7.41 | 4.5:1 | plan-card 51 배지 |
+| `status-success` / `surface-default` | 13.48 | 11.82 | 4.5:1 | tool-call-card 49 · plan-card 72 |
+| `status-error` / `surface-default` | 5.29 | 6.48 | 4.5:1 | approval-card 43 · token-usage-indicator 40 · tool-call-card 57 |
 | `status-warning` / `surface-default` | 5.29 | 6.48 | 4.5:1 | token-usage-indicator 41 · approval-card 38 |
 | `status-running` / `surface-default` | 4.99 | 6.18 | 4.5:1 | plan-card 66 · tool-call-card 40 |
 | `status-info` / `surface-default` | 4.99 | 6.18 | 4.5:1 | approval-card 33 |
 | `status-neutral` / `surface-default` | 5.78 | 6.92 | 4.5:1 | plan-card 61 · tool-call-card 32 |
-| `diff-added` / `surface-default` | 5.78 | 6.92 | 4.5:1 | diff-viewer 123 |
-| `diff-removed` / `surface-default` | 5.29 | 6.48 | 4.5:1 | diff-viewer 126 |
+| `diff-added` / `surface-secondary` | 5.25 | 6.27 | 4.5:1 | diff-viewer 123 (헤더 :115) |
+| `diff-removed` / `surface-secondary` | 4.81 | 5.87 | 4.5:1 | diff-viewer 126 (헤더 :115) |
+| `status-error` / `surface-error` | 4.51 | 5.76 | 4.5:1 | recovery-banner 42 (루트 :34) |
+| `status-success` / `surface-secondary` | 12.25 | 10.71 | 4.5:1 | code-block 77 (헤더 :57) |
+| `status-success` / `surface-tertiary` | 11.39 | 9.16 | 4.5:1 | code-block 77 hover (버튼 :73) |
+| `status-neutral` / `surface-secondary` | 5.25 | 6.27 | 4.5:1 | tool-call-card 32 hover (버튼 :100) |
+| `status-running` / `surface-secondary` | 4.53 | 5.60 | 4.5:1 | tool-call-card 40 hover (버튼 :100) |
+| `status-success` / `surface-secondary` | 12.25 | 10.71 | 4.5:1 | tool-call-card 49 hover (버튼 :100) |
+| `status-error` / `surface-secondary` | 4.81 | 5.87 | 4.5:1 | tool-call-card 57 hover (버튼 :100) |
 | `diff-added-text` / `diff-added` 10% + `surface-default` | 11.81 | 10.07 | 4.5:1 | diff-viewer 71 · 77 |
 | `diff-removed-text` / `diff-removed` 10% + `surface-default` | 6.07 | 7.06 | 4.5:1 | diff-viewer 72 · 78 |
 | `status-success` / `status-success` 10% + `surface-default` | 11.21 | 9.39 | 4.5:1 | feedback-buttons 62 |
-| `status-error` / `status-error` 10% + `surface-default` | 4.57 | 5.60 | 4.5:1 | feedback-buttons 78 · plan-card 195 hover |
+| `status-error` / `status-error` 10% + `surface-default` | 4.57 | 5.60 | 4.5:1 | feedback-buttons 78 |
+| `plan-card-reject-hover-text` / `status-error` 10% + `surface-secondary` | 5.53 | 6.36 | 4.5:1 | plan-card 195 hover (하단 영역 :175) |
 | `button-text-disabled` / `button-bg-disabled` | 4.88 | 5.37 | 4.5:1 | 소비처 없음 |
 | `border-warning` / `surface-warning` | 4.51 | 5.76 | 3:1 | alert 19 |
 | `border-info` / `surface-info` | 4.32 | 5.03 | 3:1 | alert 15 |
-| `status-error-border` / `surface-default` | 5.29 | 6.48 | 3:1 | recovery-banner 34 · attachment-card 86 |
+| `status-error-border` / `surface-default` | 5.29 | 6.48 | 3:1 | attachment-card 86 |
+| `status-error-border` / `surface-error` | 4.51 | 5.76 | 3:1 | recovery-banner 34 |
 | `icon-info` / `surface-default` | 4.99 | 6.18 | 3:1 | 소비처 없음 |
 
-글자 대비 최소값은 라이트 4.57:1(`status-error` / 10% 바탕), 다크 5.08:1(`ink` / `line-2`)입니다. 다크에 흰 글자를 그대로 두면 `key` 2.85 · `ink-2` 1.49 · `bad` 2.72:1로 미달이라 짝 토큰 다크 값은 `on-key` #0E1013입니다.
+글자 기준(4.5:1) 행의 최소값은 라이트 4.51:1(`badge-warning-text` / `badge-warning-bg` PlanCard 배지, 그리고 글자 기준으로 둔 RecoveryBanner 아이콘 `status-error` / `surface-error`), 다크 5.08:1(`ink` / `line-2`)입니다. (변경 주석, 2026-10-18 리뷰 보정: 종전 「라이트 4.57:1(`status-error` / 10% 바탕)」은 `surface-default` 위 합성 값이었습니다. 이 짝의 소비처였던 PlanCard 거절 버튼은 실제 부모 바탕이 하단 영역 `surface-secondary`(plan-card 175)라 4.17:1로 미달이었고, 95e8547에서 hover 글자를 전용 토큰 `plan-card-reject-hover-text`(ontology #A8281F · #F49890)로 바꿔 5.53 · 6.36:1이 됐습니다. 4.57 · 5.60 행에는 FeedbackButtons 78만 남았습니다. cc9037e에서 부모 바탕을 실제 값으로 바꾼 행(diff 헤더 · RecoveryBanner · CodeBlock · ToolCallCard hover)과 PlanCard 배지 4행이 더해져 표가 28행에서 41행이 됐습니다.) 다크에 흰 글자를 그대로 두면 `key` 2.85 · `ink-2` 1.49 · `bad` 2.72:1로 미달이라 짝 토큰 다크 값은 `on-key` #0E1013입니다.
 
-측정 조건: 대비는 토큰 값을 hex로 끝까지 풀어 node로 계산했고(자기 계산), `color-mix(in srgb, X 10%, transparent)`는 `surface-default` 위에 합성한 색으로 봤습니다(실제 부모 바탕이 `surface-secondary`이면 값이 조금 다릅니다). 브랜드 CSS를 tokens CSS 뒤에 import하는 문서 안내(U11)를 전제로, 다크는 다크 선언이 없으면 라이트 선언 값을 씁니다. 렌더 계산 스타일 · axe 독립 실측은 AC6 · 비텍스트 대비 spec · a11y 36건에서 교차 확인합니다.
+측정 조건: 대비는 토큰 값을 hex로 끝까지 풀어 node로 계산했고(자기 계산), 바탕은 그 글자 · 표식을 실제로 감싸는 가장 가까운 불투명 바탕입니다. 부모 요소에 있는 바탕은 「소비처」 칸에 그 행을 적었고(예: 「diff-viewer 123 (헤더 :115)」), 짝 표의 `parent` 근거를 `pnpm check-contrast-pairs`가 소스 두 행과 대조합니다. `color-mix(in srgb, X 10%, transparent)`는 그 부모 바탕 위에 합성한 색으로 봤고, 표에 부모 바탕을 따로 적지 않은 옅은 바탕 행(diff 줄 · FeedbackButtons)은 `surface-default` 위 합성입니다. 컴포넌트 안에 자체 바탕이 없어 소비처 화면에 따라 부모 바탕이 바뀌는 행(FeedbackButtons 62 · 78, token-usage-indicator 40 · 41)은 `surface-default`를 가정한 값입니다. 같은 식으로 `surface-secondary` 위에 놓으면 FeedbackButtons 78(`status-error` / 10% 바탕)은 라이트 4.17:1 · 다크 5.04:1, token-usage-indicator 40 · 41은 4.81 · 5.87:1입니다(2026-10-18 dist 계산, 미달 가능성은 M4 컴포넌트 재측정에서 확인). 브랜드 CSS를 tokens CSS 뒤에 import하는 문서 안내(U11)를 전제로, 다크는 다크 선언이 없으면 라이트 선언 값을 씁니다. 렌더 계산 스타일 · axe 독립 실측은 AC6 · 비텍스트 대비 spec · a11y 36건에서 교차 확인합니다.
 
 알려진 한계
 - 라이트 `status.neutral-muted`(`line-2`)는 흰 바탕 위 1.40:1이라 대기 원 · 점의 경계가 비텍스트 3:1에 못 미칩니다. 기본 테마(gray-300 1.47:1)와 같은 수준의 기존 미달이고, 안의 번호 글자는 9.60:1로 통과합니다. 대비 표에는 단언으로 넣지 않았습니다(비텍스트 대비 spec에서 다룹니다). (변경 주석, 2026-10-18: 리뷰에서 spec이 이 변수를 재지 않는 것이 확인되어, `brand-nontext-contrast.spec.ts` 상태 아이콘 테스트 안에 상태 점 프로브를 넣었습니다. 실측 라이트 #D6DADF 대 surface-default #FFFFFF 1.40 · surface-secondary #F3F4F6 1.28, 다크 #5F6874 대 #17191D 3.12 · #1F2227 2.83입니다. 사용자 결정으로 값은 바꾸지 않고 디자인 오너 사후 확인 목록에 올렸으며, spec은 3:1로 실패시키지 않고 이 실측값을 하한으로 고정해 낮아지면 실패하게 했습니다. 테스트 수는 6 그대로입니다.)

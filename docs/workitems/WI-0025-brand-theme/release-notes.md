@@ -26,7 +26,7 @@
 - AXIS의 상태 의미는 v1의 상태 다섯 가지로 접습니다: success → 회색 계열, warning · error → `bad` 계열(바탕은 연한 단계), running · info → `key` 계열. 상태가 색만으로 구분되지 않으므로, 상태는 글자 · 아이콘과 함께 표시해 주세요
 - 글꼴(`Pretendard Variable` · `JetBrains Mono` 우선), `--radius: 12px`, 그림자(`--axis-shadow-sm` · `--axis-shadow-lg`), PlanCard 색 선 1px, Card 그림자 없음(`0 0 #0000`)을 함께 지정합니다
 - 산출 CSS: 라이트 블록 `--axis-*` 117 · shadcn 20, 다크 블록 `--axis-*` 107 · shadcn 19
-- 접근성: 문서 사이트 9페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음), 포커스 링 · 상태 아이콘 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)을 로컬에서 확인했습니다. 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
+- 접근성: 문서 사이트 9페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음)을 확인했습니다. 포커스 링과 상태 아이콘 색 6가지(`status-{neutral,running,success,error,info,warning}`)의 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)은 문서 페이지에 넣은 프로브 요소를 `surface-default` · `surface-secondary` 위에서 잰 대리 측정입니다. 실제 컴포넌트(StepTimeline · RunProgress · ToolCallCard 등)의 부모 바탕 위 재측정은 M4에서 합니다. 대기 · 건너뜀 상태 점(`status-neutral-muted`, StepTimeline · RunProgress)은 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1이며(같은 프로브 실측), 값을 바꿀지는 디자인 오너 사후 확인 대상입니다(기본 테마 gray-300도 1.47:1로 같은 수준). 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
 
 #### tokens: 새 변수 (기본값은 기존 화면과 같음)
 브랜드를 지정하지 않은 `variables.css`에는 아래 11개 변수만 `:root` · `.dark`에 새로 생깁니다. 1.2.1에 있던 변수 249개의 값은 바뀌지 않습니다.
@@ -57,7 +57,7 @@
 | 컴포넌트 | 1.2.1 | 1.3.0 |
 |---|---|---|
 | PlanCard 상태 배지 (`pending` · `approved` · `rejected` · `executing` · `completed`) | 바탕 투명, 글자 `status-*-strong` | `badge-{warning,success,error,info}` 바탕 · 글자 (기본 브랜드 대비 라이트 4.57~5.49:1 · 다크 5.78~9.52:1) |
-| PlanCard 거절 버튼 hover | 바탕 변화 없음 | `status-error` 10% 옅은 바탕, 글자는 `--axis-plan-card-reject-hover-text`(기본 브랜드는 `status-error`와 같아 글자 불변. ontology는 진한 빨강으로 바꿔 하단 영역 위 대비 라이트 5.53:1 · 다크 6.36:1) |
+| PlanCard 거절 버튼 hover | 바탕 변화 없음 | `status-error` 10% 옅은 바탕, 글자는 새 component 토큰 `--axis-plan-card-reject-hover-text`(기본 브랜드는 `status-error`와 같은 값이라 글자 불변. ontology는 `status-error-strong`과 같은 값 라이트 #A8281F · 다크 #F49890으로 바꿔, 하단 영역 `surface-secondary` 위 옅은 바탕에서 라이트 5.53:1 · 다크 6.36:1. 종전 `status-error` 글자였다면 라이트 4.17:1로 4.5 미달) |
 | DiffViewer 추가 · 삭제 줄 | 바탕 투명 | `diff-added` · `diff-removed` 10% 옅은 바탕 |
 | FeedbackButtons 선택 상태 | 바탕 투명 | `status-success` · `status-error` 10% 옅은 바탕 |
 | AttachmentCard `status="error"` | 기본 테두리(`border-default`) | `status-error-border` 테두리 |
@@ -69,8 +69,9 @@
 
 #### 동작이 달라지는 사용 방식
 - Card · Dialog 그림자가 tokens CSS 변수를 참조하므로, `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
+- Card · DialogContent에 그림자 색 수식어만 붙인 경우(`className="shadow-black/50"`, `shadow-blue-500/20` 등) 1.3.0에서는 색이 바뀌지 않습니다. 종전 `shadow-sm` · `shadow-lg`는 `--tw-shadow-colored`에 `var(--tw-shadow-color)` 자리가 있어 색 수식어가 적용됐지만, 새 클래스 `shadow-[shadow:var(--axis-card-shadow)]` · `shadow-[shadow:var(--axis-shadow-lg)]`는 Tailwind 3.4가 값을 분해하지 못해 `--tw-shadow-colored`가 변수 값 그대로입니다. `cn()`은 두 클래스를 모두 남기므로 병합 문제가 아니라 CSS 생성 방식의 차이입니다. 대안: ① 크기 클래스와 색을 함께 지정(`shadow-sm shadow-black/50`, `cn()`이 기본 그림자 클래스를 크기 클래스로 바꿔 종전처럼 색이 적용됨) ② 변수 재정의(Card `[--axis-card-shadow:0_1px_2px_0_rgb(0_0_0/0.5)]`, Dialog는 `--axis-shadow-lg`, 또는 앱 CSS에서 범위를 정해 재정의). 확인 범위: Tailwind 3.4.19가 만든 CSS와 `cn()` 병합 결과이며, 브라우저 계산 스타일은 실측하지 않았습니다
 - 브랜드 CSS는 `@axis-ds/tokens/css` **다음에** import합니다. 앱이 shadcn 변수(`--primary` 등)를 직접 정의한다면(예: `globals.css`의 `:root`) 브랜드 CSS를 그 정의보다 뒤에 둬야 합니다. 라이트 `[data-brand]`와 `:root`의 명시도가 같아 나중에 온 쪽이 이깁니다
-- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 다크 블록에 없는 변수 10개 가운데 값이 달라지는 8개(radius 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다
+- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개(`--axis-*` 10 · shadcn `--radius` 1) 가운데 기본 `.dark`(`variables.css` · `shadcn-compat.css`)와 값이 달라지는 9개(`--axis-radius-sm|md|lg` 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2 · shadcn `--radius` 12px)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다. 나머지 2개(`button-border-default` · `button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다
 
 #### CI
 - `check-token-refs` 판정 7: Tailwind가 CSS를 만들지 않는 클래스 패턴(임의값 `var()` + 불투명도 수식어)을 위반으로 잡습니다
