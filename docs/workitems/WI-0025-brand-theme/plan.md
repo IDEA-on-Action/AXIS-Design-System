@@ -133,7 +133,7 @@
    - `build-tokens.mjs` 176~181행에서 다크 소스는 primitives와 `semantic/dark.json`뿐입니다.
    - `variables.css`의 리터럴 값은 156 · 157 · 160 · 176행(라이트)과 382 · 383 · 386 · 402행(다크)에 있습니다.
    - dist 수정 시각은 2026-10-15 04:34이고, tokens `src` 마지막 커밋은 8c36953(2026-08-07)이므로 dist가 src보다 새것입니다.
-7. 온톨로지 초안: `grep -nE 'bg-muted|surface-primary|interactive|--axis-ring|brand-500' axis-theme-ontology.css`의 결과는 `bg-muted` 2줄(98, 197행)뿐이고 나머지는 0건입니다. 2026-10-16 초안 2로 다시 실행한 결과도 `bg-muted` 2줄(96, 197행)뿐입니다.
+7. 온톨로지 초안: `grep -nE 'bg-muted|surface-primary|interactive|--axis-ring|brand-500' axis-theme-ontology.css`의 결과는 `bg-muted` 2줄(98, 197행)뿐이고 나머지는 0건입니다. 2026-10-16 초안 2로 다시 실행한 결과도 `bg-muted` 2줄(96, 197행)뿐입니다. 초안 2에 24행(`plan-card-accent-width`)이 추가된 뒤의 실제 행 번호는 97 · 198행입니다(2026-10-17 실측). 이식은 행 번호가 아니라 변수명으로 제외합니다.
 8. 문서 사이트:
    - `tailwind.config.ts` 9행이 `'../../packages/ui/src/**/*'`를 가리키는데, `ls packages/ui`는 "No such file"입니다.
    - `grep -c -e '--axis-' apps/web/src/app/globals.css`는 0입니다.
@@ -467,7 +467,9 @@ V8의 25개 이름을 복제하지 않으려면 276-300줄의 이름을 상수 �
 ### 결정 필요
 
 1. **exports 방식**: 권장안은 명시형 `./css/brands/ontology`입니다. 기존 `pack-smoke` 77줄의 `existsSync` 검사를 그대로 쓸 수 있고, 빌드가 누락을 막습니다. 대안인 패턴형 `"./css/brands/*": "./dist/css/brands/*.css"`는 브랜드를 추가할 때 package.json을 고치지 않아도 되는 장점이 있습니다. 다만 `pack-smoke`가 리터럴 `*` 경로로 `existsSync`를 호출해 실패하므로 그 스크립트도 함께 고쳐야 합니다. 번들러(Next/Turbopack)가 CSS 패턴 exports를 어떻게 해석하는지도 확인하지 않았습니다.
-2. **`brand.json` 최종 경로와 목록 파일**: `dist/brands/<brand>/brand.json`과 exports `./brands/<brand>/brand.json`을 제안합니다. WI-0028 `axis theme list`가 브랜드를 열거하려면 `dist/brands/index.json`(+ exports `./brands`)도 만들지 정해야 합니다. 정한 뒤 WI-0028에 알립니다.
+2. **`brand.json` 최종 경로와 목록 파일**: `dist/brands/<brand>/brand.json`과 exports `./brands/<brand>/brand.json`을 제안합니다. WI-0028 `axis theme list`가 브랜드를 열거하려면 `dist/brands/index.json`(+ exports `./brands`)도 만들지 정해야 합니다. 정한 뒤 WI-0028에 알립니다. → 2026-10-17 결정: A안(목록 파일 생성, 5.1 U24). WI-0028 통보는 아래 「WI-0028 통보」 메모로 합니다.
+
+**WI-0028 통보 (2026-10-17, U24)**: WI-0028 문서 본문은 고치지 않고 여기에 기록합니다. WI-0028 착수 때 이 메모를 그 WI의 PRD FR-1에 옮겨 반영합니다. tokens 1.3.0부터 소비자는 다음 세 경로를 씁니다. ① 목록 `require('@axis-ds/tokens/brands')` → `dist/brands/index.json`, `{ "brands": [{ "name": "ontology", "css": "./css/brands/ontology", "meta": "./brands/ontology/brand.json" }] }` ② 메타 `@axis-ds/tokens/brands/<b>/brand.json` → `{ name, description, themes, a11y: { status, checkedAt, gate } }` ③ CSS `@axis-ds/tokens/css/brands/<b>`. exports에 `./package.json`은 없으므로 패키지 루트를 찾아 디렉터리를 읽는 방식은 쓰지 않습니다(`require.resolve`가 `ERR_PACKAGE_PATH_NOT_EXPORTED`).
 3. **shadcn 층 생성 방식**: 권장안은 브랜드 JSON의 `shadcn` 섹션 값을 그대로 내는 것입니다(초안을 그대로 옮기는 방식). 대안은 브랜드 semantic에서 `buildShadcnVars`로 값을 유도한 뒤 덮어쓰는 방식입니다. 하지만 현재 매핑은 `--primary` = `text.primary`라 초안 값과 맞지 않고, 출력 변수도 늘어납니다.
 4. **다크 선택자 수**: PRD FR-5의 3개로 할지, 초안처럼 `[data-theme="dark"] [data-brand]`를 더해 4개로 할지 정해야 합니다.
 5. **토큰이 아닌 규칙(초안 221줄 `word-break: keep-all`)**: 브랜드 CSS에 넣지 않고 문서로 안내할지, `brand.json`에 부가 CSS 필드를 둘지 정해야 합니다.
@@ -669,6 +671,7 @@ FR-3 검사 대상은 `src`뿐이라, git이 추적하는 아래 산출물에 �
 | U21 | tailwind content에 `./src/lib` 추가 | 별건으로 분리합니다 |
 | U22 | 1.3.0 릴리스 노트 · changeset | 노트 초안은 M3에서 한 명이 맡아 쓰고, changeset은 M4에서 만듭니다 |
 | U23 | `--axis-card-shadow-default` 역할 (2026-10-17 추가) | **폐기 예정**: 1.x 동안 이름 · 값(`0 1px 3px 0 rgb(0 0 0 / 0.1)`)을 유지하고 어떤 컴포넌트도 참조하지 않습니다. Card 그림자의 공개 조정점은 `--axis-card-shadow` 하나입니다. 토큰 원본에 `$extensions.axis.deprecated: "card-shadow"`(대체 토큰 경로) 마커를 두고 `theme-modes.mjs`가 대체 경로를 검사합니다. CSS · JSON · JS 산출물은 바뀌지 않습니다. ontology 브랜드는 `card-shadow` · `card.shadow.default` 둘 다 `0 0 #0000`을 넣습니다. 2.0 제거 후보이며, 브랜드가 이 변수를 덮어써도 Card에는 효과가 없다는 점은 문서로만 안내합니다(검증 규칙 변경 없음) |
+| U24 | `brand.json` 최종 경로와 브랜드 목록 파일 (3 결정 2, 2026-10-17 추가) | **A안**: 메타는 `dist/brands/<brand>/brand.json`(exports `./brands/<brand>/brand.json`), 목록은 `dist/brands/index.json`(exports `./brands`)을 1.3.0에 함께 냅니다. 목록 스키마는 `{ "brands": [{ "name", "css", "meta" }] }`이고, `css` · `meta`는 `@axis-ds/tokens` 뒤에 붙는 exports 하위 경로(`./css/brands/<b>` · `./brands/<b>/brand.json`)입니다. 이름순으로 정렬해 결정적으로 만들고, 브랜드가 0개이면 만들지 않습니다(그때는 B5도 `./brands`를 보지 않습니다). 브랜드가 있으면 B5가 `./brands` 항목 누락을 빌드 실패로 막습니다. 공개 API가 하나 늘어나므로 이후 제거는 breaking입니다. ontology `card-shadow` · `card.shadow.default`는 라이트에만 둡니다(그림자는 테마 무관 값이라 V7 허용, 초안 2의 `plan-card.accent-width`와 같은 방식, 다크는 import 순서 U11에 의존) |
 
 ### 5.2 구현 순서
 

@@ -28,7 +28,7 @@
 - [ ] Slider Range 라이트 대비 2.97:1 허용 여부 (썸이 3.68:1로 값 전달) (1.7 D-c)
 - [x] Q2 전후 스크린샷 장소: 별도 하네스 vs `apps/web` 설정 수정(tailwind content 경로 · tokens CSS import)을 범위에 포함 (AC7 영향) (1.7 D-d) → ✅ 2026-10-15: M1은 별도 Playwright 하네스, `apps/web` 정비는 M3
 - [ ] `apps/web/public/library/components/*.json` 10개 갱신 방식: 생성 스크립트 미확인 상태에서 수동 갱신 여부 (1.7 D-e)
-- [ ] 온톨로지 초안 2의 `--axis-bg-muted`(96 · 197행) 삭제 확정 (참조 교체 시 미사용, 화면 변화 없음) (1.7 D-f)
+- [x] 온톨로지 초안 2의 `--axis-bg-muted`(96 · 197행) 삭제 확정 (참조 교체 시 미사용, 화면 변화 없음) (1.7 D-f) → ✅ 2026-10-17: 이식에서 제외 확정. 초안 2의 실제 행은 97 · 198행(24행 추가 뒤)이고 변수명으로 제외했어요. ontology JSON에 `bg.muted`를 다시 넣으면 V3 · V6 위반으로 빌드 rc 1(음성 대조), 브랜드 테스트도 부재를 단언해요
 
 ### 2절 FR-2 agentic-ui primitive 매핑 (M1)
 - [x] 기존 semantic(`icon.success` · `border.error` · `surface.brand` 등) 재사용 vs 신설 22개 (재사용 시 다크 화면 변경, 하위 호환 위반) (2.5 D-1) → ✅ 2026-10-15: 신설 22개(다크 화면 불변)
@@ -41,7 +41,7 @@
 
 ### 3절 M2 브랜드 빌드 · ThemeProvider (M2)
 - [x] exports 방식: 명시형 `./css/brands/ontology`(권장) vs 패턴형 `./css/brands/*`(pack-smoke 수정 필요) (3 결정 1, 사용자 판단 필수) → ✅ 2026-10-15: 명시형 확정
-- [ ] `brand.json` 최종 경로(`dist/brands/<brand>/brand.json` 제안)와 목록 파일 `dist/brands/index.json` 생성 여부, WI-0028 통보 (3 결정 2)
+- [x] `brand.json` 최종 경로(`dist/brands/<brand>/brand.json` 제안)와 목록 파일 `dist/brands/index.json` 생성 여부, WI-0028 통보 (3 결정 2) → ✅ 2026-10-17: A안(plan U24). `dist/brands/<b>/brand.json` 유지 + `dist/brands/index.json`(exports `./brands`) 생성, B5가 `./brands` 누락을 막아요. WI-0028 통보는 plan 3절 결정 2의 「WI-0028 통보」 메모(WI-0028 본문은 고치지 않음)
 - [x] shadcn 층 생성 방식: 브랜드 JSON `shadcn` 섹션 그대로 출력(권장) vs `buildShadcnVars` 유도 (3 결정 3, 사용자 판단 필수) → ✅ 2026-10-15: shadcn 섹션 출력 확정
 - [x] 다크 선택자 수: PRD FR-5의 3개 vs 초안의 `[data-theme="dark"] [data-brand]` 포함 4개 (3 결정 4, 사용자 판단 필수) → ✅ 2026-10-15: PRD FR-5 3종 확정
 - [ ] 토큰 아닌 규칙(초안 221줄 `word-break: keep-all`) 처리: 문서 안내 vs `brand.json` 부가 CSS 필드 (3 결정 5)
@@ -192,7 +192,7 @@
 - [x] 1.2.1 publish 확인 후 M2 브랜치에 `main` 반영(rebase 또는 merge, force push 금지 시 merge) (D3 · plan 3.6) → ✅ 2026-10-17: force push 금지라 rebase 대신 `origin/main`(014e8ac) merge(0151d6a). 병합 커밋 제목의 type `merge`는 06-sync 타입 목록 밖이지만, amend · force push 금지라 고치지 않고 허용 예외로 둡니다. 충돌은 tokens `package.json` `test` 줄 1곳. WI-0033 plan.md 6장대로 `build-brands.mjs` `renderTheme`에 다크 preprocessor 배선, 브랜드 미지정 `variables.css` `:root` · `.dark` 블록이 014e8ac 빌드와 바이트 동일
 - [x] 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3) → ✅ 2026-10-17: `1.2.1`, `.changeset/`는 `config.json`만 있음
 - [ ] 1.2.1 배포 전 머지 시 changeset 없이 머지 (minor changeset은 M4에서 추가) (D3)
-- [ ] `brand.json` 최종 경로를 WI-0028에 통보 (D6)
+- [x] `brand.json` 최종 경로를 WI-0028에 통보 (D6) → ✅ 2026-10-17: plan 3절 결정 2 「WI-0028 통보」 메모로 기록(목록 · 메타 · CSS 세 경로와 스키마). WI-0028 착수 때 그 WI의 PRD FR-1에 옮겨요
 
 ### M2 DoD
 - [x] `pnpm type-check` 통과
@@ -214,14 +214,14 @@
 - [ ] FR-9 Card(`shadow-sm`) · Dialog(`shadow-lg`) 하드코딩을 그림자 변수 참조로 변경, 기본 화면 불변 (FR-9 · AC3). 2026-10-16 결정: Card는 component 토큰 `--axis-card-shadow`(기본값 `var(--axis-shadow-sm)`)를 참조하고 ontology는 `none`, Dialog는 `--axis-shadow-lg` 직접 참조 (변경 주석: 기본값은 plan U3 `{shadow.sm}` 참조로 빌드에서 리터럴로 풀림, ontology 값은 plan U2 `0 0 #0000`)
 - [x] Card 그림자 변수 2개 역할 정리: 새 `--axis-card-shadow`(0 1px 2px, `shadow.sm`)와 기존 `--axis-card-shadow-default`(0 1px 3px)가 공존합니다. 대체 · 별칭 · 폐기 예정 중 하나로 정하고 문서화합니다 (2026-10-17 사용자 결정: M3 2차 구현 범위) → ✅ 2026-10-17 **폐기 예정**으로 결정(plan U23). `components.json` `card.shadow.default`에 `$extensions.axis.deprecated: "card-shadow"` 마커, `theme-modes.mjs` 허용 키 확장과 대체 경로 검사, 테스트(theme-modes 1 · brands 1 · Card 1) 추가, `theme-customization.md` 카드 예시를 `--axis-card-shadow`로 정정. 실측: tokens 빌드 산출물 10개 파일이 착수 전 빌드와 `diff -r` rc 0, AC3 테스트 `:root` · `.dark` 249/249 일치 · 신규 10, tokens test 100/100, `check-token-refs` 테마 선언 `leaf 47 · 색 leaf 43 · 위반 0`. 음성 대조: 마커 삭제 시 U23 단언 실패, 키 오타 `deprecatd` · 없는 대체 경로 시 빌드 rc 1 · `check-token-refs` 위반 1, Card 클래스를 폐기 예정 변수로 바꾸면 Card 테스트 2건 실패(모두 되돌림). 1.3.0 노트(U22)에 넘길 문장: ① `--axis-card-shadow-default` · `CardShadowDefault`는 폐기 예정이며 Card 그림자는 `--axis-card-shadow`로 조정합니다(가이드 예시 정정이며 동작 변경 아님, 이 변수는 배포된 어느 버전에서도 Card에 반영되지 않았습니다) ② Card · Dialog 그림자가 tokens CSS 변수를 참조하므로 `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
 - [ ] (백로그) `--axis-dialog-content-shadow`(0 25px 50px -12px)도 컴포넌트가 참조하지 않고 값도 Dialog 실제 그림자(`--axis-shadow-lg`)와 다릅니다. Card와 같은 폐기 예정 처리 여부를 별도로 정합니다 (plan U23 후속, 이번 범위 밖)
-- [ ] FR-8 `src/brands/ontology/light.json` · `dark.json` 작성 (초안 2 `axis-theme-ontology.css` 이식(v0.24 · 디자인 시스템 v1 기준), `bg-muted` 줄 제외(D-f), 신설 22개 status · diff · agent 값은 D-6 접기 매핑(2026-10-16 결정)) (FR-8 · AC6)
+- [ ] FR-8 `src/brands/ontology/light.json` · `dark.json` 작성 (초안 2 `axis-theme-ontology.css` 이식(v0.24 · 디자인 시스템 v1 기준), `bg-muted` 줄 제외(D-f), 신설 22개 status · diff · agent 값은 D-6 접기 매핑(2026-10-16 결정)) (FR-8 · AC6) → 🔄 2026-10-17 1차: 초안 2 이식분(라이트 74 · 다크 68, `bg-muted` 제외)과 Card 그림자 2개(U2 · U23)를 넣었어요. 초안 대비 기계 대조(블록별 이름 · 값 집합)에서 차이는 정확히 4건(초안에만 `bg-muted` 라이트 · 다크, 산출에만 `card-shadow` · `card-shadow-default` 라이트), 값이 다른 쌍 0건(shadcn 포함). 접기 매핑 값은 다음 단계에서 같은 파일에 더해요
 - [x] 초안 2 CSS 정정: 글꼴 변수 이름을 `--axis-font-family-sans|mono`로, `--axis-plan-card-accent-width: 0` 줄 추가 (PRD FR-9 전제, 초안 2에는 정정 전 이름이 들어 있고 이 줄이 없음, plan 3.3 초안 2 대조) (FR-8 · FR-9) → ✅ 2026-10-16: 글꼴 이름 · PlanCard 0 줄 · 주석 2곳(rounded-md 10, line-2 3.12:1) 정정, shadcn HSL 30곳을 소수 퍼센트로 바꿔 원본 hex와 정확히 일치(AC6 결정)
-- [ ] FR-8 `shadcn` 섹션 이식 (`--radius: 12px` 포함) (FR-8 · AC6)
-- [ ] FR-9 글꼴 `font.family.sans|mono`, 둥글기 `radius.sm|md|lg`(초안 2: 6 · 8 · 12px, 컴포넌트 미참조라 이번 WI에서는 효과 없음), 그림자(초안 2는 라이트 · 다크 값 모두 있음), `plan-card` accent width `0` 지정 (FR-9)
-- [ ] `src/brands/ontology/brand.json` 작성 (a11y 상태 기록: 부록 B 2026-10-16 대리 승인, 디자인 오너 사후 확인 대기) (FR-4 · D6)
-- [ ] `package.json` exports에 `./css/brands/ontology` · `./brands/ontology/brand.json` 추가 (FR-5 · AC4)
-- [ ] AC4: `pnpm build` 후 `dist/css/brands/ontology.css` 생성, `import "@axis-ds/tokens/css/brands/ontology"` 동작, `pnpm pack-smoke` 통과 (AC4)
-- [x] AC3 스냅샷 테스트: 브랜드 미지정 `variables.css` 라이트 · 다크가 1.2.1과 일치, 신규 변수는 기본값만 검사 (AC3) → 2026-10-17 `test/baseline-1.2.1.test.mjs` 추가 · `scripts.test` 등록. HEAD f181716 재빌드(`--force`) 기준 `:root 249/249 · .dark 249/249 일치 · 신규 10`(전부 `SOURCE.json` 기본값), `shadcn-compat.css` 1897/1897 바이트 일치, tokens 테스트 83 → 98 pass. 음성 대조 8종(`:root` 값 · `.dark` 만 값 · 대문자 이름 줄 삭제 · 미지 변수 · 신규 변수에 1px · `.dark` 헤더 변경 · shadcn 1줄 · 없는 경로)이 전부 rc 1. dist stale 가드(src · scripts · build-tokens.mjs 보다 dist 가 오래되면 실패)는 로컬 전용이고 env `CI` 에서는 생략해요(checkout mtime 거짓 실패 방지, turbo 경유로 CI 변수 전달 확인). FR-8 브랜드 추가 뒤 재빌드에서 다시 돌려 기본 출력 불변을 재증명해요
+- [x] FR-8 `shadcn` 섹션 이식 (`--radius: 12px` 포함) (FR-8 · AC6) → ✅ 2026-10-17: 라이트 20(`radius` 포함) · 다크 19, 산출 CSS에서 초안과 값 차이 0건
+- [x] FR-9 글꼴 `font.family.sans|mono`, 둥글기 `radius.sm|md|lg`(초안 2: 6 · 8 · 12px, 컴포넌트 미참조라 이번 WI에서는 효과 없음), 그림자(초안 2는 라이트 · 다크 값 모두 있음), `plan-card` accent width `0` 지정 (FR-9) → ✅ 2026-10-17: accent width는 `0`이 아니라 U8 · 초안 2 24행대로 `1px`로 지정했어요(이 줄의 `0`은 U8 이전 문구). 글꼴 · 둥글기 · `plan-card`는 라이트에만, 그림자는 라이트 · 다크 모두, Card 그림자 2개는 라이트에만 `0 0 #0000`(plan U24)
+- [x] `src/brands/ontology/brand.json` 작성 (a11y 상태 기록: 부록 B 2026-10-16 대리 승인, 디자인 오너 사후 확인 대기) (FR-4 · D6) → ✅ 2026-10-17: `status` "부록 B 2026-10-16 대리 승인, 디자인 오너 사후 확인 대기", `checkedAt` 2026-10-16, `gate` "WI-0025 부록 B"(AC8 CI 게이트가 켜지면 그 이름으로 갱신). npm 배포본에 그대로 들어가므로 개인 이름과 제품 가칭은 넣지 않았어요
+- [x] `package.json` exports에 `./css/brands/ontology` · `./brands/ontology/brand.json` 추가 (FR-5 · AC4) → ✅ 2026-10-17: 두 항목과 목록 `./brands`를 브랜드 JSON과 같은 커밋으로 추가. 음성 대조: 사본에서 각 항목을 지우면 B5 위반으로 빌드 rc 1
+- [x] AC4: `pnpm build` 후 `dist/css/brands/ontology.css` 생성, `import "@axis-ds/tokens/css/brands/ontology"` 동작, `pnpm pack-smoke` 통과 (AC4) → ✅ 2026-10-17: `pnpm build --force`(8/8, 캐시 0) 후 `ontology.css`(선택자 라이트 1 · 다크 3, `--axis-*` 144 = 라이트 76 · 다크 68, shadcn 39) · `brand.json` · `index.json` 생성. `pnpm pack-smoke` rc 0(6개 패키지), 음성 대조로 `ontology.css`를 지우면 rc 1(`exports 타깃 미존재`) 후 재빌드로 복구. 독립 실측: `pnpm pack` tarball을 빈 소비자 디렉터리에 `npm i`(심링크 아님)하고 `require.resolve` · `import.meta.resolve('@axis-ds/tokens/css/brands/ontology')` rc 0(`dist/css/brands/ontology.css`), `require('@axis-ds/tokens/brands/ontology/brand.json').name` = ontology, `require('@axis-ds/tokens/brands')` 목록의 css · meta 경로가 그대로 해석돼요. 번들러(Next · Turbopack) CSS import는 apps/web 브랜드 로드 단계에서 확인해요
+- [x] AC3 스냅샷 테스트: 브랜드 미지정 `variables.css` 라이트 · 다크가 1.2.1과 일치, 신규 변수는 기본값만 검사 (AC3) → 2026-10-17 `test/baseline-1.2.1.test.mjs` 추가 · `scripts.test` 등록. HEAD f181716 재빌드(`--force`) 기준 `:root 249/249 · .dark 249/249 일치 · 신규 10`(전부 `SOURCE.json` 기본값), `shadcn-compat.css` 1897/1897 바이트 일치, tokens 테스트 83 → 98 pass. 음성 대조 8종(`:root` 값 · `.dark` 만 값 · 대문자 이름 줄 삭제 · 미지 변수 · 신규 변수에 1px · `.dark` 헤더 변경 · shadcn 1줄 · 없는 경로)이 전부 rc 1. dist stale 가드(src · scripts · build-tokens.mjs 보다 dist 가 오래되면 실패)는 로컬 전용이고 env `CI` 에서는 생략해요(checkout mtime 거짓 실패 방지, turbo 경유로 CI 변수 전달 확인). FR-8 브랜드 추가 뒤 재빌드에서 다시 돌려 기본 출력 불변을 재증명해요 → 2026-10-17 FR-8 구조 추가 뒤 재증명: `variables.css` · `shadcn-compat.css` sha256이 착수 전 HEAD(cb9979d) 빌드와 같고(`fa637a54…` · `dd374eca…`), 브랜드 산출물을 뺀 dist 10개 파일 `diff -r` rc 0, AC3 테스트 통과(tokens 114/114)
 - [ ] AC6 Playwright 계산 스타일 검사: `data-brand="ontology"` 라이트 · 다크 7개 변수가 부록 A(v1 기준)와 일치 (shadcn HSL은 원본 hex로 정확히 렌더되는 소수 퍼센트로 적고 렌더 rgb 채널당 ±1 비교, 2026-10-16 결정) (AC6)
 - [ ] `apps/web`이 AXIS 토큰 색을 그리도록 설정 정비 (`tailwind.config.ts` content 경로, tokens CSS import, `globals.css` shadcn 정의와 브랜드 CSS 순서, D-d · 3 결정 13 반영). M4에서 M3로 당김: 이 정비 없이 a11y를 돌리면 브랜드 값이 화면에 닿지 않은 채 통과함 (AC8 · FR-10)
 - [ ] `apps/web`에서 브랜드 CSS 로드 (4 결정 2 반영) (AC8)
