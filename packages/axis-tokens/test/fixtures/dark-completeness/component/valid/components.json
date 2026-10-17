@@ -1,0 +1,7 @@
+{
+  "fixture": {
+    "bg": { "value": "{color.white}", "$extensions": { "axis": { "dark": "{surface.default}" } } },
+    "border": { "value": "transparent", "$extensions": { "axis": { "themeIndependent": true } } },
+    "width": { "value": "4px" }
+  }
+}

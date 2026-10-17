@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/agentic-ui",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "AXIS Design System - Agentic UI Components for AI/LLM Applications",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -128,7 +128,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thoughtandaction/axis.git",
+    "url": "https://github.com/IDEA-on-Action/AXIS-Design-System.git",
     "directory": "packages/axis-agentic-ui"
   },
   "homepage": "https://axis.minu.best"

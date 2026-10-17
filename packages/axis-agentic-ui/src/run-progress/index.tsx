@@ -27,10 +27,10 @@ export interface RunProgressProps {
 }
 
 const statusColors: Record<StepStatus, string> = {
-  pending: "bg-[var(--axis-color-gray-300)]",
-  running: "bg-[var(--axis-color-blue-500)] animate-pulse",
-  complete: "bg-[var(--axis-color-green-500)]",
-  error: "bg-[var(--axis-color-red-500)]",
+  pending: "bg-[var(--axis-status-neutral-muted)]",
+  running: "bg-[var(--axis-status-running)] animate-pulse",
+  complete: "bg-[var(--axis-status-success)]",
+  error: "bg-[var(--axis-status-error)]",
 };
 
 const statusIcons: Record<StepStatus, React.ReactNode> = {
@@ -81,7 +81,7 @@ export function RunProgress({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {status === "running" && (
-            <div className="w-2 h-2 rounded-full bg-[var(--axis-color-blue-500)] animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-[var(--axis-status-running)] animate-pulse" />
           )}
           <span className="text-sm font-medium text-[var(--axis-text-primary)]">
             {status === "idle" && "대기 중"}
@@ -105,7 +105,7 @@ export function RunProgress({
         className="w-full h-1.5 rounded-full bg-[var(--axis-surface-secondary)] mb-4"
       >
         <div
-          className="h-full rounded-full bg-[var(--axis-color-blue-500)] transition-all duration-300"
+          className="h-full rounded-full bg-[var(--axis-status-running)] transition-all duration-300"
           style={{ width: `${progressPercent}%` }}
         />
       </div>
@@ -160,7 +160,7 @@ export function RunProgress({
           {status === "error" && onRetry && (
             <button
               onClick={onRetry}
-              className="px-3 py-1.5 text-sm rounded-md bg-[var(--axis-color-blue-500)] text-white hover:bg-[var(--axis-color-blue-600)]"
+              className="px-3 py-1.5 text-sm rounded-md bg-[var(--axis-button-bg-default)] text-[var(--axis-button-text-default)] hover:bg-[var(--axis-button-bg-hover)]"
             >
               재시도
             </button>

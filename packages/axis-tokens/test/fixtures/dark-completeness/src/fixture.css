@@ -1,0 +1,4 @@
+.fixture {
+  background: var(--axis-fixture-bg);
+  color: var(--axis-fixture-text);
+}

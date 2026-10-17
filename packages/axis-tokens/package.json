@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/tokens",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "AXIS Design System - Design Tokens (CSS Variables + JSON)",
   "main": "dist/js/tokens.js",
   "module": "dist/js/tokens.mjs",
@@ -32,7 +32,7 @@
   "scripts": {
     "build": "node build-tokens.mjs && tsup src/tailwind-preset.ts --format cjs,esm --dts --out-dir dist",
     "clean": "rm -rf dist",
-    "test": "node --test test/brands.test.mjs test/build-brands.test.mjs",
+    "test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/brands.test.mjs test/build-brands.test.mjs",
     "prepublishOnly": "pnpm build"
   },
   "devDependencies": {
@@ -57,7 +57,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thoughtandaction/axis.git",
+    "url": "https://github.com/IDEA-on-Action/AXIS-Design-System.git",
     "directory": "packages/axis-tokens"
   },
   "homepage": "https://axis.minu.best"

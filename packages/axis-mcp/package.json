@@ -44,7 +44,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thoughtandaction/axis.git",
+    "url": "https://github.com/IDEA-on-Action/AXIS-Design-System.git",
     "directory": "packages/axis-mcp"
   },
   "homepage": "https://axis.minu.best"

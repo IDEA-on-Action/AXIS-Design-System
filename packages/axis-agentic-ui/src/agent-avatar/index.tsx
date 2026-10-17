@@ -25,15 +25,15 @@ const sizeStyles = {
 };
 
 const statusStyles = {
-  online: "bg-[var(--axis-color-green-500)]",
-  busy: "bg-[var(--axis-color-yellow-500)]",
-  offline: "bg-[var(--axis-color-gray-400)]",
+  online: "bg-[var(--axis-status-success)]",
+  busy: "bg-[var(--axis-status-warning)]",
+  offline: "bg-[var(--axis-status-neutral)]",
 };
 
 const typeColors = {
-  assistant: "bg-[var(--axis-color-purple-500)]",
-  tool: "bg-[var(--axis-color-blue-500)]",
-  system: "bg-[var(--axis-color-gray-600)]",
+  assistant: "bg-[var(--axis-agent-avatar-assistant)]",
+  tool: "bg-[var(--axis-agent-avatar-tool)]",
+  system: "bg-[var(--axis-agent-avatar-system)]",
 };
 
 /**

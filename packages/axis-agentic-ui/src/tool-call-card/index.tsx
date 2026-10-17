@@ -29,7 +29,7 @@ export interface ToolCallCardProps {
 
 const statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }> = {
   pending: {
-    color: "text-[var(--axis-color-gray-400)]",
+    color: "text-[var(--axis-status-neutral)]",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <circle cx="12" cy="12" r="10" strokeWidth={2} />
@@ -37,7 +37,7 @@ const statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }>
     ),
   },
   running: {
-    color: "text-[var(--axis-color-blue-500)]",
+    color: "text-[var(--axis-status-running)]",
     icon: (
       <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -46,7 +46,7 @@ const statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }>
     ),
   },
   success: {
-    color: "text-[var(--axis-color-green-500)]",
+    color: "text-[var(--axis-status-success)]",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -54,7 +54,7 @@ const statusConfig: Record<ToolStatus, { color: string; icon: React.ReactNode }>
     ),
   },
   error: {
-    color: "text-[var(--axis-color-red-500)]",
+    color: "text-[var(--axis-status-error)]",
     icon: (
       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

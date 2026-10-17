@@ -29,18 +29,18 @@ export interface ApprovalCardProps {
 
 const severityStyles: Record<Severity, { border: string; icon: string; bg: string }> = {
   info: {
-    border: "border-l-[var(--axis-color-blue-500)]",
-    icon: "text-[var(--axis-color-blue-500)]",
+    border: "border-l-[var(--axis-status-info)]",
+    icon: "text-[var(--axis-status-info)]",
     bg: "bg-[var(--axis-surface-info)]",
   },
   warning: {
-    border: "border-l-[var(--axis-color-yellow-500)]",
-    icon: "text-[var(--axis-color-yellow-500)]",
+    border: "border-l-[var(--axis-status-warning)]",
+    icon: "text-[var(--axis-status-warning)]",
     bg: "bg-[var(--axis-surface-warning)]",
   },
   error: {
-    border: "border-l-[var(--axis-color-red-500)]",
-    icon: "text-[var(--axis-color-red-500)]",
+    border: "border-l-[var(--axis-status-error)]",
+    icon: "text-[var(--axis-status-error)]",
     bg: "bg-[var(--axis-surface-error)]",
   },
 };
@@ -64,10 +64,10 @@ const severityIcons: Record<Severity, React.ReactNode> = {
 };
 
 const actionVariantStyles: Record<string, string> = {
-  default: "bg-[var(--axis-button-bg-default)] text-white hover:bg-[var(--axis-button-bg-hover)]",
+  default: "bg-[var(--axis-button-bg-default)] text-[var(--axis-button-text-default)] hover:bg-[var(--axis-button-bg-hover)]",
   secondary: "bg-[var(--axis-button-secondary-bg-default)] text-[var(--axis-text-primary)] hover:bg-[var(--axis-button-secondary-bg-hover)]",
   ghost: "bg-transparent text-[var(--axis-text-primary)] hover:bg-[var(--axis-surface-secondary)]",
-  destructive: "bg-[var(--axis-button-destructive-bg-default)] text-white hover:bg-[var(--axis-button-destructive-bg-hover)]",
+  destructive: "bg-[var(--axis-button-destructive-bg-default)] text-[var(--axis-button-destructive-text-default)] hover:bg-[var(--axis-button-destructive-bg-hover)]",
 };
 
 /**

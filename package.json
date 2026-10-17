@@ -23,7 +23,8 @@
     "version-packages": "changeset version",
     "pack-smoke": "node scripts/pack-smoke.mjs",
     "release": "pnpm build && pnpm pack-smoke && changeset publish",
-    "check-licenses": "node scripts/check-licenses.mjs"
+    "check-licenses": "node scripts/check-licenses.mjs",
+    "check-token-refs": "node scripts/check-token-refs.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-git": "^0.2.1",

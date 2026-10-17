@@ -14,36 +14,49 @@ describe("Alert", () => {
   it("variant=default 시 기본 클래스 포함", () => {
     const { container } = render(<Alert variant="default">기본</Alert>);
     const alert = container.firstElementChild!;
-    expect(alert.className).toContain("bg-[var(--axis-surface-primary)]");
+    expect(alert.className).toContain("bg-[var(--axis-surface-default)]");
     expect(alert.className).toContain("border-[var(--axis-border-default)]");
   });
 
   it("variant=info 시 info 클래스 포함", () => {
     const { container } = render(<Alert variant="info">정보</Alert>);
     const alert = container.firstElementChild!;
-    expect(alert.className).toContain("bg-[var(--axis-blue-100)]");
-    expect(alert.className).toContain("border-[var(--axis-blue-200)]");
+    expect(alert.className).toContain("bg-[var(--axis-surface-info)]");
+    expect(alert.className).toContain("border-[var(--axis-border-info)]");
+    expect(alert.className).toContain("text-[var(--axis-text-info)]");
+    // 아이콘은 글자색을 따른다: 기본 클래스 [&>svg]:text-current가 남고 상태 아이콘 토큰 클래스는 없어야 한다
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=success 시 success 클래스 포함", () => {
     const { container } = render(<Alert variant="success">성공</Alert>);
     const alert = container.firstElementChild!;
-    expect(alert.className).toContain("bg-[var(--axis-green-100)]");
-    expect(alert.className).toContain("border-[var(--axis-green-200)]");
+    expect(alert.className).toContain("bg-[var(--axis-surface-success)]");
+    expect(alert.className).toContain("border-[var(--axis-border-success)]");
+    expect(alert.className).toContain("text-[var(--axis-text-success)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=warning 시 warning 클래스 포함", () => {
     const { container } = render(<Alert variant="warning">경고</Alert>);
     const alert = container.firstElementChild!;
-    expect(alert.className).toContain("bg-[var(--axis-yellow-100)]");
-    expect(alert.className).toContain("border-[var(--axis-yellow-200)]");
+    expect(alert.className).toContain("bg-[var(--axis-surface-warning)]");
+    expect(alert.className).toContain("border-[var(--axis-border-warning)]");
+    expect(alert.className).toContain("text-[var(--axis-text-warning)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("variant=destructive 시 destructive 클래스 포함", () => {
     const { container } = render(<Alert variant="destructive">위험</Alert>);
     const alert = container.firstElementChild!;
-    expect(alert.className).toContain("bg-[var(--axis-red-100)]");
-    expect(alert.className).toContain("border-[var(--axis-red-200)]");
+    expect(alert.className).toContain("bg-[var(--axis-surface-error)]");
+    expect(alert.className).toContain("border-[var(--axis-border-error)]");
+    expect(alert.className).toContain("text-[var(--axis-text-error)]");
+    expect(alert.className).toContain("[&>svg]:text-current");
+    expect(alert.className).not.toMatch(/icon-(info|success|warning|error)/);
   });
 
   it("커스텀 className 병합", () => {

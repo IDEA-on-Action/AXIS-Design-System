@@ -65,11 +65,11 @@ export function StepTimeline({
             aria-hidden="true"
             className={cn(
               "relative z-10 w-5 h-5 rounded-full flex items-center justify-center",
-              step.status === "complete" && "bg-[var(--axis-color-green-500)]",
-              step.status === "running" && "bg-[var(--axis-color-blue-500)] animate-pulse",
-              step.status === "error" && "bg-[var(--axis-color-red-500)]",
-              step.status === "skipped" && "bg-[var(--axis-color-gray-300)]",
-              step.status === "pending" && "bg-[var(--axis-color-gray-300)]"
+              step.status === "complete" && "bg-[var(--axis-status-success)]",
+              step.status === "running" && "bg-[var(--axis-status-running)] animate-pulse",
+              step.status === "error" && "bg-[var(--axis-status-error)]",
+              step.status === "skipped" && "bg-[var(--axis-status-neutral-muted)]",
+              step.status === "pending" && "bg-[var(--axis-status-neutral-muted)]"
             )}
           >
             {step.status === "complete" && (

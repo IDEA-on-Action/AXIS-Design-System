@@ -1,0 +1,11 @@
+/* 다크 완전성 fixture: 음성 (.dark 에만 있는 --axis-fixture-extra) */
+:root {
+  --axis-fixture-bg: #FFFFFF;
+  --axis-fixture-text: #111827;
+}
+
+.dark {
+  --axis-fixture-bg: #030712;
+  --axis-fixture-text: #F3F4F6;
+  --axis-fixture-extra: #000000;
+}

@@ -77,6 +77,8 @@
 
 ### 1.6 1.2.1 릴리스 노트에 적을 화면 변화 컴포넌트
 
+> 2026-10-15 구현 반영: Alert 상태 변형은 D-a 결정대로 semantic 매핑이라 아래 1.3 표의 alert 행(primitive 값)과 "다크에서도 밝은 파스텔 상자" 서술은 낡았습니다. 실제로는 다크에서 어두운 상자(예: info 바탕 #172554)이고, 아이콘은 변형 글자색(`text-current`)을 따릅니다.
+
 모두 `@axis-ds/ui-react`입니다. `@axis-ds/agentic-ui`는 정의 없는 참조가 0건이라 해당이 없습니다.
 
 1. Alert: default 바탕이 surface-default가 됩니다. info · success · warning · destructive는 바탕 · 글자 · 테두리 · 아이콘 색이 생기며, 다크에서도 밝은 파스텔 상자로 보입니다.
