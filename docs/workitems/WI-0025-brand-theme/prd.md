@@ -127,6 +127,7 @@ M1이 끝나야 M3의 매핑이 모든 컴포넌트에 닿으므로 M3는 M1 · 
 - AC6: `data-brand="ontology"`에서 라이트 · 다크 각각 `--axis-button-bg-default`, `--axis-button-text-default`, `--axis-surface-default`, `--axis-text-primary`, `--axis-text-secondary`, `--axis-border-focus`, `--primary`(HSL)의 계산값이 부록 A와 일치합니다(Playwright 계산 스타일 검사). shadcn HSL 변수(`--background` · `--primary` 등)는 정수 퍼센트로 적으면 원본 hex와 채널당 최대 2 어긋나므로(예: `220 69% 53%`는 rgb(52,108,218)), 프리셋은 원본 hex로 정확히 렌더되는 소수 퍼센트(예: 라이트 `--primary` `220 69.4% 52.5%` = #326ADA)로 적고, 렌더된 rgb를 채널당 ±1 허용 오차로 비교합니다(2026-10-16 결정).
 - AC7: 문서 사이트에서 브랜드(기본 · ontology, `data-brand` 직접 전환)와 테마(라이트 · 다크, `next-themes`)를 바꾸면 Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 함께 바뀝니다.
 - AC8: 9개 대표 페이지 axe 위반 0건을 기본 · ontology 브랜드 × 라이트 · 다크 네 조합에서 모두 만족합니다. 온톨로지 전용 예외 항목은 없습니다. 색 대비는 `test:e2e:a11y`로만 검증되며(단위 axe는 `color-contrast` 비활성), M3에서 CI에 연결하며(D9), 그 전까지는 로컬 수동 실행 결과를 근거로 삼습니다.
+  - 기본 브랜드 기준선 (2026-10-17 사용자 승인 개정): 기본 브랜드에서만 WI-0029(#94)의 흰 글자 대비 두 쌍(`#ffffff`/`#3b82f6`, `#ffffff`/`#ef4444`)의 `color-contrast` 노드를 노드 단위로 허용합니다. 이 두 쌍을 고치면 기본 출력이 바뀌어 AC3와 충돌하므로 M3에서는 고치지 않습니다(U20). 그 밖의 위반은 기본 브랜드에서도 0이어야 하고, ontology에는 기준선을 적용하지 않습니다. 상한은 페이지 · 테마별 노드 수로 `apps/web/e2e/a11y.spec.ts`에 두며, 측정 조건은 2026-10-17 `pnpm turbo run build --filter=@ax/web... --force`로 만든 `apps/web/out`을 `E2E_SERVER=static`(python3 `http.server`)으로 띄워 Chromium(Desktop Chrome 1280x720)에서 잰 값입니다: 라이트 · 다크 각 6페이지 13노드, 합계 12건 · 26노드(`#3b82f6` 24 · `#ef4444` 2). 노드가 상한을 넘거나 0이 되면 실패해 기준선을 고치게 합니다. 이전 기록의 15건 · 144노드(f64825d)는 측정 조건이 달라 근거로 쓰지 않습니다. WI-0029가 해결되면 기준선 조항을 지웁니다.
 - 비기능: 단위 테스트 · typecheck · lint · build · 기존 E2E 회귀가 없습니다.
 
 ---
@@ -188,7 +189,7 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 
 주요 대비(라이트): 흰 글자/`key` 4.99:1, 흰 글자/`bad` 5.29:1, `key-dark`/`key-light` 5.79:1, `bad`/`bad-light` 4.51:1, `bad-dark`/`bad-light` 5.98:1, `ink-2`/`panel-2` 11.39:1. 다크는 글자 대비가 모두 4.5:1 이상이고 입력 테두리 `line-2`는 `card` 위 3.12:1입니다.
 
-라이트의 입력 테두리 `line-2`는 `card` 위 1.40:1(v1 원본 값)입니다. 입력 상자의 경계는 WCAG 1.4.11 대상이므로, AC8에서 axe가 지적하지 않더라도 포커스 때 `key` 테두리로 바뀌는지 확인합니다. 원본 값을 유지할지는 디자인 오너가 부록 B와 함께 정합니다.
+라이트의 입력 테두리 `line-2`는 `card` 위 1.40:1(v1 원본 값)입니다. 입력 상자의 경계는 WCAG 1.4.11 대상이므로, AC8에서 axe가 지적하지 않더라도 포커스 때 `key` 테두리로 바뀌는지 확인합니다. 원본 값을 유지할지는 디자인 오너가 부록 B와 함께 정합니다. (2026-10-17 구현 정정: Input은 포커스를 테두리가 아니라 2px 링으로 표시하므로, 판정은 키보드 포커스 때 링 색이 `key`이고 링 대 바탕 대비가 3:1 이상인지로 합니다. `apps/web/e2e/brand-nontext-contrast.spec.ts`, 실측 라이트 4.66:1 · 다크 6.69:1)
 
 ---
 
