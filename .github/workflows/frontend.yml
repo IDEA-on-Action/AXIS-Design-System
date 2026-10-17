@@ -79,6 +79,10 @@ jobs:
       - name: Token reference check
         run: pnpm check-token-refs
 
+      # agentic-ui 바탕 · 글자 짝이 tokens 대비 검산 표(ontology-pairs.mjs)에 있는지 (WI-0025 plan 5.3)
+      - name: Contrast pair table check
+        run: pnpm check-contrast-pairs
+
       - name: Test
         run: pnpm test
 
