@@ -17,8 +17,6 @@ export default [
       '**/.turbo/**',
       '**/coverage/**',
       'apps/web/**',
-      // 초기 커밋부터 남은 미사용 구판 스크립트(SD v3 · require). 빌드는 build-tokens.mjs 만 실행합니다
-      'packages/axis-tokens/build-tokens.js',
     ],
   },
   js.configs.recommended,
@@ -37,6 +35,8 @@ export default [
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // 공개 Props 를 `interface X extends Y {}` 로 두어 소비자의 선언 병합과 .d.ts 이름 표시를 유지합니다
+      '@typescript-eslint/no-empty-object-type': ['error', { allowInterfaces: 'with-single-extends' }],
     },
   },
 ];
