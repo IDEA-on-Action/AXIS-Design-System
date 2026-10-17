@@ -40,7 +40,7 @@
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
-| 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | 🔄 |
+| 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
 
 ### 완료
 
@@ -281,12 +281,14 @@
 >
 > 2026-10-17: 배치 0 · 0' 완료. NPM_TOKEN 교체 대신 WI-0031(npm Trusted Publishing, OIDC) 머지 push로 publish가 실행되어 1.2.1이 배포됐습니다(run 38992207088, provenance 4/4). npm은 1.2.1입니다.
 
+> 2026-10-17: 배치 1 · 1' 완료. M2(#91)와 WI-0034(#104)가 머지됐고, M3는 새 main(988294a) 위로 옮긴 `feat/wi-0025-m3-ontology-v2`에서 2차 구현을 이어갑니다(기존 `feat/wi-0025-m3-ontology`는 백업).
+
 | 배치 | 단위 | 형태 | 선행 조건 | 릴리스 |
 |------|------|------|----------|--------|
 | 0 ✅ | NPM_TOKEN 교체(사용자) → WI-0033 PR 머지 → publish 자동 실행 → 1.2.1 확인 · M1 후속 정리 (2026-10-17 완료, 토큰 교체 대신 WI-0031 OIDC로 배포) | 순차 | WI-0033 보정 완료 | 1.2.1 (tokens · ui-react · agentic-ui · theme, WI-0033 포함) |
 | 0' ✅ | PR #98 머지 · WI-0031(Trusted Publishing 전환, #102) (2026-10-17 완료) | 배치 0과 독립 | 없음 | - |
-| 1 | WI-0025 M2(#91) rebase(WI-0033 위, 다크 전처리 한 줄) · 머지 | 순차 | 배치 0 | 1.3.0 누적 |
-| 1' | WI-0034 라이브러리 lint · type-check 스크립트 | 순차 (M2와 같은 `package.json`) | 배치 1 | - |
+| 1 ✅ | WI-0025 M2(#91) rebase(WI-0033 위, 다크 전처리 한 줄) · 머지 (2026-10-17 완료, 89ab33a) | 순차 | 배치 0 | 1.3.0 누적 |
+| 1' ✅ | WI-0034 라이브러리 lint · type-check 스크립트 (2026-10-17 완료, #104 988294a) | 순차 (M2와 같은 `package.json`) | 배치 1 | - |
 | 2 | WI-0025 M3 rebase(check-token-refs 판정 7, leaf 47) · 머지 ∥ WI-0028 착수 | 병렬 (패키지 겹침 없음) | 배치 1 · 1', M3는 부록 B 승인 | cli · mcp 1.2.0 |
 | 3 | WI-0025 M4 ∥ WI-0026 | 병렬, M4 먼저 머지 | M3 (WI-0026은 `brands/ontology` 필요) | 1.3.0 (M4 완료 시점) |
 | 4 | WI-0027 | 순차 | M3 · WI-0026 · WI-0028 | 템플릿 배포 |
