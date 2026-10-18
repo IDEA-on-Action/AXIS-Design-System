@@ -118,7 +118,7 @@
 - [x] 판정 규칙 대조군: fixture 4건(미정의 · fallback 미정의 · 템플릿 리터럴 · agentic `--axis-color-`)이 각각 정의 누락 · 정의 누락 · 판정 불가 · primitive 참조로 잡히는지 확인 (FR-3)
 - [x] 측정 실패 대조군: 없는 `--css-dir`, 빈 `--src`에서 rc 2 확인 (FR-3)
 - [x] 양성 대조군: M1 수정 후 rc 0, 요약 줄 검사 파일 67 · 참조 492건 규모 확인 (FR-3 · AC1 · AC2)
-- [ ] CI 배선 확인: 위반 1건 넣은 확인용 PR에서 「Token reference check」 step 실패 확인 후 되돌림 (FR-3)
+- [x] CI 배선 확인: 위반 1건 넣은 확인용 PR에서 「Token reference check」 step 실패 확인 후 되돌림 (FR-3) → ✅ 2026-10-18 확인용 draft PR #109(브랜치 `verify/wi-0025-token-ref-negative`, M3 `38d4173` 위). 주입 커밋 55c9a6a(`packages/axis-agentic-ui/src/step-timeline/index.tsx` 71행 `--axis-status-neutral-muted` → 정의 없는 `--axis-status-nonexistent-q7`, 로컬 `check-token-refs` rc 1 · 정의 누락 1) run 39088759983: 「Token reference check」(step 9)만 failure, 로그에 `정의 누락 …step-timeline/index.tsx:71 --axis-status-nonexistent-q7`과 `##[error]` 주석, exit code 1, 이후 Test · Build · E2E step skipped, CI failure · Deploy Preview skipped. 되돌림 커밋 64befc6(파일 sha256 이 원본 f53ca970… 와 일치) run 39088880713: Token reference check · Test · E2E a11y success, CI · Deploy Preview success. PR #109 는 머지하지 않고 닫고 브랜치를 원격 · 로컬에서 지웠어요. `publish.yml` 쪽 같은 step(위 줄)은 main push 에서만 돌아 이 PR 로는 확인하지 않았어요
 
 ### M1-5 생성 사본 재생성
 - [x] `pnpm build:registry`로 `packages/axis-ui-react/registry/r` · `packages/axis-agentic-ui/registry/r` · `public/r` · `apps/web/public/r` 재생성 후 커밋 (badge.json `bg-muted` 3곳, agentic `--axis-color-` 80건 해소) (FR-1 · FR-2)
