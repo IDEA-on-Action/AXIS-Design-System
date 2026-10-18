@@ -19,13 +19,21 @@ const ROWS: ReadoutRow[] = [
   { label: 'PlanCard 왼쪽 선', testId: 'demo-plan-card', property: 'border-left-width', inner: '[role="region"]' },
 ]
 
+function findTarget(row: ReadoutRow): HTMLElement | null {
+  const host = document.querySelector<HTMLElement>(`[data-testid="${row.testId}"]`)
+  return (row.inner ? host?.querySelector<HTMLElement>(row.inner) : host) ?? null
+}
+
 function readValues(): string[] {
   return ROWS.map((row) => {
-    const host = document.querySelector<HTMLElement>(`[data-testid="${row.testId}"]`)
-    const el = row.inner ? host?.querySelector<HTMLElement>(row.inner) : host
+    const el = findTarget(row)
     if (!el) return '찾지 못함'
     return getComputedStyle(el).getPropertyValue(row.property).trim()
   })
+}
+
+function sameValues(a: string[] | null, b: string[]): boolean {
+  return a !== null && a.length === b.length && a.every((value, index) => value === b[index])
 }
 
 /**
@@ -34,6 +42,8 @@ function readValues(): string[] {
  * 색 차이가 작아도 둥글기 · 그림자 · 선 두께가 숫자로 바뀌는 것을 보이려는 안내용이에요.
  * E2E 는 이 표를 근거로 쓰지 않고 실제 요소의 계산 스타일을 직접 재요(자기 증명 방지).
  * `<html>` 의 data-brand · class 가 바뀔 때마다 다음 프레임에 다시 읽어요.
+ * Button 처럼 transition-colors 를 쓰는 대상은 그 프레임에 아직 이전 색이라, 대상 요소의
+ * transitionend · transitioncancel 때 한 번 더 읽어 전환이 끝난 값을 보여 줘요.
  */
 export function TokenReadout() {
   const [values, setValues] = useState<string[] | null>(null)
@@ -42,13 +52,24 @@ export function TokenReadout() {
     let frame = 0
     const update = () => {
       cancelAnimationFrame(frame)
-      frame = requestAnimationFrame(() => setValues(readValues()))
+      frame = requestAnimationFrame(() => {
+        const next = readValues()
+        setValues((prev) => (sameValues(prev, next) ? prev : next))
+      })
+    }
+    const onTransitionDone = (event: Event) => {
+      const target = event.target
+      if (target instanceof Element && ROWS.some((row) => findTarget(row) === target)) update()
     }
     update()
     const observer = new MutationObserver(update)
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-brand', 'class'] })
+    document.addEventListener('transitionend', onTransitionDone, true)
+    document.addEventListener('transitioncancel', onTransitionDone, true)
     return () => {
       observer.disconnect()
+      document.removeEventListener('transitionend', onTransitionDone, true)
+      document.removeEventListener('transitioncancel', onTransitionDone, true)
       cancelAnimationFrame(frame)
     }
   }, [])
