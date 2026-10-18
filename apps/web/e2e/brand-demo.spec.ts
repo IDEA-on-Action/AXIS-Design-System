@@ -11,6 +11,7 @@ import {
   type ThemeName,
 } from './brand-expectations'
 import { applyBrand, readBrandState } from './helpers/brand'
+import { collectErrors, openDemo, radio } from './helpers/demo'
 
 /**
  * 브랜드 전환 데모 E2E (WI-0025 FR-10 · AC7 · Q8 · Q9).
@@ -23,7 +24,6 @@ import { applyBrand, readBrandState } from './helpers/brand'
  * - 하이드레이션 오류는 React 가 <html> 을 다시 그리며 data-brand 를 지우므로, 모든 테스트에서 페이지 오류 0 을 단언해요.
  */
 
-const DEMO_PATH = '/docs/brand-demo/'
 const THEMES = ['light', 'dark'] as const satisfies readonly ThemeName[]
 
 /** 기본 브랜드 버튼 바탕 (variables.css :root · .dark 동일) */
@@ -50,22 +50,6 @@ interface DemoShape {
   buttonRadius: string
   planCardAccentWidth: string
   cardShadowMaxAlpha: number
-}
-
-/** 페이지 오류 · 콘솔 오류 수집 (하이드레이션 불일치 #418 등) */
-function collectErrors(page: Page): string[] {
-  const errors: string[] = []
-  page.on('pageerror', (e) => errors.push(`pageerror: ${e.message}`))
-  page.on('console', (m) => {
-    if (m.type() === 'error') errors.push(`console: ${m.text()}`)
-  })
-  return errors
-}
-
-async function openDemo(page: Page) {
-  await page.goto(DEMO_PATH)
-  await page.waitForLoadState('networkidle')
-  await expect(page.getByTestId('brand-demo-controls')).toHaveAttribute('data-ready', 'true')
 }
 
 async function readDemoColors(page: Page): Promise<DemoColors> {
@@ -164,7 +148,6 @@ async function snapshotDefault(page: Page): Promise<DemoColors> {
   return readDemoColors(page)
 }
 
-const radio = (page: Page, name: string) => page.getByRole('radio', { name, exact: true })
 const current = (page: Page) => page.getByTestId('brand-demo-current')
 
 for (const theme of THEMES) {
