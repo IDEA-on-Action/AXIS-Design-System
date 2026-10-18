@@ -139,7 +139,7 @@ jobs:
       # 확인 기록은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
       # nontext · demo · tokens 는 앞 E2E step 이 실패해도 돌도록 if 를 둔다(모든 결과를 한 run 에서 보고, 건수 가드가 JSON 없음으로 오판하지 않게).
       # --output 을 나누는 이유: Playwright 는 실행마다 출력 디렉터리를 비우므로 같은 test-results 를 쓰면 앞 실행의 실패 산출물이 지워진다.
-      - name: E2E a11y (브랜드 2 x 테마 2 x 9페이지, AC8)
+      - name: E2E a11y (브랜드 2 x 테마 2 x 10페이지, AC8)
         id: e2e-a11y
         env:
           E2E_SERVER: static
@@ -171,8 +171,8 @@ jobs:
         run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
 
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
-      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-18, playwright --list): a11y 36 · nontext 6 · tokens 17 · demo 8.
-      # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 9건인지도 본다.
+      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-18, playwright --list): a11y 40 · nontext 6 · tokens 17 · demo 8.
+      # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 10건인지도 본다(M4 에서 브랜드 전환 데모 페이지를 더함).
       - name: E2E 실행 건수 가드
         id: e2e-count
         if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
@@ -185,7 +185,7 @@ jobs:
             echo '| suite | 기대 | 실행 | 통과 | 실패 | flaky | skipped |'
             echo '|---|---|---|---|---|---|---|'
           } >> "$GITHUB_STEP_SUMMARY"
-          for spec in a11y:36 nontext:6 tokens:17 demo:8; do
+          for spec in a11y:40 nontext:6 tokens:17 demo:8; do
             name=${spec%%:*}; want=${spec##*:}; f="$name.json"
             if [ ! -s "$f" ]; then
               echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"
@@ -206,8 +206,8 @@ jobs:
           if [ -s a11y.json ]; then
             for combo in default/light default/dark ontology/light ontology/dark; do
               n=$(jq --arg t "a11y ($combo)" '[.. | objects | select(.title? == $t) | .specs[]?] | length' a11y.json)
-              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne 9 ]; then
-                echo "::error::a11y ($combo): ${n}건 (기대 9건)"
+              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne 10 ]; then
+                echo "::error::a11y ($combo): ${n}건 (기대 10건)"
                 fail=1
               fi
             done

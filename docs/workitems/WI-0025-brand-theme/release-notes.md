@@ -76,7 +76,7 @@
 #### CI
 - `check-token-refs` 판정 7: Tailwind가 CSS를 만들지 않는 클래스 패턴(임의값 `var()` + 불투명도 수식어)을 위반으로 잡습니다
 - `pnpm check-contrast-pairs`: ontology 대비 짝 표와 컴포넌트 소스의 드리프트 검사
-- `frontend.yml`: pack-smoke, Playwright a11y(4조합 36건, 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선) · 비텍스트 대비 · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰습니다. 세 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
+- `frontend.yml`: pack-smoke, Playwright a11y(4조합 36건, 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선. M4 에서 브랜드 전환 데모 페이지를 더해 40건, 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석) · 비텍스트 대비 · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰습니다. 세 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
 
 ### Breaking change
 없습니다. 공개 export와 CSS 변수 이름 삭제 0건, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션). 브랜드 미지정 출력은 npm 1.2.1 배포본 대비 `variables.css` `:root` · `.dark` 각 249개 값이 같고 새 변수 11개만 늘며, `shadcn-compat.css`는 바이트까지 같습니다(AC3 테스트). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」을 확인해 주세요.
