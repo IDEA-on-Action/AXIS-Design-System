@@ -27,6 +27,7 @@ export const docsConfig: DocsConfig = {
       title: 'Getting Started',
       items: [
         { title: 'Introduction', href: '/docs' },
+        { title: 'Brand Theme', href: '/docs/brand-demo' },
       ],
     },
     {
