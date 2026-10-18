@@ -26,7 +26,7 @@
 - AXIS의 상태 의미는 v1의 상태 다섯 가지로 접습니다: success → 회색 계열, warning · error → `bad` 계열(바탕은 연한 단계), running · info → `key` 계열. 상태가 색만으로 구분되지 않으므로, 상태는 글자 · 아이콘과 함께 표시해 주세요
 - 글꼴(`Pretendard Variable` · `JetBrains Mono` 우선), `--radius: 12px`, 그림자(`--axis-shadow-sm` · `--axis-shadow-lg`), PlanCard 색 선 1px, Card 그림자 없음(`0 0 #0000`)을 함께 지정합니다
 - 산출 CSS: 라이트 블록 `--axis-*` 117 · shadcn 20, 다크 블록 `--axis-*` 107 · shadcn 19
-- 접근성: 문서 사이트 9페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음)을 확인했습니다. 포커스 링과 상태 아이콘 색 6가지(`status-{neutral,running,success,error,info,warning}`)의 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)은 문서 페이지에 넣은 프로브 요소를 `surface-default` · `surface-secondary` 위에서 잰 대리 측정입니다. 실제 컴포넌트(StepTimeline · RunProgress · ToolCallCard 등)의 부모 바탕 위 재측정은 M4에서 합니다. 대기 · 건너뜀 상태 점(`status-neutral-muted`, StepTimeline · RunProgress)은 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1이며(같은 프로브 실측), 값을 바꿀지는 디자인 오너 사후 확인 대상입니다(기본 테마 gray-300도 1.47:1로 같은 수준). 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
+- 접근성: 문서 사이트 10페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음)을 확인했습니다. 10페이지에는 실제 ui-react · agentic-ui 컴포넌트를 그리는 브랜드 전환 데모 페이지가 들어 있습니다(M3 시점에는 9페이지). 포커스 링과 상태 아이콘 색 6가지(`status-{neutral,running,success,error,info,warning}`)의 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)은 문서 페이지에 넣은 프로브 요소를 `surface-default` · `surface-secondary` 위에서 잰 대리 측정입니다. 실제 컴포넌트(StepTimeline · RunProgress · ToolCallCard 등)의 부모 바탕 위 재측정은 M4에서 합니다. 대기 · 건너뜀 상태 점(`status-neutral-muted`, StepTimeline · RunProgress)은 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1이며(같은 프로브 실측), 값을 바꿀지는 디자인 오너 사후 확인 대상입니다(기본 테마 gray-300도 1.47:1로 같은 수준). 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
 
 #### tokens: 새 변수 (기본값은 기존 화면과 같음)
 브랜드를 지정하지 않은 `variables.css`에는 아래 11개 변수만 `:root` · `.dark`에 새로 생깁니다. 1.2.1에 있던 변수 249개의 값은 바뀌지 않습니다.
@@ -64,6 +64,9 @@
 
 옅은 바탕은 `color-mix(in srgb, <색> 10%, transparent)`로 만들며, `color-mix()`를 지원하지 않는 브라우저에서는 바탕이 1.2.1처럼 투명합니다.
 
+#### 문서 사이트: 브랜드 전환 데모 (M4)
+- 문서 사이트 `/docs/brand-demo/`(사이드바 「Brand Theme」)에서 브랜드(기본 · Ontology)와 테마(시스템 · 라이트 · 다크)를 바꾸며 실제 패키지 컴포넌트(Button · Card · Input · Badge · Alert · PlanCard · MessageBubble · StepTimeline · RunProgress)의 변화를 볼 수 있습니다. 브랜드는 `<html data-brand>`를 직접 붙이고 지우며, 페이지를 떠나면 지워 다른 문서 페이지는 기본 브랜드 그대로입니다(패키지 변경 없음)
+
 #### 폐기 예정
 - `--axis-card-shadow-default`(JS `CardShadowDefault`)는 폐기 예정입니다. 1.x 동안 이름과 값(`0 1px 3px 0 rgb(0 0 0 / 0.1)`)을 유지하지만, 배포된 어느 버전에서도 Card에 반영된 적이 없습니다. Card 그림자는 `--axis-card-shadow`로 조정해 주세요(가이드 예시 정정이며 동작 변경은 아닙니다). 토큰 원본에는 `$extensions.axis.deprecated` 마커가 붙습니다
 
@@ -76,7 +79,7 @@
 #### CI
 - `check-token-refs` 판정 7: Tailwind가 CSS를 만들지 않는 클래스 패턴(임의값 `var()` + 불투명도 수식어)을 위반으로 잡습니다
 - `pnpm check-contrast-pairs`: ontology 대비 짝 표와 컴포넌트 소스의 드리프트 검사
-- `frontend.yml`: pack-smoke, Playwright a11y(4조합 36건, 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선. M4 에서 브랜드 전환 데모 페이지를 더해 40건, 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석) · 비텍스트 대비 · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰습니다. 세 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
+- `frontend.yml`: pack-smoke, Playwright a11y(4조합 40건 = 10페이지 x 4, 조합별 10건. 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선이고, 브랜드 전환 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석. M3 시점에는 9페이지 36건) · 비텍스트 대비 · 브랜드 전환 데모(AC7, 8건) · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰고, M4 에서 더한 데모 step 은 처음부터 게이트입니다. 네 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
 
 ### Breaking change
 없습니다. 공개 export와 CSS 변수 이름 삭제 0건, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션). 브랜드 미지정 출력은 npm 1.2.1 배포본 대비 `variables.css` `:root` · `.dark` 각 249개 값이 같고 새 변수 11개만 늘며, `shadcn-compat.css`는 바이트까지 같습니다(AC3 테스트). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」을 확인해 주세요.
@@ -85,10 +88,15 @@
 - 2026-10-18 M3 브랜치 95e8547(PlanCard 거절 버튼 hover 글자 토큰 반영 뒤, turbo `--force`, 캐시 0, build 를 먼저 단독 실행): build 8/8 · type-check 8/8 · lint 4/4 rc 0, test 5/5 rc 0(tokens 190 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과)
 - `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(짝 10)
 - 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`. `variables.css`는 npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11(위 새 변수 표), `shadcn-compat.css`는 1.2.1과 바이트까지 같음, AC3 테스트 통과
-- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과
+- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과(M3 시점 9페이지. M4 수치는 아래 「검증 (M4 데모 시점)」)
 - 레지스트리 사본 content 와 src 대조 84/84 일치(a8fe0a0 시점). 95e8547 뒤 PlanCard 사본 3벌(`public/r` · `apps/web/public/r` · `packages/axis-agentic-ui/registry/r`)이 src 와 일치
 
-> M4 에서 채울 것: 문서 사이트 브랜드 전환 데모(AC7) · 가이드 절, CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
+### 검증 (M4 데모 시점)
+- 2026-10-18 M4 브랜치 deadd34(`pnpm turbo run build --filter=@ax/web... --force` 4/4, 캐시 0, `E2E_SERVER=static`, Chromium Desktop Chrome 1280x720): `test:e2e:a11y` 40/40(조합별 10건) · `test:e2e:demo` 8/8 · `test:e2e:nontext` 6/6 · `test:e2e:tokens` 17/17 통과, skipped 0
+- 기본 브랜드 기준선: WI-0029 두 쌍 라이트 · 다크 각 7페이지 20노드(`#3b82f6` 18 · `#ef4444` 2), 데모 경로 기준선 라이트 2 · 다크 4노드(상한과 같음). ontology 위반 0
+- CI run 은 M4 PR 에서 확인합니다(push 전)
+
+> M4 에서 채울 것: 가이드 절, CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
 
 ## 1.2.1 (patch) - 토큰 정합 (M1, PR #90) · 다크 component 토큰 (WI-0033)
 

@@ -552,7 +552,7 @@ turbo 태스크 구성(`turbo.json`):
 | `frontend.yml` 트리거 paths | push · pull_request 양쪽에 `'scripts/**'`를 추가합니다. 지금은 `scripts/`만 바꾼 PR에서 CI가 돌지 않아, 검사 스크립트를 고친 PR이 검사 없이 머지될 수 있습니다 | M1 |
 | `publish.yml` `publish` job | 「Build」 다음, 「Pack smoke」 앞에 같은 step을 넣어 1.2.1 · 1.3.0 배포 직전에도 검사합니다 | M1 |
 | `frontend.yml` `ci` job (a11y, Q7: M3에 포함) | 「Build」 다음에 ① `~/.cache/ms-playwright` 캐시(키에 Playwright 버전 포함, 현재 설치본 1.61.1) ② `pnpm --filter @ax/web exec playwright install --with-deps chromium` ③ `pnpm --filter @ax/web test:e2e:a11y` ④ 실패할 때만 `apps/web/test-results/`를 업로드하는 step을 순서대로 넣습니다. GitHub Actions가 `CI=true`를 주므로 기존 설정의 `forbidOnly` · `retries: 1` · `workers: 1` · `reuseExistingServer: false`가 그대로 적용됩니다 | M3 |
-| `apps/web/e2e/a11y.spec.ts` | 지금은 `THEMES`(light · dark) × `PAGES` 9개 = 18건입니다. M3에서 브랜드 축(기본 · ontology)을 더해 36건으로 늘리고, ontology 갈래에서는 `page.goto` 전에 `addInitScript`로 `document.documentElement`에 `data-brand="ontology"`를 붙입니다 | M3 |
+| `apps/web/e2e/a11y.spec.ts` | 지금은 `THEMES`(light · dark) × `PAGES` 9개 = 18건입니다. M3에서 브랜드 축(기본 · ontology)을 더해 36건으로 늘리고(2026-10-18 M4 에서 브랜드 전환 데모 페이지를 더해 10페이지 · 40건, 조합별 10건), ontology 갈래에서는 `page.goto` 전에 `addInitScript`로 `document.documentElement`에 `data-brand="ontology"`를 붙입니다 | M3 |
 
 ### 4.4 대조군 검증 절차
 
