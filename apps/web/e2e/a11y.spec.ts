@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import {
   AC6_AXIS_VARS,
@@ -9,7 +9,7 @@ import {
   parseCssRgb,
   type ThemeName,
 } from './brand-expectations'
-import { applyBrand } from './helpers/brand'
+import { applyBrand, readBrandState } from './helpers/brand'
 
 /**
  * 문서 페이지 E2E a11y 검사 (WI-0021 도입, WI-0022 baseline 해소, WI-0023 다크 모드, WI-0025 브랜드 축).
@@ -111,28 +111,6 @@ function applyBaseline(brand: BrandName, violations: AxeViolation[]) {
     if (nodes.length > 0) remaining.push({ ...v, nodes })
   }
   return { remaining, filtered }
-}
-
-/**
- * <html> 의 브랜드 속성과 계산 스타일을 읽는다.
- * 변수 원문은 프로덕션 CSS 압축으로 표기가 바뀌므로(#FFFFFF -> #FFF) 원문이 아니라 렌더 rgb 로 비교한다.
- */
-async function readBrandState(page: Page, vars: readonly string[]) {
-  return page.evaluate((names) => {
-    const html = document.documentElement
-    const probe = document.createElement('span')
-    html.appendChild(probe)
-    const render = (expr: string) => {
-      probe.style.color = ''
-      probe.style.color = expr
-      return getComputedStyle(probe).color
-    }
-    const rendered: Record<string, string> = {}
-    for (const n of names) rendered[n] = render(`var(${n}, rgb(1, 2, 3))`)
-    const primaryRgb = render('hsl(var(--primary))')
-    probe.remove()
-    return { brand: html.getAttribute('data-brand'), rendered, primaryRgb }
-  }, vars)
 }
 
 for (const brand of BRANDS) {

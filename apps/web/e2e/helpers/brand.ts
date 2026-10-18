@@ -14,3 +14,26 @@ export async function applyBrand(page: Page, brand: string): Promise<void> {
     document.addEventListener('DOMContentLoaded', set, { once: true })
   }, brand)
 }
+
+/**
+ * <html> 의 브랜드 속성과 계산 스타일을 읽는다.
+ * a11y spec 과 브랜드 전환 데모 spec(brand-demo.spec.ts)이 같이 써요.
+ * 변수 원문은 프로덕션 CSS 압축으로 표기가 바뀌므로(#FFFFFF -> #FFF) 원문이 아니라 렌더 rgb 로 비교한다.
+ */
+export async function readBrandState(page: Page, vars: readonly string[]) {
+  return page.evaluate((names) => {
+    const html = document.documentElement
+    const probe = document.createElement('span')
+    html.appendChild(probe)
+    const render = (expr: string) => {
+      probe.style.color = ''
+      probe.style.color = expr
+      return getComputedStyle(probe).color
+    }
+    const rendered: Record<string, string> = {}
+    for (const n of names) rendered[n] = render(`var(${n}, rgb(1, 2, 3))`)
+    const primaryRgb = render('hsl(var(--primary))')
+    probe.remove()
+    return { brand: html.getAttribute('data-brand'), rendered, primaryRgb }
+  }, vars)
+}

@@ -90,3 +90,35 @@ export function parseCssRgb(value: string): [number, number, number] {
 export function maxChannelDiff(a: [number, number, number], b: [number, number, number]): number {
   return Math.max(...a.map((v, i) => Math.abs(v - b[i])))
 }
+
+/**
+ * 브랜드별 모양 기대값 (WI-0025 FR-9 · Q9, 브랜드 전환 데모 spec 이 씁니다).
+ *
+ * 출처는 PRD FR-9(prd.md 「FR-9」 줄과 변경 주석)이고, 손으로 옮겨 적었습니다.
+ * - 둥글기: `--radius` 기본 0.5rem(8px) · ontology 12px. Card `rounded-lg` = `--radius`, Button `rounded-md` = `--radius` - 2px.
+ * - PlanCard 왼쪽 색 선: `--axis-plan-card-accent-width` 기본 4px · ontology 1px(plan U8).
+ * - Card 그림자: `--axis-card-shadow` 기본 `0 1px 2px 0 rgb(0 0 0 / 0.05)` · ontology `0 0 #0000`(plan U2).
+ *   계산 box-shadow 는 ring-offset · ring · shadow 세 레이어이고 앞 두 레이어는 늘 알파 0 이라,
+ *   첫 레이어만 읽으면 ontology 의 「알파 0」 단언이 브랜드 CSS 없이도 통과합니다. 그래서 모든 레이어의 최대 알파로 비교합니다.
+ * 라이트 · 다크 값이 같습니다(ontology 다크는 이 셋을 다시 정의하지 않음).
+ */
+export const SHAPE_EXPECTED = {
+  default: { cardRadius: '8px', buttonRadius: '6px', planCardAccentWidth: '4px', cardShadowMaxAlpha: 0.05 },
+  ontology: { cardRadius: '12px', buttonRadius: '10px', planCardAccentWidth: '1px', cardShadowMaxAlpha: 0 },
+} as const
+
+/**
+ * 계산 box-shadow 의 모든 레이어 중 최대 알파 (`none` 은 0).
+ * 색 표기 `rgb(r, g, b)` · `rgba(r, g, b, a)` 를 레이어마다 찾아 읽습니다(쉼표로 단순히 나누면 rgba 안 쉼표에서 깨짐).
+ */
+export function maxShadowAlpha(boxShadow: string): number {
+  if (boxShadow.trim() === 'none') return 0
+  const colors = [...boxShadow.matchAll(/rgba?\(([^)]*)\)/g)]
+  if (colors.length === 0) throw new Error(`box-shadow 색을 읽지 못함: ${boxShadow}`)
+  return Math.max(
+    ...colors.map((m) => {
+      const parts = m[1].split(',').map((p) => p.trim())
+      return parts.length === 4 ? Number(parts[3]) : 1
+    }),
+  )
+}
