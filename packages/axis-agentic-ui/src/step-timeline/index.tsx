@@ -68,7 +68,7 @@ export function StepTimeline({
               step.status === "complete" && "bg-[var(--axis-status-success)]",
               step.status === "running" && "bg-[var(--axis-status-running)] animate-pulse",
               step.status === "error" && "bg-[var(--axis-status-error)]",
-              step.status === "skipped" && "bg-[var(--axis-status-nonexistent-q7)]",
+              step.status === "skipped" && "bg-[var(--axis-status-neutral-muted)]",
               step.status === "pending" && "bg-[var(--axis-status-neutral-muted)]"
             )}
           >
