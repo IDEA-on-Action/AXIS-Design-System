@@ -33,6 +33,8 @@ export type ThemeAddError =
   | { kind: "invalid-name"; brand: string }
   /** 고른 CSS 파일의 실제 경로(심볼릭 링크를 따라간 경로)가 프로젝트 디렉터리 밖입니다. */
   | { kind: "css-outside-project"; file: string; realPath: string }
+  /** 고른 파일의 실제 경로가 `.css` 파일이 아닙니다(예: globalCss 가 package.json 을 가리킴). */
+  | { kind: "css-not-stylesheet"; file: string; realPath: string }
   | { kind: "unknown-brand"; brand: string; available: string[]; version?: string };
 
 /** 쓸 파일 하나. `before` 는 계획할 때 읽은 내용(없던 파일이면 `null`)입니다. */
@@ -174,6 +176,11 @@ function realPathInside(baseDir: string, file: string): { inside: boolean; realP
   return { inside, realPath };
 }
 
+/** 실제 경로(심볼릭 링크를 따라간 경로)가 `.css` 파일인지 봅니다. */
+function isStylesheet(realPath: string): boolean {
+  return path.extname(realPath).toLowerCase() === ".css";
+}
+
 /** 프로젝트의 lockfile 로 설치 명령을 고릅니다(없으면 pnpm). */
 export function detectInstallCommand(baseDir: string): string {
   if (existsSync(path.join(baseDir, "pnpm-lock.yaml"))) return "pnpm install";
@@ -264,6 +271,12 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     const where = realPathInside(baseDir, location.path);
     if (!where.inside) {
       plan.errors.push({ kind: "css-outside-project", file: location.path, realPath: where.realPath });
+      plan.writes = [];
+      return plan;
+    }
+    // CSS 가 아닌 파일(package.json 등)에 @import 줄을 넣지 않음
+    if (!isStylesheet(where.realPath)) {
+      plan.errors.push({ kind: "css-not-stylesheet", file: location.path, realPath: where.realPath });
       plan.writes = [];
       return plan;
     }
@@ -362,6 +375,14 @@ export function applyThemeAdd(plan: ThemeAddPlan): string[] {
     const current = readText(w.file);
     if (current !== w.before) {
       throw new Error(`${w.file} 이 계획 뒤에 바뀌었습니다. 다시 실행하세요.`);
+    }
+    // 계획 뒤 심볼릭 링크가 바뀌었을 수 있으므로 쓰기 직전에 위치를 다시 확인(내용이 같아도 대상이 밖일 수 있음)
+    const where = realPathInside(plan.baseDir, w.before === null ? path.dirname(w.file) : w.file);
+    if (!where.inside && !(w.before === null && path.dirname(w.file) === plan.baseDir)) {
+      throw new Error(`${w.file} 의 실제 위치(${where.realPath})가 프로젝트 디렉터리 밖입니다. 아무것도 쓰지 않았습니다.`);
+    }
+    if (!w.file.endsWith(".json") && !isStylesheet(where.realPath)) {
+      throw new Error(`${w.file} 의 실제 대상(${where.realPath})이 CSS 파일이 아닙니다. 아무것도 쓰지 않았습니다.`);
     }
     if (w.file.endsWith(".json")) {
       JSON.parse(w.after);

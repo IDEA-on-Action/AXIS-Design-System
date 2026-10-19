@@ -344,6 +344,43 @@ describe("쓰기 대상 CSS 가 프로젝트 밖일 때", () => {
     expect(exitCode).toBe(0);
     expect(countLines(await fs.readFile(target, "utf8"), IMPORT_SAMPLE)).toBe(1);
   });
+
+  it("globalCss 가 프로젝트 안의 CSS 가 아닌 파일(package.json)을 가리키면 거절, 파일 변경 0, rc 1", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { globalCss: "package.json" }, { spaces: 2 });
+    expect(planThemeAdd(dir, "sample").errors[0]?.kind).toBe("css-not-stylesheet");
+    const before = await snapshot(dir);
+    const { out, exitCode } = await runAdd(["sample", "-d", dir]);
+    expect(exitCode).toBe(1);
+    expect(out).toContain("CSS 파일(.css)이 아닙니다. 아무것도 바꾸지 않았습니다.");
+    expect(await snapshot(dir)).toEqual(before);
+  });
+
+  it("app/globals.css 가 프로젝트 안의 CSS 가 아닌 파일을 가리키는 심볼릭 링크면 거절", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const notCss = path.join(dir, "notes.txt");
+    await fs.writeFile(notCss, "@tailwind base;\n");
+    const link = path.join(dir, "app", "globals.css");
+    await fs.remove(link);
+    await fs.symlink(notCss, link);
+    expect(planThemeAdd(dir, "sample").errors[0]?.kind).toBe("css-not-stylesheet");
+    expect(await fs.readFile(notCss, "utf8")).toBe("@tailwind base;\n");
+  });
+
+  it("계획 뒤 CSS 가 밖을 가리키는 심볼릭 링크로 바뀌면 apply 가 쓰기 전에 거절(밖 파일 불변)", async () => {
+    const { dir, outside, outsideFile } = await setup();
+    const css = path.join(dir, "app", "globals.css");
+    const plan = planThemeAdd(dir, "sample");
+    expect(plan.errors).toEqual([]);
+    const original = await fs.readFile(css, "utf8");
+    // 같은 내용의 밖 파일로 바꿔치기(내용 비교만으로는 못 잡는 경우)
+    await fs.writeFile(outsideFile, original);
+    await fs.remove(css);
+    await fs.symlink(outsideFile, css);
+    const beforeOutside = await snapshot(outside);
+    expect(() => applyThemeAdd(plan)).toThrow("프로젝트 디렉터리 밖입니다");
+    expect(await snapshot(outside)).toEqual(beforeOutside);
+  });
 });
 
 describe("쓰기 전 권한 확인", () => {

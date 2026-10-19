@@ -199,6 +199,12 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
           `  axis.config.json 의 globalCss 를 프로젝트 안 파일로 고치거나, 그 파일에 직접 넣으세요: @import "${plan.importPath}";`
         );
         break;
+      case "css-not-stylesheet":
+        lines.push(
+          chalk.red(`${error.file} 의 실제 대상(${error.realPath})이 CSS 파일(.css)이 아닙니다. 아무것도 바꾸지 않았습니다.`),
+          `  axis.config.json 의 globalCss 를 전역 CSS 파일로 고치거나, 그 파일에 직접 넣으세요: @import "${plan.importPath}";`
+        );
+        break;
       case "unknown-brand":
         lines.push(
           chalk.red(`브랜드 '${error.brand}' 가 설치된 ${TOKENS_PACKAGE} ${error.version ?? ""} 에 없습니다.`),
