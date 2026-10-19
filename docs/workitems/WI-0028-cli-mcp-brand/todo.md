@@ -51,8 +51,9 @@
 
 ## P2. 공유 코어 · list · info
 
-- [ ] fixture 원본 `packages/axis-cli/test/fixtures/theme/`(tokens-1.3 · tokens-1.2 · projects/root · projects/app)와 펼침 helper (plan 6.1)
-- [ ] `brand-core.ts`: `resolveTokens` 3상태(ok · not-installed · unsupported) → T2-1
+- [ ] fixture 원본 `packages/axis-cli/test/fixtures/theme/`(tokens-1.3 · tokens-1.3-unbuilt · tokens-1.2 · projects/app-init · projects/src-app)와 펼침 helper, theme-only 는 `theme-only.json` 에서 펼침 (plan 6.1)
+- [ ] cli `turbo.json` test inputs 에 `theme-only.json` (plan 5장 12a)
+- [ ] `brand-core.ts`: `resolveTokens` 4상태(ok · not-installed · unsupported · not-built), 설치 여부는 `node_modules/@axis-ds/tokens/package.json` 직접 탐색 (plan 3장 5) → T2-1
 - [ ] `listBrands` 가 `index.json` → `brand.json` 순으로 읽음 (FR-1) → T2-2
 - [ ] `parseBrandCss` 라이트 · 다크 블록 (FR-3) → T2-3
 - [ ] `axis theme list` 출력: 이름 · 설명 · 테마 (FR-1, AC1 fixture 판) → T2-4
@@ -65,8 +66,9 @@
 - [ ] `planThemeAdd` · `applyThemeAdd` 분리 (FR-2)
 - [ ] `axis.config.json` 없으면 아무것도 쓰지 않고 rc 1 (FR-2) → T3-1
 - [ ] CSS 대상 탐색 순서 `globalCss` → `app/` → `src/app/` → 루트 (FR-2, A1) → T3-2
+- [ ] `globalCss` 가 없는 파일을 가리키면 경고 후 다음 후보 (U14 권장안, plan 4.1) → T3-2b
 - [ ] import 삽입 위치(`@charset` · 기존 `@import` 뒤) (FR-2, U2) → T3-3
-- [ ] 두 번 실행해도 import 1줄 · 의존성 1회 · brand 기록 (AC2(a)) → T3-4
+- [ ] 두 번 실행해도 import 1줄 · 의존성 1회 · brand 기록 (AC2(a) fixture 판, 완료 판정은 T6-6) → T3-4
 - [ ] tokens 없으면 `dependencies` 에 `^1.3.0` 추가 + 설치 안내, 설치 미실행 (FR-2, U6) → T3-5
 - [ ] tokens 1.3.0 미만이면 범위 유지 + 업그레이드 안내 → T3-6
 - [ ] 브랜드 이름 검증(U5) · 다른 브랜드 import 처리(U13) → T3-7 · T3-8
@@ -97,12 +99,13 @@
 - [ ] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3
 - [ ] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4
 - [ ] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5
+- [ ] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6
 - [ ] S0 을 P0 에서 못 끝냈으면 여기서 실측
 
 ## P7. 1.3.0 배포 뒤
 
 - [ ] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1
-- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 (**AC2(b)**) → T7-2
+- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2
 - [ ] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장)
 - [ ] `release-notes.md` 작성
 - [ ] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3

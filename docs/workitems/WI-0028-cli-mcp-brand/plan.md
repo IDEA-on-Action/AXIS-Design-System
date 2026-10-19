@@ -18,7 +18,7 @@
 | `axis.config.json` 생성 | `axis init`(`src/index.ts:67-76`): `$schema` · `componentsDir` · `tailwindConfig` · `globalCss` · `registry`, `-y` 기본 `globalCss` 는 `./src/app/globals.css`. `axis template init`(`src/template/template-apply.ts:184-195`): `$schema` · `template` · `componentsDir` · `tailwindConfig` · `globalCss`(`./globals.css`). 두 곳 모두 타입 없는 객체 리터럴입니다 |
 | `axis check` | `src/template/template-check.ts` `runCheck(dir)` 가 결과 5개를 모으고 바로 `console.log` 합니다. `axis.config.json` 은 존재만 봅니다. globals.css 탐색 순서는 `globals.css` → `app/globals.css` → `src/app/globals.css` → `src/globals.css` → `styles/globals.css` 입니다. 옵션은 `-d, --dir <path>` |
 | 빌드 | `tsup src/index.ts src/monet.ts src/v0.ts src/sync/index.ts --format esm --dts`, tsconfig `rootDir: "src"` · `resolveJsonModule: true` |
-| 테스트 | vitest ^2.1.0, `vitest.config.ts` include `src/**/*.test.ts`, 기존 3파일 58건 통과(e690905, `npx vitest run`, rc 0) |
+| 테스트 | vitest ^2.1.0, `vitest.config.ts` include `src/**/*.test.ts` · `src/**/*.spec.ts`(두 패턴), coverage 블록(`src/library/**/*.ts`), 기존 3파일 58건 통과(e690905, `npx vitest run`, rc 0) |
 | lint · type-check 스크립트 | 없음(WI-0034 D3 에서 제외) |
 
 ### 1.2 `@axis-ds/mcp` (package.json 1.1.4)
@@ -85,7 +85,10 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 2. **메타데이터**: `index.json` 각 항목의 `meta`(`./brands/<b>/brand.json`)를 `@axis-ds/tokens` 뒤에 붙여 같은 방식으로 resolve 합니다. 경로를 코드에 박지 않고 index 가 준 값을 씁니다.
 3. **import 경로**: 항목의 `css`(`./css/brands/<b>`)로 `@axis-ds/tokens/css/brands/<b>` 를 만듭니다. FR-2 · FR-4 · FR-5 가 같은 함수를 씁니다.
 4. **주요 토큰(FR-3 · FR-4)**: `@axis-ds/tokens/css/brands/<b>` 를 resolve 해 CSS 를 읽고 라이트 · 다크 첫 블록에서 선언을 뽑습니다. 고를 변수 목록은 U4.
-5. **상태 판정**: resolve 결과로 셋을 가릅니다. `MODULE_NOT_FOUND` = 미설치, `ERR_PACKAGE_PATH_NOT_EXPORTED` = 브랜드 미지원 버전(1.2.1 이하), 성공 = 지원. 버전 문자열은 `package.json` 이 exports 에 없어 직접 resolve 할 수 없으므로 `resolve("@axis-ds/tokens")`(`dist/js/tokens.js`)에서 위로 올라가 `name` 이 `@axis-ds/tokens` 인 `package.json` 을 찾아 읽습니다. 미설치 · 미지원이면 빈 목록 대신 설치 · 업그레이드 안내를 돌려줍니다(PRD FR-4, Q5 현재 안).
+5. **상태 판정**: 설치 여부와 exports 해석을 따로 봅니다. `MODULE_NOT_FOUND` 는 패키지가 없을 때뿐 아니라 exports 매칭은 됐는데 대상 파일이 없을 때(워크스페이스 링크로 연결됐지만 tokens 를 아직 빌드하지 않아 `dist` 가 없는 경우)에도 나므로, 이 코드 하나로 「미설치」를 판정하지 않습니다.
+   1. **설치 여부**: `<baseDir>` 에서 위로 올라가며 `node_modules/@axis-ds/tokens/package.json` 을 `fs` 로 직접 찾습니다(심볼릭 링크는 그대로 따라감). 없으면 `not-installed`. 찾으면 그 파일의 `version` 을 버전 문자열로 씁니다. `dist` 실재에 기대지 않으므로 빌드 전 상태에서도 버전을 읽습니다.
+   2. **exports 해석**: 1에서 찾았을 때만 `createRequire(<baseDir>/package.json).resolve("@axis-ds/tokens/brands")` 를 부릅니다. 성공 = `ok`, `ERR_PACKAGE_PATH_NOT_EXPORTED` = `unsupported`(1.2.1 이하), `MODULE_NOT_FOUND` = `not-built`(패키지는 있지만 exports 대상 파일이 없음). 그 밖의 오류는 삼키지 않고 그대로 던집니다.
+   3. 안내: `not-installed` 는 설치, `unsupported` 는 업그레이드, `not-built` 는 「`@axis-ds/tokens` 는 있지만 빌드 산출물이 없음(워크스페이스면 `pnpm --filter @axis-ds/tokens build`, 아니면 재설치)」 안내를 빈 목록 대신 돌려줍니다(PRD FR-4, Q5 현재 안). 세 상태 모두 「목록이 비었다」가 아니라 「측정을 못 했다」로 다룹니다.
 6. MCP 도 1~5 를 그대로 씁니다. 정적 번들을 새로 만들지 않습니다(PRD FR-4).
 
 ---
@@ -97,12 +100,17 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 - CLI `packages/axis-cli/src/theme/brand-core.ts` 를 원본으로 두고 MCP `packages/axis-mcp/src/tools/brand-core.ts` 에 **바이트 단위로 같은 사본**을 둡니다(U1 권장안). 사본 동일성은 MCP 테스트가 두 파일을 읽어 비교해 막습니다(tokens `brands.mjs` 의 「복제 + 드리프트 검사」와 같은 방식).
 - 사본이 두 패키지에서 똑같이 컴파일되도록 Node 내장 모듈(`node:fs` · `node:path` · `node:module`)만 쓰고 chalk · fs-extra · zod 를 쓰지 않습니다. 출력 문자열을 만들지 않고 구조화된 값만 돌려줍니다.
 - 공개 함수(이름은 착수 때 확정)
-  - `resolveTokens(baseDir)` → `{ status: "ok" | "not-installed" | "unsupported", version?, indexPath? }`
+  - `resolveTokens(baseDir)` → `{ status: "ok" | "not-installed" | "unsupported" | "not-built", version?, indexPath? }`(판정은 3장 5)
   - `listBrands(baseDir)` → `{ status, brands: BrandSummary[] }`, `BrandSummary = { name, description, themes, a11y, importPath }`
   - `getBrand(baseDir, name)` → `BrandDetail = BrandSummary + { tokens: { light: Record<string,string>, dark: Record<string,string> }, providerExample, adjustments }`(`adjustments` 내용은 U3)
   - `parseBrandCss(css, name)` → `{ light, dark }` 선언 맵
-  - `brandImportPath(entry)`, `findGlobalCss(baseDir, config)`(FR-2 순서, 찾은 상대 경로 또는 `undefined`), `findBrandImports(css)`(파일 안의 `@axis-ds/tokens/css/brands/<b>` import 이름 목록, `@import "..."` · `@import '...'` · `@import url(...)` 세 형태)
+  - `brandImportPath(entry)`, `findGlobalCss(baseDir, config)`(아래 규칙, `{ path?: string, configuredMissing?: string }`), `findBrandImports(css)`(파일 안의 `@axis-ds/tokens/css/brands/<b>` import 이름 목록, `@import "..."` · `@import '...'` · `@import url(...)` 세 형태)
   - 상수 `BRAND_NAME_PATTERN`(tokens 와 같은 정규식), `MIN_BRAND_TOKENS_VERSION = "1.3.0"`, `KEY_TOKENS`(U4)
+- **`findGlobalCss` 규칙(U14 권장안)**: 후보는 `config.globalCss` → `app/globals.css` → `src/app/globals.css` → 루트 `globals.css` 순입니다. PRD FR-2 의 「`globalCss` 경로를 최우선으로 쓰고, 없으면」에서 「없으면」을 **키가 없을 때와 키가 가리키는 파일이 없을 때 모두**로 읽습니다(A1 「모두 찾지 못하면 수동 적용 안내」와 같은 방향).
+  - 키가 있고 파일도 있으면 그 파일을 고르고 나머지 후보는 보지 않습니다.
+  - 키가 있는데 파일이 없으면 `configuredMissing` 에 그 경로를 담고 다음 후보로 넘어갑니다. 호출하는 쪽(4.2-3, 4.5)은 이 값을 경고로 출력합니다. 이 경우가 실제로 생기는 경로가 있습니다: `axis init -y` 는 `globalCss: "./src/app/globals.css"` 를 기록하는데(`src/index.ts:40-45`), `create-next-app` 기본 구조(`src` 없음)는 `app/globals.css` 를 씁니다(AC2(b) 프로젝트).
+  - 키가 없으면 바로 두 번째 후보부터 봅니다. 후보가 모두 없으면 `path` 가 `undefined` 입니다.
+  - 고른 파일이 `globalCss` 와 다르면 `axis.config.json` 의 `globalCss` 는 고치지 않습니다(이 WI 는 `brand` 만 씀).
 - 정렬과 내용은 index.json 순서(이름순)를 그대로 따릅니다. CLI · MCP 가 같은 값을 받으므로 AC3 의 동일성은 코어 결과의 동일성으로 판정할 수 있습니다.
 
 ### 4.2 CLI 명령 (FR-1 · FR-2 · FR-3)
@@ -114,7 +122,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 - `axis theme add <brand>`: `src/theme/theme-add.ts` `planThemeAdd(baseDir, brand)` 가 **쓰기 전에** 바꿀 내용을 모두 계산하고, `applyThemeAdd(plan)` 이 씁니다. 테스트는 두 함수를 따로 부릅니다.
   1. `axis.config.json` 이 없으면 아무것도 쓰지 않고 `axis init` 안내 후 종료 코드 1(PRD FR-2).
   2. `<brand>` 검증: `BRAND_NAME_PATTERN` 불일치는 거절. tokens 가 설치돼 있고 지원 버전이면 index 에 없는 이름은 거절. 미설치면 U5 권장안대로 이름 규칙만 보고 「설치 후 `axis theme list` 로 확인」 경고를 붙여 진행합니다.
-  3. CSS: `findGlobalCss` 로 대상을 찾고, 같은 브랜드 import 가 이미 있으면 건너뜁니다. 없으면 `@charset` · 기존 `@import` 줄 다음(없으면 맨 앞)에 `@import "@axis-ds/tokens/css/brands/<b>";` 한 줄을 넣습니다(U2 결과에 따라 바뀔 수 있음). 다른 브랜드 import 가 있으면 지우지 않고 새 줄을 더한 뒤 「이전 브랜드 import 를 지워도 됩니다」 안내를 냅니다(U13). 대상이 없으면 수동 적용 안내(A1)만 내고 다음 단계로 갑니다.
+  3. CSS: `findGlobalCss` 로 대상을 찾습니다(4.1 규칙). `configuredMissing` 이 있으면 「`axis.config.json` 의 globalCss(<경로>)가 없어 <찾은 파일>에 추가합니다」 경고를 냅니다. 같은 브랜드 import 가 이미 있으면 건너뜁니다. 없으면 `@charset` · 기존 `@import` 줄 다음(없으면 맨 앞)에 `@import "@axis-ds/tokens/css/brands/<b>";` 한 줄을 넣습니다(U2 결과에 따라 바뀔 수 있음). 다른 브랜드 import 가 있으면 지우지 않고 새 줄을 더한 뒤 「이전 브랜드 import 를 지워도 됩니다」 안내를 냅니다(U13). 후보가 모두 없을 때만(`path` 가 `undefined`) 수동 적용 안내(A1)를 내고 다음 단계로 갑니다.
   4. `package.json`: `dependencies` · `devDependencies` 어디에도 `@axis-ds/tokens` 가 없을 때만 `dependencies` 끝에 `"@axis-ds/tokens": "^1.3.0"`(U6)을 더하고 설치 명령을 안내합니다. 이미 있으면 범위를 고치지 않고, 설치된 버전이 1.3.0 미만이면 업그레이드만 안내합니다. 설치는 실행하지 않습니다.
   5. `axis.config.json`: 나머지 키와 순서를 보존한 채 `brand` 를 기록합니다(같은 값이면 쓰지 않음).
   6. Provider 안내: `import { ThemeProvider } from "@axis-ds/theme"` + `<ThemeProvider defaultBrand="<b>">` 예시와, `ThemeProvider` 나 `<html data-brand="<b>">` 가 없으면 import 만으로는 화면이 바뀌지 않는다는 문장을 출력합니다. `package.json` 에 `@axis-ds/theme` 이 없으면 설치 안내를 덧붙입니다. 코드는 고치지 않습니다(Q1, U10).
@@ -137,7 +145,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 
 - CLI `template-check.ts`: `runCheck` 를 `collectCheckResults(baseDir): Promise<CheckResult[]>`(결과만 모음)와 출력부로 나눕니다. 출력 문구 · 순서는 그대로입니다.
 - 두 검사기 모두 마지막에 `checkBrand(baseDir)` 를 더합니다. `axis.config.json` 이 없거나 `brand` 가 없으면 **결과를 추가하지 않습니다**(기존 프로젝트 출력 불변, PRD FR-5).
-- `brand` 가 있으면 `findGlobalCss` 로 찾은 파일의 `findBrandImports` 결과와 비교합니다.
+- `brand` 가 있으면 `findGlobalCss` 로 찾은 파일의 `findBrandImports` 결과와 비교합니다. 탐색은 4.1 규칙을 그대로 따르므로 `globalCss` 가 없는 파일을 가리켜도 `axis theme add` 가 실제로 쓴 파일을 검사합니다. 이때 메시지 끝에 「(globalCss <경로> 없음)」을 붙이고 severity 는 아래 표대로 둡니다.
 
 | 상황 | severity | 메시지(초안) |
 |---|---|---|
@@ -156,7 +164,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 ### 4.7 MCP 테스트 환경 (FR-6)
 
 - `packages/axis-mcp/package.json`: devDependencies `vitest` `^2.1.0`(cli 와 같은 범위, lockfile 에 이미 있는 버전), scripts `"test": "vitest run"`.
-- `packages/axis-mcp/vitest.config.ts`: cli 설정에서 coverage 블록만 뺀 형태(`globals` · `environment: "node"` · include `src/**/*.test.ts`).
+- `packages/axis-mcp/vitest.config.ts`: cli 설정에서 coverage 블록만 뺀 형태(`globals` · `environment: "node"` · include `src/**/*.test.ts` · `src/**/*.spec.ts`, cli 와 같은 두 패턴).
 - `packages/axis-mcp/turbo.json`(신규, tokens 의 M3 선례): `test.inputs` 에 `$TURBO_DEFAULT$` 와 `$TURBO_ROOT$/packages/axis-cli/src/theme/brand-core.ts` 를 넣어, CLI 원본만 바뀌어도 MCP 동일성 테스트가 캐시로 건너뛰지 않게 합니다.
 - CI 는 `frontend.yml` 의 `pnpm test`(turbo)가 새 `test` 스크립트를 자동으로 잡습니다. 커버리지는 `turbo run test --dry=json` 의 태스크 수로 확인합니다. 현재 5개(agentic-ui · cli · theme · tokens · ui-react, e690905 에서 `turbo run test --dry=json` 의 `test` 태스크 중 `<NONEXISTENT>` 제외)이고 목표는 6개입니다.
 
@@ -177,7 +185,8 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 | 9 | `packages/axis-cli/src/theme/theme-add.test.ts` (신규) | 멱등 · 경로 탐색 · config · package.json | FR-2, AC2(a) |
 | 10 | `packages/axis-cli/src/template/template-check.test.ts` (신규) | brand 유무 · 일치 · 불일치 | FR-5, AC4 |
 | 11 | `packages/axis-cli/test/fixtures/theme/` (신규) | fixture 원본(6장). `node_modules` · `dist` 이름은 루트 `.gitignore` 에 걸리므로(`git check-ignore -v` 실측, 부정 규칙 아님) `tokens-1.3/pkg/` 처럼 다른 이름으로 두고 테스트가 임시 디렉터리의 `node_modules/@axis-ds/tokens` 로 복사합니다 | 전부 |
-| 12 | `packages/axis-cli/src/theme/test-helpers.ts` (신규, 테스트 전용) | fixture 를 임시 디렉터리에 펼치는 `makeProject({ tokens: "1.3" \| "1.2" \| "none", layout: "root" \| "app" \| "src-app" })` | 전부 |
+| 12 | `packages/axis-cli/src/theme/test-helpers.ts` (신규, 테스트 전용) | fixture 를 임시 디렉터리에 펼치는 `makeProject({ tokens: "1.3" \| "1.3-unbuilt" \| "1.2" \| "none", layout: "theme-only" \| "app-init" \| "src-app" })`. `theme-only` 는 6.1 대로 저장소의 템플릿 원본에서 펼칩니다 | 전부 |
+| 12a | `packages/axis-cli/turbo.json` (신규) | `test.inputs` 에 `$TURBO_DEFAULT$` 와 `$TURBO_ROOT$/apps/web/public/templates/theme-only.json`. 템플릿 원본만 바뀌어도 T3-4 가 캐시로 건너뛰지 않게 합니다 | AC2(a) |
 | 13 | `packages/axis-mcp/src/tools/brand-core.ts` (신규) | 1번의 바이트 동일 사본 | FR-4 · 5 |
 | 14 | `packages/axis-mcp/src/tools/brand.ts` (신규) | `handleListBrands` · `handleGetBrand` · format 2개 | FR-4 |
 | 15 | `packages/axis-mcp/src/tools/index.ts` | 14번 export | FR-4 |
@@ -211,11 +220,14 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 | `tokens-1.3/pkg/<dist>/brands/sample/brand.json` | `packages/axis-tokens/test/fixtures/brands/valid/sample/brand.json` 과 같은 내용 |
 | `tokens-1.3/pkg/<dist>/css/brands/sample.css` | `brandHeader` + 라이트 · 다크 블록(4.1 의 형식). 값은 sample light/dark 의 일부와 shadcn 줄 |
 | `tokens-1.3/pkg/<dist>/js/tokens.js` | `module.exports = {}` (resolve 기준점) |
+| `tokens-1.3-unbuilt/pkg/` | `tokens-1.3/pkg/package.json` 만 있고 `<dist>` 가 없음. 워크스페이스 링크 뒤 빌드 전 상태(3장 5, `not-built`) |
 | `tokens-1.2/pkg/` | 1.2.1 과 같은 exports(브랜드 키 없음), `version: "1.2.1"` |
-| `projects/root/` | theme-only 와 같은 루트 평면 구조: `axis.config.json`(`globalCss: "./globals.css"`) · `globals.css`(`@tailwind base;` 로 시작) · `package.json`(`@axis-ds/tokens` 없음) |
-| `projects/app/` | `app/globals.css` · `app/layout.tsx` · `axis.config.json`(`globalCss` 없음) |
+| `theme-only`(손으로 쓰지 않음) | 테스트 helper 가 `apps/web/public/templates/theme-only.json` 의 `files[]` 를 `path` 그대로 `content` 로 펼치고(7개, `applyTemplate` 의 파일 쓰기와 같음), `axis.config.json` 은 `initTemplate`(`template-apply.ts:184-195`)이 쓰는 키 · 값 · 순서(`$schema` · `template: "theme-only"` · `componentsDir` · `tailwindConfig` · `globalCss: "./globals.css"`)로 씁니다. 템플릿 원본이 바뀌면 fixture 도 같이 바뀝니다 |
+| `projects/app-init/` | `app/globals.css` · `app/layout.tsx` · `axis.config.json` 은 **`axis init -y` 산출물과 같은 형태**(`$schema` · `componentsDir: "./src/components/ui"` · `tailwindConfig` · `globalCss: "./src/app/globals.css"` · `registry`). 즉 `globalCss` 가 없는 파일을 가리킵니다(AC2(b) 프로젝트의 단위 재현) |
+| `projects/src-app/` | `src/app/globals.css` · `axis.config.json`(`globalCss` 키 없음). 키가 없을 때의 탐색 |
 
 - `<dist>` 는 복사할 때 `dist` 로 이름을 바꿉니다(5장 11번).
+- `theme-only` 를 손으로 재현하지 않는 이유: AC2(a) 의 대상은 「`axis template init theme-only` 로 만든 프로젝트」이고 원본(`theme-only.json`, `@layer base { :root {...} }` 포함)이 저장소 안에 있어 바로 쓸 수 있습니다. 이 fixture 도 레지스트리에서 받는 실경로는 아니므로 AC2(a) 의 완료 판정은 6.2-7(T6-6)에서 합니다.
 - fixture 의 index · brand.json · CSS 형식이 1.3 절과 맞는지는 테스트 안에서 상수로 단언하지 않고, 6.2 의 재확인 단계에서 실제 빌드 산출물과 바꿔 끼워 봅니다.
 
 ### 6.2 M3 머지 뒤 재확인 절차
@@ -226,11 +238,16 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 4. 주요 토큰 목록(U4)이 ontology 산출물에 실제로 있는지 봅니다. 없는 키는 「브랜드가 덮어쓰지 않음」으로 표시되는지 확인합니다.
 5. `a11y.status` 가 긴 문장(1.3 절)이라 `theme list` 한 줄 출력에서는 빼고 `info` 에서만 전부 냅니다. 출력 폭은 이 단계에서 실물로 확인합니다.
 6. S0 스파이크(U2)를 아직 실측하지 못했다면 이 tarball 로 실측합니다.
+7. **AC2(a) 실경로**: 이 브랜치에서 빌드한 CLI(`node packages/axis-cli/dist/index.js`)로 새 임시 디렉터리에 `axis template init theme-only -d <임시>` 를 실행합니다. `AXIS_TEMPLATE_URL` 을 주입하지 않아 기본 레지스트리(`https://axis.minu.best/templates`, `registry-client.ts:6-7`)에서 받습니다. 받은 파일 목록이 저장소 `theme-only.json` 의 7개와 같은지 기록한 뒤, tokens 를 설치하지 않은 그 디렉터리에서 `axis theme add ontology` 를 두 번 실행합니다(tokens 미설치이므로 U5 대로 이름 규칙만 보고 진행). 판정: 루트 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` 의 `brand: "ontology"`, 2회차 실행 전후 파일 해시 차이 0.
 
 ### 6.3 1.3.0 배포 뒤
 
 1. 레지스트리에서 `npm view @axis-ds/tokens@1.3.0 exports --json` 으로 `./brands` 가 실제 배포본에 있는지 확인합니다.
-2. AC2(b): App Router Next.js 프로젝트(Next 15)를 새로 만들고 `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` 가 rc 0 인지 봅니다. 레지스트리 설치이므로 `file:` 주입이 없습니다(스모크 우회 방지).
+2. AC2(b): App Router Next.js 프로젝트(Next 15, `app/globals.css` 구조)를 새로 만들고 `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` 를 실행합니다. 레지스트리 설치이므로 `file:` 주입이 없습니다(스모크 우회 방지). `pnpm build` rc 0 은 import 가 들어가지 않아도 나오므로 단독 근거로 쓰지 않고 다음을 함께 판정합니다.
+   - `axis theme add` 출력에 `globalCss(./src/app/globals.css)` 없음 경고가 있고(4.1 규칙), `app/globals.css` 에 `@axis-ds/tokens/css/brands/ontology` import 가 정확히 1줄.
+   - `axis check` 의 brand 항목이 pass.
+   - 빌드 산출 CSS(`.next/static/css/*.css`)에서 `grep -E "data-brand=[\"']?ontology"` 가 1건 이상. 압축기가 속성 선택자 따옴표를 지울 수 있어 따옴표 유무를 함께 받습니다.
+   - 음성 대조군: 같은 프로젝트에서 `axis theme add` 전에 `pnpm build` 한 산출 CSS 는 같은 grep 이 0건. 이 0건은 CSS 파일이 1개 이상 있고(`ls` 건수) grep rc 가 1 인 것으로 측정 수행을 증명합니다.
 3. changeset 추가(7장) → PR 리뷰 → 머지.
 
 ---
@@ -263,5 +280,6 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 | U11 | `axis.config.json` 스키마 파일(Q2) | TS 타입만, 스키마 파일 없음 | 아니오 |
 | U12 | tokens 미설치 시 MCP 응답(Q5) | 설치 안내만(PRD 현재 안) | 아니오 |
 | U13 | 다른 브랜드 import 가 이미 있을 때 | 기존 줄 유지 + 새 줄 추가 + 안내 | 아니오 |
+| U14 | FR-2 「`globalCss` 최우선, 없으면」의 「없으면」이 키 부재인지 파일 부재인지(`axis init -y` 의 `./src/app/globals.css` 와 `app/` 구조가 어긋나는 경우) | 둘 다로 읽음: 파일이 없으면 경고 후 다음 후보(4.1). 대안은 「거절하고 `globalCss` 수정 안내」 | 아니오(PRD 문구 불변, A1 과 같은 방향). 해석은 사용자 확인을 받고, PRD 에 문구를 더할지는 PRD 담당 PR 에서 정함 |
 
 U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출력): `--primary` · `--primary-foreground` · `--background` · `--foreground` · `--ring` · `--radius` · `--axis-surface-default` · `--axis-text-primary` · `--axis-text-brand` · `--axis-button-bg-default` · `--axis-border-focus` · `--axis-font-family-sans`.
