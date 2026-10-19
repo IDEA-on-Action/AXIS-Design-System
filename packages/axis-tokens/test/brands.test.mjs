@@ -264,12 +264,13 @@ describe('src/brands/ontology (FR-8)', () => {
   test('brand.json: 스키마 필드와 a11y 상태, 개인 이름 없음', () => {
     assert.deepEqual(Object.keys(ontology.meta).sort(), ['a11y', 'description', 'name', 'themes']);
     assert.deepEqual(Object.keys(ontology.meta.a11y).sort(), ['checkedAt', 'gate', 'status']);
-    // 자동 게이트 통과와 사람 승인 대기를 함께 적는다(2026-10-18 결정). 승인이 끝나면 status 를 함께 갱신한다.
+    // 자동 게이트 통과와 사람 승인 상태를 함께 적는다(2026-10-18 결정). 디자인 오너 사후 확인은 2026-10-19 에 끝나 status 에 적고,
+    // checkedAt 은 a11y 측정일(2026-10-18)을 그대로 둔다(2026-10-19 사용자 결정).
     // 게이트는 문서 사이트 페이지의 기본 상태만 재므로 검사 범위를 문구에 남긴다(컴포넌트 실측 · hover 는 M4)
     assert.match(ontology.meta.a11y.status, /CI a11y 게이트 통과/);
     assert.match(ontology.meta.a11y.status, /문서 사이트 9페이지 기본 상태 기준/);
     assert.match(ontology.meta.a11y.status, /컴포넌트 실측 · hover 미포함/);
-    assert.match(ontology.meta.a11y.status, /사후 확인 대기/);
+    assert.match(ontology.meta.a11y.status, /디자인 오너 사후 확인 완료\(2026-10-19\)/);
     assert.equal(ontology.meta.a11y.checkedAt, '2026-10-18');
     assert.equal(ontology.meta.a11y.gate, 'CI frontend.yml E2E a11y (WI-0025 AC8)');
     assert.doesNotMatch(JSON.stringify(ontology.meta), /책임|가칭/);
