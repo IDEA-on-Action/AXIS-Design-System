@@ -31,8 +31,8 @@ const REQUEST_TIMEOUT_MS = 30_000;
 const INSTALL_TIMEOUT_MS = 300_000;
 
 // tools/list 가 내야 하는 도구(src/index.ts 의 server.tool 등록과 1:1)
-// 도구를 더하거나 빼면 이 목록도 같이 고친다. 안 고치면 main push 의 publish.yml(Pack smoke)이
-// 6개 패키지 발행 전체를 막는다(PR CI 에서는 pack-smoke 가 돌지 않아 머지 전에 드러나지 않는다).
+// 도구를 더하거나 빼면 이 목록도 같이 고친다. 안 고치면 PR CI(frontend.yml ci job 의 Pack smoke)가 실패하고,
+// 그대로 main 에 들어가면 publish.yml(Pack smoke)이 6개 패키지 발행 전체를 막는다.
 const EXPECTED_TOOLS = [
   'axis.search_components',
   'axis.get_component',

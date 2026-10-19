@@ -33,6 +33,7 @@
 | D1 | 분리 | WI-0028 범위와 분리한 별도 patch(mcp 1.1.5) 로 고칩니다 |
 | D2 | 수정 방식 | 데이터를 번들 옆(`dist/data`)에 복사합니다. 경로 기준을 번들 위치에 맞추는 코드 변경보다 단순하고, 소스 실행(`src/registry/data`)과 번들 실행(`dist/data`)이 같은 `join(__dirname, "data")` 로 맞습니다. tarball 목록으로 바로 검증됩니다 |
 | D3 | 스모크 | tarball 을 빈 디렉터리에 `npm install` 하고 `bin` 으로 stdio 실행, `tools/list` 와 번들 데이터를 읽는 도구 6개를 호출합니다. `pack-smoke` 안에서 실행해 `publish.yml` 과 `pnpm release` 양쪽에 걸립니다 |
+| D4 | PR CI (2026-10-19 추가 결정) | PR CI(`frontend.yml` `ci` job)에서도 `pnpm pack-smoke` 를 실행합니다. `EXPECTED_TOOLS` 1:1 이 깨지면 main push 의 발행이 막히기 전에 PR 단계에서 실패하게 하려는 것입니다(2장 Non-goal 에서 범위로 옮김) |
 
 ---
 
@@ -42,7 +43,7 @@
 - **`files` 의 `src/registry/data` 정리**: tarball 에 같은 JSON 이 두 벌 들어가지만 이번 결함과 무관합니다.
 - **템플릿 도구의 실행 스모크**: 원격 사이트를 읽으므로 사이트 가용성이 배포를 막게 됩니다. 이번 스모크 대상이 아닙니다.
 - **`@axis-ds/cli` 변경 · 배포**: cli 는 mcp 데이터를 쓰지 않습니다.
-- **PR CI(`frontend.yml`)에 pack-smoke 추가**: 현재 pack-smoke 는 main push 의 `publish.yml` 과 `pnpm release` 에서만 돕니다. 이번에는 기존 흐름에만 연결합니다.
+- ~~**PR CI(`frontend.yml`)에 pack-smoke 추가**~~: 2026-10-19 결정 D4 로 범위에 넣었습니다(FR-5).
 
 ---
 
@@ -56,6 +57,10 @@
   - 레지스트리 도구 6개 호출에서 JSON-RPC 오류 · `isError` 없음, 응답에 기대 문자열(`button` · `colors.primary`) 포함
 - FR-3: `scripts/pack-smoke.mjs` 가 `@axis-ds/mcp` tarball 에 FR-2 를 실행합니다. 퍼블리시 대상에서 mcp 를 찾지 못해 실행하지 못하면 미수행으로 실패합니다.
 - FR-4: `.changeset` 에 `@axis-ds/mcp` patch changeset 을 둡니다.
+- FR-5: `.github/workflows/frontend.yml` `ci` job 이 `pnpm build` 다음에 `pnpm pack-smoke` 를 실행합니다(D4).
+  - 실패를 숨기지 않습니다(`continue-on-error` · `|| true` 없음). 실패하면 `ci` job 이 실패해 `deploy-preview` · `deploy-production`(`needs: ci`)을 막습니다.
+  - 위치는 기존 step 사이가 아니라 job 끝(Upload build artifact 다음)입니다. WI-0025 M4(#110)가 Build 와 Upload build artifact 사이를 고치므로 충돌을 피합니다.
+  - 트리거 paths 는 이미 `packages/**` · `scripts/**` 를 포함하므로 바꾸지 않습니다.
 
 ### 3.2 비기능 요구사항
 - **실경로**: 스모크는 소비자와 같이 `npm install <tgz>` 로 설치하고 `bin` 으로 실행합니다. env · 경로를 주입하지 않습니다(설치에 npm 레지스트리 접근이 필요합니다).
@@ -70,3 +75,4 @@
 - AC3: 배포본 1.1.4 · 1.1.3 tarball 과 수정을 되돌린 로컬 빌드에서 스모크 rc 1, 6건 isError.
 - AC4: `pnpm changeset status` 에 patch 대상이 `@axis-ds/mcp` 하나.
 - AC5: `pnpm build` · `pnpm type-check` · `pnpm lint` 통과(`--force`).
+- AC6: `frontend.yml` 의 CI step 순서를 로컬에서 그대로 실행해 `pnpm pack-smoke` rc 0, `EXPECTED_TOOLS` 에서 도구 하나를 뺀 변이로 rc 1(FR-5). PR CI run 에서 Pack smoke step 통과.

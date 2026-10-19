@@ -40,6 +40,25 @@
 - `pnpm build` 가 고친 `apps/web/public/templates/*.json` 은 커밋하지 않고 되돌렸습니다.
 - 스모크 전제: 설치는 npm 레지스트리에서 의존성을 받습니다(네트워크 필요). env · 경로 주입 없이 설치된 패키지의 `bin` 을 그대로 실행합니다.
 
+## 3.1 PR CI 배선 결과 (FR-5 · AC6, 2026-10-19, HEAD ddf8047)
+
+CI 와 같은 순서로 로컬 실행했습니다. Node v22.22.0 · npm 10.9.4 · pnpm 9.15.4(CI 는 Node 20, 아래 T12 로 따로 확인). turbo 단계는 `--force` 로 캐시를 쓰지 않았습니다.
+
+| ID | 명령 | 결과 |
+|---|---|---|
+| T10 | `pnpm install --frozen-lockfile` → `pnpm lint --force` → `pnpm type-check --force` → `pnpm check-token-refs` → `pnpm run test --force` → `pnpm build:registry` → `pnpm check-licenses` → `pnpm build --force` → `pnpm pack-smoke` | 전부 rc 0. build 8/8 · `Cached: 0`(189초), type-check 8/8 · `Cached: 0`(79초), test 5/5 · `Cached: 0`(17초), pack-smoke 6개 패키지 통과 · mcp tools/list 16개 · 호출 6건(4초, npm 캐시 있음) |
+| T11 | `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에서 `axis.check_project` 를 지운 변이 → `pnpm pack-smoke` | rc 1, `tools/list 에 목록 밖 도구: axis.check_project (EXPECTED_TOOLS 갱신 필요)` 1건. 원본 복원 후 sha256 앞 16자리 `1baaf76bfd9528e0` 일치 |
+| T12 | `npx -y node@20 scripts/pack-smoke.mjs` (Node v20.20.2, npm 은 PATH 의 10.9.4) | rc 0, 6개 패키지 통과 · mcp 16개 · 6건(40초, node@20 내려받기 포함) |
+| T13 | `npm_config_cache=<빈 디렉터리> pnpm pack-smoke` | rc 0, 9초(mcp 의존성을 npm 레지스트리에서 새로 받음) |
+| T14 | actionlint 1.7.7(docker `rhysd/actionlint:1.7.7`) `frontend.yml` | 수정 전 · 후 모두 rc 1, 같은 4건(Cloudflare credentials 확인 step 의 SC2086 info, 수정 전 138 · 209행 = 수정 후 146 · 217행). 추가한 step 에서 나온 지적 0건. `publish.yml` rc 0 |
+| T15 | `git merge-tree --write-tree HEAD origin/feat/wi-0025-m4-demo`(c111909, #110) | rc 0, 충돌 없음. 단 병합 트리에 Pack smoke step 이 2개(M4 의 AC4 step 105행, 이 WI 의 step 254행) |
+| T16 | `git merge-tree --write-tree HEAD 940e83c`(#118 `fix/wi-0035-tokens-esm`) | rc 0, 충돌 없음. 병합 트리 `pack-smoke` 스크립트는 `node scripts/pack-smoke.mjs && node scripts/pack-install-smoke.mjs` |
+| T17 | T16 병합 트리를 스크래치패드에 풀어 `pnpm install --frozen-lockfile` → `pnpm turbo run build --force --filter='./packages/*'` → `pnpm pack-smoke` | 모두 rc 0. build 6/6 · `Cached: 0`, pack-smoke 6개 통과 · mcp 16개 · 6건, 이어서 pack-install-smoke tokens 서브패스 8건 · tsc rc 0(33초) |
+
+- T10 의 `pnpm build` 가 고친 `apps/web/public/templates/*.json` 5개는 되돌렸습니다.
+- PR CI run 의 실측(Pack smoke step 소요 시간 · rc)은 push 뒤에 남습니다(4장).
+
 ## 4. 남은 확인
 
 - 배포 후 `npm pack @axis-ds/mcp@1.1.5` 로 `node scripts/mcp-smoke.mjs <tgz>` rc 0 확인(todo M1-4)
+- PR #116 CI run 에서 `Pack smoke (외부 npm 소비 · mcp 실행 검증, WI-0036)` step rc 0 과 소요 시간 확인(AC6, todo M1-5)

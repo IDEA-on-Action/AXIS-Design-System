@@ -17,7 +17,11 @@
 - `scripts/mcp-smoke.mjs`: tarball 을 빈 디렉터리에 `npm install` 하고 `bin` 으로 stdio 실행해 `tools/list`(16개 1:1)와 레지스트리 도구 6개를 호출합니다.
 - `scripts/pack-smoke.mjs` 가 mcp tarball 에 위 스모크를 실행합니다. `publish.yml` 의 Pack smoke 단계와 `pnpm release` 에 함께 걸립니다.
 - 단언은 질의어를 되풀이하는 머리글이 아니라 결과 행으로 보고, `axis.install_component` 는 대상 디렉터리에 파일이 생겼는지까지 확인합니다. `npm install` 에는 300초 timeout 을 둡니다.
-- mcp 도구를 더하거나 빼면 `scripts/mcp-smoke.mjs` 의 `EXPECTED_TOOLS` 도 같이 고쳐야 합니다. 안 고치면 main push 의 발행이 막힙니다.
+- mcp 도구를 더하거나 빼면 `scripts/mcp-smoke.mjs` 의 `EXPECTED_TOOLS` 도 같이 고쳐야 합니다. 안 고치면 PR CI 가 실패합니다.
+
+### ci: PR CI 에서 pack-smoke 실행 (2026-10-19 결정)
+- `.github/workflows/frontend.yml` `ci` job 끝(Upload build artifact 다음)에 `pnpm pack-smoke` step 을 더했습니다. `EXPECTED_TOOLS` 1:1 이 깨지면 main push 의 발행이 막히기 전에 PR 단계에서 실패합니다.
+- 실패를 숨기지 않습니다(`continue-on-error` · `|| true` 없음). 트리거 paths 에 `packages/**` · `scripts/**` 가 이미 있습니다.
 
 ## 검증 (2026-10-19, 기준 e690905 + 이 브랜치 변경)
 

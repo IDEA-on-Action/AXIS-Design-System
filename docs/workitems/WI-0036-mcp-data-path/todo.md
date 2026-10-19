@@ -6,7 +6,7 @@
 
 | Phase | 범위 | 릴리스 | GitHub |
 |---|---|---|---|
-| M1 | 데이터 복사 위치 수정 · 실행 스모크 · changeset (FR-1~4) | `@axis-ds/mcp` 1.1.5 (patch) | #115 |
+| M1 | 데이터 복사 위치 수정 · 실행 스모크 · changeset · PR CI 배선 (FR-1~5) | `@axis-ds/mcp` 1.1.5 (patch) | #115 |
 
 - `project-todo.md` 와 `.github/wi-mapping.json` 은 이 브랜치에서 고치지 않습니다(PR #112 담당)
 
@@ -19,6 +19,7 @@
 - [x] WI-0028 범위와 분리, 별도 patch → ✅ 2026-10-19 (D1)
 - [x] 수정 방식: 경로 기준 변경 vs 번들 옆 복사 → ✅ 번들 옆 복사(`dist/data`) (D2)
 - [x] 스모크: tarball 설치 · stdio 실행 · 도구 호출, pack-smoke 에 연결 (D3)
+- [x] PR CI(`frontend.yml`)에서도 pack-smoke 실행 → ✅ 2026-10-19 (D4)
 
 ---
 
@@ -46,11 +47,19 @@
 - [ ] PR 생성 · 머지
 - [ ] 배포 후 `npm pack @axis-ds/mcp@1.1.5` 로 `node scripts/mcp-smoke.mjs <tgz>` 재확인
 
+### M1-5 PR CI 배선 (D4 · FR-5)
+- [x] 전제 확인: `ci` job 은 Pack smoke 전에 `pnpm build`(turbo, 퍼블리시 대상 6개 + web)를 돌리고, turbo `build` outputs 에 `dist/**` 가 있어 캐시 적중이어도 dist 가 복원됩니다. 트리거 paths 에 `packages/**` · `scripts/**` 가 이미 있습니다. Node 20(`setup-node`), npm 은 그 번들본입니다
+- [x] `frontend.yml` `ci` job 끝(Upload build artifact 다음)에 `pnpm pack-smoke` step 추가, `continue-on-error` · `|| true` 없음
+- [x] CI 순서 로컬 실행 rc 0, `EXPECTED_TOOLS` 변이 rc 1, Node 20 rc 0, 빈 npm 캐시 rc 0, actionlint 추가 지적 0건 (testplan T10~T14)
+- [x] #110(M4) · #118(WI-0035) 와 `git merge-tree` 충돌 없음, #118 병합 트리에서 pack-smoke + pack-install-smoke rc 0 (testplan T15~T17)
+- [ ] PR #116 CI run 에서 Pack smoke step 통과와 소요 시간 확인 (AC6)
+- [ ] #110 과 합쳐지면 `ci` job 에 Pack smoke step 이 2개가 됩니다(M4 의 AC4 step 은 Build 다음, 이 WI 의 step 은 job 끝). 나중에 머지되는 쪽에서 하나로 합칠지 결정이 필요합니다
+
 ---
 
 ## 후속
 
 - [ ] WI-0028 prd 1장의 「빌드 때 `dist/registry/data`로 복사」 문구를 이 수정에 맞게 고칠지 결정
-- [ ] PR CI(`frontend.yml`)에서도 pack-smoke 를 돌릴지 결정(현재 main push 의 `publish.yml` 에서만 실행)
-- [ ] **WI-0028 머지 시 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가 필수**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 안 고치면 PR CI 는 초록으로 머지되고(pack-smoke 미실행) main push 의 `publish.yml` Pack smoke 가 6개 패키지 발행 전체를 막습니다. 위 PR CI 결정과 함께 정합니다
+- [x] ~~PR CI(`frontend.yml`)에서도 pack-smoke 를 돌릴지 결정~~ → ✅ 2026-10-19 돌린다(D4, M1-5)
+- [ ] **WI-0028 머지 시 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가 필수**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 이 WI 머지 뒤에는 안 고치면 WI-0028 PR 의 CI(Pack smoke)가 실패합니다(M1-5)
 - [ ] WI-0028 plan 1.2(36행) · testplan T5-6(84행)의 「pack-smoke 는 서버를 실행하지 않는다」 전제를 이 WI 머지에 맞게 고치고, WI-0028 plan · todo 에 `EXPECTED_TOOLS` 갱신 항목 추가(WI-0028 브랜치 담당)
