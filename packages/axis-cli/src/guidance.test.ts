@@ -23,9 +23,24 @@ function isGuidanceViolation(text: string): boolean {
   return RUNNER_PATTERN.test(text) || BARE_PATTERN.test(text);
 }
 
-/** 스캔 대상: CLI · MCP 등 패키지 소스와 README, 문서 사이트 소스, 루트 README, docs/guides */
-const SCAN_DIRS = ["apps/web/src", "docs/guides"];
+/**
+ * 스캔 대상: CLI · MCP 등 패키지 소스와 README, 문서 사이트 소스, 루트 README, docs/guides,
+ * 에이전트 지시문(.claude/agents, 에이전트가 이 안내를 그대로 옮겨 씀), docs 최상위 *.md(설계 · 계획 문서).
+ *
+ * 스캔하지 않는 것은 경로 목록이 아니라 성격으로 정합니다(2026-10-19 사용자 결정 E1).
+ * - docs/workitems/**: 결함을 설명하는 WI 기록이라 `npx axis-cli` 를 인용해야 합니다. 그래서 docs 는
+ *   하위 디렉터리로 내려가지 않고 최상위 *.md 와 docs/guides 만 봅니다.
+ * - .changeset/*.md · CHANGELOG.md: 무엇을 고쳤는지 설명하는 문장에 옛 안내를 인용합니다.
+ * - 테스트 파일(*.test.ts)과 test/ fixture: 이 테스트처럼 나쁜 문자열을 양성 대조로 담습니다.
+ *   walk 는 *.test.ts 를 건너뛰고, 패키지는 src 만 내려가므로 test/ 는 들어오지 않습니다.
+ * - apps/web/public/library/**: 외부 소스에서 수집한 데이터라 손으로 고치지 않습니다(별도 WI).
+ *   apps/web 은 src 만 봅니다.
+ * 새로 실행 안내를 쓰는 곳이 생기면 성격이 위 제외에 해당하지 않는 한 여기에 더합니다.
+ */
+const SCAN_DIRS = ["apps/web/src", "docs/guides", ".claude/agents"];
 const SCAN_FILES = ["README.md"];
+/** 하위로 내려가지 않고 바로 아래 *.md 만 보는 디렉터리 */
+const SCAN_TOP_LEVEL_MD = ["docs"];
 const SOURCE_EXT = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".md", ".mdx", ".json"]);
 
 async function walk(dir: string, out: string[]) {
@@ -49,6 +64,14 @@ async function scanTargets(): Promise<string[]> {
   }
   for (const d of SCAN_DIRS) await walk(path.join(ROOT, d), files);
   for (const f of SCAN_FILES) files.push(path.join(ROOT, f));
+  for (const d of SCAN_TOP_LEVEL_MD) {
+    const dir = path.join(ROOT, d);
+    if (!(await fs.pathExists(dir))) throw new Error(`스캔 대상이 없습니다: ${dir}`);
+    for (const name of await fs.readdir(dir)) {
+      const full = path.join(dir, name);
+      if (name.endsWith(".md") && (await fs.stat(full)).isFile()) files.push(full);
+    }
+  }
   return files;
 }
 
@@ -83,12 +106,16 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     expect(isGuidanceViolation(INIT_NEXT_STEP_COMMAND)).toBe(false);
   });
 
-  it("패키지 소스 · README, apps/web/src, docs/guides, 루트 README 에 위반 0건", async () => {
+  it("패키지 소스 · README, apps/web/src, docs/guides, .claude/agents, docs 최상위 *.md, 루트 README 에 위반 0건", async () => {
     const files = await scanTargets();
     // 계측 대조: 스캔이 실제로 대상을 읽는지(0건이 미측정이 아님을 보임)
     expect(files.length).toBeGreaterThan(100);
     expect(files).toContain(path.join(ROOT, "packages/axis-cli/src/index.ts"));
     expect(files).toContain(path.join(ROOT, "apps/web/src/components/landing/install-command.tsx"));
+    expect(files).toContain(path.join(ROOT, ".claude/agents/docs-writer.md"));
+    expect(files).toContain(path.join(ROOT, "docs/axis-ds-implementation-plan.md"));
+    // 제외 확인: 결함을 설명하는 WI 문서는 스캔하지 않음
+    expect(files.some((f) => f.startsWith(path.join(ROOT, "docs/workitems") + path.sep))).toBe(false);
     const hits: string[] = [];
     for (const file of files) {
       const lines = (await fs.readFile(file, "utf8")).split(/\r?\n/);

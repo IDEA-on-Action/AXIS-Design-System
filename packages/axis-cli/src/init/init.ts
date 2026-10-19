@@ -3,6 +3,7 @@
  *
  * `axis.config.json` 과 `utils.ts` 를 쓰고, `utils.ts` 가 import 하는 `clsx` · `tailwind-merge` 를
  * `package.json` 에 없을 때만 추가합니다(D1). 설치 명령은 실행하지 않고 안내만 합니다.
+ * `tailwind-merge` 범위는 프로젝트의 Tailwind 버전으로 고릅니다(E2, `selectUtilsDependencies`).
  * JSON 포맷 보존 · 설치 명령 선택 · 쓰기 안전성은 theme add(WI-0028)의 함수를 그대로 씁니다.
  */
 
@@ -19,14 +20,95 @@ import {
   realPathInside,
 } from "../theme/theme-add.js";
 
+/** utils.ts 가 import 하는 `clsx` 의 범위(prd 1.5). Tailwind 버전과 관계없습니다. */
+export const CLSX_RANGE = "^2.1.1";
+
 /**
- * utils.ts 가 import 하는 의존성과 추가할 범위(prd 1.5).
- * 템플릿 4종(`apps/web/templates/*` 의 package.json · template.json)과 같은 범위입니다.
+ * Tailwind major 별 `tailwind-merge` 범위(prd 1.6, 2026-10-19 사용자 결정 E2).
+ * - Tailwind 4: `^3.4.0`. tailwind-merge 3.x 가 Tailwind 4 를 대상으로 하고, 템플릿 4종과 같은 범위입니다.
+ * - Tailwind 3: `^2.6.0`. tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. npm `tailwind-merge-2`
+ *   태그가 2.6.1(2026-10-19 `npm view`)이고 2.x 의 마지막 minor 가 2.6 이라 `^2.6.0` 이 그 최신을 받습니다.
  */
-export const UTILS_DEPENDENCIES: Readonly<Record<string, string>> = {
-  clsx: "^2.1.1",
-  "tailwind-merge": "^3.4.0",
-};
+export const TAILWIND_MERGE_RANGES = {
+  tailwind4: "^3.4.0",
+  tailwind3: "^2.6.0",
+} as const;
+
+/** Tailwind 버전을 어디서 판정했는지 */
+export interface TailwindDetection {
+  /** 판정한 major. 판정하지 못하면 없음 */
+  major?: number;
+  /** `installed`: node_modules 설치본 · `declared`: package.json 선언 범위 · `none`: 판정 불가 */
+  source: "installed" | "declared" | "none";
+  /** 판정에 쓴 값(설치본 version 이나 선언 범위). 선언은 있으나 판정하지 못한 범위도 담습니다. */
+  value?: string;
+}
+
+/**
+ * 선언 범위에서 Tailwind major 를 읽습니다. 하나의 major 로 정해지는 단순 형태만 받습니다:
+ * `4` · `4.1` · `4.1.0` · `^4` · `^4.1.0` · `~3.4` · `=3.4.17` · `v4` · `4.x` · `3.4.0-beta.1`.
+ * `>=3`, `^3 || ^4`, `>=3.4 <4`, `*`, `latest`, `workspace:*`, `npm:...`, git · 파일 경로처럼
+ * major 가 하나로 정해지지 않는 범위는 판정하지 않습니다(`undefined`).
+ */
+export function tailwindMajorFromRange(range: string): number | undefined {
+  const m = /^\s*(?:\^|~|=)?\s*v?(\d+)(?:\.(?:\d+|x|X|\*)){0,2}(?:-[0-9A-Za-z.-]+)?\s*$/.exec(range);
+  return m ? Number(m[1]) : undefined;
+}
+
+/** 설치본 version(`4.3.3` 같은 정확한 버전)에서 major 를 읽습니다. */
+function majorFromVersion(version: unknown): number | undefined {
+  if (typeof version !== "string") return undefined;
+  const m = /^v?(\d+)\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]*)?$/.exec(version.trim());
+  return m ? Number(m[1]) : undefined;
+}
+
+/**
+ * 프로젝트의 Tailwind major 를 판정합니다(prd 1.6).
+ * 1. 설치본 우선: `<baseDir>/node_modules/tailwindcss/package.json` 의 `version`. 실제로 쓰이는 버전이라 선언보다 앞섭니다.
+ *    파일이 없거나 읽을 수 없거나 version 이 정확한 버전이 아니면 다음 단계로 갑니다.
+ * 2. 선언 범위: `package.json` 의 `dependencies` 다음 `devDependencies` 의 `tailwindcss`. `tailwindMajorFromRange` 로 읽습니다.
+ * 3. 판정 불가: 둘 다 없거나 읽지 못하면 `source: "none"`(기본값은 `selectUtilsDependencies` 가 정함).
+ */
+export function detectTailwind(baseDirInput: string, pkg?: Record<string, unknown>): TailwindDetection {
+  const baseDir = path.resolve(baseDirInput);
+  const installedFile = path.join(baseDir, "node_modules", "tailwindcss", "package.json");
+  try {
+    const installed: unknown = JSON.parse(readFileSync(installedFile, "utf8"));
+    const version = isPlainObject(installed) ? installed.version : undefined;
+    const major = majorFromVersion(version);
+    if (major !== undefined) return { major, source: "installed", value: String(version) };
+  } catch {
+    // 없음 · 읽을 수 없음: 선언 범위로
+  }
+  const declared = pkg ? hasDependency(pkg, "tailwindcss") : undefined;
+  if (declared !== undefined) {
+    const major = tailwindMajorFromRange(declared);
+    if (major !== undefined) return { major, source: "declared", value: declared };
+    return { source: "none", value: declared };
+  }
+  return { source: "none" };
+}
+
+/**
+ * 추가할 범위를 고릅니다. Tailwind major 가 4 이면 `tailwind-merge ^3.4.0`, 그 밖(3, 판정 불가, 다른 major)은
+ * `^2.6.0` 입니다. 판정 불가의 기본값을 Tailwind 3 쪽으로 둔 것은 사용자 결정(E2: 「3 이거나 없으면 ^2.6.0」)입니다.
+ */
+export function selectUtilsDependencies(tailwind: TailwindDetection): Record<string, string> {
+  return {
+    clsx: CLSX_RANGE,
+    "tailwind-merge": tailwind.major === 4 ? TAILWIND_MERGE_RANGES.tailwind4 : TAILWIND_MERGE_RANGES.tailwind3,
+  };
+}
+
+/** `tailwind-merge` 범위를 고른 근거 한 줄 */
+export function describeTailwindBasis(tailwind: TailwindDetection): string {
+  if (tailwind.source === "installed") return `설치된 tailwindcss ${tailwind.value}`;
+  if (tailwind.source === "declared") return `package.json 의 tailwindcss ${tailwind.value}`;
+  if (tailwind.value !== undefined) {
+    return `package.json 의 tailwindcss ${tailwind.value} 로 버전을 판정하지 못해 기본값(Tailwind 3)`;
+  }
+  return "tailwindcss 를 찾지 못해 기본값(Tailwind 3)";
+}
 
 /** init 이 쓰는 utils.ts 내용(c131ee9 과 같음) */
 export const UTILS_TS_CONTENT = `import { type ClassValue, clsx } from "clsx";
@@ -61,6 +143,10 @@ export interface UtilsDependencyPlan {
   action: "add" | "present" | "no-package-json" | "unwritable";
   /** 추가할 의존성 이름 */
   added: string[];
+  /** 고른 범위(`clsx` · `tailwind-merge`). 추가 · 안내 명령에 씁니다. */
+  ranges: Record<string, string>;
+  /** `tailwind-merge` 범위를 고른 근거 */
+  tailwind: TailwindDetection;
   /** 이미 있던 의존성과 선언된 범위(바꾸지 않음) */
   present: { name: string; range: string }[];
   /** `unwritable` 의 이유 */
@@ -89,12 +175,17 @@ export function addCommandFor(installCommand: string, deps: Readonly<Record<stri
 export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan {
   const baseDir = path.resolve(baseDirInput);
   const installCommand = detectInstallCommand(baseDir);
+  // package.json 을 읽기 전 판정(설치본 또는 판정 불가). 없거나 읽지 못하면 이 범위로 안내합니다.
+  const tailwind0 = detectTailwind(baseDir);
+  const ranges0 = selectUtilsDependencies(tailwind0);
   const plan: UtilsDependencyPlan = {
     action: "no-package-json",
     added: [],
     present: [],
+    ranges: ranges0,
+    tailwind: tailwind0,
     installCommand,
-    addCommand: addCommandFor(installCommand, UTILS_DEPENDENCIES),
+    addCommand: addCommandFor(installCommand, ranges0),
   };
 
   const pkgFile = path.join(baseDir, "package.json");
@@ -130,14 +221,18 @@ export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan
     return unwritable(`JSON 을 읽을 수 없습니다: ${(err as Error).message}`);
   }
 
+  plan.tailwind = detectTailwind(baseDir, pkg);
+  plan.ranges = selectUtilsDependencies(plan.tailwind);
+  plan.addCommand = addCommandFor(installCommand, plan.ranges);
+
   const missing: Record<string, string> = {};
-  for (const [name, range] of Object.entries(UTILS_DEPENDENCIES)) {
+  for (const [name, range] of Object.entries(plan.ranges)) {
     const declared = hasDependency(pkg, name);
     if (declared !== undefined) plan.present.push({ name, range: declared });
     else missing[name] = range;
   }
   plan.added = Object.keys(missing);
-  plan.addCommand = addCommandFor(installCommand, plan.added.length > 0 ? missing : UTILS_DEPENDENCIES);
+  plan.addCommand = addCommandFor(installCommand, plan.added.length > 0 ? missing : plan.ranges);
   if (plan.added.length === 0) return { ...plan, action: "present" };
 
   if (pkg.dependencies !== undefined && !isPlainObject(pkg.dependencies)) {
@@ -208,10 +303,12 @@ type Log = (...args: unknown[]) => void;
 /** 의존성 단계의 안내 줄을 출력합니다. */
 function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   const presentText = plan.present.map((p) => `${p.name} (${p.range})`).join(", ");
+  const basis = `  tailwind-merge 범위 기준: ${describeTailwindBasis(plan.tailwind)}`;
   if (plan.action === "add") {
-    const addedText = plan.added.map((n) => `${n}@${UTILS_DEPENDENCIES[n]}`).join(", ");
+    const addedText = plan.added.map((n) => `${n}@${plan.ranges[n]}`).join(", ");
     log(chalk.green(`✓ package.json dependencies 에 추가: ${addedText}`));
     if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}`));
+    if (plan.added.includes("tailwind-merge")) log(chalk.gray(basis));
     log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
   } else if (plan.action === "present") {
     log(chalk.green(`✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): ${presentText}`));
@@ -219,9 +316,11 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   } else if (plan.action === "no-package-json") {
     log(chalk.yellow("! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다."));
     log(chalk.yellow(`  설치: ${chalk.cyan(plan.addCommand)}`));
+    log(chalk.gray(basis));
   } else {
     log(chalk.yellow(`! package.json 을 바꾸지 않았습니다(${plan.reason}).`));
     log(chalk.yellow(`  utils.ts 의존성 설치: ${chalk.cyan(plan.addCommand)}`));
+    if (plan.addCommand.includes('"tailwind-merge@')) log(chalk.gray(basis));
   }
 }
 

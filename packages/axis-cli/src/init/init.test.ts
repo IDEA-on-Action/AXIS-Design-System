@@ -40,8 +40,12 @@ import { registerInitCommand } from "./index.js";
 import {
   addCommandFor,
   applyUtilsDependencies,
+  CLSX_RANGE,
+  detectTailwind,
   planUtilsDependencies,
-  UTILS_DEPENDENCIES,
+  selectUtilsDependencies,
+  TAILWIND_MERGE_RANGES,
+  tailwindMajorFromRange,
 } from "./init.js";
 
 const REGISTRY = "https://axis.minu.best/r";
@@ -79,9 +83,11 @@ const BASELINE = {
 
 /** D2 로 바뀐 마지막 줄 */
 const NEXT_STEP = "  npx @axis-ds/cli add button\n";
-const ADDED_BOTH = "✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0";
+const ADDED_BOTH = "✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^2.6.0";
 const NO_INSTALL = (cmd: string) => `  설치는 실행하지 않았습니다. 설치: ${cmd}`;
-const ADD_CMD = 'pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"';
+const ADD_CMD = 'pnpm add "clsx@^2.1.1" "tailwind-merge@^2.6.0"';
+/** tailwindcss 를 찾지 못했을 때의 근거 줄(E2 기본값) */
+const BASIS_NONE = "  tailwind-merge 범위 기준: tailwindcss 를 찾지 못해 기본값(Tailwind 3)";
 
 // eslint-disable-next-line no-control-regex
 const ANSI = /\u001b\[[0-9;]*m/g;
@@ -164,6 +170,7 @@ describe("axis init: 기준값 불변(AC7)", () => {
       BASELINE.logs[2],
       "! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다.",
       `  설치: ${ADD_CMD}`,
+      BASIS_NONE,
       BASELINE.logs[3],
       NEXT_STEP,
     ]);
@@ -185,6 +192,7 @@ describe("axis init: 기준값 불변(AC7)", () => {
       BASELINE.logs[1],
       BASELINE.logs[2],
       ADDED_BOTH,
+      BASIS_NONE,
       NO_INSTALL("pnpm install"),
       BASELINE.logs[3],
       NEXT_STEP,
@@ -210,12 +218,12 @@ describe("axis init: package.json 의존성(D1)", () => {
     const text = await fs.readFile(path.join(dir, "package.json"), "utf8");
     expect(JSON.parse(text)).toEqual({
       ...pkg,
-      dependencies: { next: "15.5.28", react: "19.1.0", clsx: "^2.1.1", "tailwind-merge": "^3.4.0" },
+      dependencies: { next: "15.5.28", react: "19.1.0", clsx: "^2.1.1", "tailwind-merge": "^2.6.0" },
     });
     expect(Object.keys(JSON.parse(text))).toEqual(Object.keys(pkg));
     expect(text).toBe(
       JSON.stringify(
-        { ...pkg, dependencies: { ...pkg.dependencies, clsx: "^2.1.1", "tailwind-merge": "^3.4.0" } },
+        { ...pkg, dependencies: { ...pkg.dependencies, clsx: "^2.1.1", "tailwind-merge": "^2.6.0" } },
         null,
         2
       ) + "\n"
@@ -227,7 +235,7 @@ describe("axis init: package.json 의존성(D1)", () => {
     await fs.writeFile(path.join(dir, "package.json"), '{\n  "name": "x"\n}\n');
     await runInitCli(dir);
     expect(await fs.readFile(path.join(dir, "package.json"), "utf8")).toBe(
-      '{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^3.4.0"\n  }\n}\n'
+      '{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^2.6.0"\n  }\n}\n'
     );
   });
 
@@ -263,14 +271,18 @@ describe("axis init: package.json 의존성(D1)", () => {
     );
     const r = await runInitCli(dir);
     const pkg = await fs.readJSON(path.join(dir, "package.json"));
-    expect(pkg.dependencies).toEqual({ react: "19", "tailwind-merge": "^3.4.0" });
+    expect(pkg.dependencies).toEqual({ react: "19", "tailwind-merge": "^2.6.0" });
     expect(pkg.devDependencies).toEqual({ clsx: "~2.0.1" });
-    expect(r.logs).toContain("✓ package.json dependencies 에 추가: tailwind-merge@^3.4.0");
+    expect(r.logs).toContain("✓ package.json dependencies 에 추가: tailwind-merge@^2.6.0");
     expect(r.logs).toContain("  이미 있음(버전 유지): clsx (~2.0.1)");
   });
 
-  it("범위는 템플릿과 같은 clsx ^2.1.1 · tailwind-merge ^3.4.0 (prd 1.5)", async () => {
-    expect(UTILS_DEPENDENCIES).toEqual({ clsx: "^2.1.1", "tailwind-merge": "^3.4.0" });
+  it("범위 상수: clsx ^2.1.1, tailwind-merge 는 Tailwind 4 ^3.4.0 · Tailwind 3 ^2.6.0 (prd 1.5 · 1.6)", () => {
+    expect(CLSX_RANGE).toBe("^2.1.1");
+    expect(TAILWIND_MERGE_RANGES).toEqual({ tailwind4: "^3.4.0", tailwind3: "^2.6.0" });
+  });
+
+  it("clsx 범위는 템플릿 4종과 같음 (prd 1.5)", async () => {
     const templatesDir = path.resolve(HERE, "../../../../apps/web/templates");
     const names = (await fs.readdir(templatesDir)).filter((n) =>
       fs.existsSync(path.join(templatesDir, n, "files", "package.json"))
@@ -278,11 +290,168 @@ describe("axis init: package.json 의존성(D1)", () => {
     expect(names.length).toBeGreaterThan(0);
     for (const n of names) {
       const pkg = await fs.readJSON(path.join(templatesDir, n, "files", "package.json"));
-      expect({ template: n, clsx: pkg.dependencies.clsx, twMerge: pkg.dependencies["tailwind-merge"] }).toEqual({
-        template: n,
-        clsx: UTILS_DEPENDENCIES.clsx,
-        twMerge: UTILS_DEPENDENCIES["tailwind-merge"],
-      });
+      expect({ template: n, clsx: pkg.dependencies.clsx }).toEqual({ template: n, clsx: CLSX_RANGE });
+    }
+  });
+});
+
+describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () => {
+  /** `dir/node_modules/tailwindcss/package.json` 에 설치본 version 을 씁니다. */
+  async function installTailwind(dir: string, version: string) {
+    await fs.outputFile(
+      path.join(dir, "node_modules", "tailwindcss", "package.json"),
+      JSON.stringify({ name: "tailwindcss", version }) + "\n"
+    );
+  }
+
+  async function addedTwMerge(pkg: Record<string, unknown>, installed?: string) {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify(pkg, null, 2) + "\n");
+    if (installed) await installTailwind(dir, installed);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    const after = await fs.readJSON(path.join(dir, "package.json"));
+    return { range: after.dependencies["tailwind-merge"] as string, logs: r.logs };
+  }
+
+  it("설치본 4.x: ^3.4.0 (선언이 3 이어도 설치본 우선)", async () => {
+    const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }, "4.3.3");
+    expect(r.range).toBe("^3.4.0");
+    expect(r.logs).toContain("✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0");
+    expect(r.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3");
+  });
+
+  it("설치본 3.x: ^2.6.0 (선언이 4 여도 설치본 우선)", async () => {
+    const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "^4" } }, "3.4.17");
+    expect(r.range).toBe("^2.6.0");
+    expect(r.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 3.4.17");
+  });
+
+  it("설치본 version 이 정확한 버전이 아니면 선언 범위로", async () => {
+    const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "^4" } }, "not-a-version");
+    expect(r.range).toBe("^3.4.0");
+    expect(r.logs).toContain("  tailwind-merge 범위 기준: package.json 의 tailwindcss ^4");
+  });
+
+  const declared: { range: string; field: "dependencies" | "devDependencies"; expected: string; basis: string }[] = [
+    { range: "^4", field: "devDependencies", expected: "^3.4.0", basis: "package.json 의 tailwindcss ^4" },
+    { range: "~3.4", field: "devDependencies", expected: "^2.6.0", basis: "package.json 의 tailwindcss ~3.4" },
+    { range: "^4.1.0", field: "dependencies", expected: "^3.4.0", basis: "package.json 의 tailwindcss ^4.1.0" },
+    {
+      range: "workspace:*",
+      field: "devDependencies",
+      expected: "^2.6.0",
+      basis: "package.json 의 tailwindcss workspace:* 로 버전을 판정하지 못해 기본값(Tailwind 3)",
+    },
+    {
+      range: "latest",
+      field: "devDependencies",
+      expected: "^2.6.0",
+      basis: "package.json 의 tailwindcss latest 로 버전을 판정하지 못해 기본값(Tailwind 3)",
+    },
+    {
+      range: "^3 || ^4",
+      field: "devDependencies",
+      expected: "^2.6.0",
+      basis: "package.json 의 tailwindcss ^3 || ^4 로 버전을 판정하지 못해 기본값(Tailwind 3)",
+    },
+  ];
+  for (const c of declared) {
+    it(`선언만 ${c.field}.tailwindcss = ${c.range}: ${c.expected}`, async () => {
+      const r = await addedTwMerge({ name: "x", [c.field]: { tailwindcss: c.range } });
+      expect(r.range).toBe(c.expected);
+      expect(r.logs).toContain(`  tailwind-merge 범위 기준: ${c.basis}`);
+    });
+  }
+
+  it("tailwindcss 가 없으면 기본값 ^2.6.0", async () => {
+    const r = await addedTwMerge({ name: "x", dependencies: { next: "15.5.28" } });
+    expect(r.range).toBe("^2.6.0");
+    expect(r.logs).toContain(BASIS_NONE);
+  });
+
+  it("package.json 이 없을 때 안내 명령도 같은 규칙(설치본 4 → ^3.4.0, 없음 → ^2.6.0)", async () => {
+    const withTw4 = await tmpDir();
+    await installTailwind(withTw4, "4.3.3");
+    const r4 = await runInitCli(withTw4);
+    expect(r4.logs).toContain('  설치: pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"');
+    expect(r4.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3");
+    expect(await fs.pathExists(path.join(withTw4, "package.json"))).toBe(false);
+
+    const none = await tmpDir();
+    const r0 = await runInitCli(none);
+    expect(r0.logs).toContain(`  설치: ${ADD_CMD}`);
+    expect(r0.logs).toContain(BASIS_NONE);
+  });
+
+  it("package.json 을 읽을 수 없으면 설치본으로 판정해 안내, rc 0", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), "{ nope");
+    await installTailwind(dir, "4.0.0");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain('  utils.ts 의존성 설치: pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"');
+  });
+
+  it("tailwind-merge 가 이미 있으면 범위를 바꾸지 않고 근거 줄도 내지 않음", async () => {
+    const dir = await tmpDir();
+    const pkgFile = path.join(dir, "package.json");
+    await fs.writeFile(
+      pkgFile,
+      JSON.stringify({ name: "x", dependencies: { "tailwind-merge": "^2.5.0" }, devDependencies: { tailwindcss: "^4" } })
+    );
+    const r = await runInitCli(dir);
+    const pkg = await fs.readJSON(pkgFile);
+    expect(pkg.dependencies).toEqual({ "tailwind-merge": "^2.5.0", clsx: "^2.1.1" });
+    expect(r.logs.some((l) => l.includes("tailwind-merge 범위 기준"))).toBe(false);
+  });
+
+  it("tailwindMajorFromRange: 단순 범위만 major 를 읽음", () => {
+    const cases: [string, number | undefined][] = [
+      ["4", 4],
+      ["^4", 4],
+      ["^4.1.0", 4],
+      ["~3.4", 3],
+      ["=3.4.17", 3],
+      ["3.4.x", 3],
+      ["v4", 4],
+      [" ^4 ", 4],
+      ["4.0.0-beta.1", 4],
+      [">=3", undefined],
+      [">=3.4 <4", undefined],
+      ["^3 || ^4", undefined],
+      ["*", undefined],
+      ["latest", undefined],
+      ["workspace:*", undefined],
+      ["npm:tailwindcss@^4", undefined],
+      ["github:tailwindlabs/tailwindcss", undefined],
+      ["", undefined],
+    ];
+    for (const [range, major] of cases) {
+      expect({ range, major: tailwindMajorFromRange(range) }).toEqual({ range, major });
+    }
+  });
+
+  it("detectTailwind · selectUtilsDependencies: 판정 결과와 범위", async () => {
+    const dir = await tmpDir();
+    expect(detectTailwind(dir)).toEqual({ source: "none" });
+    expect(detectTailwind(dir, { devDependencies: { tailwindcss: "^4" } })).toEqual({
+      major: 4,
+      source: "declared",
+      value: "^4",
+    });
+    await installTailwind(dir, "3.4.17");
+    expect(detectTailwind(dir, { devDependencies: { tailwindcss: "^4" } })).toEqual({
+      major: 3,
+      source: "installed",
+      value: "3.4.17",
+    });
+    expect(selectUtilsDependencies({ major: 4, source: "declared" })).toEqual({
+      clsx: "^2.1.1",
+      "tailwind-merge": "^3.4.0",
+    });
+    for (const t of [{ major: 3, source: "installed" as const }, { source: "none" as const }, { major: 5, source: "declared" as const }]) {
+      expect(selectUtilsDependencies(t)["tailwind-merge"]).toBe("^2.6.0");
     }
   });
 });
@@ -292,34 +461,34 @@ describe("axis init: 포맷 보존 · 멱등(AC4)", () => {
     {
       name: "탭 들여쓰기",
       text: '{\n\t"name": "x"\n}\n',
-      expected: '{\n\t"name": "x",\n\t"dependencies": {\n\t\t"clsx": "^2.1.1",\n\t\t"tailwind-merge": "^3.4.0"\n\t}\n}\n',
+      expected: '{\n\t"name": "x",\n\t"dependencies": {\n\t\t"clsx": "^2.1.1",\n\t\t"tailwind-merge": "^2.6.0"\n\t}\n}\n',
     },
     {
       name: "4칸 들여쓰기",
       text: '{\n    "name": "x"\n}\n',
       expected:
-        '{\n    "name": "x",\n    "dependencies": {\n        "clsx": "^2.1.1",\n        "tailwind-merge": "^3.4.0"\n    }\n}\n',
+        '{\n    "name": "x",\n    "dependencies": {\n        "clsx": "^2.1.1",\n        "tailwind-merge": "^2.6.0"\n    }\n}\n',
     },
     {
       name: "CRLF",
       text: '{\r\n  "name": "x"\r\n}\r\n',
-      expected: '{\r\n  "name": "x",\r\n  "dependencies": {\r\n    "clsx": "^2.1.1",\r\n    "tailwind-merge": "^3.4.0"\r\n  }\r\n}\r\n',
+      expected: '{\r\n  "name": "x",\r\n  "dependencies": {\r\n    "clsx": "^2.1.1",\r\n    "tailwind-merge": "^2.6.0"\r\n  }\r\n}\r\n',
     },
     {
       name: "BOM",
       text: '﻿{\n  "name": "x"\n}\n',
-      expected: '﻿{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^3.4.0"\n  }\n}\n',
+      expected: '﻿{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^2.6.0"\n  }\n}\n',
     },
     {
       name: "BOM + CRLF",
       text: '﻿{\r\n  "name": "x"\r\n}\r\n',
       expected:
-        '﻿{\r\n  "name": "x",\r\n  "dependencies": {\r\n    "clsx": "^2.1.1",\r\n    "tailwind-merge": "^3.4.0"\r\n  }\r\n}\r\n',
+        '﻿{\r\n  "name": "x",\r\n  "dependencies": {\r\n    "clsx": "^2.1.1",\r\n    "tailwind-merge": "^2.6.0"\r\n  }\r\n}\r\n',
     },
     {
       name: "끝 줄바꿈 없음",
       text: '{\n  "name": "x"\n}',
-      expected: '{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^3.4.0"\n  }\n}',
+      expected: '{\n  "name": "x",\n  "dependencies": {\n    "clsx": "^2.1.1",\n    "tailwind-merge": "^2.6.0"\n  }\n}',
     },
   ];
 
@@ -336,7 +505,7 @@ describe("axis init: 포맷 보존 · 멱등(AC4)", () => {
       expect(second.exitCode).toBe(0);
       expect(await snapshot(dir)).toEqual(afterFirst);
       expect(second.logs).toContain(
-        "✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): clsx (^2.1.1), tailwind-merge (^3.4.0)"
+        "✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): clsx (^2.1.1), tailwind-merge (^2.6.0)"
       );
     });
   }
@@ -353,8 +522,8 @@ describe("axis init: 포맷 보존 · 멱등(AC4)", () => {
 describe("axis init: lockfile 별 안내(AC5)", () => {
   const cases = [
     { lock: "pnpm-lock.yaml", install: "pnpm install", add: ADD_CMD },
-    { lock: "yarn.lock", install: "yarn install", add: 'yarn add "clsx@^2.1.1" "tailwind-merge@^3.4.0"' },
-    { lock: "package-lock.json", install: "npm install", add: 'npm install "clsx@^2.1.1" "tailwind-merge@^3.4.0"' },
+    { lock: "yarn.lock", install: "yarn install", add: 'yarn add "clsx@^2.1.1" "tailwind-merge@^2.6.0"' },
+    { lock: "package-lock.json", install: "npm install", add: 'npm install "clsx@^2.1.1" "tailwind-merge@^2.6.0"' },
     { lock: null, install: "pnpm install", add: ADD_CMD },
   ];
   for (const c of cases) {

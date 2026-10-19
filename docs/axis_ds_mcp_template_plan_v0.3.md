@@ -83,7 +83,7 @@ AI 시대의 UI/UX는 “정적 화면”이 아니라 **에이전트와 사용�
 - 목적: 사용자가 “디자인 템플릿(Theme/Blocks/Pages)”을 **보고 선택**하고, CLI/MCP로 **한 번에 적용**
 - 구성
   - Docs 사이트(Cloudflare Pages)에 **템플릿 갤러리/프리뷰/적용 가이드**
-  - `axis-cli template apply <templateId>` (또는 MCP tool)로 프로젝트에 반영
+  - `npx @axis-ds/cli template apply <templateId>` (또는 MCP tool)로 프로젝트에 반영
 
 ---
 

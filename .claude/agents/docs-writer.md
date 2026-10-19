@@ -44,7 +44,7 @@ description: 문서화 및 예제 작성 전문가 에이전트
 ## 설치
 
 \`\`\`bash
-npx axis-cli add [컴포넌트명]
+npx @axis-ds/cli add [컴포넌트명]
 \`\`\`
 
 ## 기본 사용법
