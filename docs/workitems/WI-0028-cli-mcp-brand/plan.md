@@ -34,7 +34,7 @@
 | 의존성 | `@modelcontextprotocol/sdk` · `fs-extra` · `node-fetch` · `zod`. `@axis-ds/tokens` 와 `@axis-ds/cli` 에 의존하지 않습니다 |
 | 테스트 | 테스트 파일 0개, `test` 스크립트 · vitest 없음(PRD FR-6 서술과 일치) |
 
-**기존 결함(이 WI 범위 밖, U7 결정으로 WI-0036(#115)에서 처리)**: tsup 이 `loader.ts` 를 `dist/index.js` 한 파일로 묶으면서 `__dirname` 이 `dist` 가 되어, 로더는 `dist/data/components.json` 을 찾는데 데이터는 `dist/registry/data` 에 있습니다. npm `@axis-ds/mcp@1.1.4` tarball 을 받아 stdio 로 `axis.list_components` · `axis.list_tokens` 를 호출하면 둘 다 `ENOENT ... dist/data/components.json`(tokens.json) 으로 `isError: true` 입니다(2026-10-19 실측, 대조군: 같은 세션의 `tools/list` 는 16개 정상). `pack-smoke` 는 tarball 구조만 보고 서버를 실행하지 않아 이 결함을 못 잡습니다. 브랜드 도구는 정적 번들을 쓰지 않으므로 이 결함을 물려받지 않지만, 같은 함정(번들 뒤 `__dirname` 이동)을 피하도록 4.3 절에 규칙을 둡니다.
+**기존 결함(이 WI 범위 밖, U7 결정으로 WI-0036(#115)에서 처리)**: tsup 이 `loader.ts` 를 `dist/index.js` 한 파일로 묶으면서 `__dirname` 이 `dist` 가 되어, 로더는 `dist/data/components.json` 을 찾는데 데이터는 `dist/registry/data` 에 있습니다. npm `@axis-ds/mcp@1.1.4` tarball 을 받아 stdio 로 `axis.list_components` · `axis.list_tokens` 를 호출하면 둘 다 `ENOENT ... dist/data/components.json`(tokens.json) 으로 `isError: true` 입니다(2026-10-19 실측, 대조군: 같은 세션의 `tools/list` 는 16개 정상). `pack-smoke` 는 tarball 구조만 보고 서버를 실행하지 않아 이 결함을 못 잡습니다(main 기준. WI-0036(#116)이 머지되면 `pack-smoke` 가 `scripts/mcp-smoke.mjs` 로 서버를 띄워 `tools/list` 를 보게 되므로 이 문장은 그 머지 전까지만 맞습니다). 브랜드 도구는 정적 번들을 쓰지 않으므로 이 결함을 물려받지 않지만, 같은 함정(번들 뒤 `__dirname` 이동)을 피하도록 4.3 절에 규칙을 둡니다.
 
 ### 1.3 브랜드 데이터 형식
 
@@ -338,10 +338,13 @@ U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출
 |---|---|---|
 | FR-2 그대로(globals.css 맨 앞 `@import`) | 짐 · 이김 | 없음. 라이트에서 브랜드가 적용되지 않음 |
 | 대안 1: 레이아웃 진입점에서 globals.css 다음에 JS import | 이김 · 이김 | FR-2 의 CSS 대상(「globals.css 에 import」)이 진입 파일(`layout.tsx` 등) 수정으로 바뀜. theme-only 원형은 `app/` 이 없어 진입 파일 탐색 규칙도 새로 정해야 함 |
-| 대안 2: 브랜드 선택자 명시도 상향(`:root[data-brand]`) | 이김 · 이김 | FR-2 위치는 그대로, tokens 산출물(WI-0025 `brandSelectors`) 변경 |
+| 대안 2: 브랜드 선택자 명시도 상향(명시도 0,2,0. vE 의 `:root[data-brand]` 는 형태 예시이고, 하위 요소 사용을 지키는 최종 형태는 M3 에서 확정, 아래 결정 절 참조) | 이김 · 이김(`<html data-brand>` 만 잰 값) | FR-2 위치는 그대로, tokens 산출물(WI-0025 `brandSelectors`) 변경 |
 
 **결정(2026-10-19 사용자 결정): 대안 2.**
 
 - WI-0025 M3(#107, `feat/wi-0025-m3-ontology-v2`)의 `packages/axis-tokens/scripts/brands.mjs` `brandSelectors` 라이트 선택자를 명시도 0,2,0 으로 올립니다. 사용자에게 제시한 형태는 `:root[data-brand="<b>"]` 이고, `<html>` 이 아닌 하위 요소에 `data-brand` 를 붙이는 사용을 깨지 않도록 최종 형태는 M3 에서 정합니다. 이 변경은 M3 소관이며 이 브랜치에서는 tokens 코드를 고치지 않습니다.
+- **하위 요소 브랜드(부분 브랜드)는 M3 가 지원하는 사용입니다**(`origin/feat/wi-0025-m3-ontology-v2` 17e4427 기준). 근거는 세 곳입니다. WI-0025 `prd.md` FR-5 의 하위 컨테이너용 `.dark [data-brand="<brand>"]` 와 A2 「여러 브랜드를 섞는 경우는 하위 컨테이너 선택자로만 지원」, `brands.mjs` `brandSelectors` 의 다크 선택자 `.dark ${attr}`, `apps/web/e2e/brand-tokens.spec.ts` 의 「하위 div[data-brand]」(라이트) · 「.dark 아래 div[data-brand]」(다크) 케이스입니다. 현재 라이트 선택자 `[data-brand="<b>"]`(0,1,0)는 하위 div 에 직접 선언되어 `<html>` 의 `:root` 에서 상속되는 값을 이깁니다.
+- **`:root[data-brand]` 단독 형태는 이 사용을 깹니다.** `:root` 는 `<html>` 에만 매칭되므로 하위 div 의 라이트 브랜드가 적용되지 않습니다. 8.1 절 vE 는 `<html data-brand>` 하나로만 잰 값이라 이 케이스를 보여 주지 못합니다. 0,2,0 이면서 `<html>` · 하위 요소 모두에 매칭되는 형태의 예는 `[data-brand="<b>"][data-brand="<b>"]` 이고, 다크 선택자 3개도 0,2,0 이라 파일 안에서 다크 블록이 뒤에 오면 다크가 이깁니다(이 형태의 브라우저 실측은 아직 없음).
+- **M3 최종 형태의 의존 조건**: `brand-tokens.spec.ts` 의 하위 div 라이트 · 다크 케이스를 포함한 5개 갈래를 그대로 통과해야 합니다. 이 WI 는 그 조건을 만족한 형태를 전제로 6.2-2 · T6-2 에서 라이트 블록 머리를 대조합니다.
 - FR-2 위치(globals.css `@import`, `@charset` · 기존 `@import` 다음)는 그대로이고, 4.2-3 · T3-3 의 삽입 위치를 그 위치로 확정합니다. PRD 는 고치지 않습니다.
 - **의존**: 이 WI 의 라이트 브랜드 적용은 M3 의 선택자 변경에 기댑니다. 8.1 절 vE 는 fixture `sample` CSS 에 선택자를 손으로 더한 측정이라 M3 산출물의 근거가 아닙니다. P6(6.2-6, T6-7)에서 ontology 산출물로 라이트 · 다크 승리를 다시 확인합니다. 6.2-2 의 형식 대조에서 라이트 블록 머리가 1.3 절과 달라지는 것도 이 결정의 결과입니다.

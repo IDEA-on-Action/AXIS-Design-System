@@ -94,7 +94,7 @@
 - [ ] CLI · MCP 응답 동일성 (AC3) → T5-5
 - [ ] 빌드 산출물 stdio 스모크: `tools/list` 18개, `axis.list_brands` 정상 응답 → T5-6
 - [ ] README 2개 갱신
-- [ ] **WI-0036(PR #116) 의 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 2026-10-19 결정으로 WI-0036 이 PR CI 에서도 pack-smoke 를 돌리므로, 도구 2개를 등록하고 이 목록을 안 고치면 이 WI 의 PR CI 에서 실패합니다(main push 의 발행 차단까지 가지 않고 PR 단계에서 잡힘). WI-0036 이 먼저 머지되면 이 브랜치에서 함께 고칩니다 → T5-3
+- [ ] **WI-0036(PR #116) 의 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 2026-10-19 결정 (다)로 WI-0036 이 PR CI 에서도 pack-smoke 를 돌리게 되면, 도구 2개를 등록하고 이 목록을 안 고쳤을 때 이 WI 의 PR CI 에서 실패합니다(PR 단계에서 잡힘). 그 배선이 WI-0036 에 커밋 · 머지되기 전에는(2026-10-19 `origin/fix/wi-0036-mcp-data-path` 497aca9 의 frontend.yml 에 pack-smoke 없음) PR CI 는 초록이고 main push 의 publish.yml Pack smoke 가 6개 패키지 발행을 막습니다. WI-0036 이 먼저 머지되면 이 브랜치에서 함께 고칩니다 → T5-3
 
 ## P6. M3 머지 뒤 (ontology 재확인)
 

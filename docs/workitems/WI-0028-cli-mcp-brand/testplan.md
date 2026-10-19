@@ -79,10 +79,10 @@
 
 - [ ] T5-1: `src/tools/brand-core.ts` 와 CLI `src/theme/brand-core.ts` 의 바이트 동일. 음성 대조군: 사본에 공백 하나를 더한 상태에서 테스트가 실패하는 것을 한 번 확인하고 되돌림
 - [ ] T5-2: `handleListBrands` · `handleGetBrand` 가 fixture 에서 코어 결과를 그대로 돌려줌
-- [ ] T5-3: 빌드 산출물 stdio `tools/list` 18개, 이름에 `axis.list_brands` · `axis.get_brand`. WI-0036 머지 뒤에는 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 두 이름을 더한 뒤 PR CI 의 pack-smoke 가 통과하는지 함께 봄(목록을 안 고치면 PR CI 실패)
+- [ ] T5-3: 빌드 산출물 stdio `tools/list` 18개, 이름에 `axis.list_brands` · `axis.get_brand`. WI-0036(#116)이 PR CI(frontend.yml) 의 pack-smoke 배선과 함께 머지된 뒤에는 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 두 이름을 더하고 PR CI 의 pack-smoke 가 통과하는지 함께 봄(그 뒤로는 목록을 안 고치면 PR CI 실패. 배선 머지 전에는 PR CI 가 초록이고 main push 의 publish.yml Pack smoke 가 발행을 막음)
 - [ ] T5-4: 미설치 · 미지원 fixture 에서 `isError` 없음, 안내 문구에 설치 명령
 - [ ] **T5-5 (AC3)**: 같은 fixture 에서 MCP 핸들러 결과와 CLI 코어 결과가 deep equal 이고, `formatListBrandsResult` · `formatGetBrandResult` 글에 CLI 출력이 담는 항목(이름 · 설명 · 테마 · import 경로 · `defaultBrand` 예시 · 주요 토큰 값)이 모두 있음
-- [ ] T5-6: `pnpm --filter @axis-ds/mcp build` 산출물로 stdio `axis.list_brands { targetDir: <fixture> }` 정상 응답. `pack-smoke` 는 서버를 실행하지 않으므로 이 스모크를 따로 둡니다(plan 1.2)
+- [ ] T5-6: `pnpm --filter @axis-ds/mcp build` 산출물로 stdio `axis.list_brands { targetDir: <fixture> }` 정상 응답. `pack-smoke` 는 서버를 실행하지 않으므로 이 스모크를 따로 둡니다(plan 1.2, WI-0036 머지 전 main 기준. 머지 뒤에는 `pack-smoke` 가 tarball 서버의 `tools/list` 를 보지만 `axis.list_brands` 호출은 하지 않으므로 이 스모크는 그대로 둡니다)
 
 ## T6. M3 머지 뒤 실데이터 (P6)
 
