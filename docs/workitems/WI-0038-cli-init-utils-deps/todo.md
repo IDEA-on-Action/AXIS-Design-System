@@ -18,7 +18,11 @@
 
 - [x] init 이 `package.json` 에 쓸지 안내만 할지 → ✅ 없을 때만 `dependencies` 에 추가, 설치는 안내만 (D1)
 - [x] `npx axis-cli` 안내 정정 → ✅ `npx @axis-ds/cli` (D2)
-- [x] 의존성 범위 → ✅ 템플릿 4종과 같은 `clsx ^2.1.1` · `tailwind-merge ^3.4.0` (D3, prd 1.5)
+- [x] 의존성 범위 → ✅ 템플릿 4종과 같은 `clsx ^2.1.1` · `tailwind-merge ^3.4.0` (D3, prd 1.5). E2 로 `tailwind-merge` 는 Tailwind 버전별로 보정
+- [x] 남은 실행 안내(`.claude/agents` · `docs` 최상위 문서) 정정과 스캔 범위 확장 → ✅ (E1, 2026-10-19 사용자 결정)
+- [x] `tailwind-merge` 범위 → ✅ Tailwind 4 `^3.4.0`, 3 이거나 판정 불가 `^2.6.0`, 설치본 우선 (E2, prd 1.6)
+- [x] 에이전트 해석 세 가지 → ✅ 2026-10-19 사용자 확정 (E3): D2 를 `pnpm dlx` · `bunx` · `npx` 없는 명령까지 확장, 문서 사이트 산문 2줄 정정, `package.json` 을 읽지 못하면 안내만 하고 rc 0 유지
+- [x] init 재실행 시 `axis.config.json` 덮어쓰기 · library 수집본 → ✅ 별도 WI 로 넘김(E4, 메인 세션이 등록, prd 2장)
 
 ---
 
@@ -58,6 +62,16 @@
 - [x] 실경로: 수정본 빌드로 같은 절차, 복원 성공(sha 같음) · 한도보다 큰 원본은 복원 실패 안내 (T20 · T21), 성공 경로 T13 재측정 rc 0 (T22)
 - [x] 커밋
 
+### M1-7 보정: 남은 실행 안내 · Tailwind 버전별 범위 (E1 ~ E4, 2026-10-19 사용자 결정)
+- [x] E1: `.claude/agents/docs-writer.md` 47행, `docs/axis-ds-implementation-plan.md` 378 ~ 389 · 663행 정정. 넓힌 스캔이 잡은 `docs/axis_ds_mcp_template_plan_v0.3.md` 86행도 D2 대로 정정
+- [x] E1: `guidance.test.ts` 스캔 범위에 `.claude/agents/**` · `docs` 최상위 `*.md` 추가, 제외 근거(WI 문서 · changeset · CHANGELOG · 테스트 fixture · 수집본)를 주석으로. 정정을 되돌리면 위반 9줄로 실패 (testplan T29)
+- [x] E2: `detectTailwind` · `tailwindMajorFromRange` · `selectUtilsDependencies`, 근거 한 줄 출력. `package.json` 없음 · 읽을 수 없음의 안내 명령도 같은 규칙 (prd 1.6)
+- [x] E2 테스트: 설치본 4 · 3 · 잘못된 version, 선언 `^4` · `~3.4` · `^4.1.0` · `workspace:*` · `latest` · `^3 || ^4`, 없음, devDependencies 에만 있음, `package.json` 없음 · 읽을 수 없음, 이미 있음 (init 52건, testplan T24). 변이 3종으로 27 · 5 · 8건 실패 (T28)
+- [x] 실경로: create-next-app 15.5.28(Tailwind 4.3.3) `^3.4.0` · build rc 0, Tailwind 3.4.19 최소 Next 프로젝트 `^2.6.0` · build rc 0 (T25 · T26)
+- [x] E3 · E4: prd 1.4 · 2장, 이 문서 착수 전 결정에 기록
+- [x] 커밋
+
 ### 이 브랜치 밖
 - [ ] PR · 머지 · Version Packages PR · 배포
-- [ ] 배포본(`@axis-ds/cli` 1.2.1)으로 T13 · T15 재확인
+- [ ] 배포본(`@axis-ds/cli` 1.2.1)으로 T13 · T15 · T25 · T26 재확인
+- [ ] 별도 WI(메인 세션이 등록): init 재실행 시 `axis.config.json` 덮어쓰기, `apps/web/public/library/**` 수집본의 `npx axis-cli` (E4)
