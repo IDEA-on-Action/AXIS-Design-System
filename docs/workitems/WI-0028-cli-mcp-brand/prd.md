@@ -1,7 +1,7 @@
 # WI-0028: CLI · MCP 브랜드 명령 PRD
 
 > 작성일: 2026-10-15 | 버전: v0.3(2026-10-15) | 작성자: Sinclair Seo | WI: WI-0028 | GitHub: #87 | 상태: Draft
-> 선행: WI-0025 FR-4 · FR-5(브랜드 토큰 소스, `dist/css/brands/*`, `brand.json`)와 FR-6(`ThemeProvider` brand 옵션). 모두 WI-0025 M2(1.3.0)에서 나오므로 그 배포 이후 착수합니다.
+> 선행: WI-0025 FR-4 · FR-5(브랜드 토큰 소스, `dist/css/brands/*`, `brand.json`)와 FR-6(`ThemeProvider` brand 옵션). 빌드 경로는 WI-0025 M2로 main에 들어왔으므로 개발은 지금 착수하고, 실제 `ontology` 프리셋 확인은 M3 머지 뒤, `@axis-ds/cli` · `@axis-ds/mcp` 배포는 1.3.0 배포 뒤에 합니다(2026-10-19 사용자 결정, 종전 「1.3.0 배포 이후 착수」를 정정).
 > 기준 버전: `@axis-ds/cli` · `@axis-ds/mcp` 1.1.3, `@axis-ds/tokens` · `@axis-ds/theme` 1.2.0(2026-10-15 실측)
 
 ---
