@@ -17,7 +17,7 @@
 
 - [x] 1.3.0 포함 vs 별도 patch 선배포 → ✅ 2026-10-19: 별도 patch 1.2.2 선배포 (D1)
 - [x] 수정 방식 → ✅ 포맷에서 TS 전용 두 줄만 제거, `.d.ts` 불변 (D2)
-- [ ] 의존 정확 고정(`updateInternalDependencies`)에 따른 동반 bump 수용 여부 → 사용자 확인 대기 (아래 M1-5)
+- [x] 의존 정확 고정(`updateInternalDependencies`)에 따른 동반 bump 수용 여부 → ✅ 2026-10-19 사용자 결정: 수용(tokens · ui-react · agentic-ui · theme 4개 1.2.2). 1.2.2 를 먼저 배포하고 WI-0025 M3 · M4 는 그 뒤에 머지 (아래 M1-5)
 
 ---
 
@@ -50,7 +50,7 @@
 ### M1-5 changeset (FR-6)
 - [x] `.changeset/wi-0035-tokens-esm-entry.md` (`@axis-ds/tokens` patch)
 - [x] `pnpm changeset status --verbose`: tokens 1.2.2, ui-react · agentic-ui · theme 1.2.2, axis-nextjs-example 0.1.5 (전부 patch)
-- [ ] 동반 bump 수용 여부 확인 (ui-react · agentic-ui · theme 는 `dependencies` 에 `workspace:*` 라 배포본이 `"@axis-ds/tokens": "1.2.1"` 정확 고정. tokens 만 올리면 이 세 패키지 사용자는 수정본을 받지 못함)
+- [x] 동반 bump 수용 여부 확인 (✅ 2026-10-19 수용, ui-react · agentic-ui · theme 는 `dependencies` 에 `workspace:*` 라 배포본이 `"@axis-ds/tokens": "1.2.1"` 정확 고정. tokens 만 올리면 이 세 패키지 사용자는 수정본을 받지 못함)
 
 ### M1-6 마무리
 - [ ] PR 생성 · 리뷰 · main 머지
