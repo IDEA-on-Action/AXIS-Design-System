@@ -154,11 +154,24 @@ export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan
   return { ...plan, action: "add", write: { file: pkgFile, before: text, after } };
 }
 
+/** 파일 쓰기 함수. 테스트에서 쓰기 실패를 주입할 때만 바꿉니다. */
+export type WriteFileFn = (file: string, data: string) => void;
+
+const defaultWriteFile: WriteFileFn = (file, data) => writeFileSync(file, data);
+
 /**
  * 계획대로 `package.json` 을 씁니다. 쓰기 직전에 파일이 계획할 때와 같은지, 새 내용이 JSON 인지,
  * 실제 위치가 프로젝트 안인지 다시 확인하고, 어긋나면 쓰지 않고 오류를 던집니다.
+ *
+ * `writeFileSync` 는 파일을 비운 뒤 쓰므로 쓰는 도중 실패하면(ENOSPC · EIO · EFBIG 등) 파일이 잘린 채
+ * 남습니다. 그때는 계획 때 읽은 원래 내용(`plan.write.before`)으로 되돌리고, 되돌린 결과를 오류 메시지에
+ * 담아 던집니다.
  */
-export function applyUtilsDependencies(baseDirInput: string, plan: UtilsDependencyPlan): boolean {
+export function applyUtilsDependencies(
+  baseDirInput: string,
+  plan: UtilsDependencyPlan,
+  writeFile: WriteFileFn = defaultWriteFile
+): boolean {
   const w = plan.write;
   if (plan.action !== "add" || !w) return false;
   const baseDir = path.resolve(baseDirInput);
@@ -171,7 +184,22 @@ export function applyUtilsDependencies(baseDirInput: string, plan: UtilsDependen
     throw new Error(`${w.file} 의 실제 위치(${where.realPath})가 프로젝트 디렉터리 밖입니다. 쓰지 않았습니다.`);
   }
   JSON.parse(w.after.startsWith(BOM) ? w.after.slice(1) : w.after);
-  writeFileSync(w.file, w.after);
+  try {
+    writeFile(w.file, w.after);
+  } catch (err) {
+    const cause = (err as Error).message;
+    let restored: string;
+    try {
+      writeFile(w.file, w.before);
+      if (readFileSync(w.file, "utf8") !== w.before) throw new Error("되돌린 내용이 원래 내용과 다릅니다");
+      restored = "원래 내용으로 되돌렸습니다";
+    } catch (restoreErr) {
+      restored =
+        `원래 내용으로 되돌리지 못했습니다(${(restoreErr as Error).message}). ` +
+        "파일이 잘렸거나 비었을 수 있으니 버전 관리 도구 등으로 복구하세요";
+    }
+    throw new Error(`${w.file} 을 쓰는 도중 실패했습니다(${cause}). ${restored}.`);
+  }
   return true;
 }
 
@@ -234,6 +262,7 @@ export async function runInit(
     applyUtilsDependencies(baseDir, plan);
   } catch (err) {
     log(chalk.red(`✗ package.json 을 쓰지 못했습니다: ${(err as Error).message}`));
+    log(chalk.yellow("  axis.config.json 과 utils.ts 는 이미 만들어졌습니다."));
     log(chalk.yellow(`  utils.ts 의존성 설치: ${chalk.cyan(plan.addCommand)}`));
     process.exitCode = 1;
     return;

@@ -439,6 +439,61 @@ describe("axis init: 쓸 수 없는 package.json(FR-3 · FR-4)", () => {
     expect(await fs.readFile(pkgFile, "utf8")).toBe('{"name":"x"}\n ');
   });
 
+  /** 실제 writeFileSync 처럼 파일을 비우고 앞부분만 쓴 뒤 실패하는 쓰기(ENOSPC 흉내) */
+  function truncatingThenFail(file: string, data: string) {
+    fs.writeFileSync(file, data.slice(0, 5));
+    throw Object.assign(new Error("ENOSPC: no space left on device, write"), { code: "ENOSPC" });
+  }
+
+  it("쓰는 도중 실패하면 원래 내용으로 되돌리고 그 결과를 오류에 담음", async () => {
+    const dir = await tmpDir();
+    const pkgFile = path.join(dir, "package.json");
+    const original = '{\n  "name": "x"\n}\n';
+    await fs.writeFile(pkgFile, original);
+    const plan = planUtilsDependencies(dir);
+    expect(plan.action).toBe("add");
+    let calls = 0;
+    const writer = (file: string, data: string) => {
+      calls += 1;
+      if (calls === 1) truncatingThenFail(file, data);
+      else fs.writeFileSync(file, data);
+    };
+    expect(() => applyUtilsDependencies(dir, plan, writer)).toThrow(
+      /쓰는 도중 실패했습니다\(ENOSPC: no space left on device, write\)\. 원래 내용으로 되돌렸습니다\./
+    );
+    expect(calls).toBe(2);
+    expect(await fs.readFile(pkgFile, "utf8")).toBe(original);
+  });
+
+  it("되돌리기도 실패하면 그 사실과 이유를 오류에 담음", async () => {
+    const dir = await tmpDir();
+    const pkgFile = path.join(dir, "package.json");
+    await fs.writeFile(pkgFile, '{"name":"x"}\n');
+    const plan = planUtilsDependencies(dir);
+    const writer = (file: string, data: string) => truncatingThenFail(file, data);
+    expect(() => applyUtilsDependencies(dir, plan, writer)).toThrow(
+      /쓰는 도중 실패했습니다\(ENOSPC[^)]*\)\. 원래 내용으로 되돌리지 못했습니다\(ENOSPC[^)]*\)\. 파일이 잘렸거나 비었을 수 있으니/
+    );
+    // 주입한 쓰기가 실제로 파일을 잘랐는지(양성 대조)
+    expect(await fs.readFile(pkgFile, "utf8")).toBe('{"nam');
+  });
+
+  it("되돌린 내용이 원래와 다르면 되돌리기 실패로 알림", async () => {
+    const dir = await tmpDir();
+    const pkgFile = path.join(dir, "package.json");
+    await fs.writeFile(pkgFile, '{"name":"x"}\n');
+    const plan = planUtilsDependencies(dir);
+    let calls = 0;
+    const writer = (file: string, data: string) => {
+      calls += 1;
+      if (calls === 1) truncatingThenFail(file, data);
+      else fs.writeFileSync(file, data.slice(0, 3));
+    };
+    expect(() => applyUtilsDependencies(dir, plan, writer)).toThrow(
+      /원래 내용으로 되돌리지 못했습니다\(되돌린 내용이 원래 내용과 다릅니다\)/
+    );
+  });
+
   it("plan 은 파일을 쓰지 않음", async () => {
     const dir = await tmpDir();
     await fs.writeFile(path.join(dir, "package.json"), '{"name":"x"}\n');
