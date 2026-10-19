@@ -105,7 +105,7 @@ export default function TokenUsageIndicatorPage() {
       description="AI 모델의 토큰 사용량을 시각적으로 표시하는 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add token-usage-indicator --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add token-usage-indicator --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

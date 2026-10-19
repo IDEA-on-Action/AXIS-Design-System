@@ -51,7 +51,7 @@ export default function SelectPage() {
       description="드롭다운 선택 컴포넌트입니다. Radix UI Select 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add select" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add select" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

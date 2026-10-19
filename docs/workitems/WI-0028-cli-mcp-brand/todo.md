@@ -111,7 +111,7 @@
 ## P7. 1.3.0 배포 뒤
 
 - [x] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1 (2026-10-19)
-- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다
+- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다 → 2026-10-19 WI-0038 브랜치(6ec4219) CLI 로 재측정 **통과**: `pnpm build` rc 0 · import 1줄 · `axis check` brand PASS · 산출 CSS `data-brand=ontology` 5건, 음성 대조군(theme add 없음) 0건 · rc 1 (WI-0038 testplan T15 · T16). cli 수정본이 npm 에 없어 CLI 만 브랜치 tarball 이므로 `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 재확인이 남음
 - [x] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장) (2026-10-19. `.changeset/wi-0028-cli-mcp-brand.md` 1개, `pnpm changeset status --verbose` 에서 둘 다 1.2.0)
 - [x] `release-notes.md` 작성 (2026-10-19)
 - [x] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3 (2026-10-19)

@@ -76,7 +76,7 @@ export default function TablePage() {
       description="데이터를 행과 열로 표시하는 테이블 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add table" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add table" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

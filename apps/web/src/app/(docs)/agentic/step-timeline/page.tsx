@@ -132,7 +132,7 @@ export default function StepTimelinePage() {
       description="단계별 진행 상황을 타임라인 형태로 시각화하는 컴포넌트입니다. 수직/수평 방향을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add step-timeline --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add step-timeline --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

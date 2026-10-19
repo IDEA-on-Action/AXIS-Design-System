@@ -68,7 +68,7 @@ export default function CardPage() {
       description="콘텐츠를 그룹화하는 카드 컨테이너 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add card" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add card" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

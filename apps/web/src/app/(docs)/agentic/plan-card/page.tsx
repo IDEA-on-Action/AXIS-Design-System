@@ -219,7 +219,7 @@ export default function PlanCardPage() {
       description="AI 에이전트의 실행 계획을 단계별로 표시하고 승인/거절할 수 있는 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add plan-card --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add plan-card --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

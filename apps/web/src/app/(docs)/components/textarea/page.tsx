@@ -45,7 +45,7 @@ export default function TextareaPage() {
       description="여러 줄 텍스트를 입력할 수 있는 텍스트영역 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add textarea" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add textarea" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

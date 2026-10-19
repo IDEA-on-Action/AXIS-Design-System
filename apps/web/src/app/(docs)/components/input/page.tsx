@@ -54,7 +54,7 @@ export default function InputPage() {
       description="다양한 타입을 지원하는 텍스트 입력 필드입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add input" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add input" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

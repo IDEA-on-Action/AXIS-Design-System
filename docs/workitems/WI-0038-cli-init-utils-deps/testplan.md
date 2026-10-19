@@ -1,0 +1,141 @@
+# WI-0038 테스트 계획: `axis init` utils.ts 의존성 추가 · 안내
+
+> PRD: [prd.md](./prd.md) | TODO: [todo.md](./todo.md) | 릴리스 노트: [release-notes.md](./release-notes.md)
+
+## 1. 범위
+
+- `packages/axis-cli` init 명령(FR-1 ~ FR-6)과 `axis-cli` 실행 안내 정정(D2)
+- theme add 는 바꾸지 않습니다. 재사용하는 함수에 `export` 만 붙이므로 theme add 테스트가 수정 없이 통과하는지로 확인합니다.
+
+## 2. 단위 테스트 (vitest, `packages/axis-cli`)
+
+| ID | AC | 경우 | 기대 |
+|---|---|---|---|
+| U1 | AC3 | `package.json` 없음 | 파일을 만들지 않음, `pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"` 안내 |
+| U2 | AC1 | `package.json` 있음, 두 의존성 없음 | `dependencies` 에 두 범위 추가, 나머지 키 · 순서 유지, `pnpm install` 안내 |
+| U3 | AC2 | 둘 다 `dependencies` 에 있음 | `package.json` 바이트 불변, 쓰기 0 |
+| U4 | AC2 | `devDependencies` 에 있음(하나 · 둘) | 그 범위 유지, `dependencies` 에 중복 추가 안 함 |
+| U5 | AC4 | 탭 · 4칸 들여쓰기, CRLF, BOM, 끝 줄바꿈 없음 | 형식 유지, 결과가 JSON |
+| U6 | AC4 | init 두 번 | 두 번째 실행 전후 디렉터리 스냅샷 같음 |
+| U7 | AC5 | lockfile pnpm · yarn · npm · 없음 | `pnpm install` · `yarn install` · `npm install` · `pnpm install`, 추가 명령도 매니저별 |
+| U8 | FR-3 | JSON 이 아님 · 최상위 배열 · `dependencies` 가 배열 · 실제 경로가 밖(심볼릭 링크) · 쓰기 권한 없음(0444, root 아닌 사용자 전제) | `package.json` 불변, 경고 + 추가 명령, rc 0 |
+| U9 | FR-4 | 계획 뒤 `package.json` 변경 | 쓰지 않고 오류 |
+| U10 | FR-5 | 모든 경우 | `child_process` 호출 0 |
+| U11 | AC7 | 기본값 init | 기존 출력 줄 · `axis.config.json` · `utils.ts` 가 c131ee9 기준값과 같음 |
+| U13 | FR-4 | 쓰는 도중 실패(파일을 자르고 ENOSPC 를 던지는 쓰기를 주입) · 복원도 실패 · 복원 내용 불일치 | 원래 내용으로 되돌림, 오류에 실패 원인과 복원 결과(성공 · 실패와 이유)를 담음 |
+| U12 | AC6 · AC11 | init 출력 · 소스 스캔(E1 로 `.claude/agents/**` · `docs` 최상위 `*.md` 추가) | `axis-cli` 실행 안내 0건, 스캔 대상 파일 수 > 100 · 새 범위 파일 포함 · `docs/workitems` 미포함, 패턴이 알려진 나쁜 문자열을 잡는지 양성 대조 |
+| U14 | AC10 | `tailwind-merge` 범위(E2, prd 1.6): 설치본 4.3.3 · 3.4.17 · 정확한 버전 아님, 선언만 `^4` · `~3.4` · `^4.1.0` · `workspace:*` · `latest` · `^3 \|\| ^4`, 없음, devDependencies 에만 있음, `package.json` 없음(설치본 4 · 없음) · 읽을 수 없음, 이미 있음, `tailwindMajorFromRange` 18개 입력 | 4 → `^3.4.0`, 그 밖 → `^2.6.0`, 설치본이 선언보다 우선, 근거 한 줄 출력(이미 있으면 없음) |
+| U15 | AC12 | F1: 선언 `>=4` · `>=4.0.0` · `>=3.4 <4` · `4 - 4.2` · `^5` · `>=5.0.0`, 판정 불가 `catalog:` · `workspace:*` · `latest` · `^3 \|\| ^4` · `0.0.0-insiders.4a4e1ec`, 설치본 4.3.3 · 선언 `^3.4.0` 과 설치본 3.4.17 · 선언 `^4`(불일치), 설치본 4.3.3 · 선언 `^4` · `catalog:`(경고 없음), 설치본 `0.0.0-insiders.*`, `package.json` 을 쓸 수 없을 때, `tailwindMajorFromRange` 40개 입력, `selectUtilsDependencies` major 5 · 6 · 3 · 2 · 0 · 없음, `tailwindWarnings` | 하한 major 로 판정, 4 이상 → `^3.4.0`, 판정 불가 경고 줄 · 불일치 경고 줄이 정확히 그 경우에만 나옴 |
+| U16 | AC13 | F2: 안내 스캔에 `docs/templates` · `.claude/commands` · `.claude/prompts` · `.claude/rules` · `.clinerules` 추가 | 경로마다 스캔 파일 1개 이상(계측 대조), 대표 파일 6개 포함, 위반 0건 |
+
+## 3. 실경로 스모크 (AC9)
+
+- 프로젝트: `npx --yes create-next-app@15.5.28 <dir> --ts --tailwind --eslint --app --no-src-dir --use-pnpm --import-alias "@/*" --no-turbopack --skip-git`(WI-0028 T7-2 와 같은 명령)
+- CLI: 이 브랜치 빌드를 `pnpm pack` 한 tarball 을 별도 디렉터리에 `npm install` 하고 그 `bin` 으로 실행합니다(수정본은 아직 npm 에 없음). 음성 대조는 c131ee9 빌드의 tarball 입니다.
+- 절차: `axis init -y` → `pnpm install` → `pnpm build`. env · 의존성 주입 없음.
+
+## 3.1 결과 (2026-10-19)
+
+조건: 기준 `origin/main` c131ee9, 구현 커밋 ce163f9 · 2d75b39 와 이 문서 커밋의 테스트 1건 추가. Node v22.22.0 · pnpm 9.15.4(저장소) · vitest 2.1.9. 스모크 디렉터리의 pnpm 은 PATH 의 10.33.0, 레지스트리 https://registry.npmjs.org/, 주입 env 0개(`AXIS_` · `NEXT_` · `NPM_CONFIG` · `npm_config` · `PNPM_`).
+
+| ID | AC | 명령 | 결과 |
+|---|---|---|---|
+| T1 | AC1~AC5 · AC7 | `npx vitest run src/init` (packages/axis-cli) | 33/33 통과(U1 ~ U11, 양성 대조 포함) |
+| T2 | AC6 | `npx vitest run src/guidance.test.ts` | 3/3 통과. 스캔 파일 수 > 100, 위반 0건 |
+| T3 | AC8 | `npx vitest run` (packages/axis-cli) | 12 파일 · 212건 통과(수정 전 10 파일 · 176건 + init 33 + guidance 3). theme 디렉터리 4 파일 · 81건 통과, `theme-add.test.ts` · `theme-add-rollback.test.ts` 는 고치지 않음 |
+| T4 | AC8 | `pnpm turbo run test --force` | rc 0, 6/6 태스크 · `Cached: 0`. cli 211건(권한 테스트 추가 전) · mcp 24 · theme 31 · ui-react 110 · agentic-ui 72 |
+| T5 | 품질 | `pnpm turbo run lint type-check --force` | rc 0, 12/12 · `Cached: 0` |
+| T6 | 품질 | `pnpm build --force` | rc 0, 8/8 · `Cached: 0`(79초). 빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림 |
+| T7 | 품질 | `npx tsc --noEmit -p packages/axis-cli` | 오류 20건(수정 전과 같은 수, 모두 `src/library` · `src/template` 기존 오류, WI-0039). 새 파일 오류 0 |
+| T8 | 음성 | `src/init/init.ts` 의 `applyUtilsDependencies` · `reportDependencies` 호출을 지운 변이로 `npx vitest run src/init` | 24/32 실패(권한 테스트 추가 전). 원본은 `git restore` 로 되돌림 |
+| T9 | 음성 | 2d75b39 의 문구 변경(apps · monet · v0 · sync · library)을 `git apply -R` 한 상태로 `npx vitest run src/guidance.test.ts` | 1/3 실패, 위반 75줄(바꾼 79곳 중 index.ts list 2줄은 ce163f9 에 있어 되돌리지 않았고, 산문 2줄은 패턴 밖). `git restore` 로 되돌림 |
+| T10 | AC9 | 3장 절차, 이 브랜치 tarball(sha256 `bb38a9a5b7e9801c`) | create-next-app rc 0 · init rc 0 · `pnpm install` rc 0 · **`pnpm build` rc 0**. `package.json` 차이는 `clsx ^2.1.1` · `tailwind-merge ^3.4.0` 두 줄, lockfile clsx 2.1.1 · tailwind-merge 3.7.0. init 출력 끝 줄 `npx @axis-ds/cli add button` |
+| T11 | AC9 음성 | 같은 절차, c131ee9 tarball(sha256 `f7ee2f9e27895adb`) | init rc 0 · `package.json` 불변 · install rc 0 · **`pnpm build` rc 1**, `./src/components/ui/utils.ts:1:39 Type error: Cannot find module 'clsx'` |
+| T12 | 참고 | WI-0028 T7-2 절차(init 뒤 `axis theme add ontology` 추가), 이 브랜치 tarball | 전 단계 rc 0, `pnpm build` rc 0, CSS 1개, `data-brand=ontology` 5건, `@axis-ds/tokens` 1.3.0 |
+
+- 스모크 프로젝트: next 15.5.28 · react 19.1.0 · tailwindcss `^4`, `app/globals.css` 첫 줄 `@import "tailwindcss";`. CLI 는 tarball 을 별도 디렉터리에 `npm install` 해 그 `bin` 으로 실행했습니다(수정본은 npm 에 없음, 이것이 유일한 전제입니다).
+- T12 는 WI-0028 AC2(b) 의 정식 재측정이 아닙니다. 판정 항목(① ~ ④)을 모두 본 재측정은 3.2 T15 · T16 이고, cli 배포본으로 하는 재확인은 배포 뒤에 남습니다.
+- 변이 T8 · T9 는 워킹트리에서 하고 `git restore --source=HEAD` 로 되돌린 뒤 `git status` 0줄을 확인했습니다.
+
+## 3.2 실경로 재측정 · 배포본 음성 대조 · WI-0028 T7-2 (2026-10-19)
+
+조건: HEAD 6ec4219. `pnpm exec turbo run build --filter=@axis-ds/cli --force` rc 0(1/1, `Cached: 0`) 뒤 `pnpm pack` 한 tarball(sha256 `bb38a9a5b7e9801c`, 3.1 T10 과 같은 값)을 별도 디렉터리에 `npm install` 해 그 `bin` 으로 실행했습니다. 배포본 대조는 별도 디렉터리에 `npm install @axis-ds/cli@1.2.0`(integrity `sha512-tT1OPEvn...`)한 `bin` 입니다. Node v22.22.0, 스모크 디렉터리 pnpm 10.33.0, 레지스트리 https://registry.npmjs.org/, 주입 env 0개(`AXIS_` · `NEXT_` · `NPM_CONFIG` · `npm_config` · `PNPM_`). 세 프로젝트 모두 새 `create-next-app@15.5.28`(3장 명령, rc 0)이고 next 15.5.28 · tailwindcss 4.3.3 입니다.
+
+| ID | AC | 절차 | 결과 |
+|---|---|---|---|
+| T13 | AC9 | create-next-app → 이 브랜치 CLI `axis init -y` → init 이 안내한 설치 명령 → `pnpm build` | init rc 0, 출력 `✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0` · `설치: pnpm install` · 끝 줄 `npx @axis-ds/cli add button`. `package.json` 차이는 두 줄. 안내된 `pnpm install` rc 0(lockfile clsx 2.1.1 · tailwind-merge 3.7.0). **`pnpm build` rc 0** |
+| T14 | AC9 음성 | 같은 절차, npm 배포본 `@axis-ds/cli@1.2.0` | init rc 0, 의존성 안내 0줄 · 끝 줄 `npx axis-cli add button`, `package.json` 불변(diff rc 0). 안내된 설치 명령이 없어 `pnpm install`(rc 0)을 실행. **`pnpm build` rc 1**, `./src/components/ui/utils.ts:1:39 Type error: Cannot find module 'clsx' or its corresponding type declarations.`(`Compiled successfully` 뒤 타입 검사) |
+| T15 | WI-0028 AC2(b) | create-next-app → `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` (이 브랜치 CLI) | theme add rc 0, globalCss 없음 경고 뒤 `app/globals.css` 2행에 `@import "@axis-ds/tokens/css/brands/ontology";`(grep 1건). `pnpm install` rc 0, `@axis-ds/tokens` 1.3.0. **`pnpm build` rc 0**, `.next/static/css/*.css` 1개에서 `data-brand=["']?ontology` 5건. `axis check` rc 0, `PASS brand "ontology" import 가 app/globals.css에 있습니다 (globalCss ./src/app/globals.css 없음)`, `PASS 필수 및 권장 의존성이 모두 설치되어 있습니다`(WI-0028 측정 때는 WARN) |
+| T16 | WI-0028 AC2(b) ④ | T13 프로젝트(theme add 없음)의 산출 CSS | CSS 1개, 같은 grep 0건 · rc 1(측정 수행 증명) |
+
+- T15 의 `axis check` 에는 `FAIL tailwind.config 파일이 없습니다` 1건과 `WARN app/globals.css에 AXIS CSS 변수가 없습니다` 1건이 있습니다. Tailwind 4 기본 구성에 config 파일이 없어서 나오는 기존 항목이고 WI-0028 측정 때와 같습니다. 이 WI 범위 밖이며 AC2(b) 판정 항목(brand)이 아닙니다.
+- 전제: 수정본이 npm 에 없어 CLI 만 이 브랜치 tarball 입니다. 프로젝트 의존성(`@axis-ds/tokens` 포함)은 모두 레지스트리에서 설치했고 다른 주입은 없습니다. cli patch 배포 뒤 배포본으로 T13 · T15 를 다시 확인합니다.
+- `pnpm changeset status --verbose`(changeset 추가 뒤): rc 0, patch `@axis-ds/cli` 1.2.1(`.changeset/wi-0038-cli-init-utils-deps.md`), minor · major 없음.
+- 같은 HEAD 에서 `npx vitest run`(packages/axis-cli): 12 파일 · 212건 통과.
+
+## 3.3 보정: 쓰는 도중 실패 시 복원 (2026-10-19)
+
+조건: 기준 HEAD 7aa5e55, 수정은 `src/init/init.ts` · `src/init/init.test.ts`. Node v22.22.0 · vitest 2.1.9. 쓰기 도중 실패는 root 없이 만들 수 있는 `ulimit -f 1`(1024B 한도, `trap '' XFSZ` 로 신호 대신 EFBIG)로 재현했습니다. 이 한도는 실경로에 없는 조건이고, 디스크 공간 · I/O 오류를 대신하는 실험 조건입니다. `package.json` 은 `{name, version, description, dependencies: {react}}` 에 `description` 길이로 크기를 맞췄습니다(init 이 더하는 내용이 54B 라 원본 1013B 는 쓰기만 한도를 넘고, 1053B 는 복원도 한도를 넘습니다). CLI 는 `pnpm build` 한 `dist/index.js` 를 `node` 로 실행했습니다.
+
+| ID | AC | 명령 | 결과 |
+|---|---|---|---|
+| T17 | FR-4 | `npx vitest run src/init` (packages/axis-cli) | 36/36 통과(U13 3건 추가) |
+| T18 | FR-4 음성 | HEAD 의 `init.ts` 로 같은 명령 | U13 3건 실패 · 33건 통과. 원본은 scratchpad 사본으로 되돌림 |
+| T19 | FR-4 재현 | HEAD 빌드, 원본 1013B | rc 1, `EFBIG: file too large, write`, `package.json` 1024B 로 잘림 · JSON 파손(sha `cd55b1ac8430` → `51312d2d1ee6`) |
+| T20 | FR-4 | 수정본 빌드, 원본 1013B | rc 1, `... 쓰는 도중 실패했습니다(EFBIG: file too large, write). 원래 내용으로 되돌렸습니다.` · `axis.config.json 과 utils.ts 는 이미 만들어졌습니다.` · 추가 명령 안내. `package.json` sha 전후 같음(`cd55b1ac8430`), JSON 정상 |
+| T21 | FR-4 | 수정본 빌드, 원본 1053B(복원도 한도 초과) | rc 1, `원래 내용으로 되돌리지 못했습니다(EFBIG: file too large, write). 파일이 잘렸거나 비었을 수 있으니 버전 관리 도구 등으로 복구하세요.` 파일은 1024B 로 남음(복원 불가 사실을 알리는 경우) |
+| T22 | AC9 | 3장 절차, 수정본 `pnpm exec turbo run build --filter=@axis-ds/cli --force`(1/1, `Cached: 0`) tarball(sha256 `7ae210780de251f8`) | create-next-app rc 0 · init rc 0(출력은 T13 과 같음) · `package.json` 차이 두 줄 · `pnpm install` rc 0 · **`pnpm build` rc 0**. 주입 env 0개 |
+| T23 | 품질 | `npx vitest run` (packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` | 215건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T7 과 같은 수, 새 파일 오류 0) |
+
+- init 이 `axis.config.json` · `utils.ts` 를 쓴 뒤 `package.json` 을 쓰는 순서는 바꾸지 않았습니다(AC7 기준 출력 순서 유지). 그래서 rc 1 이면 두 파일은 이미 만들어진 상태이고, 출력에 그 사실을 적습니다.
+
+## 3.4 보정: 남은 실행 안내 · Tailwind 버전별 범위 (E1 · E2, 2026-10-19)
+
+조건: 기준 HEAD ecf21cb, 수정은 `src/init/init.ts` · `src/init/init.test.ts` · `src/guidance.test.ts` 와 문서 3개(`.claude/agents/docs-writer.md` · `docs/axis-ds-implementation-plan.md` · `docs/axis_ds_mcp_template_plan_v0.3.md`). Node v22.22.0 · vitest 2.1.9. 실경로 CLI 는 `pnpm exec turbo run build --filter=@axis-ds/cli --force`(1/1, `Cached: 0`) 뒤 `pnpm pack` 한 tarball(sha256 `a1ec751a982b7b56`)을 별도 디렉터리에 `npm install` 해 그 `bin` 으로 실행했습니다. 스모크 디렉터리 pnpm 10.33.0, 레지스트리 https://registry.npmjs.org/, 주입 env 0개(`AXIS_` · `NEXT_` · `NPM_CONFIG` · `npm_config` · `PNPM_`).
+
+| ID | AC | 명령 · 절차 | 결과 |
+|---|---|---|---|
+| T24 | AC10 · AC11 | `npx vitest run src/init src/guidance.test.ts` (packages/axis-cli) | 2 파일 · 55건 통과(init 52 · guidance 3). 기존 init 테스트의 기대 범위는 tailwindcss 를 선언하지 않은 `package.json` 이라 `^2.6.0`(기본값)과 근거 줄로 바뀌었고, 템플릿 범위 대조 테스트는 `clsx` 만 템플릿과 대조하도록 바꿈(템플릿은 `tailwindcss ^3.4.0` + `tailwind-merge ^3.4.0` 이라 1.6 규칙과 다름, prd 1.6 참고) |
+| T25 | AC10 · AC9 | `create-next-app@15.5.28`(3장 명령, rc 0, next 15.5.28 · `tailwindcss ^4`, 설치본 4.3.3) → `axis init -y` → `pnpm install` → `pnpm build` | init rc 0, `✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0` · `tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3` · `설치: pnpm install`. `package.json` 차이는 두 줄. install rc 0(lockfile clsx 2.1.1 · tailwind-merge 3.7.0). **`pnpm build` rc 0** |
+| T26 | AC10 | 손으로 만든 최소 Next 프로젝트(next 15.5.28 · react 19.1.0, devDependencies `tailwindcss ~3.4.0` · postcss · autoprefixer, `tailwind.config.js` · `@tailwind` 3줄 globals.css) → `pnpm install`(설치본 3.4.19, init 전 build rc 0) → `axis init -y` → `pnpm install` → `pnpm build` | init rc 0, `✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^2.6.0` · `tailwind-merge 범위 기준: 설치된 tailwindcss 3.4.19`. `package.json` 차이는 두 줄. install rc 0(lockfile clsx 2.1.1 · tailwind-merge 2.6.1). **`pnpm build` rc 0** |
+| T27 | AC10 | T25 · T26 프로젝트의 `app/page.tsx` 를 `cn("p-2 text-sm", "p-4 text-lg")` 를 쓰는 페이지로 바꿔 `pnpm build` | 둘 다 rc 0, 프리렌더 HTML `class="p-4 text-lg"`(tailwind-merge 2.6.1 · 3.7.0 이 실제로 번들되어 충돌 클래스를 합침) |
+| T28 | AC10 | 실경로 보조: 설치 전 T26 `package.json` 만 있는 디렉터리, 빈 디렉터리에서 `axis init -y` | 선언만: `tailwind-merge@^2.6.0` · `기준: package.json 의 tailwindcss ~3.4.0`, rc 0. `package.json` 없음: `설치: pnpm add "clsx@^2.1.1" "tailwind-merge@^2.6.0"` · `기준: tailwindcss 를 찾지 못해 기본값(Tailwind 3)`, `package.json` 만들지 않음 |
+| T29 | AC11 음성 | E1 문서 정정 3개를 `git apply -R` 한 상태로 `npx vitest run src/guidance.test.ts` | 1/3 실패, 위반 9줄(docs-writer 1 · implementation-plan 7 · mcp_template_plan 1). 다시 적용해 통과 |
+| T30 | AC10 음성 | `init.ts` 변이 3종으로 `npx vitest run src/init` | A 항상 `^3.4.0`(종전 고정 범위): 27/52 실패 · B 설치본 판정 생략: 5/52 실패 · C 선언 판정 생략: 8/52 실패. 원본은 scratchpad 사본으로 되돌림(sha 전후 `9b155b529397`) |
+| T31 | AC8 · 품질 | `npx vitest run`(packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` · `pnpm build --force` | 12 파일 · 231건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T7 과 같은 수, 모두 `src/library` · `src/template`) · rc 0, 8/8, `Cached: 0`(빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림) |
+| T32 | AC10 · AC11 · 보정 | 템플릿 `tailwind-merge` 알려진 불일치 고정 테스트 추가 후 `npx vitest run src/init src/guidance.test.ts` · `npx vitest run` · 변이(dashboard 템플릿 `tailwind-merge` 를 `^2.6.0` 으로) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` | 2 파일 · 56건 통과(init 53 · guidance 3) · 12 파일 · 232건 통과 · 변이 시 새 테스트 1건 실패(`current` `^3.4.0` → `^2.6.0`), 되돌린 뒤 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T31 과 같은 수, 모두 `src/library` · `src/template`). guidance 양성 주입(docs-writer · docs/templates/adr.md · .claude/commands/ax-build.md 끝에 `npx axis-cli add button`)에서 docs-writer 1건만 잡혀, 스캔하지 않는 docs/templates · .claude/commands · prompts · rules · .clinerules 를 주석에 '근거 없이 빠진 것(확인 대기)' 으로 적음. 이 다섯 곳의 현재 위반은 git grep 0건(같은 패턴이 docs/workitems 에서 13줄) |
+
+- T26 의 프로젝트는 Tailwind 3 을 쓰는 create-next-app 옵션이 15.5.28 에 없어 손으로 만들었습니다. tailwindcss 는 레지스트리에서 설치했고 init 이 읽은 값은 그 설치본입니다.
+- T27 은 init 이 넣은 범위가 빌드에서 실제로 쓰이는지 보려고 페이지만 바꾼 확인이고, AC9 · AC10 판정은 T25 · T26(페이지를 바꾸지 않은 상태)입니다.
+
+## 3.5 보정: Tailwind 판정 보강 · 안내 스캔 확장 (F1 · F2, 2026-10-19)
+
+조건: 기준 HEAD 3426016, 수정은 `src/init/init.ts` · `src/init/init.test.ts` · `src/guidance.test.ts`. Node v22.22.0 · vitest 2.1.9. 변이는 워킹트리의 `init.ts` 를 scratchpad 사본(`a7919a931ae9`)에서 매번 새로 만들어 고친 뒤 실행했고, 끝에 사본으로 되돌려 sha 가 같음(`a7919a931ae9`)을 확인했습니다. 주입 실험은 대상 파일 5개를 scratchpad 에 복사해 두고 끝에 복사본으로 되돌렸으며, 그 5개의 `git status --short` 는 0줄입니다.
+
+| ID | AC | 명령 · 절차 | 결과 |
+|---|---|---|---|
+| T33 | AC12 · AC13 | `npx vitest run src/init src/guidance.test.ts` (packages/axis-cli) | 2 파일 · 67건 통과(init 64 · guidance 3) |
+| T34 | AC12 음성 | `init.ts` 변이로 `npx vitest run src/init` | A 비교자 하한 읽기 제거(`return lowers.length > 0 ? undefined : undefined`): 6/64 실패(`>=4` · `>=4.0.0` · `>=5.0.0` · `>=3.4 <4` · insiders 설치본 · `tailwindMajorFromRange`) · A2 하이픈 하한 제거: 2/64 실패(`4 - 4.2` · `tailwindMajorFromRange`) · B 불일치 경고 제거: 3/64 실패(설치본 4.x · 3.x · `detectTailwind`) · C 「4 이상」을 「`=== 4`」로: 3/64 실패(`^5` · `>=5.0.0` · `selectUtilsDependencies`) · D 판정 불가 경고 제거: 6/64 실패(`workspace:*` · `latest` · `^3 \|\| ^4` · `catalog:` · insiders 선언 · 쓸 수 없을 때) · E `0.0.0-*` 거부 제거: 2/64 실패(insiders 선언 · `tailwindMajorFromRange`). 끝에 sha `a7919a931ae9` 로 복원 |
+| T35 | AC13 계측 대조 | 테스트에 경로별 스캔 수 출력을 임시로 넣어 실행(실행 뒤 사본으로 되돌림, sha `f6b7ebc161cc`) | apps/web/src 109 · docs/guides 7 · docs/templates 7 · .claude/agents 5 · .claude/commands 9 · .claude/prompts 6 · .claude/rules 6 · .clinerules 11. 새 다섯 곳은 `find` 로 센 대상 확장자 파일 수(7 · 9 · 6 · 6 · 11)와 같음 |
+| T36 | AC13 양성 대조 | `docs/templates/adr.md` · `.claude/commands/ax-build.md` · `.claude/prompts/planning/feature-plan.md` · `.claude/rules/20-quality.md` · `.clinerules/workflows/wi-test.md` 끝에 `npx axis-cli add button` 한 줄을 넣고 `npx vitest run src/guidance.test.ts` | 1/3 실패, 위반 5줄(다섯 파일 모두). 같은 주입으로 HEAD 의 `guidance.test.ts` 는 3/3 통과(0줄, 종전 범위가 이 다섯 곳을 보지 않음을 재확인). 되돌린 뒤 5개 파일 `git status` 0줄 |
+| T37 | AC12 실경로 보조 | `pnpm exec turbo run build --filter=@axis-ds/cli --force`(1/1, `Cached: 0`) 뒤 `node dist/index.js init -y` 를 세 디렉터리에서: 선언 `catalog:` · 선언 `^3.4.0` + 설치본 4.3.3(`node_modules/tailwindcss/package.json` 만 둠) · 선언 `>=4.0.0` | 셋 다 rc 0. `catalog:`: `tailwind-merge@^2.6.0` 과 판정 불가 경고 줄. 불일치: `tailwind-merge@^3.4.0` 과 `! 설치본 tailwindcss 4.3.3(major 4)와 package.json 선언 ^3.4.0(major 3)가 다름 - 설치본을 따랐습니다. pnpm install 뒤 tailwind-merge 범위를 다시 확인하세요.` `>=4.0.0`: `tailwind-merge@^3.4.0` · 근거 `package.json 의 tailwindcss >=4.0.0`, 경고 없음 |
+| T38 | AC8 · 품질 | `npx vitest run`(packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` · `pnpm build --force` | 12 파일 · 243건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T31 과 같은 수, 모두 `src/library` · `src/template`) · rc 0, 8/8, `Cached: 0`(빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림) |
+
+- T37 의 설치본은 `node_modules/tailwindcss/package.json` 한 파일만 둔 것이라 실제 설치가 아닙니다. init 이 읽는 것은 그 파일의 `version` 뿐이라 판정 경로는 같지만, Tailwind 4 프로젝트의 빌드까지 본 실경로 판정은 T25 · T26 입니다.
+- 기존 테스트 중 바뀐 기대값: `tailwindMajorFromRange` 의 `>=3` · `>=3.4 <4` 는 `undefined` 에서 3 으로(F1 (a)), `selectUtilsDependencies` 의 major 5 는 `^2.6.0` 에서 `^3.4.0` 으로(F1 (c)), `detectTailwind` 의 설치본 3.4.17 · 선언 `^4` 결과에 `mismatch` 가 붙음(F1 (b)), 판정 불가 선언 3건(`workspace:*` · `latest` · `^3 || ^4`)에 경고 줄 기대가 붙음.
+
+## 3.6 보정: 불일치 판정 오탐 · 배타 하한 (F1 (a) · (b) 보정, 2026-10-19)
+
+조건: 기준 HEAD 78f1c08(`init.ts` sha `a7919a931ae9`), 수정은 `src/init/init.ts`(sha `318036938556`) · `src/init/init.test.ts`. Node v22.22.0 · vitest 2.1.9. 기대값은 semver 7.7.3(`node_modules/.pnpm/semver@7.7.3`)의 `validRange` · `satisfies` 와 맞춰 봤습니다. 변이는 scratchpad 사본에서 매번 새로 만들어 실행했고, 끝에 사본으로 되돌려 `cmp` 로 같음을 확인했습니다.
+
+재현(수정 전, 임시 probe 테스트, 실행 뒤 삭제하고 `git status --short` 0줄): 설치본 4.1.0 에 선언 `>=3.4` · `>=3 <5` · `3.4 - 4` · `>=3.4 <4` 가 모두 `mismatch: {declaredMajor: 3}`. `tailwindMajorFromRange('>3')` · `('>3.x')` · `('>3.0')` 가 모두 3, 설치본 없이 선언 `>3` 이면 `^2.6.0`. semver 7.7.3 에서 4.1.0 은 앞의 세 범위를 만족하고 `>=3.4 <4` 는 만족하지 않으며, `validRange('>3')` · `('>3.x')` 는 `>=4.0.0`, `('>3.0')` 은 `>=3.1.0` 입니다.
+
+| ID | AC | 명령 · 절차 | 결과 |
+|---|---|---|---|
+| T39 | AC12 | `npx vitest run src/init` (packages/axis-cli) | 66건 통과. 새 테스트: `tailwindMajorBounds` 18개 입력, 설치본 4.1.0 + `>=3.4` · `>=3 <5` · `3.4 - 4` · `>3`(경고 없음) · `>=3.4 <4`(경고) · 설치본 3.4.17 + `>=4`(경고), `detectTailwind` 같은 경우, 설치본 없이 `>3` → `^3.4.0`, `tailwindMajorFromRange` 에 `>3` · `>3.x` · `>3.*` · `>3.x.x` → 4, `>3.0` · `>3.4.x` · `>3.9.9` → 3, `>4` → 5, `>=4 <4` · `4 - 3` → 판정 불가 |
+| T40 | AC12 음성 | `init.ts` 변이로 `npx vitest run src/init` | A 불일치 판정을 종전(`bounds.lower !== major`)으로: 2/66 실패(설치본 만족 · 범위 밖 경고 테스트, `detectTailwind`) · B `>` 의 M+1 처리 제거: 3/66 실패(`tailwindMajorFromRange` · `tailwindMajorBounds` · `detectTailwind`). 끝에 사본으로 되돌려 `cmp` 같음, 66건 통과 |
+| T41 | AC12 실경로 보조 | `pnpm build --force` 뒤 `node packages/axis-cli/dist/index.js init -y` 를 scratchpad 세 디렉터리에서: 설치본 4.1.0 + 선언 `>=3.4` · 설치본 4.1.0 + 선언 `>=3.4 <4` · 설치본 없이 선언 `>3` | 셋 모두 `tailwind-merge@^3.4.0` 추가. 불일치 경고 줄은 `>=3.4 <4` 에서만 1줄(「설치본 tailwindcss 4.1.0(major 4)와 package.json 선언 >=3.4 <4(major 3)가 다름」), `>3` 의 근거 줄은 「package.json 의 tailwindcss >3」 |
+| T42 | AC8 · 품질 | `npx vitest run`(packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` · `pnpm build --force` | 12 파일 · 245건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T31 과 같은 수, `src/init` 0건) · rc 0, 8/8, `Cached: 0`(빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림) |
+
+- 불일치 비교는 major 단위입니다. `>=3.4 <4.1` 에 4.1.0 처럼 같은 major 안에서 범위를 벗어난 경우는 경고하지 않습니다. `tailwind-merge` 범위가 major 로만 갈려 결과가 같기 때문입니다(prd 1.6).
+- 기존 테스트 중 바뀐 기대값: `tailwindMajorFromRange('>4')` 가 4 에서 5 로.

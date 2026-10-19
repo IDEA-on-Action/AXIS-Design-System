@@ -49,7 +49,7 @@ export default function SeparatorPage() {
       description="콘텐츠를 시각적으로 구분하는 구분선 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add separator" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add separator" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

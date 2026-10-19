@@ -168,7 +168,7 @@ export function compareVersions(a: string, b: string): number | undefined {
 }
 
 /** `file` 의 실제 경로가 `baseDir` 의 실제 경로 안에 있는지 봅니다(심볼릭 링크 · `../` · 절대경로 모두 실제 경로로 판정). */
-function realPathInside(baseDir: string, file: string): { inside: boolean; realPath: string } {
+export function realPathInside(baseDir: string, file: string): { inside: boolean; realPath: string } {
   const realBase = realpathSync(baseDir);
   const realPath = realpathSync(file);
   const relPath = path.relative(realBase, realPath);
@@ -189,7 +189,7 @@ export function detectInstallCommand(baseDir: string): string {
   return "pnpm install";
 }
 
-function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
+export function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
   for (const field of ["dependencies", "devDependencies"]) {
     const deps = pkg[field];
     if (typeof deps === "object" && deps !== null && name in deps) {
@@ -199,7 +199,7 @@ function hasDependency(pkg: Record<string, unknown>, name: string): string | und
   return undefined;
 }
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 

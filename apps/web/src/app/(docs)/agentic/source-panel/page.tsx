@@ -176,7 +176,7 @@ export default function SourcePanelPage() {
       description="AI 응답의 출처와 근거를 표시하는 패널 컴포넌트입니다. 웹, 파일, 데이터베이스, API 등 다양한 출처 유형을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add source-panel --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add source-panel --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

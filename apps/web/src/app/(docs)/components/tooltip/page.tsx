@@ -89,7 +89,7 @@ export default function TooltipPage() {
       description="호버 시 추가 정보를 표시하는 팝업 컴포넌트입니다. Radix UI 기반으로 접근성을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add tooltip" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add tooltip" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

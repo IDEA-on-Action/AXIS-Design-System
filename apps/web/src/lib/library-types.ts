@@ -68,7 +68,7 @@ export interface ComponentDetail {
 // 소스 타입 정의
 export const sourceTypes: Record<string, { name: string; color: string; installPrefix: string }> = {
   shadcn: { name: 'shadcn/ui', color: 'bg-zinc-500', installPrefix: 'npx shadcn@latest add' },
-  axis: { name: 'AXIS', color: 'bg-blue-500', installPrefix: 'npx axis-cli add' },
+  axis: { name: 'AXIS', color: 'bg-blue-500', installPrefix: 'npx @axis-ds/cli add' },
   monet: { name: 'Monet', color: 'bg-purple-500', installPrefix: 'npx monet add' },
   v0: { name: 'V0', color: 'bg-green-500', installPrefix: 'npx v0 add' },
 }

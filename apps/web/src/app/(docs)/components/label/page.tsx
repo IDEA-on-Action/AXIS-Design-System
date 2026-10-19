@@ -37,7 +37,7 @@ export default function LabelPage() {
       description="폼 필드에 대한 접근성 레이블 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add label" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add label" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

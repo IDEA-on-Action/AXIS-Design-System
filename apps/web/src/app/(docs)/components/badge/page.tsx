@@ -36,7 +36,7 @@ export default function BadgePage() {
       description="상태나 카테고리를 표시하는 뱃지 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add badge" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add badge" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

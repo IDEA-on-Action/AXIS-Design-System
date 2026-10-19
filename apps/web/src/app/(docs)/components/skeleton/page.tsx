@@ -50,7 +50,7 @@ export default function SkeletonPage() {
       description="콘텐츠 로딩 상태를 표시하는 플레이스홀더 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add skeleton" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add skeleton" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

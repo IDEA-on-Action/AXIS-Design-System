@@ -74,7 +74,7 @@ export default function CommandPage() {
       description="검색 가능한 커맨드 팔레트 컴포넌트입니다. cmdk 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add command" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add command" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

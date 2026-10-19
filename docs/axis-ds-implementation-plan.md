@@ -375,18 +375,18 @@ export { Button, buttonVariants }
 
 ```bash
 # 초기화
-npx axis-cli init
+npx @axis-ds/cli init
 
 # 컴포넌트 추가
-npx axis-cli add button
-npx axis-cli add approval-card --agentic
+npx @axis-ds/cli add button
+npx @axis-ds/cli add approval-card --agentic
 
 # 목록 조회
-npx axis-cli list
-npx axis-cli list --category agentic
+npx @axis-ds/cli list
+npx @axis-ds/cli list --category agentic
 
 # 업데이트 체크
-npx axis-cli check
+npx @axis-ds/cli check
 ```
 
 #### 4.3 Registry 배포 (Cloudflare Pages)
@@ -660,7 +660,7 @@ apps/docs/
 
 ## Quick Reference
 - Install: `npm i @thoughtandaction/axis-ui-react`
-- Add component: `npx axis-cli add [name]`
+- Add component: `npx @axis-ds/cli add [name]`
 - MCP: Configure in claude_desktop_config.json
 
 ## Component Categories

@@ -87,7 +87,7 @@ export default function RecoveryBannerPage() {
       description="에러 발생 시 복구 옵션을 제공하는 배너 컴포넌트입니다. 재시도 및 무시 액션을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add recovery-banner --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add recovery-banner --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

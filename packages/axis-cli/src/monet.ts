@@ -4,9 +4,9 @@
  * Monet (https://monet.design) 컴포넌트를 검색하고 AXIS 프로젝트에 가져옵니다.
  *
  * 사용법:
- *   axis-cli monet list              # 카테고리 목록
- *   axis-cli monet search <query>    # 컴포넌트 검색
- *   axis-cli monet add <id>          # 컴포넌트 추가
+ *   npx @axis-ds/cli monet list              # 카테고리 목록
+ *   npx @axis-ds/cli monet search <query>    # 컴포넌트 검색
+ *   npx @axis-ds/cli monet add <id>          # 컴포넌트 추가
  */
 
 import chalk from "chalk";
@@ -65,8 +65,8 @@ export class MonetClient {
     }
 
     console.log(chalk.gray("\n사용법:"));
-    console.log(chalk.gray("  axis-cli monet browse <category>  # 카테고리 컴포넌트 보기"));
-    console.log(chalk.gray("  axis-cli monet search <query>     # 컴포넌트 검색\n"));
+    console.log(chalk.gray("  npx @axis-ds/cli monet browse <category>  # 카테고리 컴포넌트 보기"));
+    console.log(chalk.gray("  npx @axis-ds/cli monet search <query>     # 컴포넌트 검색\n"));
   }
 
   // 컴포넌트 검색 (웹 URL 안내)
@@ -118,7 +118,7 @@ export class MonetClient {
     console.log(chalk.gray("\n컴포넌트 가져오기:"));
     console.log(chalk.gray("  1. 웹에서 컴포넌트 선택"));
     console.log(chalk.gray("  2. Copy Code 버튼 클릭"));
-    console.log(chalk.gray("  3. axis-cli monet import 실행\n"));
+    console.log(chalk.gray("  3. npx @axis-ds/cli monet import 실행\n"));
   }
 
   // 카테고리별 예시 컴포넌트

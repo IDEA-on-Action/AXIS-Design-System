@@ -158,7 +158,7 @@ export default function ContextPanelPage() {
       description="AI 대화의 컨텍스트 정보(모델, 프롬프트, 파일, 설정)를 표시하는 접이식 패널입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add context-panel --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add context-panel --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

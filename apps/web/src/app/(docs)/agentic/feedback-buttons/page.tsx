@@ -102,7 +102,7 @@ export default function FeedbackButtonsPage() {
       description="AI 응답에 대한 좋아요/싫어요 피드백을 제공하는 버튼 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add feedback-buttons --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add feedback-buttons --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

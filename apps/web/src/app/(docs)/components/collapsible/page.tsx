@@ -87,7 +87,7 @@ export default function CollapsiblePage() {
       description="콘텐츠를 접거나 펼칠 수 있는 컴포넌트입니다. Radix UI Collapsible 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add collapsible" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add collapsible" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

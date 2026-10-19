@@ -56,7 +56,7 @@ export default function ScrollAreaPage() {
       description="커스텀 스크롤바를 제공하는 스크롤 영역입니다. Radix UI ScrollArea 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add scroll-area" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add scroll-area" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

@@ -87,7 +87,7 @@ export default function DialogPage() {
       description="모달 다이얼로그 컴포넌트입니다. Radix UI Dialog 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add dialog" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add dialog" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

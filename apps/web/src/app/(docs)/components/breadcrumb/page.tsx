@@ -63,7 +63,7 @@ export default function BreadcrumbPage_() {
       description="현재 페이지의 경로를 탐색할 수 있는 브레드크럼 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add breadcrumb" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add breadcrumb" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

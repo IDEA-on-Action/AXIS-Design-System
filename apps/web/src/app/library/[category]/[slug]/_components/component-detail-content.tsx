@@ -58,7 +58,7 @@ export function ComponentDetailContent({ category, slug }: ComponentDetailConten
   const sourceInfo = component ? sourceTypes[component.source.type] : null
   const installCommand = sourceInfo && component
     ? `${sourceInfo.installPrefix} ${slug}`
-    : `npx axis-cli add ${slug}`
+    : `npx @axis-ds/cli add ${slug}`
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)

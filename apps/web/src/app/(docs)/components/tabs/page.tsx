@@ -52,7 +52,7 @@ export default function TabsPage() {
       description="탭 형식의 콘텐츠 전환 컴포넌트입니다. Radix UI Tabs 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add tabs" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add tabs" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

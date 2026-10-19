@@ -182,7 +182,7 @@ export default function RunProgressPage() {
       description="에이전트 실행 진행 상태를 단계별로 표시하는 컴포넌트입니다. 복잡한 AI 작업의 진행 상황을 시각화합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add run-progress --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add run-progress --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

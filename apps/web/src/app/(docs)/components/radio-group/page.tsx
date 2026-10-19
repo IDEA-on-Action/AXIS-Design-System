@@ -57,7 +57,7 @@ export default function RadioGroupPage() {
       description="여러 옵션 중 하나를 선택하는 라디오 버튼 그룹입니다. Radix UI RadioGroup 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add radio-group" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add radio-group" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

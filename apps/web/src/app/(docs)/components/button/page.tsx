@@ -73,7 +73,7 @@ export default function ButtonPage() {
       description="다양한 스타일과 크기를 지원하는 버튼 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add button" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add button" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

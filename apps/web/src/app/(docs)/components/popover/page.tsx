@@ -82,7 +82,7 @@ export default function PopoverPage() {
       description="트리거 요소 근처에 표시되는 팝오버 콘텐츠입니다. Radix UI Popover 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add popover" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add popover" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

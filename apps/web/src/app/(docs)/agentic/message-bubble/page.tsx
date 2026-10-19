@@ -187,7 +187,7 @@ export default function MessageBubblePage() {
       description="채팅 메시지를 표시하는 버블 컴포넌트입니다. user, assistant, system 세 가지 역할을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add message-bubble --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add message-bubble --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

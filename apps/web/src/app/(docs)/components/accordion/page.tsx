@@ -81,7 +81,7 @@ export default function AccordionPage() {
       description="접이식 콘텐츠 패널 컴포넌트입니다. Radix UI Accordion 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add accordion" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add accordion" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

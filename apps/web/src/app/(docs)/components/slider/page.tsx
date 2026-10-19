@@ -49,7 +49,7 @@ export default function SliderPage() {
       description="범위 내에서 값을 선택하는 슬라이더 컴포넌트입니다. Radix UI Slider 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add slider" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add slider" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

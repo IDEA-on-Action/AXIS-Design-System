@@ -64,7 +64,7 @@ export default function ToastPage() {
       description="사용자에게 피드백을 제공하는 알림 메시지 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add toast" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add toast" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">
