@@ -1,6 +1,6 @@
 # WI-0035: tokens ESM 진입점 문법 오류 수정 TODO
 
-> PRD: [prd.md](./prd.md) | 상태: 🔄 진행 (2026-10-19 구현 · 검증 완료, PR #118 머지 대기. 1.2.2 취소, 1.3.0 에 포함)
+> PRD: [prd.md](./prd.md) | 상태: 🔄 진행 (2026-10-19 구현 · 검증 완료, main(8253a82) 병합 뒤 재검증 완료, PR #118 머지 대기. 1.2.2 취소, 1.3.0 에 포함)
 
 ## 진행 순서
 
@@ -54,6 +54,15 @@
 - [x] 동반 bump 수용 여부 확인 (✅ 2026-10-19 수용, ui-react · agentic-ui · theme 는 `dependencies` 에 `workspace:*` 라 배포본이 `"@axis-ds/tokens": "1.2.1"` 정확 고정. tokens 만 올리면 이 세 패키지 사용자는 수정본을 받지 못함). 1.3.0 에 합치면서 별도 동반 bump 는 없어짐: 위 1.2.2 는 이 브랜치 단독 상태의 표시이고, M4 minor changeset 과 합쳐지면 linked 4패키지가 1.3.0 으로 오름
 - [x] changeset 파일은 patch 그대로 유지 (M4 minor 와 합쳐 1.3.0, 2026-10-19 결정)
 
+### M1-5b main 병합과 재검증 (2026-10-19)
+- [x] main 에 #116(WI-0036, c5964e8) · #107(WI-0025 M3, 8253a82) 머지 뒤 `git merge origin/main` (20604a8). rebase · force push 없음
+- [x] 충돌 1건 `packages/axis-tokens/package.json` `test` 줄: main 목록 7개(no-css-opacity · baseline-1.2.1 · ontology-values 포함) 순서 그대로 두고 `test/js-entry.test.mjs` 를 끝에 붙인 합집합. 해소 뒤 main 대비 차이는 이 한 줄뿐
+- [x] 자동 병합 `package.json`(main 의 `check-contrast-pairs` 추가) · `build-tokens.mjs`(M3 의 d.ts 선언 3줄 · brands 로그 1줄). ESM 템플릿에 `as const` · `export type` 없음(grep 매칭은 설명 주석 1줄)
+- [x] tokens `turbo run build --force` 뒤 `turbo run test type-check lint --force`: rc 0, cached 0/3, tests 221 = main 목록 217 + js-entry 4, fail 0, skipped 0. `--force` 빌드 없이 돌리면 dist 가 병합 전 산출물이라 2개 파일에서 「재빌드 필요」 로 실패함(테스트 기대 동작)
+- [x] dist 비교: main(8253a82) 사본 빌드 대비 13개 중 `js/tokens.mjs` 1개만 다름(` as const` 와 `export type Tokens` 두 줄 제거). `css/variables.css` · `css/shadcn-compat.css` · `css/brands/ontology.css` · `brands/*.json` · `tokens.js` · `tokens.json` · `tokens.d.ts` · tailwind 4개 sha256 동일. main 빌드 `tokens.mjs` 는 `Unexpected identifier 'as'` 로 import 실패, 이 브랜치는 성공
+- [x] packages 6개 `--force` 빌드(cached 0/6) 뒤 `pnpm pack-smoke` rc 0: 6개 pack 검증 + mcp stdio 실행 + tokens 설치 스모크 런타임 13건(M3 brands exports 5건 추가로 8건에서 늘어남) + types tsc rc 0. 추적 파일 변경 0건
+- [x] `git diff --check origin/main HEAD` rc 0, 충돌 마커 0건
+
 ### M1-6 마무리
 - [ ] PR 생성 · 리뷰 · main 머지 (머지 시점: WI-0030 #114 뒤, M4 #110 바로 앞)
 - [ ] Version Packages PR 이 linked 4패키지 1.3.0 을 제안하는지 확인 (1.2.2 가 나오면 머지 순서 위반)
@@ -65,8 +74,8 @@
 
 - tailwindcss 4 와 TypeScript `node16` 조합에서 `@axis-ds/tokens/tailwind` 타입 import 가 TS1479 로 실패합니다(peer 범위 `>=3.0.0` 그대로 설치했을 때 관측, 3.4.19 에서는 통과). 별도 WI 후보
 - `.d.ts` 의 `export =` 와 ESM 런타임 export 정합 검토. `.d.ts` 는 중첩 모양이라 CJS require(평면 249키, `ColorGray50`) 런타임과 타입이 어긋나요(기존 결함)
-- M3·M4 브랜치(WI-0025)와 병합할 때 `packages/axis-tokens/package.json` 의 `test` 스크립트 줄이 충돌합니다(`git merge-tree` rc 1, M3 `origin/feat/wi-0025-m3-ontology-v2` · M4 34d7bca 둘 다). 머지 순서(D4)상 M3 · #114 가 먼저 머지되므로, #118 을 그 main 위로 맞출 때 #118 쪽에서 test 목록을 합집합으로 해소하고 `test/js-entry.test.mjs` 를 유지합니다. 해소 뒤 #118 브랜치에서 tokens test 를 재실행해 js-entry 4건이 포함되어 도는지 확인합니다. M4 는 #118 이 해소된 main 을 받은 뒤 재측정 항목에서 다시 확인합니다. `build-tokens.mjs` 는 자동 병합되고 `as const` 템플릿은 남지 않습니다
+- ~~M3·M4 브랜치(WI-0025)와 병합할 때 `packages/axis-tokens/package.json` 의 `test` 스크립트 줄이 충돌합니다~~ → M3 쪽은 해소(2026-10-19). M3(#107) 이 main 에 머지된 뒤 #118 에서 main(8253a82) 을 병합하며 test 목록을 합집합으로 해소했고 js-entry 4건이 함께 도는 것을 확인했습니다(위 M1-5b). WI-0030 #114 는 아직 머지 전이라, #114 가 먼저 머지되면 그 main 을 다시 받아 같은 확인을 합니다. M4 는 #118 이 머지된 main 을 받은 뒤 재측정 항목에서 다시 확인합니다
 - ~~1.2.2 배포 후 M4(WI-0025) 1.3.0 릴리스 노트의 대상 줄을 `1.2.2 → 1.3.0` 으로 고치고 `1.2.2 (patch, WI-0035)` 항목 링크를 추가합니다(M4 담당)~~ → 1.2.2 취소(2026-10-19)로 M4 릴리스 노트의 대상 줄은 `1.2.1 → 1.3.0` 그대로이고, WI-0035 ESM 수정을 1.3.0 의 fix 항목으로 넣습니다(M4 담당). AC3 기준선(1.2.1 fixture)은 CSS 가 같으므로 유지합니다
 - 설치 스모크 대상 확대(ui-react · agentic-ui · theme · cli · mcp)
-- ~~PR CI 에서 pack-smoke 실행~~ → 닫음(2026-10-19). M3(#107) `frontend.yml` 의 「Pack smoke (외부 npm 소비 검증, AC4)」 step 이 `pnpm pack-smoke` 를 돌리고, 이 브랜치의 `pack-smoke` 스크립트가 `pack-install-smoke.mjs` 까지 이어 붙어 #118 머지 뒤에는 설치 스모크도 함께 실행됩니다. #118 머지 뒤 PR CI run 로그에서 설치 스모크가 도는지만 확인합니다
+- ~~PR CI 에서 pack-smoke 실행~~ → 닫음(2026-10-19). M3(#107) `frontend.yml` 의 「Pack smoke (외부 npm 소비 검증, AC4)」 step 이 `pnpm pack-smoke` 를 돌리고, 이 브랜치의 `pack-smoke` 스크립트가 `pack-install-smoke.mjs` 까지 이어 붙어 #118 머지 뒤에는 설치 스모크도 함께 실행됩니다. #118 머지 뒤 PR CI run 로그에서 설치 스모크가 도는지만 확인합니다. 2026-10-19 main 기준 `ci` job 에는 `pnpm pack-smoke` step 이 2개(M3 AC4 · WI-0036) 있어 #118 머지 뒤에는 설치 스모크도 두 번 돕니다. 중복 정리 여부는 별도 판단입니다
 - 루트 `scripts/pack-smoke.mjs` 의 미사용 `statSync` import(eslint no-unused-vars 1건, 루트 scripts 는 lint 대상 밖)
