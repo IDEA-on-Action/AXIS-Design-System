@@ -11,6 +11,8 @@
  *   1. dependencies/peer/optional 에 `workspace:` 프로토콜 잔존 금지   (BUG1)
  *   2. exports 맵의 모든 타깃 파일이 tarball에 실재               (BUG2)
  *   3. 배포되는 .css 에 점 포함 커스텀 프로퍼티(--x-...-N.N) 금지   (BUG3)
+ *   4. @axis-ds/mcp 는 tarball 을 빈 디렉터리에 설치해 stdio 로 실행하고
+ *      레지스트리 도구를 호출한다(scripts/mcp-smoke.mjs, WI-0036)
  *
  * 사용: node scripts/pack-smoke.mjs        (실패 시 exit 1)
  */
@@ -18,6 +20,7 @@ import { execFileSync } from 'child_process';
 import { mkdtempSync, rmSync, readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { runMcpSmoke } from './mcp-smoke.mjs';
 
 const ROOT = process.cwd();
 const PKG_DIR = join(ROOT, 'packages');
@@ -32,6 +35,7 @@ const packages = readdirSync(PKG_DIR)
   });
 
 let failures = 0;
+let mcpSmokeRan = false;
 const fail = (pkg, msg) => {
   console.error(`  ✗ [${pkg}] ${msg}`);
   failures++;
@@ -91,6 +95,13 @@ for (const pkgPath of packages) {
       }
     }
 
+    // 4. MCP 서버 실행 스모크(구조 검사로는 런타임 데이터 경로 결함을 못 잡는다)
+    if (name === '@axis-ds/mcp') {
+      mcpSmokeRan = true;
+      const { tools, calls } = await runMcpSmoke(join(tmp, tgz), (msg) => fail(name, msg));
+      console.log(`  · [${name}] stdio 실행: tools/list ${tools}개, 레지스트리 도구 호출 ${calls}건`);
+    }
+
     if (failures === 0 || !published) {
       // 패키지별 통과 메시지는 누적 실패와 무관하게 표기
     }
@@ -101,6 +112,9 @@ for (const pkgPath of packages) {
     rmSync(tmp, { recursive: true, force: true });
   }
 }
+
+// 실행 스모크가 대상을 못 찾아 건너뛴 것을 통과로 읽지 않는다
+if (!mcpSmokeRan) fail('@axis-ds/mcp', '실행 스모크 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
 
 if (failures > 0) {
   console.error(`\n[pack-smoke] FAIL - ${failures}건 결함`);
