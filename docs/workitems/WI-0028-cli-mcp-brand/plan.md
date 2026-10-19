@@ -4,6 +4,7 @@
 > 이 문서는 설계만 담습니다. 구현 코드는 아직 없습니다. 줄 번호 · 건수 · 버전은 2026-10-19 실측값이며, 코드가 바뀌면 낡으므로 착수 시점에 다시 확인합니다.
 > 진행 조건(2026-10-19 사용자 결정): 개발은 지금 시작하고, 실제 ontology 프리셋 확인은 WI-0025 M3(#107) 머지 뒤, cli · mcp 배포는 1.3.0 배포 뒤에 합니다. PRD 4행 「선행」 줄의 정정은 PR #112 가 맡으므로 이 브랜치에서는 고치지 않습니다.
 > 미결 항목은 8장의 U 번호로 적었습니다. 권장안을 전제로 설계했고, 권장안이 PRD 범위를 바꾸는 항목은 결정 전까지 착수하지 않습니다(8장 「게이트」 표시).
+> U 결정(2026-10-19 사용자 결정): U3 은 (A), U7 은 별도 WI-0036(#115)로 분리, U14 는 (A), 나머지는 권장안 그대로입니다(8장 「결정」 열). U2 는 S0 실측(8.1 절) 뒤 정합니다. PRD 는 고치지 않습니다.
 
 ---
 
@@ -32,7 +33,7 @@
 | 의존성 | `@modelcontextprotocol/sdk` · `fs-extra` · `node-fetch` · `zod`. `@axis-ds/tokens` 와 `@axis-ds/cli` 에 의존하지 않습니다 |
 | 테스트 | 테스트 파일 0개, `test` 스크립트 · vitest 없음(PRD FR-6 서술과 일치) |
 
-**기존 결함(이 WI 범위 밖, U7)**: tsup 이 `loader.ts` 를 `dist/index.js` 한 파일로 묶으면서 `__dirname` 이 `dist` 가 되어, 로더는 `dist/data/components.json` 을 찾는데 데이터는 `dist/registry/data` 에 있습니다. npm `@axis-ds/mcp@1.1.4` tarball 을 받아 stdio 로 `axis.list_components` · `axis.list_tokens` 를 호출하면 둘 다 `ENOENT ... dist/data/components.json`(tokens.json) 으로 `isError: true` 입니다(2026-10-19 실측, 대조군: 같은 세션의 `tools/list` 는 16개 정상). `pack-smoke` 는 tarball 구조만 보고 서버를 실행하지 않아 이 결함을 못 잡습니다. 브랜드 도구는 정적 번들을 쓰지 않으므로 이 결함을 물려받지 않지만, 같은 함정(번들 뒤 `__dirname` 이동)을 피하도록 4.3 절에 규칙을 둡니다.
+**기존 결함(이 WI 범위 밖, U7 결정으로 WI-0036(#115)에서 처리)**: tsup 이 `loader.ts` 를 `dist/index.js` 한 파일로 묶으면서 `__dirname` 이 `dist` 가 되어, 로더는 `dist/data/components.json` 을 찾는데 데이터는 `dist/registry/data` 에 있습니다. npm `@axis-ds/mcp@1.1.4` tarball 을 받아 stdio 로 `axis.list_components` · `axis.list_tokens` 를 호출하면 둘 다 `ENOENT ... dist/data/components.json`(tokens.json) 으로 `isError: true` 입니다(2026-10-19 실측, 대조군: 같은 세션의 `tools/list` 는 16개 정상). `pack-smoke` 는 tarball 구조만 보고 서버를 실행하지 않아 이 결함을 못 잡습니다. 브랜드 도구는 정적 번들을 쓰지 않으므로 이 결함을 물려받지 않지만, 같은 함정(번들 뒤 `__dirname` 이동)을 피하도록 4.3 절에 규칙을 둡니다.
 
 ### 1.3 브랜드 데이터 형식
 
@@ -263,23 +264,23 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 
 ## 8. 미결 (U 번호)
 
-권장안을 전제로 4~7장을 썼습니다. 「게이트」는 권장안이 PRD 범위 · 요구사항을 바꾸므로 사용자 결정 전 착수하지 않는 항목입니다.
+권장안을 전제로 4~7장을 썼습니다. 「게이트」는 권장안이 PRD 범위 · 요구사항을 바꾸므로 사용자 결정 전 착수하지 않는 항목입니다. 「결정」 열은 2026-10-19 사용자 결정입니다. U3 (A) 에 따라 `axis theme info` · `axis.get_brand` 의 보정 내역(`adjustments`)은 `a11y` 메타와 WI-0025 부록 B 안내만 담습니다.
 
-| # | 갈림길 | 권장안 | 게이트 |
-|---|---|---|---|
-| U1 | CLI · MCP 공유 코어 방식 | 복제 + 바이트 동일성 테스트 | 아니오 |
-| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) |
-| U3 | FR-3 보정 내역 출처(D4, M3 PRD Q6) | 이번 WI 는 `a11y` 메타와 근거 문서 안내만, 보정 전 · 후 값은 후속 | 예(FR-3 축소) |
-| U4 | 「주요 토큰」 목록 | 고정 목록 12개(아래) | 아니오(PRD 미정 갈림길) |
-| U5 | tokens 미설치 시 `add <brand>` 검증(D7) | 이름 규칙만 보고 경고와 함께 진행 | 아니오 |
-| U6 | 추가할 tokens 범위(D6) | `^1.3.0` | 아니오 |
-| U7 | MCP 기존 데이터 경로 결함(1.2 절) | 이 WI 밖, 별도 patch WI | 포함하면 예(범위 추가) |
-| U8 | 기본 토큰 CSS(`@axis-ds/tokens/css` · `css/shadcn`)가 없는 프로젝트 | 안내만, 자동 추가 안 함 | 자동 추가면 예 |
-| U9 | 버전 번호(Q3)와 PRD 기준 버전 표기(D1) | 1.2.0 유지, PRD 정정은 PRD 담당 PR 에서 | PRD 수정은 예 |
-| U10 | `ThemeProvider` 자동 수정(Q1) | 안내만 | 아니오(PRD 현재 서술과 같음) |
-| U11 | `axis.config.json` 스키마 파일(Q2) | TS 타입만, 스키마 파일 없음 | 아니오 |
-| U12 | tokens 미설치 시 MCP 응답(Q5) | 설치 안내만(PRD 현재 안) | 아니오 |
-| U13 | 다른 브랜드 import 가 이미 있을 때 | 기존 줄 유지 + 새 줄 추가 + 안내 | 아니오 |
-| U14 | FR-2 「`globalCss` 최우선, 없으면」의 「없으면」이 키 부재인지 파일 부재인지(`axis init -y` 의 `./src/app/globals.css` 와 `app/` 구조가 어긋나는 경우) | 둘 다로 읽음: 파일이 없으면 경고 후 다음 후보(4.1). 대안은 「거절하고 `globalCss` 수정 안내」 | 아니오(PRD 문구 불변, A1 과 같은 방향). 해석은 사용자 확인을 받고, PRD 에 문구를 더할지는 PRD 담당 PR 에서 정함 |
+| # | 갈림길 | 권장안 | 게이트 | 결정(2026-10-19) |
+|---|---|---|---|---|
+| U1 | CLI · MCP 공유 코어 방식 | 복제 + 바이트 동일성 테스트 | 아니오 | 권장안(복제 + 바이트 동일성 테스트) |
+| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) | 권장안(S0 실측 뒤 결정). S0 결과는 8.1 절 |
+| U3 | FR-3 보정 내역 출처(D4, M3 PRD Q6) | 이번 WI 는 `a11y` 메타와 근거 문서 안내만, 보정 전 · 후 값은 후속 | 예(FR-3 축소) | **(A)** `a11y` 메타(`status` · `checkedAt` · `gate`)와 WI-0025 부록 B 문서 안내만. 보정 전 · 후 값은 후속 WI |
+| U4 | 「주요 토큰」 목록 | 고정 목록 12개(아래) | 아니오(PRD 미정 갈림길) | 권장안(고정 12개) |
+| U5 | tokens 미설치 시 `add <brand>` 검증(D7) | 이름 규칙만 보고 경고와 함께 진행 | 아니오 | 권장안(이름 규칙 + 경고) |
+| U6 | 추가할 tokens 범위(D6) | `^1.3.0` | 아니오 | 권장안(`^1.3.0`) |
+| U7 | MCP 기존 데이터 경로 결함(1.2 절) | 이 WI 밖, 별도 patch WI | 포함하면 예(범위 추가) | **이 WI 범위 아님**. 별도 WI-0036(#115)로 분리 |
+| U8 | 기본 토큰 CSS(`@axis-ds/tokens/css` · `css/shadcn`)가 없는 프로젝트 | 안내만, 자동 추가 안 함 | 자동 추가면 예 | 권장안(안내만) |
+| U9 | 버전 번호(Q3)와 PRD 기준 버전 표기(D1) | 1.2.0 유지, PRD 정정은 PRD 담당 PR 에서 | PRD 수정은 예 | 권장안(1.2.0 유지, PRD 정정은 PRD 담당 PR) |
+| U10 | `ThemeProvider` 자동 수정(Q1) | 안내만 | 아니오(PRD 현재 서술과 같음) | 권장안(안내만) |
+| U11 | `axis.config.json` 스키마 파일(Q2) | TS 타입만, 스키마 파일 없음 | 아니오 | 권장안(TS 타입만) |
+| U12 | tokens 미설치 시 MCP 응답(Q5) | 설치 안내만(PRD 현재 안) | 아니오 | 권장안(설치 안내만) |
+| U13 | 다른 브랜드 import 가 이미 있을 때 | 기존 줄 유지 + 새 줄 추가 + 안내 | 아니오 | 권장안(유지 + 추가 + 안내) |
+| U14 | FR-2 「`globalCss` 최우선, 없으면」의 「없으면」이 키 부재인지 파일 부재인지(`axis init -y` 의 `./src/app/globals.css` 와 `app/` 구조가 어긋나는 경우) | 둘 다로 읽음: 파일이 없으면 경고 후 다음 후보(4.1). 대안은 「거절하고 `globalCss` 수정 안내」 | 아니오(PRD 문구 불변, A1 과 같은 방향). 해석은 사용자 확인을 받고, PRD 에 문구를 더할지는 PRD 담당 PR 에서 정함 | **(A)** 권장안(키 부재 · 파일 부재 둘 다로 읽음, 4.1) |
 
 U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출력): `--primary` · `--primary-foreground` · `--background` · `--foreground` · `--ring` · `--radius` · `--axis-surface-default` · `--axis-text-primary` · `--axis-text-brand` · `--axis-button-bg-default` · `--axis-border-focus` · `--axis-font-family-sans`.
