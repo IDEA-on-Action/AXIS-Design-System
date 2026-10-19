@@ -46,6 +46,7 @@ import {
   selectUtilsDependencies,
   TAILWIND_MERGE_RANGES,
   tailwindMajorFromRange,
+  tailwindWarnings,
 } from "./init.js";
 
 const REGISTRY = "https://axis.minu.best/r";
@@ -88,6 +89,17 @@ const NO_INSTALL = (cmd: string) => `  설치는 실행하지 않았습니다. �
 const ADD_CMD = 'pnpm add "clsx@^2.1.1" "tailwind-merge@^2.6.0"';
 /** tailwindcss 를 찾지 못했을 때의 근거 줄(E2 기본값) */
 const BASIS_NONE = "  tailwind-merge 범위 기준: tailwindcss 를 찾지 못해 기본값(Tailwind 3)";
+/** 선언 범위를 판정하지 못했을 때의 경고 줄(F1 (a)) */
+const UNDETERMINED = (range: string) =>
+  `  ! tailwindcss 선언(${range})은 판정 불가 - 기본값 사용(Tailwind 3, tailwind-merge ^2.6.0). ` +
+  "Tailwind 4 이상이면 tailwind-merge 를 ^3.4.0 으로 바꾸세요.";
+/** 설치본과 선언 범위의 major 가 다를 때의 경고 줄(F1 (b)) */
+const MISMATCH = (installed: string, im: number, declared: string, dm: number, cmd = "pnpm install") =>
+  `  ! 설치본 tailwindcss ${installed}(major ${im})와 package.json 선언 ${declared}(major ${dm})가 다름 - ` +
+  `설치본을 따랐습니다. ${cmd} 뒤 tailwind-merge 범위를 다시 확인하세요.`;
+/** 출력에서 tailwind 판정 경고 줄만 고릅니다. */
+const warningLines = (lines: string[]) =>
+  lines.filter((l) => l.startsWith("  ! tailwindcss 선언") || l.startsWith("  ! 설치본 tailwindcss"));
 
 // eslint-disable-next-line no-control-regex
 const ANSI = /\u001b\[[0-9;]*m/g;
@@ -296,7 +308,7 @@ describe("axis init: package.json 의존성(D1)", () => {
 
   it("tailwind-merge: 템플릿 4종은 1.6 규칙과 어긋남을 알려진 불일치로 고정 (prd 1.6 참고)", async () => {
     // 템플릿은 tailwindcss ^3.4.0(Tailwind 3)인데 tailwind-merge ^3.4.0 을 씁니다. 규칙값은 ^2.6.0 입니다.
-    // 템플릿을 고치거나 더 어긋나면 이 기대값이 깨져 신호가 납니다. 고칠지는 사용자 결정 대기입니다.
+    // 템플릿을 고치거나 더 어긋나면 이 기대값이 깨져 신호가 납니다. 템플릿 불일치는 WI-0037(#119)에서 다룹니다.
     const templatesDir = path.resolve(HERE, "../../../../apps/web/templates");
     const names = (await fs.readdir(templatesDir)).filter((n) =>
       fs.existsSync(path.join(templatesDir, n, "files", "package.json"))
@@ -345,12 +357,31 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
     expect(r.range).toBe("^3.4.0");
     expect(r.logs).toContain("✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0");
     expect(r.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3");
+    expect(r.logs).toContain(MISMATCH("4.3.3", 4, "^3.4.0", 3));
   });
 
-  it("설치본 3.x: ^2.6.0 (선언이 4 여도 설치본 우선)", async () => {
+  it("설치본 3.x: ^2.6.0 (선언이 4 여도 설치본 우선, 불일치 경고)", async () => {
     const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "^4" } }, "3.4.17");
     expect(r.range).toBe("^2.6.0");
     expect(r.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 3.4.17");
+    expect(r.logs).toContain(MISMATCH("3.4.17", 3, "^4", 4));
+  });
+
+  it("설치본과 선언의 major 가 같으면 경고 없음, 선언을 읽지 못하면 비교하지 않음 (F1 (b))", async () => {
+    const same = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "^4" } }, "4.3.3");
+    expect(same.range).toBe("^3.4.0");
+    expect(warningLines(same.logs)).toEqual([]);
+    const unreadable = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: "catalog:" } }, "4.3.3");
+    expect(unreadable.range).toBe("^3.4.0");
+    expect(unreadable.logs).toContain("  tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3");
+    expect(warningLines(unreadable.logs)).toEqual([]);
+  });
+
+  it("설치본 version 이 0.0.0-insiders.* 이면 설치본으로 판정하지 않고 선언 범위로 (F1 (a))", async () => {
+    const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: ">=4" } }, "0.0.0-insiders.4a4e1ec");
+    expect(r.range).toBe("^3.4.0");
+    expect(r.logs).toContain("  tailwind-merge 범위 기준: package.json 의 tailwindcss >=4");
+    expect(warningLines(r.logs)).toEqual([]);
   });
 
   it("설치본 version 이 정확한 버전이 아니면 선언 범위로", async () => {
@@ -359,41 +390,66 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
     expect(r.logs).toContain("  tailwind-merge 범위 기준: package.json 의 tailwindcss ^4");
   });
 
-  const declared: { range: string; field: "dependencies" | "devDependencies"; expected: string; basis: string }[] = [
-    { range: "^4", field: "devDependencies", expected: "^3.4.0", basis: "package.json 의 tailwindcss ^4" },
-    { range: "~3.4", field: "devDependencies", expected: "^2.6.0", basis: "package.json 의 tailwindcss ~3.4" },
-    { range: "^4.1.0", field: "dependencies", expected: "^3.4.0", basis: "package.json 의 tailwindcss ^4.1.0" },
-    {
-      range: "workspace:*",
-      field: "devDependencies",
-      expected: "^2.6.0",
-      basis: "package.json 의 tailwindcss workspace:* 로 버전을 판정하지 못해 기본값(Tailwind 3)",
-    },
-    {
-      range: "latest",
-      field: "devDependencies",
-      expected: "^2.6.0",
-      basis: "package.json 의 tailwindcss latest 로 버전을 판정하지 못해 기본값(Tailwind 3)",
-    },
-    {
-      range: "^3 || ^4",
-      field: "devDependencies",
-      expected: "^2.6.0",
-      basis: "package.json 의 tailwindcss ^3 || ^4 로 버전을 판정하지 못해 기본값(Tailwind 3)",
-    },
+  /** 판정한 선언: 근거 줄은 `package.json 의 tailwindcss <범위>`, 경고 없음 */
+  const readable = (range: string, expected: string, field: "dependencies" | "devDependencies" = "devDependencies") => ({
+    range,
+    field,
+    expected,
+    basis: `package.json 의 tailwindcss ${range}`,
+    warnings: [] as string[],
+  });
+  /** 판정하지 못한 선언: 기본값 ^2.6.0, 근거 줄과 '판정 불가 - 기본값 사용' 경고 */
+  const unreadable = (range: string) => ({
+    range,
+    field: "devDependencies" as const,
+    expected: "^2.6.0",
+    basis: `package.json 의 tailwindcss ${range} 로 버전을 판정하지 못해 기본값(Tailwind 3)`,
+    warnings: [UNDETERMINED(range)],
+  });
+  const declared = [
+    readable("^4", "^3.4.0"),
+    readable("~3.4", "^2.6.0"),
+    readable("^4.1.0", "^3.4.0", "dependencies"),
+    // F1 (a): 하한의 major
+    readable(">=4", "^3.4.0"),
+    readable(">=4.0.0", "^3.4.0"),
+    readable(">=3.4 <4", "^2.6.0"),
+    readable("4 - 4.2", "^3.4.0"),
+    // F1 (c): 4 이상
+    readable("^5", "^3.4.0"),
+    readable(">=5.0.0", "^3.4.0"),
+    unreadable("workspace:*"),
+    unreadable("latest"),
+    unreadable("^3 || ^4"),
+    unreadable("catalog:"),
+    unreadable("0.0.0-insiders.4a4e1ec"),
   ];
   for (const c of declared) {
     it(`선언만 ${c.field}.tailwindcss = ${c.range}: ${c.expected}`, async () => {
       const r = await addedTwMerge({ name: "x", [c.field]: { tailwindcss: c.range } });
       expect(r.range).toBe(c.expected);
       expect(r.logs).toContain(`  tailwind-merge 범위 기준: ${c.basis}`);
+      expect(warningLines(r.logs)).toEqual(c.warnings);
     });
   }
 
-  it("tailwindcss 가 없으면 기본값 ^2.6.0", async () => {
+  it("tailwindcss 가 없으면 기본값 ^2.6.0 (근거 줄만, 경고 없음)", async () => {
     const r = await addedTwMerge({ name: "x", dependencies: { next: "15.5.28" } });
     expect(r.range).toBe("^2.6.0");
     expect(r.logs).toContain(BASIS_NONE);
+    expect(warningLines(r.logs)).toEqual([]);
+  });
+
+  it("package.json 을 쓸 수 없을 때도 판정 불가 경고를 냄", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({ name: "x", dependencies: [], devDependencies: { tailwindcss: "catalog:" } })
+    );
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain('  utils.ts 의존성 설치: pnpm add "clsx@^2.1.1" "tailwind-merge@^2.6.0"');
+    expect(warningLines(r.logs)).toEqual([UNDETERMINED("catalog:")]);
   });
 
   it("package.json 이 없을 때 안내 명령도 같은 규칙(설치본 4 → ^3.4.0, 없음 → ^2.6.0)", async () => {
@@ -432,7 +488,7 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
     expect(r.logs.some((l) => l.includes("tailwind-merge 범위 기준"))).toBe(false);
   });
 
-  it("tailwindMajorFromRange: 단순 범위만 major 를 읽음", () => {
+  it("tailwindMajorFromRange: 단순 범위의 major, 아니면 하한의 major (F1 (a))", () => {
     const cases: [string, number | undefined][] = [
       ["4", 4],
       ["^4", 4],
@@ -443,14 +499,38 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       ["v4", 4],
       [" ^4 ", 4],
       ["4.0.0-beta.1", 4],
-      [">=3", undefined],
-      [">=3.4 <4", undefined],
+      // F1 (a): 단순 형태가 아니면 하한의 major
+      [">=3", 3],
+      [">=4", 4],
+      [">=4.0.0", 4],
+      [">= 4", 4],
+      [">4", 4],
+      [">=3.4 <4", 3],
+      ["<5 >=4.1", 4],
+      [">=3 >=4.1.0", 4],
+      ["4 - 4.2", 4],
+      ["3.4 - 4", 3],
+      [">=5", 5],
+      // 하한이 없거나 하나로 정해지지 않거나 버전이 아님
+      ["<4", undefined],
+      ["<=4.2", undefined],
       ["^3 || ^4", undefined],
+      [">=3 || >=4", undefined],
       ["*", undefined],
+      ["x", undefined],
       ["latest", undefined],
       ["workspace:*", undefined],
+      ["workspace:^4", undefined],
+      ["catalog:", undefined],
+      ["catalog:tw4", undefined],
+      ["0.0.0-insiders.4a4e1ec", undefined],
+      ["^0.0.0-insiders.4a4e1ec", undefined],
+      [">=0.0.0-insiders.4a4e1ec", undefined],
+      ["insiders", undefined],
       ["npm:tailwindcss@^4", undefined],
       ["github:tailwindlabs/tailwindcss", undefined],
+      ["file:../tailwindcss", undefined],
+      [">=4 foo", undefined],
       ["", undefined],
     ];
     for (const [range, major] of cases) {
@@ -466,8 +546,18 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       source: "declared",
       value: "^4",
     });
+    expect(detectTailwind(dir, { devDependencies: { tailwindcss: "catalog:" } })).toEqual({
+      source: "none",
+      value: "catalog:",
+    });
     await installTailwind(dir, "3.4.17");
     expect(detectTailwind(dir, { devDependencies: { tailwindcss: "^4" } })).toEqual({
+      major: 3,
+      source: "installed",
+      value: "3.4.17",
+      mismatch: { declared: "^4", declaredMajor: 4 },
+    });
+    expect(detectTailwind(dir, { devDependencies: { tailwindcss: ">=3.4 <4" } })).toEqual({
       major: 3,
       source: "installed",
       value: "3.4.17",
@@ -476,9 +566,29 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       clsx: "^2.1.1",
       "tailwind-merge": "^3.4.0",
     });
-    for (const t of [{ major: 3, source: "installed" as const }, { source: "none" as const }, { major: 5, source: "declared" as const }]) {
+    // F1 (c): 4 이상은 ^3.4.0, 3 이하와 판정 불가는 ^2.6.0
+    for (const major of [5, 6]) {
+      expect({ major, r: selectUtilsDependencies({ major, source: "declared" })["tailwind-merge"] }).toEqual({
+        major,
+        r: "^3.4.0",
+      });
+    }
+    for (const t of [
+      { major: 3, source: "installed" as const },
+      { major: 2, source: "declared" as const },
+      { major: 0, source: "declared" as const },
+      { source: "none" as const },
+    ]) {
       expect(selectUtilsDependencies(t)["tailwind-merge"]).toBe("^2.6.0");
     }
+    expect(tailwindWarnings({ major: 4, source: "declared", value: "^4" }, "pnpm install")).toEqual([]);
+    expect(tailwindWarnings({ source: "none" }, "pnpm install")).toEqual([]);
+    expect(
+      tailwindWarnings(
+        { major: 4, source: "installed", value: "4.3.3", mismatch: { declared: "^3.4.0", declaredMajor: 3 } },
+        "yarn install"
+      )
+    ).toEqual([MISMATCH("4.3.3", 4, "^3.4.0", 3, "yarn install").trim()]);
   });
 });
 

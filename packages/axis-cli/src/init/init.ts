@@ -24,11 +24,13 @@ import {
 export const CLSX_RANGE = "^2.1.1";
 
 /**
- * Tailwind major 별 `tailwind-merge` 범위(prd 1.6, 2026-10-19 사용자 결정 E2).
- * - Tailwind 4: `^3.4.0`. tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다. 템플릿 4종도 이 범위를 쓰지만
- *   템플릿은 Tailwind 3(`^3.4.0`)이라 이 규칙과 어긋나며, 이 범위의 근거가 아닙니다(init.test.ts 에 고정).
- * - Tailwind 3: `^2.6.0`. tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. npm `tailwind-merge-2`
+ * Tailwind major 별 `tailwind-merge` 범위(prd 1.6, 2026-10-19 사용자 결정 E2 · F1).
+ * - Tailwind 4 이상: `^3.4.0`. tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다(F1 로 `4` 만이 아니라 `4 이상`).
+ * - Tailwind 3 이하: `^2.6.0`. tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. npm `tailwind-merge-2`
  *   태그가 2.6.1(2026-10-19 `npm view`)이고 2.x 의 마지막 minor 가 2.6 이라 `^2.6.0` 이 그 최신을 받습니다.
+ * 템플릿 4종(`apps/web/templates/*`)은 이 범위의 근거가 아닙니다. 템플릿은 `tailwindcss ^3.4.0`(Tailwind 3)에
+ * `tailwind-merge ^3.4.0` 을 함께 선언해 이 규칙과 어긋나고, 그 불일치는 WI-0037(#119)에서 다룹니다
+ * (init.test.ts 에 알려진 불일치로 고정).
  */
 export const TAILWIND_MERGE_RANGES = {
   tailwind4: "^3.4.0",
@@ -43,62 +45,130 @@ export interface TailwindDetection {
   source: "installed" | "declared" | "none";
   /** 판정에 쓴 값(설치본 version 이나 선언 범위). 선언은 있으나 판정하지 못한 범위도 담습니다. */
   value?: string;
+  /** 설치본으로 판정했는데 선언 범위의 major 가 다를 때 그 선언(F1 (b)) */
+  mismatch?: { declared: string; declaredMajor: number };
+}
+
+/** 버전 하나(`4` · `4.1` · `4.1.0` · `v4` · `3.4.x` · `4.0.0-beta.1`). 1번 그룹이 major 입니다. */
+const VERSION = String.raw`v?(\d+)(?:\.(?:\d+|[xX*])){0,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?`;
+
+/**
+ * 버전 하나에서 major 를 읽습니다. `0.0.0-insiders.<hash>` 같은 `0.0.0-*` 은 실제 버전이 아닌 자리표시라
+ * major 로 읽지 않습니다(F1 (a)).
+ */
+function majorOfVersionToken(token: string): number | undefined {
+  const m = new RegExp(`^${VERSION}$`).exec(token);
+  if (!m) return undefined;
+  if (/^v?0\.0\.0-/.test(token)) return undefined;
+  return Number(m[1]);
 }
 
 /**
- * 선언 범위에서 Tailwind major 를 읽습니다. 하나의 major 로 정해지는 단순 형태만 받습니다:
- * `4` · `4.1` · `4.1.0` · `^4` · `^4.1.0` · `~3.4` · `=3.4.17` · `v4` · `4.x` · `3.4.0-beta.1`.
- * `>=3`, `^3 || ^4`, `>=3.4 <4`, `*`, `latest`, `workspace:*`, `npm:...`, git · 파일 경로처럼
- * major 가 하나로 정해지지 않는 범위는 판정하지 않습니다(`undefined`).
+ * 선언 범위에서 Tailwind major 를 읽습니다(prd 1.6, F1 (a)).
+ * 1. 하나의 major 로 정해지는 단순 형태: `4` · `4.1` · `4.1.0` · `^4` · `^4.1.0` · `~3.4` · `=3.4.17` · `v4` · `4.x` · `3.4.0-beta.1`.
+ * 2. 그렇지 않으면 하한의 major: `>=4` · `>=4.0.0` · `>4` → 4, `>=3.4 <4` → 3, 하이픈 범위 `4 - 4.2` → 4.
+ *    비교자가 여럿이면 하한 중 가장 높은 것(실제로 걸리는 하한)을 씁니다.
+ * 3. 그래도 읽을 수 없으면 `undefined`: 하한이 없음(`<4` · `*`), `||` 로 여러 범위를 고름(`^3 || ^4`, 하한이 하나로
+ *    정해지지 않음), `catalog:` · `workspace:*` · `latest` · `0.0.0-insiders.*` · `npm:...` · git · 파일 경로.
  */
 export function tailwindMajorFromRange(range: string): number | undefined {
-  const m = /^\s*(?:\^|~|=)?\s*v?(\d+)(?:\.(?:\d+|x|X|\*)){0,2}(?:-[0-9A-Za-z.-]+)?\s*$/.exec(range);
-  return m ? Number(m[1]) : undefined;
+  const r = range.trim();
+  if (r === "" || r.includes("||")) return undefined;
+  const simple = new RegExp(`^(?:\\^|~|=)?\\s*(${VERSION})$`).exec(r);
+  if (simple) return majorOfVersionToken(simple[1]);
+  const hyphen = new RegExp(`^(${VERSION})\\s+-\\s+(${VERSION})$`).exec(r);
+  if (hyphen) return majorOfVersionToken(hyphen[1]);
+  // 비교자 집합: `>=3.4 <4`, `>= 4` 처럼 연산자 뒤 공백도 받습니다.
+  const tokens = r.replace(/(>=|<=|>|<|=)\s+/g, "$1").split(/\s+/);
+  const lowers: number[] = [];
+  for (const t of tokens) {
+    const c = /^(>=|<=|>|<|=)(.+)$/.exec(t);
+    if (!c) return undefined;
+    const major = majorOfVersionToken(c[2]);
+    if (major === undefined) return undefined;
+    if (c[1] !== "<" && c[1] !== "<=") lowers.push(major);
+  }
+  return lowers.length > 0 ? Math.max(...lowers) : undefined;
 }
 
-/** 설치본 version(`4.3.3` 같은 정확한 버전)에서 major 를 읽습니다. */
+/** 설치본 version(`4.3.3` 같은 정확한 버전)에서 major 를 읽습니다. `0.0.0-*` 은 읽지 않습니다. */
 function majorFromVersion(version: unknown): number | undefined {
   if (typeof version !== "string") return undefined;
-  const m = /^v?(\d+)\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]*)?$/.exec(version.trim());
-  return m ? Number(m[1]) : undefined;
+  const v = version.trim();
+  const m = /^v?(\d+)\.\d+\.\d+(?:[-+][0-9A-Za-z.+-]*)?$/.exec(v);
+  if (!m || /^v?0\.0\.0-/.test(v)) return undefined;
+  return Number(m[1]);
 }
 
 /**
  * 프로젝트의 Tailwind major 를 판정합니다(prd 1.6).
  * 1. 설치본 우선: `<baseDir>/node_modules/tailwindcss/package.json` 의 `version`. 실제로 쓰이는 버전이라 선언보다 앞섭니다.
  *    파일이 없거나 읽을 수 없거나 version 이 정확한 버전이 아니면 다음 단계로 갑니다.
+ *    선언 범위의 major 를 읽을 수 있고 설치본과 다르면 `mismatch` 에 담습니다(F1 (b), 경고 줄은 `tailwindWarnings`).
  * 2. 선언 범위: `package.json` 의 `dependencies` 다음 `devDependencies` 의 `tailwindcss`. `tailwindMajorFromRange` 로 읽습니다.
  * 3. 판정 불가: 둘 다 없거나 읽지 못하면 `source: "none"`(기본값은 `selectUtilsDependencies` 가 정함).
  */
 export function detectTailwind(baseDirInput: string, pkg?: Record<string, unknown>): TailwindDetection {
   const baseDir = path.resolve(baseDirInput);
   const installedFile = path.join(baseDir, "node_modules", "tailwindcss", "package.json");
+  const declared = pkg ? hasDependency(pkg, "tailwindcss") : undefined;
+  const declaredMajor = declared !== undefined ? tailwindMajorFromRange(declared) : undefined;
   try {
     const installed: unknown = JSON.parse(readFileSync(installedFile, "utf8"));
     const version = isPlainObject(installed) ? installed.version : undefined;
     const major = majorFromVersion(version);
-    if (major !== undefined) return { major, source: "installed", value: String(version) };
+    if (major !== undefined) {
+      const found: TailwindDetection = { major, source: "installed", value: String(version) };
+      if (declared !== undefined && declaredMajor !== undefined && declaredMajor !== major) {
+        found.mismatch = { declared, declaredMajor };
+      }
+      return found;
+    }
   } catch {
     // 없음 · 읽을 수 없음: 선언 범위로
   }
-  const declared = pkg ? hasDependency(pkg, "tailwindcss") : undefined;
   if (declared !== undefined) {
-    const major = tailwindMajorFromRange(declared);
-    if (major !== undefined) return { major, source: "declared", value: declared };
+    if (declaredMajor !== undefined) return { major: declaredMajor, source: "declared", value: declared };
     return { source: "none", value: declared };
   }
   return { source: "none" };
 }
 
 /**
- * 추가할 범위를 고릅니다. Tailwind major 가 4 이면 `tailwind-merge ^3.4.0`, 그 밖(3, 판정 불가, 다른 major)은
- * `^2.6.0` 입니다. 판정 불가의 기본값을 Tailwind 3 쪽으로 둔 것은 사용자 결정(E2: 「3 이거나 없으면 ^2.6.0」)입니다.
+ * 추가할 범위를 고릅니다. Tailwind major 가 4 이상이면 `tailwind-merge ^3.4.0`, 3 이하와 판정 불가는
+ * `^2.6.0` 입니다(F1 (c)). 판정 불가의 기본값을 Tailwind 3 쪽으로 둔 것은 사용자 결정(E2: 「3 이거나 없으면 ^2.6.0」)입니다.
  */
 export function selectUtilsDependencies(tailwind: TailwindDetection): Record<string, string> {
   return {
     clsx: CLSX_RANGE,
-    "tailwind-merge": tailwind.major === 4 ? TAILWIND_MERGE_RANGES.tailwind4 : TAILWIND_MERGE_RANGES.tailwind3,
+    "tailwind-merge":
+      tailwind.major !== undefined && tailwind.major >= 4
+        ? TAILWIND_MERGE_RANGES.tailwind4
+        : TAILWIND_MERGE_RANGES.tailwind3,
   };
+}
+
+/**
+ * `tailwind-merge` 범위 판정의 경고 줄(F1). 근거 줄과 같은 때(`tailwind-merge` 를 추가하거나 안내할 때)에 냅니다.
+ * - 선언은 있으나 major 를 읽지 못함(`catalog:` · `workspace:*` · `latest` · `0.0.0-insiders.*` 등): 기본값을 썼다는 경고
+ * - 설치본과 선언 범위의 major 가 다름: 설치본을 따랐고 설치 뒤 다시 확인하라는 경고
+ * tailwindcss 를 아예 찾지 못한 경우는 근거 줄(`tailwindcss 를 찾지 못해 기본값`)만 냅니다.
+ */
+export function tailwindWarnings(tailwind: TailwindDetection, installCommand: string): string[] {
+  const out: string[] = [];
+  if (tailwind.source === "none" && tailwind.value !== undefined) {
+    out.push(
+      `! tailwindcss 선언(${tailwind.value})은 판정 불가 - 기본값 사용(Tailwind 3, tailwind-merge ${TAILWIND_MERGE_RANGES.tailwind3}). ` +
+        `Tailwind 4 이상이면 tailwind-merge 를 ${TAILWIND_MERGE_RANGES.tailwind4} 으로 바꾸세요.`
+    );
+  }
+  if (tailwind.mismatch) {
+    out.push(
+      `! 설치본 tailwindcss ${tailwind.value}(major ${tailwind.major})와 package.json 선언 ${tailwind.mismatch.declared}` +
+        `(major ${tailwind.mismatch.declaredMajor})가 다름 - 설치본을 따랐습니다. ${installCommand} 뒤 tailwind-merge 범위를 다시 확인하세요.`
+    );
+  }
+  return out;
 }
 
 /** `tailwind-merge` 범위를 고른 근거 한 줄 */
@@ -305,11 +375,16 @@ type Log = (...args: unknown[]) => void;
 function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   const presentText = plan.present.map((p) => `${p.name} (${p.range})`).join(", ");
   const basis = `  tailwind-merge 범위 기준: ${describeTailwindBasis(plan.tailwind)}`;
+  // 근거 줄과 그 판정의 경고 줄(F1)
+  const logBasis = () => {
+    log(chalk.gray(basis));
+    for (const w of tailwindWarnings(plan.tailwind, plan.installCommand)) log(chalk.yellow(`  ${w}`));
+  };
   if (plan.action === "add") {
     const addedText = plan.added.map((n) => `${n}@${plan.ranges[n]}`).join(", ");
     log(chalk.green(`✓ package.json dependencies 에 추가: ${addedText}`));
     if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}`));
-    if (plan.added.includes("tailwind-merge")) log(chalk.gray(basis));
+    if (plan.added.includes("tailwind-merge")) logBasis();
     log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
   } else if (plan.action === "present") {
     log(chalk.green(`✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): ${presentText}`));
@@ -317,11 +392,11 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   } else if (plan.action === "no-package-json") {
     log(chalk.yellow("! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다."));
     log(chalk.yellow(`  설치: ${chalk.cyan(plan.addCommand)}`));
-    log(chalk.gray(basis));
+    logBasis();
   } else {
     log(chalk.yellow(`! package.json 을 바꾸지 않았습니다(${plan.reason}).`));
     log(chalk.yellow(`  utils.ts 의존성 설치: ${chalk.cyan(plan.addCommand)}`));
-    if (plan.addCommand.includes('"tailwind-merge@')) log(chalk.gray(basis));
+    if (plan.addCommand.includes('"tailwind-merge@')) logBasis();
   }
 }
 

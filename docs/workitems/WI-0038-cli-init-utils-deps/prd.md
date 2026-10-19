@@ -1,6 +1,6 @@
 # WI-0038: `axis init` utils.ts 의존성(clsx · tailwind-merge) 추가 · 안내 PRD
 
-> 작성일: 2026-10-19 | 버전: v1.1 (2026-10-19, E1 ~ E4 반영) | 작성자: Sinclair Seo | WI: WI-0038 | GitHub: #124 | 우선순위: P2 | 상태: Approved (2026-10-19 결정 반영)
+> 작성일: 2026-10-19 | 버전: v1.2 (2026-10-19, E1 ~ E4 · F1 · F2 반영) | 작성자: Sinclair Seo | WI: WI-0038 | GitHub: #124 | 우선순위: P2 | 상태: Approved (2026-10-19 결정 반영)
 > 기준: `origin/main` c131ee9 (`@axis-ds/cli` 1.2.0 배포 완료)
 > 관련: WI-0028(#87, #123) AC2(b) 실측(T7-2)에서 발견. WI-0028 은 「선행 결함으로 보류」로 기록한 채 머지했고, 이 WI 완료 뒤 같은 절차로 다시 잽니다
 
@@ -31,9 +31,11 @@
 |---|---|---|
 | D1 | 의존성 추가 · 안내 | init 은 `package.json` 이 있으면 `dependencies` 에 `clsx` · `tailwind-merge` 를 없을 때만 추가합니다. 이미 `dependencies` 나 `devDependencies` 에 있으면 그 버전을 유지합니다. lockfile 로 고른 설치 명령을 안내하고, 설치는 실행하지 않습니다. `package.json` 이 없으면 파일을 만들지 않고 설치 안내만 합니다. theme add(WI-0028, `src/theme/theme-add.ts`)의 `detectInstallCommand` · 포맷 보존 JSON 쓰기(`formatJsonLike`) · 쓰기 안전성(쓰기 직전 재확인 · 실제 경로 확인 · 쓰기 가능 확인)을 재사용합니다. 공유 위치로 옮기는 리팩터는 하지 않습니다(theme add 동작 불변을 증명할 필요가 없도록, 필요한 함수에 `export` 만 붙입니다) |
 | D2 | 안내 문구 | 실행 안내의 `npx axis-cli ...` 를 `npx @axis-ds/cli ...` 로 고칩니다. 같은 위험의 `pnpm dlx axis-cli` · `bunx axis-cli` 는 `pnpm dlx @axis-ds/cli` · `bunx @axis-ds/cli` 로, CLI 출력과 사용법 주석의 `npx` 없는 `axis-cli <명령>` 은 `npx @axis-ds/cli <명령>` 으로 고칩니다. 패키지 디렉터리 이름(`packages/axis-cli`), 디렉터리 트리, turbo 입력 경로, 코드 식별자처럼 실행 안내가 아닌 것은 바꾸지 않습니다. 안내 문구를 고정하는 테스트를 넣습니다 |
-| D3 | 의존성 범위 | `clsx` `^2.1.1`. `tailwind-merge` 는 프로젝트의 Tailwind major 가 4 이면 `^3.4.0`, 3 이거나 판정하지 못하면 `^2.6.0`(E2 로 보정, 판정 규칙은 1.6). 근거는 1.5 |
+| D3 | 의존성 범위 | `clsx` `^2.1.1`. `tailwind-merge` 는 프로젝트의 Tailwind major 가 4 이상이면 `^3.4.0`, 3 이하이거나 판정하지 못하면 `^2.6.0`(E2 · F1 로 보정, 판정 규칙은 1.6). 근거는 1.5 |
 | E1 | 남은 실행 안내 정정 (2026-10-19 사용자 결정) | `.claude/agents/docs-writer.md` 와 `docs/axis-ds-implementation-plan.md` 의 `npx axis-cli` 를 `npx @axis-ds/cli` 로 고칩니다. 안내 테스트의 스캔 범위에 `.claude/agents/**` 와 `docs` 최상위 `*.md` 를 더합니다. 결함을 설명하는 WI 문서(`docs/workitems/**`), changeset · CHANGELOG 의 설명 문장, 테스트 fixture 는 스캔하지 않으며, 제외는 경로 목록이 아니라 그 근거를 테스트 주석에 적습니다. 넓힌 스캔이 `docs/axis_ds_mcp_template_plan_v0.3.md` 86행의 `axis-cli template apply` 도 잡아 같은 규칙(D2)으로 고쳤습니다 |
 | E2 | `tailwind-merge` 범위를 Tailwind 버전에 맞춤 (2026-10-19 사용자 결정) | D3 의 고정 범위를 1.6 규칙으로 바꿉니다. `package.json` 이 없을 때 안내하는 추가 명령도 같은 규칙입니다 |
+| F1 | Tailwind 판정 보강 (2026-10-19 사용자 결정) | (a) 선언 범위에서 major 를 하나로 못 읽으면 하한의 major 를 읽습니다(`>=4` · `>=4.0.0` · `>=3.4 <4` · `4 - 4.2`). `catalog:` · `workspace:*` · `latest` · `0.0.0-insiders.*` 처럼 그래도 읽을 수 없으면 기본값(Tailwind 3, `^2.6.0`)을 쓰고 「판정 불가 - 기본값 사용」 경고 줄을 냅니다. (b) 설치본과 선언 범위의 major 가 다르면 설치본을 따르고 「설치본과 선언이 다름 - 설치 뒤 다시 확인」 경고 줄을 냅니다. (c) major 4 이상은 `^3.4.0`, 3 이하는 `^2.6.0`. 1.6 판정표와 `init.ts` 주석에서 템플릿 4종을 근거처럼 적은 부분을 고치고, 템플릿 불일치는 WI-0037(#119)에서 다룬다고 적습니다 |
+| F2 | 안내 테스트 스캔 범위 확장 (2026-10-19 사용자 결정) | `guidance.test.ts` 스캔 범위에 `docs/templates/**` · `.claude/commands/**` · `.claude/prompts/**` · `.claude/rules/**` · `.clinerules/**`(모두 있음)를 더하고, 경로마다 파일이 실제로 스캔되는지(계측 대조)와 `npx axis-cli add button` 주입이 잡히는지(양성 대조)를 확인합니다 |
 
 **에이전트 해석의 사용자 확정 (E3, 2026-10-19 사용자 확정)**: 구현 중 에이전트가 결정 문구를 해석해 정한 아래 세 가지를 사용자가 그대로 확정했습니다.
 1. D2 의 정정 범위를 `npx axis-cli` 만이 아니라 같은 위험의 `pnpm dlx axis-cli` · `bunx axis-cli` 와 `npx` 없는 `axis-cli <명령>` 안내까지 넓힘(D2 표 내용).
@@ -59,19 +61,26 @@
 | 순서 | 판정 근거 | 읽는 방법 |
 |---|---|---|
 | 1 | 설치본 | `<프로젝트>/node_modules/tailwindcss/package.json` 의 `version`(예: `4.3.3`). 실제로 쓰이는 버전이라 선언보다 앞섭니다. 파일이 없거나 읽을 수 없거나 `version` 이 정확한 버전이 아니면 2 로 갑니다 |
-| 2 | 선언 범위 | `package.json` 의 `dependencies`, 없으면 `devDependencies` 의 `tailwindcss`. 하나의 major 로 정해지는 단순 형태만 읽습니다: `4` · `4.1` · `^4` · `^4.1.0` · `~3.4` · `=3.4.17` · `3.4.x` · `v4` · `4.0.0-beta.1` |
-| 3 | 판정 불가 | 1 · 2 가 없거나, 선언이 `workspace:*` · `latest` · `*` · `>=3` · `^3 \|\| ^4` · `>=3.4 <4` · `npm:...` · git · 파일 경로처럼 major 가 하나로 정해지지 않는 범위 |
+| 2 | 선언 범위 | `package.json` 의 `dependencies`, 없으면 `devDependencies` 의 `tailwindcss`. ① 하나의 major 로 정해지는 단순 형태는 그 major: `4` · `4.1` · `^4` · `^4.1.0` · `~3.4` · `=3.4.17` · `3.4.x` · `v4` · `4.0.0-beta.1`. ② 그렇지 않으면 하한의 major(F1 (a)): `>=4` · `>=4.0.0` · `>4` → 4, `>=3.4 <4` → 3, 하이픈 범위 `4 - 4.2` → 4. 비교자가 여럿이면 하한 중 가장 높은 것 |
+| 3 | 판정 불가 | 1 · 2 가 없거나, 선언이 하한이 없는 범위(`<4` · `*`), `\|\|` 로 여러 범위를 고르는 범위(`^3 \|\| ^4`, 하한이 하나로 정해지지 않음), `catalog:` · `workspace:*` · `latest` · `0.0.0-insiders.*` · `npm:...` · git · 파일 경로. `0.0.0-*` 은 자리표시 버전이라 설치본 `version` 에 있어도 읽지 않고 2 로 갑니다 |
 
 | 판정 결과 | `tailwind-merge` | 근거 |
 |---|---|---|
-| major 4 | `^3.4.0` | tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다. 템플릿 4종도 `^3.4.0` 을 쓰지만 템플릿은 Tailwind 3 이라 이 행의 근거가 아닙니다(아래 참고) |
-| major 3 · 판정 불가 · 그 밖의 major | `^2.6.0` | tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. 판정 불가일 때의 기본값은 사용자 결정(「3 이거나 없으면 ^2.6.0」)입니다 |
+| major 4 이상 | `^3.4.0` | tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다(F1 (c) 로 4 만이 아니라 4 이상) |
+| major 3 이하 · 판정 불가 | `^2.6.0` | tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. 판정 불가일 때의 기본값은 사용자 결정(「3 이거나 없으면 ^2.6.0」)입니다 |
+
+| 경고 (F1) | 조건 | 출력 |
+|---|---|---|
+| 판정 불가 | 선언은 있으나 3 에 해당 | `! tailwindcss 선언(<범위>)은 판정 불가 - 기본값 사용(Tailwind 3, tailwind-merge ^2.6.0). Tailwind 4 이상이면 tailwind-merge 를 ^3.4.0 으로 바꾸세요.` |
+| 설치본 · 선언 불일치 | 1 로 판정했고 선언 범위의 major(2 의 ① · ②)가 설치본 major 와 다름 | `! 설치본 tailwindcss <version>(major X)와 package.json 선언 <범위>(major Y)가 다름 - 설치본을 따랐습니다. <설치 명령> 뒤 tailwind-merge 범위를 다시 확인하세요.` |
+
+- 경고는 근거 줄과 같은 때(`tailwind-merge` 를 추가하거나 추가 명령을 안내할 때)에 근거 줄 바로 뒤에 냅니다. tailwindcss 를 아예 찾지 못한 경우는 근거 줄(`tailwindcss 를 찾지 못해 기본값`)만 내고 경고는 내지 않습니다. 선언을 읽지 못하면 설치본과 비교하지 않습니다.
 
 - `^2.6.0` 근거(실측 2026-10-19 `npm view tailwind-merge`): dist-tag `tailwind-merge-2` 가 2.6.1(2026-01-30 발행)이고 2.x 의 마지막 minor 가 2.6(2.6.0 은 2024-12-23 발행)입니다. `latest` 는 3.7.0 입니다. `^2.6.0` 은 2.6.1 로 풀립니다(testplan T25 lockfile).
 - `clsx` 는 Tailwind 와 관계없어 `^2.1.1` 그대로입니다.
 - 설치본은 프로젝트 디렉터리의 `node_modules` 만 봅니다. 워크스페이스 루트로 끌어올린(hoist) 설치본은 보지 않고 선언 범위로 판정합니다.
 - init 은 `tailwind-merge` 를 추가하거나 추가 명령을 안내할 때 고른 근거를 한 줄로 출력합니다(예: `tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3`). 이미 선언돼 있어 추가하지 않으면 출력하지 않습니다.
-- 참고: 템플릿 4종(`apps/web/templates/*/files/package.json`)은 `tailwindcss ^3.4.0` 과 `tailwind-merge ^3.4.0` 을 함께 선언합니다. 이 규칙과 어긋나지만 템플릿은 init 이 쓰는 값이 아니라 이 WI 에서 바꾸지 않습니다. 이 어긋남은 `init.test.ts` 의 템플릿 대조 테스트에 알려진 불일치(현재값 `^3.4.0`, 규칙값 `^2.6.0`)로 고정해 두어, 템플릿이 바뀌면 테스트가 실패합니다.
+- 템플릿 4종(`apps/web/templates/*/files/package.json`)은 이 규칙의 근거가 아닙니다. 템플릿은 `tailwindcss ^3.4.0`(Tailwind 3)과 `tailwind-merge ^3.4.0` 을 함께 선언해 이 규칙과 어긋나며, 그 불일치는 WI-0037(#119)에서 다룹니다. 템플릿은 init 이 쓰는 값이 아니라 이 WI 에서 바꾸지 않습니다. 이 어긋남은 `init.test.ts` 의 템플릿 대조 테스트에 알려진 불일치(현재값 `^3.4.0`, 규칙값 `^2.6.0`)로 고정해 두어, 템플릿이 바뀌면 테스트가 실패합니다.
 
 ---
 
@@ -80,6 +89,7 @@
 - **설치 실행**: init 은 설치 명령을 실행하지 않습니다(D1, WI-0028 U6 과 같은 원칙).
 - **`tailwind.config.ts` · `globals.css` 기본값 변경**: init 의 기본 경로가 create-next-app 기본 구조(`src` 없음, Tailwind 4)와 다른 문제는 이 WI 밖입니다.
 - ~~**Tailwind 버전별 `tailwind-merge` 범위 선택**: 템플릿과 같은 고정 범위를 씁니다(1.5).~~ E2(2026-10-19 사용자 결정)로 범위 안으로 옮겼습니다(1.6).
+- **템플릿 4종의 `tailwind-merge` 불일치**: 1.6 참고. WI-0037(#119) 범위입니다.
 - **`apps/web/public/library/**` 의 수집 데이터**: 외부 소스에서 수집해 둔 데이터(`library collect` · `publish` 산출물)로, 원문 코드 문자열 안에 `npx axis-cli add` 가 있습니다. 문서 사이트 소스가 아니라 수집본이라 손으로 고치지 않습니다. 수집본의 정정은 별도 WI 로 넘겼습니다(E4, 2026-10-19 사용자 결정, 메인 세션이 등록).
 - **init 재실행 시 `axis.config.json` 덮어쓰기**: init 을 다시 실행하면 기존 `axis.config.json` 을 묻지 않고 기본값으로 덮어씁니다(c131ee9 부터 같은 동작, AC7 로 고정한 기준값). 이를 막거나 확인하는 동작은 별도 WI 로 넘겼습니다(E4, 2026-10-19 사용자 결정, 메인 세션이 등록).
 - **과거 WI 문서 · CHANGELOG**: 작성 시점 기록이라 바꾸지 않습니다.
@@ -100,6 +110,7 @@
 - FR-5: init 은 어떤 경우에도 설치 명령을 실행하지 않습니다(자식 프로세스 0).
 - FR-6: init 의 마지막 안내를 `npx @axis-ds/cli add button` 으로, 그 밖의 실행 안내도 D2 대로 고칩니다.
 - FR-7 (E2): `tailwind-merge` 범위를 1.6 규칙으로 고르고, 추가하거나 안내할 때 고른 근거를 한 줄 출력합니다.
+- FR-8 (F1): 선언 범위를 읽지 못했거나 설치본과 선언의 major 가 다르면 근거 줄 뒤에 1.6 의 경고 줄을 냅니다.
 
 ### 3.2 비기능 요구사항
 - **불변**: init 출력의 기존 줄, `axis.config.json`, `utils.ts` 내용은 FR-1 · FR-2 · FR-3 의 의존성 줄(FR-7 근거 줄 포함)과 FR-6 의 문구 외에 바뀌지 않습니다. c131ee9 빌드의 실제 출력과 파일을 기준값으로 테스트에 고정합니다.
@@ -122,3 +133,5 @@
 - AC9: create-next-app 15.5.28 새 프로젝트에서 `axis init -y` → `pnpm install` → `pnpm build` rc 0. 같은 절차를 c131ee9 CLI 로 하면 rc 1(음성 대조).
 - AC10 (E2): 1.6 규칙의 각 경우(설치본 4 · 3, 선언만 `^4` · `~3.4` · `workspace:*` · 판정 불가 문자열, 없음, `devDependencies` 에만 있음, `package.json` 없음의 안내 명령)를 테스트가 고정합니다. 실경로에서 Tailwind 4 프로젝트(create-next-app 15.5.28)는 `^3.4.0`, Tailwind 3.4 프로젝트는 `^2.6.0` 이 추가되고 둘 다 `pnpm build` rc 0 입니다.
 - AC11 (E1): `.claude/agents/**` 와 `docs` 최상위 `*.md` 에도 `axis-cli` 실행 안내가 0건이고, 안내 테스트가 이 범위를 스캔합니다.
+- AC12 (F1): 하한 판정(`>=4` · `>=4.0.0` · `>=3.4 <4` · `4 - 4.2`), 4 이상(`^5` · `>=5.0.0` → `^3.4.0`), 판정 불가 경고(`catalog:` · `workspace:*` · `latest` · `^3 || ^4` · `0.0.0-insiders.*`), 설치본 · 선언 불일치 경고를 테스트가 고정하고, 하한 읽기 제거 · 불일치 경고 제거 · 「4 이상」을 「4」로 되돌린 변이에서 각각 테스트가 실패합니다.
+- AC13 (F2): `docs/templates/**` · `.claude/commands/**` · `.claude/prompts/**` · `.claude/rules/**` · `.clinerules/**` 에도 `axis-cli` 실행 안내가 0건이고, 안내 테스트가 경로마다 파일을 1개 이상 스캔하며, 다섯 곳에 넣은 위반을 모두 잡습니다.

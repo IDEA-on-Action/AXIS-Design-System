@@ -21,6 +21,8 @@
 - [x] 의존성 범위 → ✅ 템플릿 4종과 같은 `clsx ^2.1.1` · `tailwind-merge ^3.4.0` (D3, prd 1.5). E2 로 `tailwind-merge` 는 Tailwind 버전별로 보정
 - [x] 남은 실행 안내(`.claude/agents` · `docs` 최상위 문서) 정정과 스캔 범위 확장 → ✅ (E1, 2026-10-19 사용자 결정)
 - [x] `tailwind-merge` 범위 → ✅ Tailwind 4 `^3.4.0`, 3 이거나 판정 불가 `^2.6.0`, 설치본 우선 (E2, prd 1.6)
+- [x] Tailwind 판정 보강 → ✅ 하한 major 읽기 · 판정 불가와 설치본 · 선언 불일치 경고 · 4 이상은 `^3.4.0` (F1, 2026-10-19 사용자 결정, prd 1.6)
+- [x] 안내 테스트 스캔 범위 → ✅ `docs/templates` · `.claude/commands` · `.claude/prompts` · `.claude/rules` · `.clinerules` 추가 (F2, 2026-10-19 사용자 결정)
 - [x] 에이전트 해석 세 가지 → ✅ 2026-10-19 사용자 확정 (E3): D2 를 `pnpm dlx` · `bunx` · `npx` 없는 명령까지 확장, 문서 사이트 산문 2줄 정정, `package.json` 을 읽지 못하면 안내만 하고 rc 0 유지
 - [x] init 재실행 시 `axis.config.json` 덮어쓰기 · library 수집본 → ✅ 별도 WI 로 넘김(E4, 메인 세션이 등록, prd 2장)
 
@@ -69,6 +71,16 @@
 - [x] E2 테스트: 설치본 4 · 3 · 잘못된 version, 선언 `^4` · `~3.4` · `^4.1.0` · `workspace:*` · `latest` · `^3 || ^4`, 없음, devDependencies 에만 있음, `package.json` 없음 · 읽을 수 없음, 이미 있음 (init 52건, testplan T24). 변이 3종으로 27 · 5 · 8건 실패 (T28)
 - [x] 실경로: create-next-app 15.5.28(Tailwind 4.3.3) `^3.4.0` · build rc 0, Tailwind 3.4.19 최소 Next 프로젝트 `^2.6.0` · build rc 0 (T25 · T26)
 - [x] E3 · E4: prd 1.4 · 2장, 이 문서 착수 전 결정에 기록
+- [x] 커밋
+
+### M1-8 보정: Tailwind 판정 보강 · 안내 스캔 확장 (F1 · F2, 2026-10-19 사용자 결정)
+- [x] F1 (a): `tailwindMajorFromRange` 가 단순 형태가 아니면 하한의 major 를 읽음(`>=4` · `>=3.4 <4` · `4 - 4.2`). `||` · 하한 없음 · `catalog:` · `0.0.0-insiders.*` 는 판정 불가
+- [x] F1 (a) · (b): `tailwindWarnings` 로 판정 불가 경고와 설치본 · 선언 불일치 경고를 근거 줄 뒤에 출력
+- [x] F1 (c): major 4 이상 `^3.4.0`
+- [x] F1: `init.ts` 주석 · prd 1.6 판정표의 템플릿 근거 서술을 고치고 템플릿 불일치는 WI-0037(#119)로 적음
+- [x] F1 테스트 (init 64건, testplan T33), 변이 6종 각각 실패 (T34)
+- [x] F2: `guidance.test.ts` 스캔 범위 · 경로별 계측 대조 · 제외 근거 주석 갱신. 계측 수 (T35), 주입 양성 대조 5/5 · HEAD 판 0/5 (T36)
+- [x] 품질: 243건 통과 · lint · type-check · build `--force` rc 0 (T38)
 - [x] 커밋
 
 ### 이 브랜치 밖

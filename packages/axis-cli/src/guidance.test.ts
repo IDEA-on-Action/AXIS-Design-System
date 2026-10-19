@@ -26,25 +26,30 @@ function isGuidanceViolation(text: string): boolean {
 /**
  * 스캔 대상: CLI · MCP 등 패키지 소스와 README, 문서 사이트 소스, 루트 README, docs/guides,
  * 에이전트 지시문(.claude/agents, 에이전트가 이 안내를 그대로 옮겨 씀), docs 최상위 *.md(설계 · 계획 문서).
+ * 2026-10-19 사용자 결정 F2 로 더한 것: docs/templates(PRD · TODO · ADR 등 산출물 템플릿, WI 기록이 아님),
+ * 에이전트 · 도구 지시문 .claude/commands · .claude/prompts · .claude/rules · .clinerules(.claude/agents 와 같은
+ * 근거). 다섯 곳 모두 2026-10-19 에 있어서 넣었고, 없어지면 walk 가 오류를 내 미측정이 0건으로 보이지 않습니다.
  *
  * 성격상 스캔하면 안 되는 것(2026-10-19 사용자 결정 E1):
  * - docs/workitems/**: 결함을 설명하는 WI 기록이라 `npx axis-cli` 를 인용해야 합니다. 이를 빼려고 docs 는
- *   하위 디렉터리로 내려가지 않고 최상위 *.md 와 docs/guides 만 봅니다.
+ *   하위 디렉터리로 내려가지 않고 최상위 *.md 와 docs/guides · docs/templates 만 봅니다.
  * - .changeset/*.md · CHANGELOG.md: 무엇을 고쳤는지 설명하는 문장에 옛 안내를 인용합니다.
  * - 테스트 파일(*.test.ts)과 test/ fixture: 이 테스트처럼 나쁜 문자열을 양성 대조로 담습니다.
  *   walk 는 *.test.ts 를 건너뛰고, 패키지는 src 만 내려가므로 test/ 는 들어오지 않습니다.
  * - apps/web/public/library/**: 외부 소스에서 수집한 데이터라 손으로 고치지 않습니다(별도 WI).
  *   apps/web 은 src 만 봅니다.
  * 새로 실행 안내를 쓰는 곳이 생기면 성격이 위 제외에 해당하지 않는 한 여기에 더합니다.
- *
- * 성격상 제외할 근거는 없지만 아직 스캔하지 않는 것(E1 지시 범위 밖, 넣을지 사용자 확인 대기):
- * - docs/templates/**: 위 docs 구조 규칙 때문에 함께 빠집니다. WI 기록도 changeset 도 fixture 도 아닙니다.
- * - .claude/commands · .claude/prompts · .claude/rules · .clinerules: .claude/agents 와 같은 근거
- *   (에이전트가 안내를 옮겨 씀)가 들어맞습니다.
- * 2026-10-19 git grep 실측으로 이 다섯 곳의 위반은 0건입니다(같은 패턴이 docs/workitems 에서는 13줄 잡혀
- * 계측은 살아 있음). 이 테스트는 이들에 새로 들어오는 위반을 잡지 못합니다.
  */
-const SCAN_DIRS = ["apps/web/src", "docs/guides", ".claude/agents"];
+const SCAN_DIRS = [
+  "apps/web/src",
+  "docs/guides",
+  "docs/templates",
+  ".claude/agents",
+  ".claude/commands",
+  ".claude/prompts",
+  ".claude/rules",
+  ".clinerules",
+];
 const SCAN_FILES = ["README.md"];
 /** 하위로 내려가지 않고 바로 아래 *.md 만 보는 디렉터리 */
 const SCAN_TOP_LEVEL_MD = ["docs"];
@@ -113,7 +118,7 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     expect(isGuidanceViolation(INIT_NEXT_STEP_COMMAND)).toBe(false);
   });
 
-  it("패키지 소스 · README, apps/web/src, docs/guides, .claude/agents, docs 최상위 *.md, 루트 README 에 위반 0건", async () => {
+  it("패키지 소스 · README, apps/web/src, docs/guides · templates, .claude 지시문, .clinerules, docs 최상위 *.md, 루트 README 에 위반 0건", async () => {
     const files = await scanTargets();
     // 계측 대조: 스캔이 실제로 대상을 읽는지(0건이 미측정이 아님을 보임)
     expect(files.length).toBeGreaterThan(100);
@@ -121,6 +126,21 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     expect(files).toContain(path.join(ROOT, "apps/web/src/components/landing/install-command.tsx"));
     expect(files).toContain(path.join(ROOT, ".claude/agents/docs-writer.md"));
     expect(files).toContain(path.join(ROOT, "docs/axis-ds-implementation-plan.md"));
+    // 계측 대조(F2): SCAN_DIRS 의 각 경로에서 파일이 실제로 들어오는지
+    for (const d of SCAN_DIRS) {
+      const n = files.filter((f) => f.startsWith(path.join(ROOT, d) + path.sep)).length;
+      expect({ dir: d, scanned: n > 0 }).toEqual({ dir: d, scanned: true });
+    }
+    for (const f of [
+      "docs/templates/adr.md",
+      ".claude/commands/ax-build.md",
+      ".claude/prompts/README.md",
+      ".claude/rules/00-general.md",
+      ".clinerules/00-core.md",
+      ".clinerules/workflows/wi-implement.md",
+    ]) {
+      expect(files).toContain(path.join(ROOT, f));
+    }
     // 제외 확인: 결함을 설명하는 WI 문서는 스캔하지 않음
     expect(files.some((f) => f.startsWith(path.join(ROOT, "docs/workitems") + path.sep))).toBe(false);
     const hits: string[] = [];

@@ -25,6 +25,8 @@
 | U13 | FR-4 | 쓰는 도중 실패(파일을 자르고 ENOSPC 를 던지는 쓰기를 주입) · 복원도 실패 · 복원 내용 불일치 | 원래 내용으로 되돌림, 오류에 실패 원인과 복원 결과(성공 · 실패와 이유)를 담음 |
 | U12 | AC6 · AC11 | init 출력 · 소스 스캔(E1 로 `.claude/agents/**` · `docs` 최상위 `*.md` 추가) | `axis-cli` 실행 안내 0건, 스캔 대상 파일 수 > 100 · 새 범위 파일 포함 · `docs/workitems` 미포함, 패턴이 알려진 나쁜 문자열을 잡는지 양성 대조 |
 | U14 | AC10 | `tailwind-merge` 범위(E2, prd 1.6): 설치본 4.3.3 · 3.4.17 · 정확한 버전 아님, 선언만 `^4` · `~3.4` · `^4.1.0` · `workspace:*` · `latest` · `^3 \|\| ^4`, 없음, devDependencies 에만 있음, `package.json` 없음(설치본 4 · 없음) · 읽을 수 없음, 이미 있음, `tailwindMajorFromRange` 18개 입력 | 4 → `^3.4.0`, 그 밖 → `^2.6.0`, 설치본이 선언보다 우선, 근거 한 줄 출력(이미 있으면 없음) |
+| U15 | AC12 | F1: 선언 `>=4` · `>=4.0.0` · `>=3.4 <4` · `4 - 4.2` · `^5` · `>=5.0.0`, 판정 불가 `catalog:` · `workspace:*` · `latest` · `^3 \|\| ^4` · `0.0.0-insiders.4a4e1ec`, 설치본 4.3.3 · 선언 `^3.4.0` 과 설치본 3.4.17 · 선언 `^4`(불일치), 설치본 4.3.3 · 선언 `^4` · `catalog:`(경고 없음), 설치본 `0.0.0-insiders.*`, `package.json` 을 쓸 수 없을 때, `tailwindMajorFromRange` 40개 입력, `selectUtilsDependencies` major 5 · 6 · 3 · 2 · 0 · 없음, `tailwindWarnings` | 하한 major 로 판정, 4 이상 → `^3.4.0`, 판정 불가 경고 줄 · 불일치 경고 줄이 정확히 그 경우에만 나옴 |
+| U16 | AC13 | F2: 안내 스캔에 `docs/templates` · `.claude/commands` · `.claude/prompts` · `.claude/rules` · `.clinerules` 추가 | 경로마다 스캔 파일 1개 이상(계측 대조), 대표 파일 6개 포함, 위반 0건 |
 
 ## 3. 실경로 스모크 (AC9)
 
@@ -106,4 +108,18 @@
 - T26 의 프로젝트는 Tailwind 3 을 쓰는 create-next-app 옵션이 15.5.28 에 없어 손으로 만들었습니다. tailwindcss 는 레지스트리에서 설치했고 init 이 읽은 값은 그 설치본입니다.
 - T27 은 init 이 넣은 범위가 빌드에서 실제로 쓰이는지 보려고 페이지만 바꾼 확인이고, AC9 · AC10 판정은 T25 · T26(페이지를 바꾸지 않은 상태)입니다.
 
+## 3.5 보정: Tailwind 판정 보강 · 안내 스캔 확장 (F1 · F2, 2026-10-19)
 
+조건: 기준 HEAD 3426016, 수정은 `src/init/init.ts` · `src/init/init.test.ts` · `src/guidance.test.ts`. Node v22.22.0 · vitest 2.1.9. 변이는 워킹트리의 `init.ts` 를 scratchpad 사본(`a7919a931ae9`)에서 매번 새로 만들어 고친 뒤 실행했고, 끝에 사본으로 되돌려 sha 가 같음(`a7919a931ae9`)을 확인했습니다. 주입 실험은 대상 파일 5개를 scratchpad 에 복사해 두고 끝에 복사본으로 되돌렸으며, 그 5개의 `git status --short` 는 0줄입니다.
+
+| ID | AC | 명령 · 절차 | 결과 |
+|---|---|---|---|
+| T33 | AC12 · AC13 | `npx vitest run src/init src/guidance.test.ts` (packages/axis-cli) | 2 파일 · 67건 통과(init 64 · guidance 3) |
+| T34 | AC12 음성 | `init.ts` 변이로 `npx vitest run src/init` | A 비교자 하한 읽기 제거(`return lowers.length > 0 ? undefined : undefined`): 6/64 실패(`>=4` · `>=4.0.0` · `>=5.0.0` · `>=3.4 <4` · insiders 설치본 · `tailwindMajorFromRange`) · A2 하이픈 하한 제거: 2/64 실패(`4 - 4.2` · `tailwindMajorFromRange`) · B 불일치 경고 제거: 3/64 실패(설치본 4.x · 3.x · `detectTailwind`) · C 「4 이상」을 「`=== 4`」로: 3/64 실패(`^5` · `>=5.0.0` · `selectUtilsDependencies`) · D 판정 불가 경고 제거: 6/64 실패(`workspace:*` · `latest` · `^3 \|\| ^4` · `catalog:` · insiders 선언 · 쓸 수 없을 때) · E `0.0.0-*` 거부 제거: 2/64 실패(insiders 선언 · `tailwindMajorFromRange`). 끝에 sha `a7919a931ae9` 로 복원 |
+| T35 | AC13 계측 대조 | 테스트에 경로별 스캔 수 출력을 임시로 넣어 실행(실행 뒤 사본으로 되돌림, sha `f6b7ebc161cc`) | apps/web/src 109 · docs/guides 7 · docs/templates 7 · .claude/agents 5 · .claude/commands 9 · .claude/prompts 6 · .claude/rules 6 · .clinerules 11. 새 다섯 곳은 `find` 로 센 대상 확장자 파일 수(7 · 9 · 6 · 6 · 11)와 같음 |
+| T36 | AC13 양성 대조 | `docs/templates/adr.md` · `.claude/commands/ax-build.md` · `.claude/prompts/planning/feature-plan.md` · `.claude/rules/20-quality.md` · `.clinerules/workflows/wi-test.md` 끝에 `npx axis-cli add button` 한 줄을 넣고 `npx vitest run src/guidance.test.ts` | 1/3 실패, 위반 5줄(다섯 파일 모두). 같은 주입으로 HEAD 의 `guidance.test.ts` 는 3/3 통과(0줄, 종전 범위가 이 다섯 곳을 보지 않음을 재확인). 되돌린 뒤 5개 파일 `git status` 0줄 |
+| T37 | AC12 실경로 보조 | `pnpm exec turbo run build --filter=@axis-ds/cli --force`(1/1, `Cached: 0`) 뒤 `node dist/index.js init -y` 를 세 디렉터리에서: 선언 `catalog:` · 선언 `^3.4.0` + 설치본 4.3.3(`node_modules/tailwindcss/package.json` 만 둠) · 선언 `>=4.0.0` | 셋 다 rc 0. `catalog:`: `tailwind-merge@^2.6.0` 과 판정 불가 경고 줄. 불일치: `tailwind-merge@^3.4.0` 과 `! 설치본 tailwindcss 4.3.3(major 4)와 package.json 선언 ^3.4.0(major 3)가 다름 - 설치본을 따랐습니다. pnpm install 뒤 tailwind-merge 범위를 다시 확인하세요.` `>=4.0.0`: `tailwind-merge@^3.4.0` · 근거 `package.json 의 tailwindcss >=4.0.0`, 경고 없음 |
+| T38 | AC8 · 품질 | `npx vitest run`(packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` · `pnpm build --force` | 12 파일 · 243건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T31 과 같은 수, 모두 `src/library` · `src/template`) · rc 0, 8/8, `Cached: 0`(빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림) |
+
+- T37 의 설치본은 `node_modules/tailwindcss/package.json` 한 파일만 둔 것이라 실제 설치가 아닙니다. init 이 읽는 것은 그 파일의 `version` 뿐이라 판정 경로는 같지만, Tailwind 4 프로젝트의 빌드까지 본 실경로 판정은 T25 · T26 입니다.
+- 기존 테스트 중 바뀐 기대값: `tailwindMajorFromRange` 의 `>=3` · `>=3.4 <4` 는 `undefined` 에서 3 으로(F1 (a)), `selectUtilsDependencies` 의 major 5 는 `^2.6.0` 에서 `^3.4.0` 으로(F1 (c)), `detectTailwind` 의 설치본 3.4.17 · 선언 `^4` 결과에 `mismatch` 가 붙음(F1 (b)), 판정 불가 선언 3건(`workspace:*` · `latest` · `^3 || ^4`)에 경고 줄 기대가 붙음.
