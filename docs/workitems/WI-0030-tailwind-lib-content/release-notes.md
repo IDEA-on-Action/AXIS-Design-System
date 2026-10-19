@@ -4,7 +4,7 @@
 
 ## 배경
 
-`apps/web/tailwind.config.ts` 의 `content` 에 `./src/lib` 가 없어 그 안의 클래스 문자열이 CSS 로 생성되지 않았다(Issue #95).
+`apps/web/tailwind.config.ts` 의 `content` 에 `./src/lib` 가 없어 `src/lib` 에만 있는 클래스(`bg-zinc-500`)가 CSS 로 생성되지 않았다(Issue #95). 같은 파일의 나머지 3개(`bg-blue-500` · `bg-purple-500` · `bg-green-500`)는 `src/app` · `src/components` 에도 있어 이미 생성되고 있었다.
 
 ## 변경 사항
 

@@ -46,3 +46,5 @@
 
 ## 후속 (이번 범위 아님)
 - `src/registry` 의 예제 파일 5개도 클래스 문자열을 갖고 있고 `content` 밖입니다. WI-0025 M3 · M4 가 그 경로를 더하므로 여기서는 손대지 않습니다.
+- WI-0025 M3 · M4 와 `apps/web/tailwind.config.ts` 인접 줄 충돌: M3 · M4 는 이 WI 가 추가한 줄 바로 다음의 `../../packages/ui/src/**` 줄을 지우고 `./src/registry/**` · `axis-ui-react` · `axis-agentic-ui` 줄로 바꿉니다. 나중에 머지되는 쪽이 `./src/lib/**` 줄과 registry · `axis-ui-react` · `axis-agentic-ui` 줄을 모두 남기고, `packages/ui` 줄 삭제는 M3 쪽을 따릅니다. 머지 순서는 사용자가 정합니다.
+  - 실측(2026-10-19, 이 브랜치 HEAD a31ea50 기준 `git merge-tree --write-tree --name-only`): `origin/feat/wi-0025-m3-ontology` 870969f · `origin/feat/wi-0025-m4-demo` 34d7bca · `feat/wi-0025-m3-ontology-v2` 17e4427 세 브랜치 모두 `tailwind.config.ts` 충돌. 대조군 `main` 대 같은 세 브랜치는 `tailwind.config.ts` 충돌 없음(M3 대조는 다른 파일 8개 충돌을 출력해 측정 수행 확인).

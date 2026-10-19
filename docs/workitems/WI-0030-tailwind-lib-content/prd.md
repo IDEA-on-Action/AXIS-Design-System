@@ -2,7 +2,7 @@
 
 > 작성일: 2026-10-19 | 버전: v1.0 (2026-10-19) | 작성자: Sinclair Seo | WI: WI-0030 | GitHub: #95 | 상태: Approved
 > 선행: 없음. 기준 `main` e690905
-> 관련: WI-0025 M3 · M4 브랜치가 같은 `content` 배열에 registry · 패키지 경로를 더합니다(plan.md 5.1 U21 에서 별건으로 분리)
+> 관련: WI-0025 M3 · M4 브랜치가 같은 `content` 배열에 registry · 패키지 경로를 더합니다(WI-0025 plan.md 5.1 U21 에서 별건으로 분리. U21 은 main 에는 없고 M3 브랜치 `feat/wi-0025-m3-ontology-v2`(PR #107) · `feat/wi-0025-m3-ontology` · M4 브랜치 `feat/wi-0025-m4-demo`(PR #110) 의 plan.md 에 있습니다)
 
 ---
 
@@ -25,6 +25,7 @@
 ### 1.4 범위
 - 포함: `content` 배열에 `./src/lib/**/*.{js,ts,jsx,tsx,mdx}` 한 줄 추가(`src/app` 줄 바로 다음, 기존 줄은 그대로)
 - 제외: `src/registry` 등 다른 디렉토리 경로(WI-0025 M3 · M4 범위), 패키지 배포
+- 머지 충돌: M3 · M4 브랜치는 추가한 줄 바로 다음의 `packages/ui` 줄을 지우고 registry · 패키지 경로로 바꾸므로 `tailwind.config.ts` 가 인접 줄 충돌을 냅니다. 해소 방법은 [todo.md](./todo.md) 후속에 적었습니다
 
 ## 2. 수용 기준 (AC)
 
