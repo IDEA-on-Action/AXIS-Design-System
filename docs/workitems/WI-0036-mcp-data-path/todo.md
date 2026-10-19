@@ -51,9 +51,9 @@
 - [x] 전제 확인: `ci` job 은 Pack smoke 전에 `pnpm build`(turbo, 퍼블리시 대상 6개 + web)를 돌리고, turbo `build` outputs 에 `dist/**` 가 있어 캐시 적중이어도 dist 가 복원됩니다. 트리거 paths 에 `packages/**` · `scripts/**` 가 이미 있습니다. Node 20(`setup-node`), npm 은 그 번들본입니다
 - [x] `frontend.yml` `ci` job 끝(Upload build artifact 다음)에 `pnpm pack-smoke` step 추가, `continue-on-error` · `|| true` 없음
 - [x] CI 순서 로컬 실행 rc 0, `EXPECTED_TOOLS` 변이 rc 1, Node 20 rc 0, 빈 npm 캐시 rc 0, actionlint 추가 지적 0건 (testplan T10~T14)
-- [x] #110(M4) · #118(WI-0035) 와 `git merge-tree` 충돌 없음, #118 병합 트리에서 pack-smoke + pack-install-smoke rc 0 (testplan T15~T17)
+- [x] #107(M3) · #110(M4) · #118(WI-0035) 와 `git merge-tree` 충돌 없음, #118 병합 트리에서 pack-smoke + pack-install-smoke rc 0 (testplan T15 · T15a · T16 · T17)
 - [ ] PR #116 CI run 에서 Pack smoke step 통과와 소요 시간 확인 (AC6)
-- [ ] #110 과 합쳐지면 `ci` job 에 Pack smoke step 이 2개가 됩니다(M4 의 AC4 step 은 Build 다음, 이 WI 의 step 은 job 끝). 나중에 머지되는 쪽에서 하나로 합칠지 결정이 필요합니다
+- [ ] #107 과 합쳐지면 `ci` job 에 Pack smoke step 이 2개가 됩니다(M3(#107, 64392e6)가 넣은 AC4 step 은 Build 다음, 이 WI 의 step 은 job 끝. #110(M4)은 M3 의 step 을 물려받았을 뿐입니다). #107 과 이 PR 만 머지돼도 생기므로, 나중에 머지되는 쪽에서 하나로 합칠지 결정이 필요합니다
 
 ---
 

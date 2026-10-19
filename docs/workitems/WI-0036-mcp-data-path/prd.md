@@ -59,7 +59,7 @@
 - FR-4: `.changeset` 에 `@axis-ds/mcp` patch changeset 을 둡니다.
 - FR-5: `.github/workflows/frontend.yml` `ci` job 이 `pnpm build` 다음에 `pnpm pack-smoke` 를 실행합니다(D4).
   - 실패를 숨기지 않습니다(`continue-on-error` · `|| true` 없음). 실패하면 `ci` job 이 실패해 `deploy-preview` · `deploy-production`(`needs: ci`)을 막습니다.
-  - 위치는 기존 step 사이가 아니라 job 끝(Upload build artifact 다음)입니다. WI-0025 M4(#110)가 Build 와 Upload build artifact 사이를 고치므로 충돌을 피합니다.
+  - 위치는 기존 step 사이가 아니라 job 끝(Upload build artifact 다음)입니다. WI-0025 M3(#107, 64392e6)가 Build 와 Upload build artifact 사이에 step 을 넣었고 M4(#110)가 그것을 물려받았으므로 충돌을 피합니다.
   - 트리거 paths 는 이미 `packages/**` · `scripts/**` 를 포함하므로 바꾸지 않습니다.
 
 ### 3.2 비기능 요구사항

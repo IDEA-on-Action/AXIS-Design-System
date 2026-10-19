@@ -47,11 +47,12 @@ CI 와 같은 순서로 로컬 실행했습니다. Node v22.22.0 · npm 10.9.4 �
 | ID | 명령 | 결과 |
 |---|---|---|
 | T10 | `pnpm install --frozen-lockfile` → `pnpm lint --force` → `pnpm type-check --force` → `pnpm check-token-refs` → `pnpm run test --force` → `pnpm build:registry` → `pnpm check-licenses` → `pnpm build --force` → `pnpm pack-smoke` | 전부 rc 0. build 8/8 · `Cached: 0`(189초), type-check 8/8 · `Cached: 0`(79초), test 5/5 · `Cached: 0`(17초), pack-smoke 6개 패키지 통과 · mcp tools/list 16개 · 호출 6건(4초, npm 캐시 있음) |
-| T11 | `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에서 `axis.check_project` 를 지운 변이 → `pnpm pack-smoke` | rc 1, `tools/list 에 목록 밖 도구: axis.check_project (EXPECTED_TOOLS 갱신 필요)` 1건. 원본 복원 후 sha256 앞 16자리 `1baaf76bfd9528e0` 일치 |
+| T11 | `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에서 `axis.check_project` 를 지운 변이 → `pnpm pack-smoke` | rc 1, `tools/list 에 목록 밖 도구: axis.check_project (EXPECTED_TOOLS 갱신 필요)` 1건. 원본 복원 후 sha256 앞 16자리 `1baaf76bfd9528e0` 일치(ddf8047 기준. 뒤의 a13234c 가 같은 파일 주석을 고쳐 최종 HEAD 의 값은 `acebaa0a92a0887a`) |
 | T12 | `npx -y node@20 scripts/pack-smoke.mjs` (Node v20.20.2, npm 은 PATH 의 10.9.4) | rc 0, 6개 패키지 통과 · mcp 16개 · 6건(40초, node@20 내려받기 포함) |
 | T13 | `npm_config_cache=<빈 디렉터리> pnpm pack-smoke` | rc 0, 9초(mcp 의존성을 npm 레지스트리에서 새로 받음) |
 | T14 | actionlint 1.7.7(docker `rhysd/actionlint:1.7.7`) `frontend.yml` | 수정 전 · 후 모두 rc 1, 같은 4건(Cloudflare credentials 확인 step 의 SC2086 info, 수정 전 138 · 209행 = 수정 후 146 · 217행). 추가한 step 에서 나온 지적 0건. `publish.yml` rc 0 |
-| T15 | `git merge-tree --write-tree HEAD origin/feat/wi-0025-m4-demo`(c111909, #110) | rc 0, 충돌 없음. 단 병합 트리에 Pack smoke step 이 2개(M4 의 AC4 step 105행, 이 WI 의 step 254행) |
+| T15 | `git merge-tree --write-tree HEAD origin/feat/wi-0025-m4-demo`(c111909, #110) | rc 0, 충돌 없음. 단 병합 트리에 Pack smoke step 이 2개(M3 에서 물려받은 AC4 step 105행, 이 WI 의 step 254행) |
+| T15a | `git merge-tree --write-tree a13234c origin/feat/wi-0025-m3-ontology-v2`(17e4427, #107) | rc 0, 충돌 없음. 병합 트리에 Pack smoke step 이 2개(AC4 step 105행, 이 WI 의 step 232행). AC4 step 은 M3 의 64392e6 이 넣었고(`git log -S` 로 확인) #110 은 그것을 물려받았으므로, #107 과 이 PR 만 머지돼도 중복이 생깁니다 |
 | T16 | `git merge-tree --write-tree HEAD 940e83c`(#118 `fix/wi-0035-tokens-esm`) | rc 0, 충돌 없음. 병합 트리 `pack-smoke` 스크립트는 `node scripts/pack-smoke.mjs && node scripts/pack-install-smoke.mjs` |
 | T17 | T16 병합 트리를 스크래치패드에 풀어 `pnpm install --frozen-lockfile` → `pnpm turbo run build --force --filter='./packages/*'` → `pnpm pack-smoke` | 모두 rc 0. build 6/6 · `Cached: 0`, pack-smoke 6개 통과 · mcp 16개 · 6건, 이어서 pack-install-smoke tokens 서브패스 8건 · tsc rc 0(33초) |
 
