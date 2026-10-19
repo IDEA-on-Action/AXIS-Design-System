@@ -111,7 +111,6 @@
 - `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(짝 10)
 - 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`. `variables.css`는 npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11(위 새 변수 표), `shadcn-compat.css`는 1.2.1과 바이트까지 같음, AC3 테스트 통과
 - `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과(M3 시점 9페이지. M4 수치는 아래 「검증 (M4)」)
-- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과
 - 2026-10-19 라이트 선택자 (0,2,0) 상향 뒤(M3 브랜치 17e4427 위, turbo `--force` 캐시 0): dist 13파일 중 `css/brands/ontology.css` 만 바뀌고 차이는 라이트 선택자 1줄(sha256 `f06a96e4…` → `d69437fe…`), 나머지 12파일(`variables.css` `e3ced2d8…` · `shadcn-compat.css` `dd374eca…` · js · json · tailwind preset) 바이트 동일. tokens test 217/217, type-check 4/4 · lint 4/4 rc 0, `test:e2e:a11y`(E2E_SERVER=static, chromium) 36/36, `test:e2e:nontext` 6/6, `test:e2e:tokens` 22/22(brand 18 · dark 4, 「프로젝트 `:root`가 브랜드 뒤」 갈래 5 추가), `check-token-refs` · `check-contrast-pairs` 위반 0. 음성 대조: 종전 선택자 dist 로 tokens E2E 를 돌리면 라이트 `html[data-brand]` · 프로젝트 `:root` 뒤 갈래 1건 실패. 앱 층: `layout.tsx`에서 브랜드 import 를 tokens 와 `globals.css` 사이로 옮겨 빌드해도(종전 U11 음성 대조, 라이트 9건 실패) a11y 36/36 통과(확인 뒤 되돌림)
 - 레지스트리 사본 content 와 src 대조 84/84 일치(a8fe0a0 시점). 95e8547 뒤 PlanCard 사본 3벌(`public/r` · `apps/web/public/r` · `packages/axis-agentic-ui/registry/r`)이 src 와 일치
 
