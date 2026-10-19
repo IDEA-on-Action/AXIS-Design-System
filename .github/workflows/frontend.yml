@@ -146,7 +146,7 @@ jobs:
           PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/a11y.json
         run: pnpm --filter @ax/web test:e2e:a11y --reporter=list,json --output=test-results/a11y
 
-      - name: E2E 비텍스트 대비 (포커스 링 · 상태 아이콘 3:1)
+      - name: E2E 비텍스트 대비 (포커스 링 · 상태 표식 실요소, 주 표식 3:1)
         id: e2e-nontext
         if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
         env:
@@ -171,8 +171,10 @@ jobs:
         run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
 
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
-      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-18, playwright --list): a11y 40 · nontext 6 · tokens 17 · demo 8.
+      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(playwright --list): a11y 40 · tokens 17 · demo 8 (2026-10-18),
+      # nontext 8 (2026-10-19, 포커스 링 ontology 2조합 x 2 + 상태 표식 실요소 4조합 x 1, D1 「주 표식만 판정」).
       # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 10건인지도 본다(M4 에서 브랜드 전환 데모 페이지를 더함).
+      # nontext 는 상태 표식 4조합마다 1건, 포커스 링 ontology 라이트 · 다크마다 2건인지 본다.
       - name: E2E 실행 건수 가드
         id: e2e-count
         if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
@@ -185,7 +187,7 @@ jobs:
             echo '| suite | 기대 | 실행 | 통과 | 실패 | flaky | skipped |'
             echo '|---|---|---|---|---|---|---|'
           } >> "$GITHUB_STEP_SUMMARY"
-          for spec in a11y:40 nontext:6 tokens:17 demo:8; do
+          for spec in a11y:40 nontext:8 tokens:17 demo:8; do
             name=${spec%%:*}; want=${spec##*:}; f="$name.json"
             if [ ! -s "$f" ]; then
               echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"
@@ -208,6 +210,16 @@ jobs:
               n=$(jq --arg t "a11y ($combo)" '[.. | objects | select(.title? == $t) | .specs[]?] | length' a11y.json)
               if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne 10 ]; then
                 echo "::error::a11y ($combo): ${n}건 (기대 10건)"
+                fail=1
+              fi
+            done
+          fi
+          if [ -s nontext.json ]; then
+            for want in 'nontext status (default/light):1' 'nontext status (default/dark):1' 'nontext status (ontology/light):1' 'nontext status (ontology/dark):1' 'nontext (ontology/light):2' 'nontext (ontology/dark):2'; do
+              t=${want%:*}; w=${want##*:}
+              n=$(jq --arg t "$t" '[.. | objects | select(.title? == $t) | .specs[]?] | length' nontext.json)
+              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne "$w" ]; then
+                echo "::error::$t: ${n}건 (기대 ${w}건)"
                 fail=1
               fi
             done

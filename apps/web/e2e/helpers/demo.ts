@@ -3,8 +3,9 @@ import { expect, type Page } from '@playwright/test'
 /**
  * 브랜드 전환 데모 페이지(/docs/brand-demo/) 진입 공용 헬퍼 (WI-0025 FR-10 · AC7).
  *
- * brand-demo.spec.ts 와 brand-nontext-contrast.spec.ts 가 같이 써요.
- * 컨트롤 준비 대기(`data-ready`)를 spec 마다 복제하면 한쪽만 바뀌어 낡으므로 여기 한 곳에 둬요.
+ * brand-demo.spec.ts 와 brand-nontext-contrast.spec.ts 가 데모 진입(openDemo)에 같이 써요.
+ * 첫 진입의 컨트롤 준비 대기(`data-ready`)는 openDemo 에 둬요. 새로고침 · 뒤로 가기 뒤의 같은 대기(brand-demo.spec.ts T2 · T3)와
+ * a11y.spec.ts 의 PAGES readySelector · DEMO_PATH 는 아직 각 spec 에 따로 있으니, 대기 조건을 바꾸면 그 셋도 함께 고쳐요.
  */
 export const DEMO_PATH = '/docs/brand-demo/'
 
