@@ -38,6 +38,20 @@ async function runTheme(args: string[]): Promise<{ out: string; exitCode: number
   return { out: logs.join("\n"), exitCode };
 }
 
+describe("부분 빌드(brand.json 없음)", () => {
+  it("list · info 모두 빌드 전 안내와 rc 1, 스택 트레이스 없음", async () => {
+    const dir = await project("1.3");
+    await fs.remove(`${dir}/node_modules/@axis-ds/tokens/dist/brands/sample/brand.json`);
+    for (const args of [["list", "-d", dir], ["info", "sample", "-d", dir]]) {
+      logs = [];
+      const { out, exitCode } = await runTheme(args);
+      expect(exitCode).toBe(1);
+      expect(out).toContain("빌드 산출물이 없어 브랜드를 읽을 수 없습니다");
+      expect(out).not.toContain("MODULE_NOT_FOUND");
+    }
+  });
+});
+
 describe("axis theme list", () => {
   it("T2-4: 이름 · 설명 · 테마, rc 0", async () => {
     const dir = await project("1.3");

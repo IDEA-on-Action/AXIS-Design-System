@@ -244,6 +244,26 @@ describe("T3-3: import 삽입 위치", () => {
     expect(out.indexOf(line)).toBeLessThan(out.indexOf(":root { --x: 1; }"));
   });
 
+  it("맨 앞 UTF-8 BOM 은 맨 앞에 남고 파일 중간으로 밀려나지 않음", () => {
+    const out = insertImportLine("\uFEFF@tailwind base;\n", line);
+    expect(out.startsWith(`\uFEFF${line}\n`)).toBe(true);
+    expect(out.split("\uFEFF").length - 1).toBe(1);
+    // @charset 이 있어도 BOM 은 맨 앞 한 번
+    const withCharset = insertImportLine('\uFEFF@charset "utf-8";\n.a { color: red; }\n', line);
+    expect(withCharset).toBe(`\uFEFF@charset "utf-8";\n${line}\n.a { color: red; }\n`);
+  });
+
+  it("BOM 이 있는 globals.css 에 theme add: 결과도 BOM 으로 시작, 중간 BOM 0개", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const file = path.join(dir, "app", "globals.css");
+    await fs.writeFile(file, "\uFEFF@tailwind base;\n");
+    const { exitCode } = await runAdd(["sample", "-d", dir]);
+    expect(exitCode).toBe(0);
+    const css = await fs.readFile(file, "utf8");
+    expect(css).toBe(`\uFEFF${line}\n@tailwind base;\n`);
+    expect(css.slice(1).includes("\uFEFF")).toBe(false);
+  });
+
   it("CRLF 파일은 CRLF 를 유지", () => {
     const out = insertImportLine("@tailwind base;\r\n.a{}\r\n", line);
     expect(out).toBe(`${line}\r\n@tailwind base;\r\n.a{}\r\n`);
@@ -255,6 +275,93 @@ describe("T3-3: import 삽입 위치", () => {
     const lines = (await fs.readFile(path.join(dir, "globals.css"), "utf8")).split("\n");
     expect(lines[0]).toBe(line);
     expect(lines[1]).toBe("@tailwind base;");
+  });
+});
+
+describe("쓰기 대상 CSS 가 프로젝트 밖일 때", () => {
+  async function setup(): Promise<{ dir: string; outside: string; outsideFile: string }> {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const outside = await fs.mkdtemp(path.join(path.dirname(dir), "axis-theme-outside-"));
+    created.push(outside);
+    const outsideFile = path.join(outside, "globals.css");
+    await fs.writeFile(outsideFile, "@tailwind base;\n");
+    return { dir, outside, outsideFile };
+  }
+
+  async function expectRejected(dir: string, outside: string) {
+    const beforeProject = await snapshot(dir);
+    const beforeOutside = await snapshot(outside);
+    const { out, exitCode } = await runAdd(["sample", "-d", dir]);
+    expect(exitCode).toBe(1);
+    expect(out).toContain("프로젝트 디렉터리 밖입니다. 아무것도 바꾸지 않았습니다.");
+    expect(await snapshot(dir)).toEqual(beforeProject);
+    expect(await snapshot(outside)).toEqual(beforeOutside);
+  }
+
+  it("globalCss 가 ../ 로 밖을 가리키면 거절, 파일 변경 0, rc 1", async () => {
+    const { dir, outside } = await setup();
+    await fs.writeJSON(
+      path.join(dir, "axis.config.json"),
+      { globalCss: `../${path.basename(outside)}/globals.css` },
+      { spaces: 2 }
+    );
+    expect(planThemeAdd(dir, "sample").errors[0]?.kind).toBe("css-outside-project");
+    await expectRejected(dir, outside);
+  });
+
+  it("globalCss 가 밖의 절대경로면 거절", async () => {
+    const { dir, outside, outsideFile } = await setup();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { globalCss: outsideFile }, { spaces: 2 });
+    await expectRejected(dir, outside);
+  });
+
+  it("app/globals.css 가 밖의 파일을 가리키는 심볼릭 링크면 거절(링크 · 대상 불변)", async () => {
+    const { dir, outside, outsideFile } = await setup();
+    const link = path.join(dir, "app", "globals.css");
+    await fs.remove(link);
+    await fs.symlink(outsideFile, link);
+    await expectRejected(dir, outside);
+    expect((await fs.lstat(link)).isSymbolicLink()).toBe(true);
+  });
+
+  it("음성 대조군: 프로젝트 안 절대경로 · 안을 가리키는 심볼릭 링크는 그대로 씀", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const real = path.join(dir, "styles", "main.css");
+    await fs.ensureDir(path.dirname(real));
+    await fs.writeFile(real, "@tailwind base;\n");
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { globalCss: real }, { spaces: 2 });
+    const plan = planThemeAdd(dir, "sample");
+    expect(plan.errors).toEqual([]);
+    expect(plan.css?.action).toBe("add");
+
+    const dir2 = await project({ tokens: "1.3", layout: "app-init" });
+    const target = path.join(dir2, "styles", "main.css");
+    await fs.ensureDir(path.dirname(target));
+    await fs.writeFile(target, "@tailwind base;\n");
+    await fs.remove(path.join(dir2, "app", "globals.css"));
+    await fs.symlink(target, path.join(dir2, "app", "globals.css"));
+    const { exitCode } = await runAdd(["sample", "-d", dir2]);
+    expect(exitCode).toBe(0);
+    expect(countLines(await fs.readFile(target, "utf8"), IMPORT_SAMPLE)).toBe(1);
+  });
+});
+
+describe("쓰기 전 권한 확인", () => {
+  it("axis.config.json 이 읽기 전용이면 아무것도 쓰지 않고 rc 1, 스택 트레이스 없음", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const config = path.join(dir, "axis.config.json");
+    await fs.chmod(config, 0o444);
+    try {
+      const before = await snapshot(dir);
+      const { out, exitCode } = await runAdd(["sample", "-d", dir]);
+      expect(exitCode).toBe(1);
+      expect(out).toContain("쓸 수 없습니다");
+      expect(out).toContain("바뀐 파일이 없습니다");
+      expect(out).not.toMatch(/\bat applyThemeAdd\b/);
+      expect(await snapshot(dir)).toEqual(before);
+    } finally {
+      await fs.chmod(config, 0o644);
+    }
   });
 });
 

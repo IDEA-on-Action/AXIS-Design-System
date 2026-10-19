@@ -222,6 +222,29 @@ describe("getBrand (T2-6 · T2-7 코어)", () => {
   });
 });
 
+describe("부분 빌드(index.json 은 있는데 항목 파일이 없음)는 not-built", () => {
+  const BUILT = "node_modules/@axis-ds/tokens/dist";
+
+  it("brand.json 이 없으면 listBrands · getBrand 모두 not-built (throw 없음)", async () => {
+    const dir = await project({ tokens: "1.3" });
+    await fs.remove(path.join(dir, BUILT, "brands/sample/brand.json"));
+    expect(listBrands(dir)).toEqual({ status: "not-built", version: "1.3.0", brands: [] });
+    expect(getBrand(dir, "sample")).toEqual({ status: "not-built", version: "1.3.0", brand: null, available: [] });
+  });
+
+  it("CSS 가 없으면 getBrand 는 not-built", async () => {
+    const dir = await project({ tokens: "1.3" });
+    await fs.remove(path.join(dir, BUILT, "css/brands/sample.css"));
+    expect(getBrand(dir, "sample")).toMatchObject({ status: "not-built", brand: null });
+  });
+
+  it("음성 대조군: 파일이 다 있으면 ok", async () => {
+    const dir = await project({ tokens: "1.3" });
+    expect(listBrands(dir).status).toBe("ok");
+    expect(getBrand(dir, "sample").status).toBe("ok");
+  });
+});
+
 describe("test-helpers", () => {
   it("theme-only 레이아웃은 템플릿 files[] 7개와 initTemplate 형태 config 를 펼침", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });

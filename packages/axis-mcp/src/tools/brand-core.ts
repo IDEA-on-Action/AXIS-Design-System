@@ -299,6 +299,15 @@ export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   return { ...base, state, cssFile, imports };
 }
 
+/**
+ * index 항목이 가리키는 파일(brand.json · CSS)이 없을 때 나는 오류인지 봅니다.
+ * index.json 은 있는데 항목 파일이 없는 부분 빌드 상태를 `not-built` 로 돌려주는 데 씁니다(plan 3장 5).
+ */
+function isMissingBuildFile(err: unknown): boolean {
+  const code = errorCode(err);
+  return code === "MODULE_NOT_FOUND" || code === "ENOENT";
+}
+
 function readBrandIndex(indexPath: string): BrandIndexEntry[] {
   const data = readJsonFile(indexPath) as { brands?: unknown };
   if (!Array.isArray(data.brands)) {
@@ -334,11 +343,14 @@ export function listBrands(baseDir: string): BrandListResult {
     return { status: tokens.status, version: tokens.version, brands: [] };
   }
   const entries = readBrandIndex(tokens.indexPath);
-  return {
-    status: "ok",
-    version: tokens.version,
-    brands: entries.map((entry) => readSummary(baseDir, entry)),
-  };
+  let brands: BrandSummary[];
+  try {
+    brands = entries.map((entry) => readSummary(baseDir, entry));
+  } catch (err) {
+    if (isMissingBuildFile(err)) return { status: "not-built", version: tokens.version, brands: [] };
+    throw err;
+  }
+  return { status: "ok", version: tokens.version, brands };
 }
 
 function stripComments(css: string): string {
@@ -415,9 +427,16 @@ export function getBrand(baseDir: string, name: string): BrandGetResult {
     return { status: "ok", version: tokens.version, brand: null, available };
   }
 
-  const summary = readSummary(baseDir, entry);
-  const cssPath = projectRequire(baseDir).resolve(summary.importPath);
-  const parsed = parseBrandCss(readFileSync(cssPath, "utf8"), name);
+  let summary: BrandSummary;
+  let parsed: BrandTokens;
+  try {
+    summary = readSummary(baseDir, entry);
+    const cssPath = projectRequire(baseDir).resolve(summary.importPath);
+    parsed = parseBrandCss(readFileSync(cssPath, "utf8"), name);
+  } catch (err) {
+    if (isMissingBuildFile(err)) return { status: "not-built", version: tokens.version, brand: null, available: [] };
+    throw err;
+  }
 
   return {
     status: "ok",

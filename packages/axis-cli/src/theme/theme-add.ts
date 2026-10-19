@@ -5,7 +5,7 @@
  * 설치 명령은 실행하지 않고 안내만 합니다(U6). 같은 브랜드로 다시 실행하면 쓸 파일이 0개입니다(멱등).
  */
 
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
 import {
@@ -31,6 +31,8 @@ export type ThemeAddError =
   | { kind: "invalid-config"; message: string }
   | { kind: "invalid-package-json"; message: string }
   | { kind: "invalid-name"; brand: string }
+  /** 고른 CSS 파일의 실제 경로(심볼릭 링크를 따라간 경로)가 프로젝트 디렉터리 밖입니다. */
+  | { kind: "css-outside-project"; file: string; realPath: string }
   | { kind: "unknown-brand"; brand: string; available: string[]; version?: string };
 
 /** 쓸 파일 하나. `before` 는 계획할 때 읽은 내용(없던 파일이면 `null`)입니다. */
@@ -112,8 +114,11 @@ export function formatJsonLike(original: string, value: unknown): string {
  * 그런 줄이 없으면 첫 줄에 넣습니다. 그래서 `@tailwind base;` 같은 규칙보다 항상 앞입니다.
  */
 export function insertImportLine(css: string, line: string): string {
-  const eol = eolOf(css);
-  const lines = css.split(/\r?\n/);
+  // 맨 앞 UTF-8 BOM 은 떼어 두었다가 결과 맨 앞에 다시 붙입니다(BOM 이 둘째 줄로 밀려나면 PostCSS 가 파싱하지 못함).
+  const bom = css.startsWith("\uFEFF") ? "\uFEFF" : "";
+  const body = bom ? css.slice(1) : css;
+  const eol = eolOf(body);
+  const lines = body.split(/\r?\n/);
   let insertAt = 0;
   let inComment = false;
   for (let i = 0; i < lines.length; i++) {
@@ -141,7 +146,7 @@ export function insertImportLine(css: string, line: string): string {
     break;
   }
   lines.splice(insertAt, 0, line);
-  return lines.join(eol);
+  return bom + lines.join(eol);
 }
 
 /** `x.y.z` 비교(프리릴리스는 같은 x.y.z 보다 낮게 봄). 읽을 수 없으면 `undefined` */
@@ -158,6 +163,15 @@ export function compareVersions(a: string, b: string): number | undefined {
   }
   if (pa.pre !== pb.pre) return pa.pre ? -1 : 1;
   return 0;
+}
+
+/** `file` 의 실제 경로가 `baseDir` 의 실제 경로 안에 있는지 봅니다(심볼릭 링크 · `../` · 절대경로 모두 실제 경로로 판정). */
+function realPathInside(baseDir: string, file: string): { inside: boolean; realPath: string } {
+  const realBase = realpathSync(baseDir);
+  const realPath = realpathSync(file);
+  const relPath = path.relative(realBase, realPath);
+  const inside = relPath !== "" && !relPath.startsWith("..") && !path.isAbsolute(relPath);
+  return { inside, realPath };
 }
 
 /** 프로젝트의 lockfile 로 설치 명령을 고릅니다(없으면 pnpm). */
@@ -246,6 +260,13 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   // 3. CSS (FR-2 탐색 순서, U14 (A), U2 대안 2 위치, U13)
   const location = findGlobalCss(baseDir, config);
   if (location.path) {
+    // 쓰기 대상은 프로젝트 안 파일만(globalCss 의 `../` · 절대경로 · 밖을 가리키는 심볼릭 링크는 거절, 아무것도 쓰지 않음)
+    const where = realPathInside(baseDir, location.path);
+    if (!where.inside) {
+      plan.errors.push({ kind: "css-outside-project", file: location.path, realPath: where.realPath });
+      plan.writes = [];
+      return plan;
+    }
     const before = readFileSync(location.path, "utf8");
     const imported = findBrandImports(before);
     const otherBrands = [...new Set(imported.filter((n) => n !== brand))];
@@ -308,9 +329,30 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   return plan;
 }
 
+/** 쓰기 단계에서 실패했을 때의 오류. 이미 쓴 파일은 계획 전 내용으로 되돌린 뒤 던집니다. */
+export class ThemeApplyError extends Error {
+  constructor(
+    message: string,
+    /** 실패한 파일 */
+    readonly failedFile: string,
+    /** 되돌린 파일 */
+    readonly restored: string[],
+    /** 되돌리지 못한 파일(이 파일들은 바뀐 채 남아 있음) */
+    readonly restoreFailed: string[]
+  ) {
+    super(message);
+    this.name = "ThemeApplyError";
+  }
+}
+
+function errorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 /**
- * 계획대로 씁니다. 쓰기 전에 모든 대상 파일이 계획할 때와 같은지, 새 내용이 올바른지 먼저 확인하고,
+ * 계획대로 씁니다. 쓰기 전에 모든 대상 파일이 계획할 때와 같은지, 새 내용이 올바른지, 쓸 수 있는지 먼저 확인하고,
  * 하나라도 어긋나면 아무것도 쓰지 않고 오류를 던집니다.
+ * 그래도 쓰는 도중 실패하면 이미 쓴 파일을 계획 전 내용으로 되돌리고 `ThemeApplyError` 를 던집니다.
  */
 export function applyThemeAdd(plan: ThemeAddPlan): string[] {
   if (plan.errors.length > 0) {
@@ -326,9 +368,36 @@ export function applyThemeAdd(plan: ThemeAddPlan): string[] {
     } else if (findBrandImports(w.after).filter((n) => n === plan.brand).length !== 1) {
       throw new Error(`${w.file}: 브랜드 import 가 정확히 1줄이 아닙니다`);
     }
+    try {
+      accessSync(w.before === null ? path.dirname(w.file) : w.file, constants.W_OK);
+    } catch (err) {
+      throw new Error(`${w.file} 에 쓸 수 없습니다(${errorMessage(err)}).`);
+    }
   }
+  const done: PlannedWrite[] = [];
   for (const w of plan.writes) {
-    writeFileSync(w.file, w.after);
+    try {
+      writeFileSync(w.file, w.after);
+      done.push(w);
+    } catch (err) {
+      const restored: string[] = [];
+      const restoreFailed: string[] = [];
+      for (const d of done.reverse()) {
+        try {
+          if (d.before === null) unlinkSync(d.file);
+          else writeFileSync(d.file, d.before);
+          restored.push(d.file);
+        } catch {
+          restoreFailed.push(d.file);
+        }
+      }
+      throw new ThemeApplyError(
+        `${w.file} 를 쓰지 못했습니다(${errorMessage(err)}).`,
+        w.file,
+        restored,
+        restoreFailed
+      );
+    }
   }
-  return plan.writes.map((w) => w.file);
+  return done.map((w) => w.file);
 }

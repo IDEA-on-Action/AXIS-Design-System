@@ -18,6 +18,7 @@ import {
 import {
   THEME_PACKAGE,
   TOKENS_DEPENDENCY_RANGE,
+  ThemeApplyError,
   applyThemeAdd,
   planThemeAdd,
   type ThemeAddPlan,
@@ -190,6 +191,14 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
           chalk.red(`브랜드 이름 '${error.brand}' 가 규칙(소문자 · 숫자 · 하이픈, 예: ontology)에 맞지 않습니다.`)
         );
         break;
+      case "css-outside-project":
+        lines.push(
+          chalk.red(
+            `CSS 파일 ${error.file} 의 실제 위치(${error.realPath})가 프로젝트 디렉터리 밖입니다. 아무것도 바꾸지 않았습니다.`
+          ),
+          `  axis.config.json 의 globalCss 를 프로젝트 안 파일로 고치거나, 그 파일에 직접 넣으세요: @import "${plan.importPath}";`
+        );
+        break;
       case "unknown-brand":
         lines.push(
           chalk.red(`브랜드 '${error.brand}' 가 설치된 ${TOKENS_PACKAGE} ${error.version ?? ""} 에 없습니다.`),
@@ -287,6 +296,33 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   return { lines, exitCode: 0 };
 }
 
+/**
+ * `applyThemeAdd` 가 던진 오류의 출력. 쓰기 전 확인에서 멈췄으면 바뀐 파일이 없고,
+ * 쓰는 도중 실패했으면 되돌린 파일과 되돌리지 못한 파일을 함께 알립니다. rc 1.
+ */
+export function renderThemeAddFailure(plan: ThemeAddPlan, err: unknown): ThemeOutput {
+  const lines = [""];
+  if (err instanceof ThemeApplyError) {
+    lines.push(chalk.red(err.message));
+    if (err.restored.length > 0) {
+      lines.push(`  먼저 쓴 파일은 원래 내용으로 되돌렸습니다: ${err.restored.map((f) => rel(plan, f)).join(", ")}`);
+    }
+    if (err.restoreFailed.length > 0) {
+      lines.push(
+        chalk.red(`  되돌리지 못해 바뀐 채 남은 파일: ${err.restoreFailed.map((f) => rel(plan, f)).join(", ")}`)
+      );
+    }
+    if (err.restored.length === 0 && err.restoreFailed.length === 0) {
+      lines.push("  바뀐 파일이 없습니다.");
+    }
+  } else {
+    // 쓰기 전 확인(계획 뒤 변경 · 내용 검증 · 쓰기 권한)에서 멈춘 경우라 쓴 파일이 없습니다.
+    lines.push(chalk.red(err instanceof Error ? err.message : String(err)), "  바뀐 파일이 없습니다.");
+  }
+  lines.push("");
+  return { lines, exitCode: 1 };
+}
+
 function print(output: ThemeOutput): void {
   for (const line of output.lines) console.log(line);
   if (output.exitCode !== 0) process.exitCode = output.exitCode;
@@ -324,7 +360,15 @@ export function registerThemeCommand(program: Command): void {
     .action((name: string, options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
       const plan = planThemeAdd(baseDir, name);
-      const written = plan.errors.length === 0 ? applyThemeAdd(plan) : [];
+      let written: string[] = [];
+      if (plan.errors.length === 0) {
+        try {
+          written = applyThemeAdd(plan);
+        } catch (err) {
+          print(renderThemeAddFailure(plan, err));
+          return;
+        }
+      }
       print(renderThemeAdd(plan, written));
     });
 }
