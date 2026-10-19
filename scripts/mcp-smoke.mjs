@@ -9,7 +9,8 @@
  * 설치된 패키지의 `bin` 으로 서버를 stdio 로 띄워 JSON-RPC 로 다음을 확인한다.
  *
  *   1. initialize 응답과 tools/list 의 도구 수(EXPECTED_TOOLS 와 1:1)
- *   2. 번들 레지스트리 데이터를 읽는 도구 6개를 실제 호출해 isError 가 없고 기대 문자열이 있는지
+ *   2. 번들 레지스트리 데이터를 읽는 도구 6개를 실제 호출해 isError 가 없고 결과에서만 나오는 기대 문자열이
+ *      있는지(install_component 는 targetDir 에 파일이 실제로 생겼는지도)
  *
  * 템플릿 도구(list/get/apply/diff_template)는 원격 `axis.minu.best` 를 읽고 번들 데이터를 읽지 않아
  * 이 스모크의 대상이 아니다(사이트 가용성이 배포를 막지 않게 하려는 것).
@@ -20,14 +21,18 @@
  * 실패 시 exit 1. pack-smoke.mjs 는 runMcpSmoke() 를 직접 호출한다.
  */
 import { execFileSync, spawn } from 'child_process';
-import { mkdtempSync, mkdirSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, mkdtempSync, mkdirSync, rmSync, readdirSync, readFileSync, writeFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { fileURLToPath } from 'url';
 
 const REQUEST_TIMEOUT_MS = 30_000;
+// npm install(레지스트리 · 네트워크 정지 시 publish job 이 매달리지 않게)
+const INSTALL_TIMEOUT_MS = 300_000;
 
 // tools/list 가 내야 하는 도구(src/index.ts 의 server.tool 등록과 1:1)
+// 도구를 더하거나 빼면 이 목록도 같이 고친다. 안 고치면 main push 의 publish.yml(Pack smoke)이
+// 6개 패키지 발행 전체를 막는다(PR CI 에서는 pack-smoke 가 돌지 않아 머지 전에 드러나지 않는다).
 const EXPECTED_TOOLS = [
   'axis.search_components',
   'axis.get_component',
@@ -48,17 +53,23 @@ const EXPECTED_TOOLS = [
 ];
 
 // 번들 레지스트리 데이터(components.json · tokens.json)를 읽는 도구 호출과 기대 문자열
+// expect 는 질의 인자를 되풀이하는 머리글이 아니라 레지스트리에서 읽은 결과에서만 나오는 문자열로 고른다.
+// check 는 응답 밖의 부수효과(파일 생성)를 확인한다.
 function registryCalls(installDir) {
+  const installTarget = join(installDir, 'install-target');
+  const installedFile = join(installTarget, 'components', 'ui', 'button.tsx');
   return [
     { name: 'axis.list_components', args: {}, expect: 'button' },
     { name: 'axis.list_tokens', args: {}, expect: 'colors.primary' },
-    { name: 'axis.search_components', args: { query: 'button' }, expect: 'button' },
+    // 머리글 '## 검색 결과: "button"' 은 결과 0건이어도 나오므로 결과 행의 '(`button`)' 을 본다
+    { name: 'axis.search_components', args: { query: 'button' }, expect: '(`button`)' },
     { name: 'axis.get_component', args: { name: 'button' }, expect: 'button' },
     { name: 'axis.get_token', args: { path: 'colors.primary' }, expect: 'colors.primary' },
     {
       name: 'axis.install_component',
-      args: { name: 'button', targetDir: join(installDir, 'install-target') },
+      args: { name: 'button', targetDir: installTarget },
       expect: 'button',
+      check: () => (existsSync(installedFile) ? null : `설치 파일 없음: ${installedFile}`),
     },
   ];
 }
@@ -136,6 +147,7 @@ export async function runMcpSmoke(tgzPath, fail) {
     execFileSync('npm', ['install', resolve(tgzPath), '--no-audit', '--no-fund', '--loglevel=error'], {
       cwd: project,
       stdio: 'pipe',
+      timeout: INSTALL_TIMEOUT_MS,
     });
 
     const pkgRoot = join(project, 'node_modules', '@axis-ds', 'mcp');
@@ -177,6 +189,9 @@ export async function runMcpSmoke(tgzPath, fail) {
           fail(`${call.name}: isError - ${text.split('\n')[0]}`);
         } else if (!text.includes(call.expect)) {
           fail(`${call.name}: 응답에 '${call.expect}' 없음`);
+        } else if (call.check) {
+          const problem = call.check();
+          if (problem) fail(`${call.name}: ${problem}`);
         }
       }
     } finally {

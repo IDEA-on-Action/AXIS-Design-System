@@ -16,6 +16,8 @@
 ### chore: 실행 스모크 추가
 - `scripts/mcp-smoke.mjs`: tarball 을 빈 디렉터리에 `npm install` 하고 `bin` 으로 stdio 실행해 `tools/list`(16개 1:1)와 레지스트리 도구 6개를 호출합니다.
 - `scripts/pack-smoke.mjs` 가 mcp tarball 에 위 스모크를 실행합니다. `publish.yml` 의 Pack smoke 단계와 `pnpm release` 에 함께 걸립니다.
+- 단언은 질의어를 되풀이하는 머리글이 아니라 결과 행으로 보고, `axis.install_component` 는 대상 디렉터리에 파일이 생겼는지까지 확인합니다. `npm install` 에는 300초 timeout 을 둡니다.
+- mcp 도구를 더하거나 빼면 `scripts/mcp-smoke.mjs` 의 `EXPECTED_TOOLS` 도 같이 고쳐야 합니다. 안 고치면 main push 의 발행이 막힙니다.
 
 ## 검증 (2026-10-19, 기준 e690905 + 이 브랜치 변경)
 
@@ -29,6 +31,7 @@
 | 음성 | `node scripts/mcp-smoke.mjs <배포본 tgz>` | 1.1.4 · 1.1.3 · 1.1.0 모두 rc 1, 6건 isError(ENOENT `dist/data/components.json`) |
 | 음성 | 수정 전 HEAD 빌드로 `node scripts/mcp-smoke.mjs` | rc 1, 6건 isError |
 | 음성 | `copy-data` 를 되돌린 빌드로 `node scripts/pack-smoke.mjs` | rc 1, 6건 결함 |
+| 단언 변이 | 빈 레지스트리 · 설치 파일 쓰기 제거 · 설치 timeout 50ms | 모두 rc 1 (testplan T5~T7) |
 | changeset | `pnpm changeset status` | patch 대상 `@axis-ds/mcp` 하나 |
 
 - 스모크 전제: 설치는 npm 레지스트리에서 의존성을 받습니다(네트워크 필요). env · 경로 주입 없이 설치된 패키지의 `bin` 을 그대로 실행합니다.
