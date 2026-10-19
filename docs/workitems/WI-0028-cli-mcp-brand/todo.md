@@ -98,19 +98,19 @@
 
 ## P6. M3 머지 뒤 (ontology 재확인)
 
-- [ ] tokens `build --force` 뒤 `dist/brands/index.json` · `ontology/brand.json` · `css/brands/ontology.css` 존재 (plan 6.2-1) → T6-1
-- [ ] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정. U2 대안 2 로 라이트 블록 머리(선택자)가 바뀌므로 `parseBrandCss` 가 바뀐 머리를 읽는지 확인 (plan 6.2-2) → T6-2
-- [ ] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3
-- [ ] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4
-- [ ] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5
-- [ ] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6
-- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7
+- [x] tokens `build --force` 뒤 `dist/brands/index.json` · `ontology/brand.json` · `css/brands/ontology.css` 존재 (plan 6.2-1) → T6-1 (2026-10-19. 3개 모두 있고 npm 1.3.0 배포본과 바이트 같음)
+- [ ] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정. U2 대안 2 로 라이트 블록 머리(선택자)가 바뀌므로 `parseBrandCss` 가 바뀐 머리를 읽는지 확인 (plan 6.2-2) → T6-2 (2026-10-19. 키 · 블록 머리 차이 0, fixture · 코어 수정 없음. fixture 는 P2 에서 이미 `[data-brand][data-brand]` 머리였음)
+- [x] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3 (2026-10-19. 1.3.0 이 배포돼 `file:` tarball 대신 npm 레지스트리 설치본으로 판정)
+- [x] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4 (2026-10-19)
+- [x] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5 (2026-10-19. 라이트 12/12 · 다크 10/12, 표 한 줄 최대 141자)
+- [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제)
+- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7 (2026-10-19. 라이트 · 다크 모두 이김)
 
 ## P7. 1.3.0 배포 뒤
 
-- [ ] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1
-- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2
-- [ ] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장)
-- [ ] `release-notes.md` 작성
-- [ ] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3
+- [x] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1 (2026-10-19)
+- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기)
+- [x] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장) (2026-10-19. `.changeset/wi-0028-cli-mcp-brand.md` 1개, `pnpm changeset status --verbose` 에서 둘 다 1.2.0)
+- [x] `release-notes.md` 작성 (2026-10-19)
+- [x] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3 (2026-10-19)
 - [ ] PR ready → 리뷰 → 머지, 배포 뒤 npm 실측(T7-4)
