@@ -69,7 +69,7 @@
   - 추가했거나 이미 있으면 lockfile 로 고른 설치 명령(`pnpm install` · `yarn install` · `npm install`, lockfile 이 없으면 `pnpm install`)을 안내합니다.
 - FR-2: `package.json` 이 없으면 파일을 만들지 않고, lockfile 로 고른 패키지 매니저의 추가 명령(예: `pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"`)을 안내합니다.
 - FR-3: `package.json` 을 쓸 수 없는 경우(JSON 이 아님, 최상위나 `dependencies` 가 객체가 아님, 실제 경로가 프로젝트 밖, 쓰기 권한 없음)에는 `package.json` 을 바꾸지 않고 경고와 FR-2 의 추가 명령을 안내합니다. init 의 나머지 결과와 종료 코드(0)는 그대로입니다.
-- FR-4: 쓰기 직전에 `package.json` 이 계획할 때와 같은지 다시 확인합니다. 다르면 쓰지 않고 오류(rc 1)입니다. 쓰기 자체가 실패해도 rc 1 입니다.
+- FR-4: 쓰기 직전에 `package.json` 이 계획할 때와 같은지 다시 확인합니다. 다르면 쓰지 않고 오류(rc 1)입니다. 쓰기 자체가 실패해도 rc 1 입니다. 쓰는 도중 실패하면 원래 내용으로 되돌리고, 되돌렸는지(실패하면 그 이유)를 오류에 적습니다(2026-10-19 보정).
 - FR-5: init 은 어떤 경우에도 설치 명령을 실행하지 않습니다(자식 프로세스 0).
 - FR-6: init 의 마지막 안내를 `npx @axis-ds/cli add button` 으로, 그 밖의 실행 안내도 D2 대로 고칩니다.
 

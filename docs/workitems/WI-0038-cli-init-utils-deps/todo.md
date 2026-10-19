@@ -46,9 +46,18 @@
 - [x] 실경로 스모크: create-next-app 15.5.28 → `axis init -y` → `pnpm install` → `pnpm build` rc 0, c131ee9 CLI 로 rc 1 (AC9, testplan T10 · T11)
 - [x] 커밋
 
-### M1-5 뒤 단계 (이 브랜치 밖)
+### M1-5 실경로 재측정 · 배포 준비
 - [x] 실경로 재측정 · 배포본 음성 대조: 이 브랜치 CLI(`--force` 빌드) `pnpm build` rc 0, npm `@axis-ds/cli@1.2.0` rc 1 (`Cannot find module 'clsx'`, testplan T13 · T14)
 - [x] WI-0028 T7-2(AC2(b)) 를 이 브랜치 CLI 로 재측정: build rc 0 · import 1줄 · check brand PASS · 선택자 5건, 음성 대조군 0건 (testplan T15 · T16, WI-0028 testplan · todo T7-2 줄에 기록)
 - [x] `.changeset/wi-0038-cli-init-utils-deps.md`(`@axis-ds/cli` patch), `pnpm changeset status --verbose` rc 0 · patch 1.2.1
+
+### M1-6 보정: 쓰는 도중 실패하면 원래 내용으로 복원 (FR-4)
+- [x] 재현: HEAD 7aa5e55 빌드로 `ulimit -f 1` 아래 init, `package.json` 1013B 가 1024B 로 잘리고 JSON 파손 · rc 1 (testplan T19)
+- [x] `applyUtilsDependencies`: 쓰기 실패 시 `plan.write.before` 로 되돌리고 다시 읽어 확인, 복원 성공 · 실패를 오류 메시지에 담음. 쓰기 함수는 테스트용 인자로 주입 가능. init 오류 안내에 `axis.config.json` · `utils.ts` 는 이미 만들어졌다는 줄 추가
+- [x] 테스트 3건(복원 성공 · 복원 실패 · 복원 내용 불일치), 수정 전 코드로 3건 모두 실패 (testplan U13 · T17 · T18)
+- [x] 실경로: 수정본 빌드로 같은 절차, 복원 성공(sha 같음) · 한도보다 큰 원본은 복원 실패 안내 (T20 · T21), 성공 경로 T13 재측정 rc 0 (T22)
+- [x] 커밋
+
+### 이 브랜치 밖
 - [ ] PR · 머지 · Version Packages PR · 배포
 - [ ] 배포본(`@axis-ds/cli` 1.2.1)으로 T13 · T15 재확인

@@ -22,6 +22,7 @@
 | U9 | FR-4 | 계획 뒤 `package.json` 변경 | 쓰지 않고 오류 |
 | U10 | FR-5 | 모든 경우 | `child_process` 호출 0 |
 | U11 | AC7 | 기본값 init | 기존 출력 줄 · `axis.config.json` · `utils.ts` 가 c131ee9 기준값과 같음 |
+| U13 | FR-4 | 쓰는 도중 실패(파일을 자르고 ENOSPC 를 던지는 쓰기를 주입) · 복원도 실패 · 복원 내용 불일치 | 원래 내용으로 되돌림, 오류에 실패 원인과 복원 결과(성공 · 실패와 이유)를 담음 |
 | U12 | AC6 | init 출력 · 소스 스캔 | `axis-cli` 실행 안내 0건, 스캔 대상 파일 수 > 0, 패턴이 알려진 나쁜 문자열을 잡는지 양성 대조 |
 
 ## 3. 실경로 스모크 (AC9)
@@ -68,3 +69,20 @@
 - 전제: 수정본이 npm 에 없어 CLI 만 이 브랜치 tarball 입니다. 프로젝트 의존성(`@axis-ds/tokens` 포함)은 모두 레지스트리에서 설치했고 다른 주입은 없습니다. cli patch 배포 뒤 배포본으로 T13 · T15 를 다시 확인합니다.
 - `pnpm changeset status --verbose`(changeset 추가 뒤): rc 0, patch `@axis-ds/cli` 1.2.1(`.changeset/wi-0038-cli-init-utils-deps.md`), minor · major 없음.
 - 같은 HEAD 에서 `npx vitest run`(packages/axis-cli): 12 파일 · 212건 통과.
+
+## 3.3 보정: 쓰는 도중 실패 시 복원 (2026-10-19)
+
+조건: 기준 HEAD 7aa5e55, 수정은 `src/init/init.ts` · `src/init/init.test.ts`. Node v22.22.0 · vitest 2.1.9. 쓰기 도중 실패는 root 없이 만들 수 있는 `ulimit -f 1`(1024B 한도, `trap '' XFSZ` 로 신호 대신 EFBIG)로 재현했습니다. 이 한도는 실경로에 없는 조건이고, 디스크 공간 · I/O 오류를 대신하는 실험 조건입니다. `package.json` 은 `{name, version, description, dependencies: {react}}` 에 `description` 길이로 크기를 맞췄습니다(init 이 더하는 내용이 54B 라 원본 1013B 는 쓰기만 한도를 넘고, 1053B 는 복원도 한도를 넘습니다). CLI 는 `pnpm build` 한 `dist/index.js` 를 `node` 로 실행했습니다.
+
+| ID | AC | 명령 | 결과 |
+|---|---|---|---|
+| T17 | FR-4 | `npx vitest run src/init` (packages/axis-cli) | 36/36 통과(U13 3건 추가) |
+| T18 | FR-4 음성 | HEAD 의 `init.ts` 로 같은 명령 | U13 3건 실패 · 33건 통과. 원본은 scratchpad 사본으로 되돌림 |
+| T19 | FR-4 재현 | HEAD 빌드, 원본 1013B | rc 1, `EFBIG: file too large, write`, `package.json` 1024B 로 잘림 · JSON 파손(sha `cd55b1ac8430` → `51312d2d1ee6`) |
+| T20 | FR-4 | 수정본 빌드, 원본 1013B | rc 1, `... 쓰는 도중 실패했습니다(EFBIG: file too large, write). 원래 내용으로 되돌렸습니다.` · `axis.config.json 과 utils.ts 는 이미 만들어졌습니다.` · 추가 명령 안내. `package.json` sha 전후 같음(`cd55b1ac8430`), JSON 정상 |
+| T21 | FR-4 | 수정본 빌드, 원본 1053B(복원도 한도 초과) | rc 1, `원래 내용으로 되돌리지 못했습니다(EFBIG: file too large, write). 파일이 잘렸거나 비었을 수 있으니 버전 관리 도구 등으로 복구하세요.` 파일은 1024B 로 남음(복원 불가 사실을 알리는 경우) |
+| T22 | AC9 | 3장 절차, 수정본 `pnpm exec turbo run build --filter=@axis-ds/cli --force`(1/1, `Cached: 0`) tarball(sha256 `7ae210780de251f8`) | create-next-app rc 0 · init rc 0(출력은 T13 과 같음) · `package.json` 차이 두 줄 · `pnpm install` rc 0 · **`pnpm build` rc 0**. 주입 env 0개 |
+| T23 | 품질 | `npx vitest run` (packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` | 215건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T7 과 같은 수, 새 파일 오류 0) |
+
+- init 이 `axis.config.json` · `utils.ts` 를 쓴 뒤 `package.json` 을 쓰는 순서는 바꾸지 않았습니다(AC7 기준 출력 순서 유지). 그래서 rc 1 이면 두 파일은 이미 만들어진 상태이고, 출력에 그 사실을 적습니다.
+

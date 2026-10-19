@@ -13,6 +13,7 @@
 - lockfile 로 고른 설치 명령(`pnpm install` · `yarn install` · `npm install`)을 안내합니다. 설치는 실행하지 않습니다.
 - `package.json` 이 없으면 만들지 않고, 패키지 매니저별 추가 명령(예: `pnpm add "clsx@^2.1.1" "tailwind-merge@^3.4.0"`)을 안내합니다. `package.json` 을 읽거나 쓸 수 없을 때(JSON 오류, 프로젝트 밖을 가리키는 링크, 쓰기 권한 없음)도 바꾸지 않고 같은 명령을 안내합니다.
 - `package.json` 의 키 순서 · 들여쓰기 · 줄바꿈(CRLF) · 끝 줄바꿈 · BOM 을 유지합니다. init 을 다시 실행해도 `package.json` 은 바뀌지 않습니다.
+- `package.json` 을 쓰는 도중 실패하면(디스크 공간 부족 등) 원래 내용으로 되돌리고, 되돌렸는지를 오류(rc 1)에 적습니다.
 - `axis.config.json` · `utils.ts` 내용과 그 밖의 출력은 그대로입니다.
 - 범위는 AXIS 템플릿 4종과 같은 값입니다. `tailwind-merge` 3.x 는 Tailwind 4 기준이며, create-next-app 15 의 기본 구성(Tailwind 4)과 맞습니다.
 
@@ -34,6 +35,7 @@
 | 실경로 재측정 | 같은 절차, `--force` 빌드한 이 브랜치 CLI, init 이 안내한 `pnpm install` 실행 (testplan T13) | `pnpm build` rc 0 |
 | 음성(배포본) | 같은 절차, npm `@axis-ds/cli@1.2.0` (testplan T14) | `pnpm build` rc 1, `Cannot find module 'clsx'` |
 | WI-0028 AC2(b) | `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` (testplan T15 · T16) | rc 0, import 1줄, `axis check` brand PASS, `data-brand=ontology` 5건, theme add 없는 대조군 0건 |
+| 쓰기 도중 실패 | `ulimit -f 1` 로 쓰기 도중 EFBIG 를 낸 init (testplan T19 ~ T21) | 수정 전 `package.json` 잘림 · JSON 파손, 수정 뒤 원래 내용으로 복원(sha 같음) |
 | changeset | `pnpm changeset status --verbose` | rc 0, patch `@axis-ds/cli` 1.2.1, minor · major 없음 |
 | 음성 | D1 호출을 지운 변이 · 문구 변경을 되돌린 상태 | init 테스트 24건 실패 · 안내 테스트 위반 75줄 |
 
