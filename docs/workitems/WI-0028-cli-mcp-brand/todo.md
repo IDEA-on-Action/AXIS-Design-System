@@ -105,13 +105,13 @@
 - [x] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3 (2026-10-19. 1.3.0 이 배포돼 `file:` tarball 대신 npm 레지스트리 설치본으로 판정)
 - [x] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4 (2026-10-19)
 - [x] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5 (2026-10-19. 라이트 12/12 · 다크 10/12, 표 한 줄 최대 141자)
-- [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제)
+- [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제) → 2026-10-19 사용자 결정: 템플릿 파일이 같아 판정은 유효하므로 `AXIS_TEMPLATE_URL` 주입 전제로 통과로 둔다. `axis.minu.best` Cloudflare 403 이 풀리면 기본 레지스트리로 한 번 더 잰다
 - [x] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7 (2026-10-19. 라이트 · 다크 모두 이김)
 
 ## P7. 1.3.0 배포 뒤
 
 - [x] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1 (2026-10-19)
-- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기)
+- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다
 - [x] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장) (2026-10-19. `.changeset/wi-0028-cli-mcp-brand.md` 1개, `pnpm changeset status --verbose` 에서 둘 다 1.2.0)
 - [x] `release-notes.md` 작성 (2026-10-19)
 - [x] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3 (2026-10-19)
