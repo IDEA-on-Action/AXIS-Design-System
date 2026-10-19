@@ -72,7 +72,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 | D2 | 1.1 「`defaultBrand` 는 현재 `ThemeProvider` 에 없는 prop」 | main 코드에는 있음, npm 1.2.1 에는 없음(1.4 절) | Provider 안내는 「`@axis-ds/theme` 1.3.0 이상」을 조건으로 출력합니다 |
 | D3 | FR-1 「`brand.json` 을 읽어」 목록 출력 | M3 가 목록 전용 `dist/brands/index.json`(exports `./brands`)을 추가했고, exports 가 명시형이라 `dist/brands` 디렉터리를 열거하려면 exports 를 우회해야 합니다 | 목록은 `index.json`, 각 항목의 메타는 그 `meta` 경로의 `brand.json` 으로 읽습니다(4.1 절). PRD 와 모순은 없고 출처가 하나 늘었습니다 |
 | D4 | FR-3 「원본 대비 보정 내역」 출력 | 배포본에는 보정 후 값만 있고 `brand.json` 에 보정 필드가 없음(M3 PRD v0.4 Q6 과 같은 지적) | U3 |
-| D5 | FR-2 「찾은 파일에 `@axis-ds/tokens/css/brands/<brand>` import 추가」 | CSS `@import` 는 규칙상 파일 맨 앞(`@charset` · 다른 `@import` 뒤)에만 둘 수 있어 브랜드 CSS 가 프로젝트 `:root` 정의보다 앞에 놓입니다. theme-only 처럼 `globals.css` 가 `:root` 에 shadcn 변수를 직접 정의하면, 라이트 브랜드 선택자 `[data-brand="b"]`(명시도 0,1,0)와 `:root`(0,1,0)가 같아 뒤에 오는 프로젝트 값이 이길 것으로 추론됩니다. 다크는 `[data-brand].dark`(0,2,0)가 `.dark`(0,1,0)를 이깁니다. **미실측 추론**입니다 | U2. 착수 직후 스파이크 S0 으로 실측합니다 |
+| D5 | FR-2 「찾은 파일에 `@axis-ds/tokens/css/brands/<brand>` import 추가」 | CSS `@import` 는 규칙상 파일 맨 앞(`@charset` · 다른 `@import` 뒤)에만 둘 수 있어 브랜드 CSS 가 프로젝트 `:root` 정의보다 앞에 놓입니다. theme-only 처럼 `globals.css` 가 `:root` 에 shadcn 변수를 직접 정의하면, 라이트 브랜드 선택자 `[data-brand="b"]`(명시도 0,1,0)와 `:root`(0,1,0)가 같아 뒤에 오는 프로젝트 값이 이길 것으로 추론됩니다. 다크는 `[data-brand].dark`(0,2,0)가 `.dark`(0,1,0)를 이깁니다. **미실측 추론**이었고, S0 실측(8.1 절, 2026-10-19)에서 라이트 짐 · 다크 이김으로 확인됐습니다 | U2. S0 결과(8.1 절)로 위치 결정을 기다립니다(게이트) |
 | D6 | FR-2 의존성 추가 | 추가할 버전 범위를 정하지 않음 | U6 |
 | D7 | FR-2 `axis theme add <brand>` | AC2(a) 프로젝트는 `@axis-ds/tokens` 가 없어 설치된 브랜드 목록으로 `<brand>` 를 검증할 수 없음 | U5 |
 | D8 | FR-5 「FR-2 와 같은 탐색 순서」 | 기존 globals.css 검사 순서(루트 우선)와 FR-2 순서(`globalCss` → `app/` → `src/app/` → 루트)가 다름 | 기존 항목은 그대로 두고 brand 항목만 FR-2 순서를 씁니다(출력 불변 요구, 2.2) |
@@ -269,7 +269,7 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 | # | 갈림길 | 권장안 | 게이트 | 결정(2026-10-19) |
 |---|---|---|---|---|
 | U1 | CLI · MCP 공유 코어 방식 | 복제 + 바이트 동일성 테스트 | 아니오 | 권장안(복제 + 바이트 동일성 테스트) |
-| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) | 권장안(S0 실측 뒤 결정). S0 결과는 8.1 절 |
+| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) | 권장안(S0 실측 뒤 결정). S0 결과(8.1 절): FR-2 위치에서 라이트 짐 · 다크 이김. 위치 변경은 FR-2 변경이라 **사용자 결정 대기** |
 | U3 | FR-3 보정 내역 출처(D4, M3 PRD Q6) | 이번 WI 는 `a11y` 메타와 근거 문서 안내만, 보정 전 · 후 값은 후속 | 예(FR-3 축소) | **(A)** `a11y` 메타(`status` · `checkedAt` · `gate`)와 WI-0025 부록 B 문서 안내만. 보정 전 · 후 값은 후속 WI |
 | U4 | 「주요 토큰」 목록 | 고정 목록 12개(아래) | 아니오(PRD 미정 갈림길) | 권장안(고정 12개) |
 | U5 | tokens 미설치 시 `add <brand>` 검증(D7) | 이름 규칙만 보고 경고와 함께 진행 | 아니오 | 권장안(이름 규칙 + 경고) |
@@ -284,3 +284,57 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 | U14 | FR-2 「`globalCss` 최우선, 없으면」의 「없으면」이 키 부재인지 파일 부재인지(`axis init -y` 의 `./src/app/globals.css` 와 `app/` 구조가 어긋나는 경우) | 둘 다로 읽음: 파일이 없으면 경고 후 다음 후보(4.1). 대안은 「거절하고 `globalCss` 수정 안내」 | 아니오(PRD 문구 불변, A1 과 같은 방향). 해석은 사용자 확인을 받고, PRD 에 문구를 더할지는 PRD 담당 PR 에서 정함 | **(A)** 권장안(키 부재 · 파일 부재 둘 다로 읽음, 4.1) |
 
 U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출력): `--primary` · `--primary-foreground` · `--background` · `--foreground` · `--ring` · `--radius` · `--axis-surface-default` · `--axis-text-primary` · `--axis-text-brand` · `--axis-button-bg-default` · `--axis-border-focus` · `--axis-font-family-sans`.
+
+### 8.1 S0 스파이크 결과 (U2 판단 근거, 2026-10-19 실측)
+
+**결론: PRD FR-2 위치(globals.css 맨 앞 `@import`)에서는 다크만 브랜드 값이 이기고 라이트는 프로젝트 `:root` 값이 이깁니다.** D5 의 추론과 같은 결과입니다. 위치를 바꾸는 것은 FR-2 변경이므로(U2 게이트) 사용자 결정 전에는 4.2-3 의 삽입 위치를 확정하지 않습니다.
+
+**측정 조건과 전제**
+
+- 기준: 이 브랜치 fde3085(CLI · tokens 코드는 main e690905 와 같음). Next.js 15.5.28, tailwindcss 3.4.19, Playwright 1.61.1 의 chromium 149.0.7827.55(headless). 주입한 환경 변수는 `NEXT_TELEMETRY_DISABLED=1` 하나입니다.
+- 브랜드 데이터: `packages/axis-tokens` 에서 `pnpm build`(turbo 를 거치지 않은 직접 실행, rc 0)로 `dist` 를 만든 뒤, main 의 `scripts/build-brands.mjs` `buildBrands` 를 fixture `test/fixtures/brands/valid/sample` 로 돌려(violations 0) `dist/css/brands/sample.css` · `dist/brands/sample/brand.json` 을 만들었습니다. exports 에 `./css/brands/sample` · `./brands/sample/brand.json` 을 더한 임시 패키지를 `file:` 로 설치했습니다. 1.3.0 이 아직 배포되지 않아 넣은 전제이고, 레지스트리 설치 판정은 6.3 에서 합니다.
+- 템플릿: 이 브랜치에서 빌드한 CLI 로 `axis template init theme-only -d <임시>` 를 실행했습니다. 기본 레지스트리 `https://axis.minu.best` 가 이 호스트에서 403(Cloudflare, UA 3종 모두)이라 `AXIS_TEMPLATE_URL` 을 저장소 `apps/web/public/templates` 를 내보내는 로컬 서버로 주입했습니다. 받은 7개 파일은 저장소 `theme-only.json` 과 목록 · 내용이 같습니다(대조 결과 차이 0, `package.json` 은 tokens 의존성을 더해 대조에서 뺌). 즉 레지스트리 경로가 아니라 「저장소 템플릿을 CLI 로 펼친」 산출물입니다.
+- 브랜드 import: 루트 `globals.css` 1행(`@tailwind base;` 앞)에 `@import "@axis-ds/tokens/css/brands/sample";` 를 손으로 넣었습니다. `axis theme add` 가 넣을 위치와 같습니다.
+- 측정: `next build` → `next start` 페이지를 열고, `<html>` 에 `data-brand="sample"` 과 `.dark` 클래스를 붙였다 떼며 `getComputedStyle(document.documentElement).getPropertyValue(...)` 와 `body` 의 `background-color` 를 읽었습니다. 템플릿의 `theme-toggle.tsx` 가 `<html>` 의 `.dark` 를 바꾸는 것과 같은 방식입니다. `--axis-surface-default` 는 프로젝트가 정의하지 않는 변수라 「브랜드 CSS 가 실제로 로드됐는가」의 양성 대조군으로 씁니다.
+
+**theme-only 원형은 브라우저 측정이 불가능합니다**: 템플릿 그대로(루트 평면) `next build` 는 rc 1, `Couldn't find any 'pages' or 'app' directory` 입니다(PRD Q4 의 빌드 기준선이 실패로 확인됨). 그래서 구조만 바꾼 변형으로 쟀습니다. 또한 변형마다 **첫 `next build` 가 rc 1**(`<Html> should not be imported outside of pages/_document`, `/404` 또는 `/500` 프리렌더)이었고, Next 가 `tsconfig.json` 을 고쳐 쓴 뒤 같은 명령을 다시 돌리면 rc 0 이었습니다. 아래 값은 모두 rc 0 빌드에서 쟀습니다.
+
+| 변형 | 구성 | 설명 |
+|---|---|---|
+| vB | 템플릿 4파일(`globals.css` · `layout.tsx` · `page.tsx` · `theme-toggle.tsx`)을 `app/` 으로 옮김, PostCSS 설정 없음(템플릿 그대로) | Tailwind 가 돌지 않아 산출 CSS 에 `@tailwind` · `@layer base` 가 그대로 남습니다 |
+| **vC** | vB + `postcss.config.mjs`(tailwindcss · autoprefixer, create-next-app 기본과 같음) | **FR-2 위치의 실사용 구성** |
+| vC0 | vC 에서 브랜드 import 를 뺌 | 음성 대조군 |
+| vD | vC 에서 globals.css 의 `@import` 를 빼고 `layout.tsx` 의 `import './globals.css'` 다음 줄에 `import '@axis-ds/tokens/css/brands/sample'` | 대안 1(testplan T0-3) |
+| vE | vC 와 같은 FR-2 위치, 브랜드 CSS 선택자만 `:root[data-brand="sample"]`(0,2,0) · `:root[data-brand="sample"].dark` 를 앞에 더함 | 대안 2. tokens 산출물 변경이라 WI-0025 소관 |
+
+**계산값** (`--primary` · `--background` · `--radius` · `--axis-surface-default` · body `background-color`)
+
+| 변형 | `data-brand` | 테마 | `--primary` | `--background` | `--radius` | `--axis-surface-default` | body 배경 | 브랜드 값 |
+|---|---|---|---|---|---|---|---|---|
+| 기대값(브랜드) | sample | 라이트 | `180 81% 43%` | `210 22% 96%` | `12px` | `#FFFFFF` | | |
+| 기대값(브랜드) | sample | 다크 | `180 81% 43%` | `217 41% 10%` | (라이트 블록 값) | `#172030` | | |
+| vC | 없음 | 라이트 | `240 5.9% 10%` | `0 0% 100%` | `0.5rem` | (빈 값) | `rgb(255, 255, 255)` | 대조군 |
+| vC | 없음 | 다크 | `0 0% 98%` | `240 10% 3.9%` | `0.5rem` | (빈 값) | `rgb(9, 9, 11)` | 대조군 |
+| **vC** | sample | 라이트 | `240 5.9% 10%` | `0 0% 100%` | `0.5rem` | `#FFFFFF` | `rgb(255, 255, 255)` | **짐** |
+| **vC** | sample | 다크 | `180 81% 43%` | `217 41% 10%` | `0.5rem` | `#172030` | `rgb(15, 23, 36)` | **이김** |
+| vC0 | sample | 라이트 | `240 5.9% 10%` | `0 0% 100%` | `0.5rem` | (빈 값) | `rgb(255, 255, 255)` | 음성 대조군 |
+| vC0 | sample | 다크 | `0 0% 98%` | `240 10% 3.9%` | `0.5rem` | (빈 값) | `rgb(9, 9, 11)` | 음성 대조군 |
+| vD | sample | 라이트 | `180 81% 43%` | `210 22% 96%` | `12px` | `#FFFFFF` | `rgb(243, 245, 247)` | 이김 |
+| vD | sample | 다크 | `180 81% 43%` | `217 41% 10%` | `12px` | `#172030` | `rgb(15, 23, 36)` | 이김 |
+| vE | sample | 라이트 | `180 81% 43%` | `210 22% 96%` | `12px` | `#FFFFFF` | `rgb(243, 245, 247)` | 이김 |
+| vE | sample | 다크 | `180 81% 43%` | `217 41% 10%` | `12px` | `#172030` | `rgb(15, 23, 36)` | 이김 |
+| vB | sample | 라이트 | `180 81% 43%` | `210 22% 96%` | `12px` | `#FFFFFF` | `rgba(0, 0, 0, 0)` | 이김(무효 구성) |
+| vB | sample | 다크 | `180 81% 43%` | `217 41% 10%` | `12px` | `#172030` | `rgba(0, 0, 0, 0)` | 이김(무효 구성) |
+
+- vD · vE · vB 의 `data-brand` 없음 행은 vC 대조군과 같은 값입니다(`--axis-surface-default` 빈 값 포함).
+- vC 라이트에서 `--axis-surface-default` 가 `#FFFFFF` 이므로 브랜드 CSS 는 로드됐고, 겹치는 shadcn 변수만 졌습니다. 산출 CSS(`.next/static/css/*.css` 1개)에서 브랜드 라이트 블록은 2063 바이트 위치, 프로젝트 `:root{--background` 는 7552 바이트 위치이고 둘 다 레이어 밖입니다. 명시도가 같아(0,1,0) 뒤에 오는 `:root` 가 이깁니다. 다크는 `[data-brand].dark`(0,2,0)가 `.dark`(0,1,0)를 이깁니다.
+- vB 는 브랜드가 이기지만 Tailwind 가 돌지 않아 `@layer base` 가 브라우저의 cascade layer 로 남아(레이어 밖 규칙이 우선) 생긴 결과이고, body 배경이 투명이라 템플릿 스타일 자체가 적용되지 않습니다. 비교 대상으로 쓰지 않습니다.
+- vD 는 산출 CSS 에서 브랜드 블록(10362)이 `:root`(6819) 뒤에 옵니다.
+
+**대안별 판단 재료** (결정은 사용자, U2 게이트)
+
+| 안 | 라이트 · 다크 | 바뀌는 것 |
+|---|---|---|
+| FR-2 그대로(globals.css 맨 앞 `@import`) | 짐 · 이김 | 없음. 라이트에서 브랜드가 적용되지 않음 |
+| 대안 1: 레이아웃 진입점에서 globals.css 다음에 JS import | 이김 · 이김 | FR-2 의 CSS 대상(「globals.css 에 import」)이 진입 파일(`layout.tsx` 등) 수정으로 바뀜. theme-only 원형은 `app/` 이 없어 진입 파일 탐색 규칙도 새로 정해야 함 |
+| 대안 2: 브랜드 선택자 명시도 상향(`:root[data-brand]`) | 이김 · 이김 | FR-2 위치는 그대로, tokens 산출물(WI-0025 `brandSelectors`) 변경 |

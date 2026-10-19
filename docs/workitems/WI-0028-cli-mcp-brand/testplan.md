@@ -27,11 +27,12 @@
 
 ## T0. 스파이크 (U2 판단 근거, 코드 PR 밖)
 
-- [ ] T0-1: Next 15 App Router 프로젝트의 `app/globals.css` 가 `@tailwind base` + `@layer base { :root { --primary: ... } }` 를 가질 때, 맨 앞 `@import "@axis-ds/tokens/css/brands/<b>"` 의 라이트 `--primary` 가 `<html data-brand="<b>">` 에서 계산값으로 적용되는지 (`getComputedStyle(document.documentElement).getPropertyValue('--primary')`)
-- [ ] T0-2: 같은 조건에서 다크(`<html class="dark" data-brand>`) 계산값
-- [ ] T0-3: 대조군 - `layout.tsx` 에서 `import './globals.css'` 뒤에 브랜드 CSS 를 JS import 했을 때 같은 두 값
-- [ ] T0-4: theme-only 루트 평면 구조에서 `@import` 가 빌드 단계에서 풀리는지(패키지 exports 하위 경로 해석)
+- [x] T0-1: Next 15 App Router 프로젝트의 `app/globals.css` 가 `@tailwind base` + `@layer base { :root { --primary: ... } }` 를 가질 때, 맨 앞 `@import "@axis-ds/tokens/css/brands/<b>"` 의 라이트 `--primary` 가 `<html data-brand="<b>">` 에서 계산값으로 적용되는지 (`getComputedStyle(document.documentElement).getPropertyValue('--primary')`) → **아니오**. `240 5.9% 10%`(프로젝트 값, 대조군과 같음). plan 8.1 vC
+- [x] T0-2: 같은 조건에서 다크(`<html class="dark" data-brand>`) 계산값 → 브랜드 값 `180 81% 43%` 이 이김. plan 8.1 vC
+- [x] T0-3: 대조군 - `layout.tsx` 에서 `import './globals.css'` 뒤에 브랜드 CSS 를 JS import 했을 때 같은 두 값 → 라이트 · 다크 모두 브랜드 값. plan 8.1 vD
+- [x] T0-4: theme-only 루트 평면 구조에서 `@import` 가 빌드 단계에서 풀리는지(패키지 exports 하위 경로 해석) → 루트 평면 그대로는 `next build` 가 CSS 처리 전에 rc 1(`Couldn't find any 'pages' or 'app' directory`)이라 판정 불가. 파일을 `app/` 으로 옮긴 변형에서는 exports 하위 경로가 풀려 산출 CSS 에 브랜드 블록이 들어감. plan 8.1
 - 브랜드 CSS 는 M3 브랜치 tokens 를 `pnpm pack` 한 tarball, 또는 M3 머지 뒤 main 빌드 산출물을 씁니다. 결과는 plan 2장 D5 에 실측으로 옮겨 적습니다.
+- 2026-10-19 실측은 main `buildBrands` 로 만든 fixture `sample` 브랜드를 썼습니다(조건 · 전제 · 전체 값은 plan 8.1). ontology 산출물로는 P6 에서 한 번 더 잽니다.
 
 ## T1. 공통 기반 (P1)
 

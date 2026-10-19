@@ -26,7 +26,7 @@
 > 2026-10-19 사용자 결정: U3 = (A), U7 = 별도 WI-0036(#115), U14 = (A), 나머지는 권장안 그대로(plan 8장 「결정」 열). U2 는 S0 실측 뒤 정합니다.
 
 - [x] U1 공유 코어 방식: 복제 + 동일성 테스트 / 내부 패키지 신설 / MCP 가 CLI 소스 번들 → 권장안(복제 + 동일성 테스트) (2026-10-19)
-- [ ] U2 브랜드 import 위치 (게이트: 위치를 바꾸는 경우): S0 실측 뒤 결정
+- [ ] U2 브랜드 import 위치 (게이트: 위치를 바꾸는 경우): S0 실측 뒤 결정 → S0 에서 FR-2 위치는 라이트 짐 · 다크 이김(plan 8.1). 위치 변경(대안 1 레이아웃 JS import / 대안 2 선택자 명시도 상향)은 FR-2 변경이라 **사용자 결정 대기**. 결정 전에는 P3 의 import 삽입 위치(T3-3)를 확정하지 않습니다
 - [x] U3 FR-3 보정 내역 출처 (게이트): a11y 메타와 근거 안내만 / `brand.json` 보정 필드(WI-0025 D6 변경) / CLI 정적 표 → **(A)** a11y 메타(`status` · `checkedAt` · `gate`)와 WI-0025 부록 B 문서 안내만, 보정 전 · 후 값은 후속 (2026-10-19)
 - [x] U4 「주요 토큰」 목록: 고정 12개 / 브랜드 CSS 전부 / `brand.json` 필드 → 권장안(고정 12개) (2026-10-19)
 - [x] U5 tokens 미설치 시 `add` 검증: 이름 규칙만 + 경고 / npm 레지스트리 조회 / 거절 → 권장안(이름 규칙만 + 경고) (2026-10-19)
@@ -36,7 +36,7 @@
 - [x] U9 버전 번호(PRD Q3)와 PRD 기준 버전 표기 정정 위치 → 권장안(1.2.0 유지, PRD 정정은 PRD 담당 PR) (2026-10-19)
 - [x] U10 ~ U13: `ThemeProvider` 안내만(Q1) · TS 타입만(Q2) · 설치 안내만(Q5) · 다른 브랜드 import 유지 + 추가 → 모두 권장안 (2026-10-19)
 - [x] U14 「`globalCss` 최우선, 없으면」 해석 → **(A)** 키 부재 · 파일 부재 둘 다로 읽음(plan 4.1) (2026-10-19)
-- [ ] **S0 스파이크** (U2 판단 근거): Next 15 App Router 와 theme-only 구조에서 globals.css 맨 앞 `@import` 한 브랜드 CSS 의 라이트 shadcn 값이 프로젝트 `:root` 값을 이기는지 계산값으로 실측 (plan 2장 D5, testplan T0)
+- [x] **S0 스파이크** (U2 판단 근거): Next 15 App Router 와 theme-only 구조에서 globals.css 맨 앞 `@import` 한 브랜드 CSS 의 라이트 shadcn 값이 프로젝트 `:root` 값을 이기는지 계산값으로 실측 (plan 2장 D5, testplan T0) → 2026-10-19 실측(plan 8.1): 라이트 **짐**(`--primary` `240 5.9% 10%`, 대조군과 같음) · 다크 이김(`180 81% 43%`). 대안 1 · 2 는 둘 다 이김. theme-only 원형은 `next build` rc 1(app 디렉터리 없음)
 
 ---
 
@@ -102,7 +102,7 @@
 - [ ] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4
 - [ ] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5
 - [ ] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6
-- [ ] S0 을 P0 에서 못 끝냈으면 여기서 실측
+- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정대로 ontology 산출물로 같은 측정을 한 번 더 함
 
 ## P7. 1.3.0 배포 뒤
 
