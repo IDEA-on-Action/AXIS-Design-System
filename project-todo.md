@@ -43,6 +43,7 @@
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
 | 47 | tokens ESM 엔트리 `dist/js/tokens.mjs` 문법 오류(`as const` 잔존, 1.2.1부터) 수정 | WI-0035 (#113) | P18 | P2 | ⏳ |
 | 48 | `@axis-ds/mcp` 1.1.4 `list_components` · `list_tokens` 데이터 경로 결함(ENOENT) 수정 + tarball stdio 스모크 (mcp 1.1.5) | WI-0036 (#115) | P18 | P1 | ⏳ |
+| 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
 
 ### 완료
 
