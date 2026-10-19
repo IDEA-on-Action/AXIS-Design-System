@@ -161,7 +161,7 @@ jobs:
         run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
 
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
-      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-18, playwright --list): a11y 36 · nontext 6 · tokens 17.
+      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-19, playwright --list): a11y 36 · nontext 6 · tokens 22.
       # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 9건인지도 본다.
       - name: E2E 실행 건수 가드
         id: e2e-count
@@ -175,7 +175,7 @@ jobs:
             echo '| suite | 기대 | 실행 | 통과 | 실패 | flaky | skipped |'
             echo '|---|---|---|---|---|---|---|'
           } >> "$GITHUB_STEP_SUMMARY"
-          for spec in a11y:36 nontext:6 tokens:17; do
+          for spec in a11y:36 nontext:6 tokens:22; do
             name=${spec%%:*}; want=${spec##*:}; f="$name.json"
             if [ ! -s "$f" ]; then
               echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"

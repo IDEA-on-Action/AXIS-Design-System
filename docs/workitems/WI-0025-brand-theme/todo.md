@@ -47,7 +47,7 @@
 - [x] 토큰 아닌 규칙(초안 221줄 `word-break: keep-all`) 처리: 문서 안내 vs `brand.json` 부가 CSS 필드 (3 결정 5) → ✅ plan U17: 토큰이 아니므로 M4 문서 안내로 처리
 - [x] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수) → ✅ 2026-10-15: removeItem 확정
 - [ ] FOUC 방지 인라인 스크립트를 theme 패키지에서 제공할지 (PRD 범위 밖) (3 결정 7)
-- [x] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8) → ✅ plan U11: 문서 안내(명시도 상향 없음) → 🔄 2026-10-19 사용자 결정으로 명시도 상향: 라이트 `[data-brand="<b>"][data-brand="<b>"]` (0,2,0), 하위 컨테이너 유지 위해 `:root[data-brand]`는 쓰지 않음(WI-0028 U2 대안 2, plan 3.2)
+- [x] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8) → ✅ plan U11: 문서 안내(명시도 상향 없음) → 🔄 2026-10-19 사용자 결정으로 명시도 상향: 라이트 `[data-brand="<b>"][data-brand="<b>"]` (0,2,0), 하위 컨테이너 유지 위해 `:root[data-brand]`는 쓰지 않음(WI-0028 U2 대안 2, plan 3.2). 같은 변경으로 brand-tokens E2E가 5건 늘어 `frontend.yml` 「E2E 실행 건수 가드」 기대값을 tokens 17에서 22로 함께 고침(`playwright --list` 실측 22). 게이트 음성 대조를 다시 할 때의 주입 선택자는 plan U11 참고
 - [ ] V7 "색 값" 판정 기준: 값 형식 판정 vs component 토큰 테마 무관 표지 (3 결정 9)
 - [ ] `cssVarName` 공유 방식: `scripts/brands.mjs`로 이동 후 import(sha 불변 조건) vs 복제 (3 결정 10)
 - [ ] 브랜드 임시 파일 위치: `dist/.tmp` + try/finally vs `os.tmpdir()` (3 결정 11)
