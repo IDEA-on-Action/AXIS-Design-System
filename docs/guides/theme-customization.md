@@ -203,7 +203,7 @@ function ThemeToggle() {
 
 ### 개념
 
-브랜드는 테마(라이트 · 다크)와 독립된 축이며, 선택자는 `data-brand` 속성입니다. 같은 브랜드 안에서 라이트 · 다크를 그대로 전환할 수 있고, 브랜드를 지정하지 않으면 1.2.1과 같은 화면입니다.
+브랜드는 테마(라이트 · 다크)와 독립된 축이며, 선택자는 `data-brand` 속성입니다. 같은 브랜드 안에서 라이트 · 다크를 그대로 전환할 수 있습니다. 브랜드를 지정하지 않으면 기존 CSS 변수(`variables.css` 249개)의 값은 1.2.1과 같습니다. 다만 화면 전체가 1.2.1과 같지는 않습니다. agentic-ui의 옅은 바탕 · 테두리 복원(PlanCard 상태 배지 · 거절 버튼 hover, DiffViewer, FeedbackButtons, AttachmentCard error 테두리)으로 기본 화면 일부가 바뀌고, Card · Dialog에 그림자 색 수식어만 붙인 경우의 동작도 달라집니다. 자세한 내용은 1.3.0 릴리스 노트(`docs/workitems/WI-0025-brand-theme/release-notes.md`)의 「agentic-ui: 흰 글자 · 색 선 토큰과 옅은 바탕 복원」 · 「동작이 달라지는 사용 방식」 항목에 있습니다.
 
 - 제공 브랜드: `ontology` 하나
 - 브랜드 목록: `@axis-ds/tokens/brands` (`dist/brands/index.json`, 형식 `{ "brands": [{ "name", "css", "meta" }] }`)
