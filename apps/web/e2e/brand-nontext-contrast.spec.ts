@@ -24,8 +24,8 @@ import { collectErrors, openDemo, radio } from './helpers/demo'
  *      기본 브랜드에서 3:1 에 못 미치는 주 표식은 `DEFAULT_BRAND_FLOOR` 의 실측 하한보다 낮아지면 실패합니다(해소는 WI-0029 #94).
  *      데모에 실요소가 없는 쌍(info · warning 아이콘, surface-secondary 위 아이콘, surface-secondary 위 neutral-muted 점)은
  *      같은 페이지에 프로브를 넣어 계속 잽니다(ontology, PROBE_RESIDUAL). 측정 대상이 M3 프로브보다 줄지 않았는지 기계로 검사합니다.
- *   ④ 대기 · 건너뜀 상태 점 `--axis-status-neutral-muted`: 3:1 에 못 미치는 값을 디자인 오너 사후 확인 대상으로 두었으므로
- *      (2026-10-18 사용자 결정) 3:1 로 판정하지 않고, 측정값이 `NEUTRAL_MUTED_FLOOR` 하한보다 낮아지면 실패하는 회귀 가드로 둡니다.
+ *   ④ 대기 · 건너뜀 상태 점 `--axis-status-neutral-muted`: 3:1 에 못 미치는 값을 그대로 두기로 했고
+ *      (2026-10-18 사용자 결정, 2026-10-19 디자인 오너가 값 유지를 명시적으로 수락) 3:1 로 판정하지 않고, 측정값이 `NEUTRAL_MUTED_FLOOR` 하한보다 낮아지면 실패하는 회귀 가드로 둡니다.
  *      하한이 없는 (브랜드/테마, 바탕) 쌍은 「하한이 설정되지 않음」으로 실패합니다.
  *   `DEFAULT_BRAND_FLOOR` 의 값은 3 미만이어야 하고(3:1 을 넘는 주 표식을 하한으로 낮추지 않음), 두 하한 표 모두 키가 측정 행과
  *   하나도 맞지 않으면 실패합니다(낡은 키가 조용히 남지 않게).
@@ -62,13 +62,13 @@ const NEUTRAL_MUTED_VAR = '--axis-status-neutral-muted'
  * 하한 = 실측값(소수 둘째 자리, static out · chromium). 측정값이 이보다 낮아지면 실패합니다.
  *   ontology 라이트 #D6DADF: surface-default #FFFFFF 위 1.40, surface-secondary #F3F4F6 위 1.28 (2026-10-18)
  *   ontology 다크  #5F6874: surface-default #17191D 위 3.12, surface-secondary #1F2227 위 2.83 (2026-10-18)
- *   2026-10-19 실요소 측정에서 더한 쌍(D1, 값은 디자인 오너 사후 확인 대기):
+ *   2026-10-19 실요소 측정에서 더한 쌍(D1, 디자인 오너 사후 확인 완료(2026-10-19), 값 유지):
  *     ontology StepTimeline 점 대 --background 라이트 #F7F7F7 위 1.31 · 다크 #0E1013 위 3.37,
  *     기본 라이트 #D1D5DB 대 #FFFFFF(surface-default 와 --background 가 같은 색) 1.47,
  *     기본 다크 #D1D5DB 대 --background #09090B 위 13.5 · surface-default #030712 위 13.66
- * 다크도 surface-secondary 위에서는 3:1 에 못 미칩니다(2.83). 함께 사후 확인 대상입니다.
+ * 다크도 surface-secondary 위에서는 3:1 에 못 미칩니다(2.83). 디자인 오너가 사후 확인에서 값 유지를 명시적으로 수락했습니다(2026-10-19).
  * 값을 올리는 변경(대비 개선)은 통과하므로, 개선했으면 이 하한도 새 측정값으로 올립니다.
- * 디자인 오너 확인으로 값이 바뀌면 plan 5.3 과 todo 「디자인 오너 사후 확인 목록」을 함께 고칩니다.
+ * 이후 값을 바꾸면 plan 5.3 과 todo 「디자인 오너 사후 확인 목록」을 함께 고칩니다.
  * 키는 `브랜드/테마` → 바탕 이름입니다(값이 같은 바탕은 `|` 로 이은 이름). 여기 없는 쌍은 「하한이 설정되지 않음」으로 실패합니다.
  */
 const NEUTRAL_MUTED_FLOOR: Record<string, Record<string, number>> = {
