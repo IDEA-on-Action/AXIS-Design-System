@@ -53,6 +53,7 @@ CI 와 같은 순서로 로컬 실행했습니다. Node v22.22.0 · npm 10.9.4 �
 | T14 | actionlint 1.7.7(docker `rhysd/actionlint:1.7.7`) `frontend.yml` | 수정 전 · 후 모두 rc 1, 같은 4건(Cloudflare credentials 확인 step 의 SC2086 info, 수정 전 138 · 209행 = 수정 후 146 · 217행). 추가한 step 에서 나온 지적 0건. `publish.yml` rc 0 |
 | T15 | `git merge-tree --write-tree HEAD origin/feat/wi-0025-m4-demo`(c111909, #110) | rc 0, 충돌 없음. 단 병합 트리에 Pack smoke step 이 2개(M3 에서 물려받은 AC4 step 105행, 이 WI 의 step 254행) |
 | T15a | `git merge-tree --write-tree a13234c origin/feat/wi-0025-m3-ontology-v2`(17e4427, #107) | rc 0, 충돌 없음. 병합 트리에 Pack smoke step 이 2개(AC4 step 105행, 이 WI 의 step 232행). AC4 step 은 M3 의 64392e6 이 넣었고(`git log -S` 로 확인) #110 은 그것을 물려받았으므로, #107 과 이 PR 만 머지돼도 중복이 생깁니다 |
+| T15b | D5 확인 명령(`frontend.yml` 을 `yaml.safe_load` 로 읽어 `ci` job steps 중 `run` 에 `pack-smoke` 를 포함한 step 수) 대조. 2026-10-19, HEAD dea0722 · M3 17e4427 | 이 브랜치 1, M3 1, 두 브랜치 병합 트리 2(양성 대조). 병합은 충돌 없이 끝나므로 이 step 은 병합 뒤 별도 커밋으로 지워야 하고, 그 뒤 출력이 1 이어야 합니다 |
 | T16 | `git merge-tree --write-tree HEAD 940e83c`(#118 `fix/wi-0035-tokens-esm`) | rc 0, 충돌 없음. 병합 트리 `pack-smoke` 스크립트는 `node scripts/pack-smoke.mjs && node scripts/pack-install-smoke.mjs` |
 | T17 | T16 병합 트리를 스크래치패드에 풀어 `pnpm install --frozen-lockfile` → `pnpm turbo run build --force --filter='./packages/*'` → `pnpm pack-smoke` | 모두 rc 0. build 6/6 · `Cached: 0`, pack-smoke 6개 통과 · mcp 16개 · 6건, 이어서 pack-install-smoke tokens 서브패스 8건 · tsc rc 0(33초) |
 

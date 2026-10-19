@@ -34,8 +34,8 @@
 | D2 | 수정 방식 | 데이터를 번들 옆(`dist/data`)에 복사합니다. 경로 기준을 번들 위치에 맞추는 코드 변경보다 단순하고, 소스 실행(`src/registry/data`)과 번들 실행(`dist/data`)이 같은 `join(__dirname, "data")` 로 맞습니다. tarball 목록으로 바로 검증됩니다 |
 | D3 | 스모크 | tarball 을 빈 디렉터리에 `npm install` 하고 `bin` 으로 stdio 실행, `tools/list` 와 번들 데이터를 읽는 도구 6개를 호출합니다. `pack-smoke` 안에서 실행해 `publish.yml` 과 `pnpm release` 양쪽에 걸립니다 |
 | D4 | PR CI (2026-10-19 추가 결정) | PR CI(`frontend.yml` `ci` job)에서도 `pnpm pack-smoke` 를 실행합니다. `EXPECTED_TOOLS` 1:1 이 깨지면 main push 의 발행이 막히기 전에 PR 단계에서 실패하게 하려는 것입니다(2장 Non-goal 에서 범위로 옮김) |
-| D5 | PR CI step 중복 해소 (2026-10-19 사용자 결정 D-C) | `ci` job 의 Pack smoke step 은 M3(#107)의 step(Build 직후, 패키지 수 가드 포함)을 남기고 이 WI 가 넣은 step(job 끝)은 제거합니다. 이 PR 이 먼저 머지되므로 이 PR 머지부터 M3 머지 전까지는 이 WI 의 step 을 유지하고, M3 를 main 위로 맞출 때(main 병합 충돌 해소) M3 쪽에서 이 step 을 뺍니다. 이 브랜치의 워크플로는 고치지 않습니다 |
-| D6 | 머지 순서 · 배포 단위 (2026-10-19 사용자 결정 D-A) | 머지 순서는 이 PR(#116, mcp 1.1.5) -> M3 #107 -> WI-0030 #114 -> WI-0035 #118 -> M4 #110 -> Version Packages PR(1.3.0) 이고 이 PR 이 첫 번째입니다. `@axis-ds/mcp` 는 changesets `linked`(tokens · ui-react · agentic-ui · theme) 밖이고 내부 의존도 주고받지 않으므로, 1.1.5 는 linked 4패키지(1.2.1 유지, 다음은 1.3.0)와 독립해 배포됩니다 |
+| D5 | PR CI step 중복 해소 (2026-10-19 사용자 결정 D-C) | `ci` job 의 Pack smoke step 은 M3(#107)의 step(Build 직후, 패키지 수 가드 포함)을 남기고 이 WI 가 넣은 step(job 끝)은 제거합니다. 이 PR 이 먼저 머지되므로 이 PR 머지부터 M3 머지 전까지는 이 WI 의 step 을 유지합니다. 이 PR 과 M3 사이에는 충돌이 없어(testplan T15a) main 병합은 자동으로 끝나고 이 step 이 아무 신호 없이 함께 남습니다. 그래서 정리는 충돌 해소가 아니라 명시적 단계로 합니다: 이 PR 머지 직후 M3 브랜치에 main 을 병합하고, 그 병합 커밋 뒤 별도 커밋으로 이 step(「Pack smoke (외부 npm 소비 · mcp 실행 검증, WI-0036)」)을 지웁니다. 확인은 줄 grep 이 아니라 `frontend.yml` 을 YAML 로 읽어 `ci` job steps 중 `run` 에 `pack-smoke` 를 포함한 step 수를 세는 `python3 -c "import yaml;d=yaml.safe_load(open('.github/workflows/frontend.yml'));print(sum(1 for s in d['jobs']['ci']['steps'] if 'pack-smoke' in str(s.get('run',''))))"` 가 정확히 1 인지로 합니다(병합 트리에서는 2). M3 머지 전 조건에 「main 병합 필수」와 이 확인을 둡니다(M3 브랜치 담당). 이 브랜치의 워크플로는 고치지 않습니다 |
+| D6 | 머지 순서 · 배포 단위 (2026-10-19 사용자 결정 D-A) | 머지 순서는 이 PR(#116, mcp patch changeset) -> changesets/action 이 연 Version Packages PR(mcp 1.1.5 만) 머지 -> npm 에서 `@axis-ds/mcp` 1.1.5 확인 -> M3 #107 -> WI-0030 #114 -> WI-0035 #118 -> M4 #110 -> Version Packages PR(linked 1.3.0) 이고 이 PR 이 첫 번째입니다. `publish.yml` 은 changesets/action 이라 이 PR 머지로 바로 발행되지 않고 Version Packages PR 이 열리며, 발행은 그 PR 을 머지할 때 일어납니다. 그래서 mcp 1.1.5 Version PR 머지와 npm 확인을 M3 앞에 둡니다. 이 Version PR 이 #118(tokens patch changeset) 머지 뒤까지 열려 있으면 linked 4패키지 1.2.2 를 함께 제안하므로(D-A 위반) 미루지 않습니다. `@axis-ds/mcp` 는 changesets `linked`(tokens · ui-react · agentic-ui · theme) 밖이고 내부 의존도 주고받지 않으므로, 이 순서를 지키면 1.1.5 는 linked 4패키지(1.2.1 유지, 다음은 1.3.0)와 독립해 배포됩니다. M3 머지 전 조건은 `.changeset/` 에 대기 changeset 0건(config 외 파일 0개)입니다 |
 
 ---
 
@@ -63,7 +63,7 @@
   - 실패를 숨기지 않습니다(`continue-on-error` · `|| true` 없음). 실패하면 `ci` job 이 실패해 `deploy-preview` · `deploy-production`(`needs: ci`)을 막습니다.
   - 위치는 기존 step 사이가 아니라 job 끝(Upload build artifact 다음)입니다. WI-0025 M3(#107, 64392e6)가 Build 와 Upload build artifact 사이에 step 을 넣었고 M4(#110)가 그것을 물려받았으므로 충돌을 피합니다.
   - 트리거 paths 는 이미 `packages/**` · `scripts/**` 를 포함하므로 바꾸지 않습니다.
-  - 이 step 은 이 PR 머지부터 M3(#107) 머지 전까지만 유지합니다. M3 를 main 위로 맞출 때 M3 의 step 만 남기고 이 step 을 제거합니다(D5).
+  - 이 step 은 이 PR 머지부터 M3(#107) 머지 전까지만 유지합니다. 이 PR 머지 직후 M3 브랜치에 main 을 병합한 뒤 별도 커밋으로 이 step 을 지우고, YAML 기준 `pack-smoke` step 수 1 을 확인합니다(D5, 충돌이 없어 병합만으로는 지워지지 않습니다).
 
 ### 3.2 비기능 요구사항
 - **실경로**: 스모크는 소비자와 같이 `npm install <tgz>` 로 설치하고 `bin` 으로 실행합니다. env · 경로를 주입하지 않습니다(설치에 npm 레지스트리 접근이 필요합니다).

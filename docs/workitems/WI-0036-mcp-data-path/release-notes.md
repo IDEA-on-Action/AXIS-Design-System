@@ -1,6 +1,6 @@
 # WI-0036 릴리스 노트: mcp 레지스트리 도구 데이터 경로 수정
 
-> 릴리스일: 미정(PR 머지 후 CI 발행) | 유형: fix | 영향: @axis-ds/mcp 1.1.4 → 1.1.5 (patch)
+> 릴리스일: 미정(PR 머지 뒤 열리는 Version Packages PR 을 머지할 때 CI 발행) | 유형: fix | 영향: @axis-ds/mcp 1.1.4 → 1.1.5 (patch)
 
 ## 배경
 
