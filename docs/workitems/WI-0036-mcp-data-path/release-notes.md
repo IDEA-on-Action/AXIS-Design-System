@@ -21,6 +21,7 @@
 
 ### ci: PR CI 에서 pack-smoke 실행 (2026-10-19 결정)
 - `.github/workflows/frontend.yml` `ci` job 끝(Upload build artifact 다음)에 `pnpm pack-smoke` step 을 더했습니다. `EXPECTED_TOOLS` 1:1 이 깨지면 main push 의 발행이 막히기 전에 PR 단계에서 실패합니다.
+- 이 step 은 2026-10-19 결정(D5, D-C)에 따라 `ci/dedupe-pack-smoke` 에서 지웠습니다. 같은 `pnpm pack-smoke` 를 부르는 M3(#107)의 「Pack smoke (외부 npm 소비 검증, AC4)」 step(Build 직후, 패키지 수 가드 포함)이 mcp 실행 스모크를 맡습니다.
 - 실패를 숨기지 않습니다(`continue-on-error` · `|| true` 없음). 트리거 paths 에 `packages/**` · `scripts/**` 가 이미 있습니다.
 
 ## 검증 (2026-10-19, 기준 e690905 + 이 브랜치 변경)
