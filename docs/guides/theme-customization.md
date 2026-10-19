@@ -212,16 +212,27 @@ function ThemeToggle() {
 
 ### import 순서
 
-브랜드 CSS는 토큰 CSS와 앱의 shadcn 변수 정의보다 **뒤에** import합니다.
+브랜드 CSS는 토큰 CSS와 앱의 shadcn 변수 정의보다 **뒤에** import하는 것을 권장합니다. 다만 순서가 달라도 브랜드 값이 이깁니다.
 
 ```tsx
 import "@axis-ds/tokens/css"
 import "@axis-ds/tokens/css/shadcn"            // shadcn 호환 변수를 쓰는 경우
 import "./globals.css"                          // 앱이 --primary 등 shadcn 변수를 직접 정의하는 경우
-import "@axis-ds/tokens/css/brands/ontology"    // 항상 마지막
+import "@axis-ds/tokens/css/brands/ontology"    // 권장 위치: 마지막
 ```
 
-라이트 선택자 `[data-brand="ontology"]`와 `:root` · `.dark`는 명시도가 같아서(0,1,0) 나중에 온 쪽이 이깁니다. 브랜드 CSS를 토큰 CSS와 `globals.css` 사이에 두면 `globals.css`의 `:root`가 브랜드 값을 덮어써 `--primary` 등이 기본값으로 돌아갑니다. 문서 사이트의 `apps/web/src/app/layout.tsx`가 이 순서를 따릅니다.
+브랜드 선택자는 라이트 · 다크 모두 명시도가 (0,2,0)이고(아래 「선택자와 다크 모드」), 기본 `:root` · `.dark`와 앱이 직접 정의한 shadcn 변수(예: `globals.css`의 `:root` · `.dark`)는 (0,1,0)입니다. 그래서 브랜드 CSS를 토큰 CSS와 `globals.css` 사이에 두거나 `globals.css` 맨 앞에 `@import`해도 `--primary` 등은 브랜드 값을 유지합니다.
+
+```css
+/* globals.css */
+@import "@axis-ds/tokens/css/brands/ontology";  /* 맨 앞에 두어도 아래 :root 에 지지 않음 */
+
+:root {
+  --primary: 240 5.9% 10%;
+}
+```
+
+반대로 앱 CSS에서 브랜드 값을 다시 덮으려면 (0,2,0)보다 높은 선택자를 쓰거나, 같은 (0,2,0) 선택자를 브랜드 CSS 뒤에 둡니다. `:root`(0,1,0)로는 브랜드 값을 덮을 수 없습니다. 문서 사이트의 `apps/web/src/app/layout.tsx`는 권장 순서(브랜드 마지막)를 따릅니다.
 
 ### 브랜드 적용
 
@@ -263,8 +274,10 @@ function BrandToggle() {
 
 | 테마 | 선택자 |
 |------|--------|
-| 라이트 | `[data-brand="<brand>"]` |
+| 라이트 | `[data-brand="<brand>"][data-brand="<brand>"]` |
 | 다크 | `[data-brand="<brand>"].dark` · `[data-brand="<brand>"][data-theme="dark"]` · `.dark [data-brand="<brand>"]` |
+
+라이트 선택자는 같은 속성 선택자를 두 번 써서 명시도를 (0,2,0)으로 맞춥니다(뜻은 `[data-brand="<brand>"]`와 같습니다). `:root[data-brand]`로 올리지 않은 것은 아래 하위 컨테이너 구성(`<div data-brand>`)에도 맞게 하려는 것입니다. 다크 선택자 3종도 (0,2,0)이라 라이트와 같고, 같은 파일에서 다크 블록이 라이트 블록 뒤에 있어 다크가 이깁니다.
 
 다크 클래스는 `ThemeProvider`나 next-themes가 붙이는 `.dark`를 그대로 사용합니다. 지원하는 구성은 다음과 같습니다.
 
@@ -274,7 +287,7 @@ function BrandToggle() {
 
 `[data-brand]` 조상 아래에 `.dark` 하위 요소를 두는 구성(`<div data-brand="ontology"><div class="dark">`)은 브랜드 다크 선택자에 걸리지 않습니다. 이 구성은 CSS 선택자 기준으로 판단한 것이며 E2E로 측정하지 않았습니다.
 
-같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개 가운데 기본 `.dark`와 값이 달라지는 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 import 순서대로 다크에서도 브랜드 라이트 값이 유지됩니다. 나머지 2개(`--axis-button-border-default` · `--axis-button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다.
+같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개 가운데 기본 `.dark`와 값이 달라지는 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 다크에서도 브랜드 라이트 값이 유지됩니다. 브랜드 라이트 (0,2,0)가 기본 `.dark` (0,1,0)를 이기므로 import 순서와 상관없습니다. 나머지 2개(`--axis-button-border-default` · `--axis-button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다.
 
 ### Provider 없이 적용 · 첫 화면
 
@@ -376,7 +389,7 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
 
 라이트 블록에서 바꾼 색 변수는 다크 블록에도 짝을 둡니다. 짝이 없으면 같은 요소에 `.dark`를 붙였을 때 라이트 값이 다크에도 남습니다.
 
-앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `<html data-brand="acme">`나 `ThemeProvider`의 `defaultBrand="acme"`로 적용합니다.
+앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `<html data-brand="acme">`나 `ThemeProvider`의 `defaultBrand="acme"`로 적용합니다. 위 예의 라이트 선택자 `[data-brand="acme"]`는 명시도가 (0,1,0)이라 `:root` · `.dark`와 같아서 나중에 온 쪽이 이기므로 이 순서를 지켜야 합니다. 순서와 상관없이 이기게 하려면 `@axis-ds/tokens` 브랜드처럼 라이트 선택자를 `[data-brand="acme"][data-brand="acme"]`(0,2,0)로 씁니다.
 
 ```tsx
 import "@axis-ds/tokens/css"
