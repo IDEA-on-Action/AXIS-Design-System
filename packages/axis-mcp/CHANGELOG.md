@@ -1,5 +1,12 @@
 # @axis-ds/mcp
 
+## 1.1.4
+
+### Patch Changes
+
+- chore: npm Trusted Publishing(OIDC) 배포 경로로 첫 발행하고, `repository.url`을 실제 저장소(`IDEA-on-Action/AXIS-Design-System`)로 정정
+  - 코드 변경은 없어요. npm 패키지 페이지의 Repository 링크와 provenance 출처가 실제 저장소를 가리키게 돼요
+
 ## 1.1.3
 
 ### Patch Changes
