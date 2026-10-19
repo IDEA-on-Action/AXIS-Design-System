@@ -44,6 +44,30 @@
 
 - a11y 는 main 의 `playwright.config.ts` 기본 webServer(`pnpm dev`, 3100) 로 실행했습니다. `E2E_SERVER=static` 분기는 main 에 아직 없습니다(실행 전 3100 포트가 비어 있음을 확인, 다른 서버 재사용 아님). 수정 전 수치는 같은 worktree 에서 추가한 줄을 잠시 빼고 잰 값입니다.
 
+### main(8253a82) 병합과 충돌 해소 (2026-10-19)
+
+> main 에 #116(WI-0036)과 #107(WI-0025 M3, squash 8253a82)이 머지된 뒤 `git merge origin/main` 으로 합쳤습니다(merge 커밋 3e19a17). 충돌은 `apps/web/tailwind.config.ts` 한 파일입니다.
+
+- 해소: 아래 「후속」의 해소 기준대로 `./src/lib/**` 줄과 M3 의 `./src/registry/**` · `axis-ui-react` · `axis-agentic-ui` 줄(주석 포함)을 모두 남기고, `../../packages/ui/src/**` 줄 삭제는 M3 를 따랐습니다. 해소 뒤 main 대비 `tailwind.config.ts` 차이는 `./src/lib/**` 한 줄뿐입니다.
+- 측정 조건: 병합 HEAD 3e19a17, `pnpm install --frozen-lockfile` 뒤 `pnpm turbo run build --filter=@ax/web... --force`(4 tasks, `Cached: 0 cached`). 대조 빌드는 같은 worktree 에서 `./src/lib/**` 줄만 잠시 뺀 상태(`git diff origin/main -- apps/web/tailwind.config.ts` 0줄, 나머지 차이는 문서와 `wi-mapping.json` 뿐)로 같은 명령을 돌렸습니다. 산출 CSS 는 `apps/web/out` 아래 `.css` 6개 파일을 합쳐 셉니다. 빌드가 고친 `apps/web/public/templates/*.json` 5개는 매번 되돌렸습니다.
+
+| 항목 | main 동등(대조) | 병합본 |
+|---|---|---|
+| 빌드 rc | 0 | 0 |
+| CSS 파일 수 / 바이트 | 6 / 202,627 | 6 / 202,715 |
+| `.bg-blue-500{` (양성 대조군) | 1 | 1 |
+| `.bg-zinc-500{` | 0 | 1 |
+| 고유 클래스 선택자 수 | 1,004 | 1,005 |
+| 사라진 선택자 / 새 선택자 | - | 0 / 1 (`.bg-zinc-500`) |
+
+| 검증 (병합본) | 결과 |
+|---|---|
+| `pnpm --filter @ax/web type-check` | rc 0 |
+| `pnpm --filter @ax/web lint` | rc 0, `No ESLint warnings or errors` |
+| a11y spec (`E2E_SERVER=static pnpm exec playwright test a11y`) | 36 passed |
+
+- a11y 는 main 에 생긴 `E2E_SERVER=static` 분기로 실행했습니다(3101 포트가 실행 전후 비어 있음을 확인, 서버 로그의 청크 이름이 이 worktree `apps/web/out` 의 파일과 일치). 통과 수가 위 「검증」의 18 에서 36 으로 는 것은 M3 가 a11y 대상에 ontology 브랜드를 더했기 때문이고, 측정 방법(dev 서버 대 static 서버)도 달라 두 수치를 나란히 비교하지 않습니다.
+
 ## 후속 (이번 범위 아님)
 - `src/registry` 의 예제 파일 5개도 클래스 문자열을 갖고 있고 `content` 밖입니다. WI-0025 M3 · M4 가 그 경로를 더하므로 여기서는 손대지 않습니다.
 - WI-0025 M3 · M4 와 `apps/web/tailwind.config.ts` 인접 줄 충돌: M3 · M4 는 이 WI 가 추가한 줄 바로 다음의 `../../packages/ui/src/**` 줄을 지우고 `./src/registry/**` · `axis-ui-react` · `axis-agentic-ui` 줄로 바꿉니다. 나중에 머지되는 쪽이 `./src/lib/**` 줄과 registry · `axis-ui-react` · `axis-agentic-ui` 줄을 모두 남기고, `packages/ui` 줄 삭제는 M3 쪽을 따릅니다. 머지 순서는 사용자가 정합니다.
