@@ -31,24 +31,24 @@
 
 | # | 항목 | WI ID | Phase | 우선순위 | 상태 |
 |---|------|-------|-------|----------|------|
-| 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 (1.3.0) | WI-0025 M2~M4 (#84) | P16 | P1 | 🔄 (M2 · M3 머지, M4 남음) |
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ⏳ |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
-| 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ✅ (#114 머지 2026-10-19, cad9398) |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
-| 47 | tokens ESM 엔트리 `dist/js/tokens.mjs` 문법 오류(`as const` 잔존, 1.2.1부터) 수정 | WI-0035 (#113) | P18 | P2 | ⏳ |
-| 48 | `@axis-ds/mcp` 1.1.4 `list_components` · `list_tokens` 데이터 경로 결함(ENOENT) 수정 + tarball stdio 스모크 (mcp 1.1.5) | WI-0036 (#115) | P18 | P1 | 🔄 (#116 머지 2026-10-19, mcp 1.1.5 배포 대기) |
 | 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 + 브랜드 전환 데모, npm v1.3.0 릴리스 (linked 4패키지, publish run 39238361098, provenance 4/4, 데모 `/docs/brand-demo/` 프로덕션 200) | WI-0025 M2~M4 (#84) | P16 | 2026-10-19 |
+| 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 (#114, cad9398) | WI-0030 (#95) | P18 | 2026-10-19 |
+| 47 | tokens ESM 진입점 `dist/js/tokens.mjs` 문법 오류(1.1.0~1.2.1) 수정, 1.3.0 에 포함 (#118, 배포본 설치 스모크 1.3.0 rc 0 · 1.2.1 rc 1) | WI-0035 (#113) | P18 | 2026-10-19 |
+| 48 | `@axis-ds/mcp` 데이터 경로 결함(ENOENT, 1.1.0~1.1.4 레지스트리 도구 6개) 수정 + tarball stdio 스모크, npm mcp v1.1.5 릴리스 (#116, publish run 39237376712, provenance, 배포본 실행 스모크 rc 0) | WI-0036 (#115) | P18 | 2026-10-19 |
 | 36 | 토큰 정합: 정의 누락 변수 · agentic-ui primitive 직접 참조 해소 + 참조 검사 CI, npm v1.2.1 릴리스 (linked 4패키지, Trusted Publishing OIDC, WI-0033 다크 수정 포함) | WI-0025 M1 (#83) | P16 | 2026-10-17 |
 | 35 | npm v1.2.0 릴리스 (linked 4패키지, CI NPM_TOKEN 인증 실측 검증) | #80 | P15 | 2026-08-07 |
 | 34 | Pretendard 대표 폰트 적용 (tokens sans 스택 + preset fontFamily + web 동적 서브셋 번들) | #79 | P15 | 2026-08-07 |
