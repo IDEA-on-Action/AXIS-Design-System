@@ -65,7 +65,8 @@
 
 - tailwindcss 4 와 TypeScript `node16` 조합에서 `@axis-ds/tokens/tailwind` 타입 import 가 TS1479 로 실패합니다(peer 범위 `>=3.0.0` 그대로 설치했을 때 관측, 3.4.19 에서는 통과). 별도 WI 후보
 - `.d.ts` 의 `export =` 와 ESM 런타임 export 정합 검토. `.d.ts` 는 중첩 모양이라 CJS require(평면 249키, `ColorGray50`) 런타임과 타입이 어긋나요(기존 결함)
-- M3·M4 브랜치(WI-0025)와 병합할 때 `packages/axis-tokens/package.json` 의 `test` 스크립트 줄이 충돌합니다(`git merge-tree` rc 1, M3 `origin/feat/wi-0025-m3-ontology-v2` · M4 34d7bca 둘 다). 나중에 머지되는 쪽(M3)이 test 목록을 합집합으로 해소하고 `test/js-entry.test.mjs` 를 유지합니다. 해소 뒤 M3 에서 tokens test 를 재실행해 js-entry 4건이 포함되어 도는지 확인합니다. `build-tokens.mjs` 는 자동 병합되고 `as const` 템플릿은 남지 않습니다
+- M3·M4 브랜치(WI-0025)와 병합할 때 `packages/axis-tokens/package.json` 의 `test` 스크립트 줄이 충돌합니다(`git merge-tree` rc 1, M3 `origin/feat/wi-0025-m3-ontology-v2` · M4 34d7bca 둘 다). 머지 순서(D4)상 M3 · #114 가 먼저 머지되므로, #118 을 그 main 위로 맞출 때 #118 쪽에서 test 목록을 합집합으로 해소하고 `test/js-entry.test.mjs` 를 유지합니다. 해소 뒤 #118 브랜치에서 tokens test 를 재실행해 js-entry 4건이 포함되어 도는지 확인합니다. M4 는 #118 이 해소된 main 을 받은 뒤 재측정 항목에서 다시 확인합니다. `build-tokens.mjs` 는 자동 병합되고 `as const` 템플릿은 남지 않습니다
 - ~~1.2.2 배포 후 M4(WI-0025) 1.3.0 릴리스 노트의 대상 줄을 `1.2.2 → 1.3.0` 으로 고치고 `1.2.2 (patch, WI-0035)` 항목 링크를 추가합니다(M4 담당)~~ → 1.2.2 취소(2026-10-19)로 M4 릴리스 노트의 대상 줄은 `1.2.1 → 1.3.0` 그대로이고, WI-0035 ESM 수정을 1.3.0 의 fix 항목으로 넣습니다(M4 담당). AC3 기준선(1.2.1 fixture)은 CSS 가 같으므로 유지합니다
-- 설치 스모크 대상 확대(ui-react · agentic-ui · theme · cli · mcp), PR CI 에서 pack-smoke 실행
+- 설치 스모크 대상 확대(ui-react · agentic-ui · theme · cli · mcp)
+- ~~PR CI 에서 pack-smoke 실행~~ → 닫음(2026-10-19). M3(#107) `frontend.yml` 의 「Pack smoke (외부 npm 소비 검증, AC4)」 step 이 `pnpm pack-smoke` 를 돌리고, 이 브랜치의 `pack-smoke` 스크립트가 `pack-install-smoke.mjs` 까지 이어 붙어 #118 머지 뒤에는 설치 스모크도 함께 실행됩니다. #118 머지 뒤 PR CI run 로그에서 설치 스모크가 도는지만 확인합니다
 - 루트 `scripts/pack-smoke.mjs` 의 미사용 `statSync` import(eslint no-unused-vars 1건, 루트 scripts 는 lint 대상 밖)
