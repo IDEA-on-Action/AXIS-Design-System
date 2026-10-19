@@ -13,7 +13,7 @@ import { LibraryCurator, Publisher } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
 import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
 import { registerThemeCommand } from "./theme/index.js";
-import { createInitConfig, type AxisConfig } from "./config/axis-config.js";
+import { registerInitCommand } from "./init/index.js";
 
 // 버전은 package.json 에서 읽습니다. dist/index.js 기준 ../package.json 도 패키지 루트입니다.
 const { version: CLI_VERSION } = createRequire(import.meta.url)("../package.json") as {
@@ -37,72 +37,8 @@ program
   .description("AXIS Design System CLI - shadcn 호환 컴포넌트 설치 도구")
   .version(CLI_VERSION);
 
-// init 명령어
-program
-  .command("init")
-  .description("프로젝트에 AXIS Design System 초기화")
-  .option("-y, --yes", "기본값으로 자동 설정")
-  .action(async (options) => {
-    console.log(chalk.blue("\n🎨 AXIS Design System 초기화\n"));
-
-    const config = options.yes
-      ? {
-          componentsDir: "./src/components/ui",
-          tailwindConfig: "./tailwind.config.ts",
-          globalCss: "./src/app/globals.css",
-        }
-      : await prompts([
-          {
-            type: "text",
-            name: "componentsDir",
-            message: "컴포넌트 디렉토리:",
-            initial: "./src/components/ui",
-          },
-          {
-            type: "text",
-            name: "tailwindConfig",
-            message: "Tailwind 설정 파일:",
-            initial: "./tailwind.config.ts",
-          },
-          {
-            type: "text",
-            name: "globalCss",
-            message: "글로벌 CSS 파일:",
-            initial: "./src/app/globals.css",
-          },
-        ]);
-
-    // axis.config.json 생성
-    const axisConfig: AxisConfig = createInitConfig(
-      {
-        componentsDir: config.componentsDir,
-        tailwindConfig: config.tailwindConfig,
-        globalCss: config.globalCss,
-      },
-      REGISTRY_URL
-    );
-
-    await fs.writeJSON("axis.config.json", axisConfig, { spaces: 2 });
-    console.log(chalk.green("✓ axis.config.json 생성 완료"));
-
-    // utils.ts 생성
-    const utilsPath = path.join(config.componentsDir, "utils.ts");
-    await fs.ensureDir(path.dirname(utilsPath));
-    await fs.writeFile(
-      utilsPath,
-      `import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-`
-    );
-    console.log(chalk.green("✓ utils.ts 생성 완료"));
-
-    console.log(chalk.blue("\n초기화 완료! 이제 다음 명령어로 컴포넌트를 추가하세요:"));
-    console.log(chalk.cyan("  npx axis-cli add button\n"));
-  });
+// init 명령어 (WI-0038: src/init)
+registerInitCommand(program, REGISTRY_URL);
 
 // add 명령어
 program
@@ -229,8 +165,8 @@ program
       showCategory("agentic", components.agentic);
     }
 
-    console.log(chalk.gray("사용법: npx axis-cli add <component-name>"));
-    console.log(chalk.gray("Agentic: npx axis-cli add <component-name> --agentic\n"));
+    console.log(chalk.gray("사용법: npx @axis-ds/cli add <component-name>"));
+    console.log(chalk.gray("Agentic: npx @axis-ds/cli add <component-name> --agentic\n"));
   });
 
 // ==========================================
