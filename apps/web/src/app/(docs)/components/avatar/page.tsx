@@ -98,7 +98,7 @@ export default function AvatarPage() {
       description="사용자 또는 엔티티를 나타내는 이미지/이니셜 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add avatar" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add avatar" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

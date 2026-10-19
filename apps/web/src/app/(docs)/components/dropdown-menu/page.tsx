@@ -94,7 +94,7 @@ export default function DropdownMenuPage() {
       description="트리거 버튼에 연결되는 드롭다운 메뉴입니다. Radix UI DropdownMenu 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add dropdown-menu" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add dropdown-menu" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

@@ -154,7 +154,7 @@ export default function AttachmentCardPage() {
       description="파일 첨부를 표시하는 카드 컴포넌트입니다. 다양한 파일 타입과 업로드 상태를 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add attachment-card --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add attachment-card --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

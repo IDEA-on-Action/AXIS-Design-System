@@ -98,7 +98,7 @@ export default function AgentAvatarPage() {
       description="AI 에이전트를 나타내는 아바타 컴포넌트입니다. 상태 표시와 에이전트 타입별 색상을 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add agent-avatar --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add agent-avatar --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

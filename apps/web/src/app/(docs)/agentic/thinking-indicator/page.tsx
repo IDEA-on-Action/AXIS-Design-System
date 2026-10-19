@@ -60,7 +60,7 @@ export default function ThinkingIndicatorPage() {
       description="AI가 생각/처리 중임을 나타내는 인디케이터 컴포넌트입니다. 애니메이션 점으로 진행 상태를 표시합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add thinking-indicator --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add thinking-indicator --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

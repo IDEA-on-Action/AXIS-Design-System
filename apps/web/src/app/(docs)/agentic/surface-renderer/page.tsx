@@ -93,7 +93,7 @@ export default function SurfaceRendererPage() {
       description="A2UI Surface를 React 컴포넌트로 렌더링하는 컴포넌트입니다. 허용된 카탈로그 컴포넌트만 렌더링하여 보안을 보장합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add surface-renderer" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add surface-renderer" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

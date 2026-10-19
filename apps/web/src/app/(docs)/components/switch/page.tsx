@@ -42,7 +42,7 @@ export default function SwitchPage() {
       description="켜기/끄기 토글 스위치 컴포넌트입니다. Radix UI Switch 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add switch" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add switch" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

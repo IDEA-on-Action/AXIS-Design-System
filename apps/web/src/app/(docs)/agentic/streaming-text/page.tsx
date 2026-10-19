@@ -95,7 +95,7 @@ export default function StreamingTextPage() {
       description="실시간 텍스트 스트리밍을 표시하는 컴포넌트입니다. AI 응답 표시에 적합합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add streaming-text" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add streaming-text" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

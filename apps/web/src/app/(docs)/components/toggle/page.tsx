@@ -45,7 +45,7 @@ export default function TogglePage() {
       description="눌림/해제 상태를 전환하는 토글 버튼입니다. Radix UI Toggle 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add toggle" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add toggle" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

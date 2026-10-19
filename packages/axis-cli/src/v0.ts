@@ -4,9 +4,9 @@
  * V0 (https://v0.app) 생성 코드를 AXIS 프로젝트에 통합합니다.
  *
  * 사용법:
- *   axis-cli v0 convert <file>     # V0 코드를 AXIS 스타일로 변환
- *   axis-cli v0 import <url>       # V0 URL에서 가져오기
- *   axis-cli v0 setup              # GitHub 연동 안내
+ *   npx @axis-ds/cli v0 convert <file>     # V0 코드를 AXIS 스타일로 변환
+ *   npx @axis-ds/cli v0 import <url>       # V0 URL에서 가져오기
+ *   npx @axis-ds/cli v0 setup              # GitHub 연동 안내
  */
 
 import chalk from "chalk";
@@ -144,7 +144,7 @@ export class V0Client {
     console.log(chalk.bold("방법 3: 코드 복사"));
     console.log(chalk.gray("  1. v0.app에서 코드 탭 열기"));
     console.log(chalk.gray("  2. 파일별로 코드 복사"));
-    console.log(chalk.gray("  3. axis-cli v0 convert로 변환\n"));
+    console.log(chalk.gray("  3. npx @axis-ds/cli v0 convert로 변환\n"));
 
     const { method } = await prompts({
       type: "select",
@@ -185,7 +185,7 @@ export class V0Client {
     console.log(chalk.cyan("   git clone https://github.com/your-org/v0-project.git\n"));
 
     console.log(chalk.bold("4. AXIS 변환:"));
-    console.log(chalk.cyan("   axis-cli v0 convert ./v0-project/components/*.tsx\n"));
+    console.log(chalk.cyan("   npx @axis-ds/cli v0 convert ./v0-project/components/*.tsx\n"));
 
     console.log(chalk.gray("팁: GitHub Actions로 자동 변환 워크플로도 설정 가능합니다.\n"));
   }
@@ -206,7 +206,7 @@ export class V0Client {
     console.log(chalk.yellow("\nZIP 변환 기능은 추후 구현 예정입니다."));
     console.log(chalk.gray("현재는 수동으로 압축 해제 후 convert 명령어를 사용하세요:\n"));
     console.log(chalk.cyan("  unzip v0-project.zip -d ./v0-project"));
-    console.log(chalk.cyan("  axis-cli v0 convert ./v0-project/components/*.tsx\n"));
+    console.log(chalk.cyan("  npx @axis-ds/cli v0 convert ./v0-project/components/*.tsx\n"));
   }
 
   // 클립보드에서 변환
@@ -274,7 +274,7 @@ export class V0Client {
     console.log(chalk.cyan("     import { StreamingText } from '@axis-ds/agentic-ui'\n"));
 
     console.log(chalk.bold("5. 자동 변환"));
-    console.log(chalk.cyan("   axis-cli v0 convert <file.tsx>\n"));
+    console.log(chalk.cyan("   npx @axis-ds/cli v0 convert <file.tsx>\n"));
   }
 }
 

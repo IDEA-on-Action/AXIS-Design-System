@@ -248,7 +248,7 @@ export default function DiffViewerPage() {
       description="코드 변경 사항을 시각적으로 비교하는 컴포넌트입니다. Unified/Split 뷰 모드를 지원합니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add diff-viewer --agentic" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add diff-viewer --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

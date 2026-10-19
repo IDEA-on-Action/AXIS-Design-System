@@ -164,7 +164,7 @@ export default function ToolCallCardPage() {
       description="AI 에이전트의 도구 호출 상태를 표시하는 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add tool-call-card" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add tool-call-card" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

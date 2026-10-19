@@ -17,7 +17,7 @@ export default function DocsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">Installation</h2>
           <p className="text-muted-foreground mb-4">
-            axis-cli를 사용하여 컴포넌트를 설치합니다.
+            @axis-ds/cli를 사용하여 컴포넌트를 설치합니다.
           </p>
           <div className="rounded-lg border bg-card p-4">
             <div className="flex items-center justify-between mb-2">
@@ -30,7 +30,7 @@ export default function DocsPage() {
               </Button>
             </div>
             <pre className="overflow-x-auto">
-              <code className="text-sm">npx axis-cli init</code>
+              <code className="text-sm">npx @axis-ds/cli init</code>
             </pre>
           </div>
         </section>
@@ -52,7 +52,7 @@ export default function DocsPage() {
               </Button>
             </div>
             <pre className="overflow-x-auto">
-              <code className="text-sm">npx axis-cli add button card input</code>
+              <code className="text-sm">npx @axis-ds/cli add button card input</code>
             </pre>
           </div>
         </section>
@@ -74,7 +74,7 @@ export default function DocsPage() {
               </Button>
             </div>
             <pre className="overflow-x-auto">
-              <code className="text-sm">npx axis-cli add streaming-text tool-call-card</code>
+              <code className="text-sm">npx @axis-ds/cli add streaming-text tool-call-card</code>
             </pre>
           </div>
         </section>
@@ -102,7 +102,7 @@ export default function DocsPage() {
         <section>
           <h2 className="text-2xl font-semibold mb-4">CLI Commands</h2>
           <p className="text-muted-foreground mb-4">
-            axis-cli는 컴포넌트 설치 외에도 프로젝트 관리를 위한 명령어를 제공합니다.
+            @axis-ds/cli는 컴포넌트 설치 외에도 프로젝트 관리를 위한 명령어를 제공합니다.
           </p>
 
           <h3 className="text-lg font-medium mb-3">axis sync</h3>
@@ -116,10 +116,10 @@ export default function DocsPage() {
             </div>
             <pre className="overflow-x-auto">
               <code className="text-sm">{`# GitHub Issue와 WI 상태 동기화
-npx axis-cli sync
+npx @axis-ds/cli sync
 
 # 변경 사항 미리보기 (실제 변경 없음)
-npx axis-cli sync --dry-run`}</code>
+npx @axis-ds/cli sync --dry-run`}</code>
             </pre>
           </div>
 
@@ -134,7 +134,7 @@ npx axis-cli sync --dry-run`}</code>
             </div>
             <pre className="overflow-x-auto">
               <code className="text-sm">{`# 프로젝트 상태 요약 출력
-npx axis-cli status`}</code>
+npx @axis-ds/cli status`}</code>
             </pre>
           </div>
         </section>

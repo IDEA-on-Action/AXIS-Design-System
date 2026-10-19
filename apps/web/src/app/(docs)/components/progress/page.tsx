@@ -104,7 +104,7 @@ export default function ProgressPage() {
       description="작업 진행 상태를 시각적으로 표시하는 프로그레스 바 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add progress" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add progress" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

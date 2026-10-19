@@ -91,7 +91,7 @@ export default function AlertPage() {
       description="사용자에게 중요한 정보나 피드백을 표시하는 알림 컴포넌트입니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add alert" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add alert" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

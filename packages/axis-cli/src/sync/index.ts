@@ -467,7 +467,7 @@ async function initSync(owner: string, repo: string, projectNumber: number): Pro
     console.log(chalk.gray(`  프로젝트: #${projectNumber}`));
     console.log();
     console.log(chalk.cyan('다음 명령어로 동기화를 시작하세요:'));
-    console.log(chalk.cyan('  npx axis-cli sync'));
+    console.log(chalk.cyan('  npx @axis-ds/cli sync'));
     console.log();
 
   } catch (error) {

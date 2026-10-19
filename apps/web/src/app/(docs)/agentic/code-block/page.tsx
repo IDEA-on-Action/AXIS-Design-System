@@ -138,7 +138,7 @@ export default function CodeBlockPage() {
       description="AI가 생성한 코드를 표시하는 블록 컴포넌트입니다. 복사 버튼, 라인 번호, 파일명 표시를 지원합니다."
     >
       <DocSection title="Installation">
-        <DocCodeBlock code="npx axis-cli add code-block --agentic" language="bash" />
+        <DocCodeBlock code="npx @axis-ds/cli add code-block --agentic" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

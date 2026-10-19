@@ -285,7 +285,7 @@ export class LibraryCurator {
 
     if (!index) {
       console.log(chalk.yellow("\n⚠️  라이브러리 인덱스가 없습니다."));
-      console.log(chalk.gray("   axis-cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
+      console.log(chalk.gray("   npx @axis-ds/cli library collect 명령어로 수집을 먼저 실행하세요.\n"));
       return;
     }
 

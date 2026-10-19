@@ -17,7 +17,7 @@ const features = [
     icon: Terminal,
     title: 'CLI 도구',
     description:
-      'npx axis-cli add 명령으로 필요한 컴포넌트만 선택적으로 설치.',
+      'npx @axis-ds/cli add 명령으로 필요한 컴포넌트만 선택적으로 설치.',
   },
   {
     icon: Moon,

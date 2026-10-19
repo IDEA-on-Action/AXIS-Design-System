@@ -6,9 +6,9 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
 const packageManagers = [
-  { id: 'pnpm', label: 'pnpm', command: 'pnpm dlx axis-cli add button' },
-  { id: 'npm', label: 'npm', command: 'npx axis-cli add button' },
-  { id: 'bun', label: 'bun', command: 'bunx axis-cli add button' },
+  { id: 'pnpm', label: 'pnpm', command: 'pnpm dlx @axis-ds/cli add button' },
+  { id: 'npm', label: 'npm', command: 'npx @axis-ds/cli add button' },
+  { id: 'bun', label: 'bun', command: 'bunx @axis-ds/cli add button' },
 ] as const
 
 export function InstallCommand() {

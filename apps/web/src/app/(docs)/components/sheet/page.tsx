@@ -99,7 +99,7 @@ export default function SheetPage() {
       description="화면 가장자리에서 슬라이드되는 사이드 패널 오버레이입니다. Radix UI Dialog 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add sheet" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add sheet" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

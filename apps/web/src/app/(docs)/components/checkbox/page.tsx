@@ -54,7 +54,7 @@ export default function CheckboxPage() {
       description="선택/해제 가능한 체크박스 입력 컴포넌트입니다. Radix UI Checkbox 기반."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add checkbox" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add checkbox" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">

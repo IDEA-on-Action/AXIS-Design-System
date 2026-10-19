@@ -186,7 +186,7 @@ export default function ApprovalDialogPage() {
       description="AI 에이전트의 작업을 사용자가 승인/거부할 수 있는 컴포넌트입니다. Human-in-the-Loop 패턴 구현에 사용됩니다."
     >
       <DocSection title="Installation">
-        <CodeBlock code="npx axis-cli add approval-card" language="bash" />
+        <CodeBlock code="npx @axis-ds/cli add approval-card" language="bash" />
       </DocSection>
 
       <DocSection title="Usage">
