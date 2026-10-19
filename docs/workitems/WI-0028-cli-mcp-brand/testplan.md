@@ -56,18 +56,18 @@
 
 ## T3. theme add (P3, FR-2)
 
-- [ ] T3-1: `axis.config.json` 없는 디렉터리 - 파일 변경 0(실행 전후 파일 목록 · 내용 해시 비교), rc 1, `axis init` 안내
-- [ ] T3-2: 탐색 순서 - `globalCss` 지정 · `app/globals.css` · `src/app/globals.css` · 루트 `globals.css` 가 함께 있을 때 각각 우선순위대로 하나만 고름. `globalCss` 키가 없을 때(projects/src-app)는 두 번째 후보부터 봄
-- [ ] T3-2b: `globalCss` 키가 없는 파일을 가리킬 때(projects/app-init, `axis init -y` 산출물과 같은 config) - `app/globals.css` 에 import 정확히 1줄, `globalCss` 경로 없음 경고 출력, `axis.config.json` 의 `globalCss` 값 불변. 음성 대조군: 수동 안내(A1)만 내고 import 0줄로 끝나는 구현이면 이 테스트가 실패함을 한 번 확인(폴백을 끈 상태로 실행)
-- [ ] T3-3: 삽입 위치 - `@charset` · 기존 `@import` 다음, 없으면 첫 줄. `@tailwind base;` 보다 앞 (U2 대안 2 결정으로 이 위치 확정, 2026-10-19. 라이트 승리는 T6-7 에서 확인)
-- [ ] **T3-4 (AC2(a) fixture 판)**: `theme-only.json` 을 펼친 프로젝트(plan 6.1, `initTemplate` 형태 config, tokens 없음)에서 2회 실행 뒤 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "sample"`. 2회차 실행의 파일 변경 0
-- [ ] T3-5: tokens 없을 때 `dependencies["@axis-ds/tokens"] === "^1.3.0"`, 설치 명령 미실행(자식 프로세스 호출 0)
-- [ ] T3-6: tokens `^1.2.1` 이 이미 있으면 범위 불변 + 업그레이드 안내
-- [ ] T3-7: 이름 규칙 위반(`Bad_Name`) 거절 · 설치돼 있는데 index 에 없는 이름 거절 · 미설치면 경고와 함께 진행
-- [ ] T3-8: 다른 브랜드 import 가 있을 때 기존 줄 유지 + 새 줄 추가 + 안내(U13)
-- [ ] T3-9: 출력에 `defaultBrand` 예시와 「Provider · `data-brand` 가 없으면 화면이 바뀌지 않음」 문장
-- [ ] T3-10: 후보 CSS 파일이 모두 없는 프로젝트 - 수동 안내, `package.json` · config 는 갱신
-- [ ] T3-11: 쓰는 파일의 들여쓰기 2칸 · 끝 줄바꿈 유지, config 의 다른 키 순서 유지
+- [x] T3-1: `axis.config.json` 없는 디렉터리 - 파일 변경 0(실행 전후 파일 목록 · 내용 해시 비교), rc 1, `axis init` 안내 → `src/theme/theme-add.test.ts` 2건 통과(config JSON 파손도 변경 0 · rc 1). 빌드 산출물로도 rc 1 · 변경 0
+- [x] T3-2: 탐색 순서 - `globalCss` 지정 · `app/globals.css` · `src/app/globals.css` · 루트 `globals.css` 가 함께 있을 때 각각 우선순위대로 하나만 고름. `globalCss` 키가 없을 때(projects/src-app)는 두 번째 후보부터 봄 → 2건 통과(네 후보를 앞에서부터 하나씩 지우며 매번 쓸 CSS 파일이 정확히 1개인지 확인) + 코어 `findGlobalCss` 3건(디렉터리는 파일로 보지 않음 포함)
+- [x] T3-2b: `globalCss` 키가 없는 파일을 가리킬 때(projects/app-init, `axis init -y` 산출물과 같은 config) - `app/globals.css` 에 import 정확히 1줄, `globalCss` 경로 없음 경고 출력, `axis.config.json` 의 `globalCss` 값 불변. 음성 대조군: 수동 안내(A1)만 내고 import 0줄로 끝나는 구현이면 이 테스트가 실패함을 한 번 확인(폴백을 끈 상태로 실행) → 1건 통과. 변이 M4(`configuredMissing` 뒤 바로 반환해 폴백을 끔)에서 이 항목 · T3-2 · 코어 1건, 3건 실패. 빌드 산출물로도 경고 줄과 import 1줄, `src/app` 미생성
+- [x] T3-3: 삽입 위치 - `@charset` · 기존 `@import` 다음, 없으면 첫 줄. `@tailwind base;` 보다 앞 (U2 대안 2 결정으로 이 위치 확정, 2026-10-19. 라이트 승리는 T6-7 에서 확인) → 6건 통과(`@charset` 만 · 앞쪽 주석 · 규칙 뒤 `@import` 무시 · CRLF · theme-only 실파일 포함). 변이 M7(맨 끝에 삽입)에서 7건 실패
+- [x] **T3-4 (AC2(a) fixture 판)**: `theme-only.json` 을 펼친 프로젝트(plan 6.1, `initTemplate` 형태 config, tokens 없음)에서 2회 실행 뒤 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "sample"`. 2회차 실행의 파일 변경 0 → 1건 통과. 빌드 산출물로도 1회차 변경 3파일(`axis.config.json` · `globals.css` · `package.json`) · 2회차 변경 0 · import 1줄 · tokens 키 1개. 변이 M5(같은 브랜드 import 감지 끔) · M8(기존 범위 덮어씀)에서 각각 실패. fixture 판이라 AC2(a) 완료 판정은 T6-6
+- [x] T3-5: tokens 없을 때 `dependencies["@axis-ds/tokens"] === "^1.3.0"`, 설치 명령 미실행(자식 프로세스 호출 0) → 2건 통과(`node:child_process` · `child_process` 의 spawn · exec 계열 7개 호출 합 0, `node_modules` 미생성. devDependencies 에 있으면 추가 안 함). 양성 대조군: 변이 M6(apply 끝에 `execSync("true")`)에서 이 항목 1건 실패
+- [x] T3-6: tokens `^1.2.1` 이 이미 있으면 범위 불변 + 업그레이드 안내 → 2건 통과(package.json 바이트 불변. 음성 대조군: tokens 1.3.0 이면 업그레이드 안내 없음)
+- [x] T3-7: 이름 규칙 위반(`Bad_Name`) 거절 · 설치돼 있는데 index 에 없는 이름 거절 · 미설치면 경고와 함께 진행 → 4건 통과(거절 두 경우 파일 변경 0 · rc 1. 음성 대조군: index 에 있으면 경고 없음). 빌드 산출물 `nope` · `Bad_Name` rc 1
+- [x] T3-8: 다른 브랜드 import 가 있을 때 기존 줄 유지 + 새 줄 추가 + 안내(U13) → 3건 통과(같은 브랜드가 `url('...')` 형태로 있으면 추가 안 함, 주석 안의 import 는 없는 것으로 봄) + 코어 `findBrandImports` 2건
+- [x] T3-9: 출력에 `defaultBrand` 예시와 「Provider · `data-brand` 가 없으면 화면이 바뀌지 않음」 문장 → 2건 통과(theme 1.3.0 조건 · `@axis-ds/theme` 설치 안내 포함, `layout.tsx` 불변)
+- [x] T3-10: 후보 CSS 파일이 모두 없는 프로젝트 - 수동 안내, `package.json` · config 는 갱신 → 1건 통과(CSS 파일 생성 0)
+- [x] T3-11: 쓰는 파일의 들여쓰기 2칸 · 끝 줄바꿈 유지, config 의 다른 키 순서 유지 → 3건 통과(기존 `brand` 키는 제자리에서 값만 바뀜, 4칸 · 탭 · 끝 줄바꿈 없음 · CRLF 도 원래 형식을 따름)
 
 ## T4. check 의 brand 검사 (P4, FR-5)
 
@@ -131,3 +131,10 @@
 | 2026-10-19 | 6d5c567 + P2 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli rc 2, 오류 20건(`src/library/**` 19 · `template-apply.ts` 1)으로 P1 기준선과 같은 분포, `src/theme/**` 0건 |
 | 2026-10-19 | 6d5c567 + P2 | 루트 `npx eslint <P2 변경 · 신규 ts 6개>` | 해당 없음 | rc 1, `src/index.ts` 기존 2건(`MONET_CATEGORIES` · `category`)만, `src/theme/**` 0건 |
 | 2026-10-19 | 6d5c567 + P2 | `pnpm build`(packages/axis-cli) 뒤 `node dist/index.js theme list` · `theme info` | 해당 없음 | build rc 0, 추적 파일 변경 0. fixture 4종 list rc 0 · 1 · 1 · 1, info sample rc 0 · nope rc 1 |
+| 2026-10-19 | 7c0dd38 + P3 | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 8파일 132건 통과, rc 0 (P3 신규 37건: theme-add 32 · brand-core 5) |
+| 2026-10-19 | 7c0dd38 + P3 | `turbo run test --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | 예 | rc 0, 2 tasks, cached 0, cli 132건 · mcp 5건 |
+| 2026-10-19 | 7c0dd38 + P3 | 변이 5종(M4 폴백 끔 · M5 같은 브랜드 감지 끔 · M6 설치 실행 · M7 맨 끝 삽입 · M8 기존 범위 덮어씀)을 하나씩 넣고 `npx vitest run src/theme` | 해당 없음 | 각각 rc 1(실패 3 · 2 · 1 · 7 · 3건), 되돌린 뒤 sha256 앞 12자리 `brand-core.ts` `e308b4c4bc7d` · `theme-add.ts` `c438b6dd0562` 로 원본과 같음 |
+| 2026-10-19 | 7c0dd38 + P3 | `pnpm --filter @axis-ds/cli --filter @axis-ds/mcp type-check` · `lint` | 해당 없음 | 둘 다 rc 0 이지만 P1 · P2 와 같이 두 패키지에 스크립트가 없어 아무것도 실행하지 않음. 통과 근거 아님 |
+| 2026-10-19 | 7c0dd38 + P3 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli 오류 20건(`src/library/**` 19 · `template-apply.ts` 1)으로 P1 · P2 기준선과 같은 분포, `src/theme/**` 0건 |
+| 2026-10-19 | 7c0dd38 + P3 | 루트 `npx eslint <P3 변경 · 신규 ts 5개>` | 해당 없음 | rc 0, 0건. 양성 대조군: 같은 설정으로 `packages/axis-cli/src/index.ts` 는 기존 지적이 나옴(린트가 실제로 돎) |
+| 2026-10-19 | 7c0dd38 + P3 | `pnpm build`(packages/axis-cli) 뒤 `node dist/index.js theme add` 를 임시 디렉터리에서 실행 | 해당 없음 | build rc 0, 추적 파일 변경 0. theme-only(템플릿 원본을 펼침, tokens 없음, 주입 env 없음) 1회차 rc 0 · 3파일 변경, 2회차 rc 0 · 변경 0, import 1줄 · tokens 키 1개 · `brand: "sample"` · `node_modules` 미생성. app-init + tokens-1.3 fixture rc 0 · globalCss 없음 경고 · `app/globals.css` import 1줄. `nope` · `Bad_Name` · config 없음 rc 1, config 없음은 변경 0 |

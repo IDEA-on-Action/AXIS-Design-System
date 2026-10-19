@@ -1,4 +1,4 @@
-/** axis theme 명령어 (WI-0028 FR-1 · FR-3) */
+/** axis theme 명령어 (WI-0028 FR-1 · FR-2 · FR-3) */
 
 import type { Command } from "commander";
 import chalk from "chalk";
@@ -9,11 +9,19 @@ import {
   TOKENS_PACKAGE,
   getBrand,
   listBrands,
+  providerExample,
   type BrandDetail,
   type BrandGetResult,
   type BrandListResult,
   type TokensStatus,
 } from "./brand-core.js";
+import {
+  THEME_PACKAGE,
+  TOKENS_DEPENDENCY_RANGE,
+  applyThemeAdd,
+  planThemeAdd,
+  type ThemeAddPlan,
+} from "./theme-add.js";
 
 /** 명령 출력: 줄 목록과 종료 코드 */
 export interface ThemeOutput {
@@ -152,6 +160,133 @@ export function renderThemeInfo(result: BrandGetResult, name: string): ThemeOutp
   return { lines, exitCode: 0 };
 }
 
+function rel(plan: ThemeAddPlan, file: string): string {
+  return path.relative(plan.baseDir, file) || file;
+}
+
+/**
+ * `axis theme add <brand>` 출력 (FR-2). `written` 은 `applyThemeAdd` 가 쓴 파일 목록입니다.
+ * 오류가 있는 계획이면 rc 1 이고 아무것도 쓰지 않은 상태입니다.
+ */
+export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutput {
+  const error = plan.errors[0];
+  if (error) {
+    const lines = [""];
+    switch (error.kind) {
+      case "no-config":
+        lines.push(
+          chalk.red("axis.config.json 이 없습니다. 아무것도 바꾸지 않았습니다."),
+          `  먼저 ${chalk.cyan("axis init")} 을 실행하세요.`
+        );
+        break;
+      case "invalid-config":
+        lines.push(chalk.red(`axis.config.json 을 읽을 수 없습니다(${error.message}). 아무것도 바꾸지 않았습니다.`));
+        break;
+      case "invalid-package-json":
+        lines.push(chalk.red(`package.json 을 읽을 수 없습니다(${error.message}). 아무것도 바꾸지 않았습니다.`));
+        break;
+      case "invalid-name":
+        lines.push(
+          chalk.red(`브랜드 이름 '${error.brand}' 가 규칙(소문자 · 숫자 · 하이픈, 예: ontology)에 맞지 않습니다.`)
+        );
+        break;
+      case "unknown-brand":
+        lines.push(
+          chalk.red(`브랜드 '${error.brand}' 가 설치된 ${TOKENS_PACKAGE} ${error.version ?? ""} 에 없습니다.`),
+          `  설치된 브랜드: ${error.available.length > 0 ? error.available.join(", ") : "(없음)"}`,
+          chalk.gray("  목록: axis theme list")
+        );
+        break;
+    }
+    lines.push("");
+    return { lines, exitCode: 1 };
+  }
+
+  const lines = ["", chalk.blue(`브랜드 ${plan.brand} 적용`), ""];
+  if (plan.unverifiedBrand) {
+    lines.push(
+      chalk.yellow(
+        `  ! ${TOKENS_PACKAGE} 를 읽을 수 없어(${plan.tokens.status}) 이름 규칙만 확인했습니다. 설치 후 axis theme list 로 '${plan.brand}' 가 있는지 확인하세요.`
+      )
+    );
+  }
+
+  // CSS
+  const css = plan.css;
+  if (css?.configuredMissing) {
+    lines.push(
+      chalk.yellow(
+        css.file
+          ? `  ! axis.config.json 의 globalCss(${css.configuredMissing})가 없어 ${rel(plan, css.file)} 에 추가합니다.`
+          : `  ! axis.config.json 의 globalCss(${css.configuredMissing})가 없습니다.`
+      )
+    );
+  }
+  if (css?.action === "add" && css.file) {
+    lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: @import "${plan.importPath}"; 추가`);
+  } else if (css?.action === "exists" && css.file) {
+    lines.push(`  ${chalk.gray("-")} ${rel(plan, css.file)}: import 가 이미 있어 건너뜀`);
+  } else {
+    lines.push(
+      chalk.yellow("  ! CSS 진입점(globalCss · app/globals.css · src/app/globals.css · globals.css)을 찾지 못했습니다."),
+      `    전역 CSS 맨 앞(@charset · 다른 @import 다음)에 직접 넣으세요: @import "${plan.importPath}";`
+    );
+  }
+  if (css && css.otherBrands.length > 0) {
+    lines.push(
+      chalk.yellow(
+        `  ! 다른 브랜드 import(${css.otherBrands.join(", ")})는 그대로 두었습니다. 쓰지 않으면 이전 브랜드 import 를 지워도 됩니다.`
+      )
+    );
+  }
+
+  // package.json
+  const dep = plan.dependency;
+  if (dep?.action === "add") {
+    lines.push(
+      `  ${chalk.green("✓")} package.json: dependencies 에 "${TOKENS_PACKAGE}": "${TOKENS_DEPENDENCY_RANGE}" 추가`,
+      `    설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`
+    );
+  } else if (dep?.action === "present") {
+    lines.push(`  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 이미 있어 범위를 바꾸지 않음`);
+  } else if (dep?.action === "no-package-json") {
+    lines.push(
+      chalk.yellow(`  ! package.json 이 없어 의존성을 추가하지 않았습니다. 설치: ${TOKENS_INSTALL_COMMAND}`)
+    );
+  }
+  if (dep?.upgrade) {
+    lines.push(
+      chalk.yellow(
+        `  ! 설치된 ${TOKENS_PACKAGE} ${plan.tokens.version} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`
+      ),
+      `    업그레이드: ${chalk.cyan(TOKENS_INSTALL_COMMAND)}`
+    );
+  }
+
+  // axis.config.json
+  if (plan.configChanged) {
+    lines.push(`  ${chalk.green("✓")} axis.config.json: "brand": "${plan.brand}" 기록`);
+  } else {
+    lines.push(`  ${chalk.gray("-")} axis.config.json: brand 가 이미 "${plan.brand}"`);
+  }
+
+  // Provider 안내(FR-2, Q1 · U10: 코드는 고치지 않음)
+  lines.push(
+    "",
+    chalk.bold(`Provider (${THEME_PACKAGE} 1.3.0 이상)`),
+    ...providerExample(plan.brand).split("\n").map((l) => (l ? `  ${l}` : "")),
+    chalk.gray(
+      `  ThemeProvider 나 <html data-brand="${plan.brand}"> 가 없으면 import 만으로는 화면이 바뀌지 않습니다.`
+    )
+  );
+  if (dep?.themeMissing) {
+    lines.push(`  ${THEME_PACKAGE} 설치: ${chalk.cyan(`pnpm add ${THEME_PACKAGE}@^1.3.0`)}`);
+  }
+
+  lines.push("", chalk.gray(written.length > 0 ? `파일 ${written.length}개를 바꿨습니다.` : "바꾼 파일이 없습니다."), "");
+  return { lines, exitCode: 0 };
+}
+
 function print(output: ThemeOutput): void {
   for (const line of output.lines) console.log(line);
   if (output.exitCode !== 0) process.exitCode = output.exitCode;
@@ -180,5 +315,16 @@ export function registerThemeCommand(program: Command): void {
     .action((name: string, options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
       print(renderThemeInfo(getBrand(baseDir, name), name));
+    });
+
+  themeCmd
+    .command("add <brand>")
+    .description("브랜드 적용: CSS import · package.json 의존성 · axis.config.json brand (설치는 안내만)")
+    .option("-d, --dir <path>", "대상 디렉토리")
+    .action((name: string, options: { dir?: string }) => {
+      const baseDir = path.resolve(options.dir || ".");
+      const plan = planThemeAdd(baseDir, name);
+      const written = plan.errors.length === 0 ? applyThemeAdd(plan) : [];
+      print(renderThemeAdd(plan, written));
     });
 }

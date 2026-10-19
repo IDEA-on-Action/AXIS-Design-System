@@ -6,6 +6,8 @@ import {
   BRAND_ADJUSTMENT_REFERENCE,
   KEY_TOKENS,
   brandImportPath,
+  findBrandImports,
+  findGlobalCss,
   getBrand,
   listBrands,
   parseBrandCss,
@@ -247,5 +249,54 @@ describe("test-helpers", () => {
   it("임시 디렉터리는 os.tmpdir 아래에 만들어짐", async () => {
     const dir = await project({ tokens: "none" });
     expect(dir.startsWith(os.tmpdir())).toBe(true);
+  });
+});
+
+describe("findGlobalCss (plan 4.1, U14 (A))", () => {
+  it("globalCss 파일이 있으면 그것만 고름", async () => {
+    const dir = await project({ tokens: "none" });
+    await fs.outputFile(path.join(dir, "styles/x.css"), "");
+    await fs.outputFile(path.join(dir, "app/globals.css"), "");
+    expect(findGlobalCss(dir, { globalCss: "./styles/x.css" })).toEqual({ path: path.join(dir, "styles/x.css") });
+  });
+
+  it("globalCss 파일이 없으면 configuredMissing 과 함께 다음 후보", async () => {
+    const dir = await project({ tokens: "none" });
+    await fs.outputFile(path.join(dir, "src/app/globals.css"), "");
+    await fs.outputFile(path.join(dir, "globals.css"), "");
+    expect(findGlobalCss(dir, { globalCss: "./nope.css" })).toEqual({
+      path: path.join(dir, "src/app/globals.css"),
+      configuredMissing: "./nope.css",
+    });
+  });
+
+  it("후보가 모두 없으면 path 없음, 디렉터리는 파일로 보지 않음", async () => {
+    const dir = await project({ tokens: "none" });
+    await fs.ensureDir(path.join(dir, "app/globals.css"));
+    expect(findGlobalCss(dir, null)).toEqual({});
+    expect(findGlobalCss(dir, { globalCss: "./globals.css" })).toEqual({ configuredMissing: "./globals.css" });
+  });
+});
+
+describe("findBrandImports", () => {
+  it("세 형태 · .css 접미 · 나온 순서", () => {
+    const css = [
+      '@import "@axis-ds/tokens/css/brands/a";',
+      "@import '@axis-ds/tokens/css/brands/b-2';",
+      "@import url(@axis-ds/tokens/css/brands/c);",
+      '@import url("@axis-ds/tokens/css/brands/d.css") layer(base);',
+      '@import "@axis-ds/tokens/css/brands/e"',
+    ].join("\n");
+    expect(findBrandImports(css)).toEqual(["a", "b-2", "c", "d", "e"]);
+  });
+
+  it("주석 · 다른 경로 · 이름 뒤에 다른 글자가 붙은 경로는 세지 않음", () => {
+    const css = [
+      '/* @import "@axis-ds/tokens/css/brands/a"; */',
+      '@import "@axis-ds/tokens/css/shadcn";',
+      '@import "@axis-ds/tokens/css/brands/x_y";',
+      ".a { content: '@axis-ds/tokens/css/brands/z'; }",
+    ].join("\n");
+    expect(findBrandImports(css)).toEqual([]);
   });
 });

@@ -6,7 +6,7 @@
  * 두 패키지에서 똑같이 컴파일되도록 Node 내장 모듈만 쓰고, 출력 문자열은 만들지 않고 구조화된 값만 돌려줍니다.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
 
@@ -169,6 +169,69 @@ export function resolveTokens(baseDir: string): TokensResolution {
 /** index 항목에서 CSS import 경로를 만듭니다. FR-2 · FR-4 · FR-5 가 같은 함수를 씁니다. */
 export function brandImportPath(entry: Pick<BrandIndexEntry, "css">): string {
   return tokensSpecifier(entry.css);
+}
+
+/** `axis.config.json` 가운데 브랜드 기능이 읽는 키(MCP 는 config 를 읽기만 하므로 최소 타입만 둡니다) */
+export interface BrandConfigLike {
+  globalCss?: unknown;
+  brand?: unknown;
+}
+
+export interface GlobalCssLocation {
+  /** 고른 CSS 파일의 절대 경로. 후보가 모두 없으면 없음 */
+  path?: string;
+  /** `globalCss` 키가 가리키는데 파일이 없을 때 그 값(설정에 적힌 그대로) */
+  configuredMissing?: string;
+}
+
+/** `globalCss` 다음으로 보는 후보(PRD FR-2 순서) */
+export const GLOBAL_CSS_CANDIDATES = ["app/globals.css", "src/app/globals.css", "globals.css"] as const;
+
+function isFile(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 브랜드 import 를 넣거나 검사할 CSS 파일을 찾습니다(PRD FR-2 · A1, plan 4.1 U14 (A)).
+ * 후보는 `config.globalCss` → `app/globals.css` → `src/app/globals.css` → 루트 `globals.css` 순이고,
+ * `globalCss` 는 키가 없을 때와 키가 가리키는 파일이 없을 때 모두 다음 후보로 넘어갑니다.
+ * 파일이 없을 때는 `configuredMissing` 에 그 값을 담아 호출한 쪽이 경고하게 합니다.
+ */
+export function findGlobalCss(baseDir: string, config: BrandConfigLike | null | undefined): GlobalCssLocation {
+  const root = resolve(baseDir);
+  const result: GlobalCssLocation = {};
+  const configured = config?.globalCss;
+  if (typeof configured === "string" && configured.trim() !== "") {
+    const file = resolve(root, configured);
+    if (isFile(file)) return { path: file };
+    result.configuredMissing = configured;
+  }
+  for (const candidate of GLOBAL_CSS_CANDIDATES) {
+    const file = join(root, candidate);
+    if (isFile(file)) {
+      result.path = file;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * CSS 안의 브랜드 import 이름 목록(나온 순서, 중복 포함). 주석 안의 import 는 세지 않습니다.
+ * `@import "..."` · `@import '...'` · `@import url(...)` 세 형태를 읽습니다.
+ */
+export function findBrandImports(css: string): string[] {
+  const names: string[] = [];
+  const pattern =
+    /@import\s+(?:url\(\s*)?["']?@axis-ds\/tokens\/css\/brands\/([a-z][a-z0-9-]*)(?:\.css)?["']?\s*\)?\s*(?=[;\s]|$)/g;
+  for (const m of stripComments(css).matchAll(pattern)) {
+    names.push(m[1]);
+  }
+  return names;
 }
 
 function readBrandIndex(indexPath: string): BrandIndexEntry[] {

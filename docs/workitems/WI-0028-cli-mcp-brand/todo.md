@@ -66,17 +66,17 @@
 
 ## P3. theme add
 
-- [ ] `planThemeAdd` · `applyThemeAdd` 분리 (FR-2)
-- [ ] `axis.config.json` 없으면 아무것도 쓰지 않고 rc 1 (FR-2) → T3-1
-- [ ] CSS 대상 탐색 순서 `globalCss` → `app/` → `src/app/` → 루트 (FR-2, A1) → T3-2
-- [ ] `globalCss` 가 없는 파일을 가리키면 경고 후 다음 후보 (U14 권장안, plan 4.1) → T3-2b
-- [ ] import 삽입 위치(`@charset` · 기존 `@import` 뒤, U2 대안 2 로 확정) (FR-2, U2) → T3-3
-- [ ] 두 번 실행해도 import 1줄 · 의존성 1회 · brand 기록 (AC2(a) fixture 판, 완료 판정은 T6-6) → T3-4
-- [ ] tokens 없으면 `dependencies` 에 `^1.3.0` 추가 + 설치 안내, 설치 미실행 (FR-2, U6) → T3-5
-- [ ] tokens 1.3.0 미만이면 범위 유지 + 업그레이드 안내 → T3-6
-- [ ] 브랜드 이름 검증(U5) · 다른 브랜드 import 처리(U13) → T3-7 · T3-8
-- [ ] Provider 안내 문구(`defaultBrand`, `<html data-brand>`, theme 1.3.0 조건) (FR-2, Q1) → T3-9
-- [ ] CSS 대상 없음 → 수동 안내, 나머지 단계 진행 (A1) → T3-10
+- [x] `planThemeAdd` · `applyThemeAdd` 분리 (FR-2) (2026-10-19. `src/theme/theme-add.ts`. plan 은 파일을 쓰지 않고 쓸 내용(`before` · `after`)만 계산, apply 는 쓰기 전에 모든 대상이 계획 때 내용과 같은지 · JSON 이 파싱되는지 · CSS 의 브랜드 import 가 정확히 1줄인지 먼저 보고 하나라도 어긋나면 아무것도 쓰지 않음. `findGlobalCss` · `findBrandImports` 는 공유 코어에 더함)
+- [x] `axis.config.json` 없으면 아무것도 쓰지 않고 rc 1 (FR-2) → T3-1 (2026-10-19. config JSON 이 깨졌을 때도 같음)
+- [x] CSS 대상 탐색 순서 `globalCss` → `app/` → `src/app/` → 루트 (FR-2, A1) → T3-2 (2026-10-19)
+- [x] `globalCss` 가 없는 파일을 가리키면 경고 후 다음 후보 (U14 권장안, plan 4.1) → T3-2b (2026-10-19, 폴백을 끈 변이에서 3건 실패 확인)
+- [x] import 삽입 위치(`@charset` · 기존 `@import` 뒤, U2 대안 2 로 확정) (FR-2, U2) → T3-3 (2026-10-19. 파일 앞쪽의 빈 줄 · 주석 · `@charset` · `@import` 구간만 보고, 규칙 뒤의 `@import` 는 기준으로 삼지 않음. CRLF 유지)
+- [x] 두 번 실행해도 import 1줄 · 의존성 1회 · brand 기록 (AC2(a) fixture 판, 완료 판정은 T6-6) → T3-4 (2026-10-19. fixture 판만 통과, AC2(a) 완료는 T6-6)
+- [x] tokens 없으면 `dependencies` 에 `^1.3.0` 추가 + 설치 안내, 설치 미실행 (FR-2, U6) → T3-5 (2026-10-19. 설치 안내 명령은 lockfile 로 고름: pnpm-lock · yarn.lock · package-lock, 없으면 `pnpm install`)
+- [x] tokens 1.3.0 미만이면 범위 유지 + 업그레이드 안내 → T3-6 (2026-10-19. 판정은 설치된 버전 기준)
+- [x] 브랜드 이름 검증(U5) · 다른 브랜드 import 처리(U13) → T3-7 · T3-8 (2026-10-19. tokens 가 `ok` 가 아닌 세 상태 모두 이름 규칙만 보고 경고와 함께 진행)
+- [x] Provider 안내 문구(`defaultBrand`, `<html data-brand>`, theme 1.3.0 조건) (FR-2, Q1) → T3-9 (2026-10-19. `package.json` 에 `@axis-ds/theme` 이 없으면 설치 안내를 덧붙임)
+- [x] CSS 대상 없음 → 수동 안내, 나머지 단계 진행 (A1) → T3-10 (2026-10-19)
 
 ## P4. check 의 brand 검사
 
