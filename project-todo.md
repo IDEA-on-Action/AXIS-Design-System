@@ -41,6 +41,7 @@
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
+| 47 | tokens ESM 엔트리 `dist/js/tokens.mjs` 문법 오류(`as const` 잔존, 1.2.1부터) 수정 | WI-0035 (#113) | P18 | P2 | ⏳ |
 
 ### 완료
 

@@ -164,7 +164,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBLNVM",
       "lastSyncedAt": "2026-10-17T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0035",
+      "slug": "tokens-esm-entry",
+      "issueNumber": 113,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhBs7lU",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-17T00:00:00.000Z"
+  "updatedAt": "2026-10-19T00:00:00.000Z"
 }
