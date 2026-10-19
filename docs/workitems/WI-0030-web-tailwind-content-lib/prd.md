@@ -1,6 +1,6 @@
 # WI-0030: apps/web Tailwind content 경로에 src/lib 추가 PRD
 
-> 작성일: 2026-10-19 | 버전: v1.0 (2026-10-19) | 작성자: Sinclair Seo | WI: WI-0030 | GitHub: #95 | 상태: Approved
+> 작성일: 2026-10-19 | 버전: v1.0 (2026-10-19) | 작성자: Sinclair Seo | WI: WI-0030 | GitHub: #95 | 상태: Approved (2026-10-19 결정 반영: 범위 src/lib 한 줄, a11y 는 main 기본 webServer(pnpm dev) 전후 비교 수용, slug 에 맞춰 폴더 이름 정정)
 > 선행: 없음. 기준 `main` e690905
 > 관련: WI-0025 M3 · M4 브랜치가 같은 `content` 배열에 registry · 패키지 경로를 더합니다(WI-0025 plan.md 5.1 U21 에서 별건으로 분리. U21 은 main 에는 없고 M3 브랜치 `feat/wi-0025-m3-ontology-v2`(PR #107) · `feat/wi-0025-m3-ontology` · M4 브랜치 `feat/wi-0025-m4-demo`(PR #110) 의 plan.md 에 있습니다)
 
