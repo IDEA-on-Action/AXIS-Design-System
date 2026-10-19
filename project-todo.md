@@ -42,6 +42,8 @@
 | 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
 | 50 | `axis init -y` 가 쓰는 utils.ts 의존성(`clsx` · `tailwind-merge`) 추가 · 안내 누락 (WI-0028 AC2(b) 선행) | WI-0038 (#124) | P18 | P2 | ⏳ |
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
+| 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
+| 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
 
 ### 완료
 

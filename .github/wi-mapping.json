@@ -204,6 +204,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB1CWM",
       "lastSyncedAt": "2026-10-19T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0040",
+      "slug": "library-axis-cli-guidance",
+      "issueNumber": 127,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB2Z_c",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0041",
+      "slug": "cli-init-config-overwrite",
+      "issueNumber": 128,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB2aE0",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-19T00:00:00.000Z"
