@@ -21,7 +21,7 @@
     "test": "turbo run test",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "pack-smoke": "node scripts/pack-smoke.mjs",
+    "pack-smoke": "node scripts/pack-smoke.mjs && node scripts/pack-install-smoke.mjs",
     "release": "pnpm build && pnpm pack-smoke && changeset publish",
     "check-licenses": "node scripts/check-licenses.mjs",
     "check-token-refs": "node scripts/check-token-refs.mjs"
