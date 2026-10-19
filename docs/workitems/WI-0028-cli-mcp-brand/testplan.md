@@ -71,14 +71,14 @@
 
 ## T4. check 의 brand 검사 (P4, FR-5)
 
-- [ ] T4-1: brand 없는 fixture 에서 `collectCheckResults` 결과(이름 · severity · 문구 · 개수)가 정정 전 `runCheck` 출력과 같음. 정정 전 출력은 착수 직전 HEAD 에서 캡처해 기대값으로 고정
-- [ ] T4-2: config 없음 · `brand` 없음 · config JSON 파손에서 brand 항목이 추가되지 않음(파손은 기존 동작 유지 여부를 함께 기록)
-- [ ] **T4-3 (AC4)**: brand 일치 pass, import 없음 warn, 다른 브랜드만 import warn, CSS 없음 warn. 음성 대조군: 일치 fixture 에서 warn 0. projects/app-init 에 `theme add` 한 뒤의 check 는 `app/globals.css` 를 검사해 pass(globalCss 경로 없음 표기 포함)
-- [ ] T4-4: MCP `handleCheckProject` 가 T4-3 과 같은 severity 를 냄, brand 없는 fixture 에서 결과 개수 불변
+- [x] T4-1: brand 없는 fixture 에서 `collectCheckResults` 결과(이름 · severity · 문구 · 개수)가 정정 전 `runCheck` 출력과 같음. 정정 전 출력은 착수 직전 HEAD 에서 캡처해 기대값으로 고정 → 1e84f15 에서 빈 디렉터리 · theme-only · app-init · src-app · config 파손 · 5항목 pass 프로젝트 6개의 `runCheck` 출력(색 제거)을 `packages/axis-cli/test/fixtures/check/run-check-baseline.json` 으로 고정. `src/template/template-check.test.ts` 13건 통과(프로젝트마다 `runCheck` 출력 줄 단위 일치 · `collectCheckResults` 5항목과 출력 줄 일치). 기존 문구 하나를 바꾼 변이에서 2건 실패. `FORCE_COLOR=1` 로 돌려도 26건 통과(색 코드를 지우고 비교)
+- [x] T4-2: config 없음 · `brand` 없음 · config JSON 파손에서 brand 항목이 추가되지 않음(파손은 기존 동작 유지 여부를 함께 기록) → 2건 통과(`brand` 빈 문자열 · 숫자도 추가 안 함). 파손 config 는 기존 동작 그대로 `axis.config.json` 항목 pass(존재만 봄), brand 항목 없음, 5항목. 코어 `readBrandConfig` 는 파손 · 배열 · `null` 에서 `null`(코어 2건)
+- [x] **T4-3 (AC4)**: brand 일치 pass, import 없음 warn, 다른 브랜드만 import warn, CSS 없음 warn. 음성 대조군: 일치 fixture 에서 warn 0. projects/app-init 에 `theme add` 한 뒤의 check 는 `app/globals.css` 를 검사해 pass(globalCss 경로 없음 표기 포함) → 11건 통과(주석 안 import 는 없음으로 봄 · 다른 브랜드와 함께 있으면 pass · globalCss 가 가리키는 파일을 루트 `globals.css` 보다 먼저 봄 · `runCheck` 출력의 brand 줄과 합계 포함) + 코어 `inspectBrandImport` 1건. 일치 프로젝트는 6항목 모두 pass(warn 0). app-init + tokens-1.3 에 `planThemeAdd` · `applyThemeAdd` 뒤 `brand "sample" import 가 app/globals.css에 있습니다 (globalCss ./src/app/globals.css 없음)` pass, 같은 프로젝트에 brand 만 적은 대조군은 warn. 변이 M9(CLI `checkBrand` 끔) 11건 실패, M10(다른 브랜드도 일치로 봄) 2건 실패. 빌드 산출물 `node dist/index.js check -d <app-init + tokens-1.3 fixture>` 에서 brand 없음 · import 없음 · `theme add` 뒤 · 다른 브랜드 순으로 5항목 출력(기준선과 같음) · warn · pass · warn
+- [x] T4-4: MCP `handleCheckProject` 가 T4-3 과 같은 severity 를 냄, brand 없는 fixture 에서 결과 개수 불변 → `src/tools/template.test.ts` 7건 추가 통과(기준선 2건 유지). 일치 pass · summary warn 0, import 없음 · 다른 브랜드 · CSS 없음 warn, globalCss 없는 파일을 가리키면 `app/globals.css` 검사, 문구는 CLI 테스트 기대 문구와 같은 문자열. brand 없음 · config 없음 · 파손에서 5항목. 변이 M12(MCP brand 검사 끔) 6건 실패. 빌드한 MCP 서버 stdio `tools/call axis.check_project` 에서 `[WARN] brand "sample" 와 import(ontology)가 다릅니다 (globalCss ./src/app/globals.css 없음)`, `isError` 없음, `tools/list` 16개(P5 전)
 
 ## T5. MCP 브랜드 도구 (P5, FR-4 · AC3)
 
-- [ ] T5-1: `src/tools/brand-core.ts` 와 CLI `src/theme/brand-core.ts` 의 바이트 동일. 음성 대조군: 사본에 공백 하나를 더한 상태에서 테스트가 실패하는 것을 한 번 확인하고 되돌림
+- [x] T5-1: `src/tools/brand-core.ts` 와 CLI `src/theme/brand-core.ts` 의 바이트 동일. 음성 대조군: 사본에 공백 하나를 더한 상태에서 테스트가 실패하는 것을 한 번 확인하고 되돌림 → P4 에서 선행(T4-4 가 사본을 씀). `src/tools/brand-core.test.ts` 1건 통과, 변이 M11(사본 끝에 공백 1자) 1건 실패, 되돌린 뒤 `cmp` 같음. P5 에서 원본을 고치면 다시 확인
 - [ ] T5-2: `handleListBrands` · `handleGetBrand` 가 fixture 에서 코어 결과를 그대로 돌려줌
 - [ ] T5-3: 빌드 산출물 stdio `tools/list` 18개, 이름에 `axis.list_brands` · `axis.get_brand`. WI-0036(#116)이 PR CI(frontend.yml) 의 pack-smoke 배선과 함께 머지된 뒤에는 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 두 이름을 더하고 PR CI 의 pack-smoke 가 통과하는지 함께 봄(그 뒤로는 목록을 안 고치면 PR CI 실패. 배선 머지 전에는 PR CI 가 초록이고 main push 의 publish.yml Pack smoke 가 발행을 막음)
 - [ ] T5-4: 미설치 · 미지원 fixture 에서 `isError` 없음, 안내 문구에 설치 명령
@@ -138,3 +138,12 @@
 | 2026-10-19 | 7c0dd38 + P3 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli 오류 20건(`src/library/**` 19 · `template-apply.ts` 1)으로 P1 · P2 기준선과 같은 분포, `src/theme/**` 0건 |
 | 2026-10-19 | 7c0dd38 + P3 | 루트 `npx eslint <P3 변경 · 신규 ts 5개>` | 해당 없음 | rc 0, 0건. 양성 대조군: 같은 설정으로 `packages/axis-cli/src/index.ts` 는 기존 지적이 나옴(린트가 실제로 돎) |
 | 2026-10-19 | 7c0dd38 + P3 | `pnpm build`(packages/axis-cli) 뒤 `node dist/index.js theme add` 를 임시 디렉터리에서 실행 | 해당 없음 | build rc 0, 추적 파일 변경 0. theme-only(템플릿 원본을 펼침, tokens 없음, 주입 env 없음) 1회차 rc 0 · 3파일 변경, 2회차 rc 0 · 변경 0, import 1줄 · tokens 키 1개 · `brand: "sample"` · `node_modules` 미생성. app-init + tokens-1.3 fixture rc 0 · globalCss 없음 경고 · `app/globals.css` import 1줄. `nope` · `Bad_Name` · config 없음 rc 1, config 없음은 변경 0 |
+| 2026-10-19 | 1e84f15 | P4 착수 전 `runCheck` 를 6개 프로젝트에서 실행해 출력 캡처(임시 테스트 파일, 캡처 뒤 삭제) | 해당 없음 | rc 0, 6개 프로젝트 출력을 `packages/axis-cli/test/fixtures/check/run-check-baseline.json` 에 고정(T4-1 기대값) |
+| 2026-10-19 | 1e84f15 + P4 | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 9파일 161건 통과, rc 0 (P4 신규 29건: template-check 26 · brand-core 3) |
+| 2026-10-19 | 1e84f15 + P4 | `packages/axis-mcp` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 3파일 13건 통과, rc 0 (P4 신규 8건: template 7 · brand-core 동일성 1) |
+| 2026-10-19 | 1e84f15 + P4 | `turbo run test --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | 예 | rc 0, 2 tasks, cached 0, cli 161건 · mcp 13건 |
+| 2026-10-19 | 1e84f15 + P4 | 변이 5종(M9 CLI brand 검사 끔 · M10 다른 브랜드도 일치 · M11 사본에 공백 1자 · M12 MCP brand 검사 끔 · 기존 config 문구 변경)을 하나씩 넣고 해당 테스트 실행 | 해당 없음 | 각각 실패 11 · 2 · 1 · 6 · 2건, 되돌린 뒤 sha256 앞 12자리 `template-check.ts` `5fc46b3340e9` · `brand-core.ts`(원본 · 사본) `044d79521986` · mcp `template.ts` `222088e36f29` 로 원본과 같음 |
+| 2026-10-19 | 1e84f15 + P4 | `pnpm --filter @axis-ds/cli --filter @axis-ds/mcp type-check` · `lint` | 해당 없음 | 둘 다 rc 0 이지만 P1 ~ P3 과 같이 두 패키지에 스크립트가 없어 아무것도 실행하지 않음(출력 1줄). 통과 근거 아님 |
+| 2026-10-19 | 1e84f15 + P4 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli rc 2, 오류 20건(`src/library/**` 19 · `template-apply.ts` 1)으로 P1 ~ P3 기준선과 같은 분포, `src/template/template-check*` · `src/theme/**` 0건 |
+| 2026-10-19 | 1e84f15 + P4 | 루트 `npx eslint <P4 변경 · 신규 ts 8개>` | 해당 없음 | rc 0, 0건. 양성 대조군: 같은 설정으로 `packages/axis-cli/src/index.ts` 는 기존 2건(rc 1) |
+| 2026-10-19 | 1e84f15 + P4 | `pnpm build`(cli · mcp) 뒤 `node dist/index.js check` · MCP stdio `axis.check_project` | 해당 없음 | build rc 0 · 0, 추적 파일 변경 0. 임시 디렉터리에 app-init + tokens-1.3 fixture 를 펼침(주입 env 없음, tokens 는 fixture 복사본이며 check 는 tokens 를 읽지 않음). CLI brand 없음 5항목(기준선 app-init 과 같은 줄) → brand 만 warn → `theme add sample` rc 0 뒤 pass → import 를 ontology 로 바꾸면 warn. MCP 같은 디렉터리 6항목, brand warn, `isError` 없음, `serverInfo.version` 1.1.5, `tools/list` 16개 |

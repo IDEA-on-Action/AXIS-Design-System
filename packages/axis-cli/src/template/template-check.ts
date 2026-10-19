@@ -3,6 +3,7 @@
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
+import { inspectBrandImport, type BrandImportCheck } from "../theme/brand-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
 const SEVERITY_ICON: Record<CheckSeverity, string> = {
@@ -12,9 +13,10 @@ const SEVERITY_ICON: Record<CheckSeverity, string> = {
 };
 
 /**
- * 프로젝트 상태 검증 실행
+ * 프로젝트 상태 검증 결과만 모읍니다(출력하지 않음, WI-0028 FR-5).
+ * 기존 5항목의 순서 · 문구는 그대로이고, `axis.config.json` 에 `brand` 가 있을 때만 brand 항목을 마지막에 더합니다.
  */
-export async function runCheck(dir?: string): Promise<void> {
+export async function collectCheckResults(dir?: string): Promise<CheckResult[]> {
   const baseDir = path.resolve(dir || ".");
   const results: CheckResult[] = [];
 
@@ -32,6 +34,19 @@ export async function runCheck(dir?: string): Promise<void> {
 
   // 5. package.json 의존성 확인
   results.push(await checkDependencies(baseDir));
+
+  // 6. brand 와 CSS import 대조 (brand 가 없으면 추가하지 않음)
+  const brand = checkBrand(baseDir);
+  if (brand) results.push(brand);
+
+  return results;
+}
+
+/**
+ * 프로젝트 상태 검증 실행
+ */
+export async function runCheck(dir?: string): Promise<void> {
+  const results = await collectCheckResults(dir);
 
   // 결과 출력
   console.log(chalk.blue("\nAXIS 프로젝트 검증 결과:\n"));
@@ -218,4 +233,45 @@ async function checkDependencies(baseDir: string): Promise<CheckResult> {
     severity: "pass",
     message: "필수 및 권장 의존성이 모두 설치되어 있습니다",
   };
+}
+
+/**
+ * `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 를 대조합니다(FR-5, plan 4.5).
+ * `brand` 가 없으면 `null` 이라 결과에 들어가지 않습니다. MCP `axis.check_project` 도 같은 문구를 냅니다.
+ */
+export function checkBrand(baseDir: string): CheckResult | null {
+  const check = inspectBrandImport(baseDir);
+  return check ? brandCheckResult(check) : null;
+}
+
+/** 코어 검사 결과를 check 항목으로 바꿉니다. */
+export function brandCheckResult(check: BrandImportCheck): CheckResult {
+  const { brand } = check;
+  const suffix = check.configuredMissing !== undefined ? ` (globalCss ${check.configuredMissing} 없음)` : "";
+  switch (check.state) {
+    case "match":
+      return {
+        name: "brand",
+        severity: "pass",
+        message: `brand "${brand}" import 가 ${check.cssFile}에 있습니다${suffix}`,
+      };
+    case "css-missing":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" 가 설정됐지만 CSS 파일을 찾지 못했습니다${suffix}`,
+      };
+    case "import-missing":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" import 가 ${check.cssFile}에 없습니다 → 'axis theme add ${brand}'${suffix}`,
+      };
+    case "other-brand":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" 와 import(${check.imports.join(", ")})가 다릅니다${suffix}`,
+      };
+  }
 }

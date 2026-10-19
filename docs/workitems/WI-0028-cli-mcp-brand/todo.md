@@ -80,14 +80,14 @@
 
 ## P4. check 의 brand 검사
 
-- [ ] CLI `runCheck` → `collectCheckResults` 분리, 출력 문구 불변 (FR-5, 2.2) → T4-1
-- [ ] `brand` 없는 프로젝트는 결과 개수 · 문구가 이전과 같음 (FR-5) → T4-2
-- [ ] brand 일치 pass · import 없음 warn · 다른 브랜드 warn · CSS 없음 warn (FR-5, AC4) → T4-3
-- [ ] MCP `handleCheckProject` 에 같은 검사 (FR-5) → T4-4
+- [x] CLI `runCheck` → `collectCheckResults` 분리, 출력 문구 불변 (FR-5, 2.2) → T4-1 (2026-10-19. 1e84f15 의 `runCheck` 출력을 6개 프로젝트에서 캡처해 `test/fixtures/check/run-check-baseline.json` 으로 고정)
+- [x] `brand` 없는 프로젝트는 결과 개수 · 문구가 이전과 같음 (FR-5) → T4-2 (2026-10-19. config JSON 파손도 brand 항목 없음, 기존 config 항목은 종전대로 존재만 봐서 pass)
+- [x] brand 일치 pass · import 없음 warn · 다른 브랜드 warn · CSS 없음 warn (FR-5, AC4) → T4-3 (2026-10-19. 대조는 공유 코어 `inspectBrandImport`(구조화된 값만)가 하고, 문구는 두 검사기의 `brandCheckResult` 가 plan 4.5 표대로 만듦. CSS 는 `findGlobalCss`(FR-2 순서)로 고르고 기존 globals.css 항목의 루트 우선 순서는 그대로(D8))
+- [x] MCP `handleCheckProject` 에 같은 검사 (FR-5) → T4-4 (2026-10-19. plan 4.5 「같은 함수(코어 사본)」대로 MCP `src/tools/brand-core.ts` 사본과 동일성 테스트를 이 단계에서 먼저 만듦(T5-1))
 
 ## P5. MCP 브랜드 도구
 
-- [ ] `src/tools/brand-core.ts` 사본 + 동일성 테스트 (U1) → T5-1
+- [x] `src/tools/brand-core.ts` 사본 + 동일성 테스트 (U1) → T5-1 (2026-10-19, P4 에서 선행. `axis.check_project` 의 brand 검사가 코어 사본을 써야 해서 P4 에서 만듦. P5 에서 원본을 고치면 사본을 다시 복사)
 - [ ] `handleListBrands` · `handleGetBrand` · format (FR-4) → T5-2
 - [ ] `axis.list_brands` · `axis.get_brand` 등록, 도구 16 → 18 (FR-4) → T5-3
 - [ ] 미설치 · 미지원이면 `isError` 없이 설치 안내 (FR-4, Q5) → T5-4

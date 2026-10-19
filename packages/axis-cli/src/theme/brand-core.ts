@@ -8,7 +8,7 @@
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join, relative, resolve, sep } from "node:path";
 
 /** 브랜드를 담는 패키지 이름 */
 export const TOKENS_PACKAGE = "@axis-ds/tokens";
@@ -232,6 +232,71 @@ export function findBrandImports(css: string): string[] {
     names.push(m[1]);
   }
   return names;
+}
+
+/** 설정 파일 이름 */
+export const AXIS_CONFIG_FILE_NAME = "axis.config.json";
+
+/**
+ * `<baseDir>/axis.config.json` 을 읽습니다(FR-5 검사용).
+ * 파일이 없거나, JSON 이 깨졌거나, 최상위가 객체가 아니면 `null` 입니다. 검사기는 이때 brand 항목을 더하지 않습니다.
+ */
+export function readBrandConfig(baseDir: string): BrandConfigLike | null {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(join(resolve(baseDir), AXIS_CONFIG_FILE_NAME), "utf8"));
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) return null;
+  return parsed as BrandConfigLike;
+}
+
+/**
+ * `axis check` · `axis.check_project` 의 brand 검사 결과(FR-5, plan 4.5)
+ * - `match`: CSS 에 `brand` import 가 있음
+ * - `css-missing`: CSS 후보를 하나도 찾지 못함
+ * - `import-missing`: CSS 에 브랜드 import 가 하나도 없음
+ * - `other-brand`: 다른 브랜드 import 만 있음
+ */
+export type BrandImportState = "match" | "css-missing" | "import-missing" | "other-brand";
+
+export interface BrandImportCheck {
+  brand: string;
+  state: BrandImportState;
+  /** 검사한 CSS 파일(`baseDir` 기준 상대 경로, `/` 구분). `css-missing` 이면 없음 */
+  cssFile?: string;
+  /** `globalCss` 가 가리키는 파일이 없을 때 그 값(설정에 적힌 그대로) */
+  configuredMissing?: string;
+  /** CSS 안의 브랜드 import 이름(나온 순서, 중복 제거) */
+  imports: string[];
+}
+
+/**
+ * `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 를 대조합니다(FR-5).
+ * config 가 없거나 읽을 수 없거나 `brand` 가 비어 있으면 `null` 이고, 검사기는 결과를 추가하지 않습니다(기존 출력 불변).
+ * CSS 파일은 `findGlobalCss`(FR-2 순서)로 고르므로 `axis theme add` 가 실제로 쓴 파일을 봅니다.
+ */
+export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
+  const config = readBrandConfig(baseDir);
+  const brand = config?.brand;
+  if (typeof brand !== "string" || brand.trim() === "") return null;
+
+  const root = resolve(baseDir);
+  const location = findGlobalCss(root, config);
+  const base: Pick<BrandImportCheck, "brand" | "configuredMissing"> = { brand };
+  if (location.configuredMissing !== undefined) base.configuredMissing = location.configuredMissing;
+  if (!location.path) {
+    return { ...base, state: "css-missing", imports: [] };
+  }
+
+  const cssFile = relative(root, location.path).split(sep).join("/");
+  const imports = [...new Set(findBrandImports(readFileSync(location.path, "utf8")))];
+  let state: BrandImportState;
+  if (imports.includes(brand)) state = "match";
+  else if (imports.length === 0) state = "import-missing";
+  else state = "other-brand";
+  return { ...base, state, cssFile, imports };
 }
 
 function readBrandIndex(indexPath: string): BrandIndexEntry[] {

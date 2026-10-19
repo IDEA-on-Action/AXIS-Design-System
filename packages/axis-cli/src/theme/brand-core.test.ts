@@ -9,8 +9,10 @@ import {
   findBrandImports,
   findGlobalCss,
   getBrand,
+  inspectBrandImport,
   listBrands,
   parseBrandCss,
+  readBrandConfig,
   resolveTokens,
 } from "./brand-core.js";
 import { THEME_FIXTURES_DIR, makeProject } from "./test-helpers.js";
@@ -298,5 +300,54 @@ describe("findBrandImports", () => {
       ".a { content: '@axis-ds/tokens/css/brands/z'; }",
     ].join("\n");
     expect(findBrandImports(css)).toEqual([]);
+  });
+});
+
+describe("readBrandConfig · inspectBrandImport (FR-5)", () => {
+  async function dirWith(files: Record<string, string>): Promise<string> {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "axis-brand-check-"));
+    created.push(dir);
+    for (const [file, content] of Object.entries(files)) {
+      await fs.ensureDir(path.dirname(path.join(dir, file)));
+      await fs.writeFile(path.join(dir, file), content);
+    }
+    return dir;
+  }
+
+  it("config 없음 · JSON 파손 · 최상위가 객체가 아님 → null", async () => {
+    expect(readBrandConfig(await dirWith({}))).toBeNull();
+    expect(readBrandConfig(await dirWith({ "axis.config.json": "{ x" }))).toBeNull();
+    expect(readBrandConfig(await dirWith({ "axis.config.json": '["sample"]' }))).toBeNull();
+    expect(readBrandConfig(await dirWith({ "axis.config.json": "null" }))).toBeNull();
+    expect(readBrandConfig(await dirWith({ "axis.config.json": '{"brand":"a"}' }))).toEqual({ brand: "a" });
+  });
+
+  it("brand 가 없거나 공백뿐이면 null (검사기가 항목을 더하지 않음)", async () => {
+    const css = { "app/globals.css": '@import "@axis-ds/tokens/css/brands/a";' };
+    expect(inspectBrandImport(await dirWith({ ...css, "axis.config.json": "{}" }))).toBeNull();
+    expect(inspectBrandImport(await dirWith({ ...css, "axis.config.json": '{"brand":"  "}' }))).toBeNull();
+  });
+
+  it("상태 4종과 상대 경로(/ 구분) · import 중복 제거", async () => {
+    const config = '{"brand":"a"}';
+    expect(
+      inspectBrandImport(
+        await dirWith({
+          "axis.config.json": config,
+          "src/app/globals.css": '@import "@axis-ds/tokens/css/brands/a";\n@import "@axis-ds/tokens/css/brands/a";',
+        })
+      )
+    ).toEqual({ brand: "a", state: "match", cssFile: "src/app/globals.css", imports: ["a"] });
+    expect(
+      inspectBrandImport(await dirWith({ "axis.config.json": config, "globals.css": ":root{}" }))
+    ).toEqual({ brand: "a", state: "import-missing", cssFile: "globals.css", imports: [] });
+    expect(
+      inspectBrandImport(
+        await dirWith({ "axis.config.json": config, "globals.css": '@import "@axis-ds/tokens/css/brands/b";' })
+      )
+    ).toEqual({ brand: "a", state: "other-brand", cssFile: "globals.css", imports: ["b"] });
+    expect(
+      inspectBrandImport(await dirWith({ "axis.config.json": '{"brand":"a","globalCss":"./x.css"}' }))
+    ).toEqual({ brand: "a", state: "css-missing", configuredMissing: "./x.css", imports: [] });
   });
 });
