@@ -313,6 +313,7 @@
   - **2026-10-16 결정**: 22개 토큰에 온톨로지 값을 **접기 매핑으로 추가**합니다. 규칙은 PRD FR-8과 같습니다(success → 기본 회색 계열, warning → `bad` 연한 단계, error → `bad`, info · running → `key`). 값은 초안 2 팔레트 안에서만 고르고, 부록 B의 미달 쌍 처리 방식(통과하는 단계 토큰 선택)을 따릅니다. D-5 흰 글자 짝 토큰의 ontology 값도 같은 표에서 대비를 검산해 정합니다(예: 다크 `key` #6B98F0 위에는 흰 글자가 2.85:1이라 `on-key` #0E1013을 씁니다). 확정 값은 M3 구현에서 표로 남기고, 디자인 오너가 부록 B를 승인할 때 함께 확인받습니다.
   - **2026-10-17 확정**: 값 표는 5.3 「ontology 접기 값 표」에 있습니다. 실제 대상은 신설 22개가 아니라 초안 2에 없는 기본 토큰 42개(semantic 32 · component 10)이고, 그중 Card 그림자 2개는 구조 단계(U24)에서 넣었습니다.
 - **D-7 primitive 오버라이드 안내 문서**: `docs/guides/theme-customization.md` 92~97행과 `docs/guides/component-usage.md` 175행은 `:root { --axis-color-blue-500: ... }` 오버라이드로 브랜드 색을 바꾸라고 안내합니다. semantic·component 토큰은 hex로 풀려 나가므로 지금 이 오버라이드가 닿는 곳은 primitive를 직접 참조하는 agentic-ui뿐입니다. FR-2 이후에는 agentic-ui 상태색·말풍선·아바타가 이 오버라이드를 따르지 않습니다. 3.2 하위 호환(브랜드 미지정 시 계산값 동일)에는 걸리지 않지만 사용자 오버라이드 동작이 바뀝니다. 릴리스 노트에 적을지, 가이드를 고칠지(FR-10 테마 문서 작업과 묶을지) 정해야 합니다.
+  - **2026-10-19 결정**: 둘 다 합니다. 1.2.1 릴리스 노트에 동작 변경을 적었고(release-notes 1.2.1 절), 가이드 정정은 FR-10(M4)과 묶어 `theme-customization.md` 2절 · 「5. 커스텀 테마 생성」과 `component-usage.md` 「테마 커스터마이징」을 고쳤습니다. 실측 결과 primitive 색 오버라이드가 아직 닿는 곳은 agentic-ui가 아니라 ui-react Progress의 `success` · `warning` · `destructive` 채움(`progress/index.tsx` 27~29행)이며, 브랜드 JSON은 primitive 색을 덮어쓸 수 없어(V4) ontology도 이 세 색을 바꾸지 않습니다. 가이드에는 이 사실만 적고 코드는 바꾸지 않았습니다.
 
 ### 실측 근거
 

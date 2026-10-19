@@ -5,7 +5,7 @@
 ## 1.3.0 (minor, 초안) - 브랜드 테마 축 (M2) · 온톨로지 프리셋 (M3)
 
 > 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.2.1 → 1.3.0 (linked)
-> 상태: M3 시점 초안(plan U22, 2026-10-18). M4(문서 사이트 브랜드 전환 데모 · `theme-customization.md` 「브랜드 테마」 절)의 내용, 배포 일시 · run 번호, 소비 프로젝트 영향은 M4에서 채웁니다
+> 상태: M3 시점 초안(plan U22, 2026-10-18). M4의 문서 사이트 브랜드 전환 데모와 `theme-customization.md` 「브랜드 테마」 절은 채웠고, 배포 일시 · run 번호, 소비 프로젝트 영향은 M4에서 채웁니다
 
 ### 배경
 
@@ -67,6 +67,11 @@
 #### 문서 사이트: 브랜드 전환 데모 (M4)
 - 문서 사이트 `/docs/brand-demo/`(사이드바 「Brand Theme」)에서 브랜드(기본 · Ontology)와 테마(시스템 · 라이트 · 다크)를 바꾸며 실제 패키지 컴포넌트(Button · Card · Input · Badge · Alert · PlanCard · MessageBubble · StepTimeline · RunProgress)의 변화를 볼 수 있습니다. 브랜드는 `<html data-brand>`를 직접 붙이고 지우며, 페이지를 떠나면 지워 다른 문서 페이지는 기본 브랜드 그대로입니다(패키지 변경 없음)
 
+#### 가이드 (M4)
+- `docs/guides/theme-customization.md`에 「4. 브랜드 테마」 절을 더했습니다: import 순서, `ThemeProvider`의 `defaultBrand` · `brandStorageKey`와 `useTheme()`의 `brand` · `setBrand`, 선택자와 다크 구성, Provider 없이 적용하는 방법과 첫 화면, ontology 프리셋의 값 출처와 접근성 보정 내역(디자인 오너 사후 확인 대기)
+- 같은 문서 「5. 커스텀 테마 생성」(종전 4절)을 브랜드 선택자 예시와 tokens 패키지 브랜드 추가 절차로 바꿨습니다
+- primitive 색 오버라이드 안내를 고쳤습니다(`theme-customization.md` 2절, `component-usage.md` 「테마 커스터마이징」). primitive 색 오버라이드가 닿는 곳은 ui-react Progress의 `success` · `warning` · `destructive` 채움과 앱 코드의 직접 참조뿐이라고 적고, 예시를 시맨틱 · component 토큰과 `--radius`로 바꿨습니다
+
 #### 폐기 예정
 - `--axis-card-shadow-default`(JS `CardShadowDefault`)는 폐기 예정입니다. 1.x 동안 이름과 값(`0 1px 3px 0 rgb(0 0 0 / 0.1)`)을 유지하지만, 배포된 어느 버전에서도 Card에 반영된 적이 없습니다. Card 그림자는 `--axis-card-shadow`로 조정해 주세요(가이드 예시 정정이며 동작 변경은 아닙니다). 토큰 원본에는 `$extensions.axis.deprecated` 마커가 붙습니다
 
@@ -96,7 +101,7 @@
 - 기본 브랜드 기준선: WI-0029 두 쌍 라이트 · 다크 각 7페이지 20노드(`#3b82f6` 18 · `#ef4444` 2), 데모 경로 기준선 라이트 2 · 다크 4노드(상한과 같음). ontology 위반 0
 - CI run 은 M4 PR 에서 확인합니다(push 전)
 
-> M4 에서 채울 것: 가이드 절, CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
+> M4 에서 채울 것: CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
 
 ## 1.2.1 (patch) - 토큰 정합 (M1, PR #90) · 다크 component 토큰 (WI-0033)
 
