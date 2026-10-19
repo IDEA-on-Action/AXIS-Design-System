@@ -188,6 +188,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBtnag",
       "lastSyncedAt": "2026-10-19T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0038",
+      "slug": "cli-init-utils-deps",
+      "issueNumber": 124,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB1CRY",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0039",
+      "slug": "cli-mcp-quality-gate",
+      "issueNumber": 125,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB1CWM",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-19T00:00:00.000Z"
