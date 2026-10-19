@@ -25,7 +25,8 @@ export const CLSX_RANGE = "^2.1.1";
 
 /**
  * Tailwind major 별 `tailwind-merge` 범위(prd 1.6, 2026-10-19 사용자 결정 E2).
- * - Tailwind 4: `^3.4.0`. tailwind-merge 3.x 가 Tailwind 4 를 대상으로 하고, 템플릿 4종과 같은 범위입니다.
+ * - Tailwind 4: `^3.4.0`. tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다. 템플릿 4종도 이 범위를 쓰지만
+ *   템플릿은 Tailwind 3(`^3.4.0`)이라 이 규칙과 어긋나며, 이 범위의 근거가 아닙니다(init.test.ts 에 고정).
  * - Tailwind 3: `^2.6.0`. tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. npm `tailwind-merge-2`
  *   태그가 2.6.1(2026-10-19 `npm view`)이고 2.x 의 마지막 minor 가 2.6 이라 `^2.6.0` 이 그 최신을 받습니다.
  */

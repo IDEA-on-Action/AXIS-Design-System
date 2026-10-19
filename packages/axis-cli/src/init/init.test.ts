@@ -293,6 +293,32 @@ describe("axis init: package.json 의존성(D1)", () => {
       expect({ template: n, clsx: pkg.dependencies.clsx }).toEqual({ template: n, clsx: CLSX_RANGE });
     }
   });
+
+  it("tailwind-merge: 템플릿 4종은 1.6 규칙과 어긋남을 알려진 불일치로 고정 (prd 1.6 참고)", async () => {
+    // 템플릿은 tailwindcss ^3.4.0(Tailwind 3)인데 tailwind-merge ^3.4.0 을 씁니다. 규칙값은 ^2.6.0 입니다.
+    // 템플릿을 고치거나 더 어긋나면 이 기대값이 깨져 신호가 납니다. 고칠지는 사용자 결정 대기입니다.
+    const templatesDir = path.resolve(HERE, "../../../../apps/web/templates");
+    const names = (await fs.readdir(templatesDir)).filter((n) =>
+      fs.existsSync(path.join(templatesDir, n, "files", "package.json"))
+    );
+    expect(names.length).toBe(4);
+    for (const n of names) {
+      const filesDir = path.join(templatesDir, n, "files");
+      const pkg = await fs.readJSON(path.join(filesDir, "package.json"));
+      const tailwind = detectTailwind(filesDir, pkg);
+      expect({
+        template: n,
+        tailwind,
+        current: pkg.dependencies["tailwind-merge"],
+        rule: selectUtilsDependencies(tailwind)["tailwind-merge"],
+      }).toEqual({
+        template: n,
+        tailwind: { major: 3, source: "declared", value: "^3.4.0" },
+        current: "^3.4.0",
+        rule: "^2.6.0",
+      });
+    }
+  });
 });
 
 describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () => {

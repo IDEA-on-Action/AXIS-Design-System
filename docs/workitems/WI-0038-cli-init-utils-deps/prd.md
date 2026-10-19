@@ -64,14 +64,14 @@
 
 | 판정 결과 | `tailwind-merge` | 근거 |
 |---|---|---|
-| major 4 | `^3.4.0` | tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다. 템플릿 4종의 범위와 같습니다 |
+| major 4 | `^3.4.0` | tailwind-merge 3.x 가 Tailwind 4 를 대상으로 합니다. 템플릿 4종도 `^3.4.0` 을 쓰지만 템플릿은 Tailwind 3 이라 이 행의 근거가 아닙니다(아래 참고) |
 | major 3 · 판정 불가 · 그 밖의 major | `^2.6.0` | tailwind-merge 2.x 가 Tailwind 3 을 대상으로 합니다. 판정 불가일 때의 기본값은 사용자 결정(「3 이거나 없으면 ^2.6.0」)입니다 |
 
 - `^2.6.0` 근거(실측 2026-10-19 `npm view tailwind-merge`): dist-tag `tailwind-merge-2` 가 2.6.1(2026-01-30 발행)이고 2.x 의 마지막 minor 가 2.6(2.6.0 은 2024-12-23 발행)입니다. `latest` 는 3.7.0 입니다. `^2.6.0` 은 2.6.1 로 풀립니다(testplan T25 lockfile).
 - `clsx` 는 Tailwind 와 관계없어 `^2.1.1` 그대로입니다.
 - 설치본은 프로젝트 디렉터리의 `node_modules` 만 봅니다. 워크스페이스 루트로 끌어올린(hoist) 설치본은 보지 않고 선언 범위로 판정합니다.
 - init 은 `tailwind-merge` 를 추가하거나 추가 명령을 안내할 때 고른 근거를 한 줄로 출력합니다(예: `tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3`). 이미 선언돼 있어 추가하지 않으면 출력하지 않습니다.
-- 참고: 템플릿 4종(`apps/web/templates/*/files/package.json`)은 `tailwindcss ^3.4.0` 과 `tailwind-merge ^3.4.0` 을 함께 선언합니다. 이 규칙과 어긋나지만 템플릿은 init 이 쓰는 값이 아니라 이 WI 에서 바꾸지 않습니다.
+- 참고: 템플릿 4종(`apps/web/templates/*/files/package.json`)은 `tailwindcss ^3.4.0` 과 `tailwind-merge ^3.4.0` 을 함께 선언합니다. 이 규칙과 어긋나지만 템플릿은 init 이 쓰는 값이 아니라 이 WI 에서 바꾸지 않습니다. 이 어긋남은 `init.test.ts` 의 템플릿 대조 테스트에 알려진 불일치(현재값 `^3.4.0`, 규칙값 `^2.6.0`)로 고정해 두어, 템플릿이 바뀌면 테스트가 실패합니다.
 
 ---
 
