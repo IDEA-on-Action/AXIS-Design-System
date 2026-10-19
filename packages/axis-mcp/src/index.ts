@@ -45,6 +45,11 @@ import {
   formatRefineResult,
   formatValidateResult,
   formatSaveResult,
+  // 브랜드 도구
+  handleListBrands,
+  formatListBrandsResult,
+  handleGetBrand,
+  formatGetBrandResult,
 } from "./tools/index.js";
 
 import type { ComponentCategory, TokenCategory } from "./types.js";
@@ -647,6 +652,78 @@ server.tool(
     try {
       const result = await handleCheckProject({ targetDir });
       const formatted = formatCheckProjectResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.list_brands (WI-0028 FR-4)
+// 미설치 · 미지원 · 빌드 전은 isError 없이 설치 안내를 돌려줍니다(정상 응답 · 설치 필요).
+server.tool(
+  "axis.list_brands",
+  "대상 프로젝트에 설치된 @axis-ds/tokens 의 브랜드 목록(이름 · 설명 · 테마 · import 경로)을 조회합니다.",
+  {
+    targetDir: z.string().optional().describe("대상 프로젝트 디렉토리 (기본: 현재 디렉토리)"),
+  },
+  async ({ targetDir }) => {
+    try {
+      const result = await handleListBrands({ targetDir });
+      const formatted = formatListBrandsResult(result);
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: formatted,
+          },
+        ],
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "알 수 없는 오류";
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `오류: ${message}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+  }
+);
+
+// 도구 등록: axis.get_brand (WI-0028 FR-4)
+server.tool(
+  "axis.get_brand",
+  "브랜드 하나의 import 경로 · Provider 설정 예시(defaultBrand) · 주요 토큰 · 보정 내역을 조회합니다.",
+  {
+    name: z.string().describe("브랜드 이름 (예: ontology)"),
+    targetDir: z.string().optional().describe("대상 프로젝트 디렉토리 (기본: 현재 디렉토리)"),
+  },
+  async ({ name, targetDir }) => {
+    try {
+      const result = await handleGetBrand({ name, targetDir });
+      const formatted = formatGetBrandResult(result, name);
 
       return {
         content: [

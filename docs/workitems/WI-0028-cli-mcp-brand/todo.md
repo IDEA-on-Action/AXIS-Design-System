@@ -88,13 +88,13 @@
 ## P5. MCP 브랜드 도구
 
 - [x] `src/tools/brand-core.ts` 사본 + 동일성 테스트 (U1) → T5-1 (2026-10-19, P4 에서 선행. `axis.check_project` 의 brand 검사가 코어 사본을 써야 해서 P4 에서 만듦. P5 에서 원본을 고치면 사본을 다시 복사)
-- [ ] `handleListBrands` · `handleGetBrand` · format (FR-4) → T5-2
-- [ ] `axis.list_brands` · `axis.get_brand` 등록, 도구 16 → 18 (FR-4) → T5-3
-- [ ] 미설치 · 미지원이면 `isError` 없이 설치 안내 (FR-4, Q5) → T5-4
-- [ ] CLI · MCP 응답 동일성 (AC3) → T5-5
-- [ ] 빌드 산출물 stdio 스모크: `tools/list` 18개, `axis.list_brands` 정상 응답 → T5-6
-- [ ] README 2개 갱신
-- [ ] **WI-0036(PR #116) 의 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 2026-10-19 결정 (다)로 WI-0036 이 PR CI 에서도 pack-smoke 를 돌리게 되면, 도구 2개를 등록하고 이 목록을 안 고쳤을 때 이 WI 의 PR CI 에서 실패합니다(PR 단계에서 잡힘). 그 배선이 WI-0036 에 커밋 · 머지되기 전에는(2026-10-19 `origin/fix/wi-0036-mcp-data-path` 497aca9 의 frontend.yml 에 pack-smoke 없음) PR CI 는 초록이고 main push 의 publish.yml Pack smoke 가 6개 패키지 발행을 막습니다. WI-0036 이 먼저 머지되면 이 브랜치에서 함께 고칩니다 → T5-3
+- [x] `handleListBrands` · `handleGetBrand` · format (FR-4) → T5-2 (2026-10-19. `src/tools/brand.ts`. 핸들러는 코어 `listBrands` · `getBrand` 결과를 그대로 돌려주고, format 2개가 마크다운 글로 바꿈. 없는 브랜드는 `axis.get_component` 와 같이 `isError` 없이 설치된 이름 목록을 돌려주고, `name` 이 비면 오류)
+- [x] `axis.list_brands` · `axis.get_brand` 등록, 도구 16 → 18 (FR-4) → T5-3 (2026-10-19, `axis.check_project` 와 같은 try/catch 형태)
+- [x] 미설치 · 미지원이면 `isError` 없이 설치 안내 (FR-4, Q5) → T5-4 (2026-10-19. 빌드 전(`not-built`)도 같음. 문장은 CLI `tokensStatusGuide` 와 같음)
+- [x] CLI · MCP 응답 동일성 (AC3) → T5-5 (2026-10-19, fixture 판. 실데이터는 T6-4)
+- [x] 빌드 산출물 stdio 스모크: `tools/list` 18개, `axis.list_brands` 정상 응답 → T5-6 (2026-10-19)
+- [x] README 2개 갱신 (2026-10-19. `packages/axis-cli/README.md` 에 「브랜드 테마 (`axis theme`)」 절, `packages/axis-mcp/README.md` 에 「브랜드 도구」 절)
+- [x] **WI-0036(PR #116) 의 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 2026-10-19 결정 (다)로 WI-0036 이 PR CI 에서도 pack-smoke 를 돌리게 되면, 도구 2개를 등록하고 이 목록을 안 고쳤을 때 이 WI 의 PR CI 에서 실패합니다(PR 단계에서 잡힘). 그 배선이 WI-0036 에 커밋 · 머지되기 전에는(2026-10-19 `origin/fix/wi-0036-mcp-data-path` 497aca9 의 frontend.yml 에 pack-smoke 없음) PR CI 는 초록이고 main push 의 publish.yml Pack smoke 가 6개 패키지 발행을 막습니다. WI-0036 이 먼저 머지되면 이 브랜치에서 함께 고칩니다 → T5-3 (2026-10-19. WI-0036 이 main 에 머지돼 있어(frontend.yml `Pack smoke` 배선 포함) 이 브랜치에서 두 이름을 더함. 수정 전 `pack-smoke` 는 「목록 밖 도구: axis.list_brands, axis.get_brand」로 rc 1, 수정 뒤 rc 0. 두 도구는 대상 프로젝트를 읽으므로 번들 데이터 호출 목록(`registryCalls`)에는 넣지 않음)
 
 ## P6. M3 머지 뒤 (ontology 재확인)
 

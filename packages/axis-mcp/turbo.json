@@ -3,7 +3,11 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/axis-cli/src/theme/brand-core.ts"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/axis-cli/src/theme/brand-core.ts",
+        "$TURBO_ROOT$/packages/axis-cli/test/fixtures/theme/**"
+      ]
     }
   }
 }
