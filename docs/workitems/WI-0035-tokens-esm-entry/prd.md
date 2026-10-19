@@ -16,7 +16,7 @@
 | # | 내용 | 실측 |
 |---|---|---|
 | C1 | `build-tokens.mjs` 의 커스텀 포맷 `typescript/axis-module` 이 `tokens.mjs` 를 만들면서 객체 끝에 ` as const` 를 붙이고 `export type Tokens = typeof tokens;` 를 넣습니다. 출력 파일 확장자는 `.mjs` 라 Node 는 JavaScript 로 읽습니다 | `git log -S'as const'` 결과 최초 커밋 f57de7d(2026-01-23)부터 같은 코드 |
-| C2 | CJS(`tokens.js`)는 Style Dictionary 내장 포맷 `javascript/module-flat`, 타입(`tokens.d.ts`)은 커스텀 포맷 `typescript/axis-declarations` 로 따로 만듭니다. 두 파일에는 TS 전용 문법이 없습니다 | `tokens.d.ts` 는 `Record<string, string>` 형태 선언이고 `as const` 리터럴 타입을 쓰지 않습니다 |
+| C2 | CJS(`tokens.js`)는 Style Dictionary 내장 포맷 `javascript/module-flat`, 타입(`tokens.d.ts`)은 커스텀 포맷 `typescript/axis-declarations` 로 따로 만듭니다. 두 파일에는 TS 전용 문법이 없습니다 | `tokens.d.ts` 는 중첩 객체 타입(리프는 `Record<string, string>`)을 `export =` 로 내보내고, `as const` 리터럴 타입은 없습니다 |
 | C3 | npm 배포본 6개(1.1.0 · 1.1.1 · 1.1.2 · 1.1.3 · 1.2.0 · 1.2.1) 모두 `tokens.mjs` 에 ` as const;` 가 1건씩 있고 node import 가 rc 1 로 실패합니다. 정상이었던 배포 버전은 없습니다 | `npm pack @axis-ds/tokens@<버전>` 을 빈 디렉터리에 풀어 import. 1.2.1 배포본 sha256(7964f163d70c)은 e690905 `--force` 빌드와 같습니다 |
 | C4 | 기존 pack-smoke 는 exports 타깃 파일이 tarball 에 "있는지"만 봐서 이 결함을 통과시켰습니다 | `scripts/pack-smoke.mjs` 검사 항목 3개(workspace 프로토콜 · 타깃 실재 · 점 포함 CSS 변수) |
 | C5 | 저장소 안에서 루트 JS 진입점을 import 하는 소비처는 0곳입니다. 예제 앱은 `@axis-ds/tokens/tailwind` 만 씁니다 | `grep -rln "@axis-ds/tokens['\"]"` (dist · node_modules 제외, rc 0, 일치는 `transpilePackages` 문자열 1곳뿐) |
@@ -41,7 +41,7 @@
 
 ## 2. Non-goals (범위 제외)
 
-- **`.d.ts` 에 리터럴 타입 도입**: 배포본의 공개 타입은 처음부터 `Record<string, string>` 이었습니다(C2). 리터럴 타입으로 바꾸면 공개 타입이 달라지므로 이번 patch 에 넣지 않습니다.
+- **`.d.ts` 에 리터럴 타입 도입**: 배포본의 공개 타입은 처음부터 중첩 객체 타입(리프는 `Record<string, string>`), `export =` 이었고 `as const` 리터럴 타입은 없었습니다(C2). 리터럴 타입으로 바꾸면 공개 타입이 달라지므로 이번 patch 에 넣지 않습니다.
 - **ESM 과 CJS 의 모양 통일**: ESM 은 중첩 객체(`tokens.color.gray['50']`), CJS · JSON 은 평면 키(`ColorGray50`)입니다. 값은 같지만 모양을 맞추는 것은 공개 API 변경입니다.
 - **`.d.ts` 의 `export =` 와 ESM 런타임(`tokens` · `default` named export) 정합**: 별도 검토 대상입니다.
 - **다른 패키지의 설치 스모크**: ui-react 등은 react 같은 런타임 의존을 설치해야 해서 이번 스모크 대상은 tokens 만입니다.

@@ -17,7 +17,7 @@
 
 - [x] 1.3.0 포함 vs 별도 patch 선배포 → ✅ 2026-10-19: 별도 patch 1.2.2 선배포 (D1)
 - [x] 수정 방식 → ✅ 포맷에서 TS 전용 두 줄만 제거, `.d.ts` 불변 (D2)
-- [ ] linked · 의존 패키지 동반 bump 수용 여부 → 사용자 확인 대기 (아래 M1-5)
+- [ ] 의존 정확 고정(`updateInternalDependencies`)에 따른 동반 bump 수용 여부 → 사용자 확인 대기 (아래 M1-5)
 
 ---
 
@@ -61,6 +61,8 @@
 ## 후속 (backlog)
 
 - tailwindcss 4 와 TypeScript `node16` 조합에서 `@axis-ds/tokens/tailwind` 타입 import 가 TS1479 로 실패합니다(peer 범위 `>=3.0.0` 그대로 설치했을 때 관측, 3.4.19 에서는 통과). 별도 WI 후보
-- `.d.ts` 의 `export =` 와 ESM 런타임 export 정합 검토
+- `.d.ts` 의 `export =` 와 ESM 런타임 export 정합 검토. `.d.ts` 는 중첩 모양이라 CJS require(평면 249키, `ColorGray50`) 런타임과 타입이 어긋나요(기존 결함)
+- M3·M4 브랜치(WI-0025)와 병합할 때 `packages/axis-tokens/package.json` 의 `test` 스크립트 줄이 충돌합니다(`git merge-tree` rc 1, M3 `origin/feat/wi-0025-m3-ontology-v2` · M4 34d7bca 둘 다). 나중에 머지되는 쪽(M3)이 test 목록을 합집합으로 해소하고 `test/js-entry.test.mjs` 를 유지합니다. 해소 뒤 M3 에서 tokens test 를 재실행해 js-entry 4건이 포함되어 도는지 확인합니다. `build-tokens.mjs` 는 자동 병합되고 `as const` 템플릿은 남지 않습니다
+- 1.2.2 배포 후 M4(WI-0025) 1.3.0 릴리스 노트의 대상 줄을 `1.2.2 → 1.3.0` 으로 고치고 `1.2.2 (patch, WI-0035)` 항목 링크를 추가합니다(M4 담당). AC3 기준선(1.2.1 fixture)은 CSS 가 같으므로 유지합니다
 - 설치 스모크 대상 확대(ui-react · agentic-ui · theme · cli · mcp), PR CI 에서 pack-smoke 실행
 - 루트 `scripts/pack-smoke.mjs` 의 미사용 `statSync` import(eslint no-unused-vars 1건, 루트 scripts 는 lint 대상 밖)

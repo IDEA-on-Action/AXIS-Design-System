@@ -4,7 +4,7 @@
 
 ## 1.2.2 (patch) - ESM 진입점 수정
 
-> 대상: `@axis-ds/tokens` 1.2.1 → 1.2.2. `pnpm changeset status` 기준 linked · 의존 패키지(ui-react · agentic-ui · theme)도 1.2.2 로 함께 오릅니다(todo M1-5)
+> 대상: `@axis-ds/tokens` 1.2.1 → 1.2.2. `pnpm changeset status` 기준 의존 정확 고정(`updateInternalDependencies`, `workspace:*` 가 배포본에서 `1.2.1` 로 고정)으로 ui-react · agentic-ui · theme 도 1.2.2 로 함께 오릅니다(todo M1-5)
 > 배포: 미배포 (PR 대기)
 
 ### 배경
@@ -17,7 +17,7 @@
 - `build-tokens.mjs` 의 ESM 포맷에서 ` as const` 와 `export type Tokens = typeof tokens;` 를 뺐습니다.
 - 토큰 값은 그대로입니다. 새 `tokens.mjs` 는 1.2.1 배포본에서 그 두 줄만 걷어낸 파일과 바이트 단위로 같습니다.
 - CSS(`variables.css` · `shadcn-compat.css`), `tokens.js`, `tokens.json`, `tokens.d.ts`, tailwind 프리셋은 바이트 단위로 같습니다.
-- 공개 타입(`tokens.d.ts`)은 바뀌지 않았습니다. 배포본의 타입은 처음부터 `Record<string, string>` 형태였고 `as const` 리터럴 타입을 노출하지 않았습니다.
+- 공개 타입(`tokens.d.ts`)은 바뀌지 않았습니다. 배포본의 타입은 처음부터 중첩 객체 타입(리프는 `Record<string, string>`), `export =` 이었고 `as const` 리터럴 타입을 노출하지 않았습니다.
 
 #### chore: 설치 스모크 추가
 - `scripts/pack-install-smoke.mjs`: tarball 을 빈 디렉터리에 설치해 exports 전수를 import · require 로 불러 보고, types 조건은 TypeScript 로 import 합니다. `pnpm pack-smoke` 가 기존 검사 뒤에 이어 실행합니다.
@@ -34,4 +34,5 @@
 ## 영향
 
 - ESM 으로 `@axis-ds/tokens` 루트를 import 하던 프로젝트는 1.2.2 로 올리면 동작합니다.
+- import 경로는 중첩 객체(`tokens.color.gray['50']`), require 경로는 PascalCase 평면 키 249개(`ColorGray50`)라 값의 모양이 다릅니다. 타입 선언(`tokens.d.ts`)은 중첩 모양 기준이라 require 소비자에게는 타입과 런타임이 어긋납니다(1.2.1 이전부터 있던 결함, 후속 WI 에서 정리).
 - ui-react · agentic-ui · theme 1.2.1 은 `@axis-ds/tokens` 를 `1.2.1` 로 고정해 배포됐습니다. 이 패키지를 통해 tokens 를 받는 프로젝트는 그 패키지들도 1.2.2 로 올려야 수정본을 받습니다.
