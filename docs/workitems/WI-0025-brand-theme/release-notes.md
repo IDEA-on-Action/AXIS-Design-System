@@ -42,6 +42,13 @@
 | `--axis-agent-message-user-text` | `#FFFFFF` | MessageBubble 사용자 말풍선 글자 |
 | `--axis-agent-avatar-text` | `#FFFFFF` | AgentAvatar 이니셜 |
 
+#### tokens: ESM 진입점 문법 오류 수정 (WI-0035 #118)
+- 1.1.0~1.2.1 배포본 6개의 ESM 진입점 `dist/js/tokens.mjs`(exports `.`의 `import` 조건)에 TypeScript 전용 문법 `as const` · `export type`이 남아, `import tokens from "@axis-ds/tokens"`가 Node에서 `SyntaxError: Unexpected identifier 'as'`로 실패했습니다. 1.3.0에서 두 문법을 걷어내 고쳤습니다(이슈 #113, 보고 0건). CSS 서브패스(`/css` · `/css/shadcn`) · `/tailwind` · `/json` · CJS `require` 경로는 영향이 없었습니다
+- 별도 patch 1.2.2로 먼저 내지 않고 1.3.0에 합쳤습니다(2026-10-19 결정). main에 1.2.1 배포 뒤 머지된 M2(브랜드 축, `ThemeContextValue` 필수 멤버)가 있어 main에서 1.2.2를 내면 그 기능과 타입 변경이 patch 번호로 나가기 때문입니다. #118의 tokens patch changeset은 이 minor changeset과 합쳐 linked 4패키지 1.3.0이 됩니다
+- 토큰 값은 그대로입니다. WI-0035 수정 자체는 `tokens.mjs`만 바꿉니다(WI-0035 검증: e690905 기준 `--force` 빌드 dist 10개 중 `js/tokens.mjs`만 변경, CSS · `tokens.js` · `tokens.json` · `tokens.d.ts` 바이트 동일)
+- 값의 모양은 진입점마다 다릅니다. `import`는 중첩 객체(`tokens.color.gray['50']`), `require`는 PascalCase 평면 키(`ColorGray50`, 1.2.1 기준 249개)입니다. 타입 선언 `tokens.d.ts`는 중첩 모양 기준이라 `require` 소비자에게는 타입과 런타임이 어긋납니다(1.2.1 이전부터 있던 결함, 이번에 고치지 않음)
+- `scripts/pack-install-smoke.mjs`(tarball을 빈 디렉터리에 설치해 exports 전수를 `import` · `require`하고 types 조건을 TypeScript로 검사)를 `pnpm pack-smoke`에 이어 붙이고, tokens 회귀 테스트 `test/js-entry.test.mjs`를 더했습니다
+
 #### theme: ThemeProvider 브랜드
 - `ThemeProvider`에 `defaultBrand?: string` · `brandStorageKey?: string`(기본 `"axis-brand"`), `useTheme()`에 `brand` · `setBrand` 추가
 - 브랜드가 있으면 `<html data-brand="...">`를 붙이고 `localStorage`에 저장합니다. `setBrand(undefined)`는 속성과 저장값을 지웁니다. 기존 `theme` 동작은 바뀌지 않습니다
@@ -69,7 +76,7 @@
 
 #### 가이드 (M4)
 - `docs/guides/theme-customization.md`에 「4. 브랜드 테마」 절을 더했습니다: import 순서, `ThemeProvider`의 `defaultBrand` · `brandStorageKey`와 `useTheme()`의 `brand` · `setBrand`, 선택자와 다크 구성, Provider 없이 적용하는 방법과 첫 화면, ontology 프리셋의 값 출처와 접근성 보정 내역(디자인 오너 사후 확인 대기)
-- 같은 문서 「5. 커스텀 테마 생성」(종전 4절)을 브랜드 선택자 예시와 tokens 패키지 브랜드 추가 절차로 바꿨습니다
+- 같은 문서 「5. 커스텀 테마 생성」(종전 4절)을 브랜드 선택자 예시(라이트 `[data-brand="acme"][data-brand="acme"]` (0,2,0), tokens 브랜드와 같은 형태)와 tokens 패키지 브랜드 추가 절차로 바꿨습니다
 - primitive 색 오버라이드 안내를 고쳤습니다(`theme-customization.md` 2절, `component-usage.md` 「테마 커스터마이징」). primitive 색 오버라이드가 닿는 곳은 ui-react Progress의 `success` · `warning` · `destructive` 채움과 앱 코드의 직접 참조뿐이라고 적고, 예시를 시맨틱 · component 토큰과 `--radius`로 바꿨습니다
 
 #### 폐기 예정
@@ -88,7 +95,7 @@
 - `frontend.yml`: pack-smoke, Playwright a11y(4조합 40건 = 10페이지 x 4, 조합별 10건. 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선이고, 브랜드 전환 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석. M3 시점에는 9페이지 36건) · 비텍스트 대비 · 브랜드 전환 데모(AC7, 8건) · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰고, M4 에서 더한 데모 step 은 처음부터 게이트입니다. 네 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
 
 ### Breaking change
-없습니다. 공개 export와 CSS 변수 이름 삭제 0건이고, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션 · `useTheme()` 반환값). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」(특히 `ThemeContextValue` 필수 멤버)을 확인해 주세요. tokens ESM 엔트리 `dist/js/tokens.mjs`는 비교하지 못했습니다(아래 「비교하지 못한 것」, WI-0035 #113 에서 수정). 판정은 같은 값을 내는 CJS · JSON 비교로 했습니다(2026-10-19 결정).
+없습니다. 공개 export와 CSS 변수 이름 삭제 0건이고, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션 · `useTheme()` 반환값). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」(특히 `ThemeContextValue` 필수 멤버)을 확인해 주세요. tokens ESM 진입점 `dist/js/tokens.mjs`는 1.2.1에서 `import` 자체가 문법 오류로 실패했으므로(WI-0035 설치 스모크: npm 1.2.1 tarball rc 1) 비교할 1.2.1 기준이 없습니다. 1.2.1에서 동작하던 ESM `import` 사용처가 없으니 이 진입점은 Breaking 판정 대상이 아니며, ESM 진입점 문법 오류(1.1.0~1.2.1)는 1.3.0에서 수정합니다(WI-0035 #118, 위 「tokens: ESM 진입점 문법 오류 수정」). 토큰 값의 판정은 같은 값을 내는 CJS · JSON 비교로 했습니다(2026-10-19 결정).
 
 근거(2026-10-19, HEAD 3c74992, `pnpm turbo run build --force` 8/8 · 캐시 0 뒤의 dist 를 `npm pack`으로 받은 npm 1.2.1 배포본 4개와 비교. tokens tgz shasum `2332e344…`는 AC3 기준선 `SOURCE.json`과 같음):
 - CSS: 브랜드 미지정 `variables.css`의 `:root` · `.dark` 각각 1.2.1 변수 249개 중 같음 249 · 변경 0 · 삭제 0, 추가 11(위 새 변수 표). `shadcn-compat.css`는 바이트까지 같음(`cmp` rc 0). AC3 테스트는 아래 tokens 테스트 217건에 포함
@@ -96,7 +103,7 @@
 - exports subpath: tokens 5 → 8(추가 `./brands` · `./css/brands/ontology` · `./brands/ontology/brand.json`), ui-react 31 · agentic-ui 13 · theme 1은 같음, 삭제 0
 - 런타임 export 이름(subpath마다 CJS 엔트리를 require, 건너뜀 0): ui-react 245 · agentic-ui 30 · theme 2개가 1.2.1과 같음(삭제 0 · 추가 0)
 - 타입 선언(`dist/**/*.d.ts` 파일별 비교): agentic-ui 19개 차이 0, ui-react 31개 중 `sheet/index.d.ts` 1개(`side` 유니온 순서만 다르고 같은 타입), theme `index.d.ts`는 `ThemeProviderProps` 선택 속성 2개(`defaultBrand?` · `brandStorageKey?`)와 `ThemeContextValue` 필수 멤버 2개(`brand` · `setBrand`) 추가
-- 비교하지 못한 것: tokens ESM 엔트리 `dist/js/tokens.mjs`(exports `.`의 `import` 조건)는 1.2.1 배포본부터 `as const`가 남아 `node --check`에서 문법 오류입니다(1.3.0 회귀가 아니며 생성 위치는 `build-tokens.mjs`). 같은 값을 내는 CJS · JSON으로 비교했고, ESM 엔트리 자체의 동등성은 확인하지 않았습니다. 이 문법 오류는 WI-0035(#113)에서 고칩니다. 1.3.0은 `tokens.mjs`를 바꾸지 않습니다(2026-10-19 결정)
+- 비교하지 못한 것: tokens ESM 진입점 `dist/js/tokens.mjs`(exports `.`의 `import` 조건). 1.1.0~1.2.1 배포본은 `as const` · `export type`이 남아 `import`가 문법 오류로 실패하므로 1.2.1 쪽에 비교할 값이 없습니다(1.3.0 회귀가 아니며 생성 위치는 `build-tokens.mjs`). ESM 진입점 문법 오류(1.1.0~1.2.1)를 1.3.0에서 수정합니다(WI-0035 #118). 위 비교의 HEAD 3c74992는 #118 병합 전이라 그 dist의 `tokens.mjs`도 아직 문법 오류였고, 1.3.0 ESM 값이 CJS · JSON과 같은지(중첩 객체를 평면화해 비교)는 #118 병합 뒤 M4 재측정에서 확인합니다(미측정). WI-0035 자체 검증에서는 e690905 기준 ESM 평면화 249개 = `tokens.js` 249개 = `tokens.json`이었습니다
 
 ### 소비 프로젝트 영향 (2026-10-19 확인)
 | 프로젝트 (원격 기준) | 선언 · lock | 영향 패턴 사용처 |
@@ -124,6 +131,7 @@
 - `pnpm changeset status --verbose`: minor 로 `@axis-ds/tokens` · `ui-react` · `agentic-ui` · `theme` 1.3.0(linked), cli · mcp 없음, major 없음. private 예제 `axis-nextjs-example`은 내부 의존성 갱신으로 patch(0.1.4 → 0.1.5, npm 배포 대상 아님)
 - CI: 마지막으로 push 된 34d7bca 의 PR #110 `Frontend CI/CD` run 39100155713 success. 그 뒤 커밋은 push 전이라 CI 결과가 없고, 머지 전 PR #110 run 으로 확인합니다
 - 2026-10-19 M3 라이트 선택자 (0,2,0) 상향(94f3b33 · 90df600) 병합 뒤 재측정(병합 커밋 7a0bc8c, `pnpm turbo run build --force` 8/8 캐시 0을 먼저 단독 실행한 뒤 type-check 8/8 · lint 4/4 · test 5/5 각 `--force` 캐시 0, rc 0): tokens 217 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과(skipped 0). dist `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`(AC3, 위 기록과 같음), `css/brands/ontology.css` `d69437fe…`(M3 기록과 같음, 라이트 선택자 `[data-brand="ontology"][data-brand="ontology"]`). `check-token-refs` · `check-contrast-pairs` 위반 0. E2E(`E2E_SERVER=static`, Chromium, Playwright 1.61.1, 포트 3101 이 비어 있음을 확인하고 이 브랜치 `apps/web/out`을 직접 서빙, 서빙 `index.html` 해시가 `out/index.html`과 같음): `test:e2e:a11y` 40/40 · `test:e2e:demo` 8/8 · `test:e2e:nontext` 8/8 · `test:e2e:tokens` 22/22(「프로젝트 `:root`가 브랜드 뒤」 갈래 5건 포함) 통과, `playwright --list` 기본 설정 전체 78건(40 + 8 + 8 + 22). `frontend.yml` 「E2E 실행 건수 가드」 run 블록을 이 결과 JSON 에 돌리면 rc 0(a11y 40 · nontext 8 · tokens 22 · demo 8, 조합별 건수 일치), 구판 기대값(tokens:17)은 rc 1 `tokens: 실행 22건`
+- ESM 진입점(WI-0035 #118): 위 M4 측정은 모두 #118 병합 전 브랜치에서 했으므로 `tokens.mjs` 수정은 들어 있지 않습니다. 머지 순서(#118을 M4 바로 앞)에 따라 #118을 main에 머지하고 M4를 main 위로 맞춘 뒤, `pnpm pack-smoke`(설치 스모크 포함)와 ESM 평면화 = CJS = JSON 값 동등을 다시 재고 여기에 기록합니다(미측정)
 - 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향과 Tailwind 4 환경의 그림자 클래스 동작은 실측하지 않았습니다
 
 ## 1.2.1 (patch) - 토큰 정합 (M1, PR #90) · 다크 component 토큰 (WI-0033)

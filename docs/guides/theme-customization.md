@@ -349,8 +349,8 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
 ```css
 /* styles/brand-acme.css */
 
-/* 라이트 모드 */
-[data-brand="acme"] {
+/* 라이트 모드 (같은 속성 선택자를 두 번 써서 명시도 (0,2,0)) */
+[data-brand="acme"][data-brand="acme"] {
   /* 브랜드 계열 */
   --axis-surface-brand: #7C3AED;
   --axis-text-brand: #6D28D9;
@@ -389,12 +389,12 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
 
 라이트 블록에서 바꾼 색 변수는 다크 블록에도 짝을 둡니다. 짝이 없으면 같은 요소에 `.dark`를 붙였을 때 라이트 값이 다크에도 남습니다.
 
-앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `<html data-brand="acme">`나 `ThemeProvider`의 `defaultBrand="acme"`로 적용합니다. 위 예의 라이트 선택자 `[data-brand="acme"]`는 명시도가 (0,1,0)이라 `:root` · `.dark`와 같아서 나중에 온 쪽이 이기므로 이 순서를 지켜야 합니다. 순서와 상관없이 이기게 하려면 `@axis-ds/tokens` 브랜드처럼 라이트 선택자를 `[data-brand="acme"][data-brand="acme"]`(0,2,0)로 씁니다.
+앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `<html data-brand="acme">`나 `ThemeProvider`의 `defaultBrand="acme"`로 적용합니다. 위 예는 `@axis-ds/tokens` 브랜드와 같은 선택자를 씁니다. 라이트 `[data-brand="acme"][data-brand="acme"]`와 다크 선택자 3종이 모두 (0,2,0)이라 기본 `:root` · `.dark`와 `globals.css`의 `:root` · `.dark`(0,1,0)보다 높으므로, import 순서가 달라도 브랜드 값이 이깁니다(권장 위치는 마지막). 라이트 · 다크 블록끼리는 명시도가 같으므로 다크 블록을 라이트 블록 **뒤에** 둡니다. 라이트 선택자를 `[data-brand="acme"]` 하나로 쓰면 명시도가 (0,1,0)이 되어 나중에 온 쪽이 이기므로, 그때는 브랜드 CSS를 반드시 토큰 CSS와 `globals.css` 뒤에 두어야 합니다.
 
 ```tsx
 import "@axis-ds/tokens/css"
 import "./globals.css"
-import "./styles/brand-acme.css"  // 토큰 CSS와 globals.css 이후에 import
+import "./styles/brand-acme.css"  // 권장 위치: 토큰 CSS와 globals.css 이후
 ```
 
 ### tokens 패키지에 브랜드 추가 (기여자용)
