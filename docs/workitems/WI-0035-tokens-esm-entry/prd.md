@@ -1,6 +1,6 @@
 # WI-0035: tokens ESM 진입점 문법 오류 수정 PRD
 
-> 작성일: 2026-10-19 | 버전: v1.0 (2026-10-19) | 작성자: Sinclair Seo | WI: WI-0035 | GitHub: #113 | 상태: Approved (2026-10-19 결정 반영: 별도 patch 1.2.2 선배포)
+> 작성일: 2026-10-19 | 버전: v1.0 (2026-10-19) | 작성자: Sinclair Seo | WI: WI-0035 | GitHub: #113 | 상태: Approved (2026-10-19 결정 반영: 별도 patch 1.2.2 취소, 1.3.0 에 포함)
 > 선행: 없음. 기준 `main` e690905 (`@axis-ds/tokens` 1.2.1 배포 완료)
 > 관련: WI-0025 M4(1.3.0 릴리스 설계 단계에서 이 결함을 발견)
 
@@ -25,7 +25,7 @@
 1. `tokens.mjs` 를 순수 JavaScript 로 만들어 Node · 번들러에서 import 가 성공하게 합니다.
 2. 다른 산출물(CSS · CJS · JSON · `.d.ts` · tailwind 프리셋)은 바이트 단위로 바꾸지 않습니다.
 3. 같은 부류(파일은 있는데 불러오면 깨짐)를 배포 전에 잡는 설치 스모크와 회귀 테스트를 둡니다.
-4. 1.3.0 을 기다리지 않고 별도 patch 로 먼저 배포합니다.
+4. WI-0025 1.3.0 에 합쳐 linked 4패키지(tokens · ui-react · agentic-ui · theme) 1.3.0 으로 배포합니다(D1). 처음에는 별도 patch 1.2.2 선배포로 정했다가 취소했습니다(D3).
 
 ### 1.4 범위
 - 포함: `build-tokens.mjs` ESM 포맷 수정, tokens 회귀 테스트 1파일, `scripts/pack-install-smoke.mjs` 와 `pnpm pack-smoke` 연결, `@axis-ds/tokens` patch changeset, WI 문서
@@ -34,14 +34,16 @@
 ### 1.5 확정 결정 (2026-10-19)
 | # | 결정 | 내용 |
 |---|---|---|
-| D1 | 배포 경로 | 1.3.0 에 넣지 않고 별도 patch(tokens 1.2.2)로 먼저 배포합니다(2026-10-19 사용자 결정) |
+| D1 | 배포 경로 | 별도 patch(tokens 1.2.2) 선배포를 취소하고 1.3.0 에 합칩니다(2026-10-19 사용자 재결정, 근거는 D3). 이 PR 의 tokens patch changeset 은 WI-0025 M4 의 minor changeset 과 합쳐 linked 4패키지 1.3.0 이 됩니다. changeset 파일은 patch 그대로 둡니다 |
 | D2 | 수정 방식 | 포맷에서 ` as const` 와 `export type Tokens` 두 줄만 뺍니다. 타입은 지금처럼 `tokens.d.ts` 가 맡고, `.d.ts` 는 바꾸지 않습니다 |
+| D3 | 1.2.2 취소 근거 | `main` 에는 1.2.1 배포(014e8ac) 뒤에 머지된 WI-0025 M2(89ab33a, ThemeProvider `brand` 옵션, `ThemeContextValue` 필수 멤버 `brand` · `setBrand` 추가)가 changeset 없이 들어 있습니다. `main` 에서 1.2.2 를 내면 이 기능과 타입 변경이 patch 번호로 먼저 나갑니다(실측: `git diff 014e8ac origin/main -- packages/axis-theme/src/index.ts`). `publish.yml` 은 `main` 에서만 OIDC 로 발행하므로 1.2.1 태그 기반 release 브랜치는 인프라 변경이 필요해 택하지 않았습니다. 결함은 1.1.0 부터 6개 배포본 전부에 있었고 보고는 0건이라 1.3.0 까지 기다립니다 |
+| D4 | 머지 순서 | #116(mcp 1.1.5) → M3 #107 → WI-0030 #114 → 이 PR #118 → M4 #110 → Version Packages PR(1.3.0). #118 을 일찍 머지하면 Version PR 이 1.2.2 를 제안하므로 M4 바로 앞에 둡니다 |
 
 ---
 
 ## 2. Non-goals (범위 제외)
 
-- **`.d.ts` 에 리터럴 타입 도입**: 배포본의 공개 타입은 처음부터 중첩 객체 타입(리프는 `Record<string, string>`), `export =` 이었고 `as const` 리터럴 타입은 없었습니다(C2). 리터럴 타입으로 바꾸면 공개 타입이 달라지므로 이번 patch 에 넣지 않습니다.
+- **`.d.ts` 에 리터럴 타입 도입**: 배포본의 공개 타입은 처음부터 중첩 객체 타입(리프는 `Record<string, string>`), `export =` 이었고 `as const` 리터럴 타입은 없었습니다(C2). 리터럴 타입으로 바꾸면 공개 타입이 달라지므로 이번 수정에 넣지 않습니다.
 - **ESM 과 CJS 의 모양 통일**: ESM 은 중첩 객체(`tokens.color.gray['50']`), CJS · JSON 은 평면 키(`ColorGray50`)입니다. 값은 같지만 모양을 맞추는 것은 공개 API 변경입니다.
 - **`.d.ts` 의 `export =` 와 ESM 런타임(`tokens` · `default` named export) 정합**: 별도 검토 대상입니다.
 - **다른 패키지의 설치 스모크**: ui-react 등은 react 같은 런타임 의존을 설치해야 해서 이번 스모크 대상은 tokens 만입니다.
@@ -75,4 +77,4 @@
 | AC-3 | ESM 값과 CJS · JSON 값이 같습니다 | 평면화 깊은 동등(249개) |
 | AC-4 | 설치 스모크가 수정본에서 rc 0, 수정 전 커밋 tarball 에서 rc 1 입니다 | `node scripts/pack-install-smoke.mjs [--tarball]` |
 | AC-5 | tokens test · type-check · lint 가 `--force` 로 통과합니다 | `turbo run test type-check lint --filter=@axis-ds/tokens --force` |
-| AC-6 | `pnpm changeset status` 에서 tokens 가 1.2.2 patch 입니다 | `pnpm changeset status --verbose` |
+| AC-6 | `pnpm changeset status` 에서 tokens 가 patch 로 잡힙니다. 이 브랜치 단독으로는 1.2.2 로 보이고, M4 의 minor changeset 과 합쳐지면 linked 4패키지 1.3.0 입니다(D1) | `pnpm changeset status --verbose`, M4 머지 뒤 Version Packages PR 에서 1.3.0 확인 |
