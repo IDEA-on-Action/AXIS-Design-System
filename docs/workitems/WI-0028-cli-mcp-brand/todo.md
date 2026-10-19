@@ -24,9 +24,10 @@
 
 > 권장안은 plan 8장. 「게이트」 항목은 결정 전 해당 작업을 시작하지 않습니다.
 > 2026-10-19 사용자 결정: U3 = (A), U7 = 별도 WI-0036(#115), U14 = (A), 나머지는 권장안 그대로(plan 8장 「결정」 열). U2 는 S0 실측 뒤 정합니다.
+> 2026-10-19 사용자 결정(S0 뒤): U2 = 대안 2(M3 에서 라이트 선택자 명시도 상향, FR-2 위치 유지, T3-3 확정). plan 8.1 끝.
 
 - [x] U1 공유 코어 방식: 복제 + 동일성 테스트 / 내부 패키지 신설 / MCP 가 CLI 소스 번들 → 권장안(복제 + 동일성 테스트) (2026-10-19)
-- [ ] U2 브랜드 import 위치 (게이트: 위치를 바꾸는 경우): S0 실측 뒤 결정 → S0 에서 FR-2 위치는 라이트 짐 · 다크 이김(plan 8.1). 위치 변경(대안 1 레이아웃 JS import / 대안 2 선택자 명시도 상향)은 FR-2 변경이라 **사용자 결정 대기**. 결정 전에는 P3 의 import 삽입 위치(T3-3)를 확정하지 않습니다
+- [x] U2 브랜드 import 위치 (게이트: 위치를 바꾸는 경우): S0 실측 뒤 결정 → S0 에서 FR-2 위치는 라이트 짐 · 다크 이김(plan 8.1). → **대안 2** (2026-10-19): WI-0025 M3(#107)에서 `brandSelectors` 라이트 선택자 명시도를 0,2,0 으로 올리고, FR-2 위치(globals.css `@import`)는 그대로, P3 의 import 삽입 위치(T3-3)를 그 위치로 확정. 이 WI 는 M3 의 선택자 변경에 의존합니다(P6 에서 확인)
 - [x] U3 FR-3 보정 내역 출처 (게이트): a11y 메타와 근거 안내만 / `brand.json` 보정 필드(WI-0025 D6 변경) / CLI 정적 표 → **(A)** a11y 메타(`status` · `checkedAt` · `gate`)와 WI-0025 부록 B 문서 안내만, 보정 전 · 후 값은 후속 (2026-10-19)
 - [x] U4 「주요 토큰」 목록: 고정 12개 / 브랜드 CSS 전부 / `brand.json` 필드 → 권장안(고정 12개) (2026-10-19)
 - [x] U5 tokens 미설치 시 `add` 검증: 이름 규칙만 + 경고 / npm 레지스트리 조회 / 거절 → 권장안(이름 규칙만 + 경고) (2026-10-19)
@@ -69,7 +70,7 @@
 - [ ] `axis.config.json` 없으면 아무것도 쓰지 않고 rc 1 (FR-2) → T3-1
 - [ ] CSS 대상 탐색 순서 `globalCss` → `app/` → `src/app/` → 루트 (FR-2, A1) → T3-2
 - [ ] `globalCss` 가 없는 파일을 가리키면 경고 후 다음 후보 (U14 권장안, plan 4.1) → T3-2b
-- [ ] import 삽입 위치(`@charset` · 기존 `@import` 뒤) (FR-2, U2) → T3-3
+- [ ] import 삽입 위치(`@charset` · 기존 `@import` 뒤, U2 대안 2 로 확정) (FR-2, U2) → T3-3
 - [ ] 두 번 실행해도 import 1줄 · 의존성 1회 · brand 기록 (AC2(a) fixture 판, 완료 판정은 T6-6) → T3-4
 - [ ] tokens 없으면 `dependencies` 에 `^1.3.0` 추가 + 설치 안내, 설치 미실행 (FR-2, U6) → T3-5
 - [ ] tokens 1.3.0 미만이면 범위 유지 + 업그레이드 안내 → T3-6
@@ -93,16 +94,17 @@
 - [ ] CLI · MCP 응답 동일성 (AC3) → T5-5
 - [ ] 빌드 산출물 stdio 스모크: `tools/list` 18개, `axis.list_brands` 정상 응답 → T5-6
 - [ ] README 2개 갱신
+- [ ] **WI-0036(PR #116) 의 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 `axis.list_brands` · `axis.get_brand` 추가**. 스모크는 `tools/list` 를 1:1 로 보고 목록 밖 도구도 실패로 칩니다. 2026-10-19 결정으로 WI-0036 이 PR CI 에서도 pack-smoke 를 돌리므로, 도구 2개를 등록하고 이 목록을 안 고치면 이 WI 의 PR CI 에서 실패합니다(main push 의 발행 차단까지 가지 않고 PR 단계에서 잡힘). WI-0036 이 먼저 머지되면 이 브랜치에서 함께 고칩니다 → T5-3
 
 ## P6. M3 머지 뒤 (ontology 재확인)
 
 - [ ] tokens `build --force` 뒤 `dist/brands/index.json` · `ontology/brand.json` · `css/brands/ontology.css` 존재 (plan 6.2-1) → T6-1
-- [ ] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정 (plan 6.2-2) → T6-2
+- [ ] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정. U2 대안 2 로 라이트 블록 머리(선택자)가 바뀌므로 `parseBrandCss` 가 바뀐 머리를 읽는지 확인 (plan 6.2-2) → T6-2
 - [ ] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3
 - [ ] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4
 - [ ] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5
 - [ ] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6
-- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정대로 ontology 산출물로 같은 측정을 한 번 더 함
+- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7
 
 ## P7. 1.3.0 배포 뒤
 

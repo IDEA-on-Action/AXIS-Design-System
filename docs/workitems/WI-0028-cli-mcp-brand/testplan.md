@@ -33,6 +33,7 @@
 - [x] T0-4: theme-only 루트 평면 구조에서 `@import` 가 빌드 단계에서 풀리는지(패키지 exports 하위 경로 해석) → 루트 평면 그대로는 `next build` 가 CSS 처리 전에 rc 1(`Couldn't find any 'pages' or 'app' directory`)이라 판정 불가. 파일을 `app/` 으로 옮긴 변형에서는 exports 하위 경로가 풀려 산출 CSS 에 브랜드 블록이 들어감. plan 8.1
 - 브랜드 CSS 는 M3 브랜치 tokens 를 `pnpm pack` 한 tarball, 또는 M3 머지 뒤 main 빌드 산출물을 씁니다. 결과는 plan 2장 D5 에 실측으로 옮겨 적습니다.
 - 2026-10-19 실측은 main `buildBrands` 로 만든 fixture `sample` 브랜드를 썼습니다(조건 · 전제 · 전체 값은 plan 8.1). ontology 산출물로는 P6 에서 한 번 더 잽니다.
+- U2 결정(2026-10-19): 대안 2. FR-2 위치는 그대로이고 M3 에서 라이트 선택자 명시도를 올립니다. P6 의 재측정(T6-7)은 라이트 승리를 확인 항목으로 둡니다.
 
 ## T1. 공통 기반 (P1)
 
@@ -57,7 +58,7 @@
 - [ ] T3-1: `axis.config.json` 없는 디렉터리 - 파일 변경 0(실행 전후 파일 목록 · 내용 해시 비교), rc 1, `axis init` 안내
 - [ ] T3-2: 탐색 순서 - `globalCss` 지정 · `app/globals.css` · `src/app/globals.css` · 루트 `globals.css` 가 함께 있을 때 각각 우선순위대로 하나만 고름. `globalCss` 키가 없을 때(projects/src-app)는 두 번째 후보부터 봄
 - [ ] T3-2b: `globalCss` 키가 없는 파일을 가리킬 때(projects/app-init, `axis init -y` 산출물과 같은 config) - `app/globals.css` 에 import 정확히 1줄, `globalCss` 경로 없음 경고 출력, `axis.config.json` 의 `globalCss` 값 불변. 음성 대조군: 수동 안내(A1)만 내고 import 0줄로 끝나는 구현이면 이 테스트가 실패함을 한 번 확인(폴백을 끈 상태로 실행)
-- [ ] T3-3: 삽입 위치 - `@charset` · 기존 `@import` 다음, 없으면 첫 줄. `@tailwind base;` 보다 앞
+- [ ] T3-3: 삽입 위치 - `@charset` · 기존 `@import` 다음, 없으면 첫 줄. `@tailwind base;` 보다 앞 (U2 대안 2 결정으로 이 위치 확정, 2026-10-19. 라이트 승리는 T6-7 에서 확인)
 - [ ] **T3-4 (AC2(a) fixture 판)**: `theme-only.json` 을 펼친 프로젝트(plan 6.1, `initTemplate` 형태 config, tokens 없음)에서 2회 실행 뒤 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "sample"`. 2회차 실행의 파일 변경 0
 - [ ] T3-5: tokens 없을 때 `dependencies["@axis-ds/tokens"] === "^1.3.0"`, 설치 명령 미실행(자식 프로세스 호출 0)
 - [ ] T3-6: tokens `^1.2.1` 이 이미 있으면 범위 불변 + 업그레이드 안내
@@ -78,7 +79,7 @@
 
 - [ ] T5-1: `src/tools/brand-core.ts` 와 CLI `src/theme/brand-core.ts` 의 바이트 동일. 음성 대조군: 사본에 공백 하나를 더한 상태에서 테스트가 실패하는 것을 한 번 확인하고 되돌림
 - [ ] T5-2: `handleListBrands` · `handleGetBrand` 가 fixture 에서 코어 결과를 그대로 돌려줌
-- [ ] T5-3: 빌드 산출물 stdio `tools/list` 18개, 이름에 `axis.list_brands` · `axis.get_brand`
+- [ ] T5-3: 빌드 산출물 stdio `tools/list` 18개, 이름에 `axis.list_brands` · `axis.get_brand`. WI-0036 머지 뒤에는 `scripts/mcp-smoke.mjs` `EXPECTED_TOOLS` 에 두 이름을 더한 뒤 PR CI 의 pack-smoke 가 통과하는지 함께 봄(목록을 안 고치면 PR CI 실패)
 - [ ] T5-4: 미설치 · 미지원 fixture 에서 `isError` 없음, 안내 문구에 설치 명령
 - [ ] **T5-5 (AC3)**: 같은 fixture 에서 MCP 핸들러 결과와 CLI 코어 결과가 deep equal 이고, `formatListBrandsResult` · `formatGetBrandResult` 글에 CLI 출력이 담는 항목(이름 · 설명 · 테마 · import 경로 · `defaultBrand` 예시 · 주요 토큰 값)이 모두 있음
 - [ ] T5-6: `pnpm --filter @axis-ds/mcp build` 산출물로 stdio `axis.list_brands { targetDir: <fixture> }` 정상 응답. `pack-smoke` 는 서버를 실행하지 않으므로 이 스모크를 따로 둡니다(plan 1.2)
@@ -86,11 +87,12 @@
 ## T6. M3 머지 뒤 실데이터 (P6)
 
 - [ ] T6-1: `pnpm --filter @axis-ds/tokens build`(turbo 우회) 뒤 `dist/brands/index.json` · `dist/brands/ontology/brand.json` · `dist/css/brands/ontology.css` 존재(`ls` rc 0)
-- [ ] T6-2: index.json 키 · 항목 형태, brand.json 최상위 키, CSS 블록 선택자 줄을 fixture 와 대조. 차이 0 또는 fixture · 코어 수정 기록
+- [ ] T6-2: index.json 키 · 항목 형태, brand.json 최상위 키, CSS 블록 선택자 줄을 fixture 와 대조. 차이 0 또는 fixture · 코어 수정 기록. 라이트 블록 머리는 U2 대안 2(명시도 0,2,0)로 바뀌므로 차이를 기록하고 `parseBrandCss` 가 그 머리를 읽는지 확인
 - [ ] **T6-3 (AC1)**: tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 출력에 `ontology`
 - [ ] T6-4: 같은 프로젝트에서 `theme info ontology` 와 MCP 두 도구 응답, T5-5 기준으로 동일
 - [ ] T6-5: 주요 토큰 12개 중 ontology CSS 에 있는 개수 기록, 긴 `a11y.status` 의 `info` 출력 확인
 - [ ] **T6-6 (AC2(a) 실경로)**: 이 브랜치 빌드 CLI 로 새 임시 디렉터리에 `axis template init theme-only -d <임시>`(`AXIS_TEMPLATE_URL` 주입 없음, 기본 레지스트리) → 받은 파일 목록이 저장소 `theme-only.json` 7개와 같은지 기록 → tokens tarball 설치 없이 `axis theme add ontology` 2회. 루트 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "ontology"`, 2회차 전후 파일 해시 차이 0 (plan 6.2-7)
+- [ ] T6-7 (U2 대안 2 의존 확인): ontology tarball 로 plan 8.1 vC 와 같은 구성(FR-2 위치 `@import`)에서 `<html data-brand="ontology">` 라이트 · 다크의 `--primary` · `--background` 계산값이 브랜드 값과 같음(라이트 승리가 확인 항목). 음성 대조군(브랜드 import 없음)과 양성 대조군(`--axis-surface-default`)을 함께 기록. 라이트가 지면 M3 선택자 변경 누락으로 보고 다음 단계 중단 (plan 6.2-6)
 
 ## T7. 1.3.0 배포 뒤 (P7)
 

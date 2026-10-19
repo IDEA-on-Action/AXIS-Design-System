@@ -5,6 +5,7 @@
 > 진행 조건(2026-10-19 사용자 결정): 개발은 지금 시작하고, 실제 ontology 프리셋 확인은 WI-0025 M3(#107) 머지 뒤, cli · mcp 배포는 1.3.0 배포 뒤에 합니다. PRD 4행 「선행」 줄의 정정은 PR #112 가 맡으므로 이 브랜치에서는 고치지 않습니다.
 > 미결 항목은 8장의 U 번호로 적었습니다. 권장안을 전제로 설계했고, 권장안이 PRD 범위를 바꾸는 항목은 결정 전까지 착수하지 않습니다(8장 「게이트」 표시).
 > U 결정(2026-10-19 사용자 결정): U3 은 (A), U7 은 별도 WI-0036(#115)로 분리, U14 는 (A), 나머지는 권장안 그대로입니다(8장 「결정」 열). U2 는 S0 실측(8.1 절) 뒤 정합니다. PRD 는 고치지 않습니다.
+> U2 결정(2026-10-19 사용자 결정): **대안 2**. WI-0025 M3(#107)의 `brandSelectors` 라이트 선택자를 명시도 0,2,0 으로 올려 import 순서와 무관하게 이기게 하고, FR-2 위치(globals.css `@import`)는 그대로 둡니다. 4.2-3 의 삽입 위치(T3-3)는 그 위치로 확정합니다. 이 WI 는 M3 의 선택자 변경에 의존합니다(8.1 절 끝, 6.2-6).
 
 ---
 
@@ -72,7 +73,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 | D2 | 1.1 「`defaultBrand` 는 현재 `ThemeProvider` 에 없는 prop」 | main 코드에는 있음, npm 1.2.1 에는 없음(1.4 절) | Provider 안내는 「`@axis-ds/theme` 1.3.0 이상」을 조건으로 출력합니다 |
 | D3 | FR-1 「`brand.json` 을 읽어」 목록 출력 | M3 가 목록 전용 `dist/brands/index.json`(exports `./brands`)을 추가했고, exports 가 명시형이라 `dist/brands` 디렉터리를 열거하려면 exports 를 우회해야 합니다 | 목록은 `index.json`, 각 항목의 메타는 그 `meta` 경로의 `brand.json` 으로 읽습니다(4.1 절). PRD 와 모순은 없고 출처가 하나 늘었습니다 |
 | D4 | FR-3 「원본 대비 보정 내역」 출력 | 배포본에는 보정 후 값만 있고 `brand.json` 에 보정 필드가 없음(M3 PRD v0.4 Q6 과 같은 지적) | U3 |
-| D5 | FR-2 「찾은 파일에 `@axis-ds/tokens/css/brands/<brand>` import 추가」 | CSS `@import` 는 규칙상 파일 맨 앞(`@charset` · 다른 `@import` 뒤)에만 둘 수 있어 브랜드 CSS 가 프로젝트 `:root` 정의보다 앞에 놓입니다. theme-only 처럼 `globals.css` 가 `:root` 에 shadcn 변수를 직접 정의하면, 라이트 브랜드 선택자 `[data-brand="b"]`(명시도 0,1,0)와 `:root`(0,1,0)가 같아 뒤에 오는 프로젝트 값이 이길 것으로 추론됩니다. 다크는 `[data-brand].dark`(0,2,0)가 `.dark`(0,1,0)를 이깁니다. **미실측 추론**이었고, S0 실측(8.1 절, 2026-10-19)에서 라이트 짐 · 다크 이김으로 확인됐습니다 | U2. S0 결과(8.1 절)로 위치 결정을 기다립니다(게이트) |
+| D5 | FR-2 「찾은 파일에 `@axis-ds/tokens/css/brands/<brand>` import 추가」 | CSS `@import` 는 규칙상 파일 맨 앞(`@charset` · 다른 `@import` 뒤)에만 둘 수 있어 브랜드 CSS 가 프로젝트 `:root` 정의보다 앞에 놓입니다. theme-only 처럼 `globals.css` 가 `:root` 에 shadcn 변수를 직접 정의하면, 라이트 브랜드 선택자 `[data-brand="b"]`(명시도 0,1,0)와 `:root`(0,1,0)가 같아 뒤에 오는 프로젝트 값이 이길 것으로 추론됩니다. 다크는 `[data-brand].dark`(0,2,0)가 `.dark`(0,1,0)를 이깁니다. **미실측 추론**이었고, S0 실측(8.1 절, 2026-10-19)에서 라이트 짐 · 다크 이김으로 확인됐습니다 | U2. 2026-10-19 사용자 결정 대안 2: 위치는 FR-2 그대로, 라이트 선택자 명시도를 M3 에서 0,2,0 으로 올림(8.1 절) |
 | D6 | FR-2 의존성 추가 | 추가할 버전 범위를 정하지 않음 | U6 |
 | D7 | FR-2 `axis theme add <brand>` | AC2(a) 프로젝트는 `@axis-ds/tokens` 가 없어 설치된 브랜드 목록으로 `<brand>` 를 검증할 수 없음 | U5 |
 | D8 | FR-5 「FR-2 와 같은 탐색 순서」 | 기존 globals.css 검사 순서(루트 우선)와 FR-2 순서(`globalCss` → `app/` → `src/app/` → 루트)가 다름 | 기존 항목은 그대로 두고 brand 항목만 FR-2 순서를 씁니다(출력 불변 요구, 2.2) |
@@ -123,7 +124,7 @@ main 의 `packages/axis-theme/src/index.ts` 에 `defaultBrand?` · `brandStorage
 - `axis theme add <brand>`: `src/theme/theme-add.ts` `planThemeAdd(baseDir, brand)` 가 **쓰기 전에** 바꿀 내용을 모두 계산하고, `applyThemeAdd(plan)` 이 씁니다. 테스트는 두 함수를 따로 부릅니다.
   1. `axis.config.json` 이 없으면 아무것도 쓰지 않고 `axis init` 안내 후 종료 코드 1(PRD FR-2).
   2. `<brand>` 검증: `BRAND_NAME_PATTERN` 불일치는 거절. tokens 가 설치돼 있고 지원 버전이면 index 에 없는 이름은 거절. 미설치면 U5 권장안대로 이름 규칙만 보고 「설치 후 `axis theme list` 로 확인」 경고를 붙여 진행합니다.
-  3. CSS: `findGlobalCss` 로 대상을 찾습니다(4.1 규칙). `configuredMissing` 이 있으면 「`axis.config.json` 의 globalCss(<경로>)가 없어 <찾은 파일>에 추가합니다」 경고를 냅니다. 같은 브랜드 import 가 이미 있으면 건너뜁니다. 없으면 `@charset` · 기존 `@import` 줄 다음(없으면 맨 앞)에 `@import "@axis-ds/tokens/css/brands/<b>";` 한 줄을 넣습니다(U2 결과에 따라 바뀔 수 있음). 다른 브랜드 import 가 있으면 지우지 않고 새 줄을 더한 뒤 「이전 브랜드 import 를 지워도 됩니다」 안내를 냅니다(U13). 후보가 모두 없을 때만(`path` 가 `undefined`) 수동 적용 안내(A1)를 내고 다음 단계로 갑니다.
+  3. CSS: `findGlobalCss` 로 대상을 찾습니다(4.1 규칙). `configuredMissing` 이 있으면 「`axis.config.json` 의 globalCss(<경로>)가 없어 <찾은 파일>에 추가합니다」 경고를 냅니다. 같은 브랜드 import 가 이미 있으면 건너뜁니다. 없으면 `@charset` · 기존 `@import` 줄 다음(없으면 맨 앞)에 `@import "@axis-ds/tokens/css/brands/<b>";` 한 줄을 넣습니다(U2 대안 2 결정으로 이 위치 확정, 2026-10-19. 라이트 승리는 M3 의 선택자 상향이 맡습니다). 다른 브랜드 import 가 있으면 지우지 않고 새 줄을 더한 뒤 「이전 브랜드 import 를 지워도 됩니다」 안내를 냅니다(U13). 후보가 모두 없을 때만(`path` 가 `undefined`) 수동 적용 안내(A1)를 내고 다음 단계로 갑니다.
   4. `package.json`: `dependencies` · `devDependencies` 어디에도 `@axis-ds/tokens` 가 없을 때만 `dependencies` 끝에 `"@axis-ds/tokens": "^1.3.0"`(U6)을 더하고 설치 명령을 안내합니다. 이미 있으면 범위를 고치지 않고, 설치된 버전이 1.3.0 미만이면 업그레이드만 안내합니다. 설치는 실행하지 않습니다.
   5. `axis.config.json`: 나머지 키와 순서를 보존한 채 `brand` 를 기록합니다(같은 값이면 쓰지 않음).
   6. Provider 안내: `import { ThemeProvider } from "@axis-ds/theme"` + `<ThemeProvider defaultBrand="<b>">` 예시와, `ThemeProvider` 나 `<html data-brand="<b>">` 가 없으면 import 만으로는 화면이 바뀌지 않는다는 문장을 출력합니다. `package.json` 에 `@axis-ds/theme` 이 없으면 설치 안내를 덧붙입니다. 코드는 고치지 않습니다(Q1, U10).
@@ -234,11 +235,11 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 ### 6.2 M3 머지 뒤 재확인 절차
 
 1. main 을 M3 머지 커밋 위로 올리고 `pnpm --filter @axis-ds/tokens build` 를 `--force` 로 돌립니다(turbo 캐시 우회). 산출물에 `dist/brands/index.json` · `dist/brands/ontology/brand.json` · `dist/css/brands/ontology.css` 가 있는지 `ls` 로 확인합니다.
-2. **형식 대조**: 산출물 `index.json` 키 집합과 항목 형태, `brand.json` 최상위 키, CSS 블록 머리(라이트 1줄, 다크 3줄 선택자)를 fixture 와 비교합니다. 다르면 fixture 를 산출물에 맞추고 코어를 고칩니다(fixture 가 낡은 쪽).
+2. **형식 대조**: 산출물 `index.json` 키 집합과 항목 형태, `brand.json` 최상위 키, CSS 블록 머리(라이트 1줄, 다크 3줄 선택자)를 fixture 와 비교합니다. 다르면 fixture 를 산출물에 맞추고 코어를 고칩니다(fixture 가 낡은 쪽). U2 대안 2 결정으로 M3 의 라이트 선택자가 1.3 절의 `[data-brand="<b>"]` 에서 명시도 0,2,0 형태로 바뀌므로(형태와 줄 수는 M3 에서 정함), 라이트 블록 머리는 여기서 차이가 날 것으로 보고 `parseBrandCss` 가 바뀐 머리를 읽는지 함께 확인합니다.
 3. **실데이터 테스트**: `pnpm --filter @axis-ds/tokens pack` 으로 tarball 을 만들어 임시 프로젝트에 `file:` 로 설치하고, CLI `theme list` · `theme info ontology` · MCP `axis.list_brands` · `axis.get_brand` 를 실행합니다. AC1(`ontology` 출력)은 여기서 처음 실측합니다.
 4. 주요 토큰 목록(U4)이 ontology 산출물에 실제로 있는지 봅니다. 없는 키는 「브랜드가 덮어쓰지 않음」으로 표시되는지 확인합니다.
 5. `a11y.status` 가 긴 문장(1.3 절)이라 `theme list` 한 줄 출력에서는 빼고 `info` 에서만 전부 냅니다. 출력 폭은 이 단계에서 실물로 확인합니다.
-6. S0 스파이크(U2)를 아직 실측하지 못했다면 이 tarball 로 실측합니다.
+6. S0 스파이크(U2)는 fixture `sample` 로 실측했습니다(8.1 절). U2 대안 2 결정에 따라 이 tarball(선택자를 올린 M3 산출물)로 8.1 절 vC 와 같은 구성 · 같은 방법(FR-2 위치 `@import`, `<html data-brand="ontology">`, 계산값)을 다시 재고, **라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둡니다. 음성 대조군(브랜드 import 없음)과 양성 대조군(`--axis-surface-default`)을 8.1 절처럼 함께 잽니다. 라이트가 지면 M3 의 선택자 변경이 빠졌거나 형태가 다른 것이므로 다음 단계로 가지 않고 보고합니다.
 7. **AC2(a) 실경로**: 이 브랜치에서 빌드한 CLI(`node packages/axis-cli/dist/index.js`)로 새 임시 디렉터리에 `axis template init theme-only -d <임시>` 를 실행합니다. `AXIS_TEMPLATE_URL` 을 주입하지 않아 기본 레지스트리(`https://axis.minu.best/templates`, `registry-client.ts:6-7`)에서 받습니다. 받은 파일 목록이 저장소 `theme-only.json` 의 7개와 같은지 기록한 뒤, tokens 를 설치하지 않은 그 디렉터리에서 `axis theme add ontology` 를 두 번 실행합니다(tokens 미설치이므로 U5 대로 이름 규칙만 보고 진행). 판정: 루트 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` 의 `brand: "ontology"`, 2회차 실행 전후 파일 해시 차이 0.
 
 ### 6.3 1.3.0 배포 뒤
@@ -269,7 +270,7 @@ main 에는 브랜드 산출물이 없으므로 **M3 가 정한 1.3.0 배포본 
 | # | 갈림길 | 권장안 | 게이트 | 결정(2026-10-19) |
 |---|---|---|---|---|
 | U1 | CLI · MCP 공유 코어 방식 | 복제 + 바이트 동일성 테스트 | 아니오 | 권장안(복제 + 바이트 동일성 테스트) |
-| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) | 권장안(S0 실측 뒤 결정). S0 결과(8.1 절): FR-2 위치에서 라이트 짐 · 다크 이김. 위치 변경은 FR-2 변경이라 **사용자 결정 대기** |
+| U2 | 브랜드 import 위치(D5) | S0 스파이크로 cascade 를 먼저 실측하고, 프로젝트 `:root` 가 이기면 위치를 다시 정함 | 위치를 바꾸면 예(FR-2 변경) | **대안 2**. S0 결과(8.1 절): FR-2 위치에서 라이트 짐 · 다크 이김. WI-0025 M3 에서 라이트 선택자 명시도를 0,2,0 으로 올리고, FR-2 위치는 그대로, T3-3 삽입 위치 확정 |
 | U3 | FR-3 보정 내역 출처(D4, M3 PRD Q6) | 이번 WI 는 `a11y` 메타와 근거 문서 안내만, 보정 전 · 후 값은 후속 | 예(FR-3 축소) | **(A)** `a11y` 메타(`status` · `checkedAt` · `gate`)와 WI-0025 부록 B 문서 안내만. 보정 전 · 후 값은 후속 WI |
 | U4 | 「주요 토큰」 목록 | 고정 목록 12개(아래) | 아니오(PRD 미정 갈림길) | 권장안(고정 12개) |
 | U5 | tokens 미설치 시 `add <brand>` 검증(D7) | 이름 규칙만 보고 경고와 함께 진행 | 아니오 | 권장안(이름 규칙 + 경고) |
@@ -287,7 +288,7 @@ U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출
 
 ### 8.1 S0 스파이크 결과 (U2 판단 근거, 2026-10-19 실측)
 
-**결론: PRD FR-2 위치(globals.css 맨 앞 `@import`)에서는 다크만 브랜드 값이 이기고 라이트는 프로젝트 `:root` 값이 이깁니다.** D5 의 추론과 같은 결과입니다. 위치를 바꾸는 것은 FR-2 변경이므로(U2 게이트) 사용자 결정 전에는 4.2-3 의 삽입 위치를 확정하지 않습니다.
+**결론: PRD FR-2 위치(globals.css 맨 앞 `@import`)에서는 다크만 브랜드 값이 이기고 라이트는 프로젝트 `:root` 값이 이깁니다.** D5 의 추론과 같은 결과입니다. 위치를 바꾸는 것은 FR-2 변경이므로(U2 게이트) 사용자 결정 전에는 4.2-3 의 삽입 위치를 확정하지 않았고, 2026-10-19 사용자 결정은 대안 2 입니다(이 절 끝).
 
 **측정 조건과 전제**
 
@@ -338,3 +339,9 @@ U4 고정 목록(라이트 · 다크 각각, 브랜드 CSS 에 있는 것만 출
 | FR-2 그대로(globals.css 맨 앞 `@import`) | 짐 · 이김 | 없음. 라이트에서 브랜드가 적용되지 않음 |
 | 대안 1: 레이아웃 진입점에서 globals.css 다음에 JS import | 이김 · 이김 | FR-2 의 CSS 대상(「globals.css 에 import」)이 진입 파일(`layout.tsx` 등) 수정으로 바뀜. theme-only 원형은 `app/` 이 없어 진입 파일 탐색 규칙도 새로 정해야 함 |
 | 대안 2: 브랜드 선택자 명시도 상향(`:root[data-brand]`) | 이김 · 이김 | FR-2 위치는 그대로, tokens 산출물(WI-0025 `brandSelectors`) 변경 |
+
+**결정(2026-10-19 사용자 결정): 대안 2.**
+
+- WI-0025 M3(#107, `feat/wi-0025-m3-ontology-v2`)의 `packages/axis-tokens/scripts/brands.mjs` `brandSelectors` 라이트 선택자를 명시도 0,2,0 으로 올립니다. 사용자에게 제시한 형태는 `:root[data-brand="<b>"]` 이고, `<html>` 이 아닌 하위 요소에 `data-brand` 를 붙이는 사용을 깨지 않도록 최종 형태는 M3 에서 정합니다. 이 변경은 M3 소관이며 이 브랜치에서는 tokens 코드를 고치지 않습니다.
+- FR-2 위치(globals.css `@import`, `@charset` · 기존 `@import` 다음)는 그대로이고, 4.2-3 · T3-3 의 삽입 위치를 그 위치로 확정합니다. PRD 는 고치지 않습니다.
+- **의존**: 이 WI 의 라이트 브랜드 적용은 M3 의 선택자 변경에 기댑니다. 8.1 절 vE 는 fixture `sample` CSS 에 선택자를 손으로 더한 측정이라 M3 산출물의 근거가 아닙니다. P6(6.2-6, T6-7)에서 ontology 산출물로 라이트 · 다크 승리를 다시 확인합니다. 6.2-2 의 형식 대조에서 라이트 블록 머리가 1.3 절과 달라지는 것도 이 결정의 결과입니다.
