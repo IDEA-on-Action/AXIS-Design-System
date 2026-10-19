@@ -83,7 +83,7 @@ export function AttachmentCard({
       className={cn(
         "flex items-center gap-3 rounded-lg border p-3",
         "bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]",
-        status === "error" && "border-[var(--axis-status-error)]/30",
+        status === "error" && "border-[var(--axis-status-error-border)]",
         className
       )}
     >

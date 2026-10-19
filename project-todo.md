@@ -292,15 +292,17 @@
 | 2 | WI-0025 M3 rebase(check-token-refs 판정 7, leaf 47) · 머지 ∥ WI-0028 착수 | 병렬 (패키지 겹침 없음) | 배치 1 · 1', M3는 부록 B 승인 | cli · mcp 1.2.0 |
 | 3 | WI-0025 M4 ∥ WI-0026 | 병렬, M4 먼저 머지 | M3 (WI-0026은 `brands/ontology` 필요) | 1.3.0 (M4 완료 시점) |
 | 4 | WI-0027 | 순차 | M3 · WI-0026 · WI-0028 | 템플릿 배포 |
-| 백로그 | WI-0029(기본 테마 흰 글자 대비, M3 기본 브랜드 a11y 실측 15건 확보) · WI-0030 | 언제든 | 없음 | - |
+| 백로그 | WI-0029(기본 테마 흰 글자 대비. 정본 수치: 기본 브랜드 a11y 기준선 12건 · 26노드(라이트 · 다크 각 6페이지 13노드, `#ffffff`/`#3b82f6` 24 · `#ffffff`/`#ef4444` 2), 측정 조건은 2026-10-17 `--force` 빌드 `apps/web/out`을 static 서버로 띄운 Chromium, WI-0025 PRD AC8 기준선 조항. 이전 기록 15건 · 144노드(f64825d)는 측정 조건이 달라 쓰지 않음. 추가로 기본 브랜드 PlanCard 거부 버튼 hover 글자 라이트 3.01 · 다크 4.34:1(4.5 미달, 미달은 이전부터. 1.2.1 은 hover 옅은 바탕이 투명해 `surface-secondary` 위 글자 3.42 · 4.71:1 이었고, 1.3.0 에서 바탕이 생겨 조금 더 낮아짐. 측정 조건: 2026-10-18 b9f225f 에서 다시 빌드한 기본 `variables.css` 값으로 node WCAG 계산, 글자 `plan-card-reject-hover-text` = `status-error` #EF4444, 바탕은 하단 영역 `surface-secondary`(라이트 #F3F4F6 · 다크 #111827) 위 `status-error` 10% sRGB 합성. axe 기준선에는 hover 상태가 없어 위 12건에 들지 않음)) · WI-0030 | 언제든 | 없음 | - |
 
 - 임계 경로: ~~WI-0033 보정 → NPM_TOKEN 교체(사용자) → WI-0033 머지 · 1.2.1 배포~~ ✅ → M2 → WI-0034 → M3(부록 B 승인 필요) → M4 · WI-0026 → WI-0027
-- 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준: 라이트 보조 글자 `sub` 1개 값 보정, 미달 쌍 처리, 입력 테두리 1.40:1 유지 여부, PlanCard 색 선 두께, 에이전트 상태 색 접기) 디자인 오너(김정원 책임) 승인 (M3 머지 전까지, 현재 미승인)
+- 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준) 2026-10-16 사용자(Sinclair Seo) 대리 승인, 디자인 오너(김정원 책임) 사후 확인 대기. 사후 확인 전까지 M3 진행은 막지 않습니다
 - 착수: `/ax-wi start <WI>` 로 WI마다 진행
 
 ### 향후 후보
 - E2E a11y 별도 워크플로우(야간/수동, 브라우저 설치 비용으로 main CI 미포함)
 - 검색 인덱싱 확장 (인덱스/랜딩 페이지)
+- 레지스트리(`registry/r` · `public/r`) · `apps/web/public/library` 사본과 src 의 일치 검사 상설화 (WI-0025 4 결정 6, 2026-10-18 M3 에서는 일회성 대조만 수행: 레지스트리 84/84 일치, library 사본 `check-token-refs` 위반 0). library 사본은 생성기 대신 줄 단위로 갱신해 와서 src 와 다른 줄이 경고 없이 쌓일 수 있음
+- `apps/web/public/templates/*.json` 5개(index.json · dashboard · hr-dashboard · landing-page · theme-only)가 생성기와 어긋남: `pnpm build`(@ax/web `build:web`의 template index 생성)가 매번 다시 써서 `updatedAt`과 index.json `total` 39 → 42가 바뀜. 커밋된 색인이 소스보다 낡았다는 신호이고, 지금은 로컬 build 뒤마다 되돌리는 중 (2026-10-18 WI-0025 M3 에서 반복 관찰, 이번 WI 범위 밖)
 
 ---
 

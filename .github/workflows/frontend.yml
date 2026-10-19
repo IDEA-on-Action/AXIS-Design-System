@@ -79,6 +79,10 @@ jobs:
       - name: Token reference check
         run: pnpm check-token-refs
 
+      # agentic-ui 바탕 · 글자 짝이 tokens 대비 검산 표(ontology-pairs.mjs)에 있는지 (WI-0025 plan 5.3)
+      - name: Contrast pair table check
+        run: pnpm check-contrast-pairs
+
       - name: Test
         run: pnpm test
 
@@ -93,12 +97,140 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || '' }}
 
+      # ===========================================
+      # WI-0025 AC4 · AC6 · AC8 (Q7): Build 산출물(packages/*/dist, apps/web/out)을 쓰므로 Build 다음에 둔다
+      # ===========================================
+
+      # 퍼블리시 대상 패키지 수가 0이면 pack-smoke 가 "OK 0개" 로 끝나므로 1개 이상인지 따로 본다
+      - name: Pack smoke (외부 npm 소비 검증, AC4)
+        run: |
+          set -o pipefail
+          log="$RUNNER_TEMP/pack-smoke.log"
+          pnpm pack-smoke 2>&1 | tee "$log"
+          n=$(grep -oE '퍼블리시 대상 [0-9]+개' "$log" | grep -oE '[0-9]+' || true)
+          if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -lt 1 ]; then
+            echo "::error::pack-smoke 검사 패키지 수를 읽지 못했거나 0개예요 (값: '${n}')"
+            exit 1
+          fi
+
+      # 캐시 키에 넣을 Playwright 버전은 lockfile 이 아니라 설치된 CLI 에서 읽는다
+      - name: Read Playwright version
+        id: pw
+        run: |
+          v=$(pnpm --filter @ax/web exec playwright --version | awk '{print $2}')
+          if ! [[ "$v" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Playwright 버전을 읽지 못했어요 (값: '${v}')"
+            exit 1
+          fi
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.pw.outputs.version }}
+
+      # 캐시가 맞아도 --with-deps 의 OS 의존성 설치는 매번 필요하다
+      - name: Install Playwright chromium
+        run: pnpm --filter @ax/web exec playwright install --with-deps chromium
+
+      # 아래 세 E2E step 은 게이트 켬(2026-10-18, run 39072471115 확인). 실패하면 ci job 이 실패해 deploy-* (needs: ci) 를 막는다.
+      # 확인 기록은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
+      # nontext · tokens 는 앞 E2E step 이 실패해도 돌도록 if 를 둔다(세 결과를 한 run 에서 모두 보고, 건수 가드가 JSON 없음으로 오판하지 않게).
+      # --output 을 나누는 이유: Playwright 는 실행마다 출력 디렉터리를 비우므로 같은 test-results 를 쓰면 앞 실행의 실패 산출물이 지워진다.
+      - name: E2E a11y (브랜드 2 x 테마 2 x 9페이지, AC8)
+        id: e2e-a11y
+        env:
+          E2E_SERVER: static
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/a11y.json
+        run: pnpm --filter @ax/web test:e2e:a11y --reporter=list,json --output=test-results/a11y
+
+      - name: E2E 비텍스트 대비 (포커스 링 · 상태 아이콘 3:1)
+        id: e2e-nontext
+        if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
+        env:
+          E2E_SERVER: static
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/nontext.json
+        run: pnpm --filter @ax/web test:e2e:nontext --reporter=list,json --output=test-results/nontext
+
+      - name: E2E 토큰 계산값 (다크 · 브랜드, AC6)
+        id: e2e-tokens
+        if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
+        env:
+          PLAYWRIGHT_JSON_OUTPUT_NAME: ${{ github.workspace }}/apps/web/playwright-report/tokens.json
+        run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
+
+      # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
+      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(2026-10-19, playwright --list): a11y 36 · nontext 6 · tokens 22.
+      # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 9건인지도 본다.
+      - name: E2E 실행 건수 가드
+        id: e2e-count
+        if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
+        working-directory: apps/web/playwright-report
+        run: |
+          fail=0
+          {
+            echo '### E2E 실행 건수 (WI-0025)'
+            echo ''
+            echo '| suite | 기대 | 실행 | 통과 | 실패 | flaky | skipped |'
+            echo '|---|---|---|---|---|---|---|'
+          } >> "$GITHUB_STEP_SUMMARY"
+          for spec in a11y:36 nontext:6 tokens:22; do
+            name=${spec%%:*}; want=${spec##*:}; f="$name.json"
+            if [ ! -s "$f" ]; then
+              echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"
+              echo "| $name | $want | 측정 실패 | - | - | - | - |" >> "$GITHUB_STEP_SUMMARY"
+              fail=1; continue
+            fi
+            read -r ok bad flaky skipped < <(jq -r '[.stats.expected // 0, .stats.unexpected // 0, .stats.flaky // 0, .stats.skipped // 0] | @tsv' "$f")
+            for x in "$ok" "$bad" "$flaky" "$skipped"; do
+              [[ "$x" =~ ^[0-9]+$ ]] || { echo "::error::$name: stats 값을 읽지 못했어요 ('$x')"; fail=1; continue 2; }
+            done
+            got=$((ok + bad + flaky))
+            echo "| $name | $want | $got | $ok | $bad | $flaky | $skipped |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$got" -ne "$want" ] || [ "$skipped" -ne 0 ]; then
+              echo "::error::$name: 실행 ${got}건 · skipped ${skipped}건 (기대 ${want}건 · skipped 0)"
+              fail=1
+            fi
+          done
+          if [ -s a11y.json ]; then
+            for combo in default/light default/dark ontology/light ontology/dark; do
+              n=$(jq --arg t "a11y ($combo)" '[.. | objects | select(.title? == $t) | .specs[]?] | length' a11y.json)
+              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne 9 ]; then
+                echo "::error::a11y ($combo): ${n}건 (기대 9건)"
+                fail=1
+              fi
+            done
+          fi
+          exit $fail
+
+      # outcome 은 continue-on-error 와 무관하게 step 자체의 결과라 게이트를 켠 뒤에도 실패 때 'failure' 다.
+      # !cancelled() 가 암묵 success() 를 대신하므로 앞 step 이 실패한 job 에서도 이 step 은 평가된다.
+      - name: Upload E2E results (실패 시)
+        if: ${{ !cancelled() && (steps.e2e-a11y.outcome == 'failure' || steps.e2e-nontext.outcome == 'failure' || steps.e2e-tokens.outcome == 'failure' || steps.e2e-count.outcome == 'failure') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-test-results
+          path: |
+            apps/web/test-results
+            apps/web/playwright-report
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: web-build
           path: apps/web/out
           retention-days: 1
+
+      # WI-0036 (2026-10-19 결정): PR 단계에서도 tarball 구조 검사와 mcp 실행 스모크를 돌린다.
+      # mcp-smoke 의 EXPECTED_TOOLS 1:1 이 깨지면 머지 전에 실패하게 하려는 것(publish.yml 에서만 돌면 발행 전체가 막힌 뒤에야 드러난다).
+      # 위 Build(turbo run build)가 퍼블리시 대상 6개 패키지의 dist 를 만든 뒤에 돈다. mcp 설치에 npm 레지스트리 접근이 필요하다.
+      # 퍼블리시 대상 0개 · mcp 미발견은 pack-smoke 가 「실행 스모크 미수행」으로 실패시킨다.
+      # 기존 step 사이가 아니라 job 끝에 둔다(WI-0025 M3(#107, 64392e6)가 Build 와 Upload build artifact 사이에 step 을 넣었고 M4(#110)가 물려받았으므로 충돌을 피한다).
+      - name: Pack smoke (외부 npm 소비 · mcp 실행 검증, WI-0036)
+        run: pnpm pack-smoke
 
   # ===========================================
   # CD: Preview 배포 (PR)

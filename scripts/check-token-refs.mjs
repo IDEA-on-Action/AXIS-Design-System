@@ -16,6 +16,13 @@
  *   6. 테마 선언 (WI-0033): component 토큰의 색 leaf 에 `$extensions.axis.dark` 도
  *      `$extensions.axis.themeIndependent` 도 없음, 또는 선언 형식 오류
  *      (판정 규칙은 packages/axis-tokens/scripts/theme-modes.mjs 의 findThemeDeclarationViolations)
+ *   7. CSS 미생성: 임의값이 `var(` · `--` · `color-mix(` 로 시작하고(`color:` 타입 힌트 포함)
+ *      불투명도 수식어(`/10` · `/[0.1]` 등)가 붙은 클래스. 예: `bg-[var(--axis-x)]/10`,
+ *      `hover:border-[color:var(--axis-x)]/30`. Tailwind 3.4(3.4.19 실측)는 이런 클래스의 CSS 규칙을
+ *      만들지 않아 의도한 옅은 바탕·테두리가 투명해집니다.
+ *      대신 `bg-[color:color-mix(in_srgb,var(--axis-x)_10%,transparent)]` 나 짝 토큰을 씁니다.
+ *      검출 범위는 위 세 접두로 시작하는 임의값뿐이고 `rgb()` · `theme()` 등은 보지 않습니다.
+ *      검사 범위는 다른 판정과 같은 --src 디렉터리입니다(기본 2곳, apps/web 과 레지스트리 JSON 은 제외).
  *
  * 정의 집합: <css-dir>/variables.css 와 <css-dir>/shadcn-compat.css 의 `:root` 블록 선언
  *
@@ -46,6 +53,14 @@ const SKIP_DIRS = new Set(['node_modules', 'dist'])
 const IS_TEST = /(\.(test|spec)\.[jt]sx?$)|([\\/]__tests__[\\/])/
 const AGENTIC_SEGMENT = `axis-agentic-ui${sep}`
 const IN_CI = process.env.GITHUB_ACTIONS === 'true'
+/**
+ * 판정 7: Tailwind 3.4가 CSS를 만들지 않는 `임의값 + 불투명도 수식어` 클래스.
+ * 변형 접두(`hover:` · `dark:` 등) 뒤 유틸리티 이름의 `[` 다음이 `var(` · `--` · `color-mix(`
+ * (앞에 `color:` 힌트 허용)이고 `]` 바로 뒤가 `/숫자` 또는 `/[임의값]` 이면 위반입니다.
+ * CSS가 생성되는 형태(`bg-[#ff0000]/10`, `bg-[hsl(var(--x))]/10`, 수식어 없는 임의값)는 잡지 않습니다.
+ */
+const NO_CSS_OPACITY =
+  /(?<![\w-])(?:[\w-]+:)*[a-z][\w-]*-\[(?:color:)?(?:var\(|--|color-mix\()[^\]\s]*\]\/(?:\d+(?:\.\d+)?|\[[^\]\s]+\])/g
 
 /** 측정 실패: 0건 통과와 구분하기 위해 종료 코드 2로 끝냅니다. */
 function measurementFailure(message) {
@@ -300,7 +315,7 @@ function main() {
   }
   if (files.length === 0) measurementFailure(`검사 파일 0개: ${src.join(', ')}`)
 
-  const counts = { refFiles: 0, refs: 0, missing: 0, primitive: 0, dynamic: 0, testViolations: 0 }
+  const counts = { refFiles: 0, refs: 0, missing: 0, primitive: 0, dynamic: 0, noCss: 0, testViolations: 0 }
   for (const abs of files.sort()) {
     const text = readFileSync(abs, 'utf-8')
     const rel = display(abs)
@@ -328,6 +343,17 @@ function main() {
       if (isTest) counts.testViolations++
       report('판정 불가', rel, lineOf(text, d.index), d.snippet.trim(), isTest)
     }
+    for (const m of text.matchAll(NO_CSS_OPACITY)) {
+      counts.noCss++
+      if (isTest) counts.testViolations++
+      report(
+        'CSS 미생성',
+        rel,
+        lineOf(text, m.index),
+        `${m[0]} (불투명도 수식어 CSS가 생성되지 않음, color-mix() 나 짝 토큰으로 교체)`,
+        isTest
+      )
+    }
   }
 
   // 판정 6의 component JSON 을 판정 5의 다크 값 기대값 계산에도 씁니다(보고 순서는 5 → 6)
@@ -354,10 +380,11 @@ function main() {
   for (const v of theme.violations) report('테마 선언', v.file, v.line, `${v.path}: ${v.reason}`, false)
 
   const darkViolations = dark.rootOnly.length + dark.darkOnly.length + dark.unapplied.length
-  const violations = counts.missing + counts.primitive + counts.dynamic + darkViolations + theme.violations.length
+  const violations = counts.missing + counts.primitive + counts.dynamic + counts.noCss + darkViolations + theme.violations.length
   console.log(
     `${TAG} 검사 파일 ${files.length} · 참조 보유 파일 ${counts.refFiles} · 참조 ${counts.refs} · 정의 ${defined.size}` +
       ` · 정의 누락 ${counts.missing} · primitive 참조 ${counts.primitive} · 판정 불가 ${counts.dynamic}` +
+      ` · CSS 미생성 ${counts.noCss}` +
       ` (그중 [test] ${counts.testViolations})`
   )
   console.log(

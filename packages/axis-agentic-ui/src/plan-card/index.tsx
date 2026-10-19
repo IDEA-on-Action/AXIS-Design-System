@@ -36,23 +36,23 @@ const planStatusStyles: Record<PlanStatus, { border: string; badge: string }> = 
   },
   pending: {
     border: "border-l-[var(--axis-status-warning)]",
-    badge: "bg-[var(--axis-status-warning)]/10 text-[var(--axis-status-warning-strong)]",
+    badge: "bg-[var(--axis-badge-warning-bg)] text-[var(--axis-badge-warning-text)]",
   },
   approved: {
     border: "border-l-[var(--axis-status-success)]",
-    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
+    badge: "bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]",
   },
   rejected: {
     border: "border-l-[var(--axis-status-error)]",
-    badge: "bg-[var(--axis-status-error)]/10 text-[var(--axis-status-error-strong)]",
+    badge: "bg-[var(--axis-badge-error-bg)] text-[var(--axis-badge-error-text)]",
   },
   executing: {
     border: "border-l-[var(--axis-status-running)]",
-    badge: "bg-[var(--axis-status-running)]/10 text-[var(--axis-status-running-strong)]",
+    badge: "bg-[var(--axis-badge-info-bg)] text-[var(--axis-badge-info-text)]",
   },
   completed: {
     border: "border-l-[var(--axis-status-success)]",
-    badge: "bg-[var(--axis-status-success)]/10 text-[var(--axis-status-success-strong)]",
+    badge: "bg-[var(--axis-badge-success-bg)] text-[var(--axis-badge-success-text)]",
   },
 };
 
@@ -107,7 +107,7 @@ export function PlanCard({
       role="region"
       aria-labelledby={titleId}
       className={cn(
-        "rounded-lg border border-l-4 overflow-hidden",
+        "rounded-lg border border-l-[length:var(--axis-plan-card-accent-width)] overflow-hidden",
         "bg-[var(--axis-surface-default)] border-[var(--axis-border-default)]",
         styles.border,
         className
@@ -176,7 +176,7 @@ export function PlanCard({
           {onApprove && (
             <button
               onClick={onApprove}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-white hover:bg-[var(--axis-status-success-strong)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)] hover:bg-[var(--axis-status-success-strong)] transition-colors"
             >
               승인
             </button>
@@ -192,7 +192,7 @@ export function PlanCard({
           {onReject && (
             <button
               onClick={onReject}
-              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:bg-[var(--axis-status-error)]/10 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:text-[var(--axis-plan-card-reject-hover-text)] hover:bg-[color:color-mix(in_srgb,var(--axis-status-error)_10%,transparent)] transition-colors"
             >
               거절
             </button>
