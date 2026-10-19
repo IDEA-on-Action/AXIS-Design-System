@@ -37,11 +37,11 @@
 
 ## T1. 공통 기반 (P1)
 
-- [ ] T1-1: `node packages/axis-cli/dist/index.js --version` 출력 = `packages/axis-cli/package.json` version (빌드 뒤 실측, 대조군: 정정 전 `0.1.0`)
-- [ ] T1-2: 빌드한 MCP 서버에 stdio `initialize` → `serverInfo.version` = `packages/axis-mcp/package.json` version
-- [ ] T1-3: `axis init -y` · `initTemplate` 이 만드는 `axis.config.json` 의 키 · 값 · 순서가 정정 전과 같음(단위 테스트, 임시 디렉터리)
-- [ ] T1-4: `pnpm --filter @axis-ds/mcp test` rc 0, 실행 테스트 수 1 이상
-- [ ] T1-5: `turbo run test --dry=json` test 태스크 6개(@axis-ds/mcp 추가)
+- [x] T1-1: `node packages/axis-cli/dist/index.js --version` 출력 = `packages/axis-cli/package.json` version (빌드 뒤 실측, 대조군: 정정 전 `0.1.0`) → 정정 전 `0.1.0`, 정정 뒤 `1.1.4`(package.json 1.1.4), rc 0. 소스 단위 테스트 `src/version.test.ts` 3건은 `.version("0.1.0")` 으로 되돌리면 1건 실패(음성 대조군)
+- [x] T1-2: 빌드한 MCP 서버에 stdio `initialize` → `serverInfo.version` = `packages/axis-mcp/package.json` version → 정정 전 `0.1.0`, 정정 뒤 `1.1.5`(package.json 1.1.5), 같은 세션 `tools/list` 16개(대조군). 소스 단위 테스트 `src/version.test.ts` 3건은 `version: "0.1.0"` 으로 되돌리면 1건 실패(음성 대조군)
+- [x] T1-3: `axis init -y` · `initTemplate` 이 만드는 `axis.config.json` 의 키 · 값 · 순서가 정정 전과 같음(단위 테스트, 임시 디렉터리) → `src/config/axis-config.test.ts` 8건 통과(정정 전 파일 내용과 바이트 비교, 값 하나를 바꾼 음성 대조군 포함). 빌드 CLI 의 `init -y` 산출물 sha256 정정 전 · 뒤 모두 `8f227788...6fcb385`
+- [x] T1-4: `pnpm --filter @axis-ds/mcp test` rc 0, 실행 테스트 수 1 이상 → 2파일 5건 통과, rc 0(`version.test.ts` 3 · `tools/template.test.ts` 2, 후자는 P4 전 `handleCheckProject` 기준선)
+- [x] T1-5: `turbo run test --dry=json` test 태스크 6개(@axis-ds/mcp 추가) → `<NONEXISTENT>` 제외 6개(agentic-ui · cli · mcp · theme · tokens · ui-react). mcp test inputs 에 `../../packages/axis-cli/src/theme/brand-core.ts` 가 들어감(파일은 P2 에서 생김)
 
 ## T2. 공유 코어 · list · info (P2, FR-1 · FR-3)
 
@@ -113,3 +113,12 @@
 |---|---|---|---|---|
 | 2026-10-19 | e690905 | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 3파일 58건 통과, rc 0 (기준선) |
 | 2026-10-19 | e690905 | `turbo run test --dry=json` | 해당 없음(dry) | test 태스크 5개 (기준선) |
+| 2026-10-19 | f1777ee | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 3파일 58건 통과, rc 0 (P1 착수 전 기준선) |
+| 2026-10-19 | f1777ee + P1 | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 5파일 69건 통과, rc 0 |
+| 2026-10-19 | f1777ee + P1 | `packages/axis-mcp` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 2파일 5건 통과, rc 0 |
+| 2026-10-19 | f1777ee + P1 | `turbo run test --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | 예 | rc 0, 2 tasks, cached 0, cli 69건 · mcp 5건 |
+| 2026-10-19 | f1777ee + P1 | `turbo run test --dry=json` | 해당 없음(dry) | test 태스크 6개(`<NONEXISTENT>` 제외) |
+| 2026-10-19 | f1777ee + P1 | `pnpm --filter @axis-ds/cli --filter @axis-ds/mcp type-check` · `lint` | 해당 없음 | 둘 다 rc 0 이지만 두 패키지에 스크립트가 없어 아무것도 실행하지 않음(출력 0줄). 통과 근거 아님 |
+| 2026-10-19 | f1777ee + P1 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli rc 2, 오류 20건(`src/library/**` 19 · `template-apply.ts` 1). 원본 두 파일로 바꿔 잰 기준선도 같은 20건(줄 번호만 다름), 이 단계가 더한 오류 0 |
+| 2026-10-19 | f1777ee + P1 | 루트 `npx eslint <P1 변경 파일 8개>` | 해당 없음 | rc 1, `src/index.ts` 2건(`MONET_CATEGORIES` · `category` 미사용). 원본 `src/index.ts` 도 같은 2건, 나머지 파일 0건 |
+| 2026-10-19 | f1777ee + P1 | `pnpm install --frozen-lockfile --offline` | 해당 없음 | rc 0, lockfile 차이는 mcp importer 의 vitest 3줄 |

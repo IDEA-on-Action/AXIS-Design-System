@@ -5,12 +5,19 @@ import chalk from "chalk";
 import ora from "ora";
 import fs from "fs-extra";
 import path from "path";
+import { createRequire } from "module";
 import prompts from "prompts";
 import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 import { V0Client } from "./v0.js";
 import { LibraryCurator, Publisher } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
 import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
+import { createInitConfig, type AxisConfig } from "./config/axis-config.js";
+
+// 버전은 package.json 에서 읽습니다. dist/index.js 기준 ../package.json 도 패키지 루트입니다.
+const { version: CLI_VERSION } = createRequire(import.meta.url)("../package.json") as {
+  version: string;
+};
 
 const REGISTRY_URL = process.env.AXIS_REGISTRY_URL || "https://axis.minu.best/r";
 
@@ -27,7 +34,7 @@ const program = new Command();
 program
   .name("axis")
   .description("AXIS Design System CLI - shadcn 호환 컴포넌트 설치 도구")
-  .version("0.1.0");
+  .version(CLI_VERSION);
 
 // init 명령어
 program
@@ -65,13 +72,14 @@ program
         ]);
 
     // axis.config.json 생성
-    const axisConfig = {
-      $schema: "https://axis.minu.best/schema.json",
-      componentsDir: config.componentsDir,
-      tailwindConfig: config.tailwindConfig,
-      globalCss: config.globalCss,
-      registry: REGISTRY_URL,
-    };
+    const axisConfig: AxisConfig = createInitConfig(
+      {
+        componentsDir: config.componentsDir,
+        tailwindConfig: config.tailwindConfig,
+        globalCss: config.globalCss,
+      },
+      REGISTRY_URL
+    );
 
     await fs.writeJSON("axis.config.json", axisConfig, { spaces: 2 });
     console.log(chalk.green("✓ axis.config.json 생성 완료"));

@@ -8,6 +8,7 @@ import prompts from "prompts";
 import { fetchTemplateDetail } from "./registry-client.js";
 import { runPostInstall } from "./post-install.js";
 import type { ApplyOptions, TemplateDetail } from "./types.js";
+import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js";
 
 /**
  * 템플릿 apply 로직 — 파일 쓰기 + postInstall 실행
@@ -184,13 +185,7 @@ export async function initTemplate(
   // axis.config.json 생성
   const configPath = path.join(resolved, "axis.config.json");
   if (!(await fs.pathExists(configPath))) {
-    const axisConfig = {
-      $schema: "https://axis.minu.best/schema.json",
-      template: selectedSlug,
-      componentsDir: "./components/ui",
-      tailwindConfig: "./tailwind.config.ts",
-      globalCss: "./globals.css",
-    };
+    const axisConfig: AxisConfig = createTemplateConfig(selectedSlug!);
     await fs.writeJSON(configPath, axisConfig, { spaces: 2 });
     console.log(chalk.green("axis.config.json 생성 완료"));
   }

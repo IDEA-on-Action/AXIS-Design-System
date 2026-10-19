@@ -43,14 +43,14 @@
 
 ## P1. 공통 기반
 
-- [ ] CLI `.version()` 이 `package.json` 값을 읽음 (2.2) → testplan T1-1
-- [ ] MCP `McpServer` version 이 `package.json` 값을 읽음 (2.2) → T1-2
-- [ ] `src/config/axis-config.ts`: `AxisConfig`(`brand?` 포함) · `readAxisConfig` · 스키마 URL 상수 (FR-2 설정)
-- [ ] `axis init` · `axis template init` 생성 객체에 `AxisConfig` 타입, 생성 내용 불변 → T1-3
-- [ ] MCP `vitest` devDependency · `test` 스크립트 · `vitest.config.ts` (FR-6) → T1-4
-- [ ] MCP `turbo.json` test inputs 에 CLI `brand-core.ts` (FR-6, plan 4.7)
-- [ ] `pnpm install --offline` rc 0, lockfile 변경은 mcp importer 만 (FR-6)
-- [ ] `turbo run test --dry=json` test 태스크 5 → 6 (FR-6) → T1-5
+- [x] CLI `.version()` 이 `package.json` 값을 읽음 (2.2) → testplan T1-1 (2026-10-19, `--version` 0.1.0 → 1.1.4)
+- [x] MCP `McpServer` version 이 `package.json` 값을 읽음 (2.2) → T1-2 (2026-10-19, `serverInfo.version` 0.1.0 → 1.1.5)
+- [x] `src/config/axis-config.ts`: `AxisConfig`(`brand?` 포함) · `readAxisConfig` · 스키마 URL 상수 (FR-2 설정) (2026-10-19)
+- [x] `axis init` · `axis template init` 생성 객체에 `AxisConfig` 타입, 생성 내용 불변 → T1-3 (2026-10-19. 단위 테스트로 부를 수 있게 객체를 `createInitConfig` · `createTemplateConfig` 로 옮김, 키 · 값 · 순서 그대로)
+- [x] MCP `vitest` devDependency · `test` 스크립트 · `vitest.config.ts` (FR-6) → T1-4 (2026-10-19)
+- [x] MCP `turbo.json` test inputs 에 CLI `brand-core.ts` (FR-6, plan 4.7) (2026-10-19. 파일은 P2 에서 생기므로 그 전까지 해시 대상 0개)
+- [x] `pnpm install --offline` rc 0, lockfile 변경은 mcp importer 만 (FR-6) (2026-10-19. pnpm 이 eslint 계열 peer 표기를 다시 쓴 hunk 는 빼고 importer 3줄만 남김, `--frozen-lockfile --offline` rc 0)
+- [x] `turbo run test --dry=json` test 태스크 5 → 6 (FR-6) → T1-5 (2026-10-19)
 
 ## P2. 공유 코어 · list · info
 
