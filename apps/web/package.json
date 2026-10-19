@@ -11,10 +11,12 @@
     "type-check": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:e2e:a11y": "playwright test a11y",
+    "test:e2e:nontext": "playwright test brand-nontext-contrast",
     "test:e2e:tokens": "playwright test -c playwright.tokens.config.ts"
   },
   "dependencies": {
     "@axis-ds/agentic-ui": "workspace:*",
+    "@axis-ds/tokens": "workspace:*",
     "@axis-ds/ui-react": "workspace:*",
     "@tanstack/react-query": "^5.64.2",
     "clsx": "^2.1.1",

@@ -103,6 +103,7 @@ declare const tokens: {
   color: Record<string, Record<string, string> | string>;
   space: Record<string, string>;
   radius: Record<string, string>;
+  shadow: Record<string, string>;
   font: {
     family: Record<string, string>;
     size: Record<string, string>;
@@ -122,6 +123,8 @@ declare const tokens: {
   card: Record<string, Record<string, string>>;
   badge: Record<string, Record<string, string>>;
   dialog: Record<string, Record<string, string>>;
+  'plan-card': Record<string, string>;
+  'card-shadow': string;
 };
 
 export = tokens;
@@ -357,5 +360,6 @@ if (brandResult.violations.length > 0) {
   process.exit(1);
 }
 brandResult.brands.forEach(name => console.log(`  ✓ brands/${name}.css generated`));
+if (brandResult.brands.length > 0) console.log('  ✓ brands/index.json generated');
 
 console.log('Done!');

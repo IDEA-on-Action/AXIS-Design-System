@@ -77,7 +77,7 @@ export function AgentAvatar({
         <div
           aria-hidden="true"
           className={cn(
-            "rounded-full flex items-center justify-center font-medium text-white",
+            "rounded-full flex items-center justify-center font-medium text-[var(--axis-agent-avatar-text)]",
             sizeStyles[size],
             typeColors[type]
           )}

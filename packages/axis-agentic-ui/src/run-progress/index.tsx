@@ -27,10 +27,10 @@ export interface RunProgressProps {
 }
 
 const statusColors: Record<StepStatus, string> = {
-  pending: "bg-[var(--axis-status-neutral-muted)]",
-  running: "bg-[var(--axis-status-running)] animate-pulse",
-  complete: "bg-[var(--axis-status-success)]",
-  error: "bg-[var(--axis-status-error)]",
+  pending: "bg-[var(--axis-status-neutral-muted)] text-[var(--axis-status-neutral-muted-contrast)]",
+  running: "bg-[var(--axis-status-running)] text-[var(--axis-status-running-contrast)] animate-pulse",
+  complete: "bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)]",
+  error: "bg-[var(--axis-status-error)] text-[var(--axis-status-error-contrast)]",
 };
 
 const statusIcons: Record<StepStatus, React.ReactNode> = {
@@ -124,7 +124,7 @@ export function RunProgress({
           >
             <div
               className={cn(
-                "w-5 h-5 rounded-full flex items-center justify-center text-white text-xs",
+                "w-5 h-5 rounded-full flex items-center justify-center text-xs",
                 statusColors[step.status]
               )}
               aria-hidden="true"

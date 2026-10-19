@@ -108,7 +108,7 @@ semantic 참조 26개 + primitive 5개입니다. 다크 계산값이 실제로 �
 | 44 | `--axis-card-shadow-default` | 72 | 0 1px 3px 0 rgb(0 0 0 / 0.1) | 그림자(비색). 선언 필수는 아니지만 D2에 따라 마커를 둠 |
 | 45 | `--axis-dialog-content-shadow` | 104 | 0 25px 50px -12px rgb(0 0 0 / 0.25) | 그림자(비색), 마커 |
 
-M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shadow.sm}`)는 비색이라 선언 검사 대상이 아닙니다. 마커를 붙일지는 M3 rebase 때 정합니다.
+M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shadow.sm}`)는 비색이라 선언 검사 대상이 아닙니다. 그래도 위 44 · 45와 같은 관례(D2)로 `themeIndependent` 마커를 붙였습니다(M3 rebase, 2026-10-17 사용자 결정).
 
 ## 5. 선언 검사 규칙
 
@@ -154,7 +154,7 @@ M3 전용 2개(`--axis-plan-card-accent-width` 4px, `--axis-card-shadow` `{shado
   - M3 의 함수 주석 「판정 6: Tailwind 3.4가 CSS를 만들지 않는 …」도 「판정 7」로 고칩니다
   - `const violations` 식은 `counts.missing + counts.primitive + counts.dynamic + counts.noCss + darkViolations + theme.violations.length`로 합칩니다
   - WI-0025 plan.md 의 U7(L654) · G2(L678)에 적힌 「판정 6」도 M3 쪽에서 「판정 7」로 고칩니다
-- `components.json`: 실측에서 자동 병합, 충돌 0 이었습니다. M3 전용 2개(plan-card · card-shadow)는 비색이라 선언이 필요 없습니다(실측 leaf 47 · 색 leaf 43 · 위반 0)
+- `components.json`: 실측에서 자동 병합, 충돌 0 이었습니다. M3 전용 2개(plan-card · card-shadow)는 비색이라 선언 검사 대상은 아니지만, main 의 비색 14개와 같은 관례로 `themeIndependent` 마커를 붙였습니다(실측 leaf 47 · 색 leaf 43 · 위반 0, 2026-10-17 사용자 결정)
 - 고정 수치
   - `theme-modes.test.mjs`의 component leaf 수는 소스에서 센 값과 비교하도록 바꿨으므로 고칠 것이 없습니다(M3 47). 색 leaf 43 은 고정값이고 M3 에서도 43 이라 그대로 둡니다
   - `dark-tokens.spec.ts`의 `:root` 수와 기준선 `.dark` 수는 산출물과 `components.json`에서 센 값으로 비교하므로 고칠 것이 없습니다. M3 실측 기대값은 `:root` 249 → 259, 기준선 `.dark` 204 → 212(259 - 47)이며 rebase 뒤 테스트를 실행해 확인합니다

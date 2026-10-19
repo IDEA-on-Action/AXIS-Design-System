@@ -24,7 +24,8 @@
     "pack-smoke": "node scripts/pack-smoke.mjs",
     "release": "pnpm build && pnpm pack-smoke && changeset publish",
     "check-licenses": "node scripts/check-licenses.mjs",
-    "check-token-refs": "node scripts/check-token-refs.mjs"
+    "check-token-refs": "node scripts/check-token-refs.mjs",
+    "check-contrast-pairs": "node scripts/check-contrast-pairs.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-git": "^0.2.1",

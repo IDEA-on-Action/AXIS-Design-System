@@ -208,7 +208,8 @@ function inAllowedScope(path, base) {
   return PRIMITIVE_ALLOW_PREFIXES.some(prefix => path.length > prefix.length && startsWithPath(path, prefix));
 }
 
-const SHADCN_HSL = /^\d{1,3} \d{1,3}% \d{1,3}%$/;
+// H · S · L 각각 정수 또는 소수(예 "220 69.4% 52.5%", "1.9 62.6% 48.2%"). 2026-10-16 AC6 결정(U14)
+const SHADCN_HSL = /^\d{1,3}(\.\d+)? \d{1,3}(\.\d+)?% \d{1,3}(\.\d+)?%$/;
 const SHADCN_HEX = /^#[0-9a-fA-F]{6}$/;
 const CSS_LENGTH = /^(0|\d+(\.\d+)?(px|rem))$/;
 
@@ -316,7 +317,7 @@ export function validateBrand(brand, base) {
           at('V8', `${file} shadcn.radius: CSS 길이(px · rem)가 아닙니다: "${value}"`);
         }
       } else if (!SHADCN_HSL.test(value.trim()) && !SHADCN_HEX.test(value.trim())) {
-        at('V8', `${file} shadcn.${key}: HSL 삼중값("H S% L%") 또는 6자리 hex 가 아닙니다: "${value}"`);
+        at('V8', `${file} shadcn.${key}: HSL 삼중값("H S% L%", 소수 허용) 또는 6자리 hex 가 아닙니다: "${value}"`);
       }
     }
   }
@@ -353,9 +354,37 @@ export function brandExportEntries(name) {
   };
 }
 
+/**
+ * 브랜드 목록 파일 exports 항목 (plan 3 결정 2, 2026-10-17: A안).
+ * 브랜드가 하나 이상일 때만 dist/brands/index.json 이 생기므로 그때만 검사한다.
+ */
+export const BRAND_INDEX_EXPORT = { './brands': './dist/brands/index.json' };
+
+/**
+ * dist/brands/index.json 내용. 이름순으로 정렬해 결정적으로 만든다.
+ * css · meta 는 패키지 exports 하위 경로(`@axis-ds/tokens` 뒤에 붙는 부분)다.
+ * 스키마: { "brands": [{ "name", "css", "meta" }] } (1.3.0 공개 API)
+ */
+export function brandIndex(brandNames) {
+  return {
+    brands: [...brandNames].sort().map(name => ({
+      name,
+      css: `./css/brands/${name}`,
+      meta: `./brands/${name}/brand.json`,
+    })),
+  };
+}
+
 export function checkBrandExports(pkg, brandNames) {
   const errors = [];
   const exportsField = isPlainObject(pkg?.exports) ? pkg.exports : {};
+  if (brandNames.length > 0) {
+    for (const [key, target] of Object.entries(BRAND_INDEX_EXPORT)) {
+      if (exportsField[key] !== target) {
+        errors.push(`B5 package.json exports 에 "${key}": "${target}" 항목이 없습니다(브랜드 목록 파일)`);
+      }
+    }
+  }
   for (const name of brandNames) {
     for (const [key, target] of Object.entries(brandExportEntries(name))) {
       if (exportsField[key] !== target) {
@@ -366,11 +395,18 @@ export function checkBrandExports(pkg, brandNames) {
   return errors;
 }
 
-/** 브랜드 선택자 (PRD FR-5, plan 3절 결정 4: 다크 3개) */
+/**
+ * 브랜드 선택자 (PRD FR-5, plan 3절 결정 4: 다크 3개)
+ *
+ * 라이트는 같은 속성 선택자를 두 번 써서 명시도를 (0,2,0)으로 올린다(2026-10-19 사용자 결정, WI-0028 U2 대안 2).
+ * 기본 `:root` · `.dark`와 소비자 `:root`(예: globals.css)는 (0,1,0)이라 import 순서와 상관없이 브랜드 값이 이긴다.
+ * `:root[data-brand]`로 올리지 않은 까닭: 하위 컨테이너(`<div data-brand>`, PRD A2)에는 `:root`가 맞지 않는다.
+ * 다크 3개도 (0,2,0)이라 라이트와 명시도가 같고, 같은 파일에서 다크 블록이 라이트 블록 뒤에 오므로 다크가 이긴다.
+ */
 export function brandSelectors(name) {
   const attr = `[data-brand="${name}"]`;
   return {
-    light: [attr],
+    light: [`${attr}${attr}`],
     dark: [`${attr}.dark`, `${attr}[data-theme="dark"]`, `.dark ${attr}`],
   };
 }
