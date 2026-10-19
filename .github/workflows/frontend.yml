@@ -102,6 +102,9 @@ jobs:
       # ===========================================
 
       # 퍼블리시 대상 패키지 수가 0이면 pack-smoke 가 "OK 0개" 로 끝나므로 1개 이상인지 따로 본다
+      # pack-smoke 는 @axis-ds/mcp tarball 의 stdio 실행 스모크(scripts/mcp-smoke.mjs)도 돌린다. mcp 미발견은 「실행 스모크 미수행」으로 실패하고,
+      # EXPECTED_TOOLS 1:1 이 깨지면 머지 전에 여기서 실패한다(WI-0036). mcp 설치에 npm 레지스트리 접근이 필요하다.
+      # WI-0036(#116)이 job 끝에 따로 둔 같은 명령의 step 은 2026-10-19 사용자 결정(D-C)으로 이 step 하나로 합쳤다.
       - name: Pack smoke (외부 npm 소비 검증, AC4)
         run: |
           set -o pipefail
@@ -223,14 +226,6 @@ jobs:
           name: web-build
           path: apps/web/out
           retention-days: 1
-
-      # WI-0036 (2026-10-19 결정): PR 단계에서도 tarball 구조 검사와 mcp 실행 스모크를 돌린다.
-      # mcp-smoke 의 EXPECTED_TOOLS 1:1 이 깨지면 머지 전에 실패하게 하려는 것(publish.yml 에서만 돌면 발행 전체가 막힌 뒤에야 드러난다).
-      # 위 Build(turbo run build)가 퍼블리시 대상 6개 패키지의 dist 를 만든 뒤에 돈다. mcp 설치에 npm 레지스트리 접근이 필요하다.
-      # 퍼블리시 대상 0개 · mcp 미발견은 pack-smoke 가 「실행 스모크 미수행」으로 실패시킨다.
-      # 기존 step 사이가 아니라 job 끝에 둔다(WI-0025 M3(#107, 64392e6)가 Build 와 Upload build artifact 사이에 step 을 넣었고 M4(#110)가 물려받았으므로 충돌을 피한다).
-      - name: Pack smoke (외부 npm 소비 · mcp 실행 검증, WI-0036)
-        run: pnpm pack-smoke
 
   # ===========================================
   # CD: Preview 배포 (PR)
