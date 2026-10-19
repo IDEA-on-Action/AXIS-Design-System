@@ -6,7 +6,7 @@
 
 | Phase | 범위 | 릴리스 | GitHub |
 |---|---|---|---|
-| M1 | init 의존성 추가 · 안내(D1), 실행 안내 `@axis-ds/cli` 정정(D2), 테스트 · 스모크 | `@axis-ds/cli` patch (changeset 은 배포 결정 뒤) | #124 |
+| M1 | init 의존성 추가 · 안내(D1), 실행 안내 `@axis-ds/cli` 정정(D2), 테스트 · 스모크 | `@axis-ds/cli` patch 1.2.1 (`.changeset/wi-0038-cli-init-utils-deps.md`) | #124 |
 
 - `project-todo.md` 와 `.github/wi-mapping.json` 은 이 브랜치에서 고치지 않습니다
 
@@ -47,5 +47,8 @@
 - [x] 커밋
 
 ### M1-5 뒤 단계 (이 브랜치 밖)
-- [ ] `@axis-ds/cli` patch changeset 추가 여부 결정 · PR · 머지 · 배포
-- [ ] WI-0028 T7-2(AC2(b)) 를 배포본으로 다시 잼
+- [x] 실경로 재측정 · 배포본 음성 대조: 이 브랜치 CLI(`--force` 빌드) `pnpm build` rc 0, npm `@axis-ds/cli@1.2.0` rc 1 (`Cannot find module 'clsx'`, testplan T13 · T14)
+- [x] WI-0028 T7-2(AC2(b)) 를 이 브랜치 CLI 로 재측정: build rc 0 · import 1줄 · check brand PASS · 선택자 5건, 음성 대조군 0건 (testplan T15 · T16, WI-0028 testplan · todo T7-2 줄에 기록)
+- [x] `.changeset/wi-0038-cli-init-utils-deps.md`(`@axis-ds/cli` patch), `pnpm changeset status --verbose` rc 0 · patch 1.2.1
+- [ ] PR · 머지 · Version Packages PR · 배포
+- [ ] 배포본(`@axis-ds/cli` 1.2.1)으로 T13 · T15 재확인

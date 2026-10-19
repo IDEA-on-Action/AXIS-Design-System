@@ -1,6 +1,6 @@
 # 테스트 계획 - WI-0028: CLI · MCP 브랜드 명령
 
-> 작성일: 2026-10-19 | 상태: 구현 · 검증 진행(P1 ~ P6 완료, T7-2 AC2(b) 결정 대기, T7-4 배포 뒤) | PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
+> 작성일: 2026-10-19 | 상태: 구현 · 검증 진행(P1 ~ P6 완료, T7-2 AC2(b) WI-0038 브랜치로 재측정 통과 · 배포본 재확인 대기, T7-4 배포 뒤) | PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
 > 기준선(e690905, 2026-10-19 실측): cli `npx vitest run` 3파일 58건 통과(rc 0), mcp 테스트 파일 0개 · vitest 없음, `turbo run test --dry=json` 의 test 태스크 5개.
 > 결과는 실행한 HEAD · 명령 · `--force` 여부와 함께 적습니다. turbo cached 결과와 0건 · 무출력은 rc · 건수로 측정 수행을 증명하기 전에는 통과 근거로 쓰지 않습니다.
 
@@ -107,6 +107,7 @@
   - ③ `.next/static/css/*.css` 에서 `grep -E "data-brand=[\"']?ontology"` 1건 이상
   - ④ 음성 대조군: `theme add` 전 빌드 산출 CSS 에서 ③ 과 같은 grep 0건(CSS 파일 1개 이상 · grep rc 1 로 측정 수행 증명)
   - → **미통과(2026-10-19).** 결과는 아래 「T7-2 측정」. 정의된 절차의 `pnpm build` 가 rc 1 이고 원인은 기존 `axis init -y` 입니다. ① · ② · ④ 는 통과, ③ 은 보조 측정(전제 주입)에서만 통과
+  - → **재측정 통과(2026-10-19, WI-0038 브랜치 CLI).** 결과는 아래 「T7-2 재측정」. ① ~ ④ 모두 통과, 전제 주입 없음. `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 재확인이 남아 체크하지 않음
 - [x] T7-3: `pnpm exec turbo run build test --force --continue` rc 0, cached 0, 패키지별 테스트 수 기록 → rc 0, 14/14 태스크(build 8 · test 6), cached 0. cli 9파일 161건 · mcp 4파일 24건 · tokens 221건(node test) · theme 2파일 31건 · ui-react 8파일 110건 · agentic-ui 6파일 72건, 실패 0. 빌드가 고친 추적 파일 5개(`apps/web/public/templates/*.json`)는 `git checkout --` 로 되돌림
 - [ ] T7-4: 배포 뒤 `npx @axis-ds/cli@1.2.0 --version` = 1.2.0, `@axis-ds/mcp@1.2.0` tarball stdio `serverInfo.version` = 1.2.0 · 도구 18개
 
@@ -153,6 +154,23 @@
 | 보조 측정(전제 주입: `pnpm add clsx tailwind-merge`, clsx 2.1.1 · tailwind-merge 3.7.0) → `pnpm build` | rc 0, CSS 1개, ③ grep 1줄(압축 1줄) · `data-brand=ontology]` 5건(라이트 머리 2 + 다크 3), import 1줄 유지 |
 
 - 판정: 정의된 절차(env · 캐시 주입 없음)의 `pnpm build` 가 rc 1 이라 T7-2(AC2(b))는 미통과입니다. 보조 측정은 init 이 요구하는 의존성을 손으로 넣은 결과라 AC2(b) 근거로 쓰지 않습니다. 처리 방법(예: init 결함을 별도 WI 로 고친 뒤 재측정, 또는 AC2(b) 절차 재정의)은 사용자 결정 대기입니다.
+
+### T7-2 재측정 (2026-10-19, WI-0038)
+
+- CLI: WI-0038 브랜치 HEAD 6ec4219 를 `pnpm exec turbo run build --filter=@axis-ds/cli --force`(rc 0, `Cached: 0`)로 빌드해 `pnpm pack` 한 tarball(sha256 `bb38a9a5b7e9801c`)을 별도 디렉터리에 `npm install` 한 `bin`. init 의 utils.ts 의존성 추가가 들어 있습니다(WI-0038, #124).
+- 프로젝트: 위와 같은 `create-next-app@15.5.28` 명령(rc 0). next 15.5.28 · tailwindcss 4.3.3. Node v22.22.0 · pnpm 10.33.0, 레지스트리 https://registry.npmjs.org/, 주입 env 0개. 의존성 손 설치 없음.
+
+| 단계 | 결과 |
+|---|---|
+| `axis init -y` | rc 0, `package.json` `dependencies` 에 `clsx ^2.1.1` · `tailwind-merge ^3.4.0` 추가, `설치: pnpm install` 안내 |
+| ① `axis theme add ontology` | rc 0, globalCss(`./src/app/globals.css`) 없음 경고, `app/globals.css` 2행에 `@import "@axis-ds/tokens/css/brands/ontology";`, grep 1건 |
+| `pnpm install` | rc 0, `@axis-ds/tokens` 1.3.0 · clsx 2.1.1 · tailwind-merge 3.7.0 |
+| **`pnpm build`** | **rc 0** |
+| ② `axis check` | rc 0, `PASS brand "ontology" import 가 app/globals.css에 있습니다 (globalCss ./src/app/globals.css 없음)`. 같은 출력의 FAIL 1(tailwind.config 없음) · WARN 1(AXIS CSS 변수 없음)은 위 측정과 같은 기존 항목, 권장 의존성은 WARN 에서 PASS 로 바뀜 |
+| ③ `.next/static/css/*.css` | 1개, `data-brand=["']?ontology` 5건 |
+| ④ 음성 대조군: 같은 CLI 로 init 만 하고(theme add 없음) 빌드한 프로젝트 | build rc 0, CSS 1개, 같은 grep 0건 · rc 1 |
+
+- 판정: 정의된 절차에서 ① ~ ④ 를 모두 통과했습니다. 전제는 CLI 가 배포본이 아니라 WI-0038 브랜치 빌드라는 것 하나이고, `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 같은 절차를 다시 확인합니다. 원 데이터는 WI-0038 testplan 3.2 T15 · T16 입니다.
 
 ---
 
@@ -213,6 +231,7 @@
 | 2026-10-19 | 0d5e535 | vC · vC0 `next build` · `next start` · Playwright 계산값 | 해당 없음 | vC 라이트 · 다크 브랜드 값 이김, vC0 프로젝트 값 (T6-7) |
 | 2026-10-19 | 0d5e535 | `npm view @axis-ds/tokens@1.3.0 exports --json` | 해당 없음 | rc 0, `./brands` · `./css/brands/ontology` · `./brands/ontology/brand.json` (T7-1) |
 | 2026-10-19 | 0d5e535 | create-next-app 15.5.28 → `axis init -y` → `theme add ontology` → `pnpm install` → `pnpm build` | 해당 없음 | build rc 1(init 의 `utils.ts` · `clsx`), 대조군(init 만) rc 1, 보조(clsx · tailwind-merge 설치) rc 0 · grep 5건, 음성 대조군 0건 · rc 1 (T7-2 미통과) |
+| 2026-10-19 | WI-0038 6ec4219 | 같은 절차, WI-0038 브랜치 CLI(`--force` 빌드 tarball) | 해당 없음 | build rc 0, import 1줄, check brand PASS, grep 5건, 음성 대조군 0건 · rc 1 (T7-2 재측정 통과, 배포본 재확인 남음) |
 | 2026-10-19 | 0d5e535 | `pnpm exec turbo run build test --force --continue` | 예 | rc 0, 14/14, cached 0, cli 161 · mcp 24 · tokens 221 · theme 31 · ui-react 110 · agentic-ui 72 (T7-3) |
 | 2026-10-19 | 0d5e535 + changeset | `pnpm changeset status --verbose` | 해당 없음 | rc 0, minor `@axis-ds/cli` 1.2.0 · `@axis-ds/mcp` 1.2.0(둘 다 `.changeset/wi-0028-cli-mcp-brand.md`), patch · major 없음 |
 | 2026-10-19 | 53893d6 | 리뷰 결함 재현: 빌드 CLI(53893d6) `theme add` · `theme list` 를 scratchpad 임시 프로젝트(tokens-1.3 fixture 복사, 주입 env 없음)에서 실행 | 해당 없음 | BOM 파일 rc 0 · BOM 이 둘째 줄 앞, `globalCss: "../outside/globals.css"` rc 0 · 밖 파일에 import, brand.json 만 지운 프로젝트 `theme list` rc 1 · `MODULE_NOT_FOUND` 스택, 읽기 전용 config rc 1 · 스택 · `globals.css` · `package.json` 은 바뀐 채, 한 줄 배열 · 이스케이프가 있는 `package.json` 은 3 ~ 4행이 3 ~ 9행으로 다시 쓰임 |

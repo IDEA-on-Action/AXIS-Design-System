@@ -1,6 +1,6 @@
 # WI-0038 릴리스 노트: `axis init` utils.ts 의존성 추가 · 안내
 
-> 릴리스일: 미정(changeset 추가 · PR 머지 뒤 Version Packages PR 을 머지할 때 CI 발행) | 유형: fix | 영향: @axis-ds/cli 1.2.0 → patch
+> 릴리스일: 미정(PR 머지 뒤 Version Packages PR 을 머지할 때 CI 발행) | 유형: fix | 영향: @axis-ds/cli 1.2.0 → 1.2.1 (patch, `.changeset/wi-0038-cli-init-utils-deps.md`)
 
 ## 배경
 
@@ -31,9 +31,13 @@
 | 빌드 | `pnpm build --force` | rc 0, 8/8, 0 cached |
 | 실경로 | create-next-app 15.5.28 → `axis init -y` → `pnpm install` → `pnpm build` (이 브랜치 tarball) | `pnpm build` rc 0 |
 | 음성 | 같은 절차, c131ee9 tarball | `pnpm build` rc 1, `Cannot find module 'clsx'` |
+| 실경로 재측정 | 같은 절차, `--force` 빌드한 이 브랜치 CLI, init 이 안내한 `pnpm install` 실행 (testplan T13) | `pnpm build` rc 0 |
+| 음성(배포본) | 같은 절차, npm `@axis-ds/cli@1.2.0` (testplan T14) | `pnpm build` rc 1, `Cannot find module 'clsx'` |
+| WI-0028 AC2(b) | `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` (testplan T15 · T16) | rc 0, import 1줄, `axis check` brand PASS, `data-brand=ontology` 5건, theme add 없는 대조군 0건 |
+| changeset | `pnpm changeset status --verbose` | rc 0, patch `@axis-ds/cli` 1.2.1, minor · major 없음 |
 | 음성 | D1 호출을 지운 변이 · 문구 변경을 되돌린 상태 | init 테스트 24건 실패 · 안내 테스트 위반 75줄 |
 
-- 실경로 전제: 수정본이 npm 에 없어 이 브랜치를 `pnpm pack` 한 tarball 을 별도 디렉터리에 설치해 실행했습니다. 프로젝트 쪽 env · 의존성 주입은 없습니다. 자세한 조건은 testplan 3.1 입니다.
+- 실경로 전제: 수정본이 npm 에 없어 이 브랜치를 `pnpm pack` 한 tarball 을 별도 디렉터리에 설치해 실행했습니다. 프로젝트 쪽 env · 의존성 주입은 없습니다. 자세한 조건은 testplan 3.1 · 3.2 입니다. 배포 뒤 1.2.1 배포본으로 T13 · T15 를 다시 확인합니다.
 
 ## 소비 프로젝트 영향
 

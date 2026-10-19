@@ -50,5 +50,21 @@
 | T12 | 참고 | WI-0028 T7-2 절차(init 뒤 `axis theme add ontology` 추가), 이 브랜치 tarball | 전 단계 rc 0, `pnpm build` rc 0, CSS 1개, `data-brand=ontology` 5건, `@axis-ds/tokens` 1.3.0 |
 
 - 스모크 프로젝트: next 15.5.28 · react 19.1.0 · tailwindcss `^4`, `app/globals.css` 첫 줄 `@import "tailwindcss";`. CLI 는 tarball 을 별도 디렉터리에 `npm install` 해 그 `bin` 으로 실행했습니다(수정본은 npm 에 없음, 이것이 유일한 전제입니다).
-- T12 는 WI-0028 AC2(b) 의 정식 재측정이 아닙니다. 정식 재측정은 cli 배포본으로 WI-0028 에서 합니다.
+- T12 는 WI-0028 AC2(b) 의 정식 재측정이 아닙니다. 판정 항목(① ~ ④)을 모두 본 재측정은 3.2 T15 · T16 이고, cli 배포본으로 하는 재확인은 배포 뒤에 남습니다.
 - 변이 T8 · T9 는 워킹트리에서 하고 `git restore --source=HEAD` 로 되돌린 뒤 `git status` 0줄을 확인했습니다.
+
+## 3.2 실경로 재측정 · 배포본 음성 대조 · WI-0028 T7-2 (2026-10-19)
+
+조건: HEAD 6ec4219. `pnpm exec turbo run build --filter=@axis-ds/cli --force` rc 0(1/1, `Cached: 0`) 뒤 `pnpm pack` 한 tarball(sha256 `bb38a9a5b7e9801c`, 3.1 T10 과 같은 값)을 별도 디렉터리에 `npm install` 해 그 `bin` 으로 실행했습니다. 배포본 대조는 별도 디렉터리에 `npm install @axis-ds/cli@1.2.0`(integrity `sha512-tT1OPEvn...`)한 `bin` 입니다. Node v22.22.0, 스모크 디렉터리 pnpm 10.33.0, 레지스트리 https://registry.npmjs.org/, 주입 env 0개(`AXIS_` · `NEXT_` · `NPM_CONFIG` · `npm_config` · `PNPM_`). 세 프로젝트 모두 새 `create-next-app@15.5.28`(3장 명령, rc 0)이고 next 15.5.28 · tailwindcss 4.3.3 입니다.
+
+| ID | AC | 절차 | 결과 |
+|---|---|---|---|
+| T13 | AC9 | create-next-app → 이 브랜치 CLI `axis init -y` → init 이 안내한 설치 명령 → `pnpm build` | init rc 0, 출력 `✓ package.json dependencies 에 추가: clsx@^2.1.1, tailwind-merge@^3.4.0` · `설치: pnpm install` · 끝 줄 `npx @axis-ds/cli add button`. `package.json` 차이는 두 줄. 안내된 `pnpm install` rc 0(lockfile clsx 2.1.1 · tailwind-merge 3.7.0). **`pnpm build` rc 0** |
+| T14 | AC9 음성 | 같은 절차, npm 배포본 `@axis-ds/cli@1.2.0` | init rc 0, 의존성 안내 0줄 · 끝 줄 `npx axis-cli add button`, `package.json` 불변(diff rc 0). 안내된 설치 명령이 없어 `pnpm install`(rc 0)을 실행. **`pnpm build` rc 1**, `./src/components/ui/utils.ts:1:39 Type error: Cannot find module 'clsx' or its corresponding type declarations.`(`Compiled successfully` 뒤 타입 검사) |
+| T15 | WI-0028 AC2(b) | create-next-app → `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` (이 브랜치 CLI) | theme add rc 0, globalCss 없음 경고 뒤 `app/globals.css` 2행에 `@import "@axis-ds/tokens/css/brands/ontology";`(grep 1건). `pnpm install` rc 0, `@axis-ds/tokens` 1.3.0. **`pnpm build` rc 0**, `.next/static/css/*.css` 1개에서 `data-brand=["']?ontology` 5건. `axis check` rc 0, `PASS brand "ontology" import 가 app/globals.css에 있습니다 (globalCss ./src/app/globals.css 없음)`, `PASS 필수 및 권장 의존성이 모두 설치되어 있습니다`(WI-0028 측정 때는 WARN) |
+| T16 | WI-0028 AC2(b) ④ | T13 프로젝트(theme add 없음)의 산출 CSS | CSS 1개, 같은 grep 0건 · rc 1(측정 수행 증명) |
+
+- T15 의 `axis check` 에는 `FAIL tailwind.config 파일이 없습니다` 1건과 `WARN app/globals.css에 AXIS CSS 변수가 없습니다` 1건이 있습니다. Tailwind 4 기본 구성에 config 파일이 없어서 나오는 기존 항목이고 WI-0028 측정 때와 같습니다. 이 WI 범위 밖이며 AC2(b) 판정 항목(brand)이 아닙니다.
+- 전제: 수정본이 npm 에 없어 CLI 만 이 브랜치 tarball 입니다. 프로젝트 의존성(`@axis-ds/tokens` 포함)은 모두 레지스트리에서 설치했고 다른 주입은 없습니다. cli patch 배포 뒤 배포본으로 T13 · T15 를 다시 확인합니다.
+- `pnpm changeset status --verbose`(changeset 추가 뒤): rc 0, patch `@axis-ds/cli` 1.2.1(`.changeset/wi-0038-cli-init-utils-deps.md`), minor · major 없음.
+- 같은 HEAD 에서 `npx vitest run`(packages/axis-cli): 12 파일 · 212건 통과.
