@@ -56,7 +56,10 @@ StyleDictionary.registerFormat({
 
 // 브랜드 CSS 포맷(css/axis-brand, WI-0025 B1)은 scripts/build-brands.mjs 에서 등록한다
 
-// --- 커스텀 포맷: TypeScript 모듈 ---
+// --- 커스텀 포맷: ESM 모듈 (dist/js/tokens.mjs, exports '.' 의 import 조건) ---
+// 이 파일은 Node 와 번들러가 JavaScript 로 그대로 읽는다. `as const` · `export type` 같은
+// TypeScript 전용 문법을 넣으면 import 가 문법 오류로 실패한다(WI-0035, 1.1.0~1.2.1 배포본 결함).
+// 타입은 typescript/axis-declarations 가 만드는 tokens.d.ts 가 맡는다.
 StyleDictionary.registerFormat({
   name: 'typescript/axis-module',
   format: async ({ dictionary }) => {
@@ -80,9 +83,7 @@ StyleDictionary.registerFormat({
  * Do not edit directly
  */
 
-export const tokens = ${JSON.stringify(tokens, null, 2)} as const;
-
-export type Tokens = typeof tokens;
+export const tokens = ${JSON.stringify(tokens, null, 2)};
 
 export default tokens;
 `;
