@@ -45,13 +45,14 @@
 
 ## T2. 공유 코어 · list · info (P2, FR-1 · FR-3)
 
-- [ ] T2-1: `resolveTokens` - tokens-1.3 fixture `ok` · tokens-1.2 fixture `unsupported` · 미설치 `not-installed` · tokens-1.3-unbuilt fixture(`dist` 없음) `not-built`. 버전 문자열을 함께 돌려주고, `not-built` 에서도 `1.3.0` 을 읽음(`dist` 실재에 기대지 않음). 음성 대조군: `not-built` fixture 가 `not-installed` 로 판정되지 않음
-- [ ] T2-2: `listBrands` - index.json 항목 수와 결과 수가 같고, 각 항목의 `description` · `themes` · `a11y` 가 brand.json 과 같음. 대조군: index 에 없는 브랜드 디렉터리는 결과에 없음
-- [ ] T2-3: `parseBrandCss` - 라이트 블록 · 다크 블록(선택자 3줄) 선언을 분리. 다크 블록이 없는 CSS 는 다크 빈 맵
-- [ ] T2-4: `axis theme list` 출력에 `sample` · 설명 · `light` · `dark` 포함, rc 0
-- [ ] T2-5: 미설치 · 미지원 · 빌드 산출물 없음에서 각각 설치 · 업그레이드 · 빌드(재설치) 안내, rc 1, 빈 목록 문구를 내지 않음
-- [ ] T2-6: `axis theme info sample` 에 import 경로 `@axis-ds/tokens/css/brands/sample`, `defaultBrand="sample"` 예시, 주요 토큰 라이트 · 다크 값. 없는 브랜드는 rc 1 + 목록 안내
-- [ ] T2-7: 보정 내역 출력(U3 결정 내용대로)
+- [x] T2-1: `resolveTokens` - tokens-1.3 fixture `ok` · tokens-1.2 fixture `unsupported` · 미설치 `not-installed` · tokens-1.3-unbuilt fixture(`dist` 없음) `not-built`. 버전 문자열을 함께 돌려주고, `not-built` 에서도 `1.3.0` 을 읽음(`dist` 실재에 기대지 않음). 음성 대조군: `not-built` fixture 가 `not-installed` 로 판정되지 않음 → `src/theme/brand-core.test.ts` 5건 통과(하위 디렉터리에서 위로 찾는 경우 포함). 미설치 케이스는 임시 디렉터리 위로 `node_modules/@axis-ds/tokens` 가 없음을 먼저 단언. 변이 M1(`MODULE_NOT_FOUND` 를 `not-installed` 로)을 넣으면 이 항목과 T2-5 unbuilt 가 실패(2건), 되돌린 뒤 sha 원본과 같음
+- [x] T2-2: `listBrands` - index.json 항목 수와 결과 수가 같고, 각 항목의 `description` · `themes` · `a11y` 가 brand.json 과 같음. 대조군: index 에 없는 브랜드 디렉터리는 결과에 없음 → 4건 통과(`dist/brands/ghost/brand.json` 을 더한 대조군 포함). 변이 M3(index 대신 `dist/brands` 디렉터리 열거)을 넣으면 대조군 1건 실패
+- [x] T2-3: `parseBrandCss` - 라이트 블록 · 다크 블록(선택자 3줄) 선언을 분리. 다크 블록이 없는 CSS 는 다크 빈 맵 → 4건 통과. fixture CSS 는 M3 형식(라이트 `[data-brand="sample"][data-brand="sample"]`)이고 라이트 12 · 다크 8 선언, 0,1,0 라이트 형식 · 다른 브랜드 블록 무시도 확인. 변이 M2(라이트를 0,1,0 선택자로만 인식)를 넣으면 4건 실패
+- [x] T2-4: `axis theme list` 출력에 `sample` · 설명 · `light` · `dark` 포함, rc 0 → `src/theme/theme-commands.test.ts`(commander 에 `registerThemeCommand` 로 등록해 실행) 통과. 빌드 산출물 `node packages/axis-cli/dist/index.js theme list -d <tokens-1.3 fixture 프로젝트>` 도 같은 출력, rc 0
+- [x] T2-5: 미설치 · 미지원 · 빌드 산출물 없음에서 각각 설치 · 업그레이드 · 빌드(재설치) 안내, rc 1, 빈 목록 문구를 내지 않음 → 3건 통과. 빌드 산출물로도 none · 1.2 · 1.3-unbuilt 각각 rc 1 과 안내 문구 확인
+- [x] T2-6: `axis theme info sample` 에 import 경로 `@axis-ds/tokens/css/brands/sample`, `defaultBrand="sample"` 예시, 주요 토큰 라이트 · 다크 값. 없는 브랜드는 rc 1 + 목록 안내 → 명령 3건 · 코어 3건 통과. 주요 토큰 12개 중 sample 에 있는 8개만 표로 내고 나머지 4개는 「브랜드가 덮어쓰지 않음」 줄. 빌드 산출물 `theme info sample` rc 0, `theme info nope` rc 1
+- [x] T2-7: 보정 내역 출력(U3 결정 내용대로) → a11y `status` · `checkedAt` · `gate`(null 은 `-`)와 근거 문서 「WI-0025 PRD 부록 B」, 「보정 전 · 후 값은 이 버전에서 출력하지 않습니다」 1건 통과
+- 참고(AC1 판정 아님, P6 에서 tarball 로 다시 잼): 임시 프로젝트에 `node_modules/@axis-ds/tokens` 를 워크스페이스 `packages/axis-tokens` 로 심볼릭 링크하고(`node build-tokens.mjs` 직접 실행 산출물, rc 0) 빌드 CLI 로 `theme list` · `theme info ontology` 를 돌리면 둘 다 rc 0, `ontology` 와 주요 토큰 12개가 모두 나옴. 링크는 레지스트리 · tarball 경로가 아니므로 형식 확인 참고로만 씀. `--axis-font-family-sans` 값이 길어 표 폭이 넓어지는 것은 6.2-5 에서 다시 봄
 
 ## T3. theme add (P3, FR-2)
 
@@ -122,3 +123,11 @@
 | 2026-10-19 | f1777ee + P1 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli rc 2, 오류 20건(`src/library/**` 19 · `template-apply.ts` 1). 원본 두 파일로 바꿔 잰 기준선도 같은 20건(줄 번호만 다름), 이 단계가 더한 오류 0 |
 | 2026-10-19 | f1777ee + P1 | 루트 `npx eslint <P1 변경 파일 8개>` | 해당 없음 | rc 1, `src/index.ts` 2건(`MONET_CATEGORIES` · `category` 미사용). 원본 `src/index.ts` 도 같은 2건, 나머지 파일 0건 |
 | 2026-10-19 | f1777ee + P1 | `pnpm install --frozen-lockfile --offline` | 해당 없음 | rc 0, lockfile 차이는 mcp importer 의 vitest 3줄 |
+| 2026-10-19 | 6d5c567 + P2 | `packages/axis-cli` 에서 `npx vitest run` | 해당 없음(vitest 직접) | 7파일 95건 통과, rc 0 (P2 신규 2파일 26건: brand-core 18 · theme-commands 8) |
+| 2026-10-19 | 6d5c567 + P2 | `turbo run test --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | 예 | rc 0, 2 tasks, cached 0, cli 95건 · mcp 5건 |
+| 2026-10-19 | 6d5c567 + P2 | `turbo run test --dry=json` | 해당 없음(dry) | test 태스크 6개. cli inputs 56개에 `../../apps/web/public/templates/theme-only.json`, mcp inputs 27개에 `../axis-cli/src/theme/brand-core.ts`(이제 실제 파일이 해시 대상) |
+| 2026-10-19 | 6d5c567 + P2 | 변이 3종(M1 · M2 · M3)을 `brand-core.ts` 에 하나씩 넣고 `npx vitest run src/theme` | 해당 없음 | 각각 rc 1(실패 2 · 4 · 1건), 되돌린 뒤 sha256 앞 12자리 `2658aa445a06` 로 원본과 같음 |
+| 2026-10-19 | 6d5c567 + P2 | `pnpm --filter @axis-ds/cli --filter @axis-ds/mcp type-check` · `lint` | 해당 없음 | 둘 다 rc 0 이지만 P1 과 같이 두 패키지에 스크립트가 없어 아무것도 실행하지 않음. 통과 근거 아님 |
+| 2026-10-19 | 6d5c567 + P2 | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` | 해당 없음 | mcp rc 0. cli rc 2, 오류 20건(`src/library/**` 19 · `template-apply.ts` 1)으로 P1 기준선과 같은 분포, `src/theme/**` 0건 |
+| 2026-10-19 | 6d5c567 + P2 | 루트 `npx eslint <P2 변경 · 신규 ts 6개>` | 해당 없음 | rc 1, `src/index.ts` 기존 2건(`MONET_CATEGORIES` · `category`)만, `src/theme/**` 0건 |
+| 2026-10-19 | 6d5c567 + P2 | `pnpm build`(packages/axis-cli) 뒤 `node dist/index.js theme list` · `theme info` | 해당 없음 | build rc 0, 추적 파일 변경 0. fixture 4종 list rc 0 · 1 · 1 · 1, info sample rc 0 · nope rc 1 |

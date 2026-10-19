@@ -54,15 +54,15 @@
 
 ## P2. 공유 코어 · list · info
 
-- [ ] fixture 원본 `packages/axis-cli/test/fixtures/theme/`(tokens-1.3 · tokens-1.3-unbuilt · tokens-1.2 · projects/app-init · projects/src-app)와 펼침 helper, theme-only 는 `theme-only.json` 에서 펼침 (plan 6.1)
-- [ ] cli `turbo.json` test inputs 에 `theme-only.json` (plan 5장 12a)
-- [ ] `brand-core.ts`: `resolveTokens` 4상태(ok · not-installed · unsupported · not-built), 설치 여부는 `node_modules/@axis-ds/tokens/package.json` 직접 탐색 (plan 3장 5) → T2-1
-- [ ] `listBrands` 가 `index.json` → `brand.json` 순으로 읽음 (FR-1) → T2-2
-- [ ] `parseBrandCss` 라이트 · 다크 블록 (FR-3) → T2-3
-- [ ] `axis theme list` 출력: 이름 · 설명 · 테마 (FR-1, AC1 fixture 판) → T2-4
-- [ ] `axis theme list` 미설치 · 미지원 안내, rc 1 (FR-1) → T2-5
-- [ ] `axis theme info <brand>` 메타 · import 경로 · Provider 예시 · 주요 토큰 (FR-3) → T2-6
-- [ ] `axis theme info` 보정 내역 (FR-3, U3 (A): a11y 메타와 WI-0025 부록 B 안내만) → T2-7
+- [x] fixture 원본 `packages/axis-cli/test/fixtures/theme/`(tokens-1.3 · tokens-1.3-unbuilt · tokens-1.2 · projects/app-init · projects/src-app)와 펼침 helper, theme-only 는 `theme-only.json` 에서 펼침 (plan 6.1) (2026-10-19. M3 가 머지돼 있어 sample 의 index · brand.json · CSS 는 손으로 쓰지 않고 f1777ee 의 `buildBrands` 를 tokens fixture `sample` 로 돌린 산출물을 그대로 넣음(라이트 선택자 `[data-brand="sample"][data-brand="sample"]`). exports 는 1.3.0 · 1.2.1 실제 package.json 에서 옮김. `dist` 는 `_dist` 로 두고 helper 가 바꿈. projects 두 개에 `package.json` 을 더했고, helper 에 tokens 만 까는 `empty` 레이아웃을 더함)
+- [x] cli `turbo.json` test inputs 에 `theme-only.json` (plan 5장 12a) (2026-10-19, dry 에서 cli test inputs 에 `../../apps/web/public/templates/theme-only.json` 확인)
+- [x] `brand-core.ts`: `resolveTokens` 4상태(ok · not-installed · unsupported · not-built), 설치 여부는 `node_modules/@axis-ds/tokens/package.json` 직접 탐색 (plan 3장 5) → T2-1 (2026-10-19. `findGlobalCss` · `findBrandImports` 는 쓰는 단계(P3 · P4)에서 더함)
+- [x] `listBrands` 가 `index.json` → `brand.json` 순으로 읽음 (FR-1) → T2-2 (2026-10-19)
+- [x] `parseBrandCss` 라이트 · 다크 블록 (FR-3) → T2-3 (2026-10-19. 선택자 목록에 `.dark` · `[data-theme="dark"]` 가 있으면 다크, 없으면 라이트로 갈라 라이트 선택자 형태(0,1,0 · 0,2,0)에 기대지 않음)
+- [x] `axis theme list` 출력: 이름 · 설명 · 테마 (FR-1, AC1 fixture 판) → T2-4 (2026-10-19)
+- [x] `axis theme list` 미설치 · 미지원 안내, rc 1 (FR-1) → T2-5 (2026-10-19, 빌드 산출물 없음 안내 포함)
+- [x] `axis theme info <brand>` 메타 · import 경로 · Provider 예시 · 주요 토큰 (FR-3) → T2-6 (2026-10-19. 브랜드 CSS 에 없는 주요 토큰은 「브랜드가 덮어쓰지 않음」 한 줄로 냄)
+- [x] `axis theme info` 보정 내역 (FR-3, U3 (A): a11y 메타와 WI-0025 부록 B 안내만) → T2-7 (2026-10-19. 근거 문서 줄은 브랜드와 상관없이 같은 문구)
 
 ## P3. theme add
 

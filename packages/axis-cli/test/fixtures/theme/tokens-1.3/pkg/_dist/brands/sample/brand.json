@@ -1,0 +1,6 @@
+{
+  "name": "sample",
+  "description": "브랜드 빌드 · 검증 테스트용 fixture 브랜드",
+  "themes": ["light", "dark"],
+  "a11y": { "status": "unchecked", "checkedAt": null, "gate": null }
+}

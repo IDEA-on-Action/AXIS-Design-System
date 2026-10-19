@@ -12,6 +12,7 @@ import { V0Client } from "./v0.js";
 import { LibraryCurator, Publisher } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
 import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
+import { registerThemeCommand } from "./theme/index.js";
 import { createInitConfig, type AxisConfig } from "./config/axis-config.js";
 
 // 버전은 package.json 에서 읽습니다. dist/index.js 기준 ../package.json 도 패키지 루트입니다.
@@ -535,6 +536,11 @@ registerSyncCommand(program);
 // ==========================================
 registerTemplateCommand(program);
 registerCheckCommand(program);
+
+// ==========================================
+// Theme 명령어 (브랜드)
+// ==========================================
+registerThemeCommand(program);
 
 // 컴포넌트 정보 가져오기 (로컬 폴백 포함)
 async function getComponentInfo(name: string, category: string): Promise<ComponentInfo | null> {
