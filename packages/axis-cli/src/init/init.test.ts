@@ -411,6 +411,23 @@ describe("axis init: 쓸 수 없는 package.json(FR-3 · FR-4)", () => {
     expect(r.logs.some((l) => /프로젝트 디렉터리 밖/.test(l))).toBe(true);
   });
 
+  // root 는 권한 비트와 무관하게 쓸 수 있으므로 이 테스트는 root 가 아닌 사용자 전제입니다(CI runner 포함).
+  it(
+    "쓰기 권한이 없으면 package.json 불변, 경고 + 추가 명령, rc 0",
+    async () => {
+      const dir = await tmpDir();
+      const pkgFile = path.join(dir, "package.json");
+      await fs.writeFile(pkgFile, '{"name":"x"}\n');
+      await fs.chmod(pkgFile, 0o444);
+      const r = await runInitCli(dir);
+      await fs.chmod(pkgFile, 0o644);
+      expect(r.exitCode).toBe(0);
+      expect(await fs.readFile(pkgFile, "utf8")).toBe('{"name":"x"}\n');
+      expect(r.logs.some((l) => /^! package\.json 을 바꾸지 않았습니다\(쓸 수 없습니다/.test(l))).toBe(true);
+      expect(r.logs).toContain(`  utils.ts 의존성 설치: ${ADD_CMD}`);
+    }
+  );
+
   it("계획 뒤 package.json 이 바뀌면 쓰지 않고 오류", async () => {
     const dir = await tmpDir();
     const pkgFile = path.join(dir, "package.json");

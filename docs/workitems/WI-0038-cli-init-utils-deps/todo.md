@@ -1,6 +1,6 @@
 # WI-0038: `axis init` utils.ts 의존성(clsx · tailwind-merge) 추가 · 안내 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행 (2026-10-19 구현 · 검증 완료, PR 대기)
 
 ## 진행 순서
 
@@ -25,26 +25,26 @@
 ## Phase M1
 
 ### M1-1 원인 · 기준값 실측
-- [ ] c131ee9 빌드를 pack · 설치해 `axis init -y` 출력 · `axis.config.json` · `utils.ts` 기준값 기록 (prd C2)
-- [ ] `axis-cli` 전수 grep, 실행 안내와 아닌 것 분류 (prd C4)
-- [ ] 의존성 범위 출처 실측 (prd 1.5)
+- [x] c131ee9 빌드를 pack · 설치해 `axis init -y` 출력 · `axis.config.json` · `utils.ts` 기준값 기록 (prd C2)
+- [x] `axis-cli` 전수 grep, 실행 안내와 아닌 것 분류 (prd C4)
+- [x] 의존성 범위 출처 실측 (prd 1.5)
 
 ### M1-2 D1 구현
-- [ ] init 을 `src/init/` 으로 옮겨 테스트 가능한 형태(`registerInitCommand` · `runInit`)로 분리, 출력 · 파일 불변
-- [ ] `planUtilsDependencies` · `applyUtilsDependencies`: theme add 의 `detectInstallCommand` · `formatJsonLike` · `realPathInside` · `hasDependency` 재사용, BOM 유지
-- [ ] `package.json` 없음 · 읽을 수 없음 · 프로젝트 밖 · 쓰기 불가 · 계획 뒤 변경 처리 (FR-2 ~ FR-4)
+- [x] init 을 `src/init/` 으로 옮겨 테스트 가능한 형태(`registerInitCommand` · `runInit`)로 분리, 출력 · 파일 불변
+- [x] `planUtilsDependencies` · `applyUtilsDependencies`: theme add 의 `detectInstallCommand` · `formatJsonLike` · `realPathInside` · `hasDependency` 재사용, BOM 유지
+- [x] `package.json` 없음 · 읽을 수 없음 · 프로젝트 밖 · 쓰기 불가 · 계획 뒤 변경 처리 (FR-2 ~ FR-4)
 
 ### M1-3 D2 정정
-- [ ] CLI 출력 · 사용법 주석의 `axis-cli` 실행 안내 정정
-- [ ] 문서 사이트(`apps/web/src`) 실행 안내 정정
-- [ ] 안내 문구 고정 테스트(양성 대조 포함)
+- [x] CLI 출력 · 사용법 주석의 `axis-cli` 실행 안내 정정
+- [x] 문서 사이트(`apps/web/src`) 실행 안내 정정
+- [x] 안내 문구 고정 테스트(양성 대조 포함)
 
 ### M1-4 테스트 · 검증
-- [ ] init 테스트: `package.json` 없음 · 있음 · 이미 있음 · devDependencies · 포맷 보존(들여쓰기 · CRLF · BOM) · 두 번 실행 멱등 · lockfile 별 안내 · 자식 프로세스 0 · 기준값 불변
-- [ ] `@axis-ds/cli` 테스트 전체 · theme add 테스트 통과
-- [ ] 음성 대조: 수정 전 코드로 새 테스트가 실패
-- [ ] 실경로 스모크: create-next-app 15.5.28 → `axis init -y` → `pnpm install` → `pnpm build` rc 0, c131ee9 CLI 로 rc 1 (AC9)
-- [ ] 커밋
+- [x] init 테스트: `package.json` 없음 · 있음 · 이미 있음 · devDependencies · 포맷 보존(들여쓰기 · CRLF · BOM) · 두 번 실행 멱등 · lockfile 별 안내 · 쓸 수 없는 경우 · 자식 프로세스 0 · 기준값 불변 (33건, testplan T1)
+- [x] `@axis-ds/cli` 테스트 전체 · theme add 테스트 통과 (212건, turbo `--force` 6/6, testplan T3 · T4)
+- [x] 음성 대조: 수정 전 코드로 새 테스트가 실패 (변이 T8 24건 실패, 문구 되돌림 T9 위반 75줄)
+- [x] 실경로 스모크: create-next-app 15.5.28 → `axis init -y` → `pnpm install` → `pnpm build` rc 0, c131ee9 CLI 로 rc 1 (AC9, testplan T10 · T11)
+- [x] 커밋
 
 ### M1-5 뒤 단계 (이 브랜치 밖)
 - [ ] `@axis-ds/cli` patch changeset 추가 여부 결정 · PR · 머지 · 배포
