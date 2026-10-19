@@ -172,6 +172,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBs7lU",
       "lastSyncedAt": "2026-10-19T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0036",
+      "slug": "mcp-data-path",
+      "issueNumber": 115,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhBtArk",
+      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-19T00:00:00.000Z"
