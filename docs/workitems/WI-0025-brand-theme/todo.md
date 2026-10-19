@@ -15,6 +15,7 @@
 - 배치 1 동안 `plan.md` · `todo.md` · `project-todo.md` 갱신은 M1 브랜치에서만 수행 (M2 브랜치는 참조만, plan 3.5)
 - 머지 순서: **M1 머지 → 1.2.1 릴리스 PR 머지 · npm 배포 확인 → M2 머지** (M2 브랜치는 1.2.1 배포 후 `main`을 반영합니다. force push 금지라 rebase 대신 merge, plan 3.6)
 - 배치 2: M3 → M4 순차 (M3는 M1 매핑과 M2 빌드 위에서만 성립)
+- 1.3.0 머지 순서 (2026-10-19 사용자 결정 D-A, plan U27): **#116(mcp 1.1.5) → M3 #107 → WI-0030 #114 → WI-0035 #118(M4 바로 앞) → M4 #110 → Version Packages PR(1.3.0)**. WI-0035 ESM 수정은 별도 1.2.2 patch를 내지 않고 1.3.0에 합쳐요. `main`에는 1.2.1 배포 뒤 머지된 M2(89ab33a, ThemeProvider `brand` · `ThemeContextValue` 필수 멤버)가 changeset 없이 있어 `main`에서 1.2.2를 내면 그 기능과 타입 변경이 patch로 나가기 때문이에요(실측: `git diff 014e8ac origin/main -- packages/axis-theme/src/index.ts`). #118의 tokens patch changeset은 M4의 minor changeset과 합쳐 linked 4패키지 1.3.0이 돼요. #118을 일찍 머지하면 Version PR이 1.2.2를 제안하므로 M4 바로 앞에 둬요
 
 ---
 
@@ -47,7 +48,7 @@
 - [x] 토큰 아닌 규칙(초안 221줄 `word-break: keep-all`) 처리: 문서 안내 vs `brand.json` 부가 CSS 필드 (3 결정 5) → ✅ plan U17: 토큰이 아니므로 M4 문서 안내로 처리
 - [x] `setBrand(undefined)` 저장 의미: `removeItem`(AC5 문구 일치) vs "브랜드 없음" sentinel (3 결정 6, 사용자 판단 필수) → ✅ 2026-10-15: removeItem 확정
 - [ ] FOUC 방지 인라인 스크립트를 theme 패키지에서 제공할지 (PRD 범위 밖) (3 결정 7)
-- [x] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8) → ✅ plan U11: 문서 안내(명시도 상향 없음) → 🔄 2026-10-19 사용자 결정으로 명시도 상향: 라이트 `[data-brand="<b>"][data-brand="<b>"]` (0,2,0), 하위 컨테이너 유지 위해 `:root[data-brand]`는 쓰지 않음(WI-0028 U2 대안 2, plan 3.2). 같은 변경으로 brand-tokens E2E가 5건 늘어 `frontend.yml` 「E2E 실행 건수 가드」 기대값을 tokens 17에서 22로 함께 고침(`playwright --list` 실측 22). 게이트 음성 대조를 다시 할 때의 주입 선택자는 plan U11 참고
+- [x] 브랜드 CSS import 순서 의존: 문서 안내 vs `:root[data-brand]` 명시도 상향 (3 결정 8) → ✅ plan U11: 문서 안내(명시도 상향 없음) → 🔄 2026-10-19 사용자 결정으로 명시도 상향: 라이트 `[data-brand="<b>"][data-brand="<b>"]` (0,2,0), 하위 컨테이너 유지 위해 `:root[data-brand]`는 쓰지 않음(WI-0028 U2 대안 2, plan 3.2). 같은 변경으로 brand-tokens E2E가 5건 늘어 `frontend.yml` 「E2E 실행 건수 가드」 기대값을 tokens 17에서 22로 함께 고침(`playwright --list` 실측 22). 게이트 음성 대조를 다시 할 때의 주입 선택자는 plan U11 참고 → ✅ 2026-10-19 확정(사용자 결정 D-B, plan U28): 라이트 `[data-brand="x"][data-brand="x"]`(0,2,0)로 하위 요소 브랜드 지원을 유지하고, CI 건수 가드 tokens 22 동반 수정도 확정
 - [ ] V7 "색 값" 판정 기준: 값 형식 판정 vs component 토큰 테마 무관 표지 (3 결정 9)
 - [ ] `cssVarName` 공유 방식: `scripts/brands.mjs`로 이동 후 import(sha 불변 조건) vs 복제 (3 결정 10)
 - [ ] 브랜드 임시 파일 위치: `dist/.tmp` + try/finally vs `os.tmpdir()` (3 결정 11)
@@ -243,7 +244,8 @@
 - [ ] 게이트 켠 뒤 main 배포 관찰 (2026-10-18 추가, 신규 인프라 첫 실사용 관찰): E2E 3 step 이 막는 게이트가 되면서 `deploy-production`(`needs: ci`)이 E2E 실패에도 멈춰요. M3 머지 뒤 처음 몇 번의 main push run 에서 「CI」 job 의 E2E 3 step 결과와 「Deploy Production」이 실제로 배포됐는지를 run id 와 함께 기록하고, 일시 실패(브라우저 설치 · 네트워크)로 멈춘 경우는 원인과 `workflow_dispatch` 재실행 여부를 적어요. 연속 3회 정상 배포가 확인되면 정착으로 닫아요. 참고: 「Install Playwright chromium」 step 은 게이트 켜기 전부터 `continue-on-error` 가 없어 이미 배포를 막고 있었어요
 - [ ] AC8: 4조합 axe 위반 0, 온톨로지 전용 예외 0 (CI 결과로 확인) (AC8)
 - [x] 레지스트리 · library 사본 재생성 (Card · Dialog · PlanCard 변경분) (FR-7 · FR-9) → ✅ 2026-10-18 (a8fe0a0): `pnpm build:registry` 1회로 10개 컴포넌트 x 3벌 30개 파일 갱신, 사본 content 와 src 대조 84/84 일치(사본 변조 시 rc 1). library 는 M1(4411bd3)처럼 988294a..HEAD `index.tsx`의 1:1 줄 쌍 23개를 같은 줄에만 적용(18곳: components 5개 파일 9곳 · categories/agentic 7곳 · categories/ui 2곳, 재실행 0건). 사본을 풀어 `check-token-refs` 검사 파일 69 · 위반 0(오타 변수 주입 시 rc 1). surface-renderer 의 case 중괄호(WI-0034 lint 수정)는 토큰 변경이 아니라 library 사본에 적용하지 않음
-- [ ] M3 PR 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 patch 잔여 없음 확인 (D3 · plan 3.6) → 2026-10-18 중간 확인: `npm view @axis-ds/tokens version` = 1.2.1. 1.3.0 minor changeset은 2026-10-18 사용자 결정으로 M4로 되돌려 이 브랜치에 없습니다(plan U22). `main`에 patch 잔여가 없는지는 머지 직전에 다시 확인
+- [ ] PR CI 「Pack smoke」 중복 정리 (2026-10-19 사용자 결정 D-C, plan U29): M3(#107)의 「Pack smoke (외부 npm 소비 검증, AC4)」 step(「Build」 직후, 검사 패키지 수 가드 포함)을 남기고 WI-0036(#116)이 `frontend.yml`에 추가한 pack-smoke step은 빼요. #116이 먼저 머지되므로 그때까지는 #116 step을 유지하고, M3 브랜치에 `main`을 병합해 충돌을 해소할 때 #116 step을 지워요. **확인**: 병합 커밋 뒤 `grep -n -i 'pack.smoke' .github/workflows/frontend.yml`로 `ci` job에 pack-smoke step이 하나(M3 step)만 남는지 보고, 남은 step에 패키지 수 가드가 그대로 있는지 확인해요. 0개면 병합에서 M3 step까지 지워진 것이고 2개면 #116 step이 남은 것이에요
+- [ ] M3 PR 머지 전 `npm view @axis-ds/tokens version` = `1.2.1`, `main`의 `.changeset/`에 linked 4패키지(tokens · ui-react · agentic-ui · theme) patch 잔여 없음 확인 (D3 · plan 3.6 · D-A) → 2026-10-18 중간 확인: `npm view @axis-ds/tokens version` = 1.2.1. 1.3.0 minor changeset은 2026-10-18 사용자 결정으로 M4로 되돌려 이 브랜치에 없습니다(plan U22). `main`에 patch 잔여가 없는지는 머지 직전에 다시 확인 → 2026-10-19 D-A 반영(plan U27): 1.2.2는 나가지 않으므로 머지 직전 기대값은 계속 `1.2.1`이에요. M3 바로 앞에 머지되는 #116의 mcp patch changeset(mcp 1.1.5)은 mcp 전용이라 linked 4개와 무관하고, `.changeset/`에 남아 있어도 이 확인의 실패가 아니에요(파일 frontmatter의 패키지가 `@axis-ds/mcp`뿐인지로 판정). WI-0035 #118의 tokens patch changeset은 M4 바로 앞에 머지되므로 M3 머지 시점의 `main`에는 없어야 하고, 있으면 머지 순서가 어긋난 것이라 M3를 머지하지 않고 멈춰요
 
 ### M3 DoD
 - [x] `pnpm type-check` 통과 → 2026-10-18 `pnpm turbo run type-check --force` rc 0, 8/8(type-check 4 + 의존 build 4, 캐시 0), build 를 먼저 단독 실행한 뒤
@@ -258,13 +260,13 @@
 
 - [ ] FR-10 `apps/web` 브랜드 전환 데모: `document.documentElement`에 `data-brand` 직접 부착 · 제거, 다크는 `next-themes` `.dark` 유지 (FR-10 · AC7)
 - [ ] 상태 아이콘 비텍스트 대비 재측정: M3 `brand-nontext-contrast.spec.ts`는 문서 페이지에 실제 상태 아이콘이 0개라 svg 프로브로 6색을 대신 쟀어요(결정 22). M4 데모에서 agentic-ui 실제 컴포넌트(StepTimeline · RunProgress · PlanCard 등)가 렌더한 아이콘의 계산 색과 실제 부모 바탕으로 기본 · ontology × 라이트 · 다크 3:1 이상을 다시 재고, spec 을 프로브 대신 실제 요소로 바꿔요. 프로브 값과 다르면 그 차이(변수 · 투명도)를 기록해요 (3.2 접근성 · 결정 22 후속)
-- [ ] M4 PR 머지 전 1.2.1 배포 · patch changeset 잔여 없음 재확인 (D3 · plan 3.6)
+- [ ] M4 PR 머지 전 1.2.1 배포 · patch changeset 잔여 없음 재확인 (D3 · plan 3.6) → 2026-10-19 D-A 반영(plan U27): M4 머지 시점의 `main`에는 바로 앞에 머지한 #118의 tokens patch changeset(WI-0035 ESM 수정)이 있어야 정상이에요. 이것은 M4 minor changeset과 합쳐 linked 4패키지 1.3.0이 되므로 잔여로 보지 않아요. 그 밖의 linked 4패키지 patch가 없는지와 npm이 아직 1.2.1인지(1.2.2 미발행)를 확인해요
 - [ ] AC7: Button · Card · Input · Badge · Alert · PlanCard · MessageBubble 데모가 브랜드 · 테마 전환에 함께 바뀌는지 확인, v1에서 접힌 상태(성공 · 경고)가 늘 글자 · 아이콘과 함께 보이는지(Q8), 상태 뱃지 · 둥글기 · 그림자 차이가 함께 보이는 화면 구성(Q9) (AC7)
 - [ ] FR-10 `docs/guides/theme-customization.md`에 「브랜드 테마」 절 추가 (import 순서 안내 포함) (FR-10)
 - [ ] FR-10 같은 문서 「4. 커스텀 테마 생성」 예시를 브랜드 디렉터리 방식으로 갱신, primitive 오버라이드 안내(92~97행) · `component-usage.md` 175행 정정 (D-7 반영) (FR-10)
 - [ ] FR-10 부록 B 원본 대비 보정 내역 문서 게재 (v1 기준 `sub` 1개 값 보정과 미달 쌍 처리) (FR-10 · D1)
 - [ ] `release-notes.md` 1.3.0 절 작성 (브랜드 축 · ontology 프리셋 · 신규 변수 기본값 불변 명시) → 🔄 2026-10-18 M3 에서 초안 작성(plan U22, 실명 없음). M2 브랜드 빌드 · ThemeProvider, ontology 프리셋, 새 변수 11개 기본값(2026-10-18 95e8547 에서 `plan-card-reject-hover-text` 추가로 10 → 11), agentic-ui 화면 변화 표, 폐기 예정, 동작이 달라지는 사용 방식(tokens CSS 미로드 시 그림자 없음 · import 순서), M3 검증 수치. M4 에서 데모 · 가이드 · 배포 정보 · 소비 프로젝트 영향을 채움
-- [ ] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3) → 2026-10-18 M3 에서 한 번 작성(13c6c36, `pnpm changeset status --verbose` 로 linked 4개 1.3.0 확인)했다가 같은 날 사용자 결정으로 M3 에서 뺐습니다(plan U22). M4 에서 13c6c36 의 본문으로 다시 작성합니다. 메모(2026-10-18 리뷰 보정): 13c6c36 본문의 수치는 낡았어요(예: 「새 변수 10개」, 95e8547 뒤 `plan-card-reject-hover-text`가 더해져 지금 11개). 본문 수치는 M4 작성 시점에 dist를 재측정한 뒤 갱신해요
+- [ ] 1.2.1 배포 확인 후 minor changeset 작성 (tokens · theme · ui-react · agentic-ui) (D3) → 2026-10-18 M3 에서 한 번 작성(13c6c36, `pnpm changeset status --verbose` 로 linked 4개 1.3.0 확인)했다가 같은 날 사용자 결정으로 M3 에서 뺐습니다(plan U22). M4 에서 13c6c36 의 본문으로 다시 작성합니다. 메모(2026-10-18 리뷰 보정): 13c6c36 본문의 수치는 낡았어요(예: 「새 변수 10개」, 95e8547 뒤 `plan-card-reject-hover-text`가 더해져 지금 11개). 본문 수치는 M4 작성 시점에 dist를 재측정한 뒤 갱신해요 → 2026-10-19 D-A: #118의 tokens patch changeset과 함께 Version Packages PR에서 linked 4개가 모두 1.3.0(1.2.2 아님)인지 `pnpm changeset status --verbose`로 확인해요
 - [ ] 1.3.0 Breaking change 없음 확인: 브랜드 미지정 시 기존 변수 계산값 불변(AC3), 공개 API 추가만 (3.2 릴리스)
 - [ ] 1.3.0 릴리스 PR에서 linked 4개 1.3.0 확인 후 머지, `pack-smoke` 브랜드 exports 통과, npm 배포 확인 (D3)
 - [ ] `CHANGELOG.md` · `project-todo.md` · `.github/wi-mapping.json` 현행화, #84 close
