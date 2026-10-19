@@ -15,7 +15,7 @@
 
 #### tokens: 브랜드 빌드 (M2)
 - 브랜드 소스 `src/brands/<brand>/{light,dark,brand}.json`을 빌드하면 `dist/css/brands/<brand>.css`가 생깁니다. 브랜드 값은 이 파일에만 있고 `variables.css`에는 들어가지 않습니다
-- 선택자: 라이트 `[data-brand="<brand>"]`, 다크 `[data-brand="<brand>"].dark` · `[data-brand="<brand>"][data-theme="dark"]` · `.dark [data-brand="<brand>"]`
+- 선택자: 라이트 `[data-brand="<brand>"][data-brand="<brand>"]`(명시도 (0,2,0), 아래 「동작이 달라지는 사용 방식」 참고), 다크 `[data-brand="<brand>"].dark` · `[data-brand="<brand>"][data-theme="dark"]` · `.dark [data-brand="<brand>"]`
 - 메타데이터 `dist/brands/<brand>/brand.json`(name · description · themes · a11y)과 브랜드 목록 `dist/brands/index.json`(`{ "brands": [{ "name", "css", "meta" }] }`, 이름순)
 - 브랜드 JSON 검증(파일 구성 · 기본 토큰 경로 존재 · 라이트/다크 짝 · 변수명 충돌 · shadcn 값 형식 등)에 실패하거나 브랜드에 맞는 `package.json` exports 항목이 없으면 빌드가 실패합니다
 
@@ -78,9 +78,9 @@
 #### 동작이 달라지는 사용 방식
 - Card · Dialog 그림자가 tokens CSS 변수를 참조하므로, `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
 - Card · DialogContent에 그림자 색 수식어만 붙인 경우(`className="shadow-black/50"`, `shadow-blue-500/20` 등) 1.3.0에서는 색이 바뀌지 않습니다. 종전 `shadow-sm` · `shadow-lg`는 `--tw-shadow-colored`에 `var(--tw-shadow-color)` 자리가 있어 색 수식어가 적용됐지만, 새 클래스 `shadow-[shadow:var(--axis-card-shadow)]` · `shadow-[shadow:var(--axis-shadow-lg)]`는 Tailwind 3.4가 값을 분해하지 못해 `--tw-shadow-colored`가 변수 값 그대로입니다. `cn()`은 두 클래스를 모두 남기므로 병합 문제가 아니라 CSS 생성 방식의 차이입니다. 대안: ① 크기 클래스와 색을 함께 지정(`shadow-sm shadow-black/50`, `cn()`이 기본 그림자 클래스를 크기 클래스로 바꿔 종전처럼 색이 적용됨) ② 변수 재정의(Card `[--axis-card-shadow:0_1px_2px_0_rgb(0_0_0/0.5)]`, Dialog는 `--axis-shadow-lg`, 또는 앱 CSS에서 범위를 정해 재정의). 확인 범위: Tailwind 3.4.19가 만든 CSS와 `cn()` 병합 결과이며, 브라우저 계산 스타일은 실측하지 않았습니다
-- 브랜드 CSS는 `@axis-ds/tokens/css` **다음에** import합니다. 앱이 shadcn 변수(`--primary` 등)를 직접 정의한다면(예: `globals.css`의 `:root`) 브랜드 CSS를 그 정의보다 뒤에 둬야 합니다. 라이트 `[data-brand]`와 `:root`의 명시도가 같아 나중에 온 쪽이 이깁니다
+- 브랜드 CSS는 `@axis-ds/tokens/css` 다음에 import하는 것을 권장하지만, 순서가 달라도 브랜드 값이 이깁니다. 라이트 선택자가 같은 속성을 두 번 쓴 `[data-brand="<brand>"][data-brand="<brand>"]`라 명시도가 (0,2,0)이고, 기본 `:root` · `.dark`와 앱이 직접 정의한 shadcn 변수(예: `globals.css`의 `:root` · `.dark`)는 (0,1,0)이기 때문입니다. 그래서 브랜드 CSS를 `globals.css` 맨 앞에 `@import`해도 됩니다. 다크 선택자 3종도 (0,2,0)이라 라이트와 같고, 같은 파일에서 다크 블록이 뒤에 있어 다크가 이깁니다. `:root[data-brand]`로 올리지 않은 것은 하위 컨테이너(`<div data-brand>`)에도 맞게 하려는 것입니다. 앱이 브랜드 값을 다시 덮으려면 (0,2,0)보다 높은 선택자이거나 같은 명시도로 브랜드 CSS 뒤에 둬야 합니다
 - `@axis-ds/theme`의 공개 타입 `ThemeContextValue`에 필수 멤버 `brand: string | undefined` · `setBrand: (brand: string | undefined) => void`가 늘었습니다. 런타임 동작은 추가만이지만, `ThemeContextValue` 타입으로 값을 직접 만드는 경우(테스트 mock, 자체 Provider 등)에는 `brand` · `setBrand`가 필요합니다. 두 멤버를 채우지 않으면 TypeScript 컴파일 오류가 납니다(2026-10-19 결정: Breaking change로 분류하지 않음)
-- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개(`--axis-*` 10 · shadcn `--radius` 1) 가운데 기본 `.dark`(`variables.css` · `shadcn-compat.css`)와 값이 달라지는 9개(`--axis-radius-sm|md|lg` 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2 · shadcn `--radius` 12px)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다. 나머지 2개(`button-border-default` · `button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다
+- 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개(`--axis-*` 10 · shadcn `--radius` 1) 가운데 기본 `.dark`(`variables.css` · `shadcn-compat.css`)와 값이 달라지는 9개(`--axis-radius-sm|md|lg` 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2 · shadcn `--radius` 12px)는 브랜드 라이트 값이 다크에서도 유지됩니다(라이트 (0,2,0)가 기본 `.dark` (0,1,0)를 이김). 나머지 2개(`button-border-default` · `button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다
 
 #### CI
 - `check-token-refs` 판정 7: Tailwind가 CSS를 만들지 않는 클래스 패턴(임의값 `var()` + 불투명도 수식어)을 위반으로 잡습니다
@@ -111,6 +111,8 @@
 - `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(짝 10)
 - 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`. `variables.css`는 npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11(위 새 변수 표), `shadcn-compat.css`는 1.2.1과 바이트까지 같음, AC3 테스트 통과
 - `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과(M3 시점 9페이지. M4 수치는 아래 「검증 (M4)」)
+- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과
+- 2026-10-19 라이트 선택자 (0,2,0) 상향 뒤(M3 브랜치 17e4427 위, turbo `--force` 캐시 0): dist 13파일 중 `css/brands/ontology.css` 만 바뀌고 차이는 라이트 선택자 1줄(sha256 `f06a96e4…` → `d69437fe…`), 나머지 12파일(`variables.css` `e3ced2d8…` · `shadcn-compat.css` `dd374eca…` · js · json · tailwind preset) 바이트 동일. tokens test 217/217, type-check 4/4 · lint 4/4 rc 0, `test:e2e:a11y`(E2E_SERVER=static, chromium) 36/36, `test:e2e:nontext` 6/6, `test:e2e:tokens` 22/22(brand 18 · dark 4, 「프로젝트 `:root`가 브랜드 뒤」 갈래 5 추가), `check-token-refs` · `check-contrast-pairs` 위반 0. 음성 대조: 종전 선택자 dist 로 tokens E2E 를 돌리면 라이트 `html[data-brand]` · 프로젝트 `:root` 뒤 갈래 1건 실패. 앱 층: `layout.tsx`에서 브랜드 import 를 tokens 와 `globals.css` 사이로 옮겨 빌드해도(종전 U11 음성 대조, 라이트 9건 실패) a11y 36/36 통과(확인 뒤 되돌림)
 - 레지스트리 사본 content 와 src 대조 84/84 일치(a8fe0a0 시점). 95e8547 뒤 PlanCard 사본 3벌(`public/r` · `apps/web/public/r` · `packages/axis-agentic-ui/registry/r`)이 src 와 일치
 
 ### 검증 (M4)

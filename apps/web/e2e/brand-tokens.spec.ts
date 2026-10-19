@@ -169,6 +169,23 @@ test.describe('브랜드 계산 스타일 ontology (WI-0025 AC6)', () => {
     })
   }
 
+  // import 순서 무관 (2026-10-19 사용자 결정 (가), WI-0028 U2 대안 2): 프로젝트 :root · .dark (0,1,0)가
+  // 브랜드 CSS 뒤에 와도(브랜드를 globals.css 맨 앞에 @import 한 구성) 라이트 (0,2,0) · 다크 (0,2,0) 브랜드 값이 이깁니다.
+  // 프로젝트 값은 기대값과 다른 값이라, 브랜드가 지면 7개 변수 단언이 실패합니다.
+  const PROJECT_AFTER_CSS = [
+    ':root { --primary: 240 5.9% 10%; --axis-button-bg-default: #123456; --axis-surface-default: #123456; }',
+    '.dark { --primary: 0 0% 98%; --axis-button-bg-default: #654321; --axis-surface-default: #654321; }',
+  ].join('\n')
+
+  for (const s of SCENARIOS) {
+    test(`${s.theme} · ${s.name} · 프로젝트 :root 가 브랜드 뒤: 7개 변수가 부록 A 와 일치`, async ({ page: p }) => {
+      const html = s.html(true)
+      expect(html).toContain('</style>')
+      await p.setContent(html.replace('</style>', `\n${PROJECT_AFTER_CSS}</style>`))
+      assertMatches(await readProbe(p), s.theme)
+    })
+  }
+
   for (const theme of ['light', 'dark'] as const) {
     test(`applyBrand 헬퍼(addInitScript) · ${theme}: 이동한 문서의 <html> 에 data-brand 가 붙고 값이 부록 A 와 일치`, async ({
       page: p,

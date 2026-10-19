@@ -71,7 +71,7 @@
 **트랙 B. 브랜드 테마 축 (1.3.0)**
 - FR-4: 토큰 소스에 브랜드 디렉터리를 둡니다. `packages/axis-tokens/src/brands/<brand>/{light,dark}.json`은 semantic · component 토큰과 일부 primitive(radius · font · shadow, shadow는 FR-9에서 신설)를 덮어쓰는 값만 담습니다. 같은 디렉터리에 메타데이터 `brand.json`(name · description · themes · a11y 상태)을 둡니다(D6). 브랜드 이름은 kebab-case이며 공개 저장소에 둡니다.
 - FR-5: 빌드는 브랜드마다 `dist/css/brands/<brand>.css`를 만들고 `package.json` exports에 `./css/brands/<brand>`를 추가합니다. 선택자 규칙은 다음과 같습니다.
-  - 라이트: `[data-brand="<brand>"]`
+  - 라이트: `[data-brand="<brand>"][data-brand="<brand>"]` (명시도 (0,2,0). 2026-10-19 사용자 결정으로 종전 `[data-brand="<brand>"]` (0,1,0)에서 올림. import 순서와 상관없이 기본 · 소비자 `:root`를 이기고, `:root`를 쓰지 않아 하위 컨테이너에도 맞음)
   - 다크: `[data-brand="<brand>"].dark`, `[data-brand="<brand>"][data-theme="dark"]`, 그리고 하위 컨테이너용 `.dark [data-brand="<brand>"]`
   - shadcn HSL 호환 층(`--background`, `--primary` 등)도 같은 규칙으로 함께 냅니다.
   - 참고: 기본 토큰 CSS(`variables.css` · `shadcn-compat.css`)의 다크 선택자는 `.dark` 하나뿐이고 `[data-theme="dark"]`는 없습니다. `@axis-ds/theme` `ThemeProvider`는 `.dark` 클래스와 `data-theme`을 함께 붙이므로 문제가 없지만, `data-theme`만 붙이는 환경에서는 브랜드 다크 값만 적용되고 기본 토큰은 라이트 값으로 남습니다. 브랜드 CSS의 `[data-theme="dark"]` 갈래는 이 점을 전제로 둡니다.

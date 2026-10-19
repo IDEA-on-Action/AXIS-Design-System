@@ -465,9 +465,11 @@ describe('checkBrandExports (B5)', () => {
 });
 
 describe('brandSelectors', () => {
-  test('라이트 1개 · 다크 3개 (PRD FR-5)', () => {
+  // 라이트는 속성 두 번으로 (0,2,0). import 순서와 상관없이 기본 · 소비자 :root (0,1,0)를 이기고,
+  // :root 를 쓰지 않아 하위 컨테이너(<div data-brand>)에도 맞는다 (2026-10-19 사용자 결정, WI-0028 U2 대안 2)
+  test('라이트 1개 · 다크 3개 (PRD FR-5), 라이트 명시도 (0,2,0)', () => {
     assert.deepEqual(brandSelectors('ontology'), {
-      light: ['[data-brand="ontology"]'],
+      light: ['[data-brand="ontology"][data-brand="ontology"]'],
       dark: [
         '[data-brand="ontology"].dark',
         '[data-brand="ontology"][data-theme="dark"]',
