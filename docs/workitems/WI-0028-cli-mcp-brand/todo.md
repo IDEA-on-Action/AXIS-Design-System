@@ -1,6 +1,6 @@
 # WI-0028: CLI · MCP 브랜드 명령 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | Testplan: [testplan.md](./testplan.md) | GitHub: #87 | 상태: 🔄 설계 완료 (2026-10-19, 구현 전)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | Testplan: [testplan.md](./testplan.md) | GitHub: #87 | 상태: 🔄 구현 · 검증 진행 (2026-10-19, P1 ~ P6 완료, AC2(b) 결정 대기 · PR 전)
 
 ## 진행 순서
 
@@ -60,7 +60,7 @@
 - [x] `listBrands` 가 `index.json` → `brand.json` 순으로 읽음 (FR-1) → T2-2 (2026-10-19)
 - [x] `parseBrandCss` 라이트 · 다크 블록 (FR-3) → T2-3 (2026-10-19. 선택자 목록에 `.dark` · `[data-theme="dark"]` 가 있으면 다크, 없으면 라이트로 갈라 라이트 선택자 형태(0,1,0 · 0,2,0)에 기대지 않음)
 - [x] `axis theme list` 출력: 이름 · 설명 · 테마 (FR-1, AC1 fixture 판) → T2-4 (2026-10-19)
-- [x] `axis theme list` 미설치 · 미지원 안내, rc 1 (FR-1) → T2-5 (2026-10-19, 빌드 산출물 없음 안내 포함)
+- [x] `axis theme list` 미설치 · 미지원 안내, rc 1 (FR-1) → T2-5 (2026-10-19, 빌드 산출물 없음 안내 포함. 리뷰 보정: index.json 은 있는데 brand.json · CSS 가 없는 부분 빌드도 `not-built`, 724d94b)
 - [x] `axis theme info <brand>` 메타 · import 경로 · Provider 예시 · 주요 토큰 (FR-3) → T2-6 (2026-10-19. 브랜드 CSS 에 없는 주요 토큰은 「브랜드가 덮어쓰지 않음」 한 줄로 냄)
 - [x] `axis theme info` 보정 내역 (FR-3, U3 (A): a11y 메타와 WI-0025 부록 B 안내만) → T2-7 (2026-10-19. 근거 문서 줄은 브랜드와 상관없이 같은 문구)
 
@@ -77,6 +77,7 @@
 - [x] 브랜드 이름 검증(U5) · 다른 브랜드 import 처리(U13) → T3-7 · T3-8 (2026-10-19. tokens 가 `ok` 가 아닌 세 상태 모두 이름 규칙만 보고 경고와 함께 진행)
 - [x] Provider 안내 문구(`defaultBrand`, `<html data-brand>`, theme 1.3.0 조건) (FR-2, Q1) → T3-9 (2026-10-19. `package.json` 에 `@axis-ds/theme` 이 없으면 설치 안내를 덧붙임)
 - [x] CSS 대상 없음 → 수동 안내, 나머지 단계 진행 (A1) → T3-10 (2026-10-19)
+- [x] 리뷰 보정: BOM 으로 시작하는 CSS 에서 BOM 을 맨 앞에 유지 · 쓰기 대상 CSS 가 프로젝트 밖이면 거절 · 쓰기 전 권한 확인과 쓰기 실패 시 되돌림 → T3-3 · T3-12 · T3-13 (2026-10-19, 724d94b)
 
 ## P4. check 의 brand 검사
 
@@ -99,12 +100,12 @@
 ## P6. M3 머지 뒤 (ontology 재확인)
 
 - [x] tokens `build --force` 뒤 `dist/brands/index.json` · `ontology/brand.json` · `css/brands/ontology.css` 존재 (plan 6.2-1) → T6-1 (2026-10-19. 3개 모두 있고 npm 1.3.0 배포본과 바이트 같음)
-- [ ] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정. U2 대안 2 로 라이트 블록 머리(선택자)가 바뀌므로 `parseBrandCss` 가 바뀐 머리를 읽는지 확인 (plan 6.2-2) → T6-2 (2026-10-19. 키 · 블록 머리 차이 0, fixture · 코어 수정 없음. fixture 는 P2 에서 이미 `[data-brand][data-brand]` 머리였음)
+- [x] 산출물 형식과 fixture 대조, 다르면 fixture · 코어 수정. U2 대안 2 로 라이트 블록 머리(선택자)가 바뀌므로 `parseBrandCss` 가 바뀐 머리를 읽는지 확인 (plan 6.2-2) → T6-2 (2026-10-19. 키 · 블록 머리 차이 0, fixture · 코어 수정 없음. fixture 는 P2 에서 이미 `[data-brand][data-brand]` 머리였음)
 - [x] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3 (2026-10-19. 1.3.0 이 배포돼 `file:` tarball 대신 npm 레지스트리 설치본으로 판정)
 - [x] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4 (2026-10-19)
 - [x] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5 (2026-10-19. 라이트 12/12 · 다크 10/12, 표 한 줄 최대 141자)
 - [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제)
-- [ ] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7 (2026-10-19. 라이트 · 다크 모두 이김)
+- [x] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7 (2026-10-19. 라이트 · 다크 모두 이김)
 
 ## P7. 1.3.0 배포 뒤
 
