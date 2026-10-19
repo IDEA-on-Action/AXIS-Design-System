@@ -20,6 +20,8 @@
 - [x] 수정 방식: 경로 기준 변경 vs 번들 옆 복사 → ✅ 번들 옆 복사(`dist/data`) (D2)
 - [x] 스모크: tarball 설치 · stdio 실행 · 도구 호출, pack-smoke 에 연결 (D3)
 - [x] PR CI(`frontend.yml`)에서도 pack-smoke 실행 → ✅ 2026-10-19 (D4)
+- [x] PR CI Pack smoke step 중복 해소 → ✅ 2026-10-19 M3(#107) step 을 남기고 이 WI step 은 M3 를 main 위로 맞출 때 제거 (D5)
+- [x] 머지 순서 · 배포 단위 → ✅ 2026-10-19 이 PR(#116)이 첫 번째, mcp 1.1.5 는 linked 4패키지와 독립 배포 (D6)
 
 ---
 
@@ -53,7 +55,12 @@
 - [x] CI 순서 로컬 실행 rc 0, `EXPECTED_TOOLS` 변이 rc 1, Node 20 rc 0, 빈 npm 캐시 rc 0, actionlint 추가 지적 0건 (testplan T10~T14)
 - [x] #107(M3) · #110(M4) · #118(WI-0035) 와 `git merge-tree` 충돌 없음, #118 병합 트리에서 pack-smoke + pack-install-smoke rc 0 (testplan T15 · T15a · T16 · T17)
 - [ ] PR #116 CI run 에서 Pack smoke step 통과와 소요 시간 확인 (AC6)
-- [ ] #107 과 합쳐지면 `ci` job 에 Pack smoke step 이 2개가 됩니다(M3(#107, 64392e6)가 넣은 AC4 step 은 Build 다음, 이 WI 의 step 은 job 끝. #110(M4)은 M3 의 step 을 물려받았을 뿐입니다). #107 과 이 PR 만 머지돼도 생기므로, 나중에 머지되는 쪽에서 하나로 합칠지 결정이 필요합니다
+- [x] ~~#107 과 합쳐지면 `ci` job 에 Pack smoke step 이 2개가 됩니다. 나중에 머지되는 쪽에서 하나로 합칠지 결정이 필요합니다~~ → ✅ 2026-10-19 결정(D5): M3(#107, 64392e6)의 step(Build 직후, 패키지 수 가드 포함)을 남기고 이 WI 의 step(job 끝)은 제거합니다. 이 PR 머지부터 M3 머지 전까지만 이 WI 의 step 을 유지합니다
+- [ ] M3(#107)를 main 위로 맞출 때(main 병합 충돌 해소) `frontend.yml` `ci` job 끝의 이 WI Pack smoke step 제거(M3 브랜치 담당, 이 브랜치의 워크플로는 고치지 않음)
+
+### 머지 순서 (D6)
+- 이 PR(#116, mcp 1.1.5) -> M3 #107 -> WI-0030 #114 -> WI-0035 #118 -> M4 #110 -> Version Packages PR(1.3.0). 이 PR 이 첫 번째입니다
+- `@axis-ds/mcp` 는 changesets `linked` 밖이고 내부 의존도 없어, 1.1.5 는 linked 4패키지(1.2.1 유지, 다음 1.3.0)와 독립해 배포됩니다
 
 ---
 
