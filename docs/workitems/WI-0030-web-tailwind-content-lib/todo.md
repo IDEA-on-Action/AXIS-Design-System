@@ -69,6 +69,6 @@
 - a11y 는 main 에 생긴 `E2E_SERVER=static` 분기로 실행했습니다(3101 포트가 실행 전후 비어 있음을 확인, 서버 로그의 청크 이름이 이 worktree `apps/web/out` 의 파일과 일치). 통과 수가 위 「검증」의 18 에서 36 으로 는 것은 M3 가 a11y 대상에 ontology 브랜드를 더했기 때문이고, 측정 방법(dev 서버 대 static 서버)도 달라 두 수치를 나란히 비교하지 않습니다.
 
 ## 후속 (이번 범위 아님)
-- `src/registry` 의 예제 파일 5개도 클래스 문자열을 갖고 있고 `content` 밖입니다. WI-0025 M3 · M4 가 그 경로를 더하므로 여기서는 손대지 않습니다.
-- WI-0025 M3 · M4 와 `apps/web/tailwind.config.ts` 인접 줄 충돌: M3 · M4 는 이 WI 가 추가한 줄 바로 다음의 `../../packages/ui/src/**` 줄을 지우고 `./src/registry/**` · `axis-ui-react` · `axis-agentic-ui` 줄로 바꿉니다. 나중에 머지되는 쪽이 `./src/lib/**` 줄과 registry · `axis-ui-react` · `axis-agentic-ui` 줄을 모두 남기고, `packages/ui` 줄 삭제는 M3 쪽을 따릅니다. 머지 순서는 사용자가 정합니다.
+- `src/registry` 의 예제 파일 5개도 클래스 문자열을 갖고 있었습니다. 그 경로(`./src/registry/**`)는 WI-0025 M3(#107, 8253a82)가 `content` 에 더했고, 이 브랜치는 병합 커밋 3e19a17 에서 그 줄을 함께 남겼습니다. 여기서 따로 손대지 않습니다.
+- WI-0025 M3 · M4 와 `apps/web/tailwind.config.ts` 인접 줄 충돌: M3 · M4 는 이 WI 가 추가한 줄 바로 다음의 `../../packages/ui/src/**` 줄을 지우고 `./src/registry/**` · `axis-ui-react` · `axis-agentic-ui` 줄로 바꿉니다. M3 쪽 충돌은 M3 가 먼저 머지돼(#107, 8253a82) 이 브랜치가 3e19a17 에서 해소했습니다(위 「main(8253a82) 병합과 충돌 해소」). 남은 것은 M4(#110)입니다. M4 도 같은 줄을 건드리므로 M4 와 이 PR 중 나중에 머지되는 쪽이 같은 기준(`./src/lib/**` 줄과 registry · `axis-ui-react` · `axis-agentic-ui` 줄을 모두 남기고, `packages/ui` 줄 삭제는 M3 쪽을 따름)으로 해소합니다. 머지 순서는 사용자가 정합니다.
   - 실측(2026-10-19, 이 브랜치 HEAD a31ea50 기준 `git merge-tree --write-tree --name-only`): `origin/feat/wi-0025-m3-ontology` 870969f · `origin/feat/wi-0025-m4-demo` 34d7bca · `feat/wi-0025-m3-ontology-v2` 17e4427 세 브랜치 모두 `tailwind.config.ts` 충돌. 대조군 `main` 대 같은 세 브랜치는 `tailwind.config.ts` 충돌 없음(M3 대조는 다른 파일 8개 충돌을 출력해 측정 수행 확인).

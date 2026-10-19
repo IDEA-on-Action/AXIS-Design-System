@@ -15,4 +15,4 @@
 ## 영향
 
 - `@axis-ds/*` 패키지 변경 없음, changeset 없음.
-- a11y spec 18 passed 유지.
+- a11y spec 36 passed(main 8253a82 병합 뒤, `E2E_SERVER=static`). 병합 전 18 passed(dev 서버)는 M3 가 ontology 브랜드를 더해 대상 수가 달라 나란히 비교하지 않습니다.
