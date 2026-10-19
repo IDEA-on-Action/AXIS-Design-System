@@ -870,13 +870,29 @@ for (const brand of BRANDS) {
         const moved = await pulseToMid(page)
         expect(moved, 'pulse 애니메이션 수').toBeGreaterThan(0)
         const pulseRows: MarkRow[] = []
+        // 위치가 아니라 단계 상태로 실행 중 항목을 고른다(데모 단계 순서가 바뀌어도 다른 점을 기록하지 않게)
+        const runningItem = async (list: Locator, label: string): Promise<Locator> => {
+          const found: Locator[] = []
+          for (let i = 0, n = await list.getByRole('listitem').count(); i < n; i += 1) {
+            const item = list.getByRole('listitem').nth(i)
+            if ((await stateOf(item)) === 'running') found.push(item)
+          }
+          expect(found.length, `${label} 실행 중 단계 수`).toBe(1)
+          return found[0]
+        }
         const runningDots = [
-          page.getByRole('list', { name: '작업 타임라인' }).getByRole('listitem').nth(1).locator(':scope > [aria-hidden="true"]').last(),
-          page.getByTestId('demo-run-progress').getByRole('list', { name: '실행 단계' }).getByRole('listitem').nth(1).locator(':scope > [aria-hidden="true"]'),
+          (await runningItem(page.getByRole('list', { name: '작업 타임라인' }), 'StepTimeline'))
+            .locator(':scope > [aria-hidden="true"]').last(),
+          (await runningItem(page.getByTestId('demo-run-progress').getByRole('list', { name: '실행 단계' }), 'RunProgress'))
+            .locator(':scope > [aria-hidden="true"]'),
         ]
         for (const [i, dot] of runningDots.entries()) {
-          for (const r of await measureMark(dot, 'fill')) {
+          const measured = await measureMark(dot, 'fill')
+          expect(measured.length, `pulse50 측정 행 수 (${i})`).toBeGreaterThan(0)
+          for (const r of measured) {
             const component = i === 0 ? 'StepTimeline 점 pulse50' : 'RunProgress 점 pulse50'
+            // pulse 최저 시점으로 실제로 옮겨졌는지(keyframes 50%{opacity:.5})
+            expect(r.opacity, `${component} 불투명도`).toBeCloseTo(0.5, 1)
             pulseRows.push({
               component, kind: component, state: 'running', expectVar: '--axis-status-running', ...r, judge: 'record',
               bgName: nameBg(r.background),
