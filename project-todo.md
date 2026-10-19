@@ -31,16 +31,19 @@
 
 | # | 항목 | WI ID | Phase | 우선순위 | 상태 |
 |---|------|-------|-------|----------|------|
-| 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 (1.3.0) | WI-0025 M2~M4 (#84) | P16 | P1 | ⏳ |
+| 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 (1.3.0) | WI-0025 M2~M4 (#84) | P16 | P1 | 🔄 (M2 · M3 머지, M4 남음) |
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ⏳ |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
-| 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ⏳ |
+| 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 | WI-0030 (#95) | P18 | P3 | ✅ (#114 머지 2026-10-19, cad9398) |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
+| 47 | tokens ESM 엔트리 `dist/js/tokens.mjs` 문법 오류(`as const` 잔존, 1.2.1부터) 수정 | WI-0035 (#113) | P18 | P2 | ⏳ |
+| 48 | `@axis-ds/mcp` 1.1.4 `list_components` · `list_tokens` 데이터 경로 결함(ENOENT) 수정 + tarball stdio 스모크 (mcp 1.1.5) | WI-0036 (#115) | P18 | P1 | 🔄 (#116 머지 2026-10-19, mcp 1.1.5 배포 대기) |
+| 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
 
 ### 완료
 
@@ -275,7 +278,7 @@
 - ✅ Phase 12: 레이아웃·검색·구조·a11y 섹션 (WI-0016~0019)
 - ✅ Phase 13: axe 단위·E2E(라이트/다크)·CI 게이트로 a11y 자동 보장 (WI-0020~0023)
 
-### 브랜드 테마 · 온톨로지 실행 계획 (Phase 16·17, 2026-10-15 수립, 2026-10-16 재계획)
+### 브랜드 테마 · 온톨로지 실행 계획 (Phase 16·17, 2026-10-15 수립, 2026-10-19 재계획)
 
 > 2026-10-16 재계획: M1은 머지됐으나 1.2.1 publish가 NPM_TOKEN 만료로 실패해 npm은 1.2.0입니다. 다크 모드 component 토큰 결함(WI-0033)을 1.2.1에 포함하기로 해 실패한 publish run은 다시 돌리지 않고, WI-0033 머지 push로 새 publish를 실행합니다. M3는 `feat/wi-0025-m3-ontology`에서 구현 중이고, WI-0028은 PRD v0.4의 「M2 이후 착수」 조건에 따라 배치 2에 둡니다.
 >
@@ -283,19 +286,28 @@
 
 > 2026-10-17: 배치 1 · 1' 완료. M2(#91)와 WI-0034(#104)가 머지됐고, M3는 새 main(988294a) 위로 옮긴 `feat/wi-0025-m3-ontology-v2`에서 2차 구현을 이어갑니다(기존 `feat/wi-0025-m3-ontology`는 백업).
 
+> 2026-10-19 재계획(`/ax:todo plan`): M3(#107)는 2차 구현이 끝나 디자인 오너 사후 확인 8건만 남았고(2026-10-19 완료), M4(#110)는 데모 · AC7을 마쳐 가이드 · 1.3.0 문서가 남았습니다. 사용자 결정으로 WI-0026 · WI-0028 · WI-0029 · WI-0030을 지금 함께 착수하되, **착수와 머지를 분리**해 충돌을 머지 순서로 관리합니다. 근거는 실측입니다: WI-0030이 고칠 `apps/web/tailwind.config.ts` content 배열은 M3 · M4 브랜치가 이미 고쳤고(registry · 패키지 경로 추가), WI-0029가 바꿀 기본 테마 색은 M3 · M4의 a11y 기준선(WI-0029 상한 7, `DEMO_KNOWN_PAIRS`)에 묶여 있습니다. WI-0028은 `packages/axis-cli` · `axis-mcp`만 고쳐 M3 · M4 변경과 겹치는 파일이 0건입니다. WI-0028 선행 조건은 PRD(「1.3.0 배포 이후 착수」)와 이 표(「M3와 병렬」)가 어긋나 있어 「개발은 지금, cli · mcp 배포는 1.3.0 뒤」로 맞추고 PRD 4행을 고쳤습니다.
+
+> 2026-10-19 추가 결정: 새로 등록한 WI-0035(tokens ESM, #118) · WI-0036(mcp 데이터 경로, #116) · WI-0037(템플릿 원형 빌드, 이슈 #119)을 배치에 넣습니다. WI-0035는 별도 1.2.2 patch를 취소하고 1.3.0에 합칩니다. 1.2.1 배포(`014e8ac`) 뒤 main에 머지된 M2(89ab33a, ThemeProvider `brand` · `ThemeContextValue` 필수 멤버 추가)가 changeset 없이 들어 있어 main에서 1.2.2를 내면 그 기능과 타입 변경이 patch 번호로 나가기 때문입니다(실측: `git diff 014e8ac origin/main -- packages/axis-theme/src/index.ts`). `publish.yml`은 main에서만 OIDC로 발행하므로 1.2.1 태그 기반 release 브랜치도 인프라 변경이 필요해 택하지 않았고, 결함은 1.1.0부터 배포본 6개 전부에 있었으나 보고는 0건입니다. #118의 tokens patch changeset은 M4의 minor changeset과 합쳐져 linked 4패키지 1.3.0이 됩니다. #118을 일찍 머지하면 Version Packages PR이 1.2.2를 제안하므로 M4 바로 앞에 둡니다. M3의 라이트 브랜드 선택자는 `[data-brand="x"][data-brand="x"]`(0,2,0)로 확정했고(하위 요소 브랜드 지원 유지, CI 건수 가드 tokens 22 동반 수정), PR CI pack-smoke는 M3(#107)의 step(Build 직후, 패키지 수 가드 포함)을 남기고 WI-0036이 추가한 step은 #116 머지 뒤 M3 브랜치에 main을 병합할 때 지웁니다. 두 브랜치 사이에는 충돌이 없어(`git merge-tree --write-tree` rc 0, 병합 트리의 `frontend.yml`에 `- name: Pack smoke` 2개) 병합만으로는 #116 step이 신호 없이 남으므로, 충돌 해소가 아니라 명시적 단계로 지웁니다. `publish.yml`은 changesets/action이라 #116 머지만으로는 발행되지 않고 Version Packages PR이 열리므로, 그 PR(mcp 1.1.5)을 M3 앞에서 머지합니다. 이 PR이 #118 머지 뒤까지 열려 있으면 tokens patch가 함께 실려 linked 4패키지 1.2.2를 제안합니다.
+
+> 2026-10-19 머지 결과: #116(WI-0036, c5964e8)과 #107(M3, squash 8253a82)이 머지됐습니다. M3는 디자인 오너 사후 확인 8건을 받은 뒤 머지했고, 계획과 달리 mcp 1.1.5 Version Packages PR(#120)보다 먼저 들어갔습니다. #120은 `@axis-ds/mcp` 1.1.5만 담고 있어(M3는 changeset 없음) 순서가 바뀌어도 릴리스 내용은 같습니다. M3 브랜치에서 #116 step을 지우는 단계는 수행되지 않아 main `frontend.yml`의 `ci` job에 pack-smoke step이 2개 남았고, 이 중복은 별도 PR로 지웁니다. 이어서 #114(WI-0030, cad9398)도 계획과 달리 #120 · #121보다 먼저 머지됐습니다(2026-10-19 재조회 기준 #120 · #121은 열려 있음).
+
 | 배치 | 단위 | 형태 | 선행 조건 | 릴리스 |
 |------|------|------|----------|--------|
 | 0 ✅ | NPM_TOKEN 교체(사용자) → WI-0033 PR 머지 → publish 자동 실행 → 1.2.1 확인 · M1 후속 정리 (2026-10-17 완료, 토큰 교체 대신 WI-0031 OIDC로 배포) | 순차 | WI-0033 보정 완료 | 1.2.1 (tokens · ui-react · agentic-ui · theme, WI-0033 포함) |
 | 0' ✅ | PR #98 머지 · WI-0031(Trusted Publishing 전환, #102) (2026-10-17 완료) | 배치 0과 독립 | 없음 | - |
 | 1 ✅ | WI-0025 M2(#91) rebase(WI-0033 위, 다크 전처리 한 줄) · 머지 (2026-10-17 완료, 89ab33a) | 순차 | 배치 0 | 1.3.0 누적 |
 | 1' ✅ | WI-0034 라이브러리 lint · type-check 스크립트 (2026-10-17 완료, #104 988294a) | 순차 (M2와 같은 `package.json`) | 배치 1 | - |
-| 2 | WI-0025 M3 rebase(check-token-refs 판정 7, leaf 47) · 머지 ∥ WI-0028 착수 | 병렬 (패키지 겹침 없음) | 배치 1 · 1', M3는 부록 B 승인 | cli · mcp 1.2.0 |
-| 3 | WI-0025 M4 ∥ WI-0026 | 병렬, M4 먼저 머지 | M3 (WI-0026은 `brands/ontology` 필요) | 1.3.0 (M4 완료 시점) |
-| 4 | WI-0027 | 순차 | M3 · WI-0026 · WI-0028 | 템플릿 배포 |
-| 백로그 | WI-0029(기본 테마 흰 글자 대비. 정본 수치: 기본 브랜드 a11y 기준선 12건 · 26노드(라이트 · 다크 각 6페이지 13노드, `#ffffff`/`#3b82f6` 24 · `#ffffff`/`#ef4444` 2), 측정 조건은 2026-10-17 `--force` 빌드 `apps/web/out`을 static 서버로 띄운 Chromium, WI-0025 PRD AC8 기준선 조항. 이전 기록 15건 · 144노드(f64825d)는 측정 조건이 달라 쓰지 않음. 추가로 기본 브랜드 PlanCard 거부 버튼 hover 글자 라이트 3.01 · 다크 4.34:1(4.5 미달, 미달은 이전부터. 1.2.1 은 hover 옅은 바탕이 투명해 `surface-secondary` 위 글자 3.42 · 4.71:1 이었고, 1.3.0 에서 바탕이 생겨 조금 더 낮아짐. 측정 조건: 2026-10-18 b9f225f 에서 다시 빌드한 기본 `variables.css` 값으로 node WCAG 계산, 글자 `plan-card-reject-hover-text` = `status-error` #EF4444, 바탕은 하단 영역 `surface-secondary`(라이트 #F3F4F6 · 다크 #111827) 위 `status-error` 10% sRGB 합성. axe 기준선에는 hover 상태가 없어 위 12건에 들지 않음)) · WI-0030 | 언제든 | 없음 | - |
+| 2 | 🔄 WI-0025 M3(#107) 머지 ✅(2026-10-19, 8253a82) ∥ M4(#110) 마무리 ∥ WI-0028(#117) 착수 (2026-10-19) ∥ WI-0030(#114) 머지 ✅(2026-10-19, cad9398) ∥ WI-0026 · WI-0029 착수 예정(브랜치 없음, 2026-10-19 실측) ∥ WI-0035(#118) · WI-0036(#116, 머지 ✅ 2026-10-19 c5964e8) · WI-0037 착수 (2026-10-19 등록) | 병렬 착수, 머지는 아래 순서 | M3 디자인 오너 사후 확인 8건 완료(2026-10-19) | - |
+| 3 | 머지 순서(2026-10-19 현재): ① WI-0036(#116) ✅ 2026-10-19 머지(c5964e8) → ② M3(#107) ✅ 2026-10-19 squash 머지(8253a82, 디자인 오너 사후 확인 완료(2026-10-19), 계획과 달리 ①′보다 먼저 머지) → ①′ changesets/action이 연 Version Packages PR(#120, mcp 1.1.5만) 머지 · npm에서 `@axis-ds/mcp` 1.1.5 확인 → ②′ pack-smoke 중복 제거 PR(#121, `ci/dedupe-pack-smoke`, main `frontend.yml`의 `ci` job에서 #116 step 「Pack smoke (외부 npm 소비 · mcp 실행 검증, WI-0036)」 삭제, `python3 -c`의 `yaml.safe_load`로 읽어 `run`에 `pack-smoke`를 포함한 step 수가 정확히 1) → ③ WI-0030(#114, M3가 고친 content 배열 위로 main을 받아 정리) ✅ 2026-10-19 머지(cad9398), 계획과 달리 ①′ · ②′보다 먼저 머지 → ④ WI-0035(#118, M4 바로 앞, tokens patch changeset, #120 머지 뒤) → ⑤ M4(#110, 1.3.0 minor changeset 포함) → ⑥ Version Packages PR(1.3.0) → ⑦ WI-0026(M3 머지로 main에서 시작, 종전 계획은 M3 브랜치 위) | 순차 | ①′ npm 1.1.5 확인 · ④는 ①′ · ⑤ WI-0035 머지 | mcp 1.1.5(①′ Version Packages PR 머지 시점) · 1.3.0(⑥ Version Packages PR 머지 시점, WI-0035 포함, 1.2.2 취소) |
+| 4 | ⑧ WI-0037 머지(WI-0028 AC2(b) 실경로 빌드 검증의 선행) → ⑨ WI-0028 머지(1.3.0 배포 뒤, ontology 실데이터로 재확인) → cli · mcp 1.2.0 배포 ∥ ⑩ WI-0029 머지(1.3.0 뒤, a11y 기준선 축소와 함께) | 병렬 (패키지 겹침 없음) | 1.3.0 배포 · ⑨는 ⑧ | cli · mcp 1.2.0 · tokens patch(WI-0029) |
+| 5 | WI-0027 | 순차 | M3 · WI-0026 · WI-0028 | 템플릿 배포 |
 
-- 임계 경로: ~~WI-0033 보정 → NPM_TOKEN 교체(사용자) → WI-0033 머지 · 1.2.1 배포~~ ✅ → M2 → WI-0034 → M3(부록 B 승인 필요) → M4 · WI-0026 → WI-0027
-- 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준) 2026-10-16 사용자(Sinclair Seo) 대리 승인, 디자인 오너(김정원 책임) 사후 확인 대기. 사후 확인 전까지 M3 진행은 막지 않습니다
+- 브랜치 기준: WI-0028 · WI-0029 · WI-0030 · WI-0035 · WI-0036 · WI-0037은 main에서, WI-0026은 M3가 머지됐으므로 main에서 시작합니다(종전 계획은 `feat/wi-0025-m3-ontology-v2` 위, 아직 착수 전). WI-0028은 main의 M2 브랜드 빌드(`build-brands.mjs`)와 테스트 fixture로 개발했고, M3가 머지됐으므로 실제 `ontology` 프리셋 확인은 이제 main에서 할 수 있습니다. WI-0029는 기본 출력을 바꾸므로 1.3.0의 「기본 출력 불변(AC3)」 근거를 흐리지 않도록 1.3.0 뒤에 머지합니다. WI-0035는 tokens patch changeset만 담고 따로 배포하지 않습니다(1.2.2 취소, M4와 함께 1.3.0). M3는 #116이 먼저 머지된 main을 받아 squash 머지됐고, 계획했던 「병합 커밋 뒤 #116 step 삭제」는 M3 브랜치에서 하지 않아 main `ci` job에 pack-smoke step이 2개(M3 AC4 「Pack smoke (외부 npm 소비 검증, AC4)」 · WI-0036) 남아 있습니다. 중복은 별도 PR(②′)로 #116 step을 지워 정리합니다.
+- WI-0029 정본 수치(2026-10-17 기록, ⑩ 머지 때 기준선 축소의 근거): 기본 테마 흰 글자 대비. 정본 수치: 기본 브랜드 a11y 기준선 12건 · 26노드(라이트 · 다크 각 6페이지 13노드, `#ffffff`/`#3b82f6` 24 · `#ffffff`/`#ef4444` 2), 측정 조건은 2026-10-17 `--force` 빌드 `apps/web/out`을 static 서버로 띄운 Chromium, WI-0025 PRD AC8 기준선 조항. 2026-10-18 WI-0025 M4 갱신: a11y 대상에 브랜드 전환 데모(`/docs/brand-demo/`)를 더해 10페이지 · 40건이 되면서 기준선은 14건 · 40노드(라이트 · 다크 각 7페이지 20노드, `#3b82f6` 36 · `#ef4444` 4), 데모 페이지가 실제 agentic-ui 컴포넌트를 그리며 드러난 기본 토큰 결함 쌍(라이트 흰 글자/`#22c55e` 2.27:1 PlanCard 승인 버튼 · `#ef4444`/`#f3f4f6` 3.41:1 거절 버튼 hover 바탕으로 측정, 다크 흰 글자/`#22c55e` 2.27:1 · `#6b7280` `text-tertiary` 4.16 · 4.11:1)을 WI-0029 대상에 더함(데모 경로 한정 기준선 라이트 2 · 다크 4노드, 측정 조건 같음, PRD AC8 변경 주석). 이전 기록 15건 · 144노드(f64825d)는 측정 조건이 달라 쓰지 않음. 추가로 기본 브랜드 PlanCard 거부 버튼 hover 글자 라이트 3.01 · 다크 4.34:1(4.5 미달, 미달은 이전부터. 1.2.1 은 hover 옅은 바탕이 투명해 `surface-secondary` 위 글자 3.42 · 4.71:1 이었고, 1.3.0 에서 바탕이 생겨 조금 더 낮아짐. 측정 조건: 2026-10-18 b9f225f 에서 다시 빌드한 기본 `variables.css` 값으로 node WCAG 계산, 글자 `plan-card-reject-hover-text` = `status-error` #EF4444, 바탕은 하단 영역 `surface-secondary`(라이트 #F3F4F6 · 다크 #111827) 위 `status-error` 10% sRGB 합성. axe 기준선에는 hover 상태가 없어 위 12건에 들지 않음)
+- 동시 진행: 2026-10-19 M3 · WI-0036 머지 뒤 남은 착수 단위가 M4 포함 7개라 병렬 상한(3)을 넘습니다. 한 번에 구현하는 단위는 3개 이하로 두고, 나머지는 설계 · PRD 확인 단계에 둡니다.
+- 임계 경로: ~~WI-0033 보정 → NPM_TOKEN 교체(사용자) → WI-0033 머지 · 1.2.1 배포~~ ✅ → ~~M2 → WI-0034~~ ✅ → ~~WI-0036 → M3(디자인 오너 사후 확인)~~ ✅ → Version Packages PR(#120, mcp 1.1.5) → pack-smoke 중복 제거(#121) → ~~WI-0030(#114)~~ ✅ → WI-0035(#118) → M4(#110) → Version Packages PR(1.3.0) → WI-0037 → WI-0028 · WI-0026 → WI-0027
+- 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준: 라이트 보조 글자 `sub` 1개 값 보정, 미달 쌍 처리, 입력 테두리 1.40:1 유지 여부, PlanCard 색 선 두께, 에이전트 상태 색 접기) 2026-10-16 사용자 대리 승인, 디자인 오너 사후 확인 8건 완료(2026-10-19, M3 머지 전) ✅
 - 착수: `/ax-wi start <WI>` 로 WI마다 진행
 
 ### 향후 후보
