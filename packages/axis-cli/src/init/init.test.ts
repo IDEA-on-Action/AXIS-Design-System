@@ -45,6 +45,7 @@ import {
   planUtilsDependencies,
   selectUtilsDependencies,
   TAILWIND_MERGE_RANGES,
+  tailwindMajorBounds,
   tailwindMajorFromRange,
   tailwindWarnings,
 } from "./init.js";
@@ -377,6 +378,24 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
     expect(warningLines(unreadable.logs)).toEqual([]);
   });
 
+  it("설치본이 선언 범위를 만족하면 하한 major 와 달라도 경고 없음, 범위 밖이면 경고 (F1 (b) 보정)", async () => {
+    // 4.1.0 은 세 범위를 모두 만족합니다(semver 7.7.3 satisfies 로 확인).
+    for (const declared of [">=3.4", ">=3 <5", "3.4 - 4", ">3"]) {
+      const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: declared } }, "4.1.0");
+      expect({ declared, range: r.range, warnings: warningLines(r.logs) }).toEqual({
+        declared,
+        range: "^3.4.0",
+        warnings: [],
+      });
+    }
+    const outside = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: ">=3.4 <4" } }, "4.1.0");
+    expect(outside.range).toBe("^3.4.0");
+    expect(warningLines(outside.logs)).toEqual([MISMATCH("4.1.0", 4, ">=3.4 <4", 3)]);
+    const below = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: ">=4" } }, "3.4.17");
+    expect(below.range).toBe("^2.6.0");
+    expect(warningLines(below.logs)).toEqual([MISMATCH("3.4.17", 3, ">=4", 4)]);
+  });
+
   it("설치본 version 이 0.0.0-insiders.* 이면 설치본으로 판정하지 않고 선언 범위로 (F1 (a))", async () => {
     const r = await addedTwMerge({ name: "x", devDependencies: { tailwindcss: ">=4" } }, "0.0.0-insiders.4a4e1ec");
     expect(r.range).toBe("^3.4.0");
@@ -504,7 +523,16 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       [">=4", 4],
       [">=4.0.0", 4],
       [">= 4", 4],
-      [">4", 4],
+      // `>M` · `>M.x` 는 `>=(M+1).0.0` 이라 하한 M+1, minor 를 쓴 `>M.m` 은 M (semver 7.7.3 validRange 와 같음)
+      [">4", 5],
+      [">3", 4],
+      [">3.x", 4],
+      [">3.*", 4],
+      [">3.x.x", 4],
+      [">3.0", 3],
+      [">3.4.x", 3],
+      [">3.9.9", 3],
+      [">= 3", 3],
       [">=3.4 <4", 3],
       ["<5 >=4.1", 4],
       [">=3 >=4.1.0", 4],
@@ -531,10 +559,38 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       ["github:tailwindlabs/tailwindcss", undefined],
       ["file:../tailwindcss", undefined],
       [">=4 foo", undefined],
+      [">=4 <4", undefined],
+      ["4 - 3", undefined],
       ["", undefined],
     ];
     for (const [range, major] of cases) {
       expect({ range, major: tailwindMajorFromRange(range) }).toEqual({ range, major });
+    }
+  });
+
+  it("tailwindMajorBounds: 선언 범위가 허용하는 major 구간 (F1 (b) 보정)", () => {
+    const cases: [string, ReturnType<typeof tailwindMajorBounds>][] = [
+      ["^4", { lower: 4, upper: 4 }],
+      ["~3.4", { lower: 3, upper: 3 }],
+      ["4.x", { lower: 4, upper: 4 }],
+      [">=3.4", { lower: 3 }],
+      [">3", { lower: 4 }],
+      [">=3 <5", { lower: 3, upper: 4 }],
+      [">=3.4 <4", { lower: 3, upper: 3 }],
+      [">=3.4 <4.0.0", { lower: 3, upper: 3 }],
+      [">=3.4 <4.x", { lower: 3, upper: 3 }],
+      [">=3.4 <4.1", { lower: 3, upper: 4 }],
+      [">=3.4 <4.0.1", { lower: 3, upper: 4 }],
+      [">=3 <=4", { lower: 3, upper: 4 }],
+      [">=3 <=4.0.0", { lower: 3, upper: 4 }],
+      ["3.4 - 4", { lower: 3, upper: 4 }],
+      ["4 - 4.2", { lower: 4, upper: 4 }],
+      ["<5 >=4.1", { lower: 4, upper: 4 }],
+      ["<4", undefined],
+      ["catalog:", undefined],
+    ];
+    for (const [range, bounds] of cases) {
+      expect({ range, bounds: tailwindMajorBounds(range) }).toEqual({ range, bounds });
     }
   });
 
@@ -561,6 +617,28 @@ describe("axis init: Tailwind 버전별 tailwind-merge 범위(E2, prd 1.6)", () 
       major: 3,
       source: "installed",
       value: "3.4.17",
+    });
+    // 설치본 4.1.0 이 선언 범위를 만족하면 하한 major(3)와 달라도 mismatch 가 아닙니다.
+    const dir4 = await tmpDir();
+    await installTailwind(dir4, "4.1.0");
+    for (const declared of [">=3.4", ">=3 <5", "3.4 - 4"]) {
+      expect(detectTailwind(dir4, { devDependencies: { tailwindcss: declared } })).toEqual({
+        major: 4,
+        source: "installed",
+        value: "4.1.0",
+      });
+    }
+    expect(detectTailwind(dir4, { devDependencies: { tailwindcss: ">=3.4 <4" } })).toEqual({
+      major: 4,
+      source: "installed",
+      value: "4.1.0",
+      mismatch: { declared: ">=3.4 <4", declaredMajor: 3 },
+    });
+    // `>3` 은 Tailwind 4 이상만 허용하는 선언이라 설치본이 없어도 ^3.4.0
+    const empty = await tmpDir();
+    expect(selectUtilsDependencies(detectTailwind(empty, { devDependencies: { tailwindcss: ">3" } }))).toEqual({
+      clsx: "^2.1.1",
+      "tailwind-merge": "^3.4.0",
     });
     expect(selectUtilsDependencies({ major: 4, source: "declared" })).toEqual({
       clsx: "^2.1.1",

@@ -123,3 +123,19 @@
 
 - T37 의 설치본은 `node_modules/tailwindcss/package.json` 한 파일만 둔 것이라 실제 설치가 아닙니다. init 이 읽는 것은 그 파일의 `version` 뿐이라 판정 경로는 같지만, Tailwind 4 프로젝트의 빌드까지 본 실경로 판정은 T25 · T26 입니다.
 - 기존 테스트 중 바뀐 기대값: `tailwindMajorFromRange` 의 `>=3` · `>=3.4 <4` 는 `undefined` 에서 3 으로(F1 (a)), `selectUtilsDependencies` 의 major 5 는 `^2.6.0` 에서 `^3.4.0` 으로(F1 (c)), `detectTailwind` 의 설치본 3.4.17 · 선언 `^4` 결과에 `mismatch` 가 붙음(F1 (b)), 판정 불가 선언 3건(`workspace:*` · `latest` · `^3 || ^4`)에 경고 줄 기대가 붙음.
+
+## 3.6 보정: 불일치 판정 오탐 · 배타 하한 (F1 (a) · (b) 보정, 2026-10-19)
+
+조건: 기준 HEAD 78f1c08(`init.ts` sha `a7919a931ae9`), 수정은 `src/init/init.ts`(sha `318036938556`) · `src/init/init.test.ts`. Node v22.22.0 · vitest 2.1.9. 기대값은 semver 7.7.3(`node_modules/.pnpm/semver@7.7.3`)의 `validRange` · `satisfies` 와 맞춰 봤습니다. 변이는 scratchpad 사본에서 매번 새로 만들어 실행했고, 끝에 사본으로 되돌려 `cmp` 로 같음을 확인했습니다.
+
+재현(수정 전, 임시 probe 테스트, 실행 뒤 삭제하고 `git status --short` 0줄): 설치본 4.1.0 에 선언 `>=3.4` · `>=3 <5` · `3.4 - 4` · `>=3.4 <4` 가 모두 `mismatch: {declaredMajor: 3}`. `tailwindMajorFromRange('>3')` · `('>3.x')` · `('>3.0')` 가 모두 3, 설치본 없이 선언 `>3` 이면 `^2.6.0`. semver 7.7.3 에서 4.1.0 은 앞의 세 범위를 만족하고 `>=3.4 <4` 는 만족하지 않으며, `validRange('>3')` · `('>3.x')` 는 `>=4.0.0`, `('>3.0')` 은 `>=3.1.0` 입니다.
+
+| ID | AC | 명령 · 절차 | 결과 |
+|---|---|---|---|
+| T39 | AC12 | `npx vitest run src/init` (packages/axis-cli) | 66건 통과. 새 테스트: `tailwindMajorBounds` 18개 입력, 설치본 4.1.0 + `>=3.4` · `>=3 <5` · `3.4 - 4` · `>3`(경고 없음) · `>=3.4 <4`(경고) · 설치본 3.4.17 + `>=4`(경고), `detectTailwind` 같은 경우, 설치본 없이 `>3` → `^3.4.0`, `tailwindMajorFromRange` 에 `>3` · `>3.x` · `>3.*` · `>3.x.x` → 4, `>3.0` · `>3.4.x` · `>3.9.9` → 3, `>4` → 5, `>=4 <4` · `4 - 3` → 판정 불가 |
+| T40 | AC12 음성 | `init.ts` 변이로 `npx vitest run src/init` | A 불일치 판정을 종전(`bounds.lower !== major`)으로: 2/66 실패(설치본 만족 · 범위 밖 경고 테스트, `detectTailwind`) · B `>` 의 M+1 처리 제거: 3/66 실패(`tailwindMajorFromRange` · `tailwindMajorBounds` · `detectTailwind`). 끝에 사본으로 되돌려 `cmp` 같음, 66건 통과 |
+| T41 | AC12 실경로 보조 | `pnpm build --force` 뒤 `node packages/axis-cli/dist/index.js init -y` 를 scratchpad 세 디렉터리에서: 설치본 4.1.0 + 선언 `>=3.4` · 설치본 4.1.0 + 선언 `>=3.4 <4` · 설치본 없이 선언 `>3` | 셋 모두 `tailwind-merge@^3.4.0` 추가. 불일치 경고 줄은 `>=3.4 <4` 에서만 1줄(「설치본 tailwindcss 4.1.0(major 4)와 package.json 선언 >=3.4 <4(major 3)가 다름」), `>3` 의 근거 줄은 「package.json 의 tailwindcss >3」 |
+| T42 | AC8 · 품질 | `npx vitest run`(packages/axis-cli) · `pnpm turbo run lint type-check --force` · `npx tsc --noEmit -p packages/axis-cli` · `pnpm build --force` | 12 파일 · 245건 통과 · rc 0, 12/12, `Cached: 0` · 오류 20건(T31 과 같은 수, `src/init` 0건) · rc 0, 8/8, `Cached: 0`(빌드가 고친 `apps/web/public/templates/*.json` 5개는 되돌림) |
+
+- 불일치 비교는 major 단위입니다. `>=3.4 <4.1` 에 4.1.0 처럼 같은 major 안에서 범위를 벗어난 경우는 경고하지 않습니다. `tailwind-merge` 범위가 major 로만 갈려 결과가 같기 때문입니다(prd 1.6).
+- 기존 테스트 중 바뀐 기대값: `tailwindMajorFromRange('>4')` 가 4 에서 5 로.

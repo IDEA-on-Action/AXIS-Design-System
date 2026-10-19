@@ -16,7 +16,7 @@
 - `package.json` 을 쓰는 도중 실패하면(디스크 공간 부족 등) 원래 내용으로 되돌리고, 되돌렸는지를 오류(rc 1)에 적습니다.
 - `axis.config.json` · `utils.ts` 내용과 그 밖의 출력은 그대로입니다.
 - `clsx` 범위는 AXIS 템플릿 4종과 같은 `^2.1.1` 입니다.
-- `tailwind-merge` 범위는 프로젝트의 Tailwind 버전으로 고릅니다. 설치된 `node_modules/tailwindcss` 의 버전을 먼저 보고, 없으면 `package.json` 의 `tailwindcss` 선언 범위를 봅니다. 선언이 `>=4` · `>=3.4 <4` · `4 - 4.2` 처럼 범위이면 하한의 major 를 씁니다. Tailwind 4 이상이면 `^3.4.0`(create-next-app 15 기본 구성), Tailwind 3 이하이거나 판정할 수 없으면(`catalog:` · `workspace:*` · `latest` 등, 또는 tailwindcss 없음) `^2.6.0` 입니다. 고른 근거를 한 줄로 출력합니다(예: `tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3`).
+- `tailwind-merge` 범위는 프로젝트의 Tailwind 버전으로 고릅니다. 설치된 `node_modules/tailwindcss` 의 버전을 먼저 보고, 없으면 `package.json` 의 `tailwindcss` 선언 범위를 봅니다. 선언이 `>=4` · `>=3.4 <4` · `4 - 4.2` · `>3` 처럼 범위이면 하한의 major 를 씁니다(`>3` 은 4.0.0 부터라 4). 설치본이 선언 범위가 허용하는 major 밖이면(`>=3.4 <4` 에 4.1.0 등) 설치본을 따르고 경고 줄을 냅니다. `>=3.4` 에 4.1.0 처럼 범위를 만족하면 경고하지 않습니다. Tailwind 4 이상이면 `^3.4.0`(create-next-app 15 기본 구성), Tailwind 3 이하이거나 판정할 수 없으면(`catalog:` · `workspace:*` · `latest` 등, 또는 tailwindcss 없음) `^2.6.0` 입니다. 고른 근거를 한 줄로 출력합니다(예: `tailwind-merge 범위 기준: 설치된 tailwindcss 4.3.3`).
 - 선언 범위를 판정할 수 없어 기본값을 썼거나, 설치본과 선언의 Tailwind major 가 달라 설치본을 따랐으면 그 사실을 경고 줄로 알립니다(설치 뒤 범위를 다시 확인하라는 안내 포함).
 
 ### fix: 실행 안내의 `axis-cli` 를 `@axis-ds/cli` 로
@@ -45,6 +45,8 @@
 | 단위(E1 · E2 뒤) | `npx vitest run` (packages/axis-cli) (testplan T31) | 12 파일 · 231건 통과. 범위 판정 변이 3종 27 · 5 · 8건 실패, 문서 정정 되돌림 위반 9줄 |
 | 단위(F1 · F2 뒤) | `npx vitest run` (packages/axis-cli) (testplan T33 · T34 · T36 · T38) | 12 파일 · 243건 통과. 하한 읽기 제거 · 불일치 경고 제거 · 「4 이상」을 「4」로 되돌린 변이에서 6 · 3 · 3건 실패. 넓힌 스캔 다섯 곳에 넣은 위반 5줄을 모두 잡음 |
 | 품질(F1 · F2 뒤) | `pnpm turbo run lint type-check --force` · `pnpm build --force` (testplan T38) | rc 0, 12/12, `Cached: 0` · rc 0, 8/8, `Cached: 0` |
+| 단위(불일치 판정 보정 뒤) | `npx vitest run` (packages/axis-cli) (testplan T39 · T40 · T42) | 12 파일 · 245건 통과. 불일치 판정을 종전으로 되돌린 변이 · 배타 하한 처리 제거 변이에서 2 · 3건 실패 |
+| 품질(불일치 판정 보정 뒤) | `pnpm turbo run lint type-check --force` · `pnpm build --force` (testplan T42) | rc 0, 12/12, `Cached: 0` · rc 0, 8/8, `Cached: 0` |
 
 - 실경로 전제: 수정본이 npm 에 없어 이 브랜치를 `pnpm pack` 한 tarball 을 별도 디렉터리에 설치해 실행했습니다. 프로젝트 쪽 env · 의존성 주입은 없습니다. 자세한 조건은 testplan 3.1 · 3.2 입니다. 배포 뒤 1.2.1 배포본으로 T13 · T15 를 다시 확인합니다.
 
