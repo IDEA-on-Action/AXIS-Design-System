@@ -8,6 +8,8 @@ on:
     paths:
       - 'packages/**'
       - '.changeset/**'
+      # pack-smoke · guard-pnpm-publish 는 이 workflow 에서만 실행되므로 scripts 만 바뀐 push 도 여기서 검증한다 (WI-0025 4 결정 7)
+      - 'scripts/**'
       - '.github/workflows/publish.yml'
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}

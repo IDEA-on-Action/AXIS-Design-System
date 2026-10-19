@@ -1,0 +1,53 @@
+{
+  "$source": "npm 에 배포된 @axis-ds/tokens@1.2.1 tarball 의 package/dist/css/ 원문을 바이트 그대로 복사했다(cp). AC3 기준선(브랜드 미지정 기본 출력은 1.2.1 과 같아야 한다)의 원천이다.",
+  "$regenerate": "재생성 금지. 1.2.1 배포본은 바뀌지 않으므로 이 디렉터리의 CSS 도 바뀌면 안 된다. 재검증만 한다: npm pack @axis-ds/tokens@1.2.1 후 shasum 을 아래 값과 대조하고, 압축을 푼 package/dist/css/*.css 를 이 디렉터리 파일과 cmp 한다(rc 0).",
+  "$expectedNew": "1.2.1 이후 기본 출력에 새로 생긴 변수와 그 기본값이다(블록별). 여기 없는 신규 변수가 생기거나, 값이 다르면 baseline-1.2.1.test.mjs 가 실패한다. 기본 출력에 변수를 의도적으로 추가할 때만 이 표에 기본값을 함께 적는다.",
+  "package": "@axis-ds/tokens",
+  "version": "1.2.1",
+  "tarball": {
+    "filename": "axis-ds-tokens-1.2.1.tgz",
+    "shasum": "2332e3445705105be8a389b110e16f1284442f5b",
+    "integrity": "sha512-CHCp1sqFvdmSIbSOXKmeCRZ1w61TIUj090l3JoNdyUKX8tRyE24igVCEBRhLEKT/UhYg/Pdym13qm2d31JtNog=="
+  },
+  "retrievedAt": "2026-10-17",
+  "files": {
+    "variables.css": {
+      "from": "package/dist/css/variables.css",
+      "sha256": "4c1296c5aeb91bdcf954d031a0b38d665e5bf996516598a7017eb43f4e0b2b02",
+      "compare": "블록별 변수 이름-값 비교(1.2.1 변수는 값 불변, 신규 변수는 expectedNew 와 일치)"
+    },
+    "shadcn-compat.css": {
+      "from": "package/dist/css/shadcn-compat.css",
+      "sha256": "dd374eca4feda03eeaab4c26fe7172f2228f91c40b00c857062cbcf48b7ab6dc",
+      "compare": "바이트 일치"
+    }
+  },
+  "expectedNew": {
+    ":root": {
+      "--axis-shadow-sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "--axis-shadow-lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "--axis-status-success-contrast": "#FFFFFF",
+      "--axis-status-running-contrast": "#FFFFFF",
+      "--axis-status-error-contrast": "#FFFFFF",
+      "--axis-status-neutral-muted-contrast": "#FFFFFF",
+      "--axis-agent-message-user-text": "#FFFFFF",
+      "--axis-agent-avatar-text": "#FFFFFF",
+      "--axis-plan-card-accent-width": "4px",
+      "--axis-plan-card-reject-hover-text": "#EF4444",
+      "--axis-card-shadow": "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+    },
+    ".dark": {
+      "--axis-shadow-sm": "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+      "--axis-shadow-lg": "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+      "--axis-status-success-contrast": "#FFFFFF",
+      "--axis-status-running-contrast": "#FFFFFF",
+      "--axis-status-error-contrast": "#FFFFFF",
+      "--axis-status-neutral-muted-contrast": "#FFFFFF",
+      "--axis-agent-message-user-text": "#FFFFFF",
+      "--axis-agent-avatar-text": "#FFFFFF",
+      "--axis-plan-card-accent-width": "4px",
+      "--axis-plan-card-reject-hover-text": "#EF4444",
+      "--axis-card-shadow": "0 1px 2px 0 rgb(0 0 0 / 0.05)"
+    }
+  }
+}

@@ -82,14 +82,41 @@ test('선언 검사: 누락 · 형식 오류를 잡습니다', () => {
   assert.equal(findThemeDeclarationViolations({ w: { value: '4px' }, s: { value: '{shadow.sm}' } }).violations.length, 0)
 })
 
-test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에서 센 값, 색 leaf 43)', () => {
+test('선언 검사: axis.deprecated 는 허용 키이고 대체 경로를 같은 트리에서 확인합니다 (WI-0025 U23)', () => {
+  const fixed = { value: '0 1px 2px 0 rgb(0 0 0 / 0.05)', $extensions: { axis: { themeIndependent: true } } }
+  // 양성: 대체 경로가 같은 트리의 leaf 이면 위반 0
+  const ok = {
+    old: { value: '0 1px 3px 0 rgb(0 0 0 / 0.1)', $extensions: { axis: { themeIndependent: true, deprecated: 'new' } } },
+    new: fixed,
+  }
+  assert.deepEqual(findThemeDeclarationViolations(ok).violations, [])
+  // 비색 leaf 는 테마 키 없이 deprecated 만 있어도 됩니다
+  assert.deepEqual(findThemeDeclarationViolations({ a: { value: '4px', $extensions: { axis: { deprecated: 'b' } } }, b: { value: '8px' } }).violations, [])
+  // 음성: 오타 · 형식 · 대상 오류
+  /** @type {Array<[unknown, RegExp]>} */
+  const cases = [
+    [{ old: { value: '4px', $extensions: { axis: { deprecatd: 'new' } } }, new: fixed }, /알 수 없는 키: deprecatd/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: '' } } } }, /비어 있지 않은 문자열/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: true } } } }, /비어 있지 않은 문자열/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: 'nope' } } } }, /leaf가 아닙니다: nope/],
+    [{ old: { value: '4px', $extensions: { axis: { deprecated: 'old' } } } }, /자기 자신/],
+    [{ a: { value: '4px', $extensions: { axis: { deprecated: 'b' } } }, b: { value: '4px', $extensions: { axis: { deprecated: 'c' } } }, c: { value: '1px' } }, /대체 경로도 폐기 예정입니다: b/],
+  ]
+  for (const [tree, reason] of cases) {
+    const { violations } = findThemeDeclarationViolations(tree)
+    assert.ok(violations.some((v) => reason.test(v.reason)), `${JSON.stringify(tree)} -> ${JSON.stringify(violations)}`)
+  }
+})
+
+test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에서 센 값, 색 leaf 44)', () => {
   const r = findThemeDeclarationViolations(components())
   assert.deepEqual(r.violations, [])
   // 측정 대상이 0이면 위반 0도 의미가 없으므로 leaf 수를 별도 순회로 센 값과 함께 단언합니다
   assert.ok(componentPaths().length > 0)
   assert.equal(r.leaves, componentPaths().length)
-  // 색 leaf 43 은 고정값입니다(main 45 leaf · WI-0025 M3 47 leaf 모두 43, plan 6장)
-  assert.equal(r.colorLeaves, 43)
+  // 색 leaf 수는 고정값입니다(main 45 leaf · WI-0025 M3 47 leaf 모두 43, plan 6장).
+  // M3 적대 검증 보정(2026-10-18)에서 plan-card.reject-hover-text 1개를 더해 48 leaf · 색 leaf 44 입니다.
+  assert.equal(r.colorLeaves, 44)
 })
 
 test('resolveTokenValue: 참조를 끝까지 풀고, 풀 수 없는 참조 · 순환은 예외', () => {

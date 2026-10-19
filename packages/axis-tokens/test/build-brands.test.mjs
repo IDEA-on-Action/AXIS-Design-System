@@ -21,7 +21,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildBrands } from '../scripts/build-brands.mjs';
-import { brandExportEntries, brandSelectors, SHADCN_KEYS } from '../scripts/brands.mjs';
+import { BRAND_INDEX_EXPORT, brandExportEntries, brandIndex, brandSelectors, SHADCN_KEYS } from '../scripts/brands.mjs';
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = join(pkgDir, 'src');
@@ -31,7 +31,7 @@ const fixtures = join(pkgDir, 'test', 'fixtures', 'brands');
 const SHADCN_CSS = `:root {\n${SHADCN_KEYS.map(k => `  --${k}: 0 0% 0%;`).join('\n')}\n}\n`;
 
 function pkgFor(...names) {
-  return { exports: Object.assign({}, ...names.map(brandExportEntries)) };
+  return { exports: Object.assign({}, BRAND_INDEX_EXPORT, ...names.map(brandExportEntries)) };
 }
 
 let work;
@@ -88,10 +88,10 @@ describe('buildBrands 유효 fixture', () => {
     css = readFileSync(join(s.distDir, 'css', 'brands', 'sample.css'), 'utf-8');
   });
 
-  test('위반 0건, 산출물 2개', () => {
+  test('위반 0건, 산출물 3개(브랜드 CSS · brand.json · 목록 index.json)', () => {
     assert.deepEqual(result.violations, []);
     assert.deepEqual(result.brands, ['sample']);
-    assert.equal(result.files.length, 2);
+    assert.equal(result.files.length, 3);
   });
 
   test('라이트 블록: 선택자 1개, 브랜드 토큰만, 참조가 풀린 값', () => {
@@ -135,7 +135,15 @@ describe('buildBrands 유효 fixture', () => {
 
   test('이전 빌드 잔여 산출물 삭제', () => {
     assert.deepEqual(readdirSync(join(s.distDir, 'css', 'brands')), ['sample.css']);
-    assert.deepEqual(readdirSync(join(s.distDir, 'brands')), ['sample']);
+    assert.deepEqual(readdirSync(join(s.distDir, 'brands')).sort(), ['index.json', 'sample']);
+  });
+
+  test('브랜드 목록 index.json: 이름 · exports 하위 경로 (plan 3 결정 2 A안)', () => {
+    const index = JSON.parse(readFileSync(join(s.distDir, 'brands', 'index.json'), 'utf-8'));
+    assert.deepEqual(index, {
+      brands: [{ name: 'sample', css: './css/brands/sample', meta: './brands/sample/brand.json' }],
+    });
+    assert.deepEqual(index, brandIndex(['sample']));
   });
 
   test('임시 디렉터리 정리', () => {
@@ -254,7 +262,7 @@ describe('buildBrands 브랜드 0개 · 검증 실패', () => {
     const result = await buildBrands({
       srcDir, brandsDir: join(fixtures, 'valid'), distDir: s.distDir, pkg: { exports: {} }, shadcnCss: SHADCN_CSS, tmpParent: s.tmpParent,
     });
-    assert.equal(result.violations.filter(v => v.includes('B5')).length, 2, result.violations.join('\n'));
+    assert.equal(result.violations.filter(v => v.includes('B5')).length, 3, result.violations.join('\n'));
     assert.deepEqual(result.files, []);
   });
 
@@ -265,6 +273,60 @@ describe('buildBrands 브랜드 0개 · 검증 실패', () => {
       shadcnCss: ':root {\n  --background: 0 0% 100%;\n}\n', tmpParent: s.tmpParent,
     });
     assert.ok(result.violations.some(v => v.includes('SHADCN_KEYS')), result.violations.join('\n'));
+  });
+});
+
+// FR-8 · AC4: 실제 src/brands/ontology 와 실제 package.json exports 로 빌드한다(산출물은 임시 디렉터리)
+describe('buildBrands 실제 ontology 브랜드 (FR-8 · AC4)', () => {
+  let result, css, s;
+  before(async () => {
+    s = scratch('ontology');
+    result = await buildBrands({
+      srcDir,
+      brandsDir: join(srcDir, 'brands'),
+      distDir: s.distDir,
+      pkg: JSON.parse(readFileSync(join(pkgDir, 'package.json'), 'utf-8')),
+      shadcnCss: SHADCN_CSS,
+      tmpParent: s.tmpParent,
+    });
+    css = readFileSync(join(s.distDir, 'css', 'brands', 'ontology.css'), 'utf-8');
+  });
+
+  test('위반 0건(B5 포함), CSS · brand.json · index.json 생성', () => {
+    assert.deepEqual(result.violations, []);
+    assert.deepEqual(result.brands, ['ontology']);
+    assert.ok(existsSync(join(s.distDir, 'brands', 'ontology', 'brand.json')));
+    assert.deepEqual(
+      JSON.parse(readFileSync(join(s.distDir, 'brands', 'index.json'), 'utf-8')),
+      brandIndex(['ontology']),
+    );
+  });
+
+  test('라이트 1개 · 다크 3개 선택자 블록, 초안의 4번째 다크 선택자는 만들지 않음(3 결정 4)', () => {
+    assert.ok(blockOf(css, brandSelectors('ontology').light), css);
+    assert.ok(blockOf(css, brandSelectors('ontology').dark), css);
+    assert.ok(!css.includes('[data-theme="dark"] [data-brand="ontology"]'), css);
+  });
+
+  test('Card 그림자 두 변수는 라이트 블록에서 0 0 #0000 (U2 · U23), 다크 블록에는 없음(결정 10 A)', () => {
+    const light = blockOf(css, brandSelectors('ontology').light);
+    const dark = blockOf(css, brandSelectors('ontology').dark);
+    assert.ok(light.includes('  --axis-card-shadow: 0 0 #0000;'), light);
+    assert.ok(light.includes('  --axis-card-shadow-default: 0 0 #0000;'), light);
+    assert.ok(!dark.includes('--axis-card-shadow'), dark);
+  });
+
+  test('bg-muted 는 이식하지 않고(D-f) word-break 같은 토큰 아닌 규칙도 없음(U17)', () => {
+    assert.ok(!css.includes('--axis-bg-muted'), css);
+    assert.ok(!css.includes('word-break'), css);
+  });
+
+  test('참조가 모두 풀리고 shadcn --radius 는 라이트에만', () => {
+    const light = blockOf(css, brandSelectors('ontology').light);
+    const dark = blockOf(css, brandSelectors('ontology').dark);
+    assert.ok(!light.includes('{') && !dark.includes('{'), css);
+    assert.ok(light.includes('  --radius: 12px;'), light);
+    assert.ok(!dark.includes('--radius:'), dark);
   });
 });
 
@@ -292,6 +354,22 @@ describe('build-tokens.mjs 5단계 배선 (패키지 사본에서 실행)', () =
     assert.ok(existsSync(join(copy, 'dist', 'css', 'variables.css')));
   });
 
+  test('M3 G3 그림자 변수: 기본값이 Tailwind shadow-sm · shadow-lg 와 같고 1.2.1 변수는 그대로', () => {
+    const css = readFileSync(join(copy, 'dist', 'css', 'variables.css'), 'utf-8');
+    const root = blockOf(css, [':root']);
+    const dark = blockOf(css, ['.dark']);
+    assert.ok(root && dark, 'variables.css 에서 :root · .dark 블록을 찾지 못함');
+    const SM = '0 1px 2px 0 rgb(0 0 0 / 0.05)';
+    const LG = '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)';
+    for (const block of [root, dark]) {
+      assert.ok(block.includes(`--axis-shadow-sm: ${SM};`), block);
+      assert.ok(block.includes(`--axis-shadow-lg: ${LG};`), block);
+    }
+    assert.ok(root.includes(`--axis-card-shadow: ${SM};`), root);
+    assert.ok(root.includes('--axis-card-shadow-default: 0 1px 3px 0 rgb(0 0 0 / 0.1);'), root);
+    assert.ok(root.includes('--axis-dialog-content-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);'), root);
+  });
+
   test('유효 브랜드 + exports: rc 0, 브랜드 CSS 와 brand.json 생성', () => {
     cpSync(join(fixtures, 'valid', 'sample'), join(copy, 'src', 'brands', 'sample'), { recursive: true });
     const pkg = JSON.parse(readFileSync(join(copy, 'package.json'), 'utf-8'));
@@ -305,6 +383,11 @@ describe('build-tokens.mjs 5단계 배선 (패키지 사본에서 실행)', () =
     assert.ok(blockOf(css, brandSelectors('sample').light));
     assert.ok(blockOf(css, brandSelectors('sample').dark));
     assert.ok(existsSync(join(copy, 'dist', 'brands', 'sample', 'brand.json')));
+    assert.ok(r.stdout.includes('✓ brands/index.json generated'), r.stdout);
+    assert.deepEqual(
+      JSON.parse(readFileSync(join(copy, 'dist', 'brands', 'index.json'), 'utf-8')),
+      brandIndex(['sample']),
+    );
   });
 
   test('검증 위반: rc 1, 위반 출력, 이전 브랜드 산출물 제거', () => {
