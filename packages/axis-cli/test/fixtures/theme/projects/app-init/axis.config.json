@@ -1,0 +1,7 @@
+{
+  "$schema": "https://axis.minu.best/schema.json",
+  "componentsDir": "./src/components/ui",
+  "tailwindConfig": "./tailwind.config.ts",
+  "globalCss": "./src/app/globals.css",
+  "registry": "https://axis.minu.best/r"
+}

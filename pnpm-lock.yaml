@@ -320,6 +320,9 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.7)(jsdom@27.4.0(@noble/hashes@1.8.0))(terser@5.46.0)
 
   packages/axis-theme:
     dependencies:

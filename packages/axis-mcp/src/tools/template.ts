@@ -7,6 +7,7 @@
 import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
+import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
 
 // --- 타입 ---
 
@@ -287,6 +288,41 @@ export async function handleDiffTemplate(
   return { templateName: detail.name, entries, summary };
 }
 
+/**
+ * brand 검사 결과를 check 항목으로 바꿉니다(WI-0028 FR-5, plan 4.5).
+ * CLI `axis check` 의 `brandCheckResult`(packages/axis-cli/src/template/template-check.ts)와 같은 문구입니다.
+ */
+function brandCheckResult(check: BrandImportCheck): CheckResult {
+  const { brand } = check;
+  const suffix = check.configuredMissing !== undefined ? ` (globalCss ${check.configuredMissing} 없음)` : "";
+  switch (check.state) {
+    case "match":
+      return {
+        name: "brand",
+        severity: "pass",
+        message: `brand "${brand}" import 가 ${check.cssFile}에 있습니다${suffix}`,
+      };
+    case "css-missing":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" 가 설정됐지만 CSS 파일을 찾지 못했습니다${suffix}`,
+      };
+    case "import-missing":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" import 가 ${check.cssFile}에 없습니다 → 'axis theme add ${brand}'${suffix}`,
+      };
+    case "other-brand":
+      return {
+        name: "brand",
+        severity: "warn",
+        message: `brand "${brand}" 와 import(${check.imports.join(", ")})가 다릅니다${suffix}`,
+      };
+  }
+}
+
 /** 프로젝트 상태 검증 */
 export async function handleCheckProject(
   params: CheckProjectParams
@@ -433,6 +469,10 @@ export async function handleCheckProject(
       message: "package.json 파일이 없습니다",
     });
   }
+
+  // 6. brand 와 CSS import 대조 (WI-0028 FR-5, brand 가 없으면 추가하지 않음)
+  const brandCheck = inspectBrandImport(baseDir);
+  if (brandCheck) results.push(brandCheckResult(brandCheck));
 
   const summary = {
     pass: results.filter((r) => r.severity === "pass").length,

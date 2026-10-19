@@ -1,0 +1,9 @@
+{
+  "brands": [
+    {
+      "name": "sample",
+      "css": "./css/brands/sample",
+      "meta": "./brands/sample/brand.json"
+    }
+  ]
+}

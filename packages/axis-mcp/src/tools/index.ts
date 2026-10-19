@@ -83,3 +83,15 @@ export {
   type CheckProjectParams,
   type CheckProjectResult,
 } from "./template.js";
+
+// 브랜드 도구 (WI-0028 FR-4)
+export {
+  handleListBrands,
+  formatListBrandsResult,
+  handleGetBrand,
+  formatGetBrandResult,
+  type ListBrandsParams,
+  type ListBrandsResult,
+  type GetBrandParams,
+  type GetBrandResult,
+} from "./brand.js";

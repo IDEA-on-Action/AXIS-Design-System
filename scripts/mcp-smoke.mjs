@@ -50,6 +50,9 @@ const EXPECTED_TOOLS = [
   'axis.apply_template',
   'axis.diff_template',
   'axis.check_project',
+  // WI-0028 FR-4: 대상 프로젝트의 @axis-ds/tokens 를 읽으므로 번들 데이터 호출(registryCalls) 대상은 아님
+  'axis.list_brands',
+  'axis.get_brand',
 ];
 
 // 번들 레지스트리 데이터(components.json · tokens.json)를 읽는 도구 호출과 기대 문자열

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/packages/axis-cli/src/theme/brand-core.ts",
+        "$TURBO_ROOT$/packages/axis-cli/test/fixtures/theme/**"
+      ]
+    }
+  }
+}

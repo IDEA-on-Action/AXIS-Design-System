@@ -1,0 +1,22 @@
+{
+  "name": "@axis-ds/tokens",
+  "version": "1.2.1",
+  "main": "dist/js/tokens.js",
+  "module": "dist/js/tokens.mjs",
+  "types": "dist/js/tokens.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/js/tokens.d.ts",
+      "import": "./dist/js/tokens.mjs",
+      "require": "./dist/js/tokens.js"
+    },
+    "./css": "./dist/css/variables.css",
+    "./css/shadcn": "./dist/css/shadcn-compat.css",
+    "./tailwind": {
+      "types": "./dist/tailwind-preset.d.ts",
+      "import": "./dist/tailwind-preset.mjs",
+      "require": "./dist/tailwind-preset.js"
+    },
+    "./json": "./dist/json/tokens.json"
+  }
+}
