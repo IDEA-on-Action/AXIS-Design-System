@@ -274,7 +274,7 @@ function BrandToggle() {
 
 `[data-brand]` 조상 아래에 `.dark` 하위 요소를 두는 구성(`<div data-brand="ontology"><div class="dark">`)은 브랜드 다크 선택자에 걸리지 않습니다. 이 구성은 CSS 선택자 기준으로 판단한 것이며 E2E로 측정하지 않았습니다.
 
-같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있는 변수 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 import 순서대로 다크에서도 브랜드 라이트 값이 유지됩니다.
+같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개 가운데 기본 `.dark`와 값이 달라지는 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 import 순서대로 다크에서도 브랜드 라이트 값이 유지됩니다. 나머지 2개(`--axis-button-border-default` · `--axis-button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다.
 
 ### Provider 없이 적용 · 첫 화면
 
@@ -316,9 +316,10 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 
 - 상태 색 접기: 성공 `ink-2`, 경고 · 오류 `bad`, 진행 · 정보 `key`
 - warning 단계: 바탕 `bad-light`, 표식 · 글자 `bad`, 강조 `bad-dark`
-- PlanCard 색 선 두께 1px, 에이전트 아바타 3색, Dialog overlay 기본값 유지
+- PlanCard 색 선 두께 1px, 에이전트 아바타 3색과 아바타 글자(`on-key`), Dialog overlay 기본값 유지
 - 승인 범위에 맞추려고 바꾼 값: destructive 버튼 hover · active 바탕(`bad-light`), Alert warning 테두리 · `status.error-border`(`bad`), 비활성 버튼 글자(`sub-aa`)
-- 대기 · 건너뜀 상태 점 `status-neutral-muted`는 비텍스트 대비 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1입니다
+- PlanCard 거절 버튼 hover 글자 `--axis-plan-card-reject-hover-text`: `status-error-strong`과 같은 값(라이트 #A8281F · 다크 #F49890)
+- 대기 · 건너뜀 상태 점 `status-neutral-muted`는 비텍스트 대비 3:1에 못 미치는 바탕이 있습니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1 · 페이지 바탕(`--background` #F7F7F7) 위 1.31:1, 다크 #5F6874는 3.12:1 · 2.83:1 · 3.37:1(#0E1013)입니다
 
 v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로 구분되지 않습니다. 상태는 글자 · 아이콘과 함께 표시합니다.
 
@@ -402,6 +403,7 @@ import "./styles/brand-acme.css"  // 토큰 CSS와 globals.css 이후에 import
    - 기본 토큰에 없는 경로나 기본 변수명 집합에 없는 변수명은 쓸 수 없습니다.
    - 최상위 예약 키 `shadcn`에는 shadcn 호환 변수 값을 HSL 삼중값(`"H S% L%"`) 또는 6자리 hex로 적습니다. `radius`는 px · rem 길이입니다.
    - 라이트에 둔 semantic 범주와 색 값은 `dark.json`에도 짝이 있어야 합니다.
+   - `shadcn` 키도 `radius`를 빼고는 `dark.json`의 `shadcn`에 짝이 있어야 합니다. 위 예시라면 `dark.json`에 `"shadcn": { "primary": "..." }`를 둡니다.
 3. `brand.json`에는 `name`(디렉터리 이름과 같음) · `description` · `themes: ["light", "dark"]` · `a11y` 객체를 둡니다.
 4. `packages/axis-tokens/package.json`의 `exports`에 다음 항목을 더합니다(`"./brands"`는 이미 있음).
 

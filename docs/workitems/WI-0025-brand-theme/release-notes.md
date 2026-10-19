@@ -79,7 +79,7 @@
 - Card · Dialog 그림자가 tokens CSS 변수를 참조하므로, `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
 - Card · DialogContent에 그림자 색 수식어만 붙인 경우(`className="shadow-black/50"`, `shadow-blue-500/20` 등) 1.3.0에서는 색이 바뀌지 않습니다. 종전 `shadow-sm` · `shadow-lg`는 `--tw-shadow-colored`에 `var(--tw-shadow-color)` 자리가 있어 색 수식어가 적용됐지만, 새 클래스 `shadow-[shadow:var(--axis-card-shadow)]` · `shadow-[shadow:var(--axis-shadow-lg)]`는 Tailwind 3.4가 값을 분해하지 못해 `--tw-shadow-colored`가 변수 값 그대로입니다. `cn()`은 두 클래스를 모두 남기므로 병합 문제가 아니라 CSS 생성 방식의 차이입니다. 대안: ① 크기 클래스와 색을 함께 지정(`shadow-sm shadow-black/50`, `cn()`이 기본 그림자 클래스를 크기 클래스로 바꿔 종전처럼 색이 적용됨) ② 변수 재정의(Card `[--axis-card-shadow:0_1px_2px_0_rgb(0_0_0/0.5)]`, Dialog는 `--axis-shadow-lg`, 또는 앱 CSS에서 범위를 정해 재정의). 확인 범위: Tailwind 3.4.19가 만든 CSS와 `cn()` 병합 결과이며, 브라우저 계산 스타일은 실측하지 않았습니다
 - 브랜드 CSS는 `@axis-ds/tokens/css` **다음에** import합니다. 앱이 shadcn 변수(`--primary` 등)를 직접 정의한다면(예: `globals.css`의 `:root`) 브랜드 CSS를 그 정의보다 뒤에 둬야 합니다. 라이트 `[data-brand]`와 `:root`의 명시도가 같아 나중에 온 쪽이 이깁니다
-- `@axis-ds/theme`의 공개 타입 `ThemeContextValue`에 필수 멤버 `brand` · `setBrand`가 늘었습니다. 런타임 동작은 추가만이지만, 이 타입으로 값을 직접 만드는 TypeScript 코드(테스트 mock, 자체 Provider 등)는 두 멤버를 채워야 컴파일됩니다
+- `@axis-ds/theme`의 공개 타입 `ThemeContextValue`에 필수 멤버 `brand: string | undefined` · `setBrand: (brand: string | undefined) => void`가 늘었습니다. 런타임 동작은 추가만이지만, `ThemeContextValue` 타입으로 값을 직접 만드는 경우(테스트 mock, 자체 Provider 등)에는 `brand` · `setBrand`가 필요합니다. 두 멤버를 채우지 않으면 TypeScript 컴파일 오류가 납니다(2026-10-19 결정: Breaking change로 분류하지 않음)
 - 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개(`--axis-*` 10 · shadcn `--radius` 1) 가운데 기본 `.dark`(`variables.css` · `shadcn-compat.css`)와 값이 달라지는 9개(`--axis-radius-sm|md|lg` 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2 · shadcn `--radius` 12px)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다. 나머지 2개(`button-border-default` · `button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다
 
 #### CI
@@ -88,7 +88,7 @@
 - `frontend.yml`: pack-smoke, Playwright a11y(4조합 40건 = 10페이지 x 4, 조합별 10건. 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선이고, 브랜드 전환 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석. M3 시점에는 9페이지 36건) · 비텍스트 대비 · 브랜드 전환 데모(AC7, 8건) · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰고, M4 에서 더한 데모 step 은 처음부터 게이트입니다. 네 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
 
 ### Breaking change
-없습니다. 공개 export와 CSS 변수 이름 삭제 0건이고, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션 · `useTheme()` 반환값). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」(특히 `ThemeContextValue` 필수 멤버)을 확인해 주세요.
+없습니다. 공개 export와 CSS 변수 이름 삭제 0건이고, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션 · `useTheme()` 반환값). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」(특히 `ThemeContextValue` 필수 멤버)을 확인해 주세요. tokens ESM 엔트리 `dist/js/tokens.mjs`는 비교하지 못했습니다(아래 「비교하지 못한 것」, WI-0035 #113 에서 수정). 판정은 같은 값을 내는 CJS · JSON 비교로 했습니다(2026-10-19 결정).
 
 근거(2026-10-19, HEAD 3c74992, `pnpm turbo run build --force` 8/8 · 캐시 0 뒤의 dist 를 `npm pack`으로 받은 npm 1.2.1 배포본 4개와 비교. tokens tgz shasum `2332e344…`는 AC3 기준선 `SOURCE.json`과 같음):
 - CSS: 브랜드 미지정 `variables.css`의 `:root` · `.dark` 각각 1.2.1 변수 249개 중 같음 249 · 변경 0 · 삭제 0, 추가 11(위 새 변수 표). `shadcn-compat.css`는 바이트까지 같음(`cmp` rc 0). AC3 테스트는 아래 tokens 테스트 217건에 포함
@@ -96,7 +96,7 @@
 - exports subpath: tokens 5 → 8(추가 `./brands` · `./css/brands/ontology` · `./brands/ontology/brand.json`), ui-react 31 · agentic-ui 13 · theme 1은 같음, 삭제 0
 - 런타임 export 이름(subpath마다 CJS 엔트리를 require, 건너뜀 0): ui-react 245 · agentic-ui 30 · theme 2개가 1.2.1과 같음(삭제 0 · 추가 0)
 - 타입 선언(`dist/**/*.d.ts` 파일별 비교): agentic-ui 19개 차이 0, ui-react 31개 중 `sheet/index.d.ts` 1개(`side` 유니온 순서만 다르고 같은 타입), theme `index.d.ts`는 `ThemeProviderProps` 선택 속성 2개(`defaultBrand?` · `brandStorageKey?`)와 `ThemeContextValue` 필수 멤버 2개(`brand` · `setBrand`) 추가
-- 비교하지 못한 것: tokens ESM 엔트리 `dist/js/tokens.mjs`(exports `.`의 `import` 조건)는 1.2.1 배포본부터 `as const`가 남아 `node --check`에서 문법 오류입니다(1.3.0 회귀가 아니며 생성 위치는 `build-tokens.mjs`). 같은 값을 내는 CJS · JSON으로 비교했고, ESM 엔트리 자체의 동등성은 확인하지 않았습니다
+- 비교하지 못한 것: tokens ESM 엔트리 `dist/js/tokens.mjs`(exports `.`의 `import` 조건)는 1.2.1 배포본부터 `as const`가 남아 `node --check`에서 문법 오류입니다(1.3.0 회귀가 아니며 생성 위치는 `build-tokens.mjs`). 같은 값을 내는 CJS · JSON으로 비교했고, ESM 엔트리 자체의 동등성은 확인하지 않았습니다. 이 문법 오류는 WI-0035(#113)에서 고칩니다. 1.3.0은 `tokens.mjs`를 바꾸지 않습니다(2026-10-19 결정)
 
 ### 소비 프로젝트 영향 (2026-10-19 확인)
 | 프로젝트 (원격 기준) | 선언 · lock | 영향 패턴 사용처 |
