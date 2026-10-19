@@ -6,6 +6,7 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/lib/**/*.{js,ts,jsx,tsx,mdx}',
     './src/registry/**/*.{ts,tsx}',
     // WI-0025: AXIS 패키지 컴포넌트의 임의값 클래스(bg-[var(--axis-…)])가 생성되도록 소스를 스캔한다
     '../../packages/axis-ui-react/src/**/*.{ts,tsx}',
