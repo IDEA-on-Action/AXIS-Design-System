@@ -194,8 +194,8 @@
       "slug": "cli-init-utils-deps",
       "issueNumber": 124,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB1CRY",
-      "lastSyncedAt": "2026-10-19T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "🔄"
     },
     {
       "wiId": "WI-0039",
@@ -222,5 +222,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-19T00:00:00.000Z"
+  "updatedAt": "2026-10-20T00:00:00.000Z"
 }
