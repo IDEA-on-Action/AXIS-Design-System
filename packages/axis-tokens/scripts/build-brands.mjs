@@ -17,6 +17,7 @@ import {
   collectBasePaths,
   validateBrand,
   checkBrandExports,
+  brandIndex,
   brandSelectors,
   renderShadcnBlock,
   renderBrandBlock,
@@ -200,6 +201,11 @@ export async function buildBrands({ srcDir, brandsDir, distDir, pkg, shadcnCss, 
       copyFileSync(join(brandsDir, brand.name, 'brand.json'), metaFile);
       files.push(metaFile);
     }
+
+    // 브랜드 목록 파일 (plan 3 결정 2 A안, exports `./brands`). WI-0028 `axis theme list` 가 읽는다
+    const indexFile = join(metaDir, 'index.json');
+    writeFileSync(indexFile, `${JSON.stringify(brandIndex(brandNames), null, 2)}\n`);
+    files.push(indexFile);
   } finally {
     rmSync(tmpRoot, { recursive: true, force: true });
   }

@@ -18,7 +18,10 @@
       "import": "./dist/tailwind-preset.mjs",
       "require": "./dist/tailwind-preset.js"
     },
-    "./json": "./dist/json/tokens.json"
+    "./json": "./dist/json/tokens.json",
+    "./brands": "./dist/brands/index.json",
+    "./css/brands/ontology": "./dist/css/brands/ontology.css",
+    "./brands/ontology/brand.json": "./dist/brands/ontology/brand.json"
   },
   "sideEffects": [
     "*.css"
@@ -33,7 +36,7 @@
     "build": "node build-tokens.mjs && tsup src/tailwind-preset.ts --format cjs,esm --dts --out-dir dist",
     "clean": "rm -rf dist",
     "lint": "eslint .",
-    "test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/brands.test.mjs test/build-brands.test.mjs",
+    "test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/no-css-opacity.test.mjs test/brands.test.mjs test/build-brands.test.mjs test/baseline-1.2.1.test.mjs test/ontology-values.test.mjs",
     "type-check": "tsc --noEmit -p tsconfig.typecheck.json && node scripts/check-ts-optin.mjs",
     "prepublishOnly": "pnpm build"
   },

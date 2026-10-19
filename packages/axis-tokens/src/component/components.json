@@ -69,7 +69,7 @@
       "default": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{border.default}" } } }
     },
     "shadow": {
-      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)", "$extensions": { "axis": { "themeIndependent": true } } }
+      "default": { "value": "0 1px 3px 0 rgb(0 0 0 / 0.1)", "$extensions": { "axis": { "themeIndependent": true, "deprecated": "card-shadow" } } }
     }
   },
   "badge": {
@@ -103,5 +103,10 @@
       "border": { "value": "{color.gray.200}", "$extensions": { "axis": { "dark": "{border.default}" } } },
       "shadow": { "value": "0 25px 50px -12px rgb(0 0 0 / 0.25)", "$extensions": { "axis": { "themeIndependent": true } } }
     }
-  }
+  },
+  "plan-card": {
+    "accent-width": { "value": "4px", "$extensions": { "axis": { "themeIndependent": true } } },
+    "reject-hover-text": { "value": "{status.error}", "$extensions": { "axis": { "themeIndependent": true } } }
+  },
+  "card-shadow": { "value": "{shadow.sm}", "$extensions": { "axis": { "themeIndependent": true } } }
 }
