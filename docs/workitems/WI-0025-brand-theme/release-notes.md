@@ -2,10 +2,10 @@
 
 > PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
 
-## 1.3.0 (minor, 초안) - 브랜드 테마 축 (M2) · 온톨로지 프리셋 (M3)
+## 1.3.0 (minor) - 브랜드 테마 축 (M2) · 온톨로지 프리셋 (M3) · 브랜드 전환 데모와 가이드 (M4)
 
 > 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.2.1 → 1.3.0 (linked)
-> 상태: M3 시점 초안(plan U22, 2026-10-18). M4의 문서 사이트 브랜드 전환 데모와 `theme-customization.md` 「브랜드 테마」 절은 채웠고, 배포 일시 · run 번호, 소비 프로젝트 영향은 M4에서 채웁니다
+> 배포: (배포 후 기입: 일시 KST · Version Packages PR · publish run id · provenance N/4 · `npm view` 4패키지 1.3.0 · dist-tags latest)
 
 ### 배경
 
@@ -26,7 +26,7 @@
 - AXIS의 상태 의미는 v1의 상태 다섯 가지로 접습니다: success → 회색 계열, warning · error → `bad` 계열(바탕은 연한 단계), running · info → `key` 계열. 상태가 색만으로 구분되지 않으므로, 상태는 글자 · 아이콘과 함께 표시해 주세요
 - 글꼴(`Pretendard Variable` · `JetBrains Mono` 우선), `--radius: 12px`, 그림자(`--axis-shadow-sm` · `--axis-shadow-lg`), PlanCard 색 선 1px, Card 그림자 없음(`0 0 #0000`)을 함께 지정합니다
 - 산출 CSS: 라이트 블록 `--axis-*` 117 · shadcn 20, 다크 블록 `--axis-*` 107 · shadcn 19
-- 접근성: 문서 사이트 10페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음)을 확인했습니다. 10페이지에는 실제 ui-react · agentic-ui 컴포넌트를 그리는 브랜드 전환 데모 페이지가 들어 있습니다(M3 시점에는 9페이지). 포커스 링과 상태 아이콘 색 6가지(`status-{neutral,running,success,error,info,warning}`)의 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)은 문서 페이지에 넣은 프로브 요소를 `surface-default` · `surface-secondary` 위에서 잰 대리 측정입니다. 실제 컴포넌트(StepTimeline · RunProgress · ToolCallCard 등)의 부모 바탕 위 재측정은 M4에서 합니다. 대기 · 건너뜀 상태 점(`status-neutral-muted`, StepTimeline · RunProgress)은 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1이며(같은 프로브 실측), 값을 바꿀지는 디자인 오너 사후 확인 대상입니다(기본 테마 gray-300도 1.47:1로 같은 수준). 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에 같은 상태를 적었습니다)
+- 접근성: 문서 사이트 10페이지 x 라이트 · 다크 axe 위반 0(ontology 전용 예외 없음)을 확인했습니다. 10페이지에는 실제 ui-react · agentic-ui 컴포넌트를 그리는 브랜드 전환 데모 페이지가 들어 있습니다(M3 시점에는 9페이지). 포커스 링과 상태 아이콘 색 6가지(`status-{neutral,running,success,error,info,warning}`)의 비텍스트 대비 3:1 이상(라이트 최소 4.53:1 · 다크 5.60:1)은 문서 페이지에 넣은 프로브 요소를 `surface-default` · `surface-secondary` 위에서 잰 대리 측정입니다. 실제 컴포넌트(StepTimeline · RunProgress · PlanCard 등)가 그린 상태 표식을 실제 부모 바탕 위에서 다시 재는 작업은 M4 데모 페이지에서 했지만, 실제 아이콘의 투명도(실행 중 아이콘의 트랙 원 등)와 실제 바탕이 프로브와 달라 판정 기준(어느 도형 · 어느 시점을 판정에 넣을지, 기본 브랜드 값의 처리)이 정해지지 않았습니다. 그래서 1.3.0에서는 그 결과를 확정 수치로 싣지 않고, CI의 비텍스트 대비 검사도 위 프로브 측정 그대로입니다. 대기 · 건너뜀 상태 점(`status-neutral-muted`, StepTimeline · RunProgress)은 3:1에 못 미칩니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1, 다크 #5F6874는 3.12:1 · 2.83:1이며(같은 프로브 실측), 값을 바꿀지는 디자인 오너 사후 확인 대상입니다(기본 테마 gray-300도 1.47:1로 같은 수준). 색 결정 일부(보정값, 상태 색 접기, 경고 단계, 에이전트 아바타 색 등)는 디자인 오너의 사후 확인을 기다리며, 확인 결과에 따라 이후 patch에서 값이 바뀔 수 있습니다(`brand.json`의 `a11y.status`에는 M3 시점(문서 사이트 9페이지 기준) 상태가 적혀 있습니다)
 
 #### tokens: 새 변수 (기본값은 기존 화면과 같음)
 브랜드를 지정하지 않은 `variables.css`에는 아래 11개 변수만 `:root` · `.dark`에 새로 생깁니다. 1.2.1에 있던 변수 249개의 값은 바뀌지 않습니다.
@@ -79,6 +79,7 @@
 - Card · Dialog 그림자가 tokens CSS 변수를 참조하므로, `@axis-ds/tokens/css`를 로드하지 않는 환경에서는 그림자가 없습니다
 - Card · DialogContent에 그림자 색 수식어만 붙인 경우(`className="shadow-black/50"`, `shadow-blue-500/20` 등) 1.3.0에서는 색이 바뀌지 않습니다. 종전 `shadow-sm` · `shadow-lg`는 `--tw-shadow-colored`에 `var(--tw-shadow-color)` 자리가 있어 색 수식어가 적용됐지만, 새 클래스 `shadow-[shadow:var(--axis-card-shadow)]` · `shadow-[shadow:var(--axis-shadow-lg)]`는 Tailwind 3.4가 값을 분해하지 못해 `--tw-shadow-colored`가 변수 값 그대로입니다. `cn()`은 두 클래스를 모두 남기므로 병합 문제가 아니라 CSS 생성 방식의 차이입니다. 대안: ① 크기 클래스와 색을 함께 지정(`shadow-sm shadow-black/50`, `cn()`이 기본 그림자 클래스를 크기 클래스로 바꿔 종전처럼 색이 적용됨) ② 변수 재정의(Card `[--axis-card-shadow:0_1px_2px_0_rgb(0_0_0/0.5)]`, Dialog는 `--axis-shadow-lg`, 또는 앱 CSS에서 범위를 정해 재정의). 확인 범위: Tailwind 3.4.19가 만든 CSS와 `cn()` 병합 결과이며, 브라우저 계산 스타일은 실측하지 않았습니다
 - 브랜드 CSS는 `@axis-ds/tokens/css` **다음에** import합니다. 앱이 shadcn 변수(`--primary` 등)를 직접 정의한다면(예: `globals.css`의 `:root`) 브랜드 CSS를 그 정의보다 뒤에 둬야 합니다. 라이트 `[data-brand]`와 `:root`의 명시도가 같아 나중에 온 쪽이 이깁니다
+- `@axis-ds/theme`의 공개 타입 `ThemeContextValue`에 필수 멤버 `brand` · `setBrand`가 늘었습니다. 런타임 동작은 추가만이지만, 이 타입으로 값을 직접 만드는 TypeScript 코드(테스트 mock, 자체 Provider 등)는 두 멤버를 채워야 컴파일됩니다
 - 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개(`--axis-*` 10 · shadcn `--radius` 1) 가운데 기본 `.dark`(`variables.css` · `shadcn-compat.css`)와 값이 달라지는 9개(`--axis-radius-sm|md|lg` 3 · 글꼴 2 · PlanCard 색 선 · Card 그림자 2 · shadcn `--radius` 12px)는 import 순서대로 브랜드 라이트 값이 다크에서도 유지됩니다. 나머지 2개(`button-border-default` · `button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다
 
 #### CI
@@ -87,21 +88,40 @@
 - `frontend.yml`: pack-smoke, Playwright a11y(4조합 40건 = 10페이지 x 4, 조합별 10건. 기본 브랜드는 WI-0029 두 쌍만 노드 단위 기준선이고, 브랜드 전환 데모 경로에만 기본 브랜드 토큰 결함 쌍 기준선 라이트 2 · 다크 4노드를 더함, PRD AC8 변경 주석. M3 시점에는 9페이지 36건) · 비텍스트 대비 · 브랜드 전환 데모(AC7, 8건) · AC6 계산 스타일 검사. 첫 실행(run 39072471115)을 확인한 뒤 2026-10-18 게이트로 켰고, M4 에서 더한 데모 step 은 처음부터 게이트입니다. 네 E2E step 중 하나라도 실패하면 `ci` job이 실패해 배포를 막습니다
 
 ### Breaking change
-없습니다. 공개 export와 CSS 변수 이름 삭제 0건, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션). 브랜드 미지정 출력은 npm 1.2.1 배포본 대비 `variables.css` `:root` · `.dark` 각 249개 값이 같고 새 변수 11개만 늘며, `shadcn-compat.css`는 바이트까지 같습니다(AC3 테스트). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」을 확인해 주세요.
+없습니다. 공개 export와 CSS 변수 이름 삭제 0건이고, 공개 API는 추가만 있습니다(브랜드 exports · `ThemeProvider` 옵션 · `useTheme()` 반환값). 다만 위 agentic-ui 표의 화면 변화와 「동작이 달라지는 사용 방식」(특히 `ThemeContextValue` 필수 멤버)을 확인해 주세요.
+
+근거(2026-10-19, HEAD 3c74992, `pnpm turbo run build --force` 8/8 · 캐시 0 뒤의 dist 를 `npm pack`으로 받은 npm 1.2.1 배포본 4개와 비교. tokens tgz shasum `2332e344…`는 AC3 기준선 `SOURCE.json`과 같음):
+- CSS: 브랜드 미지정 `variables.css`의 `:root` · `.dark` 각각 1.2.1 변수 249개 중 같음 249 · 변경 0 · 삭제 0, 추가 11(위 새 변수 표). `shadcn-compat.css`는 바이트까지 같음(`cmp` rc 0). AC3 테스트는 아래 tokens 테스트 217건에 포함
+- tokens JS · JSON: `dist/json/tokens.json`과 CJS `dist/js/tokens.js`의 leaf 각 249개 같음 · 변경 0 · 삭제 0, 추가 11. `dist/js/tokens.d.ts`는 삭제 줄 0(키 추가만)
+- exports subpath: tokens 5 → 8(추가 `./brands` · `./css/brands/ontology` · `./brands/ontology/brand.json`), ui-react 31 · agentic-ui 13 · theme 1은 같음, 삭제 0
+- 런타임 export 이름(subpath마다 CJS 엔트리를 require, 건너뜀 0): ui-react 245 · agentic-ui 30 · theme 2개가 1.2.1과 같음(삭제 0 · 추가 0)
+- 타입 선언(`dist/**/*.d.ts` 파일별 비교): agentic-ui 19개 차이 0, ui-react 31개 중 `sheet/index.d.ts` 1개(`side` 유니온 순서만 다르고 같은 타입), theme `index.d.ts`는 `ThemeProviderProps` 선택 속성 2개(`defaultBrand?` · `brandStorageKey?`)와 `ThemeContextValue` 필수 멤버 2개(`brand` · `setBrand`) 추가
+- 비교하지 못한 것: tokens ESM 엔트리 `dist/js/tokens.mjs`(exports `.`의 `import` 조건)는 1.2.1 배포본부터 `as const`가 남아 `node --check`에서 문법 오류입니다(1.3.0 회귀가 아니며 생성 위치는 `build-tokens.mjs`). 같은 값을 내는 CJS · JSON으로 비교했고, ESM 엔트리 자체의 동등성은 확인하지 않았습니다
+
+### 소비 프로젝트 영향 (2026-10-19 확인)
+| 프로젝트 (원격 기준) | 선언 · lock | 영향 패턴 사용처 |
+|---|---|---|
+| RFP-X (origin/master 6c6329c, 2026-09-28) | 루트 `pnpm.overrides` tokens · ui-react `1.1.2`, `packages/web` agentic-ui · tokens · ui-react `^1.1.2`, `packages/ui` tokens `^1.1.2`, lock agentic-ui · tokens · ui-react 1.1.2, tailwindcss `^4` | 0 |
+| Discovery-X (origin/master 85b6ef2, 2026-10-09) | theme · tokens · ui-react `1.1.1` 정확 고정, lock 1.1.1, tailwindcss `^4.1.18`, tailwind-merge `^3.4.0` | 0 (`@axis-ds/theme`의 `useTheme()` 3파일 · `ThemeProvider` 1파일을 쓰지만 `ThemeContextValue` 참조 0, 테스트의 `vi.mock("@axis-ds/theme")` 1곳은 타입을 쓰지 않음) |
+
+영향 패턴은 그림자 색 수식어(`shadow-<색>/N`), `ThemeContextValue`, `--axis-card-shadow-default` · `CardShadowDefault`, `data-brand` 네 가지이고, 양성 대조로 같은 트리에서 `@axis-ds/*` import 파일(RFP-X 59 · Discovery-X 17)이 잡히는 것을 확인했습니다. 두 프로젝트 모두 lock이 1.1.x를 고정해 1.3.0이 자동으로 반영되지 않습니다. RFP-X의 agentic-ui는 `^1.1.2` 범위 선언이고 override가 없어(1.2.1 절의 「정확 버전 고정」 표기는 agentic-ui에는 맞지 않음), lock을 다시 만들면 agentic-ui만 1.3.0으로 올라갈 수 있습니다. 이때 override로 1.1.2에 묶인 tokens · ui-react와의 조합 동작은 확인하지 않았습니다. 두 프로젝트 모두 Tailwind 4라 위 「동작이 달라지는 사용 방식」의 Tailwind 3.4.19 기준 분석은 그 환경에서 확인하지 않았습니다. 확인 범위는 로컬에 체크아웃된 두 레포이고, Minu는 범위 밖입니다.
 
 ### 검증 (M3 시점)
 - 2026-10-18 M3 브랜치 95e8547(PlanCard 거절 버튼 hover 글자 토큰 반영 뒤, turbo `--force`, 캐시 0, build 를 먼저 단독 실행): build 8/8 · type-check 8/8 · lint 4/4 rc 0, test 5/5 rc 0(tokens 190 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과)
 - `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(짝 10)
 - 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`. `variables.css`는 npm 1.2.1 배포본 대비 `:root` · `.dark` 각 값 변경 0 · 삭제 0 · 추가 11(위 새 변수 표), `shadcn-compat.css`는 1.2.1과 바이트까지 같음, AC3 테스트 통과
-- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과(M3 시점 9페이지. M4 수치는 아래 「검증 (M4 데모 시점)」)
+- `test:e2e:a11y`(정적 서버, 위 빌드의 `apps/web/out`) 36/36 통과(M3 시점 9페이지. M4 수치는 아래 「검증 (M4)」)
 - 레지스트리 사본 content 와 src 대조 84/84 일치(a8fe0a0 시점). 95e8547 뒤 PlanCard 사본 3벌(`public/r` · `apps/web/public/r` · `packages/axis-agentic-ui/registry/r`)이 src 와 일치
 
-### 검증 (M4 데모 시점)
-- 2026-10-18 M4 브랜치 deadd34(`pnpm turbo run build --filter=@ax/web... --force` 4/4, 캐시 0, `E2E_SERVER=static`, Chromium Desktop Chrome 1280x720): `test:e2e:a11y` 40/40(조합별 10건) · `test:e2e:demo` 8/8 · `test:e2e:nontext` 6/6 · `test:e2e:tokens` 17/17 통과, skipped 0
-- 기본 브랜드 기준선: WI-0029 두 쌍 라이트 · 다크 각 7페이지 20노드(`#3b82f6` 18 · `#ef4444` 2), 데모 경로 기준선 라이트 2 · 다크 4노드(상한과 같음). ontology 위반 0
-- CI run 은 M4 PR 에서 확인합니다(push 전)
-
-> M4 에서 채울 것: CI(게이트 켠 뒤) 결과, 배포 정보, 소비 프로젝트 영향. 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향은 tailwind-merge 버전별 실측 뒤에만 적습니다
+### 검증 (M4)
+- 2026-10-19 M4 브랜치 3c74992(데모 진입 헬퍼 · 가이드 반영 뒤. 이후 커밋은 문서 · changeset만 바꿈): `pnpm turbo run build --force` 8/8(캐시 0)을 먼저 단독 실행한 뒤 type-check 8/8 · lint 4/4 · test 5/5(각 `--force`, 캐시 0) rc 0, tokens 217 · ui-react 110 · agentic-ui 72 · cli 58 · theme 31 통과(skipped 0)
+- `check-token-refs` 위반 0(검사 파일 68 · 참조 514, `:root` · `.dark` 260 · 미반영 0), `check-contrast-pairs` 위반 0(소스 짝 14 · 표 짝 14), `pnpm pack-smoke` 6개 패키지 통과
+- 브랜드 미지정 `variables.css` · `shadcn-compat.css` sha256 `e3ced2d8…` · `dd374eca…`(M3 기록과 같음)
+- E2E(`E2E_SERVER=static`, 위 빌드의 `apps/web/out`, Chromium Desktop Chrome 1280x720, Playwright 1.61.1): `test:e2e:a11y` 40/40(조합별 10건) · `test:e2e:demo` 8/8 · `test:e2e:nontext` 6/6 · `test:e2e:tokens` 17/17 통과. nontext 6건은 M3 프로브 spec 그대로입니다(위 접근성 항목)
+- 기본 브랜드 기준선: WI-0029 두 쌍 라이트 · 다크 각 7페이지 20노드, 데모 경로 기준선 라이트 2 · 다크 4노드(상한과 같음). ontology 20건 위반 0
+- `pnpm changeset status --verbose`: minor 로 `@axis-ds/tokens` · `ui-react` · `agentic-ui` · `theme` 1.3.0(linked), cli · mcp 없음, major 없음. private 예제 `axis-nextjs-example`은 내부 의존성 갱신으로 patch(0.1.4 → 0.1.5, npm 배포 대상 아님)
+- CI: 마지막으로 push 된 34d7bca 의 PR #110 `Frontend CI/CD` run 39100155713 success. 그 뒤 커밋은 push 전이라 CI 결과가 없고, 머지 전 PR #110 run 으로 확인합니다
+- 레지스트리로 컴포넌트를 받는 소비자의 `cn()`(레지스트리에 utils 항목이 없음) 영향과 Tailwind 4 환경의 그림자 클래스 동작은 실측하지 않았습니다
 
 ## 1.2.1 (patch) - 토큰 정합 (M1, PR #90) · 다크 component 토큰 (WI-0033)
 
