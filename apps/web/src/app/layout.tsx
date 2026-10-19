@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from 'next'
 import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css'
 // WI-0025: AXIS 토큰 변수(--axis-*)를 globals.css(shadcn 변수)보다 먼저 로드한다.
-// 브랜드 CSS는 globals.css 뒤에 둔다. 라이트 선택자 [data-brand="ontology"]와 globals.css :root 는
-// 명시도가 0,1,0 으로 같아서 나중에 오는 쪽이 이긴다(tokens 와 globals 사이에 두면 --primary 가 기본값으로 돌아감, U11).
+// 브랜드 CSS는 globals.css 뒤에 둔다(문서 안내 순서). 라이트 선택자는 [data-brand="ontology"][data-brand="ontology"]
+// 명시도 0,2,0 이라 globals.css :root(0,1,0)보다 앞에 와도 이긴다(2026-10-19 결정, 종전 0,1,0 일 때는 U11 순서 의존).
 // 브랜드는 <html data-brand="ontology"> 일 때만 적용되므로 속성이 없는 기본 화면은 바뀌지 않는다(AC3).
 import '@axis-ds/tokens/css'
 import './globals.css'

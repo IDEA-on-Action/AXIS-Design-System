@@ -16,7 +16,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { collectBasePaths, cssVarName, loadBrand, validateBrand } from '../scripts/brands.mjs';
+import { brandSelectors, collectBasePaths, cssVarName, loadBrand, validateBrand } from '../scripts/brands.mjs';
 import { CONTRAST_PAIRS, V1_PALETTE } from './ontology-pairs.mjs';
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -142,7 +142,7 @@ describe('ontology 완전성 (U16 · D4 결정 36)', () => {
     const brandPath = join(cssDir, 'brands', 'ontology.css');
     assert.ok(existsSync(varsPath) && existsSync(brandPath), 'dist 가 없습니다(빌드 먼저, 미측정 0 금지)');
     const root = blockValues(readFileSync(varsPath, 'utf8'), ':root');
-    const brandLight = blockValues(readFileSync(brandPath, 'utf8'), '[data-brand="ontology"]');
+    const brandLight = blockValues(readFileSync(brandPath, 'utf8'), brandSelectors('ontology').light[0]);
     assert.ok(root.size >= 250 && brandLight.size > 0, `읽은 선언 수 :root ${root.size} · 브랜드 ${brandLight.size}`);
     // dist :root 의 비 primitive 이름 = 소스에서 뽑은 이름 (추출 방식이 이름을 자르지 않는지 함께 본다)
     const primitive = new Set([...base.varNames].filter(n => !required.has(n)));

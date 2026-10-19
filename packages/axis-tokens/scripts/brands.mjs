@@ -395,11 +395,18 @@ export function checkBrandExports(pkg, brandNames) {
   return errors;
 }
 
-/** 브랜드 선택자 (PRD FR-5, plan 3절 결정 4: 다크 3개) */
+/**
+ * 브랜드 선택자 (PRD FR-5, plan 3절 결정 4: 다크 3개)
+ *
+ * 라이트는 같은 속성 선택자를 두 번 써서 명시도를 (0,2,0)으로 올린다(2026-10-19 사용자 결정, WI-0028 U2 대안 2).
+ * 기본 `:root` · `.dark`와 소비자 `:root`(예: globals.css)는 (0,1,0)이라 import 순서와 상관없이 브랜드 값이 이긴다.
+ * `:root[data-brand]`로 올리지 않은 까닭: 하위 컨테이너(`<div data-brand>`, PRD A2)에는 `:root`가 맞지 않는다.
+ * 다크 3개도 (0,2,0)이라 라이트와 명시도가 같고, 같은 파일에서 다크 블록이 라이트 블록 뒤에 오므로 다크가 이긴다.
+ */
 export function brandSelectors(name) {
   const attr = `[data-brand="${name}"]`;
   return {
-    light: [attr],
+    light: [`${attr}${attr}`],
     dark: [`${attr}.dark`, `${attr}[data-theme="dark"]`, `.dark ${attr}`],
   };
 }
