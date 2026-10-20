@@ -1175,6 +1175,63 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
     ]);
   });
 
+  // 보정 3차: runInit 이 프로젝트 디렉터리를 넘겨 설치본(node_modules)을 먼저 봄(axis check 와 같은 함수)
+  it("init -y: 설치본 1.4.2 + 선언 ^1.3.0 은 안내 없음, 설치본 1.3.0 + 선언 ^1.4.0 은 설치본 버전으로 안내", async () => {
+    const ok = await tmpDir();
+    await fs.writeFile(
+      path.join(ok, "package.json"),
+      JSON.stringify({ name: "x", dependencies: { "@axis-ds/tokens": "^1.3.0" }, devDependencies: { tailwindcss: "^4" } })
+    );
+    await fs.outputJSON(path.join(ok, "node_modules/@axis-ds/tokens/package.json"), { version: "1.4.2" });
+    expect(guideOf((await runInitCli(ok)).logs).at(-1)).toBe(CONFLICT_LINE);
+
+    const old = await tmpDir();
+    await fs.writeFile(
+      path.join(old, "package.json"),
+      JSON.stringify({ name: "x", dependencies: { "@axis-ds/tokens": "^1.4.0" }, devDependencies: { tailwindcss: "^4" } })
+    );
+    await fs.outputJSON(path.join(old, "node_modules/@axis-ds/tokens/package.json"), { version: "1.3.0" });
+    expect(guideOf((await runInitCli(old)).logs).at(-1)).toBe(
+      '  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/tokens 1.3.0, 선언 ^1.4.0)을 올리세요: pnpm add "@axis-ds/tokens@^1.4.0"'
+    );
+  });
+
+  // 보정 3차 후속: 설치본이 1.4.0 미만이어도 하한을 읽을 수 없는 선언(catalog: · npm: · latest · ||)은 덮어쓰는 명령을 내지 않음
+  it("설치본 1.3.0 + 하한을 읽을 수 없는 선언은 pnpm add 없이 선언을 올리고 다시 설치하라는 줄", async () => {
+    for (const range of ["catalog:", "npm:@axis-ds/tokens@1.3.0", "latest", "^1 || ^2"]) {
+      const dir = await tmpDir();
+      await fs.writeFile(
+        path.join(dir, "package.json"),
+        JSON.stringify({ name: "x", dependencies: { "@axis-ds/tokens": range }, devDependencies: { tailwindcss: "^4" } })
+      );
+      await fs.outputJSON(path.join(dir, "node_modules/@axis-ds/tokens/package.json"), { version: "1.3.0" });
+      const guide = guideOf((await runInitCli(dir)).logs);
+      expect({ range, last: guide.at(-1), add: guide.some((l) => l.includes("pnpm add")) }).toEqual({
+        range,
+        last: `  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/tokens 1.3.0, 선언 ${range})이 1.4.0 미만입니다. 선언이 가리키는 버전을 1.4.0 이상으로 올린 뒤 다시 설치하세요(선언은 덮어쓰지 않습니다).`,
+        add: false,
+      });
+    }
+  });
+
+  it("설치본 미만이 섞이면 읽을 수 있는 선언만 명령에 넣음(catalog: 는 명령 밖)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({
+        name: "x",
+        dependencies: { "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "catalog:" },
+        devDependencies: { tailwindcss: "^4" },
+      })
+    );
+    await fs.outputJSON(path.join(dir, "node_modules/@axis-ds/tokens/package.json"), { version: "1.3.0" });
+    await fs.outputJSON(path.join(dir, "node_modules/@axis-ds/ui-react/package.json"), { version: "1.3.0" });
+    expect(guideOf((await runInitCli(dir)).logs).slice(-2)).toEqual([
+      '  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/tokens 1.3.0, 선언 ^1.3.0)을 올리세요: pnpm add "@axis-ds/tokens@^1.4.0"',
+      "  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/ui-react 1.3.0, 선언 catalog:)이 1.4.0 미만입니다. 선언이 가리키는 버전을 1.4.0 이상으로 올린 뒤 다시 설치하세요(선언은 덮어쓰지 않습니다).",
+    ]);
+  });
+
   it("이름 충돌 안내는 quick-start 「Tailwind CSS 4」 절의 지울 블록 · 이름과 같음(두 곳 대조)", async () => {
     const doc = await fs.readFile(path.resolve(HERE, "../../../../docs/guides/quick-start.md"), "utf8");
     const section = doc.slice(doc.indexOf("### Tailwind CSS 4"), doc.indexOf("### Tailwind CSS 3"));

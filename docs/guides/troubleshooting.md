@@ -95,7 +95,7 @@ Tailwind CSS는 스캔한 파일에 나오는 클래스만 생성합니다. AXIS
 
 - 패키지의 `tailwind.css` 는 그 파일 기준 상대 경로 `@source "./dist"` 를 담고 있어 npm · pnpm 설치 모두에서 동작합니다. `shamefully-hoist` 는 필요 없습니다. 다만 pnpm 에서는 `@axis-ds/tokens` 를 앱에 직접 설치해야 `@axis-ds/tokens/css/tailwind4` import 가 풀립니다.
 - 이 줄들은 `@import "tailwindcss";` 와 같은 파일에 둡니다. 별도 CSS 파일이나 JS/TSX 에서 import 하면 클래스가 생성되지 않습니다.
-- `@axis-ds/cli` 의 `axis check` 는 Tailwind 4 전역 CSS 에 토큰 진입점이 없거나, `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` 줄이 없거나, 진입점이 있는데 create-next-app 기본 정의(`:root` 의 `--background: #ffffff` · `@theme inline` 의 `--color-background: var(--background)` · `body` 의 `background: var(--background)` 등)가 남아 있으면 WARN 을 내고 넣을 줄 · 지울 정의를 문구에 보여 줍니다. 선언이 1.4.0 미만이면 `(1.4.0 이상 필요: …)`, `catalog:` 처럼 판정할 수 없으면 `(설치된 버전이 1.4.0 이상인지 확인하세요: …)` 가 붙습니다.
+- `@axis-ds/cli` 의 `axis check` 는 Tailwind 4 전역 CSS 에 토큰 진입점이 없거나, `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` 줄이 없거나, 진입점이 있는데 create-next-app 기본 정의(`:root` 의 `--background: #ffffff` · `@theme inline` 의 `--color-background: var(--background)` · `body` 의 `background: var(--background)` 등)가 남아 있으면 WARN 을 내고 넣을 줄 · 실제로 남은 정의 이름을 문구에 보여 줍니다. `tailwind.css` 대신 그 패키지를 가리키는 `@source "../node_modules/@axis-ds/ui-react/dist";` 같은 줄을 같은 CSS 에 직접 썼으면 스캔 경로가 있는 것으로 봅니다(경로 문자열에 `@axis-ds/<패키지>` 가 들어 있는지로 판정, 주석 안 · `@source not` 은 제외). 버전은 설치본(`node_modules/<패키지>/package.json`)을 먼저 보고, 없으면 `package.json` 선언 범위를 봅니다. 1.4.0 미만이면 `(1.4.0 이상 필요: …)`(설치본으로 판정했으면 `@axis-ds/tokens 설치본 1.3.0` 처럼 표시), 설치본이 없고 `catalog:` 처럼 선언으로도 판정할 수 없으면 `(설치된 버전이 1.4.0 이상인지 확인하세요: …)` 가 붙습니다. `tailwind.css` 를 import 하는 패키지가 1.4.0 미만이거나 판정할 수 없으면(설치본이 없고 `catalog:` 등) 다른 문제가 없어도 WARN 입니다.
 
 Tailwind 4 에서 자주 만나는 증상은 다음과 같습니다.
 

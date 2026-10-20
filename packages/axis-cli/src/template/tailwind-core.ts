@@ -13,8 +13,11 @@
  *   보정 2차(2026-10-20 사용자 결정): 선언된 ui-react · agentic-ui 의 `tailwind.css` import 누락(B1), 진입점이 있는데 남은
  *   create-next-app 기본 정의(B2), 진입점이 있는데 `@axis-ds/tokens` 선언이 1.4.0 조건에 걸림(A4)도 같은 항목의 WARN 입니다.
  *   여럿이면 한 문구에 우선순위 순서로 잇습니다(C, `tailwind4Issues`). Tailwind 3 은 preset 참조도 pass 로 인정합니다(B3).
- *   WARN 끝에는 package.json 의 AXIS 패키지 선언이 1.4.0 미만이면 「1.4.0 이상 필요」, 판정할 수 없으면 「설치된 버전이
+ *   WARN 끝에는 package.json 에 선언된 AXIS 패키지가 1.4.0 미만이면 「1.4.0 이상 필요」, 판정할 수 없으면 「설치된 버전이
  *   1.4.0 이상인지 확인하세요」를 붙입니다(A1, `workspace:` 는 제외).
+ *   보정 3차(2026-10-20 사용자 결정): 버전은 설치본(node_modules) 우선, 다음 선언 하한, 다음 판정 불가 순으로 봅니다. B2 는 실제로
+ *   걸린 정의 이름을 표시하고, B1 은 그 패키지를 가리키는 `@source` 가 직접 있으면 내지 않습니다. import 중인 컴포넌트
+ *   `tailwind.css` 의 패키지도 A4 와 같은 버전 조건을 봅니다.
  * - `checkGlobalsCss`: globals.css 항목(WI-0044 보정). 변수를 직접 정의하지 않아도 tokens CSS import 가 있으면 pass 입니다.
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  */
@@ -385,41 +388,90 @@ export function rangeLowerAtLeast(range: string, min: string): boolean | undefin
   return compareLower(lower, target) >= 0;
 }
 
-/** 1.4.0 조건에 걸린 AXIS 패키지 선언. `below`: 하한이 1.4.0 미만 · `unknown`: 하한을 읽을 수 없음(판정 불가) */
+/**
+ * 1.4.0 조건에 걸린 AXIS 패키지. `below`: 1.4.0 미만 · `unknown`: 판정 불가(설치본이 없고 선언 하한도 읽을 수 없음).
+ * `installed` 가 있으면 설치본 version 으로 판정한 것이고(`source: "installed"`), 없으면 선언 하한으로 판정한 것입니다.
+ */
 export interface AxisPackageVersionIssue {
   name: string;
+  /** package.json 의 선언 범위 */
   range: string;
   status: "below" | "unknown";
+  /** 판정 근거: `installed`(node_modules 설치본) · `declared`(선언 범위 하한) */
+  source: "installed" | "declared";
+  /** 설치본 version(`source: "installed"` 일 때만) */
+  installed?: string;
+}
+
+/** 설치본 version 이 정확한 버전(`1.4.2` · `1.4.0-beta.1`)이면 그대로, 아니면 `undefined`. `0.0.0-*` 은 읽지 않습니다. */
+function exactVersion(version: unknown): string | undefined {
+  if (typeof version !== "string") return undefined;
+  const v = version.trim();
+  if (!/^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(v) || /^v?0\.0\.0-/.test(v)) return undefined;
+  return v;
+}
+
+/** `<baseDir>/node_modules/<name>/package.json` 의 정확한 version. 없거나 읽지 못하거나 정확한 버전이 아니면 `undefined`. */
+function installedVersion(baseDir: string, name: string): string | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(baseDir, "node_modules", ...name.split("/"), "package.json"), "utf8"));
+    return isPlainObject(parsed) ? exactVersion(parsed.version) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**
  * package.json 에 선언된 AXIS 패키지(`TAILWIND4_AXIS_PACKAGES`) 가운데 1.4.0 조건에 걸린 것을 선언 순서대로 돌려줍니다
- * (2026-10-20 사용자 결정 A1, `axis init` · `axis check` 공용).
- * - 하한이 1.4.0 미만(`^1.3.0` · `1.x` · `^1.4.0-beta.1` · `1.3.0 - 1.5.0`) → `below`. 올리라고 안내합니다.
- * - 하한을 읽을 수 없음(`catalog:` · `latest` · `||` · `<2` · `*` · `npm:` · git · 파일 경로) → `unknown`.
- *   선언을 덮어쓰라고 하지 않고 설치된 버전을 확인하라고 안내합니다.
- * - `workspace:` 프로토콜은 넣지 않습니다. 모노레포 링크를 레지스트리 범위로 덮어쓰지 않게 하려는 것입니다.
- * - 선언이 없는 패키지는 넣지 않습니다.
+ * (2026-10-20 사용자 결정 A1, 보정 3차 설치본 우선. `axis init` · `axis check` 가 같은 결과를 씁니다).
+ * 판정 순서는 `detectTailwind` 와 같습니다.
+ * 1. 설치본: `baseDir` 가 있으면 `<baseDir>/node_modules/<pkg>/package.json` 의 version(정확한 버전일 때만).
+ *    1.4.0 이상이면 선언이 `^1.3.0` · `1.x` · `catalog:` 여도 넣지 않고, 미만(`1.4.0-beta.1` 포함)이면 `below`(설치본 표시).
+ * 2. 선언 하한: 설치본이 없으면(또는 `baseDir` 가 없으면) 종전 규칙.
+ *    하한이 1.4.0 미만(`^1.3.0` · `1.x` · `^1.4.0-beta.1` · `1.3.0 - 1.5.0`) → `below`. 올리라고 안내합니다.
+ * 3. 판정 불가: 하한도 읽을 수 없음(`catalog:` · `latest` · `||` · `<2` · `*` · `npm:` · git · 파일 경로) → `unknown`.
+ *    선언을 덮어쓰라고 하지 않고 설치된 버전을 확인하라고 안내합니다.
+ * - `workspace:` 프로토콜은 설치본과 관계없이 넣지 않습니다. 모노레포 링크를 레지스트리 범위로 덮어쓰지 않게 하려는 것이고,
+ *   링크된 설치본의 version 은 배포 전 소스의 version 이라(예: 이 저장소는 changeset 적용 전까지 진입점이 있어도 1.3.0)
+ *   1.4.0 미만이어도 진입점이 없다는 증거가 아니기 때문입니다.
+ * - 선언이 없는 패키지는 설치본이 있어도 넣지 않습니다(다른 패키지가 끌어온 의존성은 안내 대상이 아님, 종전과 같음).
  */
-export function axisPackagesBelowTailwind4(pkg: Record<string, unknown> | undefined): AxisPackageVersionIssue[] {
+export function axisPackagesBelowTailwind4(
+  pkg: Record<string, unknown> | undefined,
+  baseDirInput?: string
+): AxisPackageVersionIssue[] {
   if (!pkg) return [];
+  const baseDir = baseDirInput !== undefined ? resolve(baseDirInput) : undefined;
   const out: AxisPackageVersionIssue[] = [];
+  const min = lowerOf(TAILWIND4_MIN_AXIS_VERSION)!;
   for (const name of TAILWIND4_AXIS_PACKAGES) {
     const range = hasDependency(pkg, name);
     if (range === undefined || range.trim().startsWith("workspace:")) continue;
+    const installed = baseDir !== undefined ? installedVersion(baseDir, name) : undefined;
+    const installedLower = installed !== undefined ? lowerOf(installed) : undefined;
+    if (installed !== undefined && installedLower !== undefined) {
+      if (compareLower(installedLower, min) < 0) out.push({ name, range, status: "below", source: "installed", installed });
+      continue;
+    }
     const atLeast = rangeLowerAtLeast(range, TAILWIND4_MIN_AXIS_VERSION);
-    if (atLeast === false) out.push({ name, range, status: "below" });
-    else if (atLeast === undefined) out.push({ name, range, status: "unknown" });
+    if (atLeast === false) out.push({ name, range, status: "below", source: "declared" });
+    else if (atLeast === undefined) out.push({ name, range, status: "unknown", source: "declared" });
   }
   return out;
 }
 
-/** `이름 선언` 을 ` · ` 로 잇습니다. */
-const declaredList = (issues: AxisPackageVersionIssue[]) => issues.map((i) => `${i.name} ${i.range}`).join(" · ");
+/** 버전 안내에 쓰는 패키지 표시: 선언으로 판정하면 `이름 선언`, 설치본으로 판정하면 `이름 설치본 <version>` 입니다. */
+export function axisPackageVersionLabel(issue: AxisPackageVersionIssue): string {
+  return issue.source === "installed" ? `${issue.name} 설치본 ${issue.installed}` : `${issue.name} ${issue.range}`;
+}
+
+/** 표시를 ` · ` 로 잇습니다. */
+const declaredList = (issues: AxisPackageVersionIssue[]) => issues.map(axisPackageVersionLabel).join(" · ");
 
 /**
  * Tailwind 4 WARN 끝에 붙이는 버전 안내(A1). 대상이 없으면 빈 문자열입니다.
  * `below` 는 ` (1.4.0 이상 필요: ...)`, `unknown` 은 ` (설치된 버전이 1.4.0 이상인지 확인하세요: ...)` 이고 둘 다 있으면 이 순서로 잇습니다.
+ * 패키지 표시는 `axisPackageVersionLabel`(설치본으로 판정했으면 `이름 설치본 <version>`)입니다.
  */
 export function tailwind4VersionNote(issues: AxisPackageVersionIssue[]): string {
   const below = issues.filter((i) => i.status === "below");
@@ -447,6 +499,21 @@ export function hasComponentTailwindImport(css: string, name: string): boolean {
 }
 
 /**
+ * CSS 에 그 패키지를 가리키는 `@source` 가 직접 있는지(보정 3차, 2026-10-20 사용자 결정). 블록 주석 안은 보지 않습니다.
+ * - `@source "<경로>"` · `@source '<경로>'` 의 경로 문자열에 `@axis-ds/<pkg>` 가 들어 있으면 그 패키지를 가리킨다고 봅니다
+ *   (`../node_modules/@axis-ds/ui-react` · `../node_modules/@axis-ds/ui-react/dist` · 다른 상대 경로 모두).
+ *   이름 바로 뒤는 경로 끝 · `/` · `\` 여야 합니다(`@axis-ds/ui-react-extra` 는 다른 패키지라 인정하지 않음).
+ * - `@source not "..."`(스캔 제외) · `@source inline(...)` 은 스캔 경로가 아니라 인정하지 않습니다.
+ * - 경로가 `@axis-ds/` 로 시작하는 패키지 이름 그대로(`@source "@axis-ds/ui-react"`)는 인정하지 않습니다. `@source` 는
+ *   CSS 파일 기준 상대 경로라 이 표기는 node_modules 를 가리키지 않습니다(PRD V2 와 같은 상태를 PASS 로 놓치지 않게).
+ * - 경로가 실제로 있는지는 보지 않습니다(문자열 판정).
+ */
+export function hasComponentSource(css: string, name: string): boolean {
+  const re = new RegExp(`@source\\s+(["'])(?!@axis-ds/)[^"'\\n]*${escapeRegExp(name)}(?:[/\\\\][^"'\\n]*)?\\1`);
+  return re.test(stripCssComments(css));
+}
+
+/**
  * create-next-app 기본 globals.css 의 특징 정의(B2). create-next-app@15.5.28 이 만든 `app/globals.css` 실물에서 골랐고,
  * AXIS 권장 구성(토큰 진입점 + 컴포넌트 tailwind.css)에는 나오지 않는 줄만 씁니다. 블록 주석 안은 보지 않습니다.
  * - `--background` · `--foreground` 를 색값(`#fff` · `rgb()` · `oklch()` 등)으로 정의: AXIS 는 HSL 삼중값(`0 0% 100%`)이라
@@ -454,30 +521,49 @@ export function hasComponentTailwindImport(css: string, name: string): boolean {
  * - `--color-background` · `--color-foreground` 를 `var(--background)` · `var(--foreground)` 로 정의: 진입점의 매핑을 덮습니다.
  * - `--font-sans` · `--font-mono` 를 `var(--font-geist-*)` 로 정의: 진입점의 AXIS 글꼴 매핑을 덮습니다.
  * - `background` · `color` 를 `var(--background)` · `var(--foreground)` 로 직접 씀(body): HSL 삼중값이라 무효입니다.
+ * 표시 이름(보정 3차, 2026-10-20 사용자 결정)은 특징마다 `prefix` 뒤에 실제로 걸린 정의를 CSS 에 나온 순서로, 중복 없이
+ * `, ` 로 잇습니다. `item` 이 매치에서 정의를 공백 없이 다시 씁니다(`--font-sans:var(...)` 도 `--font-sans: var(...)` 로 표시).
+ * 예: `--font-sans` 만 남았으면 `@theme --font-sans: var(--font-geist-sans)` 이고 `--font-mono` 는 말하지 않습니다.
  */
-const CREATE_NEXT_APP_DEFAULTS: { label: string; pattern: RegExp }[] = [
+const CREATE_NEXT_APP_DEFAULTS: { prefix: string; pattern: RegExp; item: (m: RegExpMatchArray) => string }[] = [
   {
-    label: ":root 색값 --background",
-    pattern: /(?<![\w-])--(?:background|foreground)\s*:\s*(?:#[0-9a-fA-F]{3,8}\b|(?:rgba?|hsla?|hwb|oklch|oklab|lab|lch|color)\()/,
+    prefix: ":root 색값",
+    pattern: /(?<![\w-])(--(?:background|foreground))\s*:\s*(?:#[0-9a-fA-F]{3,8}\b|(?:rgba?|hsla?|hwb|oklch|oklab|lab|lch|color)\()/g,
+    item: (m) => m[1],
   },
   {
-    label: "@theme --color-background: var(--background)",
-    pattern: /(?<![\w-])--color-(?:background|foreground)\s*:\s*var\(\s*--(?:background|foreground)\s*\)/,
+    prefix: "@theme",
+    pattern: /(?<![\w-])(--color-(?:background|foreground))\s*:\s*var\(\s*(--(?:background|foreground))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
   },
   {
-    label: "@theme --font-mono: var(--font-geist-mono)",
-    pattern: /(?<![\w-])--font-(?:sans|mono)\s*:\s*var\(\s*--font-geist-(?:sans|mono)\s*\)/,
+    prefix: "@theme",
+    pattern: /(?<![\w-])(--font-(?:sans|mono))\s*:\s*var\(\s*(--font-geist-(?:sans|mono))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
   },
   {
-    label: "body background: var(--background)",
-    pattern: /(?<![\w-])(?:background|background-color|color)\s*:\s*var\(\s*--(?:background|foreground)\s*\)/,
+    prefix: "body",
+    pattern: /(?<![\w-])(background|background-color|color)\s*:\s*var\(\s*(--(?:background|foreground))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
   },
 ];
 
-/** CSS 에 남은 create-next-app 기본 정의의 표시 이름(정해진 순서). 없으면 빈 배열입니다. */
+/**
+ * CSS 에 남은 create-next-app 기본 정의의 표시 이름(특징 순서, 특징 하나에 한 이름). 없으면 빈 배열입니다.
+ * 각 이름은 그 특징의 `prefix` 와 걸린 정의(나온 순서 · 중복 없음)입니다.
+ */
 export function findCreateNextAppDefaults(css: string): string[] {
   const body = stripCssComments(css);
-  return CREATE_NEXT_APP_DEFAULTS.filter((d) => d.pattern.test(body)).map((d) => d.label);
+  const labels: string[] = [];
+  for (const d of CREATE_NEXT_APP_DEFAULTS) {
+    const items: string[] = [];
+    for (const m of body.matchAll(d.pattern)) {
+      const item = d.item(m);
+      if (!items.includes(item)) items.push(item);
+    }
+    if (items.length > 0) labels.push(`${d.prefix} ${items.join(", ")}`);
+  }
+  return labels;
 }
 
 /**
@@ -545,9 +631,13 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
 /**
  * Tailwind 4 CSS 에서 AXIS 연동 문제를 우선순위 순서로 모읍니다(C). `@import "tailwindcss"` 가 있는 CSS 에만 씁니다.
  * 1. 토큰 진입점 import 없음(FR-4) → 넣을 import 줄
- * 2. package.json 에 선언된 ui-react · agentic-ui 의 `tailwind.css` import 없음(B1) → 빠진 import 줄(선언 순서)
+ * 2. package.json 에 선언된 ui-react · agentic-ui 의 `tailwind.css` import 없음(B1) → 빠진 import 줄(선언 순서).
+ *    그 패키지를 가리키는 `@source` 가 같은 CSS 에 직접 있으면(`hasComponentSource`, 보정 3차) 스캔 경로가 있으므로 빼지 않습니다.
  * 3. 진입점이 있는데 create-next-app 기본 정의가 남음(B2) → 남은 정의의 표시 이름
- * 4. 진입점이 있는데 `@axis-ds/tokens` 선언이 1.4.0 조건에 걸림(A4, A1 규칙) → 버전 확인
+ * 4. 진입점이 있는데 `@axis-ds/tokens` 가 1.4.0 조건에 걸림(A4, A1 규칙) → 버전 확인
+ * 5. `<pkg>/tailwind.css` 를 import 하는데 그 패키지가 1.4.0 조건에 걸림(보정 3차, A4 와 같은 규칙) → 버전 확인.
+ *    `tailwind.css` 는 1.4.0 부터 있으므로 init 이 세 패키지를 모두 안내하는 것과 대칭입니다. 직접 `@source` 로 스캔하면
+ *    `tailwind.css` 가 필요 없으므로 이 항목을 만들지 않습니다(버전 안내는 다른 문제가 있을 때 끝에 붙음).
  * 버전 안내(`tailwind4VersionNote`)는 문제 목록이 아니라 WARN 문구 끝에 한 번 붙습니다.
  */
 function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, versions: AxisPackageVersionIssue[]): string[] {
@@ -555,7 +645,11 @@ function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, 
   const hasEntry = hasTokensTailwind4Import(css);
   if (!hasEntry) issues.push(`AXIS 토큰 진입점이 없습니다 → ${TOKENS_TAILWIND4_IMPORT_LINE}`);
   const missing = TAILWIND4_COMPONENT_PACKAGES.filter(
-    (name) => pkg !== undefined && hasDependency(pkg, name) !== undefined && !hasComponentTailwindImport(css, name)
+    (name) =>
+      pkg !== undefined &&
+      hasDependency(pkg, name) !== undefined &&
+      !hasComponentTailwindImport(css, name) &&
+      !hasComponentSource(css, name)
   );
   if (missing.length > 0) {
     issues.push(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${missing.map(componentTailwindImportLine).join(" ")}`);
@@ -565,6 +659,11 @@ function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, 
     if (defaults.length > 0) issues.push(`create-next-app 기본 정의가 남아 있습니다(${defaults.join(" · ")}) → 지우세요`);
     if (versions.some((v) => v.name === TAILWIND4_AXIS_PACKAGES[0])) {
       issues.push(`AXIS 토큰 진입점이 있지만 ${TAILWIND4_AXIS_PACKAGES[0]} 버전 확인이 필요합니다`);
+    }
+  }
+  for (const name of TAILWIND4_COMPONENT_PACKAGES) {
+    if (hasComponentTailwindImport(css, name) && versions.some((v) => v.name === name)) {
+      issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
     }
   }
   return issues;
@@ -598,7 +697,7 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
           message: `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다`,
         };
       }
-      const versions = axisPackagesBelowTailwind4(pkg);
+      const versions = axisPackagesBelowTailwind4(pkg, baseDir);
       const issues = tailwind4Issues(css, pkg, versions);
       if (issues.length > 0) {
         return {

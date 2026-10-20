@@ -4,7 +4,8 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { collectCheckResults, runCheck } from "./template-check.js";
-import { axisPackagesBelowTailwind4, rangeLowerAtLeast } from "./tailwind-core.js";
+import { axisPackagesBelowTailwind4, findCreateNextAppDefaults, hasComponentSource, rangeLowerAtLeast } from "./tailwind-core.js";
+import { tailwind4GuideLines } from "../init/init.js";
 import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
 import { makeProject } from "../theme/test-helpers.js";
 import type { CheckResult } from "./types.js";
@@ -539,8 +540,11 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
         },
         { tailwindcss: "^4", "@axis-ds/agentic-ui": "catalog:", "@axis-ds/ui-react": "1.3.1" }
       );
+      // 보정 3차: import 중인 tailwind.css 의 패키지도 버전 조건을 문제로 올립니다(A4 와 같은 규칙).
       expect((await tailwindItem(dir)).message).toBe(
-        `${WARN} (1.4.0 이상 필요: @axis-ds/ui-react 1.3.1) (설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/agentic-ui catalog:)`
+        `${WARN} / @axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다` +
+          ` / @axis-ds/agentic-ui/tailwind.css import 가 있지만 @axis-ds/agentic-ui 버전 확인이 필요합니다` +
+          ` (1.4.0 이상 필요: @axis-ds/ui-react 1.3.1) (설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/agentic-ui catalog:)`
       );
     });
 
@@ -652,13 +656,13 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
           devDependencies: { "@axis-ds/tokens": "workspace:^1.3.0" },
         })
       ).toEqual([
-        { name: "@axis-ds/ui-react", range: "1.3.0 - 1.5.0", status: "below" },
-        { name: "@axis-ds/agentic-ui", range: "latest", status: "unknown" },
+        { name: "@axis-ds/ui-react", range: "1.3.0 - 1.5.0", status: "below", source: "declared" },
+        { name: "@axis-ds/agentic-ui", range: "latest", status: "unknown", source: "declared" },
       ]);
       expect(axisPackagesBelowTailwind4({ dependencies: { "@axis-ds/tokens": ">=1.2 >=1.4" } })).toEqual([]);
       expect(axisPackagesBelowTailwind4({ dependencies: { "@axis-ds/tokens": "workspace:*" } })).toEqual([]);
       expect(axisPackagesBelowTailwind4({ dependencies: { "@axis-ds/tokens": "^1 || ^2" } })).toEqual([
-        { name: "@axis-ds/tokens", range: "^1 || ^2", status: "unknown" },
+        { name: "@axis-ds/tokens", range: "^1 || ^2", status: "unknown", source: "declared" },
       ]);
       expect(axisPackagesBelowTailwind4(undefined)).toEqual([]);
       expect(axisPackagesBelowTailwind4({ name: "x" })).toEqual([]);
@@ -715,12 +719,17 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
       }
     });
 
-    it("A4 는 tokens 만 봄: import 가 있는 ui-react 1.3.0 은 진입점이 있으면 warn 을 만들지 않음", async () => {
+    it("보정 3차: import 중인 ui-react tailwind.css 의 패키지도 A4 와 같은 조건(ui-react 1.3.0 → warn, 종전에는 pass)", async () => {
       const dir = await project(
         { "globals.css": `${TW}\n${TOKENS_LINE}\n${UI}` },
         { tailwindcss: "^4", "@axis-ds/tokens": "^1.4.0", "@axis-ds/ui-react": "1.3.0" }
       );
-      expect((await tailwindItem(dir)).severity).toBe("pass");
+      expect(await tailwindItem(dir)).toEqual({
+        name: "tailwind.config",
+        severity: "warn",
+        message:
+          "Tailwind 4: globals.css에 @axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/ui-react 1.3.0)",
+      });
     });
   });
 
@@ -776,8 +785,16 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
   });
 
   describe("B2: create-next-app 기본 정의 (create-next-app@15.5.28 실물 기준)", () => {
+    // 보정 3차: 특징마다 실제로 걸린 정의를 나온 순서로, 중복 없이 표시합니다(fixture 의 다크 :root 재정의는 한 번만).
     const ALL =
-      "create-next-app 기본 정의가 남아 있습니다(:root 색값 --background · @theme --color-background: var(--background) · @theme --font-mono: var(--font-geist-mono) · body background: var(--background)) → 지우세요";
+      "create-next-app 기본 정의가 남아 있습니다(" +
+      [
+        ":root 색값 --background, --foreground",
+        "@theme --color-background: var(--background), --color-foreground: var(--foreground)",
+        "@theme --font-sans: var(--font-geist-sans), --font-mono: var(--font-geist-mono)",
+        "body background: var(--background), color: var(--foreground)",
+      ].join(" · ") +
+      ") → 지우세요";
 
     it("fixture 는 create-next-app@15.5.28 기본 globals.css 그대로(특징 줄 4종을 담음)", async () => {
       const cna = await fs.readFile(CNA_GLOBALS_FILE, "utf8");
@@ -799,12 +816,15 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
       expect((await tailwindItem(dir)).message).toBe(`Tailwind 4: app/globals.css에 ${NO_ENTRY}`);
     });
 
-    it("특징을 하나씩만 남기면 그 이름만 표시", async () => {
+    it("특징을 하나씩만 남기면 실제로 걸린 정의 이름만 표시(보정 3차: --font-sans 만 남으면 --font-mono 를 말하지 않음)", async () => {
       const cases: [string, string][] = [
-        [":root { --foreground: oklch(0.2 0 0); }", ":root 색값 --background"],
-        ["@theme inline { --color-foreground: var(--foreground); }", "@theme --color-background: var(--background)"],
-        ["@theme inline { --font-sans: var(--font-geist-sans); }", "@theme --font-mono: var(--font-geist-mono)"],
-        ["body { color: var(--foreground); }", "body background: var(--background)"],
+        [":root { --foreground: oklch(0.2 0 0); }", ":root 색값 --foreground"],
+        [":root { --background: #fff; }", ":root 색값 --background"],
+        ["@theme inline { --color-foreground: var(--foreground); }", "@theme --color-foreground: var(--foreground)"],
+        ["@theme inline { --font-sans: var(--font-geist-sans); }", "@theme --font-sans: var(--font-geist-sans)"],
+        ["@theme inline { --font-mono:var( --font-geist-mono ); }", "@theme --font-mono: var(--font-geist-mono)"],
+        ["body { color: var(--foreground); }", "body color: var(--foreground)"],
+        ["body { background-color: var(--background); }", "body background-color: var(--background)"],
       ];
       for (const [css, label] of cases) {
         const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}\n${css}` }, { tailwindcss: "^4" });
@@ -929,7 +949,7 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
       );
     });
 
-    it("버전만 걸린 ui-react 는 다른 문제가 없으면 warn 을 만들지 않고, 다른 문제가 있으면 끝에 안내", async () => {
+    it("버전만 걸린 ui-react: import 중이면 버전 확인 문제(보정 3차, 종전에는 pass), 다른 문제가 있으면 그 뒤에 잇고 끝에 안내", async () => {
       const onlyVersion = await project(
         { "globals.css": `${TW}\n${TOKENS_LINE}\n${UI}` },
         { tailwindcss: "^4", "@axis-ds/ui-react": "^1.3.0" }
@@ -938,15 +958,231 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
         { "globals.css": `${TW}\n${TOKENS_LINE}\n${UI}\n:root { --background: #fff; }` },
         { tailwindcss: "^4", "@axis-ds/ui-react": "^1.3.0" }
       );
-      expect((await tailwindItem(onlyVersion)).severity).toBe("pass");
+      const VERSION_ISSUE = "@axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다";
+      expect((await tailwindItem(onlyVersion)).message).toBe(
+        `Tailwind 4: globals.css에 ${VERSION_ISSUE} (1.4.0 이상 필요: @axis-ds/ui-react ^1.3.0)`
+      );
       expect((await tailwindItem(withDefault)).message).toBe(
-        "Tailwind 4: globals.css에 create-next-app 기본 정의가 남아 있습니다(:root 색값 --background) → 지우세요 (1.4.0 이상 필요: @axis-ds/ui-react ^1.3.0)"
+        `Tailwind 4: globals.css에 create-next-app 기본 정의가 남아 있습니다(:root 색값 --background) → 지우세요 / ${VERSION_ISSUE} (1.4.0 이상 필요: @axis-ds/ui-react ^1.3.0)`
       );
     });
 
     it("@import \"tailwindcss\" 가 없으면 다른 문제와 합치지 않고 종전 문구 하나", async () => {
       const dir = await project({ "globals.css": ":root { --background: #fff; }" }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.3.0" });
       expect((await tailwindItem(dir)).message).toBe('Tailwind 4: globals.css에 @import "tailwindcss" 가 없습니다');
+    });
+  });
+});
+
+describe("WI-0044 보정 3차: B2 라벨 · 설치본 우선 버전 판정 · 직접 @source", () => {
+  async function project(
+    files: Record<string, string>,
+    deps: Record<string, string> | null,
+    installed: Record<string, string> = {}
+  ): Promise<string> {
+    const dir = await tempDir();
+    if (deps) await fs.writeJSON(path.join(dir, "package.json"), { dependencies: deps });
+    for (const [rel, content] of Object.entries(files)) {
+      await fs.ensureDir(path.dirname(path.join(dir, rel)));
+      await fs.writeFile(path.join(dir, rel), content);
+    }
+    // node_modules/<pkg>/package.json 설치본
+    for (const [name, version] of Object.entries(installed)) {
+      await fs.ensureDir(path.join(dir, "node_modules", name));
+      await fs.writeJSON(path.join(dir, "node_modules", name, "package.json"), { name, version });
+    }
+    return dir;
+  }
+  const tailwindItem = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "tailwind.config")!;
+  const pkgOf = async (dir: string) => (await fs.readJSON(path.join(dir, "package.json"))) as Record<string, unknown>;
+  /** init 의 안내 중 1.4.0 조건 줄(「!」 로 시작하는 버전 줄) */
+  const initVersionLines = async (dir: string) =>
+    tailwind4GuideLines(await pkgOf(dir), "pnpm install", "./globals.css", dir).filter((l) => l.includes("1.4.0 부터"));
+  const TW = '@import "tailwindcss";';
+  const UI = '@import "@axis-ds/ui-react/tailwind.css";';
+  const PASS4 = 'Tailwind 4: globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다';
+  const B1 = "컴포넌트 스캔 경로(tailwind.css)가 없습니다 →";
+
+  describe("1. B2 라벨: 실제로 걸린 정의 이름", () => {
+    it("findCreateNextAppDefaults 직접 호출: 나온 순서 · 중복 없음 · 공백 정규화, 걸리지 않은 이름은 말하지 않음", () => {
+      expect(
+        findCreateNextAppDefaults(
+          ":root { --foreground: #000; --background: rgb(0 0 0); }\n@media (x) { :root { --foreground: #111; } }\n" +
+            "@theme inline { --font-sans: var(--font-geist-sans); --font-sans:var( --font-geist-sans ); }"
+        )
+      ).toEqual([":root 색값 --foreground, --background", "@theme --font-sans: var(--font-geist-sans)"]);
+      expect(findCreateNextAppDefaults("/* --font-mono: var(--font-geist-mono); */ body { color: var(--foreground); }")).toEqual([
+        "body color: var(--foreground)",
+      ]);
+      expect(findCreateNextAppDefaults(":root { --background: 0 0% 100%; }")).toEqual([]);
+    });
+
+    it("check 문구: --font-sans 만 남으면 --font-mono 를 말하지 않음", async () => {
+      const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}\n@theme inline { --font-sans: var(--font-geist-sans); }` }, { tailwindcss: "^4" });
+      const message = (await tailwindItem(dir)).message;
+      expect(message).toBe(
+        "Tailwind 4: globals.css에 create-next-app 기본 정의가 남아 있습니다(@theme --font-sans: var(--font-geist-sans)) → 지우세요"
+      );
+      expect(message).not.toContain("--font-mono");
+    });
+  });
+
+  describe("2. 버전 판정: 설치본 → 선언 하한 → 판정 불가 (init · check 같은 함수)", () => {
+    it("설치본 1.4.2 + 선언 ^1.3.0 → check pass · init 안내 없음", async () => {
+      const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0" }, { "@axis-ds/tokens": "1.4.2" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(dir), dir)).toEqual([]);
+      expect(await tailwindItem(dir)).toEqual({ name: "tailwind.config", severity: "pass", message: PASS4 });
+      expect(await initVersionLines(dir)).toEqual([]);
+    });
+
+    it("설치본 1.3.0 + 선언 ^1.4.0 → 안내(설치본 우선, 문구에 설치본 버전)", async () => {
+      const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.4.0" }, { "@axis-ds/tokens": "1.3.0" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(dir), dir)).toEqual([
+        { name: "@axis-ds/tokens", range: "^1.4.0", status: "below", source: "installed", installed: "1.3.0" },
+      ]);
+      expect((await tailwindItem(dir)).message).toBe(
+        "Tailwind 4: globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens 설치본 1.3.0)"
+      );
+      expect(await initVersionLines(dir)).toEqual([
+        '  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/tokens 1.3.0, 선언 ^1.4.0)을 올리세요: pnpm add "@axis-ds/tokens@^1.4.0"',
+      ]);
+    });
+
+    it("설치본 없음 + ^1.3.0 → 기존 안내(선언 하한)", async () => {
+      const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0" });
+      expect((await tailwindItem(dir)).message).toBe(
+        "Tailwind 4: globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0)"
+      );
+      expect(await initVersionLines(dir)).toEqual([
+        '  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 선언(@axis-ds/tokens ^1.3.0)을 올리세요: pnpm add "@axis-ds/tokens@^1.4.0"',
+      ]);
+    });
+
+    it("ui-react tailwind.css import + ui-react 설치본 1.3.0(선언 ^1.4.0) → warn", async () => {
+      const dir = await project(
+        { "globals.css": `${TW}\n${TOKENS_LINE}\n${UI}` },
+        { tailwindcss: "^4", "@axis-ds/tokens": "^1.4.0", "@axis-ds/ui-react": "^1.4.0" },
+        { "@axis-ds/tokens": "1.4.0", "@axis-ds/ui-react": "1.3.0" }
+      );
+      expect(await tailwindItem(dir)).toEqual({
+        name: "tailwind.config",
+        severity: "warn",
+        message:
+          "Tailwind 4: globals.css에 @axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/ui-react 설치본 1.3.0)",
+      });
+    });
+
+    it("설치본 1.4.0 이상이면 판정 불가 선언(catalog: · 1.x · latest)도 안내 없음", async () => {
+      for (const range of ["catalog:", "1.x", "latest"]) {
+        const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}` }, { tailwindcss: "^4", "@axis-ds/tokens": range }, { "@axis-ds/tokens": "1.5.0" });
+        expect({ range, item: await tailwindItem(dir), init: await initVersionLines(dir) }).toEqual({
+          range,
+          item: { name: "tailwind.config", severity: "pass", message: PASS4 },
+          init: [],
+        });
+      }
+    });
+
+    it("설치본 prerelease 1.4.0-beta.1 은 1.4.0 미만, 정확한 버전이 아니면(1.4 · 0.0.0-insiders.1 · 숫자 아님) 선언 하한으로", async () => {
+      const pre = await project({ "globals.css": TW }, { "@axis-ds/tokens": "^1.4.0" }, { "@axis-ds/tokens": "1.4.0-beta.1" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(pre), pre)).toEqual([
+        { name: "@axis-ds/tokens", range: "^1.4.0", status: "below", source: "installed", installed: "1.4.0-beta.1" },
+      ]);
+      for (const version of ["1.4", "0.0.0-insiders.1", "abc"]) {
+        const dir = await project({ "globals.css": TW }, { "@axis-ds/tokens": "^1.3.0" }, { "@axis-ds/tokens": version });
+        expect({ version, got: axisPackagesBelowTailwind4(await pkgOf(dir), dir) }).toEqual({
+          version,
+          got: [{ name: "@axis-ds/tokens", range: "^1.3.0", status: "below", source: "declared" }],
+        });
+      }
+    });
+
+    it("workspace: 는 설치본이 1.3.0 이어도 안내 없음(링크된 소스 version 은 배포 전 version 이라 근거가 아님)", async () => {
+      const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}` }, { tailwindcss: "^4", "@axis-ds/tokens": "workspace:*" }, { "@axis-ds/tokens": "1.3.0" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(dir), dir)).toEqual([]);
+      expect((await tailwindItem(dir)).severity).toBe("pass");
+      expect(await initVersionLines(dir)).toEqual([]);
+    });
+
+    it("선언이 없으면 설치본이 1.3.0 이어도 넣지 않음(다른 패키지가 끌어온 의존성), baseDir 없으면 선언만 봄", async () => {
+      const dir = await project({ "globals.css": TW }, { "@axis-ds/ui-react": "^1.4.0" }, { "@axis-ds/tokens": "1.3.0", "@axis-ds/ui-react": "1.4.1" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(dir), dir)).toEqual([]);
+      const declaredOnly = await project({ "globals.css": TW }, { "@axis-ds/tokens": "^1.3.0" }, { "@axis-ds/tokens": "1.4.2" });
+      expect(axisPackagesBelowTailwind4(await pkgOf(declaredOnly))).toEqual([
+        { name: "@axis-ds/tokens", range: "^1.3.0", status: "below", source: "declared" },
+      ]);
+    });
+
+    it("init 과 check 가 같은 프로젝트에서 같은 패키지를 걸러냄(설치본 · 선언 · 판정 불가 혼합)", async () => {
+      const dir = await project(
+        { "globals.css": `${TW}\n${TOKENS_LINE}` },
+        { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.4.0", "@axis-ds/agentic-ui": "catalog:" },
+        { "@axis-ds/tokens": "1.4.2", "@axis-ds/ui-react": "1.3.5" }
+      );
+      const issues = axisPackagesBelowTailwind4(await pkgOf(dir), dir);
+      expect(issues.map((i) => i.name)).toEqual(["@axis-ds/ui-react", "@axis-ds/agentic-ui"]);
+      const message = (await tailwindItem(dir)).message;
+      expect(message).toContain("(1.4.0 이상 필요: @axis-ds/ui-react 설치본 1.3.5) (설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/agentic-ui catalog:)");
+      expect(message).not.toContain("@axis-ds/tokens");
+      const init = await initVersionLines(dir);
+      expect(init).toEqual([
+        '  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 설치본(@axis-ds/ui-react 1.3.5, 선언 ^1.4.0)을 올리세요: pnpm add "@axis-ds/ui-react@^1.4.0"',
+        "  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 선언(@axis-ds/agentic-ui catalog:)으로는 버전을 판정할 수 없으니 설치된 버전이 1.4.0 이상인지 확인하세요.",
+      ]);
+      expect(init.join("\n")).not.toContain("@axis-ds/tokens");
+    });
+  });
+
+  describe("3. 직접 @source 인정(B1)", () => {
+    it("ui-react 를 가리키는 @source(패키지 · dist · 작은따옴표 · 다른 상대 경로)가 있으면 B1 없음 → pass", async () => {
+      for (const line of [
+        '@source "../node_modules/@axis-ds/ui-react";',
+        '@source "../node_modules/@axis-ds/ui-react/dist";',
+        "@source '../../node_modules/@axis-ds/ui-react/dist/index.js';",
+        '@source "./node_modules/@axis-ds/ui-react/";',
+      ]) {
+        const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}\n${line}` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0" });
+        expect({ line, item: await tailwindItem(dir) }).toEqual({ line, item: { name: "tailwind.config", severity: "pass", message: PASS4 } });
+      }
+    });
+
+    it("주석 안 · @source not · 다른 패키지 이름 · 다른 컴포넌트 패키지 경로는 인정하지 않음 → B1 warn", async () => {
+      for (const line of [
+        '/* @source "../node_modules/@axis-ds/ui-react"; */',
+        '@source not "../node_modules/@axis-ds/ui-react";',
+        '@source "../node_modules/@axis-ds/ui-react-extra";',
+        '@source "../node_modules/@axis-ds/agentic-ui";',
+        '@source "../node_modules/ui-react";',
+      ]) {
+        const dir = await project({ "globals.css": `${TW}\n${TOKENS_LINE}\n${line}` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0" });
+        expect({ line, message: (await tailwindItem(dir)).message }).toEqual({
+          line,
+          message: `Tailwind 4: globals.css에 ${B1} ${UI}`,
+        });
+      }
+    });
+
+    it("hasComponentSource 직접 호출", () => {
+      expect(hasComponentSource('@source "../node_modules/@axis-ds/agentic-ui/dist";', "@axis-ds/agentic-ui")).toBe(true);
+      expect(hasComponentSource('@source "../node_modules/@axis-ds/agentic-ui/dist";', "@axis-ds/ui-react")).toBe(false);
+      expect(hasComponentSource('@source inline("@axis-ds/ui-react");', "@axis-ds/ui-react")).toBe(false);
+      // 패키지 이름 그대로는 CSS 기준 상대 경로라 node_modules 를 가리키지 않음(PRD V2 와 같은 상태)
+      expect(hasComponentSource('@source "@axis-ds/ui-react";', "@axis-ds/ui-react")).toBe(false);
+      expect(hasComponentSource("@source '@axis-ds/ui-react/dist';", "@axis-ds/ui-react")).toBe(false);
+      expect(hasComponentSource('@source "node_modules/@axis-ds/ui-react";', "@axis-ds/ui-react")).toBe(true);
+    });
+
+    it("두 패키지 중 하나만 @source → 다른 하나만 B1, 직접 @source 는 tailwind.css 가 필요 없으니 버전 문제를 만들지 않음", async () => {
+      const dir = await project(
+        { "globals.css": `${TW}\n${TOKENS_LINE}\n@source "../node_modules/@axis-ds/ui-react/dist";` },
+        { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0", "@axis-ds/agentic-ui": "^1.4.0" }
+      );
+      expect((await tailwindItem(dir)).message).toBe(`Tailwind 4: globals.css에 ${B1} @import "@axis-ds/agentic-ui/tailwind.css";`);
+      const old = await project(
+        { "globals.css": `${TW}\n${TOKENS_LINE}\n@source "../node_modules/@axis-ds/ui-react/dist";` },
+        { tailwindcss: "^4", "@axis-ds/ui-react": "^1.3.0" }
+      );
+      expect((await tailwindItem(old)).severity).toBe("pass");
     });
   });
 });

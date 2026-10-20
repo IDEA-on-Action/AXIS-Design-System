@@ -113,13 +113,13 @@
 | S1 | A3: `rangeLowerAtLeast` 직접 17개(`1.3.0 - 1.5.0` false · `1.4.0 - 1.3.0` true(왼쪽만) · `>=1.2 >=1.4` · `>=1.4 >=1.2` true · `>=1.2 <1.9` false · `>1.3` true · `>1.3.9` false · `^1.4.0-beta.1` false · `<2` · `*` · `catalog:` · `latest` · `\|\|` · `workspace:*` undefined 등) | 통과 |
 | S2 | A3: `axisPackagesBelowTailwind4` 직접(below · unknown · workspace 제외 · 선언 순서 · devDependencies · pkg 없음), check 문구 `1.3.0 - 1.5.0` 안내 있음 · `>=1.2 >=1.4` 안내 없음 | 통과 |
 | S3 | A1 check: `catalog:` · `latest` · `^1 \|\| ^2` · `<2` → 확인 문구, `workspace:*` · `workspace:^1.3.0` → 안내 없음. A1 init: 미만 4종 → 올리기 명령, 판정 불가 5종 → 확인 줄(명령 없음), workspace 2종 → 줄 없음, 섞이면 올리기 줄 다음 확인 줄 | 통과 |
-| S4 | A4: 진입점 + tokens `^1.3.0` → WARN `AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: …)`(종전 PASS 를 기대하던 테스트 1건을 WARN 으로 바꿈), `catalog:` → 확인 문구, `^1.4.0` · `workspace:*` · 선언 없음 → PASS, import 가 있는 ui-react 1.3.0 은 A4 대상 아님 | 통과 |
+| S4 | A4: 진입점 + tokens `^1.3.0` → WARN `AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: …)`(종전 PASS 를 기대하던 테스트 1건을 WARN 으로 바꿈), `catalog:` → 확인 문구, `^1.4.0` · `workspace:*` · 선언 없음 → PASS, import 가 있는 ui-react 1.3.0 은 A4 대상 아님(보정 3차에서 WARN 으로 바뀜, 8절 R5) | 통과 |
 | S5 | B1: 선언 + import 없음 → 빠진 줄, 둘 중 하나만 → 빠진 쪽, 둘 다 → 선언 순서 두 줄, 작은따옴표 · `url()` · `layer()` 인정, 주석 안 · `tailwind.cs` 는 없음, 선언 없음 → 요구 안 함 | 통과 |
-| S6 | B2: fixture `test/fixtures/check/create-next-app-15.5.28-globals.css`(scratch 에서 `npx create-next-app@15.5.28 base --yes --use-npm --skip-install` 로 만든 실물, sha256 769edf77…)에 진입점 한 줄 → 특징 4종 모두 표시, 진입점 없음 → 진입점 WARN 만, 특징 하나씩 4건 → 그 이름만 | 통과 |
+| S6 | B2: fixture `test/fixtures/check/create-next-app-15.5.28-globals.css`(scratch 에서 `npx create-next-app@15.5.28 base --yes --use-npm --skip-install` 로 만든 실물, sha256 769edf77…)에 진입점 한 줄 → 특징 4종 모두 표시, 진입점 없음 → 진입점 WARN 만, 특징 하나씩 4건 → 그 이름만(보정 3차에서 고정 이름 대신 실제로 걸린 정의 이름으로 바뀜, 8절 R1) | 통과 |
 | S7 | B2 오탐 음성 대조: 문서 권장형 · HSL 삼중값 재정의 · `hsl(var(--background))` · `--sidebar-background: #fff` 류 다른 이름 · 기본 globals.css 전체를 블록 주석으로 감쌈 → PASS. globals.css 항목은 진입점 import 로 계속 PASS | 통과 |
 | S8 | B3: `.ts` 의 `import from` · `require('…')` · `import()` → preset PASS, `.js` · `.mjs` · `.cjs` 의 preset 참조 → PASS · 없으면 종전 WARN, `//` · `/* */` 주석 안 · `tailwind-preset` · `css/tailwind4` → 종전 WARN, 문자열 속 `https://` 뒤 참조 → PASS, `hsl(var(` 가 있으면 종전 문구, Tailwind 4 는 설정 파일을 보지 않음 | 통과 |
 | S9 | B3 기준선: T4-1 6개 프로젝트 · MCP 기준선 테스트 그대로 통과. 기준선 fixture 에서 tailwind.config 를 만드는 것은 theme-only(`apps/web/public/templates/theme-only.json` 의 `tailwind.config.ts`, `hsl(var(` 포함 · preset 참조 없음)와 allPass(`hsl(var(--x))`)뿐이라 종전 분기로 판정됨을 읽어 확인 | 통과 |
-| S10 | C: 진입점 없음 + 컴포넌트 + 미만 2개 → `… / … (1.4.0 이상 필요: tokens · ui-react)`, 진입점 있음 + 컴포넌트 + B2 + tokens `~1.3.2` + agentic-ui `catalog:` → 문제 3개 순서 + 버전 안내 2개, ui-react 버전만 걸리면 PASS · 다른 문제가 있으면 끝에 안내, `@import "tailwindcss"` 없음은 합치지 않음. MCP 에서 A1 · A4 · B1 · B2 · B3 · C 6건 같은 문자열 | 통과 |
+| S10 | C: 진입점 없음 + 컴포넌트 + 미만 2개 → `… / … (1.4.0 이상 필요: tokens · ui-react)`, 진입점 있음 + 컴포넌트 + B2 + tokens `~1.3.2` + agentic-ui `catalog:` → 문제 3개 순서 + 버전 안내 2개, ui-react 버전만 걸리면 PASS(보정 3차에서 import 중이면 WARN 으로 바뀜, 8절 R5) · 다른 문제가 있으면 끝에 안내, `@import "tailwindcss"` 없음은 합치지 않음. MCP 에서 A1 · A4 · B1 · B2 · B3 · C 6건 같은 문자열 | 통과 |
 | S11 | 변이 음성 대조(두 사본 같게 바꾸고 CLI · MCP 전체 테스트): A4 끄기 · B1 끄기 · B2 끄기 · B3 끄기 | A4: CLI rc 1(3건) · MCP rc 1(1건). B1: CLI rc 1(7건) · MCP rc 1(2건). B2: CLI rc 1(4건) · MCP rc 1(1건). B3: CLI rc 1(3건) · MCP rc 1(1건). 매회 원복 후 `sha256sum -c` OK |
 | S12 | 품질 게이트 | cli: `pnpm test` 288 → 319개 통과(12파일), `pnpm build` rc 0, `tsc --noEmit` 오류 20건(이전 목록과 diff rc 0, 새 테스트의 타입 오류 1건을 고친 뒤). mcp: `pnpm test` 33 → 39개 통과, `pnpm build` rc 0, `tsc` 오류 0. 두 코어 `cmp` 동일 |
 | S13 | 빌드한 cli `dist/index.js` 로 create-next-app@15.5.28 기반 scratch 세 프로젝트에 `init -y` 뒤 `check`(설치는 하지 않음, Tailwind 는 선언 `^4` 로 판정, lockfile 없음이라 설치 명령은 pnpm) | 아래 표 |
@@ -138,7 +138,36 @@ S13 결과:
 
 보정 2차 미측정: 빌드한 MCP 서버(stdio)의 `axis.check_project` 실행(소스 테스트로만 확인), Tailwind 3 실앱에서 preset 참조 PASS(소스 테스트로만 확인), 의존성을 설치한 상태(설치본 판정 경로)의 S13.
 
-## 8. 미측정 (AC 판정 전에 필요)
+## 8. 보정 3차 (2026-10-20 사용자 결정, minor 3건)
+
+판정 로직은 공유 코어(`tailwind-core.ts`, MCP 사본 바이트 동일, sha256 b26ed4a8…)에 있습니다. 테스트는 CLI `template-check.test.ts` 「WI-0044 보정 3차」 절 · 갱신한 보정 2차 테스트 5건 · `init.test.ts` 1건, MCP `template.test.ts` 「보정 3차」 절입니다.
+
+결정한 규칙:
+- R1 B2 라벨: 특징 4종마다 접두(`:root 색값` · `@theme` · `@theme` · `body`) 뒤에 실제로 걸린 정의를 CSS 에 나온 순서로, 중복 없이 `, ` 로 잇습니다(정의는 공백을 정규화해 `--font-sans: var(--font-geist-sans)` 형태로 표시). 특징끼리는 종전대로 ` · `. create-next-app@15.5.28 실물은 `:root 색값 --background, --foreground · @theme --color-background: var(--background), --color-foreground: var(--foreground) · @theme --font-sans: var(--font-geist-sans), --font-mono: var(--font-geist-mono) · body background: var(--background), color: var(--foreground)` 입니다(다크 `:root` 재정의는 같은 이름이라 한 번).
+- R2 버전 판정(`axisPackagesBelowTailwind4(pkg, baseDir)`, init · check 가 같은 함수 결과를 씀): ① 설치본 `<baseDir>/node_modules/<pkg>/package.json` 의 `version` 이 정확한 버전(`1.4.2` · `1.4.0-beta.1`, `0.0.0-*` 제외)이면 그것으로 판정. 1.4.0 이상이면 선언과 관계없이 대상 아님, 미만이면 `below`(`source: "installed"`) ② 설치본이 없거나 정확한 버전이 아니면 선언 하한(종전) ③ 하한도 못 읽으면 `unknown`. 표시는 설치본이면 check `@axis-ds/tokens 설치본 1.3.0`, init `설치본(@axis-ds/tokens 1.3.0, 선언 ^1.4.0)을 올리세요: <명령>`(선언 하한 판정은 종전 문구). 설치본 미만이어도 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||`) init 은 명령을 내지 않고 `…이 1.4.0 미만입니다. 선언이 가리키는 버전을 1.4.0 이상으로 올린 뒤 다시 설치하세요(선언은 덮어쓰지 않습니다).` 를 냅니다(보정 3차 후속, 보정 2차 A1 원칙 유지).
+- R3 `workspace:`: 설치본이 1.4.0 미만이어도 대상에서 뺍니다. 링크된 패키지의 `version` 은 배포 전 소스의 값이라(이 저장소의 tokens · ui-react · agentic-ui 는 changeset 적용 전까지 진입점 · `tailwind.css` 가 있어도 1.3.0) 1.4.0 미만이 진입점이 없다는 근거가 아니고, 레지스트리 범위로 올리라는 안내는 링크를 깹니다.
+- R4 선언이 없는 패키지는 설치본이 있어도 대상이 아닙니다(다른 패키지가 끌어온 의존성, 종전 범위 유지).
+- R5 컴포넌트 버전: check 의 문제 목록에 ⑤ `<pkg>/tailwind.css` 를 import 하는데 그 패키지가 1.4.0 조건에 걸림 → `<pkg>/tailwind.css import 가 있지만 <pkg> 버전 확인이 필요합니다` 를 더했습니다(A4 뒤, ui-react · agentic-ui 순서). init 이 세 패키지를 모두 안내하는 것과 대칭입니다. 직접 `@source` 로 스캔하는 패키지는 `tailwind.css` 가 필요 없으므로 이 문제를 만들지 않습니다.
+- R6 직접 `@source`(B1): 같은 CSS 에 `@source "<경로>"` · `@source '<경로>'` 가 있고(블록 주석 밖) 경로 문자열에 `@axis-ds/<pkg>` 가 들어 있으며 그 바로 뒤가 경로 끝 · `/` · `\` 이면 그 패키지의 스캔 경로로 인정해 B1 을 내지 않습니다. `@source not` · `@source inline()` · `@axis-ds/ui-react-extra` 류 다른 이름은 인정하지 않습니다. 경로가 실제로 있는지는 보지 않습니다(문자열 판정).
+
+| # | 내용 | 결과 |
+|---|---|---|
+| U1 | R1: `findCreateNextAppDefaults` 직접(나온 순서 · 다크 재정의 중복 제거 · `--font-sans:var( --font-geist-sans )` 정규화 · 주석 안 제외 · HSL 삼중값 제외), check 문구에서 `--font-sans` 만 남으면 `--font-mono` 를 말하지 않음, 특징 하나씩 7건(`--foreground` 만 · `--background` 만 · `--color-foreground` · `--font-sans` · 공백 없는 `--font-mono` · `color` · `background-color`), 실물 fixture 전체 라벨 | 통과 |
+| U2 | R2: 설치본 1.4.2 + 선언 `^1.3.0` → check PASS · init 버전 줄 없음 / 설치본 1.3.0 + 선언 `^1.4.0` → check `(1.4.0 이상 필요: @axis-ds/tokens 설치본 1.3.0)` · init `설치본(@axis-ds/tokens 1.3.0, 선언 ^1.4.0)을 올리세요` / 설치본 없음 + `^1.3.0` → 종전 문구 / 설치본 1.5.0 + `catalog:` · `1.x` · `latest` → PASS · init 줄 없음 / 설치본 `1.4.0-beta.1` → below / 설치본 `1.4` · `0.0.0-insiders.1` · `abc` → 선언 하한으로 / `baseDir` 없이 부르면 선언만 | 통과 |
+| U3 | R2 대칭: 같은 프로젝트(tokens 설치본 1.4.2 · 선언 `^1.3.0`, ui-react 설치본 1.3.5 · 선언 `^1.4.0`, agentic-ui `catalog:`)에서 함수 결과 · check 문구 · init 줄이 모두 ui-react · agentic-ui 만 걸러내고 tokens 는 말하지 않음. `init -y` 실경로(runInit 이 `baseDir` 를 넘김)에서도 설치본 1.4.2 → 줄 없음, 설치본 1.3.0 → 설치본 줄 | 통과 |
+| U4 | R3 · R4: `workspace:*` + 설치본 1.3.0 → 대상 아님(check PASS · init 줄 없음), 선언 없는 tokens 설치본 1.3.0 → 대상 아님 | 통과 |
+| U5 | R5: ui-react `tailwind.css` import + ui-react 1.3.0(선언) · 설치본 1.3.0(선언 `^1.4.0`) → WARN `@axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다 (1.4.0 이상 필요: …)`. 종전 PASS · 종전 문구를 기대하던 보정 2차 테스트 3건(A1 혼합 · A4 ui-react · C ui-react)을 새 동작으로 바꿈 | 통과 |
+| U6 | R6: `@source "../node_modules/@axis-ds/ui-react"` · `…/dist` · 작은따옴표 `…/dist/index.js` · `./node_modules/@axis-ds/ui-react/` → PASS / 주석 안 · `@source not` · `ui-react-extra` · agentic-ui 경로 · `node_modules/ui-react` → B1 WARN / 둘 중 하나만 `@source` → 다른 하나만 B1 / `@source` 로 스캔하는 ui-react `^1.3.0` → PASS(R5 대상 아님) / `hasComponentSource` 직접(`@source inline()` 제외) | 통과 |
+| U7 | MCP: B2 라벨 · 설치본 우선 2건 · ui-react 컴포넌트 버전 · 직접 `@source` 인정과 주석 제외, CLI 와 같은 문자열 | 통과 |
+| U8 | 변이 음성 대조(두 사본 같게 바꾸고 CLI · MCP 전체 테스트, 매회 원본 복사로 원복): ① 라벨 고정(종전 고정 이름 4개로 되돌림) ② 설치본 우선 끄기 ③ 컴포넌트 패키지 버전 조건 끄기 ④ 직접 `@source` 인정 끄기 | ① CLI rc 1(4건) · MCP rc 1(1건) ② CLI rc 1(6건, init 실경로 테스트를 더한 뒤 재실행하면 7건) · MCP rc 1(1건) ③ CLI rc 1(4건) · MCP rc 1(1건) ④ CLI rc 1(2건) · MCP rc 1(1건). 원복 후 두 사본 sha256 b26ed4a8… 변경 전과 같음(diff rc 0), `cmp` 동일 |
+| U9 | 품질 게이트 | cli: `pnpm test` 319 → 335개 통과(12파일), `pnpm build` rc 0, `tsc --noEmit -p .` 오류 20건(바꾼 세 파일에는 0건). mcp: `pnpm test` 39 → 43개 통과, `pnpm build` rc 0 |
+| U10 | 빌드한 cli `dist/index.js` 로 scratch 프로젝트(tokens 선언 `^1.3.0` · 설치본 1.4.2, ui-react 선언 `^1.4.0` · 설치본 1.3.0, agentic-ui 선언 `^1.4.0` 을 `@source "../node_modules/@axis-ds/agentic-ui/dist"` 로 스캔, `--font-sans` 만 남김, tailwindcss 설치본 4.3.3)에서 `check` | tailwind: `create-next-app 기본 정의가 남아 있습니다(@theme --font-sans: var(--font-geist-sans)) → 지우세요 / @axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/ui-react 설치본 1.3.0)`. tokens · agentic-ui B1 은 나오지 않음. rc 1 은 axis.config.json 없음 FAIL 때문 |
+| U11 | 보정 3차 후속(검증 major): 설치본 1.3.0 + 선언 `catalog:` · `npm:@axis-ds/tokens@1.3.0` · `latest` · `^1 \|\| ^2` → init 끝 줄 `설치본(@axis-ds/tokens 1.3.0, 선언 <선언>)이 1.4.0 미만입니다. 선언이 가리키는 버전을 1.4.0 이상으로 올린 뒤 다시 설치하세요(선언은 덮어쓰지 않습니다).`, `pnpm add` 없음 / tokens `^1.3.0`(설치본 1.3.0) + ui-react `catalog:`(설치본 1.3.0) → tokens 만 명령, ui-react 는 다음 줄. 수정 전 코드에서 두 테스트 rc 1(음성 대조), 수정 뒤 init · template-check 184개 통과 | 통과 |
+| U12 | 보정 3차 후속(검증 minor): 직접 `@source` 가 패키지 이름 그대로(`@source "@axis-ds/ui-react"` · `'@axis-ds/ui-react/dist'`)이면 인정하지 않음(CSS 기준 상대 경로라 node_modules 를 가리키지 않음), `node_modules/@axis-ds/ui-react` 는 인정 | `hasComponentSource` 직접 호출 3건 추가. cli 337 · mcp 43 통과, 변이(부정 전방 탐색 제거) 시 1건 실패 · 원복 뒤 MCP 사본 cmp 동일 |
+
+보정 3차 미측정: 빌드한 MCP 서버(stdio) 실행, 실제 패키지 매니저로 설치한 node_modules(pnpm 심볼릭 링크 포함)에서의 설치본 판정(U2 · U10 은 손으로 만든 `node_modules/<pkg>/package.json`), 직접 `@source` 구성의 실앱 렌더(판정은 문자열만 봄).
+
+## 9. 미측정 (AC 판정 전에 필요)
 
 | 항목 | 상태 |
 |---|---|

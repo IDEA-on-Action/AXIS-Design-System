@@ -67,13 +67,15 @@ body {
 
 이 블록을 남겨 두면 `--background` 가 AXIS 의 HSL 값 대신 `#ffffff` 가 되어 `.dark` 안의 `bg-background` 가 투명해지고, `font-sans` · `font-mono` 가 AXIS 글꼴 대신 `Arial` 로 그려집니다. AXIS 토큰은 base 레이어에 있어서 레이어 없이 쓴 앱 CSS 가 항상 이깁니다.
 
-`axis init`(`@axis-ds/cli`)은 Tailwind 4 프로젝트에서 위 import 줄과 이 네 블록을 지우라는 주의를 출력합니다. 파일은 고치지 않습니다. `package.json` 의 `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 선언은 이렇게 안내합니다.
+`axis init`(`@axis-ds/cli`)은 Tailwind 4 프로젝트에서 위 import 줄과 이 네 블록을 지우라는 주의를 출력합니다. 파일은 고치지 않습니다. `package.json` 에 선언된 `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 는 설치본을 먼저 보고 이렇게 안내합니다.
 
-- 선언 범위의 하한이 1.4.0 미만(`^1.3.0` · `1.x` · `1.3.0 - 1.5.0` 등) → `^1.4.0` 으로 올리는 명령
+- 설치본(`node_modules/<패키지>/package.json` 의 정확한 `version`)이 1.4.0 이상 → 선언이 `^1.3.0` · `catalog:` 여도 안내하지 않음
+- 설치본이 1.4.0 미만 → 설치본 버전을 보여 주고 `^1.4.0` 으로 올리는 명령. 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) 명령 없이 선언이 가리키는 버전을 올리고 다시 설치하라는 줄(선언을 덮어쓰지 않음)
+- 설치본이 없고 선언 범위의 하한이 1.4.0 미만(`^1.3.0` · `1.x` · `1.3.0 - 1.5.0` 등) → `^1.4.0` 으로 올리는 명령
 - 하한을 읽을 수 없음(`catalog:` · `latest` · `||` 등) → 설치된 버전이 1.4.0 이상인지 확인하라는 줄(선언을 덮어쓰지 않음)
-- `workspace:` 프로토콜 → 안내하지 않음(모노레포 링크)
+- `workspace:` 프로토콜 → 설치본과 관계없이 안내하지 않음(모노레포 링크)
 
-`axis check` 는 같은 규칙으로 판정하고, Tailwind 4 에서 토큰 진입점 · 선언된 컴포넌트 패키지의 `tailwind.css` 가 빠졌거나 진입점이 있는데 위 create-next-app 기본 정의가 남아 있거나 `@axis-ds/tokens` 선언이 1.4.0 조건에 걸리면 WARN 을 냅니다.
+`axis check` 는 같은 함수로 판정하고, Tailwind 4 에서 토큰 진입점 · 선언된 컴포넌트 패키지의 `tailwind.css` 가 빠졌거나 진입점이 있는데 위 create-next-app 기본 정의가 남아 있거나(실제로 남은 정의 이름을 보여 줌) `@axis-ds/tokens` 가 1.4.0 조건에 걸리거나 import 한 `tailwind.css` 의 패키지가 1.4.0 조건에 걸리면 WARN 을 냅니다. `tailwind.css` 대신 그 패키지를 가리키는 `@source`(예: `@source "../node_modules/@axis-ds/ui-react/dist";`)를 같은 CSS 에 직접 쓴 경우는 스캔 경로가 있는 것으로 봅니다(경로 문자열에 `@axis-ds/<패키지>` 가 들어 있는지로 판정).
 
 **Tailwind 3 과 다르게 동작하는 것**
 

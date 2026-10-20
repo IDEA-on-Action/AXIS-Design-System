@@ -1,6 +1,6 @@
 # WI-0044: Tailwind 4 프로젝트의 AXIS 연동 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행 중 (2026-10-20, 구현 · 문서 · 보정 2차 완료, 통합 검증 · 머지 · 배포 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행 중 (2026-10-20, 구현 · 문서 · 보정 2차 · 3차 완료, 통합 검증 · 머지 · 배포 전)
 
 ## FR-1 토큰 진입점 (D1)
 - [x] `build-tokens.mjs` 6단계에서 `src/tailwind-preset.ts` 를 읽어 `dist/css/tailwind4.css` 생성(`scripts/tailwind4.mjs`)
@@ -50,6 +50,15 @@
 - [x] C: 여러 문제를 우선순위 순서로 ` / ` 로 잇고 버전 안내는 끝에 한 번, CLI · MCP 같은 문구 테스트
 - [x] D: cli README · quick-start · troubleshooting · release-notes · testplan 7절 · changeset
 - [x] E: cli 319 · mcp 39 통과, build rc 0, cli tsc 20 불변, 변이 4종 빨강 · sha256 원복, MCP 사본 cmp, scratch 세 프로젝트 init · check
+
+## 보정 3차 (2026-10-20 사용자 결정 minor 3건, testplan 8절)
+- [x] B2 라벨: 특징마다 실제로 걸린 정의 이름을 나온 순서로 중복 없이 표시(`--font-sans` 만 남으면 `--font-mono` 를 말하지 않음)
+- [x] 버전 판정 설치본 우선: `axisPackagesBelowTailwind4(pkg, baseDir)` 가 설치본(정확한 버전) → 선언 하한 → 판정 불가, init · check 같은 함수, `workspace:` 는 설치본과 관계없이 제외(근거는 testplan 8절 R3)
+- [x] check: import 중인 ui-react · agentic-ui `tailwind.css` 의 패키지도 1.4.0 조건(A4 와 같은 WARN 접미사)
+- [x] B1: 그 패키지를 가리키는 직접 `@source`(경로 문자열에 `@axis-ds/<pkg>`, 주석 · `@source not` 제외)는 스캔 경로로 인정
+- [x] 문서: cli README · quick-start · troubleshooting · release-notes · testplan 8절 · changeset
+- [x] cli 335(후속 U11 2건 뒤 337, bare 이름 @source 보정 뒤 337 유지) · mcp 43 통과, build rc 0, cli tsc 20 불변, 변이 4종 빨강 · sha256 원복, MCP 사본 cmp, scratch check 1건
+- [x] 후속(검증 major): init 이 설치본 미만이어도 선언 하한을 읽을 수 없는 선언(`catalog:` · `npm:` 등)은 `pnpm add` 로 덮어쓰지 않고 선언을 올린 뒤 다시 설치하라고 안내(testplan U11)
 
 ## 검증 · 릴리스
 - [ ] AC1 · AC2 실경로: create-next-app 15.5.28 + Playwright 계산 스타일(Button `#3B82F6`, `bg-primary`, `--radius` 프로브, ontology)
