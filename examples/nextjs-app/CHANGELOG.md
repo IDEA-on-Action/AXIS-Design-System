@@ -1,5 +1,14 @@
 # axis-nextjs-example
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [4eb8a83]
+  - @axis-ds/ui-react@1.5.0
+  - @axis-ds/theme@1.5.0
+  - @axis-ds/tokens@1.5.0
+
 ## 0.1.6
 
 ### Patch Changes
