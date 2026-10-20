@@ -44,12 +44,12 @@
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
 | 54 | Tailwind 4 프로젝트에서 `axis check` 의 `tailwind.config` 오탐 · FAIL 이 있어도 종료 코드 0 (WI-0038 배포본 확인 중 발견) | WI-0042 (#131) | P18 | P2 | ⏳ |
-| 55 | Ontology Platform 디자인 테마 v0.26 반영(v0.26 토큰과 ontology 프리셋 대조, WI-0027 PRD r3 병합, 디자인 오너 개정 묶음 2026-10-19) | WI-0043 (#132) | P18 | P2 | ⏳ |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 55 | Ontology Platform 디자인 테마 v0.26 반영: 프로토타입 v0.24 · v0.26 대조로 토큰 변경 0건 확인(프리셋 변경 없음), WI-0027 PRD v0.5에 r3 화면 범위 병합(정본 전환은 WI-0027 Q7), WI-0025 머리말 갱신 | WI-0043 (#132) | P18 | 2026-10-20 |
 | 50 | `axis init -y` 가 쓰는 utils.ts 의존성(`clsx` · `tailwind-merge`) 추가 · 안내 + `npx axis-cli` 안내 정정, npm cli v1.2.1 릴리스 (#129 · #130, publish run 39345179364, provenance, 배포본 init -> install -> build rc 0, npm `axis-cli@99.0.0` 선점 · deprecate) | WI-0038 (#124) | P18 | 2026-10-20 |
 | 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 + 브랜드 전환 데모, npm v1.3.0 릴리스 (linked 4패키지, publish run 39238361098, provenance 4/4, 데모 `/docs/brand-demo/` 프로덕션 200) | WI-0025 M2~M4 (#84) | P16 | 2026-10-19 |
 | 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 (#114, cad9398) | WI-0030 (#95) | P18 | 2026-10-19 |
