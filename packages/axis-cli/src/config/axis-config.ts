@@ -24,19 +24,23 @@ export interface AxisConfig {
   brand?: string;
 }
 
-/** `axis init` 이 받는 경로 3개 */
+/** `axis init` 이 받는 경로 3개. `tailwindConfig` 는 Tailwind 4 이상에서 없습니다(WI-0044 FR-3). */
 export interface InitConfigAnswers {
   componentsDir: string;
-  tailwindConfig: string;
+  tailwindConfig?: string;
   globalCss: string;
 }
 
-/** `axis init` 이 쓰는 설정. 키 순서가 곧 파일의 키 순서입니다. */
+/**
+ * `axis init` 이 쓰는 설정. 키 순서가 곧 파일의 키 순서입니다.
+ * `tailwindConfig` 가 없으면(Tailwind 4) 키를 쓰지 않습니다. 타입에서 이미 선택 필드이고, 이 값을 읽는 코드가 없어
+ * 빈 문자열보다 키 생략이 「설정 파일 없음」을 그대로 나타냅니다.
+ */
 export function createInitConfig(answers: InitConfigAnswers, registry: string): AxisConfig {
   return {
     $schema: AXIS_CONFIG_SCHEMA_URL,
     componentsDir: answers.componentsDir,
-    tailwindConfig: answers.tailwindConfig,
+    ...(answers.tailwindConfig !== undefined ? { tailwindConfig: answers.tailwindConfig } : {}),
     globalCss: answers.globalCss,
     registry,
   };

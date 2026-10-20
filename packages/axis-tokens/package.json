@@ -13,6 +13,7 @@
     },
     "./css": "./dist/css/variables.css",
     "./css/shadcn": "./dist/css/shadcn-compat.css",
+    "./css/tailwind4": "./dist/css/tailwind4.css",
     "./tailwind": {
       "types": "./dist/tailwind-preset.d.ts",
       "import": "./dist/tailwind-preset.mjs",
@@ -36,7 +37,7 @@
     "build": "node build-tokens.mjs && tsup src/tailwind-preset.ts --format cjs,esm --dts --out-dir dist",
     "clean": "rm -rf dist",
     "lint": "eslint .",
-    "test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/no-css-opacity.test.mjs test/brands.test.mjs test/build-brands.test.mjs test/baseline-1.2.1.test.mjs test/ontology-values.test.mjs test/js-entry.test.mjs",
+    "test": "node --test test/theme-modes.test.mjs test/dark-completeness.test.mjs test/no-css-opacity.test.mjs test/brands.test.mjs test/build-brands.test.mjs test/baseline-1.2.1.test.mjs test/ontology-values.test.mjs test/js-entry.test.mjs test/tailwind4.test.mjs",
     "type-check": "tsc --noEmit -p tsconfig.typecheck.json && node scripts/check-ts-optin.mjs",
     "prepublishOnly": "pnpm build"
   },

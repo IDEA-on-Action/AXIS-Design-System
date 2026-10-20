@@ -363,4 +363,13 @@ if (brandResult.violations.length > 0) {
 brandResult.brands.forEach(name => console.log(`  ✓ brands/${name}.css generated`));
 if (brandResult.brands.length > 0) console.log('  ✓ brands/index.json generated');
 
+// --- 6. Tailwind 4 진입점 (WI-0044 FR-1) ---
+// Tailwind 3 preset(src/tailwind-preset.ts)을 출처로 @theme inline · @custom-variant dark 를 만든다.
+// 1~5단계 산출물은 건드리지 않는다(새 파일 하나만 쓴다).
+import { buildTailwind4Css, loadPresetFromSource } from './scripts/tailwind4.mjs';
+
+const tailwindPreset = await loadPresetFromSource('src/tailwind-preset.ts');
+writeFileSync('dist/css/tailwind4.css', buildTailwind4Css(tailwindPreset));
+console.log('  ✓ tailwind4.css generated');
+
 console.log('Done!');

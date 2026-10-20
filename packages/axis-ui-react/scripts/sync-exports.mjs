@@ -47,6 +47,20 @@ for (const name of subdirs) {
   };
 }
 
+// dist 밖의 고정 export: 패키지 루트 파일을 그대로 노출한다(WI-0044).
+// dist 를 기준으로 맵을 다시 만들 때 지워지지 않도록 여기서 함께 생성하고,
+// 파일이 없으면 미존재 타깃을 export 하게 되므로 실패시킨다.
+const STATIC_EXPORTS = {
+  './tailwind.css': './tailwind.css', // Tailwind 4 @source 진입점
+};
+for (const [key, target] of Object.entries(STATIC_EXPORTS)) {
+  if (!existsSync(join(pkgRoot, target))) {
+    console.error(`[sync-exports] 고정 export 타깃 없음: ${target}`);
+    process.exit(1);
+  }
+  exportsMap[key] = target;
+}
+
 const pkg = JSON.parse(readFileSync(pkgPath, 'utf8'));
 const current = JSON.stringify(pkg.exports ?? {});
 const next = JSON.stringify(exportsMap);
@@ -54,7 +68,7 @@ const next = JSON.stringify(exportsMap);
 const isCheck = process.argv.includes('--check');
 
 if (current === next) {
-  console.log(`[sync-exports] OK - exports ${subdirs.length + 1}개 항목 일치`);
+  console.log(`[sync-exports] OK - exports ${Object.keys(exportsMap).length}개 항목 일치`);
   process.exit(0);
 }
 
@@ -66,4 +80,4 @@ if (isCheck) {
 
 pkg.exports = exportsMap;
 writeFileSync(pkgPath, JSON.stringify(pkg, null, 2) + '\n');
-console.log(`[sync-exports] 갱신 완료 - exports ${subdirs.length + 1}개 항목`);
+console.log(`[sync-exports] 갱신 완료 - exports ${Object.keys(exportsMap).length}개 항목`);

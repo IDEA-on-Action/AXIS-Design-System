@@ -1,0 +1,10 @@
+/*
+ * @axis-ds/ui-react - Tailwind CSS 4 스캔 진입점
+ *
+ * Tailwind 4 는 node_modules 를 자동 스캔하지 않아서, 컴포넌트가 쓰는 클래스
+ * (예: bg-[var(--axis-button-bg-default)])가 생성되지 않습니다. 전역 CSS 에서
+ *   @import "@axis-ds/ui-react/tailwind.css";
+ * 한 줄을 넣으면 아래 @source 가 이 패키지의 빌드 산출물을 스캔 대상에 더합니다.
+ * 경로는 이 파일 기준 상대 경로입니다. 스타일 규칙은 담지 않습니다.
+ */
+@source "./dist";

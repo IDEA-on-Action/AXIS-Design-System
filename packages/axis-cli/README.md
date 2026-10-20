@@ -23,6 +23,27 @@ axis add button
 axis list
 ```
 
+## 프로젝트 초기화 (`axis init`)
+
+- `axis.config.json` 과 `cn()` 을 담은 `utils.ts` 를 만들고, `clsx` · `tailwind-merge` 가 `package.json` 에 없으면 `dependencies` 에 더합니다. 설치는 실행하지 않고 명령만 안내합니다.
+- `tailwind-merge` 범위와 아래 안내는 프로젝트의 Tailwind 버전(설치본, 없으면 `package.json` 선언)으로 정합니다. 판정하지 못하면 Tailwind 3 으로 봅니다.
+- Tailwind 4 이상이면 전역 CSS 에 넣을 줄을 안내합니다. CSS 파일은 고치지 않습니다.
+
+  ```css
+  @import "tailwindcss";
+  @import "@axis-ds/tokens/css/tailwind4";
+  @import "@axis-ds/ui-react/tailwind.css"; /* npm 패키지 컴포넌트를 쓸 때, agentic-ui 도 같은 방식 */
+  ```
+
+  - 컴포넌트 패키지 줄은 `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 만큼 냅니다. 선언이 없으면 예시 한 줄만 냅니다(`axis add` 로 복사한 컴포넌트는 프로젝트 소스라 따로 넣을 필요가 없습니다).
+  - create-next-app 기본 `globals.css` 의 `:root` · `@theme inline` · `@media (prefers-color-scheme: dark)` · `body` 블록이 AXIS 와 같은 이름(`--background` · `--foreground` · `--color-background` · `--font-sans` · `--font-mono`)을 다른 값으로 정의하니 지우라는 주의를 함께 냅니다(Quick Start 가이드 「Tailwind CSS 4」와 같은 내용).
+  - `@axis-ds/tokens` 가 `package.json` 에 없으면 lockfile 에 맞춘 설치 명령(예: `pnpm add "@axis-ds/tokens@^1.4.0"`)을 안내합니다. 토큰 진입점은 1.4.0 부터 있습니다.
+  - `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 선언의 버전 조건(`axis check` 와 같은 규칙):
+    - 선언 범위의 하한이 1.4.0 미만이면(예: `^1.3.0` · `1.x` · `1.3.0 - 1.5.0` · `^1.4.0-beta.1`) 그 패키지들을 `^1.4.0` 으로 올리는 명령(예: `pnpm add "@axis-ds/tokens@^1.4.0"`)을 냅니다. 하이픈 범위는 왼쪽 버전을, 비교자 여러 개(`>=1.2 >=1.4`)는 가장 높은 하한을 봅니다.
+    - 하한을 읽을 수 없으면(`catalog:` · `latest` · `||` · `<2` · `*` 등) 선언을 덮어쓰는 명령 대신 「설치된 버전이 1.4.0 이상인지 확인하세요」를 냅니다.
+    - `workspace:` 프로토콜은 모노레포 링크라 안내하지 않습니다.
+  - Tailwind 4 에는 설정 파일이 없으므로 `axis.config.json` 에 `tailwindConfig` 를 적지 않고, 대화형 실행에서도 묻지 않습니다. Tailwind 3 은 종전과 같습니다.
+
 ## 브랜드 테마 (`axis theme`)
 
 프로젝트에 설치된 `@axis-ds/tokens`(1.3.0 이상)의 브랜드를 조회하고 적용합니다. 세 명령 모두 `-d, --dir <path>` 로 대상 디렉터리를 받습니다(기본: 현재 디렉터리).
@@ -46,8 +67,16 @@ axis theme add ontology
 
 ## 프로젝트 검증 (`axis check`)
 
-- Tailwind 구성 항목: Tailwind 4 이상(설치본, 없으면 `package.json` 선언으로 판정)은 설정 파일 대신 전역 CSS(`globals.css` · `app/globals.css` · `src/app/globals.css` · `src/globals.css` · `styles/globals.css` 순)의 `@import "tailwindcss"` 를 봅니다. Tailwind 3 이하는 `tailwind.config.ts` · `.js` · `.mjs` · `.cjs` 를 찾습니다.
-  - 이 항목은 Tailwind 진입 import 만 봅니다. `@axis-ds/tokens` 의 Tailwind 연동은 Tailwind 3 preset(`@axis-ds/tokens/tailwind`)뿐이라, Tailwind 4 에서 PASS 여도 `bg-primary` 같은 AXIS 색 클래스가 만들어진다는 뜻은 아닙니다.
+- Tailwind 구성 항목: Tailwind 4 이상(설치본, 없으면 `package.json` 선언으로 판정)은 설정 파일 대신 전역 CSS(`globals.css` · `app/globals.css` · `src/app/globals.css` · `src/globals.css` · `styles/globals.css` 순으로 처음 찾은 파일 하나)를 봅니다. Tailwind 3 이하는 `tailwind.config.ts` · `.js` · `.mjs` · `.cjs` 를 찾습니다.
+  - Tailwind 4: `@import "tailwindcss"` 가 있는 CSS 에서 아래 문제가 하나도 없으면 PASS 이고, 하나라도 있으면 WARN 입니다(블록 주석 안은 없는 것으로 봅니다). `@import "tailwindcss"` 가 없으면 그 WARN 하나만 냅니다.
+    1. 토큰 진입점 `@import "@axis-ds/tokens/css/tailwind4";` 이 없음 → 문구에 넣을 import 줄. 진입점이 없으면 `bg-primary` · `rounded-md` 같은 AXIS 매핑이 만들어지지 않습니다. `@axis-ds/tokens/css` · `css/shadcn` · `tailwind`(Tailwind 3 preset)는 진입점으로 치지 않습니다.
+    2. `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` import 가 없음 → 빠진 import 줄. 선언이 없으면(복사 설치) 요구하지 않습니다.
+    3. 진입점이 있는데 create-next-app 기본 정의가 남음 → 남은 정의 이름. `--background` · `--foreground` 를 색값(`#ffffff` · `rgb()` · `oklch()` 등)으로 정의, `--color-background: var(--background)` 류, `--font-sans` · `--font-mono: var(--font-geist-*)`, `background` · `color: var(--background)` 류 직접 사용을 봅니다(create-next-app 15.5.28 기본 `globals.css` 실물 기준). AXIS 의 HSL 삼중값(`0 0% 100%`) 재정의나 `hsl(var(--background))` 는 걸리지 않습니다.
+    4. 진입점이 있는데 `@axis-ds/tokens` 선언이 아래 버전 조건에 걸림.
+  - 문제가 여럿이면 위 순서대로 ` / ` 로 이어 한 항목에 냅니다. 끝에는 `package.json` 의 세 AXIS 패키지 선언 가운데 하한이 1.4.0 미만인 것을 `(1.4.0 이상 필요: @axis-ds/tokens ^1.3.0)`, 하한을 읽을 수 없는 것(`catalog:` · `latest` · `||` 등)을 `(설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/agentic-ui catalog:)` 로 한 번 덧붙입니다. `workspace:` 는 넣지 않습니다(`axis init` 과 같은 규칙).
+  - 문구 예: `Tailwind 4: globals.css에 AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4"; / 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → @import "@axis-ds/ui-react/tailwind.css"; (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0 · @axis-ds/ui-react ^1.3.0)`
+  - Tailwind 3: `tailwind.config.ts` 에 `--background` · `hsl(var(` 가 있으면 종전 문구로 PASS 입니다. 그렇지 않아도 설정 파일(`.ts` · `.js` · `.mjs` · `.cjs`)이 `@axis-ds/tokens/tailwind` preset 을 `require` · `import` 하면(주석 밖) `tailwind.config.mjs에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)` 처럼 PASS 입니다. 1.3.0 에서는 preset 만 쓰는 `.ts` 가 WARN(`AXIS 토큰 설정이 없습니다`), `.js` · `.mjs` · `.cjs` 가 WARN(`TypeScript 권장`)이었습니다.
+- globals.css 항목: 같은 후보에서 처음 찾은 CSS 하나를 봅니다. `--background` 와 `--primary` 를 직접 정의하거나, `@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn` · `@axis-ds/tokens/css/tailwind4` 를 import 하면(블록 주석 밖, 작은따옴표 · `url()` · `layer()` 표기 포함) PASS 입니다. import 로 인정한 경우 문구 끝에 `(@axis-ds/tokens/css/tailwind4 import)` 처럼 경로가 붙습니다. 1.4.0 부터이고, 이전에는 import 만 있으면 WARN 이었습니다.
 - FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다(1.3.0 부터, 이전에는 결과와 관계없이 0).
 - MCP `axis.check_project` 도 같은 항목 · 문구를 냅니다.
 

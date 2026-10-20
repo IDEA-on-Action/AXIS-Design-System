@@ -31,6 +31,7 @@ vi.mock("child_process", async (importOriginal) => {
 import * as childProcess from "node:child_process";
 import * as childProcessBare from "child_process";
 import { Command } from "commander";
+import prompts from "prompts";
 import { createHash } from "crypto";
 import fs from "fs-extra";
 import os from "os";
@@ -48,6 +49,8 @@ import {
   tailwindMajorBounds,
   tailwindMajorFromRange,
   tailwindWarnings,
+  tailwind4GuideLines,
+  TAILWIND4_TOKENS_VERSION,
 } from "./init.js";
 
 const REGISTRY = "https://axis.minu.best/r";
@@ -883,6 +886,316 @@ describe("axis init: 쓸 수 없는 package.json(FR-3 · FR-4)", () => {
     const before = await snapshot(dir);
     planUtilsDependencies(dir);
     expect(await snapshot(dir)).toEqual(before);
+  });
+});
+
+describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
+  const GLOBAL_CSS = "./src/app/globals.css";
+  const HEAD = `\nTailwind 4: 전역 CSS(${GLOBAL_CSS}) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).`;
+  const TW_LINE = '  @import "tailwindcss";';
+  const TOKENS_LINE = '  @import "@axis-ds/tokens/css/tailwind4";';
+  const EXAMPLE_LINE =
+    '  npm 패키지 컴포넌트를 쓰면 그 패키지의 tailwind.css 도 넣으세요(예: @import "@axis-ds/ui-react/tailwind.css";).';
+  /** quick-start 「create-next-app 기본 globals.css 와의 충돌」과 같은 내용(블록 4개 · 이름 5개 · 지움, WI-0044 보정) */
+  const CONFLICT_LINE =
+    "  ! create-next-app 기본 globals.css 의 :root · @theme inline · @media (prefers-color-scheme: dark) · body 블록은 " +
+    "AXIS 와 같은 이름(--background · --foreground · --color-background · --font-sans · --font-mono)을 다른 값으로 정의합니다. 이 블록들을 지우세요.";
+  const INSTALL_LINE = (cmd: string) => `  @axis-ds/tokens 설치: ${cmd}`;
+  /** init 출력에서 Tailwind 4 안내 구간(제목 줄부터 '초기화 완료' 앞까지) */
+  const guideOf = (lines: string[]) => {
+    const start = lines.indexOf(HEAD);
+    const end = lines.indexOf(BASELINE.logs[3]);
+    return start < 0 ? [] : lines.slice(start, end);
+  };
+
+  async function installTailwind(dir: string, version: string) {
+    await fs.outputFile(
+      path.join(dir, "node_modules", "tailwindcss", "package.json"),
+      JSON.stringify({ name: "tailwindcss", version }) + "\n"
+    );
+  }
+
+  /** axis.config.json 의 키 목록과 tailwindConfig 값 */
+  async function configKeys(dir: string) {
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    return { keys: Object.keys(config), tailwindConfig: config.tailwindConfig };
+  }
+
+  it("설치본 4.3.3 · tokens 없음: import 2줄 · 패키지 예시 · 이름 충돌 주의 · tokens 설치 명령, '초기화 완료' 앞", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }) + "\n");
+    await installTailwind(dir, "4.3.3");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(guideOf(r.logs)).toEqual([
+      HEAD,
+      TW_LINE,
+      TOKENS_LINE,
+      EXAMPLE_LINE,
+      CONFLICT_LINE,
+      INSTALL_LINE(`pnpm add "@axis-ds/tokens@^${TAILWIND4_TOKENS_VERSION}"`),
+    ]);
+    // 안내는 의존성 줄 뒤, 마무리 줄 앞
+    expect(r.logs.slice(-2)).toEqual([BASELINE.logs[3], NEXT_STEP]);
+    expect(TAILWIND4_TOKENS_VERSION).toBe("1.4.0");
+  });
+
+  it("tokens · ui-react · agentic-ui 가 선언돼 있으면 설치 줄 없이 두 패키지의 tailwind.css import", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({
+        name: "x",
+        dependencies: { "@axis-ds/tokens": "^1.4.0", "@axis-ds/ui-react": "^1.4.0", "@axis-ds/agentic-ui": "^1.4.0" },
+        devDependencies: { tailwindcss: "^4" },
+      }) + "\n"
+    );
+    const r = await runInitCli(dir);
+    expect(guideOf(r.logs)).toEqual([
+      HEAD,
+      TW_LINE,
+      TOKENS_LINE,
+      '  @import "@axis-ds/ui-react/tailwind.css";',
+      '  @import "@axis-ds/agentic-ui/tailwind.css";',
+      CONFLICT_LINE,
+    ]);
+  });
+
+  it("tokens 설치 명령은 lockfile 을 따름(theme add 와 같은 판정)", async () => {
+    for (const [lock, cmd] of [
+      ["package-lock.json", 'npm install "@axis-ds/tokens@^1.4.0"'],
+      ["yarn.lock", 'yarn add "@axis-ds/tokens@^1.4.0"'],
+      ["pnpm-lock.yaml", 'pnpm add "@axis-ds/tokens@^1.4.0"'],
+    ] as const) {
+      const dir = await tmpDir();
+      await fs.writeFile(path.join(dir, lock), "");
+      await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4.1.0" } }));
+      const r = await runInitCli(dir);
+      expect({ lock, last: guideOf(r.logs).at(-1) }).toEqual({ lock, last: INSTALL_LINE(cmd) });
+    }
+  });
+
+  it("package.json 이 없어도 설치본 4 면 안내와 tokens 설치 명령을 냄", async () => {
+    const dir = await tmpDir();
+    await installTailwind(dir, "4.0.0");
+    const r = await runInitCli(dir);
+    expect(guideOf(r.logs)).toEqual([
+      HEAD,
+      TW_LINE,
+      TOKENS_LINE,
+      EXAMPLE_LINE,
+      CONFLICT_LINE,
+      INSTALL_LINE('pnpm add "@axis-ds/tokens@^1.4.0"'),
+    ]);
+  });
+
+  it("Tailwind 4 의 axis.config.json 에는 tailwindConfig 키가 없음, 나머지 키 순서 유지", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }));
+    await runInitCli(dir);
+    expect(await configKeys(dir)).toEqual({
+      keys: ["$schema", "componentsDir", "globalCss", "registry"],
+      tailwindConfig: undefined,
+    });
+    expect(await fs.pathExists(path.join(dir, "tailwind.config.ts"))).toBe(false);
+  });
+
+  it("대화형: Tailwind 4 는 설정 파일을 묻지 않고, 받은 경로 2개만 기록", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }));
+    prompts.inject(["./components/ui", "./app/globals.css"]);
+    const program = new Command();
+    program.exitOverride();
+    registerInitCommand(program, REGISTRY);
+    process.chdir(dir);
+    try {
+      await program.parseAsync(["init"], { from: "user" });
+    } finally {
+      process.chdir(cwd0);
+    }
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config).toEqual({
+      $schema: "https://axis.minu.best/schema.json",
+      componentsDir: "./components/ui",
+      globalCss: "./app/globals.css",
+      registry: REGISTRY,
+    });
+    expect(logs).toContain("\nTailwind 4: 전역 CSS(./app/globals.css) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).");
+  });
+
+  it("대화형: Tailwind 3 은 종전대로 설정 파일을 묻고 기록", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    prompts.inject(["./components/ui", "./tailwind.config.js", "./app/globals.css"]);
+    const program = new Command();
+    program.exitOverride();
+    registerInitCommand(program, REGISTRY);
+    process.chdir(dir);
+    try {
+      await program.parseAsync(["init"], { from: "user" });
+    } finally {
+      process.chdir(cwd0);
+    }
+    expect(await fs.readJSON(path.join(dir, "axis.config.json"))).toEqual({
+      $schema: "https://axis.minu.best/schema.json",
+      componentsDir: "./components/ui",
+      tailwindConfig: "./tailwind.config.js",
+      globalCss: "./app/globals.css",
+      registry: REGISTRY,
+    });
+  });
+
+  it("Tailwind 3 선언: 출력 전체 · axis.config.json 이 종전과 같고 안내가 없음", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    const r = await runInitCli(dir);
+    expect(r.logs).toEqual([
+      BASELINE.logs[0],
+      BASELINE.logs[1],
+      BASELINE.logs[2],
+      ADDED_BOTH,
+      "  tailwind-merge 범위 기준: package.json 의 tailwindcss ^3.4.0",
+      NO_INSTALL("pnpm install"),
+      BASELINE.logs[3],
+      NEXT_STEP,
+    ]);
+    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
+  });
+
+  it("설치본 3.x · 판정 불가(catalog:) · tailwindcss 없음은 안내 없음, tailwindConfig 기록", async () => {
+    const v3 = await tmpDir();
+    await fs.writeFile(path.join(v3, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }));
+    await installTailwind(v3, "3.4.17");
+    const unknown = await tmpDir();
+    await fs.writeFile(path.join(unknown, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "catalog:" } }));
+    const none = await tmpDir();
+    for (const dir of [v3, unknown, none]) {
+      const r = await runInitCli(dir);
+      expect(r.logs.some((l) => l.includes("Tailwind 4:") || l.includes("@axis-ds/tokens/css/tailwind4"))).toBe(false);
+      expect((await configKeys(dir)).tailwindConfig).toBe("./tailwind.config.ts");
+    }
+  });
+
+  // WI-0044 보정: 선언된 AXIS 패키지의 하한이 1.4.0 미만이면 ^1.4.0 으로 올리는 명령(판정 불가는 보정 2차 A1 에서 확인 줄로 나눔)
+  const UPGRADE_LINE = (declared: string, cmd: string) =>
+    `  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 선언(${declared})을 올리세요: ${cmd}`;
+
+  it("tokens 1.3.x 선언 → 업그레이드 명령(lockfile 별), 설치 줄은 없음", async () => {
+    for (const [lock, cmd] of [
+      ["pnpm-lock.yaml", 'pnpm add "@axis-ds/tokens@^1.4.0"'],
+      ["package-lock.json", 'npm install "@axis-ds/tokens@^1.4.0"'],
+      ["yarn.lock", 'yarn add "@axis-ds/tokens@^1.4.0"'],
+    ] as const) {
+      const dir = await tmpDir();
+      await fs.writeFile(path.join(dir, lock), "");
+      await fs.writeFile(
+        path.join(dir, "package.json"),
+        JSON.stringify({ name: "x", dependencies: { "@axis-ds/tokens": "^1.3.0" }, devDependencies: { tailwindcss: "^4" } })
+      );
+      const r = await runInitCli(dir);
+      expect({ lock, guide: guideOf(r.logs) }).toEqual({
+        lock,
+        guide: [HEAD, TW_LINE, TOKENS_LINE, EXAMPLE_LINE, CONFLICT_LINE, UPGRADE_LINE("@axis-ds/tokens ^1.3.0", cmd)],
+      });
+    }
+  });
+
+  it("세 패키지 중 1.4.0 미만인 것만 한 명령으로 올림(ui-react ~1.3.2 · agentic-ui 1.3.0, tokens ^1.4.0 은 제외)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({
+        name: "x",
+        dependencies: { "@axis-ds/tokens": "^1.4.0", "@axis-ds/ui-react": "~1.3.2" },
+        devDependencies: { "@axis-ds/agentic-ui": "1.3.0", tailwindcss: "^4" },
+      })
+    );
+    const r = await runInitCli(dir);
+    expect(guideOf(r.logs).at(-1)).toBe(
+      UPGRADE_LINE(
+        "@axis-ds/ui-react ~1.3.2 · @axis-ds/agentic-ui 1.3.0",
+        'pnpm add "@axis-ds/ui-react@^1.4.0" "@axis-ds/agentic-ui@^1.4.0"'
+      )
+    );
+  });
+
+  it("^1.4.0 · >=1.4 · ~1.5.0 선언은 업그레이드 줄 없음", () => {
+    for (const range of ["^1.4.0", ">=1.4", "~1.5.0", "1.4.0", ">1.3", "1.4.0 - 1.9.0"]) {
+      const lines = tailwind4GuideLines({ dependencies: { "@axis-ds/tokens": range } }, "pnpm install", "./g.css");
+      expect({ range, upgrade: lines.some((l) => l.includes("올리세요")) }).toEqual({ range, upgrade: false });
+    }
+  });
+
+  it("하한이 1.4.0 미만(prerelease 하한 ^1.4.0-beta.1 · >1.3.9 · 1.x · 1.3.0 - 1.5.0)은 업그레이드 안내", () => {
+    for (const range of ["^1.4.0-beta.1", ">1.3.9", "1.x", "1.3.0 - 1.5.0"]) {
+      const lines = tailwind4GuideLines({ dependencies: { "@axis-ds/tokens": range } }, "pnpm install", "./g.css");
+      expect({ range, last: lines.at(-1) }).toEqual({
+        range,
+        last: UPGRADE_LINE(`@axis-ds/tokens ${range}`, 'pnpm add "@axis-ds/tokens@^1.4.0"'),
+      });
+    }
+  });
+
+  // 보정 2차 A1: 판정 불가 범위는 선언을 덮어쓰지 않고 설치본 확인, workspace: 는 안내 없음(axis check 와 같은 규칙)
+  const CONFIRM_LINE = (declared: string) =>
+    `  ! Tailwind 4 진입점은 1.4.0 부터 있습니다. 선언(${declared})으로는 버전을 판정할 수 없으니 설치된 버전이 1.4.0 이상인지 확인하세요.`;
+
+  it("판정 불가(catalog: · latest · ^1 || ^2 · <2 · *)는 설치된 버전 확인 줄, 업그레이드 명령 없음(A1)", () => {
+    for (const range of ["catalog:", "latest", "^1 || ^2", "<2", "*"]) {
+      const lines = tailwind4GuideLines({ dependencies: { "@axis-ds/tokens": range } }, "pnpm install", "./g.css");
+      expect({ range, last: lines.at(-1), upgrade: lines.some((l) => l.includes("올리세요")) }).toEqual({
+        range,
+        last: CONFIRM_LINE(`@axis-ds/tokens ${range}`),
+        upgrade: false,
+      });
+    }
+  });
+
+  it("workspace: 프로토콜은 업그레이드 · 확인 줄 모두 없음(A1, 모노레포 링크를 덮어쓰지 않음)", () => {
+    for (const range of ["workspace:*", "workspace:^1.3.0"]) {
+      const lines = tailwind4GuideLines({ dependencies: { "@axis-ds/tokens": range } }, "pnpm install", "./g.css");
+      expect({ range, last: lines.at(-1) }).toEqual({ range, last: CONFLICT_LINE });
+    }
+  });
+
+  it("미만 · 판정 불가가 섞이면 업그레이드 줄 다음 확인 줄(선언 순서), 판정 불가는 명령에 넣지 않음", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({
+        name: "x",
+        dependencies: { "@axis-ds/agentic-ui": "catalog:", "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "workspace:*" },
+        devDependencies: { tailwindcss: "^4" },
+      })
+    );
+    const r = await runInitCli(dir);
+    expect(guideOf(r.logs).slice(-2)).toEqual([
+      UPGRADE_LINE("@axis-ds/tokens ^1.3.0", 'pnpm add "@axis-ds/tokens@^1.4.0"'),
+      CONFIRM_LINE("@axis-ds/agentic-ui catalog:"),
+    ]);
+  });
+
+  it("이름 충돌 안내는 quick-start 「Tailwind CSS 4」 절의 지울 블록 · 이름과 같음(두 곳 대조)", async () => {
+    const doc = await fs.readFile(path.resolve(HERE, "../../../../docs/guides/quick-start.md"), "utf8");
+    const section = doc.slice(doc.indexOf("### Tailwind CSS 4"), doc.indexOf("### Tailwind CSS 3"));
+    const block = /```css\n\/\* 지울 블록[^\n]*\n([\s\S]*?)```/.exec(section)?.[1] ?? "";
+    // 문서 코드 블록의 최상위 블록 머리(들여쓰기 없는 `... {`)
+    const heads = [...block.matchAll(/^(\S[^{\n]*?)\s*\{/gm)].map((m) => m[1].trim());
+    expect(heads).toEqual([":root", "@theme inline", "@media (prefers-color-scheme: dark)", "body"]);
+    for (const head of heads) expect(CONFLICT_LINE).toContain(head);
+    const names = ["--background", "--foreground", "--color-background", "--font-sans", "--font-mono"];
+    for (const name of names) {
+      expect(section).toContain(`\`${name}\``);
+      expect(CONFLICT_LINE).toContain(name);
+    }
+    expect(section).toContain("지웁니다");
+    expect(CONFLICT_LINE).toContain("지우세요");
+  });
+
+  it("tailwind4GuideLines: devDependencies 의 tokens 도 선언으로 침, 첫 줄은 제목", () => {
+    const lines = tailwind4GuideLines({ devDependencies: { "@axis-ds/tokens": "workspace:*" } }, "pnpm install", "./g.css");
+    expect(lines[0]).toBe("Tailwind 4: 전역 CSS(./g.css) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).");
+    expect(lines.some((l) => l.includes("설치:"))).toBe(false);
   });
 });
 

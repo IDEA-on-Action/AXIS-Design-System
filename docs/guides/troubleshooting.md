@@ -79,9 +79,36 @@ AXIS 컴포넌트가 렌더링되지만 스타일이 전혀 적용되지 않거�
 
 ### 원인
 
-Tailwind CSS는 `content` 배열에 지정된 경로의 파일만 스캔하여 클래스를 생성합니다. AXIS 패키지의 빌드 결과물 경로가 `content`에 포함되지 않으면 해당 클래스가 최종 CSS에 포함되지 않습니다.
+Tailwind CSS는 스캔한 파일에 나오는 클래스만 생성합니다. AXIS 패키지의 빌드 결과물 경로가 스캔 대상에 없으면 해당 클래스가 최종 CSS에 포함되지 않습니다. Tailwind 3 은 `content` 배열로, Tailwind 4 는 CSS 의 `@source` 로 스캔 대상을 정합니다. Tailwind 4 는 `node_modules` 를 자동으로 스캔하지 않습니다.
 
-### 해결
+### 해결 (Tailwind CSS 4)
+
+`@import "tailwindcss";` 가 있는 전역 CSS 에 토큰 진입점과 사용하는 컴포넌트 패키지의 `tailwind.css` 를 한 줄씩 넣습니다(1.4.0 부터).
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";
+@import "@axis-ds/ui-react/tailwind.css";
+@import "@axis-ds/agentic-ui/tailwind.css"; /* @axis-ds/agentic-ui 를 쓸 때만 */
+```
+
+- 패키지의 `tailwind.css` 는 그 파일 기준 상대 경로 `@source "./dist"` 를 담고 있어 npm · pnpm 설치 모두에서 동작합니다. `shamefully-hoist` 는 필요 없습니다. 다만 pnpm 에서는 `@axis-ds/tokens` 를 앱에 직접 설치해야 `@axis-ds/tokens/css/tailwind4` import 가 풀립니다.
+- 이 줄들은 `@import "tailwindcss";` 와 같은 파일에 둡니다. 별도 CSS 파일이나 JS/TSX 에서 import 하면 클래스가 생성되지 않습니다.
+- `@axis-ds/cli` 의 `axis check` 는 Tailwind 4 전역 CSS 에 토큰 진입점이 없거나, `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` 줄이 없거나, 진입점이 있는데 create-next-app 기본 정의(`:root` 의 `--background: #ffffff` · `@theme inline` 의 `--color-background: var(--background)` · `body` 의 `background: var(--background)` 등)가 남아 있으면 WARN 을 내고 넣을 줄 · 지울 정의를 문구에 보여 줍니다. 선언이 1.4.0 미만이면 `(1.4.0 이상 필요: …)`, `catalog:` 처럼 판정할 수 없으면 `(설치된 버전이 1.4.0 이상인지 확인하세요: …)` 가 붙습니다.
+
+Tailwind 4 에서 자주 만나는 증상은 다음과 같습니다.
+
+| 증상 | 원인 | 해결 |
+|------|------|------|
+| Button 등 npm 패키지 컴포넌트의 배경이 투명 | 패키지 `tailwind.css`(`@source`)가 없어 `bg-[var(--axis-*)]` 클래스가 생성되지 않음 | 위 `@import "@axis-ds/ui-react/tailwind.css";` 를 넣음 |
+| 앱 코드의 `bg-primary` 가 투명, `--radius` 를 바꿔도 `rounded-md` 가 그대로 | 토큰 진입점이 없어 preset 매핑(`@theme inline`)이 없음 | `@import "@axis-ds/tokens/css/tailwind4";` 를 넣음 |
+| `.dark` 안의 `bg-background` 가 투명, `font-mono` 가 Arial | create-next-app 기본 `:root` · `@theme inline` · `body` 블록이 같은 이름을 다른 값으로 정의 | 그 블록을 지움([Quick Start](./quick-start.md) 「Tailwind CSS 4」) |
+| `border-red-500` 같은 테두리색이 적용되지 않음 | `@axis-ds/tokens/css/shadcn` 을 레이어 없이 직접 import 해 `* { border-color }` 가 유틸리티를 이김 | 직접 import 를 지우고 토큰 진입점만 씀(진입점은 토큰 변수를 base 레이어로 불러옴) |
+| 색을 지정하지 않은 `ring-2` 가 글자색 | Tailwind 4 의 링 기본색은 `currentColor` | `ring-ring` 처럼 색을 지정 |
+| Dialog · Popover 등이 애니메이션 없이 나타남 | `animate-in` · `fade-in-0` 류 클래스는 AXIS 진입점에 없음 | tailwindcss-animate 류 애니메이션 플러그인을 앱에 설치 |
+
+### 해결 (Tailwind CSS 3)
 
 `tailwind.config.js` (또는 `tailwind.config.ts`)의 `content` 배열에 AXIS 패키지 경로를 추가합니다.
 
@@ -100,7 +127,7 @@ module.exports = {
 }
 ```
 
-**pnpm 사용 시 주의**: pnpm은 심볼릭 링크 기반으로 `node_modules`를 관리합니다. 경로가 올바르게 해석되지 않는 경우, 절대 경로로 지정하거나 `.npmrc`에 `shamefully-hoist=true`를 설정합니다.
+**pnpm 사용 시 주의 (Tailwind 3)**: pnpm은 심볼릭 링크 기반으로 `node_modules`를 관리합니다. 경로가 올바르게 해석되지 않는 경우, 절대 경로로 지정하거나 `.npmrc`에 `shamefully-hoist=true`를 설정합니다.
 
 ```ini
 # .npmrc

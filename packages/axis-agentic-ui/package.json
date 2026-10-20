@@ -70,11 +70,13 @@
       "types": "./dist/attachment-card/index.d.ts",
       "import": "./dist/attachment-card/index.mjs",
       "require": "./dist/attachment-card/index.js"
-    }
+    },
+    "./tailwind.css": "./tailwind.css"
   },
   "sideEffects": false,
   "files": [
-    "dist"
+    "dist",
+    "tailwind.css"
   ],
   "publishConfig": {
     "access": "public"

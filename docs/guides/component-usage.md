@@ -174,11 +174,11 @@ CSS 변수를 오버라이드하여 프로젝트에 맞는 테마를 적용할 �
 :root {
   --axis-surface-brand: #4F46E5;     /* 브랜드 색상으로 변경 (시맨틱 토큰) */
   --axis-button-bg-default: #4F46E5; /* 버튼 기본 배경 (component 토큰) */
-  --radius: 0.5rem;                  /* 컴포넌트 둥글기 (Tailwind preset 사용 시) */
+  --radius: 0.5rem;                  /* 컴포넌트 둥글기 (Tailwind 3 preset · Tailwind 4 진입점 사용 시) */
 }
 ```
 
-> primitive 색 토큰(`--axis-color-*`)을 덮어쓰는 방식은 컴포넌트 대부분에 닿지 않습니다. 색은 시맨틱 · component 토큰을 덮어씁니다. 둥글기는 앱의 Tailwind 설정에 따라 닿는 변수가 다릅니다. `@axis-ds/tokens/tailwind` preset을 쓰면 컴포넌트의 `rounded-sm|md|lg`가 `--radius`를 참조하므로 `--radius`를 덮어쓰고(`--axis-radius-*`는 닿지 않음), [테마 커스터마이징 가이드](./theme-customization.md)의 「Tailwind 설정 확장」 예시처럼 `borderRadius`를 `var(--axis-radius-*)`로 매핑했다면 반대로 `--axis-radius-*`가 닿고 `--radius`는 닿지 않습니다. 브랜드 단위 전환은 [테마 커스터마이징 가이드](./theme-customization.md)의 「4. 브랜드 테마」를 참고합니다.
+> primitive 색 토큰(`--axis-color-*`)을 덮어쓰는 방식은 컴포넌트 대부분에 닿지 않습니다. 색은 시맨틱 · component 토큰을 덮어씁니다. 둥글기는 앱의 Tailwind 설정에 따라 닿는 변수가 다릅니다. `@axis-ds/tokens/tailwind` preset(Tailwind 3)이나 `@axis-ds/tokens/css/tailwind4` 진입점(Tailwind 4)을 쓰면 컴포넌트의 `rounded-sm|md|lg`가 `--radius`를 참조하므로 `--radius`를 덮어쓰고(`--axis-radius-*`는 닿지 않음), Tailwind 4 에서 진입점 없이 `@source` 만 쓰면 Tailwind 기본 둥글기가 적용되어 `--radius` 도 닿지 않습니다. [테마 커스터마이징 가이드](./theme-customization.md)의 「Tailwind 설정 확장」 Tailwind 3 예시처럼 `borderRadius`를 `var(--axis-radius-*)`로 매핑했다면 반대로 `--axis-radius-*`가 닿고 `--radius`는 닿지 않습니다. 브랜드 단위 전환은 [테마 커스터마이징 가이드](./theme-customization.md)의 「4. 브랜드 테마」를 참고합니다.
 
 ---
 
