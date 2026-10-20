@@ -8,6 +8,8 @@
  * - Tailwind major 판정(`detectTailwind` 등): WI-0038 에서 `init/init.ts` 에 만든 것을 옮겼습니다. `init.ts` 는 다시 내보냅니다.
  * - `checkTailwindSetup`: `axis check` · MCP `axis.check_project` 의 tailwind.config 항목. Tailwind 4 이상은 설정 파일 없이
  *   CSS(`@import "tailwindcss"`)로 구성하므로 설정 파일 대신 CSS 진입점을 봅니다(2026-10-20 사용자 결정).
+ *   이 항목은 Tailwind 진입 import 만 봅니다. AXIS 의 Tailwind 4 연동(`@theme`)은 아직 없어 PASS 가 AXIS 색 클래스 생성을
+ *   뜻하지 않습니다(WI-0044).
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -264,7 +266,7 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
         name: "tailwind.config",
         severity: found ? "pass" : "warn",
         message: found
-          ? `${label}: ${candidate}에 @import "tailwindcss" 가 있습니다 (설정 파일 불필요)`
+          ? `${label}: ${candidate}에 @import "tailwindcss" 가 있습니다`
           : `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다`,
       };
     }

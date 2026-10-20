@@ -44,4 +44,4 @@
 
 ## 4. 범위 밖
 - `globals.css` 항목이 Tailwind 4 기본 CSS 에서 내는 `AXIS CSS 변수가 없습니다` WARN(토큰 CSS 를 import 로 받는 경우를 보지 않음). 이번 결정 범위가 아니라 기록만 합니다.
-- Tailwind 4 용 AXIS 연동(`@theme` 진입점). `@axis-ds/tokens` 의 Tailwind 연동은 v3 preset(`./tailwind`)뿐입니다.
+- Tailwind 4 용 AXIS 연동(`@theme` 진입점). `@axis-ds/tokens` 의 Tailwind 연동은 v3 preset(`./tailwind`)뿐이라, 이 WI 의 PASS 는 Tailwind 진입 import 만 뜻하고 AXIS 색 클래스 생성은 확인하지 않습니다. 그래서 PASS 문구에서 「설정 파일 불필요」를 뺐고(2026-10-20 사용자 결정), 실제 렌더 확인과 연동은 WI-0044 로 분리했습니다.

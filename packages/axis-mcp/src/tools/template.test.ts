@@ -169,7 +169,7 @@ describe("handleCheckProject Tailwind 구성 (WI-0042)", () => {
     expect(await item()).toEqual({
       name: "tailwind.config",
       severity: "pass",
-      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다 (설정 파일 불필요)',
+      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다',
     });
   });
 

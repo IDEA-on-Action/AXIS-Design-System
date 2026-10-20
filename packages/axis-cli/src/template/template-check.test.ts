@@ -297,7 +297,7 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
     expect(await tailwindItem(dir)).toEqual({
       name: "tailwind.config",
       severity: "pass",
-      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다 (설정 파일 불필요)',
+      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다',
     });
   });
 

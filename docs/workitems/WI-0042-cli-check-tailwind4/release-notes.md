@@ -13,6 +13,9 @@
 - `axis check` 는 FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다. 종전에는 결과와 관계없이 0 이었습니다.
 - CI 나 스크립트에서 `axis check` 를 쓰고 있다면 FAIL 이 이제 실패로 잡힙니다.
 
+## 알려진 한계
+- Tailwind 4 의 PASS 는 Tailwind 진입 import 가 있다는 뜻입니다. AXIS 의 Tailwind 4 연동(`@theme`)은 아직 없어 AXIS 색 클래스가 만들어지는지는 확인하지 않습니다(WI-0044).
+
 ## 영향 없음
 - Tailwind 3 프로젝트의 `.ts` · `.js` · 설정 없음 문구와 나머지 항목(axis.config.json · globals.css · utils.ts · dependencies · brand)은 바뀌지 않았습니다.
 
