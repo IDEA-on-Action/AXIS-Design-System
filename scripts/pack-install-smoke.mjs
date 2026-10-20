@@ -14,9 +14,20 @@
  * 대상: 인자로 준 패키지 디렉터리(기본값 packages/axis-tokens). 다른 패키지는 런타임 의존
  * (react 등)을 설치해야 해서 아직 넣지 않았다. 넓힐 때는 그 패키지의 설치 비용과 결과를 먼저 잰다.
  *
+ * G2 RSC 하네스(WI-0050 D4 · FR-6): tokens · ui-react · agentic-ui · theme tarball 을 한 소비자 디렉터리에
+ * 함께 설치하고 react · react-dom · react-server-dom-webpack(그 디렉터리에만, 워크스페이스와 같은 react 버전)을
+ * 더한 뒤 react-server 조건으로 각 패키지의 루트 · 서브패스 엔트리를 불러
+ *   - 컴포넌트를 RSC 로 렌더해 실패 0 ("use client" 모듈은 scripts/rsc-smoke/client-loader.mjs 가 클라이언트 참조로 바꾼다)
+ *   - 소문자 내보내기(cn · *Variants)를 서버에서 호출해 통과(클라이언트 참조면 실패)
+ *   - 훅(use*)은 클라이언트 참조여야 함(서버에서 호출할 수 없음. 예: theme 의 useTheme)
+ * 을 확인합니다. 하네스는 ESM import 경로만 봅니다(CJS 지시문 위치는 G1 이 정적으로 봅니다).
+ *
  * 사용:
- *   node scripts/pack-install-smoke.mjs [패키지 디렉터리...]
- *   node scripts/pack-install-smoke.mjs --tarball <tgz 경로>   (이미 있는 tarball 로 검사. 음성 대조용)
+ *   node scripts/pack-install-smoke.mjs                          (tokens 설치 스모크 + G2)
+ *   node scripts/pack-install-smoke.mjs [패키지 디렉터리...]     (설치 스모크만)
+ *   node scripts/pack-install-smoke.mjs --tarball <tgz 경로>     (이미 있는 tarball 로 설치 스모크. 음성 대조용)
+ *   node scripts/pack-install-smoke.mjs --rsc-only [--rsc-tarball <tgz>]...
+ *       G2 만 실행. --rsc-tarball 로 준 tarball 은 같은 이름 패키지의 워크스페이스 pack 을 대신한다(음성 대조용)
  *
  * 종료 코드: 0 통과 / 1 결함 / 2 측정 실패(pack · 설치 실패, 검사한 서브패스 0개, tsc 없음)
  */
@@ -24,14 +35,28 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const ROOT = process.cwd();
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+// G2 플래그를 먼저 떼어 낸다
+const rscOnly = rawArgs.includes('--rsc-only');
+const rscTarballs = [];
+const args = [];
+for (let i = 0; i < rawArgs.length; i++) {
+  if (rawArgs[i] === '--rsc-only') continue;
+  if (rawArgs[i] === '--rsc-tarball') { rscTarballs.push(resolve(rawArgs[++i])); continue; }
+  args.push(rawArgs[i]);
+}
 const tarballIdx = args.indexOf('--tarball');
 const givenTarball = tarballIdx >= 0 ? resolve(args[tarballIdx + 1]) : null;
-const pkgDirs = givenTarball
-  ? [null]
-  : (args.length > 0 ? args : ['packages/axis-tokens']).map((p) => resolve(ROOT, p));
+const pkgDirs = rscOnly
+  ? []
+  : givenTarball
+    ? [null]
+    : (args.length > 0 ? args : ['packages/axis-tokens']).map((p) => resolve(ROOT, p));
+// G2 는 인자 없는 기본 실행(pnpm pack-smoke)과 --rsc-only · --rsc-tarball 에서 돈다
+const runRsc = rscOnly || rscTarballs.length > 0 || rawArgs.length === 0;
 
 const TSC = join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
 
@@ -211,6 +236,8 @@ for (const pkgDir of pkgDirs) {
   }
 }
 
+if (runRsc) await runRscSmoke();
+
 if (measureErrors > 0) {
   console.error(`\n[pack-install-smoke] 측정 실패 ${measureErrors}건${failures ? `, 결함 ${failures}건` : ''}`);
   process.exit(2);
@@ -219,4 +246,147 @@ if (failures > 0) {
   console.error(`\n[pack-install-smoke] FAIL - ${failures}건 결함`);
   process.exit(1);
 }
-console.log(`\n[pack-install-smoke] OK - ${pkgDirs.length}개 패키지 설치 후 로드 통과`);
+console.log(`\n[pack-install-smoke] OK - ${[
+  pkgDirs.length ? `${pkgDirs.length}개 패키지 설치 후 로드 통과` : '',
+  runRsc ? 'G2 RSC 통과' : '',
+].filter(Boolean).join(', ')}`);
+
+// ---------------------------------------------------------------------------
+// G2: RSC 하네스 (WI-0050)
+// ---------------------------------------------------------------------------
+async function runRscSmoke() {
+  const G2 = 'G2';
+  const RSC_PACKAGES = ['@axis-ds/tokens', '@axis-ds/ui-react', '@axis-ds/agentic-ui', '@axis-ds/theme'];
+  // 렌더 · 호출 대상(tokens 는 의존으로만 설치)
+  const PROBE_PACKAGES = ['@axis-ds/ui-react', '@axis-ds/agentic-ui', '@axis-ds/theme'];
+  const HARNESS = join(ROOT, 'scripts', 'rsc-smoke');
+  const work = mkdtempSync(join(tmpdir(), 'axis-rsc-smoke-'));
+  const t0 = Date.now();
+  try {
+    const wsByName = new Map(readdirSync(join(ROOT, 'packages'))
+      .map((d) => join(ROOT, 'packages', d))
+      .filter((p) => existsSync(join(p, 'package.json')))
+      .map((p) => [JSON.parse(readFileSync(join(p, 'package.json'), 'utf8')).name, p]));
+
+    // 1. tarball 확보: --rsc-tarball 로 준 것이 같은 이름의 워크스페이스 pack 을 대신한다
+    const tarballs = new Map();
+    for (const tgz of rscTarballs) {
+      const pj = JSON.parse(execFileSync('tar', ['-xzOf', tgz, 'package/package.json'], { encoding: 'utf8' }));
+      tarballs.set(pj.name, tgz);
+      console.log(`  - [${G2}] ${pj.name}@${pj.version} 는 주어진 tarball 사용: ${tgz}`);
+    }
+    const packDir = join(work, 'pack');
+    for (const name of RSC_PACKAGES) {
+      if (tarballs.has(name)) continue;
+      const dir = wsByName.get(name);
+      if (!dir) { measureFail(G2, `워크스페이스에서 ${name} 를 찾지 못함`); return; }
+      const before = existsSync(packDir) ? new Set(readdirSync(packDir)) : new Set();
+      execFileSync('pnpm', ['pack', '--pack-destination', packDir], { cwd: dir, stdio: 'pipe' });
+      const f = readdirSync(packDir).find((x) => x.endsWith('.tgz') && !before.has(x));
+      if (!f) { measureFail(G2, `${name} tarball 생성 실패`); return; }
+      tarballs.set(name, join(packDir, f));
+    }
+    const tPack = Date.now();
+
+    // 2. 소비자 디렉터리 설치. react 는 워크스페이스에 설치된 버전과 맞추고,
+    //    react-server-dom-webpack 은 react 와 같은 버전이어야 한다(G2 전용, 저장소 의존 아님).
+    //    --legacy-peer-deps: react-server-dom-webpack 의 peer 인 webpack 을 받지 않는다(서버 렌더에 쓰지 않음)
+    const reactPj = join(wsByName.get('@axis-ds/ui-react'), 'node_modules', 'react', 'package.json');
+    if (!existsSync(reactPj)) { measureFail(G2, `워크스페이스 react 버전을 읽지 못함(${reactPj})`); return; }
+    const reactVer = JSON.parse(readFileSync(reactPj, 'utf8')).version;
+    const consumer = join(work, 'consumer');
+    mkdirSync(consumer, { recursive: true });
+    writeFileSync(join(consumer, 'package.json'), JSON.stringify({ name: 'axis-rsc-smoke', private: true, type: 'module' }));
+    writeFileSync(join(consumer, 'probe-entry.mjs'), 'export const imp = (s) => import(s);\n');
+    execFileSync('npm', [
+      'install', ...RSC_PACKAGES.map((n) => tarballs.get(n)),
+      `react@${reactVer}`, `react-dom@${reactVer}`, `react-server-dom-webpack@${reactVer}`,
+      '--legacy-peer-deps', '--no-audit', '--no-fund', '--ignore-scripts', '--no-package-lock',
+    ], { cwd: consumer, stdio: 'pipe' });
+    const tInstall = Date.now();
+
+    // 설치된 @axis-ds 패키지가 각각 한 벌이고 버전이 tarball 과 같은지(레지스트리 사본이 끼면 측정 대상이 바뀐다)
+    // 중첩 설치(node_modules/@axis-ds/x/node_modules/@axis-ds/y)도 세도록 경로 끝 모양으로만 거른다
+    const found = execFileSync('find', ['node_modules', '-path', '*/@axis-ds/*/package.json'], { cwd: consumer, encoding: 'utf8' })
+      .split('\n').filter((l) => /(^|\/)node_modules\/@axis-ds\/[^/]+\/package\.json$/.test(l));
+    for (const name of RSC_PACKAGES) {
+      const copies = found.filter((l) => l.endsWith(`${name}/package.json`));
+      const want = JSON.parse(execFileSync('tar', ['-xzOf', tarballs.get(name), 'package/package.json'], { encoding: 'utf8' })).version;
+      if (copies.length !== 1) { measureFail(G2, `${name} 설치본이 ${copies.length}벌(${copies.join(', ')})`); return; }
+      const got = JSON.parse(readFileSync(join(consumer, copies[0]), 'utf8')).version;
+      if (got !== want) { measureFail(G2, `${name} 설치 버전 ${got} != tarball ${want}`); return; }
+    }
+
+    // 3. 대상 spec: 루트 + exports 서브패스(.css · package.json 제외)
+    const specs = [];
+    for (const name of PROBE_PACKAGES) {
+      const pj = JSON.parse(readFileSync(join(consumer, 'node_modules', name, 'package.json'), 'utf8'));
+      const subs = typeof pj.exports === 'object' && pj.exports ? Object.keys(pj.exports) : ['.'];
+      for (const sub of subs) {
+        if (sub.endsWith('.css') || sub.endsWith('.json')) continue;
+        specs.push(sub === '.' ? name : `${name}/${sub.replace(/^\.\//, '')}`);
+      }
+    }
+
+    // 4. react-server 조건으로 실행
+    const r = spawnSync(process.execPath, [
+      '--conditions=react-server', '--import', pathToFileURL(join(HARNESS, 'register.mjs')).href,
+      join(HARNESS, 'run.mjs'), consumer, ...specs,
+    ], { cwd: consumer, encoding: 'utf-8', timeout: 180000, maxBuffer: 64 * 1024 * 1024 });
+    const tRun = Date.now();
+    if (r.status !== 0) {
+      measureFail(G2, `하네스 rc=${r.status}${r.signal ? ` signal=${r.signal}` : ''} ${String(r.stderr).trim().split('\n').slice(-2).join(' | ')}`);
+      return;
+    }
+    const lines = r.stdout.split('\n').filter((l) => l.startsWith('{')).map((l) => JSON.parse(l));
+    const env = lines.find((x) => x.type === 'env');
+    if (!env || !env.reactServer || !env.rsdw) {
+      measureFail(G2, `react-server 조건 미적용(env=${JSON.stringify(env)}) - 이 상태의 통과는 근거가 아님`);
+      return;
+    }
+    const rows = lines.filter((x) => x.type === 'row');
+    for (const spec of specs) {
+      if (!rows.some((x) => x.spec === spec)) measureFail(G2, `${spec} 결과 0행`);
+    }
+
+    // 5. 판정
+    const count = { render: 0, boundary: 0, call: 0, hook: 0, import: 0 };
+    const before = failures;
+    for (const x of rows) {
+      count[x.kind]++;
+      const where = `${x.spec} ${x.name}${x.clientRef ? '[client-ref]' : ''}`;
+      if (x.kind === 'import') fail(G2, `${where} import 실패: ${x.detail}`);
+      else if (x.kind === 'render') {
+        if (!x.ok) fail(G2, `${where} RSC 렌더 실패: ${x.detail}`);
+        else if (x.detail.startsWith('경계')) count.boundary++;
+      } else if (x.kind === 'call') {
+        if (x.clientRef) fail(G2, `${where} 서버 호출 불가(클라이언트 참조): ${x.detail}`);
+        else if (!x.ok) fail(G2, `${where} 서버 호출 실패: ${x.detail}`);
+      } else if (x.kind === 'hook' && !x.clientRef) {
+        fail(G2, `${where} 훅이 클라이언트 참조가 아님(서버 그래프에서 평가됨)`);
+      }
+    }
+    // 서버 호출 대상이 실제로 불렸는지(0건 통과 방지): ui-react 루트의 cn 과 *Variants
+    const uiRootCalls = rows.filter((x) => x.spec === '@axis-ds/ui-react' && x.kind === 'call');
+    const callNames = [...new Set(uiRootCalls.map((x) => x.name))];
+    // AC2: 서버에서 호출할 수 있어야 하는 8개가 모두 루트 내보내기에 있어야 함(하나라도 빠지면 하위 호환 결함)
+    const REQUIRED_SERVER_CALLS = [
+      'cn', 'buttonVariants', 'toggleVariants', 'alertVariants', 'badgeVariants',
+      'progressVariants', 'progressIndicatorVariants', 'avatarVariants',
+    ];
+    for (const name of REQUIRED_SERVER_CALLS) {
+      if (!callNames.includes(name)) fail(G2, `@axis-ds/ui-react 루트에서 ${name} 호출 행이 없음`);
+    }
+    const okCalls = uiRootCalls.filter((x) => x.ok && !x.clientRef).map((x) => x.name);
+    const theme = rows.find((x) => x.spec === '@axis-ds/theme' && x.name === 'ThemeProvider');
+
+    console.log(`  - [${G2}] spec ${specs.length}개, 행 ${rows.length}개(렌더 ${count.render} 중 경계 ${count.boundary}, 호출 ${count.call}, 훅 ${count.hook}, import 실패 ${count.import}), 결함 ${failures - before}건`);
+    console.log(`    서버 호출 통과(ui-react 루트): ${okCalls.length}개 ${okCalls.join(', ')}`);
+    console.log(`    ThemeProvider: ${theme ? (theme.ok ? theme.detail : 'FAIL ' + theme.detail) : '행 없음'}`);
+    console.log(`    비용: pack ${((tPack - t0) / 1000).toFixed(1)}s, npm install ${((tInstall - tPack) / 1000).toFixed(1)}s (react ${reactVer}, node_modules ${execFileSync('du', ['-sm', 'node_modules'], { cwd: consumer, encoding: 'utf8' }).split('\t')[0]}MB), 하네스 ${((tRun - tInstall) / 1000).toFixed(1)}s`);
+  } catch (e) {
+    measureFail(G2, String(e.message).split('\n')[0]);
+  } finally {
+    rmSync(work, { recursive: true, force: true });
+  }
+}

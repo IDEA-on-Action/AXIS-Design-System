@@ -15,6 +15,9 @@
  *      레지스트리 도구를 호출한다(scripts/mcp-smoke.mjs, WI-0036)
  *   5. Tailwind 4 CSS 진입점이 tarball 에 실재하고, 그 안의 @source 상대 경로가
  *      tarball 안의 실제 경로를 가리킨다(WI-0044)
+ *   6. G1 "use client" 정적 검사(WI-0050): ui-react · agentic-ui · theme 의 지시문 목록 파일에는
+ *      ESM · CJS 모두 지시문이 있고, 루트 배럴 · cn · *Variants 파일에는 없으며, 목록 밖 파일에
+ *      상태 훅 · createContext/useContext · "use client" 모듈 점 접근이 없다(scripts/use-client-gate.mjs)
  *
  * 사용: node scripts/pack-smoke.mjs        (실패 시 exit 1)
  */
@@ -23,6 +26,7 @@ import { mkdtempSync, rmSync, readFileSync, existsSync, readdirSync, statSync } 
 import { tmpdir } from 'os';
 import { join, dirname } from 'path';
 import { runMcpSmoke } from './mcp-smoke.mjs';
+import { USE_CLIENT_PACKAGES, checkUseClient, describeG1 } from './use-client-gate.mjs';
 
 const ROOT = process.cwd();
 const PKG_DIR = join(ROOT, 'packages');
@@ -43,6 +47,7 @@ const REQUIRED_FILES = {
   '@axis-ds/agentic-ui': ['tailwind.css'],
 };
 const requiredSeen = new Set();
+const g1Seen = new Set();
 
 let failures = 0;
 let mcpSmokeRan = false;
@@ -125,6 +130,13 @@ for (const pkgPath of packages) {
       }
     }
 
+    // 6. G1 "use client" 정적 검사(목록은 각 패키지 scripts/client-modules.mjs 단일 출처)
+    if (USE_CLIENT_PACKAGES[name]) {
+      g1Seen.add(name);
+      const r = await checkUseClient(name, root, (msg) => fail(name, msg));
+      if (r) console.log(`  · [${name}] ${describeG1(r)}`);
+    }
+
     // 4. MCP 서버 실행 스모크(구조 검사로는 런타임 데이터 경로 결함을 못 잡는다)
     if (name === '@axis-ds/mcp') {
       mcpSmokeRan = true;
@@ -145,6 +157,9 @@ for (const pkgPath of packages) {
 
 // 실행 스모크가 대상을 못 찾아 건너뛴 것을 통과로 읽지 않는다
 if (!mcpSmokeRan) fail('@axis-ds/mcp', '실행 스모크 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
+for (const pkg of Object.keys(USE_CLIENT_PACKAGES)) {
+  if (!g1Seen.has(pkg)) fail(pkg, 'G1 "use client" 검사 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
+}
 for (const pkg of Object.keys(REQUIRED_FILES)) {
   if (!requiredSeen.has(pkg)) fail(pkg, '필수 배포 파일 검사 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
 }

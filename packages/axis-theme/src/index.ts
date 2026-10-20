@@ -1,7 +1,19 @@
+"use client";
+
 /**
  * AXIS Design System - Theme Provider
  * @packageDocumentation
  */
+
+// "use client" 를 모듈 전체에 두는 근거(WI-0050 FR-4 · D3)
+// - 모듈 최상위에서 createContext 를 호출해서, 지시문이 없으면 서버 컴포넌트가 import 만 해도
+//   `createContext is not a function` 으로 빌드 전체가 멈춘다
+// - 런타임 내보내기는 ThemeProvider(useState · useEffect) 와 useTheme(useContext 훅) 둘뿐이고
+//   둘 다 클라이언트 전용이다. 서버에서 호출할 비컴포넌트 함수(상수 · 유틸)는 없어서 파일을 나누지 않는다
+// - 나머지 내보내기는 타입(Theme · ThemeProviderProps · ThemeContextValue)이라 런타임 영향이 없다
+// - 단일 엔트리 번들이라 esbuild 가 엔트리 맨 앞 지시문을 ESM · CJS 산출물에 그대로 남긴다
+//   (CJS 는 "use strict" 다음 줄). 서버 컴포넌트에 쓸 비컴포넌트 내보내기를 더하게 되면
+//   이 파일에 두지 말고 지시문 없는 별도 엔트리(서브패스)로 낸다
 
 import * as React from "react";
 

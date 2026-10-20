@@ -71,6 +71,36 @@
       "import": "./dist/attachment-card/index.mjs",
       "require": "./dist/attachment-card/index.js"
     },
+    "./agent-avatar": {
+      "types": "./dist/agent-avatar/index.d.ts",
+      "import": "./dist/agent-avatar/index.mjs",
+      "require": "./dist/agent-avatar/index.js"
+    },
+    "./recovery-banner": {
+      "types": "./dist/recovery-banner/index.d.ts",
+      "import": "./dist/recovery-banner/index.mjs",
+      "require": "./dist/recovery-banner/index.js"
+    },
+    "./source-panel": {
+      "types": "./dist/source-panel/index.d.ts",
+      "import": "./dist/source-panel/index.mjs",
+      "require": "./dist/source-panel/index.js"
+    },
+    "./step-timeline": {
+      "types": "./dist/step-timeline/index.d.ts",
+      "import": "./dist/step-timeline/index.mjs",
+      "require": "./dist/step-timeline/index.js"
+    },
+    "./surface-renderer": {
+      "types": "./dist/surface-renderer/index.d.ts",
+      "import": "./dist/surface-renderer/index.mjs",
+      "require": "./dist/surface-renderer/index.js"
+    },
+    "./thinking-indicator": {
+      "types": "./dist/thinking-indicator/index.d.ts",
+      "import": "./dist/thinking-indicator/index.mjs",
+      "require": "./dist/thinking-indicator/index.js"
+    },
     "./tailwind.css": "./tailwind.css"
   },
   "sideEffects": false,
@@ -82,8 +112,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup src/index.ts src/*/index.tsx --format cjs,esm --dts --external react",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch --external react",
+    "build": "tsup && node scripts/postbuild.mjs",
+    "dev": "tsup --watch --onSuccess \"node scripts/postbuild.mjs\"",
     "clean": "rm -rf dist",
     "lint": "eslint .",
     "test": "vitest run",
