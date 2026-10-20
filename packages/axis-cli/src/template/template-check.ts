@@ -4,6 +4,7 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import { inspectBrandImport, type BrandImportCheck } from "../theme/brand-core.js";
+import { checkTailwindSetup } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
 const SEVERITY_ICON: Record<CheckSeverity, string> = {
@@ -23,8 +24,8 @@ export async function collectCheckResults(dir?: string): Promise<CheckResult[]> 
   // 1. axis.config.json 존재 여부
   results.push(await checkFileExists(baseDir, "axis.config.json", "axis.config.json"));
 
-  // 2. tailwind.config.ts 존재 여부
-  results.push(await checkTailwindConfig(baseDir));
+  // 2. Tailwind 구성: 3 이하는 tailwind.config 파일, 4 이상은 CSS 의 @import "tailwindcss"(WI-0042)
+  results.push(checkTailwindSetup(baseDir));
 
   // 3. globals.css 존재 여부 + AXIS 토큰 포함 여부
   results.push(await checkGlobalsCss(baseDir));
@@ -42,10 +43,18 @@ export async function collectCheckResults(dir?: string): Promise<CheckResult[]> 
   return results;
 }
 
+/** 검증 결과 개수 */
+export interface CheckSummary {
+  pass: number;
+  warn: number;
+  fail: number;
+}
+
 /**
- * 프로젝트 상태 검증 실행
+ * 프로젝트 상태 검증 실행. 출력하고 개수를 돌려줍니다.
+ * 종료 코드는 여기서 정하지 않고 `axis check` 명령이 정합니다(fail 이 있으면 1, WI-0042).
  */
-export async function runCheck(dir?: string): Promise<void> {
+export async function runCheck(dir?: string): Promise<CheckSummary> {
   const results = await collectCheckResults(dir);
 
   // 결과 출력
@@ -82,6 +91,8 @@ export async function runCheck(dir?: string): Promise<void> {
   } else {
     console.log(chalk.green("\n모든 검증을 통과했습니다!"));
   }
+
+  return { pass: passCount, warn: warnCount, fail: failCount };
 }
 
 async function checkFileExists(
@@ -96,37 +107,6 @@ async function checkFileExists(
     message: exists
       ? `${label} 파일이 존재합니다`
       : `${label} 파일이 없습니다 → 'axis init'을 실행하세요`,
-  };
-}
-
-async function checkTailwindConfig(baseDir: string): Promise<CheckResult> {
-  const tsPath = path.join(baseDir, "tailwind.config.ts");
-  const jsPath = path.join(baseDir, "tailwind.config.js");
-
-  if (await fs.pathExists(tsPath)) {
-    const content = await fs.readFile(tsPath, "utf-8");
-    const hasTokens = content.includes("--background") || content.includes("hsl(var(");
-    return {
-      name: "tailwind.config",
-      severity: hasTokens ? "pass" : "warn",
-      message: hasTokens
-        ? "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다"
-        : "tailwind.config.ts에 AXIS 토큰 설정이 없습니다",
-    };
-  }
-
-  if (await fs.pathExists(jsPath)) {
-    return {
-      name: "tailwind.config",
-      severity: "warn",
-      message: "tailwind.config.js 존재 (TypeScript 권장)",
-    };
-  }
-
-  return {
-    name: "tailwind.config",
-    severity: "fail",
-    message: "tailwind.config 파일이 없습니다",
   };
 }
 

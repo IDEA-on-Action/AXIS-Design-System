@@ -8,6 +8,7 @@ import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
 import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
+import { checkTailwindSetup } from "./tailwind-core.js";
 
 // --- 타입 ---
 
@@ -340,32 +341,8 @@ export async function handleCheckProject(
       : "axis.config.json 파일이 없습니다 → 'axis init'을 실행하세요",
   });
 
-  // 2. tailwind.config
-  const twTs = path.join(baseDir, "tailwind.config.ts");
-  const twJs = path.join(baseDir, "tailwind.config.js");
-  if (await fs.pathExists(twTs)) {
-    const content = await fs.readFile(twTs, "utf-8");
-    const hasTokens = content.includes("--background") || content.includes("hsl(var(");
-    results.push({
-      name: "tailwind.config",
-      severity: hasTokens ? "pass" : "warn",
-      message: hasTokens
-        ? "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다"
-        : "tailwind.config.ts에 AXIS 토큰 설정이 없습니다",
-    });
-  } else if (await fs.pathExists(twJs)) {
-    results.push({
-      name: "tailwind.config",
-      severity: "warn",
-      message: "tailwind.config.js 존재 (TypeScript 권장)",
-    });
-  } else {
-    results.push({
-      name: "tailwind.config",
-      severity: "fail",
-      message: "tailwind.config 파일이 없습니다",
-    });
-  }
+  // 2. Tailwind 구성: 3 이하는 tailwind.config 파일, 4 이상은 CSS 의 @import "tailwindcss"(WI-0042, CLI 와 같은 코어)
+  results.push(checkTailwindSetup(baseDir));
 
   // 3. globals.css
   const cssCandidates = [
