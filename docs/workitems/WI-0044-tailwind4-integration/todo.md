@@ -1,6 +1,6 @@
 # WI-0044: Tailwind 4 프로젝트의 AXIS 연동 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행 중 (2026-10-20, 구현 · 문서 · 보정 2차 · 3차 완료, 통합 검증 · 머지 · 배포 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: ✅ 완료 (2026-10-20, linked 4패키지 · cli 1.4.0 · mcp 1.2.2 배포, 배포본 실측 통과)
 
 ## FR-1 토큰 진입점 (D1)
 - [x] `build-tokens.mjs` 6단계에서 `src/tailwind-preset.ts` 를 읽어 `dist/css/tailwind4.css` 생성(`scripts/tailwind4.mjs`)
@@ -61,10 +61,10 @@
 - [x] 후속(검증 major): init 이 설치본 미만이어도 선언 하한을 읽을 수 없는 선언(`catalog:` · `npm:` 등)은 `pnpm add` 로 덮어쓰지 않고 선언을 올린 뒤 다시 설치하라고 안내(testplan U11)
 
 ## 검증 · 릴리스
-- [ ] AC1 · AC2 실경로: create-next-app 15.5.28 + Playwright 계산 스타일(Button `#3B82F6`, `bg-primary`, `--radius` 프로브, ontology)
-- [ ] AC4 실경로: 빌드한 cli · mcp 를 Tailwind 4 · 3 앱에서 실행
-- [ ] AC6: `pnpm exec turbo run type-check|lint|build|test --force` · `pnpm pack-smoke`(통합 브랜치 기준)
-- [ ] 미측정 항목 정리: 다크 모드 실앱 · hover · Next 16 · turbopack
-- [ ] PR 생성 · 머지
-- [ ] Version PR 머지 → npm 배포(tokens · ui-react · agentic-ui · theme 1.4.0, cli 1.4.0, mcp 1.2.2) 확인. tokens 1.4.0 이 cli 보다 먼저 또는 함께 배포돼야 `axis init` 의 설치 안내가 성립
-- [ ] 배포본으로 AC1 재확인, project-todo.md · wi-mapping 현행화
+- [x] AC1 · AC2 실경로: create-next-app 15.5.28 + Playwright 계산 스타일(Button `#3B82F6`, `bg-primary`, `--radius` 프로브, ontology)
+- [x] AC4 실경로: 빌드한 cli · mcp 를 Tailwind 4 · 3 앱에서 실행
+- [x] AC6: `pnpm exec turbo run type-check|lint|build|test --force` · `pnpm pack-smoke`(통합 브랜치 기준)
+- [x] 미측정 항목 정리: 다크(.dark 래퍼) 실앱은 배포본으로 측정, hover · Next 16 · turbopack · next dev 는 미측정으로 남김(testplan 9 · 10절)
+- [x] PR 생성 · 머지(#141, 4f578fc)
+- [x] Version PR 머지(#142, 5169af8, publish run 39413301099, provenance 6/6) → npm 배포(tokens · ui-react · agentic-ui · theme 1.4.0, cli 1.4.0, mcp 1.2.2) 확인. tokens 1.4.0 이 cli 보다 먼저 또는 함께 배포돼야 `axis init` 의 설치 안내가 성립
+- [x] 배포본으로 AC1 재확인(testplan 10절), project-todo.md · wi-mapping 현행화

@@ -43,7 +43,6 @@
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
-| 56 | Tailwind 4 프로젝트의 AXIS 색 클래스 적용 확인(Button 렌더 실측) · 안 되면 tokens 에 v4 `@theme` 진입점 (WI-0042 에서 분리) | WI-0044 (#134) | P18 | P2 | 🔄 PR #141(2026-10-20, tokens css/tailwind4 · 패키지 tailwind.css · init 안내 · check WARN, 실앱 Playwright AC1 ~ AC3 통과, linked 4패키지 · cli minor · mcp patch) |
 | 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | ⏳ |
 | 58 | 애니메이션 플러그인(tailwindcss-animate) 의존 미선언(7개 컴포넌트 0/26) · accordion · progress keyframes 부재 | WI-0046 (#137) | P18 | P2 | ⏳ |
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ⏳ |
@@ -54,6 +53,7 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 56 | Tailwind 4 연동: tokens `css/tailwind4`(preset 에서 생성한 @theme inline) · ui-react · agentic-ui `tailwind.css`(@source) · axis init 안내 · axis check/MCP WARN, npm linked 4패키지 v1.4.0 · cli v1.4.0 · mcp v1.2.2 릴리스 (#141 · #142, publish run 39413301099, provenance 6/6, 배포본 실앱 Playwright · CLI/MCP 실측 통과) | WI-0044 (#134) | P18 | 2026-10-20 |
 | 54 | `axis check` · MCP `axis.check_project` 의 Tailwind 4 tailwind.config 오탐 수정(CSS 의 `@import "tailwindcss"` 로 판정, Tailwind 3 `.mjs` · `.cjs` 인정) + FAIL 시 종료 코드 1, npm cli v1.3.0 · mcp v1.2.1 릴리스 (#133 · #135, publish run 39351203366, provenance, 배포본 check rc 0/1 · MCP PASS 실측). AXIS 색 클래스 실제 적용은 WI-0044 | WI-0042 (#131) | P18 | 2026-10-20 |
 | 55 | Ontology Platform 디자인 테마 v0.26 반영: 프로토타입 v0.24 · v0.26 대조로 토큰 변경 0건 확인(프리셋 변경 없음), WI-0027 PRD v0.5에 r3 화면 범위 병합(정본 전환은 WI-0027 Q7), WI-0025 머리말 갱신 | WI-0043 (#132) | P18 | 2026-10-20 |
 | 50 | `axis init -y` 가 쓰는 utils.ts 의존성(`clsx` · `tailwind-merge`) 추가 · 안내 + `npx axis-cli` 안내 정정, npm cli v1.2.1 릴리스 (#129 · #130, publish run 39345179364, provenance, 배포본 init -> install -> build rc 0, npm `axis-cli@99.0.0` 선점 · deprecate) | WI-0038 (#124) | P18 | 2026-10-20 |

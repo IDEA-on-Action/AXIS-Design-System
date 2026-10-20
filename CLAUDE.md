@@ -2,8 +2,8 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: 1.3.0 | **상태**: ✅ Active Development
-**npm 배포**: v1.3.0 배포 완료 (2026-10-19, 브랜드 테마 축 · ontology 프리셋 · tokens ESM 진입점 수정), cli 1.3.0 · mcp 1.2.1 (2026-10-20, axis check Tailwind 4 판정 · FAIL 시 rc 1)
+**현재 버전**: 1.4.0 | **상태**: ✅ Active Development
+**npm 배포**: v1.4.0 배포 완료 (2026-10-20, Tailwind 4 연동 · tokens css/tailwind4 · 패키지 tailwind.css), cli 1.4.0 · mcp 1.2.2 (2026-10-20)
 
 ---
 
@@ -128,7 +128,7 @@ pnpm publish -r --access public --no-git-checks  # 비상용 수동 배포: 로�
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
 - **publish 부수효과**(로컬 수동 배포 때만): 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
 - **CI 배포**: `.github/workflows/publish.yml` - main push 시 changesets/action이 OIDC로 발행 (npm 인증용 GitHub Secret 불필요)
-- **현재 배포 버전**: 1.3.0 (2026-10-19 배포, run 39238361098, linked 4패키지 minor, provenance 4/4). cli · mcp 1.2.0 (2026-10-19, run 39257199603, 브랜드 명령 theme list · info · add · MCP 도구 2개, provenance 2/2). cli 1.3.0 · mcp 1.2.1 (2026-10-20, run 39351203366, axis check · check_project 의 Tailwind 4 판정과 FAIL 시 종료 코드 1, provenance 2/2). cli 1.2.1 (2026-10-20, run 39345179364, init 의 utils.ts 의존성 추가 · `npx axis-cli` 안내 정정, provenance). 이전 mcp 1.1.5(run 39237376712, 데이터 경로 결함 수정)
+- **현재 배포 버전**: 1.4.0 (2026-10-20 배포, run 39413301099, linked 4패키지 minor, Tailwind 4 연동, provenance 4/4). cli 1.4.0 · mcp 1.2.2 (같은 run, init 안내 · check WARN, provenance 2/2). 이전 1.3.0 (2026-10-19, run 39238361098), cli 1.3.0 · mcp 1.2.1 (2026-10-20, run 39351203366)
 
 ---
 

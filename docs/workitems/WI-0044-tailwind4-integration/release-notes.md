@@ -1,6 +1,6 @@
 # WI-0044 릴리스 노트: Tailwind 4 프로젝트의 AXIS 연동
 
-> 릴리스일: 미정(배포 전) | 유형: feat · 일부 동작 변경(`axis check`) | 영향: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 1.3.0 → 1.4.0 (minor, linked 로 `@axis-ds/theme` 도 1.4.0), `@axis-ds/cli` 1.3.0 → 1.4.0 (minor), `@axis-ds/mcp` 1.2.1 → 1.2.2 (patch)
+> 릴리스일: 2026-10-20 (publish run 39413301099, provenance 6/6) | 유형: feat · 일부 동작 변경(`axis check`) | 영향: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 1.3.0 → 1.4.0 (minor, linked 로 `@axis-ds/theme` 도 1.4.0), `@axis-ds/cli` 1.3.0 → 1.4.0 (minor), `@axis-ds/mcp` 1.2.1 → 1.2.2 (patch)
 > changeset: `.changeset/wi-0044-tailwind4-entry.md` · `.changeset/wi-0044-tailwind4-cli.md`
 
 ## 변경 사항

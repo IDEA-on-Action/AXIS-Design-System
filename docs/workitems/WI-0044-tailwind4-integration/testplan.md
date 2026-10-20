@@ -178,3 +178,23 @@ S13 결과:
 | 다크 모드 실앱(ThemeProvider), hover · focus 상태 | **미측정** |
 | Next 16 · turbopack | **미측정** |
 | agentic-ui 실앱 렌더 | **미측정** (스캔 규칙 생성만 P1 에서 확인) |
+
+## 10. 배포본 확인 (2026-10-20, publish run 39413301099)
+
+npm 레지스트리 배포본(tokens · ui-react · agentic-ui · theme 1.4.0, cli 1.4.0, mcp 1.2.2)만 설치해 새 디렉터리에서 쟀습니다(설치본 version 과 package-lock resolved 로 배포본임을 확인).
+
+| 대상 | 결과 |
+|---|---|
+| 실앱(create-next-app 15.5.28 · tailwindcss 4.3.3, README 권장 globals.css) | Button rgb(59,130,246) · 글자 rgb(255,255,255), 앱 `bg-primary` rgb(17,24,39), rounded-lg 8px, `.dark` 안 rgb(243,244,246) |
+| `:root{--radius:1rem}` | 프로브 lg 16px, Button 14px, Card · CodeBlock 16px |
+| ontology(`brands/ontology` import + `data-brand`) | rounded-lg/md/sm 12/10/8px, `font-mono` 첫 항목 "JetBrains Mono". `data-brand` 없으면 기본값(대조) |
+| 음성 대조 | tokens 진입점을 빼면 `bg-primary` · Button · Card 투명, 컴포넌트 `tailwind.css` 둘 다 빼면 Button · Card 투명(앱 `bg-primary` 는 유지) |
+| pnpm 설치 사본 | 기본 구성 값이 npm 과 같음 |
+| CLI 1.4.0 `init` (Tailwind 4 그대로) | import 줄 · 기본 블록 4개 삭제 안내 · `@axis-ds/tokens@^1.4.0` 설치 안내, `axis.config.json` 에 tailwindConfig 없음, globals.css 불변 |
+| CLI 1.4.0 `check` | 기본: 진입점 WARN(3 pass / 2 warn), 권장형: 5 pass / 0 warn, `--font-sans` 만 남김: 그 이름만 WARN, 설치본 1.3.0: 1.4.0 조건 WARN 과 init 업그레이드 명령, Tailwind 3 preset: PASS(주석 처리하면 WARN), 빈 디렉터리 rc 1 |
+| MCP 1.2.2 `axis.check_project` | serverInfo 1.2.2, 프로젝트 4개에서 CLI 와 줄 단위 동일(diff rc 0, 한 줄 바꾼 사본은 rc 1) |
+
+배포본 확인 중 발견(이번 WI 범위 밖, 기존 결함): ui-react · agentic-ui 소스와 dist 에 `"use client"` 지시문이 없어, 서버 컴포넌트 페이지(create-next-app 기본)에서 쓰면 `next build` 가 prerender 에서 `useState is not a function` 으로 실패합니다. 측정은 page.tsx 에 `"use client"` 를 넣고 했습니다. `axis check` 의 dependencies 항목은 선언만 보는데 문구가 「설치되어 있습니다」라는 점도 관찰했습니다.
+
+미측정: next dev · turbopack, hover · focus, Next 16, pnpm 사본의 radius · ontology · 음성 대조.
+
