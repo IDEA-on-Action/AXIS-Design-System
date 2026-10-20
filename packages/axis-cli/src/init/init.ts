@@ -12,6 +12,7 @@ import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
 import { createInitConfig, type AxisConfig } from "../config/axis-config.js";
+import { TOKENS_PACKAGE } from "../theme/brand-core.js";
 import {
   detectInstallCommand,
   formatJsonLike,
@@ -19,7 +20,20 @@ import {
   isPlainObject,
   realPathInside,
 } from "../theme/theme-add.js";
-import { detectTailwind, type TailwindDetection } from "../template/tailwind-core.js";
+import {
+  axisPackageVersionLabel,
+  axisPackagesBelowTailwind4,
+  componentTailwindImportLine,
+  detectTailwind,
+  rangeLowerAtLeast,
+  TAILWIND4_COMPONENT_PACKAGES,
+  TAILWIND4_MIN_AXIS_VERSION,
+  TOKENS_TAILWIND4_IMPORT_LINE,
+  type TailwindDetection,
+} from "../template/tailwind-core.js";
+
+// Tailwind 4 진입점을 내는 컴포넌트 패키지 목록은 axis check(B1)와 같이 쓰려고 공유 코어에 둡니다.
+export { TAILWIND4_COMPONENT_PACKAGES };
 
 // Tailwind major 판정은 WI-0042 에서 axis check 와 함께 쓰려고 공유 코어로 옮겼습니다. 기존 import 경로는 그대로 둡니다.
 export {
@@ -115,8 +129,113 @@ export const INIT_NEXT_STEP_COMMAND = "npx @axis-ds/cli add button";
 
 export interface InitAnswers {
   componentsDir: string;
-  tailwindConfig: string;
+  /** Tailwind 4 이상에서는 쓰지 않습니다(설정 파일이 없음, WI-0044 FR-3). */
+  tailwindConfig?: string;
   globalCss: string;
+}
+
+/** Tailwind major 가 4 이상인지. 판정 불가는 Tailwind 3 쪽(종전 동작)으로 봅니다. */
+export function isTailwind4(tailwind: TailwindDetection): boolean {
+  return tailwind.major !== undefined && tailwind.major >= 4;
+}
+
+/** `@axis-ds/tokens/css/tailwind4` 진입점이 처음 들어가는 `@axis-ds/tokens` 버전(WI-0044 D1, linked minor). 값은 공유 코어에 있습니다. */
+export const TAILWIND4_TOKENS_VERSION = TAILWIND4_MIN_AXIS_VERSION;
+
+/**
+ * create-next-app 기본 globals.css 의 지울 블록 안내(WI-0044 보정). `docs/guides/quick-start.md` 「Tailwind CSS 4」 절의
+ * 「create-next-app 기본 globals.css 와의 충돌」과 같은 내용입니다(블록 4개 · 겹치는 이름 5개 · 지움).
+ */
+export const TAILWIND4_CONFLICT_LINE =
+  "  ! create-next-app 기본 globals.css 의 :root · @theme inline · @media (prefers-color-scheme: dark) · body 블록은 " +
+  "AXIS 와 같은 이름(--background · --foreground · --color-background · --font-sans · --font-mono)을 다른 값으로 정의합니다. 이 블록들을 지우세요.";
+
+/** package.json 을 읽기만 합니다. 없거나 읽지 못하면 `undefined`. */
+function readPackageJsonSafe(baseDir: string): Record<string, unknown> | undefined {
+  try {
+    const text = readFileSync(path.join(baseDir, "package.json"), "utf8");
+    const parsed: unknown = JSON.parse(text.startsWith(BOM) ? text.slice(1) : text);
+    return isPlainObject(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * Tailwind 4 프로젝트에 전역 CSS 연동을 안내하는 줄(WI-0044 FR-3). 파일은 고치지 않습니다.
+ * - import 줄: `@import "tailwindcss"` · 토큰 진입점 · package.json 에 선언된 컴포넌트 패키지의 `tailwind.css`.
+ *   컴포넌트 패키지가 없으면(복사 설치만 쓰면 프로젝트 소스라 스캔됨) 패키지를 쓸 때 더하라는 줄만 냅니다.
+ * - create-next-app 기본 globals.css 의 `:root` · `@theme inline` · `@media (prefers-color-scheme: dark)` · `body` 블록을
+ *   지우라는 주의(`TAILWIND4_CONFLICT_LINE`, quick-start 와 같은 내용).
+ * - `@axis-ds/tokens` 가 package.json 에 없으면 설치 명령(theme add 와 같은 lockfile 판정).
+ * - tokens · ui-react · agentic-ui 의 1.4.0 조건(A1, `axisPackagesBelowTailwind4(pkg, baseDir)`, axis check 와 같은 함수 ·
+ *   같은 판정): 보정 3차부터 `baseDir` 의 설치본(node_modules) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
+ *   `^1.3.0` · `catalog:` 여도 안내하지 않고, 미만이면 설치본 버전을 보여 주며 `^1.4.0` 으로 올리는 명령을 냅니다.
+ *   다만 설치본 미만이어도 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) 명령 대신 선언이 가리키는
+ *   버전을 올리고 다시 설치하라는 줄을 냅니다(선언을 덮어쓰지 않음).
+ *   설치본이 없으면 선언 하한이 1.4.0 미만일 때 `^1.4.0` 으로 올리는 명령, 하한을 읽을 수 없으면(`catalog:` · `latest` ·
+ *   `||` 등) 선언을 덮어쓰지 않고 설치된 버전을 확인하라는 줄. `workspace:` 는 모노레포 링크라 안내하지 않습니다.
+ *   `baseDir` 를 주지 않으면 설치본을 보지 않습니다(선언만으로 판정).
+ */
+export function tailwind4GuideLines(
+  pkg: Record<string, unknown> | undefined,
+  installCommand: string,
+  globalCss: string,
+  baseDir?: string
+): string[] {
+  const used = TAILWIND4_COMPONENT_PACKAGES.filter((name) => pkg !== undefined && hasDependency(pkg, name) !== undefined);
+  const lines = [
+    `Tailwind 4: 전역 CSS(${globalCss}) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).`,
+    '  @import "tailwindcss";',
+    `  ${TOKENS_TAILWIND4_IMPORT_LINE}`,
+    ...used.map((name) => `  ${componentTailwindImportLine(name)}`),
+  ];
+  if (used.length === 0) {
+    lines.push(
+      `  npm 패키지 컴포넌트를 쓰면 그 패키지의 tailwind.css 도 넣으세요(예: @import "${TAILWIND4_COMPONENT_PACKAGES[0]}/tailwind.css";).`
+    );
+  }
+  lines.push(TAILWIND4_CONFLICT_LINE);
+  if (pkg === undefined || hasDependency(pkg, TOKENS_PACKAGE) === undefined) {
+    const add = addCommandFor(installCommand, { [TOKENS_PACKAGE]: `^${TAILWIND4_TOKENS_VERSION}` });
+    lines.push(`  ${TOKENS_PACKAGE} 설치: ${add}`);
+  }
+  // 선언된 AXIS 패키지의 1.4.0 조건(axis check 의 버전 안내와 같은 함수 · 판정, A1 · 보정 3차 설치본 우선)
+  const versions = axisPackagesBelowTailwind4(pkg, baseDir);
+  const unknown = versions.filter((v) => v.status === "unknown");
+  const declaredOf = (list: typeof versions) => list.map(axisPackageVersionLabel).join(" · ");
+  const upgradeOf = (list: typeof versions) =>
+    addCommandFor(installCommand, Object.fromEntries(list.map((b) => [b.name, `^${TAILWIND4_MIN_AXIS_VERSION}`])));
+  // 선언 하한으로 판정한 것은 종전 문구, 설치본으로 판정한 것은 설치본을 올리라는 문구(같은 명령 형식)
+  const belowDeclared = versions.filter((v) => v.status === "below" && v.source === "declared");
+  // 설치본 미만이어도 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) `^1.4.0` 으로 덮어쓰는 명령을 내지 않습니다
+  // (보정 2차 A1 원칙, 보정 3차 후속). pnpm catalog 참조 등을 레지스트리 범위로 바꾸지 않게 하려는 것입니다.
+  const readableRange = (v: (typeof versions)[number]) => rangeLowerAtLeast(v.range, TAILWIND4_MIN_AXIS_VERSION) !== undefined;
+  const installedBelow = versions.filter((v) => v.status === "below" && v.source === "installed");
+  const belowInstalled = installedBelow.filter(readableRange);
+  const belowInstalledOpaque = installedBelow.filter((v) => !readableRange(v));
+  const installedOf = (list: typeof versions) => list.map((v) => `${v.name} ${v.installed}, 선언 ${v.range}`).join(" · ");
+  if (belowDeclared.length > 0) {
+    lines.push(
+      `  ! Tailwind 4 진입점은 ${TAILWIND4_MIN_AXIS_VERSION} 부터 있습니다. 선언(${declaredOf(belowDeclared)})을 올리세요: ${upgradeOf(belowDeclared)}`
+    );
+  }
+  if (belowInstalled.length > 0) {
+    lines.push(
+      `  ! Tailwind 4 진입점은 ${TAILWIND4_MIN_AXIS_VERSION} 부터 있습니다. 설치본(${installedOf(belowInstalled)})을 올리세요: ${upgradeOf(belowInstalled)}`
+    );
+  }
+  if (belowInstalledOpaque.length > 0) {
+    lines.push(
+      `  ! Tailwind 4 진입점은 ${TAILWIND4_MIN_AXIS_VERSION} 부터 있습니다. 설치본(${installedOf(belowInstalledOpaque)})이 ${TAILWIND4_MIN_AXIS_VERSION} 미만입니다. 선언이 가리키는 버전을 ${TAILWIND4_MIN_AXIS_VERSION} 이상으로 올린 뒤 다시 설치하세요(선언은 덮어쓰지 않습니다).`
+    );
+  }
+  if (unknown.length > 0) {
+    lines.push(
+      `  ! Tailwind 4 진입점은 ${TAILWIND4_MIN_AXIS_VERSION} 부터 있습니다. 선언(${declaredOf(unknown)})으로는 버전을 판정할 수 없으니 설치된 버전이 ${TAILWIND4_MIN_AXIS_VERSION} 이상인지 확인하세요.`
+    );
+  }
+  return lines;
 }
 
 export interface UtilsDependencyPlan {
@@ -325,11 +444,15 @@ export async function runInit(
 ): Promise<void> {
   const baseDir = path.resolve(baseDirInput);
 
-  // axis.config.json 생성
+  // utils.ts 의존성 계획(D1). 파일을 쓰지 않으므로 먼저 계산해 Tailwind 판정을 config 에도 씁니다.
+  const plan = planUtilsDependencies(baseDir);
+  const tailwind4 = isTailwind4(plan.tailwind);
+
+  // axis.config.json 생성. Tailwind 4 이상은 설정 파일이 없으므로 tailwindConfig 를 적지 않습니다(WI-0044 FR-3).
   const axisConfig: AxisConfig = createInitConfig(
     {
       componentsDir: answers.componentsDir,
-      tailwindConfig: answers.tailwindConfig,
+      tailwindConfig: tailwind4 ? undefined : answers.tailwindConfig,
       globalCss: answers.globalCss,
     },
     registryUrl
@@ -345,7 +468,6 @@ export async function runInit(
   log(chalk.green("✓ utils.ts 생성 완료"));
 
   // utils.ts 의존성(D1)
-  const plan = planUtilsDependencies(baseDir);
   try {
     applyUtilsDependencies(baseDir, plan);
   } catch (err) {
@@ -356,6 +478,18 @@ export async function runInit(
     return;
   }
   reportDependencies(plan, log);
+
+  // Tailwind 4 전역 CSS 연동 안내(WI-0044 FR-3). Tailwind 3 · 판정 불가는 출력이 종전과 같습니다.
+  if (tailwind4) {
+    const [head, ...rest] = tailwind4GuideLines(
+      readPackageJsonSafe(baseDir),
+      plan.installCommand,
+      answers.globalCss,
+      baseDir
+    );
+    log(chalk.blue(`\n${head}`));
+    for (const line of rest) log(line.startsWith("  !") ? chalk.yellow(line) : chalk.cyan(line));
+  }
 
   log(chalk.blue("\n초기화 완료! 이제 다음 명령어로 컴포넌트를 추가하세요:"));
   log(chalk.cyan(`  ${INIT_NEXT_STEP_COMMAND}\n`));

@@ -162,20 +162,205 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
 describe("handleCheckProject Tailwind 구성 (WI-0042)", () => {
   const item = async () => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === "tailwind.config");
 
-  it("Tailwind 4 + @import \"tailwindcss\" → pass, 설정 파일 없음 fail 이 나지 않음", async () => {
+  /** Tailwind 4 프로젝트에 src/app/globals.css 를 씁니다. */
+  async function tailwind4Css(css: string) {
     await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: { tailwindcss: "^4" } });
     await fs.ensureDir(path.join(tmp, "src/app"));
-    await fs.writeFile(path.join(tmp, "src/app/globals.css"), '@import "tailwindcss";');
+    await fs.writeFile(path.join(tmp, "src/app/globals.css"), css);
+  }
+
+  it("Tailwind 4 + @import \"tailwindcss\" · 토큰 진입점 → pass, 설정 파일 없음 fail 이 나지 않음 (WI-0044)", async () => {
+    await tailwind4Css('@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n');
     expect(await item()).toEqual({
       name: "tailwind.config",
       severity: "pass",
-      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다',
+      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다',
     });
+  });
+
+  it("Tailwind 4 + @import \"tailwindcss\" 만 있으면 CLI 와 같은 warn 문구 (WI-0044 FR-4)", async () => {
+    await tailwind4Css('@import "tailwindcss";\n');
+    expect(await item()).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message: 'Tailwind 4: src/app/globals.css에 AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4";',
+    });
+    const text = formatCheckProjectResult(await handleCheckProject({ targetDir: tmp }));
+    expect(text).toContain('AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4";');
+  });
+
+  it("토큰 진입점이 블록 주석 안에만 있으면 warn (WI-0044 FR-4)", async () => {
+    await tailwind4Css('@import "tailwindcss";\n/* @import "@axis-ds/tokens/css/tailwind4"; */\n');
+    expect(await item()).toMatchObject({ severity: "warn", message: expect.stringContaining("AXIS 토큰 진입점이 없습니다") });
   });
 
   it("Tailwind 3 + tailwind.config.mjs → warn(TypeScript 권장)", async () => {
     await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: { tailwindcss: "^3.4.0" } });
     await fs.writeFile(path.join(tmp, "tailwind.config.mjs"), "export default {}");
     expect(await item()).toEqual({ name: "tailwind.config", severity: "warn", message: "tailwind.config.mjs 존재 (TypeScript 권장)" });
+  });
+});
+
+// WI-0044 보정: globals.css 의 tokens CSS import 인정 · 진입점 WARN 의 1.4.0 안내(CLI template-check.test.ts 와 같은 문구)
+describe("handleCheckProject globals.css · 버전 안내 (WI-0044 보정)", () => {
+  async function write(css: string, deps: Record<string, string>) {
+    await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: deps });
+    await fs.ensureDir(path.join(tmp, "src/app"));
+    await fs.writeFile(path.join(tmp, "src/app/globals.css"), css);
+  }
+  const find = async (name: string) => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === name);
+
+  it("토큰 진입점 import 만 있으면 globals.css pass, 문구에 import 경로", async () => {
+    await write('@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n', { tailwindcss: "^4" });
+    expect(await find("globals.css")).toEqual({
+      name: "globals.css",
+      severity: "pass",
+      message: "src/app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)",
+    });
+  });
+
+  it("css/shadcn 작은따옴표 · layer() 도 pass", async () => {
+    await write("@import 'tailwindcss';\n@import url('@axis-ds/tokens/css/shadcn') layer(base);\n", { tailwindcss: "^4" });
+    expect(await find("globals.css")).toMatchObject({
+      severity: "pass",
+      message: "src/app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/shadcn import)",
+    });
+  });
+
+  it("주석 안에만 있으면 종전 warn, 변수 직접 정의는 종전 pass 문구", async () => {
+    await write('/* @import "@axis-ds/tokens/css"; */', { tailwindcss: "^4" });
+    expect(await find("globals.css")).toEqual({
+      name: "globals.css",
+      severity: "warn",
+      message: "src/app/globals.css에 AXIS CSS 변수가 없습니다",
+    });
+    await write(":root{--background:0 0% 100%;--primary:0 0% 0%;}", { tailwindcss: "^3.4.0" });
+    expect(await find("globals.css")).toMatchObject({
+      severity: "pass",
+      message: "src/app/globals.css에 AXIS CSS 변수가 정의되어 있습니다",
+    });
+  });
+
+  it("진입점 WARN: tokens ^1.3.0 이면 1.4.0 이상 필요, ^1.4.0 이면 없음", async () => {
+    const WARN =
+      'Tailwind 4: src/app/globals.css에 AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4";';
+    await write('@import "tailwindcss";', { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0" });
+    expect((await find("tailwind.config"))?.message).toBe(`${WARN} (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0)`);
+    await write('@import "tailwindcss";', { tailwindcss: "^4", "@axis-ds/tokens": "^1.4.0" });
+    expect((await find("tailwind.config"))?.message).toBe(WARN);
+  });
+});
+
+// 보정 2차(2026-10-20 사용자 결정): CLI template-check.test.ts 「WI-0044 보정 2차」와 같은 문구(공유 코어 사본)
+describe("handleCheckProject 보정 2차: A1 · A4 · B1 · B2 · B3 · C (CLI 와 같은 문구)", () => {
+  const TW = '@import "tailwindcss";';
+  const ENTRY = '@import "@axis-ds/tokens/css/tailwind4";';
+  const UI = '@import "@axis-ds/ui-react/tailwind.css";';
+  const AG = '@import "@axis-ds/agentic-ui/tailwind.css";';
+  async function write(files: Record<string, string>, deps: Record<string, string>) {
+    await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: deps });
+    for (const [rel, content] of Object.entries(files)) await fs.outputFile(path.join(tmp, rel), content);
+  }
+  const item = async () => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === "tailwind.config");
+
+  it("A1: 판정 불가는 확인 문구, workspace: 는 안내 없음", async () => {
+    await write({ "globals.css": TW }, { tailwindcss: "^4", "@axis-ds/tokens": "catalog:" });
+    expect((await item())?.message).toBe(
+      `Tailwind 4: globals.css에 AXIS 토큰 진입점이 없습니다 → ${ENTRY} (설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/tokens catalog:)`
+    );
+    await write({ "globals.css": TW }, { tailwindcss: "^4", "@axis-ds/tokens": "workspace:*" });
+    expect((await item())?.message).toBe(`Tailwind 4: globals.css에 AXIS 토큰 진입점이 없습니다 → ${ENTRY}`);
+  });
+
+  it("A4: 진입점이 있어도 tokens ^1.3.0 이면 warn", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0" });
+    expect(await item()).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message:
+        "Tailwind 4: globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0)",
+    });
+  });
+
+  it("B1: 선언된 ui-react · agentic-ui 의 tailwind.css 가 없으면 warn, 선언이 없으면 pass", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0", "@axis-ds/agentic-ui": "^1.4.0" });
+    expect((await item())?.message).toBe(`Tailwind 4: globals.css에 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${UI} ${AG}`);
+    await write({ "globals.css": `${TW}\n${ENTRY}` }, { tailwindcss: "^4" });
+    expect((await item())?.severity).toBe("pass");
+  });
+
+  it("B2: create-next-app 기본 정의가 남으면 warn", async () => {
+    await write(
+      {
+        "app/globals.css": `${TW}\n${ENTRY}\n:root { --background: #ffffff; }\n@theme inline { --color-background: var(--background); --font-mono: var(--font-geist-mono); }\nbody { background: var(--background); }`,
+      },
+      { tailwindcss: "^4" }
+    );
+    expect((await item())?.message).toBe(
+      "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(:root 색값 --background · @theme --color-background: var(--background) · @theme --font-mono: var(--font-geist-mono) · body background: var(--background)) → 지우세요"
+    );
+  });
+
+  it("B3: Tailwind 3 tailwind.config.mjs 의 preset 참조 → pass", async () => {
+    await write({ "tailwind.config.mjs": "import axis from '@axis-ds/tokens/tailwind';\nexport default { presets: [axis] };" }, { tailwindcss: "^3.4.0" });
+    expect(await item()).toEqual({
+      name: "tailwind.config",
+      severity: "pass",
+      message: "tailwind.config.mjs에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)",
+    });
+  });
+
+  it("C: 여러 문제는 우선순위 순서로 ' / ' 로 잇고 버전 안내는 끝에 한 번", async () => {
+    await write({ "globals.css": TW }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.3.0" });
+    expect((await item())?.message).toBe(
+      `Tailwind 4: globals.css에 AXIS 토큰 진입점이 없습니다 → ${ENTRY} / 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${UI} (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0 · @axis-ds/ui-react ^1.3.0)`
+    );
+  });
+});
+
+// 보정 3차(2026-10-20 사용자 결정): CLI template-check.test.ts 「WI-0044 보정 3차」와 같은 문구(공유 코어 사본)
+describe("handleCheckProject 보정 3차: B2 라벨 · 설치본 우선 · 컴포넌트 버전 · 직접 @source (CLI 와 같은 문구)", () => {
+  const TW = '@import "tailwindcss";';
+  const ENTRY = '@import "@axis-ds/tokens/css/tailwind4";';
+  const UI = '@import "@axis-ds/ui-react/tailwind.css";';
+  const PASS4 = 'Tailwind 4: globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다';
+  async function write(files: Record<string, string>, deps: Record<string, string>, installed: Record<string, string> = {}) {
+    await fs.remove(path.join(tmp, "node_modules"));
+    await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: deps });
+    for (const [rel, content] of Object.entries(files)) await fs.outputFile(path.join(tmp, rel), content);
+    for (const [name, version] of Object.entries(installed)) {
+      await fs.outputJSON(path.join(tmp, "node_modules", name, "package.json"), { name, version });
+    }
+  }
+  const item = async () => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === "tailwind.config");
+
+  it("B2: --font-sans 만 남으면 그 이름만 표시", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}\n@theme inline { --font-sans: var(--font-geist-sans); }` }, { tailwindcss: "^4" });
+    expect((await item())?.message).toBe(
+      "Tailwind 4: globals.css에 create-next-app 기본 정의가 남아 있습니다(@theme --font-sans: var(--font-geist-sans)) → 지우세요"
+    );
+  });
+
+  it("설치본 우선: 설치본 1.4.2 + 선언 ^1.3.0 → pass, 설치본 1.3.0 + 선언 ^1.4.0 → 설치본 버전 안내", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.3.0" }, { "@axis-ds/tokens": "1.4.2" });
+    expect(await item()).toEqual({ name: "tailwind.config", severity: "pass", message: PASS4 });
+    await write({ "globals.css": `${TW}\n${ENTRY}` }, { tailwindcss: "^4", "@axis-ds/tokens": "^1.4.0" }, { "@axis-ds/tokens": "1.3.0" });
+    expect((await item())?.message).toBe(
+      "Tailwind 4: globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens 설치본 1.3.0)"
+    );
+  });
+
+  it("ui-react tailwind.css import + ui-react 1.3.0 → warn", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}\n${UI}` }, { tailwindcss: "^4", "@axis-ds/ui-react": "1.3.0" });
+    expect((await item())?.message).toBe(
+      "Tailwind 4: globals.css에 @axis-ds/ui-react/tailwind.css import 가 있지만 @axis-ds/ui-react 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/ui-react 1.3.0)"
+    );
+  });
+
+  it("직접 @source 가 ui-react 를 가리키면 B1 없음, 주석 안이면 B1", async () => {
+    await write({ "globals.css": `${TW}\n${ENTRY}\n@source '../node_modules/@axis-ds/ui-react/dist';` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0" });
+    expect(await item()).toEqual({ name: "tailwind.config", severity: "pass", message: PASS4 });
+    await write({ "globals.css": `${TW}\n${ENTRY}\n/* @source "../node_modules/@axis-ds/ui-react"; */` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0" });
+    expect((await item())?.message).toBe(`Tailwind 4: globals.css에 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${UI}`);
   });
 });

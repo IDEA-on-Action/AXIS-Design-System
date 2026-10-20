@@ -13,13 +13,15 @@
  *   3. 배포되는 .css 에 점 포함 커스텀 프로퍼티(--x-...-N.N) 금지   (BUG3)
  *   4. @axis-ds/mcp 는 tarball 을 빈 디렉터리에 설치해 stdio 로 실행하고
  *      레지스트리 도구를 호출한다(scripts/mcp-smoke.mjs, WI-0036)
+ *   5. Tailwind 4 CSS 진입점이 tarball 에 실재하고, 그 안의 @source 상대 경로가
+ *      tarball 안의 실제 경로를 가리킨다(WI-0044)
  *
  * 사용: node scripts/pack-smoke.mjs        (실패 시 exit 1)
  */
 import { execFileSync } from 'child_process';
 import { mkdtempSync, rmSync, readFileSync, existsSync, readdirSync, statSync } from 'fs';
 import { tmpdir } from 'os';
-import { join } from 'path';
+import { join, dirname } from 'path';
 import { runMcpSmoke } from './mcp-smoke.mjs';
 
 const ROOT = process.cwd();
@@ -33,6 +35,14 @@ const packages = readdirSync(PKG_DIR)
     const j = JSON.parse(readFileSync(join(p, 'package.json'), 'utf8'));
     return j.private !== true;
   });
+
+// 5. 패키지별 필수 배포 파일(WI-0044). exports 검사는 exports 에서 빠지면 함께 빠지므로 따로 센다.
+const REQUIRED_FILES = {
+  '@axis-ds/tokens': ['dist/css/tailwind4.css'],
+  '@axis-ds/ui-react': ['tailwind.css'],
+  '@axis-ds/agentic-ui': ['tailwind.css'],
+};
+const requiredSeen = new Set();
 
 let failures = 0;
 let mcpSmokeRan = false;
@@ -95,6 +105,26 @@ for (const pkgPath of packages) {
       }
     }
 
+    // 5. Tailwind 4 진입점 실재 + @source 경로 실재
+    if (REQUIRED_FILES[name]) requiredSeen.add(name);
+    for (const rel of REQUIRED_FILES[name] || []) {
+      const file = join(root, rel);
+      if (!existsSync(file)) {
+        fail(name, `필수 배포 파일 미존재: ${rel}`);
+        continue;
+      }
+      const sources = [...readFileSync(file, 'utf8').matchAll(/^\s*@source\s+"([^"]+)"/gm)];
+      // 컴포넌트 패키지의 tailwind.css 는 @source 가 존재 이유다. 빠지면 조용히 아무것도 스캔하지 않는다
+      if (rel === 'tailwind.css' && sources.length === 0) {
+        fail(name, `${rel} 에 @source 가 없음`);
+      }
+      for (const m of sources) {
+        if (!existsSync(join(dirname(file), m[1]))) {
+          fail(name, `${rel} 의 @source "${m[1]}" 가 tarball 안에 없음`);
+        }
+      }
+    }
+
     // 4. MCP 서버 실행 스모크(구조 검사로는 런타임 데이터 경로 결함을 못 잡는다)
     if (name === '@axis-ds/mcp') {
       mcpSmokeRan = true;
@@ -115,6 +145,9 @@ for (const pkgPath of packages) {
 
 // 실행 스모크가 대상을 못 찾아 건너뛴 것을 통과로 읽지 않는다
 if (!mcpSmokeRan) fail('@axis-ds/mcp', '실행 스모크 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
+for (const pkg of Object.keys(REQUIRED_FILES)) {
+  if (!requiredSeen.has(pkg)) fail(pkg, '필수 배포 파일 검사 미수행(퍼블리시 대상에서 패키지를 찾지 못함)');
+}
 
 if (failures > 0) {
   console.error(`\n[pack-smoke] FAIL - ${failures}건 결함`);

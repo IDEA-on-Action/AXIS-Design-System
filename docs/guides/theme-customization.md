@@ -234,6 +234,17 @@ import "@axis-ds/tokens/css/brands/ontology"    // 권장 위치: 마지막
 
 반대로 앱 CSS에서 브랜드 값을 다시 덮으려면 (0,2,0)보다 높은 선택자를 쓰거나, 같은 (0,2,0) 선택자를 브랜드 CSS 뒤에 둡니다. `:root`(0,1,0)로는 브랜드 값을 덮을 수 없습니다. 문서 사이트의 `apps/web/src/app/layout.tsx`는 권장 순서(브랜드 마지막)를 따릅니다.
 
+Tailwind CSS 4 에서는 토큰 CSS 대신 토큰 진입점을 쓰고, 브랜드 CSS 를 그 뒤에 둡니다(1.4.0 부터).
+
+```css
+/* app/globals.css (Tailwind CSS 4) */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";             /* 토큰 변수 + preset 매핑 */
+@import "@axis-ds/tokens/css/brands/ontology";       /* 브랜드: 진입점 뒤 */
+```
+
+진입점이 `rounded-sm|md|lg` 를 `--radius` 로, `font-mono` · `font-sans` 를 `--axis-font-family-*` 로 매핑하므로 ontology 를 적용한 요소에서는 `rounded-lg` 12px · `rounded-md` 10px 이고 `font-mono` 가 JetBrains Mono 로 시작합니다. 진입점은 토큰 변수를 base 레이어로 불러오고 브랜드 CSS 는 레이어가 없어서, 브랜드 값이 토큰 기본값을 이깁니다.
+
 ### 브랜드 적용
 
 `ThemeProvider`에 `defaultBrand`를 지정합니다.
@@ -284,6 +295,8 @@ function BrandToggle() {
 - 같은 요소: `<html class="dark" data-brand="ontology">`
 - `.dark` 조상 아래의 브랜드 컨테이너: `<html class="dark">` 안의 `<div data-brand="ontology">`
 - 하위 컨테이너(라이트): `<div data-brand="ontology">`
+
+Tailwind 의 `dark:` 변형도 같은 `.dark` 클래스를 봅니다. Tailwind 3 preset(`darkMode: ["class"]`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라갑니다. Tailwind 4 진입점(`@axis-ds/tokens/css/tailwind4`)은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 라서 `.dark` 를 붙인 요소 자신에도 적용되고(`<div class="dark dark:bg-primary">`) 명시도를 올리지 않습니다.
 
 `[data-brand]` 조상 아래에 `.dark` 하위 요소를 두는 구성(`<div data-brand="ontology"><div class="dark">`)은 브랜드 다크 선택자에 걸리지 않습니다. 이 구성은 CSS 선택자 기준으로 판단한 것이며 E2E로 측정하지 않았습니다.
 
@@ -428,6 +441,27 @@ import "./styles/brand-acme.css"  // 권장 위치: 토큰 CSS와 globals.css �
 5. `pnpm --filter @axis-ds/tokens build`로 `dist/css/brands/<name>.css` · `dist/brands/<name>/brand.json` · `dist/brands/index.json`을 만듭니다. 위 규칙이나 `exports` 항목을 어기면 빌드가 실패합니다.
 
 ### Tailwind 설정 확장
+
+#### Tailwind CSS 4
+
+Tailwind 4 에는 `tailwind.config.ts` 가 없습니다. `bg-primary` · `rounded-md` · `font-mono` 같은 preset 매핑은 `@axis-ds/tokens/css/tailwind4` 가 이미 정의하므로, 그 밖의 토큰을 유틸리티로 쓰려면 전역 CSS 에 `@theme inline` 을 더합니다.
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";
+
+@theme inline {
+  --color-surface: var(--axis-surface-default);
+  --color-surface-brand: var(--axis-surface-brand);
+  --color-success: var(--axis-text-success);
+  --radius-xl: var(--axis-radius-xl);
+}
+```
+
+이렇게 하면 `bg-surface` · `bg-surface-brand` · `text-success` · `rounded-xl` 이 각 AXIS 변수로 생성됩니다. 진입점이 이미 정의한 이름(`--color-background` · `--color-foreground` · `--color-border` · `--radius-sm|md|lg` · `--font-sans|serif|mono` 등)을 다시 정의하면 앱 쪽 값이 진입점 매핑을 덮어씁니다. 아래 Tailwind 3 예시의 `foreground` · `border` 처럼 기존 이름을 바꾸는 매핑은 그 점을 알고 씁니다.
+
+#### Tailwind CSS 3
 
 `tailwind.config.ts`에서 AXIS 토큰을 Tailwind 유틸리티로 연결합니다.
 

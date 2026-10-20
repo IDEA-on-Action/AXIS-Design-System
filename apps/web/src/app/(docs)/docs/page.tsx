@@ -35,6 +35,47 @@ export default function DocsPage() {
           </div>
         </section>
 
+        {/* Tailwind CSS 연동 */}
+        <section>
+          <h2 className="text-2xl font-semibold mb-4">Tailwind CSS</h2>
+          <h3 className="text-lg font-medium mb-3">Tailwind CSS 4</h3>
+          <p className="text-muted-foreground mb-4">
+            Tailwind CSS 4 프로젝트(create-next-app 15.5 기본)는 @import &quot;tailwindcss&quot; 가 있는
+            전역 CSS 에 아래 줄을 한 줄씩 더합니다(1.4.0 부터). 컴포넌트 패키지 줄은
+            @axis-ds/ui-react · @axis-ds/agentic-ui 를 npm 패키지로 쓸 때 그 패키지만 넣습니다.
+            axis init 이 Tailwind 4 프로젝트에서 같은 줄을 안내합니다.
+          </p>
+          <div className="rounded-lg border bg-card p-4 mb-4">
+            <pre className="overflow-x-auto">
+              <code className="text-sm">{`/* app/globals.css */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";
+@import "@axis-ds/ui-react/tailwind.css";
+@import "@axis-ds/agentic-ui/tailwind.css";`}</code>
+            </pre>
+          </div>
+          <div className="space-y-2 text-sm text-muted-foreground mb-6">
+            <p>
+              • create-next-app 기본 globals.css 의 :root(--background · --foreground), @theme inline,
+              다크용 @media, body 블록은 AXIS 와 같은 이름을 다른 값으로 정의하므로 지웁니다.
+            </p>
+            <p>
+              • 토큰 진입점이 토큰 변수를 함께 불러오므로 @axis-ds/tokens/css/shadcn 을 따로 import 하지
+              않습니다.
+            </p>
+            <p>
+              • 색을 지정하지 않은 ring-2 는 글자색(currentColor)으로 그려집니다. 애니메이션 클래스(animate-in
+              등)는 tailwindcss-animate 류 플러그인이 따로 필요합니다.
+            </p>
+          </div>
+          <h3 className="text-lg font-medium mb-3">Tailwind CSS 3</h3>
+          <p className="text-muted-foreground">
+            tailwind.config 의 presets 에 @axis-ds/tokens/tailwind 를 넣고, content 에
+            ./node_modules/@axis-ds/ui-react/**/*.{'{js,jsx}'} 처럼 사용하는 패키지 경로를 더합니다. 전역
+            CSS 에는 @axis-ds/tokens/css 와 @axis-ds/tokens/css/shadcn 을 import 합니다.
+          </p>
+        </section>
+
         {/* Add Components */}
         <section>
           <h2 className="text-2xl font-semibold mb-4">Add Components</h2>

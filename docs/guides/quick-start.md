@@ -6,7 +6,7 @@ AXIS Design System을 프로젝트에 설정하고 첫 컴포넌트를 렌더링
 
 - Node.js 20+
 - React 18+
-- Tailwind CSS 3.4+
+- Tailwind CSS 3.4+ 또는 Tailwind CSS 4 (Tailwind 4 연동은 `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 1.4.0 부터)
 
 ## 1. 패키지 설치
 
@@ -15,6 +15,76 @@ pnpm add @axis-ds/ui-react @axis-ds/theme @axis-ds/tokens
 ```
 
 ## 2. Tailwind CSS 설정
+
+프로젝트의 Tailwind 버전에 맞는 절을 따릅니다. `package.json` 의 `tailwindcss` 가 `^4` 이거나 전역 CSS 가 `@import "tailwindcss";` 로 시작하면 Tailwind 4 입니다(create-next-app 15.5 의 기본값).
+
+### Tailwind CSS 4
+
+전역 CSS(`app/globals.css` 등)를 아래처럼 씁니다. 한 줄에 하나씩, 이 순서로 import 합니다.
+
+```css
+/* app/globals.css */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";
+@import "@axis-ds/ui-react/tailwind.css";
+@import "@axis-ds/agentic-ui/tailwind.css"; /* @axis-ds/agentic-ui 를 쓸 때만 */
+```
+
+- `@axis-ds/tokens/css/tailwind4` 는 Tailwind 3 preset 과 같은 매핑(`bg-primary` · `rounded-md` · `font-mono` · `dark:` 변형)을 Tailwind 4 의 `@theme inline` 으로 정의하고, 토큰 변수(`@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn`)를 base 레이어로 함께 불러옵니다. 토큰 CSS 를 따로 import 하지 않습니다.
+- `@axis-ds/ui-react/tailwind.css` · `@axis-ds/agentic-ui/tailwind.css` 는 패키지 빌드 산출물을 가리키는 `@source` 한 줄입니다. Tailwind 4 는 `node_modules` 를 스캔하지 않아서, 이 줄이 없으면 컴포넌트가 쓰는 `bg-[var(--axis-button-bg-default)]` 같은 클래스가 만들어지지 않고 Button 배경이 투명해집니다. 사용하는 패키지만 넣습니다.
+- 모두 `@import "tailwindcss";` 가 있는 같은 파일에 둡니다. 다른 CSS 파일이나 JS/TSX 에서 import 하면 스캔 경로가 Tailwind 컴파일에 들어가지 않습니다.
+- `tailwind.config.ts` 는 만들지 않아도 됩니다. 아래 Tailwind 3 의 `content` 와 `@import "@axis-ds/tokens/css"` 도 넣지 않습니다(진입점이 토큰 CSS 를 base 레이어로 이미 불러옵니다). 특히 `@import "@axis-ds/tokens/css/shadcn"` 을 레이어 없이 넣으면 그 안의 `* { border-color }` 가 `border-red-500` 같은 테두리색 유틸리티를 이깁니다.
+
+**create-next-app 기본 `globals.css` 와의 충돌**: create-next-app 이 만든 `globals.css` 에는 아래 블록이 들어 있습니다. AXIS 와 같은 이름(`--background` · `--foreground` · `--color-background` · `--font-sans` · `--font-mono`)을 다른 값으로 정의하므로 지웁니다.
+
+```css
+/* 지울 블록: create-next-app 기본값 */
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+```
+
+이 블록을 남겨 두면 `--background` 가 AXIS 의 HSL 값 대신 `#ffffff` 가 되어 `.dark` 안의 `bg-background` 가 투명해지고, `font-sans` · `font-mono` 가 AXIS 글꼴 대신 `Arial` 로 그려집니다. AXIS 토큰은 base 레이어에 있어서 레이어 없이 쓴 앱 CSS 가 항상 이깁니다.
+
+`axis init`(`@axis-ds/cli`)은 Tailwind 4 프로젝트에서 위 import 줄과 이 네 블록을 지우라는 주의를 출력합니다. 파일은 고치지 않습니다. `package.json` 에 선언된 `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 는 설치본을 먼저 보고 이렇게 안내합니다.
+
+- 설치본(`node_modules/<패키지>/package.json` 의 정확한 `version`)이 1.4.0 이상 → 선언이 `^1.3.0` · `catalog:` 여도 안내하지 않음
+- 설치본이 1.4.0 미만 → 설치본 버전을 보여 주고 `^1.4.0` 으로 올리는 명령. 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) 명령 없이 선언이 가리키는 버전을 올리고 다시 설치하라는 줄(선언을 덮어쓰지 않음)
+- 설치본이 없고 선언 범위의 하한이 1.4.0 미만(`^1.3.0` · `1.x` · `1.3.0 - 1.5.0` 등) → `^1.4.0` 으로 올리는 명령
+- 하한을 읽을 수 없음(`catalog:` · `latest` · `||` 등) → 설치된 버전이 1.4.0 이상인지 확인하라는 줄(선언을 덮어쓰지 않음)
+- `workspace:` 프로토콜 → 설치본과 관계없이 안내하지 않음(모노레포 링크)
+
+`axis check` 는 같은 함수로 판정하고, Tailwind 4 에서 토큰 진입점 · 선언된 컴포넌트 패키지의 `tailwind.css` 가 빠졌거나 진입점이 있는데 위 create-next-app 기본 정의가 남아 있거나(실제로 남은 정의 이름을 보여 줌) `@axis-ds/tokens` 가 1.4.0 조건에 걸리거나 import 한 `tailwind.css` 의 패키지가 1.4.0 조건에 걸리면 WARN 을 냅니다. `tailwind.css` 대신 그 패키지를 가리키는 `@source`(예: `@source "../node_modules/@axis-ds/ui-react/dist";`)를 같은 CSS 에 직접 쓴 경우는 스캔 경로가 있는 것으로 봅니다(경로 문자열에 `@axis-ds/<패키지>` 가 들어 있는지로 판정).
+
+**Tailwind 3 과 다르게 동작하는 것**
+
+- 색을 지정하지 않은 `ring-2` 같은 링은 Tailwind 4 에서 글자색(`currentColor`)으로 그려집니다. 링 색은 `ring-ring` 처럼 직접 지정합니다.
+- 색을 지정하지 않은 `border` · `border-t` 는 진입점이 불러오는 base 규칙(`* { border-color: hsl(var(--border)) }`) 덕분에 AXIS `--border` 색입니다. 진입점이 없으면 Tailwind 4 기본값인 `currentColor` 가 됩니다. Tailwind 3 preset 의 기본 테두리색은 preflight 의 gray-200(`#e5e7eb`)이라(`@axis-ds/tokens/css/shadcn` 을 따로 넣지 않을 때) 기본 라이트에서는 값이 같지만(AXIS `--border` 도 rgb(229,231,235)), 다크에서는 AXIS `--border` 가 rgb(31,41,55) 로 바뀌고 ontology 브랜드는 라이트 rgb(230,232,235) · 다크 rgb(43,47,53) 이라 Tailwind 3 과 달라집니다.
+- `dark:` 변형은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 입니다. Tailwind 3 preset(`darkMode: ["class"]`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라가지만, Tailwind 4 진입점은 `.dark` 를 붙인 요소 자신에도 적용되고 명시도를 올리지 않습니다.
+- Dialog · Sheet · Popover · Select · DropdownMenu · Tooltip · Toast 가 쓰는 `animate-in` · `fade-in-0` 같은 열고 닫는 애니메이션 클래스는 AXIS 진입점이 정의하지 않습니다. 애니메이션이 필요하면 tailwindcss-animate 류 애니메이션 플러그인을 앱에 따로 설치합니다(Tailwind 3 preset 도 같습니다).
+
+### Tailwind CSS 3
 
 `tailwind.config.ts`의 `content` 배열에 AXIS 패키지 경로를 추가합니다.
 

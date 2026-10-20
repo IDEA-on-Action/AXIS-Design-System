@@ -8,7 +8,7 @@ import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
 import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
-import { checkTailwindSetup } from "./tailwind-core.js";
+import { checkGlobalsCss, checkTailwindSetup } from "./tailwind-core.js";
 
 // --- 타입 ---
 
@@ -344,38 +344,8 @@ export async function handleCheckProject(
   // 2. Tailwind 구성: 3 이하는 tailwind.config 파일, 4 이상은 CSS 의 @import "tailwindcss"(WI-0042, CLI 와 같은 코어)
   results.push(checkTailwindSetup(baseDir));
 
-  // 3. globals.css
-  const cssCandidates = [
-    "globals.css",
-    "app/globals.css",
-    "src/app/globals.css",
-    "src/globals.css",
-    "styles/globals.css",
-  ];
-  let cssFound = false;
-  for (const candidate of cssCandidates) {
-    const fullPath = path.join(baseDir, candidate);
-    if (await fs.pathExists(fullPath)) {
-      const content = await fs.readFile(fullPath, "utf-8");
-      const hasTokens = content.includes("--background") && content.includes("--primary");
-      results.push({
-        name: "globals.css",
-        severity: hasTokens ? "pass" : "warn",
-        message: hasTokens
-          ? `${candidate}에 AXIS CSS 변수가 정의되어 있습니다`
-          : `${candidate}에 AXIS CSS 변수가 없습니다`,
-      });
-      cssFound = true;
-      break;
-    }
-  }
-  if (!cssFound) {
-    results.push({
-      name: "globals.css",
-      severity: "fail",
-      message: "globals.css 파일을 찾을 수 없습니다",
-    });
-  }
+  // 3. globals.css: 변수 직접 정의 또는 tokens CSS import(CLI 와 같은 코어, WI-0044 보정)
+  results.push(checkGlobalsCss(baseDir));
 
   // 4. utils.ts
   const utilsCandidates = [

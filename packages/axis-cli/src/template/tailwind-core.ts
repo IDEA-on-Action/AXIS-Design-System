@@ -8,8 +8,18 @@
  * - Tailwind major 판정(`detectTailwind` 등): WI-0038 에서 `init/init.ts` 에 만든 것을 옮겼습니다. `init.ts` 는 다시 내보냅니다.
  * - `checkTailwindSetup`: `axis check` · MCP `axis.check_project` 의 tailwind.config 항목. Tailwind 4 이상은 설정 파일 없이
  *   CSS(`@import "tailwindcss"`)로 구성하므로 설정 파일 대신 CSS 진입점을 봅니다(2026-10-20 사용자 결정).
- *   이 항목은 Tailwind 진입 import 만 봅니다. AXIS 의 Tailwind 4 연동(`@theme`)은 아직 없어 PASS 가 AXIS 색 클래스 생성을
- *   뜻하지 않습니다(WI-0044).
+ *   WI-0044(FR-4)부터 같은 CSS 에 AXIS 토큰 진입점(`@axis-ds/tokens/css/tailwind4`) import 가 없으면 warn 입니다.
+ *   진입점이 없으면 `bg-primary` · `rounded-md` 같은 AXIS 매핑이 만들어지지 않기 때문입니다.
+ *   보정 2차(2026-10-20 사용자 결정): 선언된 ui-react · agentic-ui 의 `tailwind.css` import 누락(B1), 진입점이 있는데 남은
+ *   create-next-app 기본 정의(B2), 진입점이 있는데 `@axis-ds/tokens` 선언이 1.4.0 조건에 걸림(A4)도 같은 항목의 WARN 입니다.
+ *   여럿이면 한 문구에 우선순위 순서로 잇습니다(C, `tailwind4Issues`). Tailwind 3 은 preset 참조도 pass 로 인정합니다(B3).
+ *   WARN 끝에는 package.json 에 선언된 AXIS 패키지가 1.4.0 미만이면 「1.4.0 이상 필요」, 판정할 수 없으면 「설치된 버전이
+ *   1.4.0 이상인지 확인하세요」를 붙입니다(A1, `workspace:` 는 제외).
+ *   보정 3차(2026-10-20 사용자 결정): 버전은 설치본(node_modules) 우선, 다음 선언 하한, 다음 판정 불가 순으로 봅니다. B2 는 실제로
+ *   걸린 정의 이름을 표시하고, B1 은 그 패키지를 가리키는 `@source` 가 직접 있으면 내지 않습니다. import 중인 컴포넌트
+ *   `tailwind.css` 의 패키지도 A4 와 같은 버전 조건을 봅니다.
+ * - `checkGlobalsCss`: globals.css 항목(WI-0044 보정). 변수를 직접 정의하지 않아도 tokens CSS import 가 있으면 pass 입니다.
+ * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  */
 
 import { existsSync, readFileSync } from "node:fs";
@@ -232,10 +242,382 @@ export const TAILWIND_CSS_CANDIDATES = [
 /** `@import "tailwindcss"` · `@import 'tailwindcss' layer(...)` · `@import url("tailwindcss")`. 주석은 미리 지웁니다. */
 const TAILWIND_IMPORT = /@import\s+(?:url\(\s*)?["']tailwindcss["']/;
 
+/** CSS 블록 주석을 지웁니다. 주석 안의 import 는 적용되지 않으므로 보지 않습니다. */
+function stripCssComments(css: string): string {
+  return css.replace(/\/\*[\s\S]*?\*\//g, "");
+}
+
 /** CSS 에 Tailwind 4 진입 import 가 있는지(블록 주석 안은 보지 않음) */
 export function hasTailwindImport(css: string): boolean {
-  return TAILWIND_IMPORT.test(css.replace(/\/\*[\s\S]*?\*\//g, ""));
+  return TAILWIND_IMPORT.test(stripCssComments(css));
 }
+
+/** Tailwind 4 용 AXIS 토큰 진입점(`@axis-ds/tokens` exports 의 `./css/tailwind4`, WI-0044 FR-1) */
+export const TOKENS_TAILWIND4_ENTRY = "@axis-ds/tokens/css/tailwind4";
+
+/** 토큰 진입점을 넣는 import 줄. check 의 해결 안내와 init 의 안내에 같이 씁니다. */
+export const TOKENS_TAILWIND4_IMPORT_LINE = `@import "${TOKENS_TAILWIND4_ENTRY}";`;
+
+/** `@import "@axis-ds/tokens/css/tailwind4"` · 작은따옴표 · `url()` · 뒤의 `layer(...)` 를 받습니다. */
+const TOKENS_TAILWIND4_IMPORT = /@import\s+(?:url\(\s*)?["']@axis-ds\/tokens\/css\/tailwind4["']/;
+
+/** CSS 에 AXIS 토큰 진입점 import 가 있는지(블록 주석 안은 보지 않음) */
+export function hasTokensTailwind4Import(css: string): boolean {
+  return TOKENS_TAILWIND4_IMPORT.test(stripCssComments(css));
+}
+
+/**
+ * AXIS 변수(`--background` · `--primary` 등)를 정의하는 tokens CSS 의 import(WI-0044 보정, globals.css 항목).
+ * `@axis-ds/tokens/css` · `css/shadcn` · `css/tailwind4` 만 받고, 작은따옴표 · `url()` · 뒤의 `layer(...)` 를 받습니다.
+ * 닫는 따옴표까지 맞추므로 `css/brands/ontology` · `tailwind`(Tailwind 3 preset)는 걸리지 않습니다.
+ */
+const TOKENS_CSS_IMPORT = /@import\s+(?:url\(\s*)?["'](@axis-ds\/tokens\/css(?:\/shadcn|\/tailwind4)?)["']/;
+
+/** CSS 에서 AXIS 변수를 정의하는 tokens CSS import 를 찾아 그 경로를 돌려줍니다(블록 주석 안은 보지 않음). */
+export function findTokensCssImport(css: string): string | undefined {
+  return TOKENS_CSS_IMPORT.exec(stripCssComments(css))?.[1];
+}
+
+/** globals.css 항목. CLI · MCP 의 `CheckResult` 와 같은 모양입니다. */
+export interface GlobalsCssCheckResult {
+  name: "globals.css";
+  severity: "pass" | "warn" | "fail";
+  message: string;
+}
+
+/**
+ * globals.css 항목을 판정합니다(`axis check` · MCP `axis.check_project` 공용, WI-0044 보정).
+ * 후보(`TAILWIND_CSS_CANDIDATES`)에서 처음 찾은 파일 하나를 봅니다.
+ * 1. 변수를 직접 정의(`--background` 와 `--primary` 문자열이 모두 있음) → 종전 pass 문구.
+ * 2. 그렇지 않고 tokens CSS import(`findTokensCssImport`)가 있으면 pass. import 로 인정했다는 것을 문구에 남깁니다.
+ *    tokens CSS 가 변수를 정의하므로 import 만 있는 Tailwind 4 진입점 구성이 warn 으로 오탐되던 것을 막습니다.
+ * 3. 둘 다 없으면 warn, 후보가 하나도 없으면 fail(종전과 같음).
+ */
+export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
+  const baseDir = resolve(baseDirInput);
+  for (const candidate of TAILWIND_CSS_CANDIDATES) {
+    const file = join(baseDir, candidate);
+    if (!existsSync(file)) continue;
+    const content = readFileSync(file, "utf8");
+    if (content.includes("--background") && content.includes("--primary")) {
+      return { name: "globals.css", severity: "pass", message: `${candidate}에 AXIS CSS 변수가 정의되어 있습니다` };
+    }
+    const imported = findTokensCssImport(content);
+    if (imported !== undefined) {
+      return { name: "globals.css", severity: "pass", message: `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)` };
+    }
+    return { name: "globals.css", severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다` };
+  }
+  return { name: "globals.css", severity: "fail", message: "globals.css 파일을 찾을 수 없습니다" };
+}
+
+/** Tailwind 4 진입점(토큰 `css/tailwind4` · 컴포넌트 `tailwind.css`)이 처음 들어가는 AXIS 버전(WI-0044 D1, linked minor) */
+export const TAILWIND4_MIN_AXIS_VERSION = "1.4.0";
+
+/** Tailwind 4 연동에 1.4.0 이상이 필요한 AXIS 패키지 */
+export const TAILWIND4_AXIS_PACKAGES = ["@axis-ds/tokens", "@axis-ds/ui-react", "@axis-ds/agentic-ui"] as const;
+
+/** 범위의 하한 버전. `pre` 는 하한이 prerelease(같은 core 의 정식 버전보다 낮음)인지입니다. */
+interface LowerVersion {
+  core: [number, number, number];
+  pre: boolean;
+}
+
+/** 버전 하나를 하한 버전으로 읽습니다. 빠지거나 와일드카드인 자리는 0 입니다. `0.0.0-*` 은 읽지 않습니다. */
+function lowerOf(token: string): LowerVersion | undefined {
+  const v = versionParts(token);
+  if (!v) return undefined;
+  const num = (part: string | undefined) => (isWild(part) ? 0 : Number(part));
+  const pre = /^v?\d+(?:\.(?:\d+|[xX*]))?(?:\.(?:\d+|[xX*]))?-/.test(token);
+  return { core: [v.major, num(v.minor), num(v.patch)], pre };
+}
+
+/** 하한 버전 비교(a < b 이면 음수). core 가 같으면 prerelease 가 낮습니다. */
+function compareLower(a: LowerVersion, b: LowerVersion): number {
+  for (let i = 0; i < 3; i++) {
+    if (a.core[i] !== b.core[i]) return a.core[i] - b.core[i];
+  }
+  return Number(b.pre) - Number(a.pre);
+}
+
+/**
+ * 선언 범위의 하한 버전을 읽습니다(`tailwindMajorBounds` 와 같은 형태만 받음). 읽을 수 없으면 `undefined`(판정 불가).
+ * - 단순 형태(`1.3.0` · `^1.3.0` · `~1.4` · `=1.4.0` · `1.x`) → 그 버전(빠진 자리는 0).
+ * - 하이픈 범위 `A - B` → A.
+ * - 비교자 집합 → 하한 비교자 중 가장 높은 것. `>M` → (M+1).0.0, `>M.m` → M.(m+1).0, `>M.m.p` → M.m.(p+1).
+ *   하한 비교자가 없으면(`<2` · `*`) 판정 불가.
+ * - `||` · `catalog:` · `workspace:*` · `latest` · `0.0.0-*` · git · 파일 경로 → 판정 불가.
+ */
+function rangeLowerVersion(range: string): LowerVersion | undefined {
+  const r = range.trim();
+  if (r === "" || r.includes("||")) return undefined;
+  const simple = new RegExp(`^(?:\\^|~|=)?\\s*(${VERSION})$`).exec(r);
+  if (simple) return lowerOf(simple[1]);
+  if (new RegExp(`^(${VERSION})\\s+-\\s+(${VERSION})$`).test(r)) {
+    const [a, b] = r.split(/\s+-\s+/);
+    return lowerOf(b) ? lowerOf(a) : undefined;
+  }
+  const tokens = r.replace(/(>=|<=|>|<|=)\s+/g, "$1").split(/\s+/);
+  let lower: LowerVersion | undefined;
+  for (const t of tokens) {
+    const c = /^(>=|<=|>|<|=)(.+)$/.exec(t);
+    if (!c) return undefined;
+    const v = versionParts(c[2]);
+    const low = lowerOf(c[2]);
+    if (!v || !low) return undefined;
+    let candidate: LowerVersion | undefined;
+    if (c[1] === ">=" || c[1] === "=") candidate = low;
+    else if (c[1] === ">") {
+      if (isWild(v.minor)) candidate = { core: [v.major + 1, 0, 0], pre: false };
+      else if (isWild(v.patch)) candidate = { core: [v.major, Number(v.minor) + 1, 0], pre: false };
+      else candidate = { core: [v.major, Number(v.minor), Number(v.patch) + 1], pre: false };
+    }
+    if (candidate && (!lower || compareLower(candidate, lower) > 0)) lower = candidate;
+  }
+  return lower;
+}
+
+/**
+ * 선언 범위의 하한이 `min` 이상인지. 하한을 읽지 못하면 `undefined`(판정 불가)입니다.
+ * 예: `^1.3.2` → false, `^1.4.0` · `>=1.4` · `~1.5.0` → true, `^1.4.0-beta.1` → false, `catalog:` → undefined.
+ */
+export function rangeLowerAtLeast(range: string, min: string): boolean | undefined {
+  const lower = rangeLowerVersion(range);
+  const target = lowerOf(min);
+  if (!lower || !target) return undefined;
+  return compareLower(lower, target) >= 0;
+}
+
+/**
+ * 1.4.0 조건에 걸린 AXIS 패키지. `below`: 1.4.0 미만 · `unknown`: 판정 불가(설치본이 없고 선언 하한도 읽을 수 없음).
+ * `installed` 가 있으면 설치본 version 으로 판정한 것이고(`source: "installed"`), 없으면 선언 하한으로 판정한 것입니다.
+ */
+export interface AxisPackageVersionIssue {
+  name: string;
+  /** package.json 의 선언 범위 */
+  range: string;
+  status: "below" | "unknown";
+  /** 판정 근거: `installed`(node_modules 설치본) · `declared`(선언 범위 하한) */
+  source: "installed" | "declared";
+  /** 설치본 version(`source: "installed"` 일 때만) */
+  installed?: string;
+}
+
+/** 설치본 version 이 정확한 버전(`1.4.2` · `1.4.0-beta.1`)이면 그대로, 아니면 `undefined`. `0.0.0-*` 은 읽지 않습니다. */
+function exactVersion(version: unknown): string | undefined {
+  if (typeof version !== "string") return undefined;
+  const v = version.trim();
+  if (!/^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(v) || /^v?0\.0\.0-/.test(v)) return undefined;
+  return v;
+}
+
+/** `<baseDir>/node_modules/<name>/package.json` 의 정확한 version. 없거나 읽지 못하거나 정확한 버전이 아니면 `undefined`. */
+function installedVersion(baseDir: string, name: string): string | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(baseDir, "node_modules", ...name.split("/"), "package.json"), "utf8"));
+    return isPlainObject(parsed) ? exactVersion(parsed.version) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * package.json 에 선언된 AXIS 패키지(`TAILWIND4_AXIS_PACKAGES`) 가운데 1.4.0 조건에 걸린 것을 선언 순서대로 돌려줍니다
+ * (2026-10-20 사용자 결정 A1, 보정 3차 설치본 우선. `axis init` · `axis check` 가 같은 결과를 씁니다).
+ * 판정 순서는 `detectTailwind` 와 같습니다.
+ * 1. 설치본: `baseDir` 가 있으면 `<baseDir>/node_modules/<pkg>/package.json` 의 version(정확한 버전일 때만).
+ *    1.4.0 이상이면 선언이 `^1.3.0` · `1.x` · `catalog:` 여도 넣지 않고, 미만(`1.4.0-beta.1` 포함)이면 `below`(설치본 표시).
+ * 2. 선언 하한: 설치본이 없으면(또는 `baseDir` 가 없으면) 종전 규칙.
+ *    하한이 1.4.0 미만(`^1.3.0` · `1.x` · `^1.4.0-beta.1` · `1.3.0 - 1.5.0`) → `below`. 올리라고 안내합니다.
+ * 3. 판정 불가: 하한도 읽을 수 없음(`catalog:` · `latest` · `||` · `<2` · `*` · `npm:` · git · 파일 경로) → `unknown`.
+ *    선언을 덮어쓰라고 하지 않고 설치된 버전을 확인하라고 안내합니다.
+ * - `workspace:` 프로토콜은 설치본과 관계없이 넣지 않습니다. 모노레포 링크를 레지스트리 범위로 덮어쓰지 않게 하려는 것이고,
+ *   링크된 설치본의 version 은 배포 전 소스의 version 이라(예: 이 저장소는 changeset 적용 전까지 진입점이 있어도 1.3.0)
+ *   1.4.0 미만이어도 진입점이 없다는 증거가 아니기 때문입니다.
+ * - 선언이 없는 패키지는 설치본이 있어도 넣지 않습니다(다른 패키지가 끌어온 의존성은 안내 대상이 아님, 종전과 같음).
+ */
+export function axisPackagesBelowTailwind4(
+  pkg: Record<string, unknown> | undefined,
+  baseDirInput?: string
+): AxisPackageVersionIssue[] {
+  if (!pkg) return [];
+  const baseDir = baseDirInput !== undefined ? resolve(baseDirInput) : undefined;
+  const out: AxisPackageVersionIssue[] = [];
+  const min = lowerOf(TAILWIND4_MIN_AXIS_VERSION)!;
+  for (const name of TAILWIND4_AXIS_PACKAGES) {
+    const range = hasDependency(pkg, name);
+    if (range === undefined || range.trim().startsWith("workspace:")) continue;
+    const installed = baseDir !== undefined ? installedVersion(baseDir, name) : undefined;
+    const installedLower = installed !== undefined ? lowerOf(installed) : undefined;
+    if (installed !== undefined && installedLower !== undefined) {
+      if (compareLower(installedLower, min) < 0) out.push({ name, range, status: "below", source: "installed", installed });
+      continue;
+    }
+    const atLeast = rangeLowerAtLeast(range, TAILWIND4_MIN_AXIS_VERSION);
+    if (atLeast === false) out.push({ name, range, status: "below", source: "declared" });
+    else if (atLeast === undefined) out.push({ name, range, status: "unknown", source: "declared" });
+  }
+  return out;
+}
+
+/** 버전 안내에 쓰는 패키지 표시: 선언으로 판정하면 `이름 선언`, 설치본으로 판정하면 `이름 설치본 <version>` 입니다. */
+export function axisPackageVersionLabel(issue: AxisPackageVersionIssue): string {
+  return issue.source === "installed" ? `${issue.name} 설치본 ${issue.installed}` : `${issue.name} ${issue.range}`;
+}
+
+/** 표시를 ` · ` 로 잇습니다. */
+const declaredList = (issues: AxisPackageVersionIssue[]) => issues.map(axisPackageVersionLabel).join(" · ");
+
+/**
+ * Tailwind 4 WARN 끝에 붙이는 버전 안내(A1). 대상이 없으면 빈 문자열입니다.
+ * `below` 는 ` (1.4.0 이상 필요: ...)`, `unknown` 은 ` (설치된 버전이 1.4.0 이상인지 확인하세요: ...)` 이고 둘 다 있으면 이 순서로 잇습니다.
+ * 패키지 표시는 `axisPackageVersionLabel`(설치본으로 판정했으면 `이름 설치본 <version>`)입니다.
+ */
+export function tailwind4VersionNote(issues: AxisPackageVersionIssue[]): string {
+  const below = issues.filter((i) => i.status === "below");
+  const unknown = issues.filter((i) => i.status === "unknown");
+  let note = "";
+  if (below.length > 0) note += ` (${TAILWIND4_MIN_AXIS_VERSION} 이상 필요: ${declaredList(below)})`;
+  if (unknown.length > 0) note += ` (설치된 버전이 ${TAILWIND4_MIN_AXIS_VERSION} 이상인지 확인하세요: ${declaredList(unknown)})`;
+  return note;
+}
+
+/** Tailwind 4 진입점(`./tailwind.css`, `@source` 를 담음)을 내는 컴포넌트 패키지(WI-0044 FR-2) */
+export const TAILWIND4_COMPONENT_PACKAGES = ["@axis-ds/ui-react", "@axis-ds/agentic-ui"] as const;
+
+/** 컴포넌트 패키지의 `tailwind.css` import 줄 */
+export function componentTailwindImportLine(name: string): string {
+  return `@import "${name}/tailwind.css";`;
+}
+
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** CSS 에 `<패키지>/tailwind.css` import 가 있는지(블록 주석 안은 보지 않음, 작은따옴표 · `url()` · `layer()` 받음) */
+export function hasComponentTailwindImport(css: string, name: string): boolean {
+  const re = new RegExp(`@import\\s+(?:url\\(\\s*)?["']${escapeRegExp(name)}/tailwind\\.css["']`);
+  return re.test(stripCssComments(css));
+}
+
+/**
+ * CSS 에 그 패키지를 가리키는 `@source` 가 직접 있는지(보정 3차, 2026-10-20 사용자 결정). 블록 주석 안은 보지 않습니다.
+ * - `@source "<경로>"` · `@source '<경로>'` 의 경로 문자열에 `@axis-ds/<pkg>` 가 들어 있으면 그 패키지를 가리킨다고 봅니다
+ *   (`../node_modules/@axis-ds/ui-react` · `../node_modules/@axis-ds/ui-react/dist` · 다른 상대 경로 모두).
+ *   이름 바로 뒤는 경로 끝 · `/` · `\` 여야 합니다(`@axis-ds/ui-react-extra` 는 다른 패키지라 인정하지 않음).
+ * - `@source not "..."`(스캔 제외) · `@source inline(...)` 은 스캔 경로가 아니라 인정하지 않습니다.
+ * - 경로가 `@axis-ds/` 로 시작하는 패키지 이름 그대로(`@source "@axis-ds/ui-react"`)는 인정하지 않습니다. `@source` 는
+ *   CSS 파일 기준 상대 경로라 이 표기는 node_modules 를 가리키지 않습니다(PRD V2 와 같은 상태를 PASS 로 놓치지 않게).
+ * - 경로가 실제로 있는지는 보지 않습니다(문자열 판정).
+ */
+export function hasComponentSource(css: string, name: string): boolean {
+  const re = new RegExp(`@source\\s+(["'])(?!@axis-ds/)[^"'\\n]*${escapeRegExp(name)}(?:[/\\\\][^"'\\n]*)?\\1`);
+  return re.test(stripCssComments(css));
+}
+
+/**
+ * create-next-app 기본 globals.css 의 특징 정의(B2). create-next-app@15.5.28 이 만든 `app/globals.css` 실물에서 골랐고,
+ * AXIS 권장 구성(토큰 진입점 + 컴포넌트 tailwind.css)에는 나오지 않는 줄만 씁니다. 블록 주석 안은 보지 않습니다.
+ * - `--background` · `--foreground` 를 색값(`#fff` · `rgb()` · `oklch()` 등)으로 정의: AXIS 는 HSL 삼중값(`0 0% 100%`)이라
+ *   `hsl(var(--background))` 가 무효가 됩니다.
+ * - `--color-background` · `--color-foreground` 를 `var(--background)` · `var(--foreground)` 로 정의: 진입점의 매핑을 덮습니다.
+ * - `--font-sans` · `--font-mono` 를 `var(--font-geist-*)` 로 정의: 진입점의 AXIS 글꼴 매핑을 덮습니다.
+ * - `background` · `color` 를 `var(--background)` · `var(--foreground)` 로 직접 씀(body): HSL 삼중값이라 무효입니다.
+ * 표시 이름(보정 3차, 2026-10-20 사용자 결정)은 특징마다 `prefix` 뒤에 실제로 걸린 정의를 CSS 에 나온 순서로, 중복 없이
+ * `, ` 로 잇습니다. `item` 이 매치에서 정의를 공백 없이 다시 씁니다(`--font-sans:var(...)` 도 `--font-sans: var(...)` 로 표시).
+ * 예: `--font-sans` 만 남았으면 `@theme --font-sans: var(--font-geist-sans)` 이고 `--font-mono` 는 말하지 않습니다.
+ */
+const CREATE_NEXT_APP_DEFAULTS: { prefix: string; pattern: RegExp; item: (m: RegExpMatchArray) => string }[] = [
+  {
+    prefix: ":root 색값",
+    pattern: /(?<![\w-])(--(?:background|foreground))\s*:\s*(?:#[0-9a-fA-F]{3,8}\b|(?:rgba?|hsla?|hwb|oklch|oklab|lab|lch|color)\()/g,
+    item: (m) => m[1],
+  },
+  {
+    prefix: "@theme",
+    pattern: /(?<![\w-])(--color-(?:background|foreground))\s*:\s*var\(\s*(--(?:background|foreground))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
+  },
+  {
+    prefix: "@theme",
+    pattern: /(?<![\w-])(--font-(?:sans|mono))\s*:\s*var\(\s*(--font-geist-(?:sans|mono))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
+  },
+  {
+    prefix: "body",
+    pattern: /(?<![\w-])(background|background-color|color)\s*:\s*var\(\s*(--(?:background|foreground))\s*\)/g,
+    item: (m) => `${m[1]}: var(${m[2]})`,
+  },
+];
+
+/**
+ * CSS 에 남은 create-next-app 기본 정의의 표시 이름(특징 순서, 특징 하나에 한 이름). 없으면 빈 배열입니다.
+ * 각 이름은 그 특징의 `prefix` 와 걸린 정의(나온 순서 · 중복 없음)입니다.
+ */
+export function findCreateNextAppDefaults(css: string): string[] {
+  const body = stripCssComments(css);
+  const labels: string[] = [];
+  for (const d of CREATE_NEXT_APP_DEFAULTS) {
+    const items: string[] = [];
+    for (const m of body.matchAll(d.pattern)) {
+      const item = d.item(m);
+      if (!items.includes(item)) items.push(item);
+    }
+    if (items.length > 0) labels.push(`${d.prefix} ${items.join(", ")}`);
+  }
+  return labels;
+}
+
+/**
+ * JS · TS 소스의 `//` · `/* *\/` 주석을 지웁니다. 문자열(`'` · `"` · 템플릿 리터럴) 안의 `//` 는 남깁니다.
+ * 정규식 리터럴은 구분하지 않습니다(tailwind.config 에서는 드물고, 틀려도 preset 참조를 못 보는 쪽입니다).
+ */
+function stripJsComments(src: string): string {
+  let out = "";
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    const d = src[i + 1];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      while (j < n && src[j] !== c) {
+        if (src[j] === "\\") j++;
+        else if (c !== "`" && src[j] === "\n") break;
+        j++;
+      }
+      out += src.slice(i, j + 1);
+      i = j + 1;
+      continue;
+    }
+    if (c === "/" && d === "/") {
+      const end = src.indexOf("\n", i);
+      i = end === -1 ? n : end;
+      continue;
+    }
+    if (c === "/" && d === "*") {
+      const end = src.indexOf("*/", i + 2);
+      i = end === -1 ? n : end + 2;
+      out += " ";
+      continue;
+    }
+    out += c;
+    i++;
+  }
+  return out;
+}
+
+/** Tailwind 3 preset 경로(`@axis-ds/tokens` exports 의 `./tailwind`) */
+export const TOKENS_TAILWIND3_PRESET = "@axis-ds/tokens/tailwind";
+
+/** `require("…")` · `import("…")` · `from "…"` · `import "…"`(큰 · 작은따옴표). 닫는 따옴표까지 맞춰 `tailwind4` 등은 걸리지 않습니다. */
+const PRESET_REFERENCE = /(?:\brequire\s*\(\s*|\bimport\s*\(\s*|\bfrom\s*|\bimport\s+)(["'])@axis-ds\/tokens\/tailwind\1/;
+
+/** tailwind.config 소스에 AXIS Tailwind 3 preset 참조가 있는지(주석 안은 보지 않음, B3) */
+export function hasTokensPresetReference(source: string): boolean {
+  return PRESET_REFERENCE.test(stripJsComments(source));
+}
+
+/** preset 참조로 인정한 pass 의 문구 뒷부분(B3). 앞에 설정 파일 이름이 붙습니다. */
+const PRESET_PASS_SUFFIX = `에 AXIS 토큰이 설정되어 있습니다 (${TOKENS_TAILWIND3_PRESET} preset)`;
 
 function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
   try {
@@ -247,27 +629,87 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
 }
 
 /**
+ * Tailwind 4 CSS 에서 AXIS 연동 문제를 우선순위 순서로 모읍니다(C). `@import "tailwindcss"` 가 있는 CSS 에만 씁니다.
+ * 1. 토큰 진입점 import 없음(FR-4) → 넣을 import 줄
+ * 2. package.json 에 선언된 ui-react · agentic-ui 의 `tailwind.css` import 없음(B1) → 빠진 import 줄(선언 순서).
+ *    그 패키지를 가리키는 `@source` 가 같은 CSS 에 직접 있으면(`hasComponentSource`, 보정 3차) 스캔 경로가 있으므로 빼지 않습니다.
+ * 3. 진입점이 있는데 create-next-app 기본 정의가 남음(B2) → 남은 정의의 표시 이름
+ * 4. 진입점이 있는데 `@axis-ds/tokens` 가 1.4.0 조건에 걸림(A4, A1 규칙) → 버전 확인
+ * 5. `<pkg>/tailwind.css` 를 import 하는데 그 패키지가 1.4.0 조건에 걸림(보정 3차, A4 와 같은 규칙) → 버전 확인.
+ *    `tailwind.css` 는 1.4.0 부터 있으므로 init 이 세 패키지를 모두 안내하는 것과 대칭입니다. 직접 `@source` 로 스캔하면
+ *    `tailwind.css` 가 필요 없으므로 이 항목을 만들지 않습니다(버전 안내는 다른 문제가 있을 때 끝에 붙음).
+ * 버전 안내(`tailwind4VersionNote`)는 문제 목록이 아니라 WARN 문구 끝에 한 번 붙습니다.
+ */
+function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, versions: AxisPackageVersionIssue[]): string[] {
+  const issues: string[] = [];
+  const hasEntry = hasTokensTailwind4Import(css);
+  if (!hasEntry) issues.push(`AXIS 토큰 진입점이 없습니다 → ${TOKENS_TAILWIND4_IMPORT_LINE}`);
+  const missing = TAILWIND4_COMPONENT_PACKAGES.filter(
+    (name) =>
+      pkg !== undefined &&
+      hasDependency(pkg, name) !== undefined &&
+      !hasComponentTailwindImport(css, name) &&
+      !hasComponentSource(css, name)
+  );
+  if (missing.length > 0) {
+    issues.push(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${missing.map(componentTailwindImportLine).join(" ")}`);
+  }
+  if (hasEntry) {
+    const defaults = findCreateNextAppDefaults(css);
+    if (defaults.length > 0) issues.push(`create-next-app 기본 정의가 남아 있습니다(${defaults.join(" · ")}) → 지우세요`);
+    if (versions.some((v) => v.name === TAILWIND4_AXIS_PACKAGES[0])) {
+      issues.push(`AXIS 토큰 진입점이 있지만 ${TAILWIND4_AXIS_PACKAGES[0]} 버전 확인이 필요합니다`);
+    }
+  }
+  for (const name of TAILWIND4_COMPONENT_PACKAGES) {
+    if (hasComponentTailwindImport(css, name) && versions.some((v) => v.name === name)) {
+      issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
+    }
+  }
+  return issues;
+}
+
+/**
  * tailwind.config 항목을 판정합니다.
  * - Tailwind major 4 이상(`detectTailwind`): 설정 파일을 보지 않고 CSS 후보에서 처음 찾은 파일의 `@import "tailwindcss"` 를
- *   봅니다. 있으면 pass, 없거나 CSS 를 찾지 못하면 warn(CSS 가 없을 때의 fail 은 globals.css 항목이 냅니다).
+ *   봅니다. 없거나 CSS 를 찾지 못하면 warn(CSS 가 없을 때의 fail 은 globals.css 항목이 냅니다, 문구는 종전과 같음).
+ *   있으면 같은 파일에서 `tailwind4Issues` 를 모아 하나도 없을 때만 pass 입니다. 여럿이면 한 항목 안에서 우선순위 순서로
+ *   ` / ` 로 잇고, 끝에 버전 안내(A1)를 한 번 붙입니다(C). 문제가 하나면 그 문구만 나옵니다.
  * - 3 이하 · 판정 불가: 종전 규칙. `.ts` 는 AXIS 토큰 설정 여부(pass · warn), `.js` · `.mjs` · `.cjs` 는 warn(TypeScript 권장),
- *   없으면 fail. `.ts` · `.js` 의 문구는 종전과 같습니다.
+ *   없으면 fail. 여기에 B3: 설정 파일에 `@axis-ds/tokens/tailwind` preset 참조(require · import, 주석 제외)가 있으면
+ *   `(@axis-ds/tokens/tailwind preset)` 을 붙인 pass 입니다. `.ts` 가 종전 기준(`--background` · `hsl(var(`)으로 pass 면
+ *   종전 문구 그대로입니다.
  */
 export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
   const baseDir = resolve(baseDirInput);
-  const tailwind = detectTailwind(baseDir, readPackageJson(baseDir));
+  const pkg = readPackageJson(baseDir);
+  const tailwind = detectTailwind(baseDir, pkg);
   if (tailwind.major !== undefined && tailwind.major >= 4) {
     const label = `Tailwind ${tailwind.major}`;
     for (const candidate of TAILWIND_CSS_CANDIDATES) {
       const file = join(baseDir, candidate);
       if (!existsSync(file)) continue;
-      const found = hasTailwindImport(readFileSync(file, "utf8"));
+      const css = readFileSync(file, "utf8");
+      if (!hasTailwindImport(css)) {
+        return {
+          name: "tailwind.config",
+          severity: "warn",
+          message: `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다`,
+        };
+      }
+      const versions = axisPackagesBelowTailwind4(pkg, baseDir);
+      const issues = tailwind4Issues(css, pkg, versions);
+      if (issues.length > 0) {
+        return {
+          name: "tailwind.config",
+          severity: "warn",
+          message: `${label}: ${candidate}에 ${issues.join(" / ")}${tailwind4VersionNote(versions)}`,
+        };
+      }
       return {
         name: "tailwind.config",
-        severity: found ? "pass" : "warn",
-        message: found
-          ? `${label}: ${candidate}에 @import "tailwindcss" 가 있습니다`
-          : `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다`,
+        severity: "pass",
+        message: `${label}: ${candidate}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다`,
       };
     }
     return {
@@ -282,16 +724,20 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
   if (existsSync(tsPath)) {
     const content = readFileSync(tsPath, "utf8");
     const hasTokens = content.includes("--background") || content.includes("hsl(var(");
-    return {
-      name: "tailwind.config",
-      severity: hasTokens ? "pass" : "warn",
-      message: hasTokens
-        ? "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다"
-        : "tailwind.config.ts에 AXIS 토큰 설정이 없습니다",
-    };
+    if (hasTokens) {
+      return { name: "tailwind.config", severity: "pass", message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다" };
+    }
+    if (hasTokensPresetReference(content)) {
+      return { name: "tailwind.config", severity: "pass", message: `tailwind.config.ts${PRESET_PASS_SUFFIX}` };
+    }
+    return { name: "tailwind.config", severity: "warn", message: "tailwind.config.ts에 AXIS 토큰 설정이 없습니다" };
   }
   for (const file of otherFiles) {
-    if (existsSync(join(baseDir, file))) {
+    const path = join(baseDir, file);
+    if (existsSync(path)) {
+      if (hasTokensPresetReference(readFileSync(path, "utf8"))) {
+        return { name: "tailwind.config", severity: "pass", message: `${file}${PRESET_PASS_SUFFIX}` };
+      }
       return { name: "tailwind.config", severity: "warn", message: `${file} 존재 (TypeScript 권장)` };
     }
   }
