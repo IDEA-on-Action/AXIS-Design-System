@@ -284,6 +284,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCFAjg",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0050",
+      "slug": "use-client-directive",
+      "issueNumber": 143,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCGcPI",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0051",
+      "slug": "check-dependencies-wording",
+      "issueNumber": 144,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCGcRU",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-20T00:00:00.000Z"
