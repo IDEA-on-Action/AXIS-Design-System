@@ -48,7 +48,7 @@
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ⏳ |
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ⏳ |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
-| 62 | ui-react · agentic-ui 에 `"use client"` 지시문이 없어 Next 서버 컴포넌트 페이지에서 `next build` 실패(WI-0044 배포본 확인에서 발견) | WI-0050 (#143) | P18 | P1 | ⏳ |
+| 62 | ui-react · agentic-ui 에 `"use client"` 지시문이 없어 Next 서버 컴포넌트 페이지에서 `next build` 실패(WI-0044 배포본 확인에서 발견) | WI-0050 (#143) | P18 | P1 | 🔄 실측 워크플로 완료(2026-10-20), 결정: 모듈 보존 빌드 + 명시 목록 선택 "use client" · avatarVariants 분리 · theme 포함 · agentic exports 누락 6개 포함 · G1 정적 + G2 RSC 하네스 |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 
 ### 완료
