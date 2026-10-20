@@ -1,6 +1,6 @@
 # WI-0042: `axis check` Tailwind 4 오탐 · 종료 코드 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: 🔄 진행 (2026-10-20 구현 · 검증 완료, PR 대기)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | 상태: ✅ 완료 (2026-10-20, cli 1.3.0 · mcp 1.2.1 배포)
 
 - [x] Tailwind 판정을 공유 코어 `tailwind-core.ts` 로 옮기고 `init.ts` 에서 다시 내보내기 (FR-1)
 - [x] Tailwind 4 이상 CSS 진입점 검사 (FR-2, AC1)
@@ -10,4 +10,4 @@
 - [x] README 갱신 (FR-5)
 - [x] 테스트 · 변이 대조 · 품질 게이트 · 실경로 (AC1 ~ AC5)
 - [x] changeset: cli minor · mcp patch
-- [ ] PR 머지 → Version PR → 배포본으로 재확인
+- [x] PR 머지(#133) → Version PR(#135) → 배포본으로 재확인(2026-10-20)

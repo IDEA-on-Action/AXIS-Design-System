@@ -1,6 +1,6 @@
 # WI-0042 릴리스 노트: `axis check` Tailwind 4 오탐 · 종료 코드
 
-> 릴리스일: 미정(PR 머지 뒤 Version Packages PR 을 머지할 때 CI 발행) | 유형: fix · 동작 변경 | 영향: @axis-ds/cli 1.2.1 → 1.3.0 (minor), @axis-ds/mcp 1.2.0 → 1.2.1 (patch), `.changeset/wi-0042-check-tailwind4.md`
+> 릴리스일: 2026-10-20 (publish run 39351203366, provenance) | 유형: fix · 동작 변경 | 영향: @axis-ds/cli 1.2.1 → 1.3.0 (minor), @axis-ds/mcp 1.2.0 → 1.2.1 (patch), `.changeset/wi-0042-check-tailwind4.md`
 
 ## 변경 사항
 

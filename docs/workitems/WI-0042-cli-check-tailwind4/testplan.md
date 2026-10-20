@@ -48,3 +48,14 @@
 |---|---|---|
 | Tailwind 4 앱(create-next-app 15.5.28 → init → theme add ontology) | `FAIL tailwind.config 파일이 없습니다`, 4 pass / 1 warn / 1 fail, rc 0 | `PASS Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다`, 5 pass / 1 warn / 0 fail, rc 0 |
 | 빈 디렉터리 | 0 pass / 1 warn / 4 fail, rc 0 | 같은 결과, rc 1 |
+
+## 5. 배포본 확인 (2026-10-20, publish run 39351203366)
+
+새 빌드가 설치되지 않은 디렉터리에서 배포본을 실행했습니다.
+
+| 대상 | 결과 |
+|---|---|
+| `@axis-ds/cli@1.3.0` · Tailwind 4 앱 | `PASS Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다`, 5 pass / 1 warn / 0 fail, rc 0 |
+| `@axis-ds/cli@1.3.0` · 빈 디렉터리 | 0 pass / 1 warn / 4 fail, rc 1 |
+| `@axis-ds/mcp@1.2.1` stdio `axis.check_project` · Tailwind 4 앱 | serverInfo 1.2.1, `[PASS] Tailwind 4: ...` |
+| `@axis-ds/mcp@1.2.0`(대조군) · 같은 앱 | `[FAIL] tailwind.config 파일이 없습니다` |
