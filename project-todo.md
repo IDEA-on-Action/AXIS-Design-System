@@ -33,22 +33,23 @@
 |---|------|-------|-------|----------|------|
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
-| 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | 🔄 cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(b) 는 WI-0038(#124) 뒤 재측정, AC2(a) 는 minu.best 403 해소 뒤 기본 레지스트리로 재확인 |
+| 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | 🔄 cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(b) 는 cli 1.2.1 배포본으로 통과(2026-10-20, init -> theme add ontology -> install -> build rc 0, check brand PASS), AC2(a) 는 minu.best 403 해소 뒤 기본 레지스트리로 재확인 |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
 | 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
-| 50 | `axis init -y` 가 쓰는 utils.ts 의존성(`clsx` · `tailwind-merge`) 추가 · 안내 누락 (WI-0028 AC2(b) 선행) | WI-0038 (#124) | P18 | P2 | 🔄 #129 머지(2026-10-20, 97e5d92). cli 1.2.1 Version PR · 배포 뒤 배포본으로 init -> build 와 WI-0028 AC2(b) 재확인. npm `axis-cli@99.0.0` 선점 · deprecate 완료 |
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
+| 54 | Tailwind 4 프로젝트에서 `axis check` 의 `tailwind.config` 오탐 · FAIL 이 있어도 종료 코드 0 (WI-0038 배포본 확인 중 발견) | WI-0042 (#131) | P18 | P2 | ⏳ |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 50 | `axis init -y` 가 쓰는 utils.ts 의존성(`clsx` · `tailwind-merge`) 추가 · 안내 + `npx axis-cli` 안내 정정, npm cli v1.2.1 릴리스 (#129 · #130, publish run 39345179364, provenance, 배포본 init -> install -> build rc 0, npm `axis-cli@99.0.0` 선점 · deprecate) | WI-0038 (#124) | P18 | 2026-10-20 |
 | 37 | 브랜드 테마 축(`data-brand`, brands 빌드 · brand.json, ThemeProvider brand) + ontology 프리셋 + 브랜드 전환 데모, npm v1.3.0 릴리스 (linked 4패키지, publish run 39238361098, provenance 4/4, 데모 `/docs/brand-demo/` 프로덕션 200) | WI-0025 M2~M4 (#84) | P16 | 2026-10-19 |
 | 42 | `apps/web` tailwind content 경로에 `src/lib` 추가 (#114, cad9398) | WI-0030 (#95) | P18 | 2026-10-19 |
 | 47 | tokens ESM 진입점 `dist/js/tokens.mjs` 문법 오류(1.1.0~1.2.1) 수정, 1.3.0 에 포함 (#118, 배포본 설치 스모크 1.3.0 rc 0 · 1.2.1 rc 1) | WI-0035 (#113) | P18 | 2026-10-19 |

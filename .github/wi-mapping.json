@@ -195,7 +195,7 @@
       "issueNumber": 124,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB1CRY",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0039",
@@ -219,6 +219,14 @@
       "issueNumber": 128,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB2aE0",
       "lastSyncedAt": "2026-10-19T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0042",
+      "slug": "cli-check-tailwind4",
+      "issueNumber": 131,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB-sYI",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
       "lastStatus": "⏳"
     }
   ],
