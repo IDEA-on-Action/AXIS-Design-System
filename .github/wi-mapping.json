@@ -276,6 +276,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_860",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0049",
+      "slug": "cli-init-globalcss-path",
+      "issueNumber": 140,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCFAjg",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-20T00:00:00.000Z"
