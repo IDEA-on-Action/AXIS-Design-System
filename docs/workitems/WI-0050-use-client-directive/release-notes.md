@@ -1,6 +1,6 @@
 # WI-0050 릴리스 노트: 서버 컴포넌트(RSC) 호환 - "use client" 경계
 
-> 릴리스일: 미배포(PR · Version PR 전) | 유형: fix · 빌드 산출물 구조 변경 | 영향: `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.4.0 → 1.5.0 (minor, `changeset status` 기준. `@axis-ds/tokens` 는 변경이 없어 1.4.0 유지)
+> 릴리스일: 2026-10-21 (publish run 39496056901, provenance 4/4) | 유형: fix · 빌드 산출물 구조 변경 | 영향: `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 1.4.0 → 1.5.0 (minor, `changeset status` 기준. `@axis-ds/tokens` 는 변경이 없어 1.4.0 유지)
 > changeset: `.changeset/wi-0050-use-client.md`
 
 ## 변경 사항
@@ -40,6 +40,7 @@
 - 지시문 제거 · 루트 배럴 지시문 추가 · theme 지시문 제거 변이와 npm 1.4.0 tarball 에서 G1 · G2 모두 실패하는 것을 확인했습니다(testplan 5절).
 
 ## 알려진 한계
+- Vite 를 `@vitejs/plugin-react` 없이 쓰거나 `onwarn` 을 직접 설정하면 `"use client" was ignored` 경고가 우리 패키지 파일에서 새로 나옵니다(배포본 실측 3건, 빌드 결과 · rc 영향 없음). 표준 plugin-react 구성에서는 숨겨집니다.
 - 서버 page 에서 `avatarVariants` 만 서브패스(`@axis-ds/ui-react/avatar`)로 import 해도 First Load JS 가 103 kB 에서 111 kB 로 8 kB 늘어납니다. `avatar/index` 가 클라이언트 모듈인 `Avatar` 를 함께 내보내기 때문입니다. 호출 결과는 1.4.0 과 같습니다(2026-10-20 결정: 기록만).
 - `@axis-ds/tokens` 는 코드 변경 없이 linked 버전 정렬로만 1.5.0 이 됩니다.
 - 서버 컴포넌트에서 `onClick` · `onFeedback` 같은 함수 prop 은 넘길 수 없습니다. React Server Components 규칙이라 그대로이며, 핸들러가 필요하면 그 부분을 `"use client"` 파일로 만듭니다(각 패키지 README 「서버 컴포넌트」 절).

@@ -106,3 +106,24 @@ create-next-app 15.5.28 · react 19.1.0 앱의 서버 `app/layout.tsx` 에서 `<
 ## 9. 확인 필요
 
 - `.changeset/config.json` 의 `linked` 는 변경이 있는 패키지끼리만 버전을 맞춥니다. 이번 changeset 은 tokens 를 올리지 않아 `changeset status` 기준 tokens 1.4.0 · 나머지 1.5.0 이 됩니다. 4패키지를 같은 버전으로 낼지는 별도 판단입니다.
+
+## 10. 배포본 확인 (2026-10-21, publish run 39496056901)
+
+npm 배포본 1.5.0 만 정확한 버전으로 설치해 새 디렉터리에서 쟀습니다(대조군 1.4.0).
+
+| 대상 | 1.5.0 | 1.4.0(대조군) |
+|---|---|---|
+| create-next-app 15.5.28 서버 layout(ThemeProvider) + 지시문 없는 서버 page(Avatar · Command · CodeBlock · StreamingText · ToolCallCard · DiffViewer · Button · Card · Dialog · Select · MessageBubble · PlanCard) + 서버 호출 page + 클라이언트 page | `next build` rc 0(11/11), 콘솔 오류 0(수집기 양성 대조 확인) | 전체 rc 1(createContext), 경로별: Avatar · CodeBlock useState 실패, Command `Element type is invalid`, Button 등 · 서버 호출은 통과 |
+| 상호작용(Playwright) | Command 필터링 · CodeBlock 복사(클립보드 원문) · Dialog 열기/Esc · Select 변경 통과 | 빌드 실패로 미측정 |
+| 서버 `cn` · `buttonVariants` · `avatarVariants` · `badgeVariants` | 1.4.0 서버 page · 클라이언트 page 출력과 문자열 일치(`cn` 은 tailwind-merge 적용값) | 기준 |
+| pnpm 사본 | layout + Avatar · CodeBlock 빌드 rc 0 | |
+| Node CJS · ESM | 루트 · 서브패스 로드, 내보내기 이름 수 1.4.0 과 같음(ui-react 122 · agentic-ui 18 · theme 2), agentic-ui 새 서브패스 6개 로드 | 새 서브패스 `ERR_PACKAGE_PATH_NOT_EXPORTED` |
+| Vite 6 + plugin-react SPA | build rc 0, 렌더 확인, 경고 0줄 | 같음 |
+| Vite plugin-react 없음 | `"use client" was ignored` 경고 3건 증가(@axis-ds 파일), rc 0 | 0건 |
+| TypeScript bundler | `tsc --noEmit` rc 0 | rc 0 |
+| TypeScript node10 | 서브패스 TS2307(WI-0053 기존 결함, 서브패스 6개 증가분만 증가) | 같은 형태 |
+
+관찰: Avatar 는 서버 렌더된 깨진 이미지를 하드 로드했을 때 fallback 으로 바뀌지 않습니다(1.4.0 클라이언트 page 에서도 같음, WI-0054 #148). 소프트 내비게이션에서는 정상입니다.
+
+미측정: next dev · Turbopack, Next 16, 1.4.0 런타임(빌드 실패), pnpm 사본 런타임, 다크 · 브랜드 전환.
+

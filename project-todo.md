@@ -48,7 +48,6 @@
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ⏳ |
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ⏳ |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
-| 62 | ui-react · agentic-ui 에 `"use client"` 지시문이 없어 Next 서버 컴포넌트 페이지에서 `next build` 실패(WI-0044 배포본 확인에서 발견) | WI-0050 (#143) | P18 | P1 | 🔄 #145 머지(2026-10-21, 4eb8a83), Version PR #149(linked 4패키지 1.5.0) bypass 머지 · 배포본 실측 대기. 모듈 보존 빌드 + 선택 "use client" · avatarVariants 분리 · theme · agentic exports 6개 · G1/G2 게이트(CI · publish 에서 G2 통과) |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ⏳ |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ⏳ |
@@ -58,6 +57,7 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 62 | Next 서버 컴포넌트 호환: ui-react · agentic-ui 모듈 보존 빌드 + 선택 "use client"(Avatar · Command · agentic 7개), avatarVariants 분리, theme 지시문, agentic exports 서브패스 6개, G1 정적 · G2 RSC 하네스 게이트, npm linked 4패키지 v1.5.0 릴리스 (#145 · #149, publish run 39496056901, provenance 4/4, 배포본 서버 page 빌드 · 상호작용 · 서버 cn/Variants 실측 통과) | WI-0050 (#143) | P18 | 2026-10-21 |
 | 56 | Tailwind 4 연동: tokens `css/tailwind4`(preset 에서 생성한 @theme inline) · ui-react · agentic-ui `tailwind.css`(@source) · axis init 안내 · axis check/MCP WARN, npm linked 4패키지 v1.4.0 · cli v1.4.0 · mcp v1.2.2 릴리스 (#141 · #142, publish run 39413301099, provenance 6/6, 배포본 실앱 Playwright · CLI/MCP 실측 통과) | WI-0044 (#134) | P18 | 2026-10-20 |
 | 54 | `axis check` · MCP `axis.check_project` 의 Tailwind 4 tailwind.config 오탐 수정(CSS 의 `@import "tailwindcss"` 로 판정, Tailwind 3 `.mjs` · `.cjs` 인정) + FAIL 시 종료 코드 1, npm cli v1.3.0 · mcp v1.2.1 릴리스 (#133 · #135, publish run 39351203366, provenance, 배포본 check rc 0/1 · MCP PASS 실측). AXIS 색 클래스 실제 적용은 WI-0044 | WI-0042 (#131) | P18 | 2026-10-20 |
 | 55 | Ontology Platform 디자인 테마 v0.26 반영: 프로토타입 v0.24 · v0.26 대조로 토큰 변경 0건 확인(프리셋 변경 없음), WI-0027 PRD v0.5에 r3 화면 범위 병합(정본 전환은 WI-0027 Q7), WI-0025 머리말 갱신 | WI-0043 (#132) | P18 | 2026-10-20 |
