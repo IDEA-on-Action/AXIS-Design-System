@@ -161,6 +161,8 @@ export function registerCheckCommand(program: Command): void {
     .description("AXIS 프로젝트 설정 검증")
     .option("-d, --dir <path>", "대상 디렉토리")
     .action(async (options) => {
-      await runCheck(options.dir);
+      const summary = await runCheck(options.dir);
+      // fail 이 있으면 종료 코드 1(WI-0042). warn 만 있으면 0 입니다. 출력이 끝나도록 exit 대신 exitCode 를 씁니다.
+      if (summary.fail > 0) process.exitCode = 1;
     });
 }

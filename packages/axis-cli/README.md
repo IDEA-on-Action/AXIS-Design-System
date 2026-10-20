@@ -44,6 +44,12 @@ axis theme add ontology
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이면 목록 대신 설치 · 업그레이드 안내를 내고 종료 코드 1 로 끝납니다.
 - `axis check` 는 `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 가 맞는지도 봅니다.
 
+## 프로젝트 검증 (`axis check`)
+
+- Tailwind 구성 항목: Tailwind 4 이상(설치본, 없으면 `package.json` 선언으로 판정)은 설정 파일 대신 전역 CSS(`globals.css` · `app/globals.css` · `src/app/globals.css` · `src/globals.css` · `styles/globals.css` 순)의 `@import "tailwindcss"` 를 봅니다. Tailwind 3 이하는 `tailwind.config.ts` · `.js` · `.mjs` · `.cjs` 를 찾습니다.
+- FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다(1.3.0 부터, 이전에는 결과와 관계없이 0).
+- MCP `axis.check_project` 도 같은 항목 · 문구를 냅니다.
+
 ## 문서
 
 자세한 사용법은 [AXIS Design System 문서](https://axis.minu.best)를 참고하세요.

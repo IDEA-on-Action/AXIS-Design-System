@@ -157,3 +157,25 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
     expect(text).toContain("brand \"sample\" import 가 app/globals.css에 없습니다");
   });
 });
+
+// WI-0042: Tailwind 4 프로젝트의 tailwind.config 항목(CLI 와 같은 코어)
+describe("handleCheckProject Tailwind 구성 (WI-0042)", () => {
+  const item = async () => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === "tailwind.config");
+
+  it("Tailwind 4 + @import \"tailwindcss\" → pass, 설정 파일 없음 fail 이 나지 않음", async () => {
+    await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: { tailwindcss: "^4" } });
+    await fs.ensureDir(path.join(tmp, "src/app"));
+    await fs.writeFile(path.join(tmp, "src/app/globals.css"), '@import "tailwindcss";');
+    expect(await item()).toEqual({
+      name: "tailwind.config",
+      severity: "pass",
+      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다 (설정 파일 불필요)',
+    });
+  });
+
+  it("Tailwind 3 + tailwind.config.mjs → warn(TypeScript 권장)", async () => {
+    await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: { tailwindcss: "^3.4.0" } });
+    await fs.writeFile(path.join(tmp, "tailwind.config.mjs"), "export default {}");
+    expect(await item()).toEqual({ name: "tailwind.config", severity: "warn", message: "tailwind.config.mjs 존재 (TypeScript 권장)" });
+  });
+});

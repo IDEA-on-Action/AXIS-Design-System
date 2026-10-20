@@ -277,3 +277,125 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
     expect(out).toContain("\n권장 항목을 확인하세요.");
   });
 });
+
+// WI-0042: Tailwind 4 의 tailwind.config 오탐 · fail 시 종료 코드
+describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
+  async function project(files: Record<string, string>, deps: Record<string, string> | null): Promise<string> {
+    const dir = await tempDir();
+    if (deps) await fs.writeJSON(path.join(dir, "package.json"), { dependencies: deps });
+    for (const [rel, content] of Object.entries(files)) {
+      await fs.ensureDir(path.dirname(path.join(dir, rel)));
+      await fs.writeFile(path.join(dir, rel), content);
+    }
+    return dir;
+  }
+
+  const tailwindItem = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "tailwind.config")!;
+
+  it("Tailwind 4 선언 + src/app/globals.css 에 @import \"tailwindcss\", 설정 파일 없음 → pass (재현 사례)", async () => {
+    const dir = await project({ "src/app/globals.css": '@import "tailwindcss";\n:root{--background:#fff;}' }, { tailwindcss: "^4" });
+    expect(await tailwindItem(dir)).toEqual({
+      name: "tailwind.config",
+      severity: "pass",
+      message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 있습니다 (설정 파일 불필요)',
+    });
+  });
+
+  it("같은 프로젝트에서 import 를 지우면 warn (대조군)", async () => {
+    const dir = await project({ "src/app/globals.css": ":root{--background:#fff;}" }, { tailwindcss: "^4" });
+    expect(await tailwindItem(dir)).toMatchObject({ severity: "warn", message: 'Tailwind 4: src/app/globals.css에 @import "tailwindcss" 가 없습니다' });
+  });
+
+  it("Tailwind 4 인데 CSS 후보가 없으면 warn, CSS 없음의 fail 은 globals.css 항목이 냄", async () => {
+    const dir = await project({}, { tailwindcss: "^4.1.0" });
+    const results = await collectCheckResults(dir);
+    expect(results.find((r) => r.name === "tailwind.config")).toMatchObject({ severity: "warn" });
+    expect(results.find((r) => r.name === "globals.css")).toMatchObject({ severity: "fail" });
+  });
+
+  it("import 표기: 작은따옴표 + layer, url(), 블록 주석 안만 있으면 없음", async () => {
+    const one = await project({ "app/globals.css": "@import 'tailwindcss' layer(base);" }, { tailwindcss: "4.1.3" });
+    const two = await project({ "app/globals.css": '@import url("tailwindcss");' }, { tailwindcss: ">=4" });
+    const commented = await project({ "app/globals.css": '/* @import "tailwindcss"; */' }, { tailwindcss: "^4" });
+    expect((await tailwindItem(one)).severity).toBe("pass");
+    expect((await tailwindItem(two)).severity).toBe("pass");
+    expect((await tailwindItem(commented)).severity).toBe("warn");
+  });
+
+  it("설치본이 선언보다 앞섬: 선언 ^3 이어도 설치본 4.1.0 이면 Tailwind 4 규칙", async () => {
+    const dir = await project(
+      { "node_modules/tailwindcss/package.json": JSON.stringify({ version: "4.1.0" }), "globals.css": '@import "tailwindcss";' },
+      { tailwindcss: "^3.4.0" }
+    );
+    expect(await tailwindItem(dir)).toMatchObject({ severity: "pass", message: expect.stringContaining("Tailwind 4: globals.css") });
+  });
+
+  it("Tailwind 4 라도 tailwind.config.ts 는 보지 않음(CSS 기준)", async () => {
+    const dir = await project({ "tailwind.config.ts": "hsl(var(--x))", "globals.css": "" }, { tailwindcss: "^4" });
+    expect((await tailwindItem(dir)).severity).toBe("warn");
+  });
+
+  it("Tailwind 3: .mjs · .cjs 설정은 warn(TypeScript 권장), 종전에는 fail", async () => {
+    const mjs = await project({ "tailwind.config.mjs": "export default {}" }, { tailwindcss: "^3.4.0" });
+    const cjs = await project({ "tailwind.config.cjs": "module.exports = {}" }, { tailwindcss: "^3.4.0" });
+    expect(await tailwindItem(mjs)).toMatchObject({ severity: "warn", message: "tailwind.config.mjs 존재 (TypeScript 권장)" });
+    expect(await tailwindItem(cjs)).toMatchObject({ severity: "warn", message: "tailwind.config.cjs 존재 (TypeScript 권장)" });
+  });
+
+  it("Tailwind 3 · 판정 불가에서 설정 파일이 없으면 종전대로 fail", async () => {
+    const v3 = await project({ "globals.css": '@import "tailwindcss";' }, { tailwindcss: "^3.4.0" });
+    const unknown = await project({ "globals.css": '@import "tailwindcss";' }, { tailwindcss: "catalog:" });
+    const noPkg = await project({}, null);
+    for (const dir of [v3, unknown, noPkg]) {
+      expect(await tailwindItem(dir)).toEqual({ name: "tailwind.config", severity: "fail", message: "tailwind.config 파일이 없습니다" });
+    }
+  });
+
+  it("runCheck 는 개수를 돌려줌", async () => {
+    const dir = await project({ "src/app/globals.css": '@import "tailwindcss";' }, { tailwindcss: "^4" });
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    expect(await runCheck(dir)).toEqual({ pass: 1, warn: 3, fail: 1 });
+  });
+
+  describe("axis check 종료 코드", () => {
+    let saved: typeof process.exitCode;
+    beforeEach(() => {
+      saved = process.exitCode;
+      process.exitCode = undefined;
+    });
+    afterEach(() => {
+      process.exitCode = saved;
+    });
+
+    async function runCommand(dir: string): Promise<typeof process.exitCode> {
+      const { Command } = await import("commander");
+      const { registerCheckCommand } = await import("./index.js");
+      const program = new Command().exitOverride();
+      registerCheckCommand(program);
+      vi.spyOn(console, "log").mockImplementation(() => {});
+      await program.parseAsync(["node", "axis", "check", "-d", dir]);
+      const code = process.exitCode;
+      process.exitCode = undefined;
+      return code;
+    }
+
+    it("fail 이 있으면 1", async () => {
+      expect(await runCommand(await tempDir())).toBe(1);
+    });
+
+    it("warn 만 있으면 설정하지 않음(0)", async () => {
+      const dir = await tempDir();
+      await writeAllPassProject(dir, {}, ":root{--background:0;}");
+      const summary = await runCheck(dir);
+      expect(summary.fail).toBe(0);
+      expect(summary.warn).toBeGreaterThan(0);
+      expect(await runCommand(dir)).toBeUndefined();
+    });
+
+    it("모두 pass 면 설정하지 않음(0)", async () => {
+      const dir = await tempDir();
+      await writeAllPassProject(dir, {});
+      expect(await runCommand(dir)).toBeUndefined();
+    });
+  });
+});
