@@ -47,9 +47,50 @@ import { StreamingText, ToolCallCard } from '@axis-ds/agentic-ui';
 import { StreamingText } from '@axis-ds/agentic-ui/streaming-text';
 ```
 
+컴포넌트마다 서브패스(`@axis-ds/agentic-ui/<컴포넌트 이름의 kebab-case>`)가 있습니다. 1.5.0 에서 그동안 루트로만 import 할 수 있던 `agent-avatar` · `recovery-banner` · `source-panel` · `step-timeline` · `surface-renderer` · `thinking-indicator` 서브패스를 더했습니다.
+
+## 서버 컴포넌트 (Next.js App Router)
+
+1.5.0 부터 `"use client"` 를 쓰지 않은 서버 컴포넌트(create-next-app 기본 `app/page.tsx` 등)에서 바로 import 해 렌더할 수 있습니다. 루트와 서브패스 결과가 같습니다.
+
+```tsx
+// app/page.tsx (서버 컴포넌트)
+import { CodeBlock, MessageBubble, StreamingText } from '@axis-ds/agentic-ui';
+
+export default function Page() {
+  return (
+    <>
+      <MessageBubble role="assistant" content="안녕하세요" />
+      <CodeBlock code="pnpm add @axis-ds/agentic-ui" language="bash" />
+      <StreamingText text="응답을 생성하고 있어요" />
+    </>
+  );
+}
+```
+
+**클라이언트 경계가 있는 컴포넌트**: 아래 7개는 패키지 `dist` 파일에 `"use client"` 가 있어, 서버 컴포넌트가 렌더하면 그 컴포넌트만 브라우저에서 hydrate 됩니다(복사 · 펼침 · 보기 모드 전환 · 피드백 선택 · 타이핑 애니메이션).
+
+`CodeBlock` · `ContextPanel` · `DiffViewer` · `FeedbackButtons` · `SourcePanel` · `StreamingText` · `ToolCallCard`
+
+나머지 11개(`AgentAvatar` · `ApprovalCard` · `AttachmentCard` · `MessageBubble` · `PlanCard` · `RecoveryBanner` · `RunProgress` · `StepTimeline` · `SurfaceRenderer` · `ThinkingIndicator` · `TokenUsageIndicator`)와 루트 배럴에는 지시문이 없어 서버에서 렌더됩니다. 판단 기준은 `useState` · `useEffect` · `useRef` 같은 클라이언트 전용 API 와 컴포넌트 안에서 이벤트 핸들러를 직접 만드는지이며, 목록은 패키지 소스 `scripts/client-modules.mjs` 한 곳에서 관리합니다.
+
+**서버 컴포넌트에서 함수 prop 은 넘길 수 없습니다**: `onCopy` · `onFeedback` · `onComplete` · `onRetry` · `onApprove` 같은 함수는 서버에서 클라이언트로 직렬화할 수 없어 React 가 오류를 냅니다(React Server Components 규칙). 함수 prop 없이 쓰면 서버에서 렌더되고, 핸들러가 필요하면 그 부분을 `"use client"` 파일로 만들어 그 안에서 씁니다.
+
+```tsx
+// app/feedback.tsx
+'use client';
+import { FeedbackButtons } from '@axis-ds/agentic-ui';
+
+export function Feedback({ messageId }: { messageId: string }) {
+  return <FeedbackButtons messageId={messageId} onFeedback={(id, f) => console.log(id, f)} />;
+}
+```
+
+- 이 패키지는 `@axis-ds/ui-react` 루트에서 `cn` 을 가져옵니다. 그래서 서브패스 하나만 import 해도 서버 그래프에 `@axis-ds/ui-react` 의 Radix 클라이언트 참조가 함께 실릴 수 있습니다(1.4.0 에도 있던 현상).
+
 ## 컴포넌트 목록
 
-RunProgress, ApprovalCard, StreamingText, ToolCallCard, MessageBubble, FeedbackButtons, CodeBlock, DiffViewer, PlanCard, ContextPanel, TokenUsageIndicator, AttachmentCard
+AgentAvatar, ApprovalCard, AttachmentCard, CodeBlock, ContextPanel, DiffViewer, FeedbackButtons, MessageBubble, PlanCard, RecoveryBanner, RunProgress, SourcePanel, StepTimeline, StreamingText, SurfaceRenderer, ThinkingIndicator, TokenUsageIndicator, ToolCallCard
 
 ## 문서
 

@@ -37,6 +37,8 @@ function App() {
 
 **Next.js App Router**
 
+`@axis-ds/theme` 1.5.0 이상은 서버 컴포넌트인 `app/layout.tsx` 에서 `<ThemeProvider>` 를 바로 써도 됩니다(패키지가 `"use client"` 모듈입니다). 1.4.0 이하는 아래처럼 `'use client'` 래퍼를 둡니다. 래퍼는 1.5.0 이상에서도 그대로 동작합니다.
+
 ```tsx
 // app/providers.tsx
 'use client'
@@ -226,6 +228,19 @@ rm -rf node_modules pnpm-lock.yaml
 pnpm install
 ```
 
+#### 1.5.0 으로 올린 뒤 `./chunk-*.mjs` 를 찾지 못할 때
+
+```
+Module not found: Can't resolve './chunk-QXQWVRXN.mjs'
+```
+
+1.5.0 부터 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `dist` 는 공용 `chunk-*.mjs` 없이 소스 파일 단위로 나옵니다. 이전 버전으로 빌드한 Next.js webpack 캐시(`.next/cache`)가 남아 있으면 사라진 chunk 파일을 찾다가 실패합니다. `.next` 를 지우고 다시 빌드하세요.
+
+```bash
+rm -rf .next
+pnpm build
+```
+
 ### 4-2. ESM/CJS 호환성 에러
 
 #### 증상
@@ -303,7 +318,12 @@ Tailwind 없이 사용하려면 AXIS 패키지의 빌드 결과물에 포함된 
 
 ### Q: Next.js App Router에서 사용할 수 있나요?
 
-사용할 수 있습니다. `ThemeProvider`는 내부적으로 `useState`, `useEffect` 등 클라이언트 훅을 사용하므로 **클라이언트 컴포넌트**로 래핑해야 합니다.
+사용할 수 있습니다. 1.5.0 부터 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` · `@axis-ds/theme` 는 `"use client"` 를 쓰지 않은 서버 컴포넌트(`app/page.tsx` · `app/layout.tsx`)에서 바로 import 해 렌더할 수 있습니다. 클라이언트 상태가 필요한 컴포넌트(ui-react 의 `Avatar` · `Command` 계열, agentic-ui 의 `CodeBlock` · `StreamingText` 등 7개, theme 의 `ThemeProvider`)는 패키지 안에 클라이언트 경계가 있어 쓰는 쪽에서 할 일이 없습니다. 목록과 판단 기준은 각 패키지 README 의 「서버 컴포넌트」 절을 참고하세요.
+
+- `cn` 과 `buttonVariants` · `avatarVariants` 등 `*Variants` 함수는 서버 컴포넌트에서 직접 호출할 수 있습니다.
+- 서버 컴포넌트에서 `onClick` · `onFeedback` 같은 **함수 prop 은 넘길 수 없습니다**(React Server Components 규칙). `Event handlers cannot be passed to Client Component props` 류 오류가 나면 핸들러를 쓰는 부분을 `'use client'` 파일로 옮깁니다.
+
+1.4.0 이하에서는 `ThemeProvider` · `Avatar` · `Command` 하위 컴포넌트 · agentic-ui 7개 컴포넌트를 서버 컴포넌트에서 쓰면 `next build` 가 실패합니다(`createContext is not a function` · `useState is not a function` · `Element type is invalid`). 1.5.0 으로 올리거나, 쓰는 파일에 `'use client'` 를 두거나, 아래처럼 클라이언트 컴포넌트로 감쌉니다.
 
 ```tsx
 // app/providers.tsx

@@ -1,80 +1,10 @@
-import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
-import { cn } from "../utils";
-
-const avatarVariants = cva(
-  "relative flex shrink-0 overflow-hidden rounded-full bg-[var(--axis-surface-secondary)]",
-  {
-    variants: {
-      size: {
-        sm: "h-8 w-8 text-xs",
-        default: "h-10 w-10 text-sm",
-        lg: "h-12 w-12 text-base",
-        xl: "h-16 w-16 text-lg",
-      },
-    },
-    defaultVariants: {
-      size: "default",
-    },
-  }
-);
-
-/**
- * Avatar 컴포넌트 Props
- * @property size - 아바타 크기 (sm, default, lg, xl)
- */
-export interface AvatarProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof avatarVariants> {
-  /** 이미지 소스 URL */
-  src?: string;
-  /** 대체 텍스트 */
-  alt?: string;
-  /** 이미지 로드 실패 시 표시할 fallback 텍스트 */
-  fallback?: string;
-}
-
 /**
  * 사용자 프로필 이미지를 표시하는 아바타 컴포넌트
  * 이미지 로드 실패 시 이니셜 fallback을 표시한다.
+ *
+ * 이 파일은 `./avatar`(클라이언트 경계) 와 `./variants`(서버에서도 호출 가능) 를 다시 내보내는 배럴입니다.
+ * 루트와 `@axis-ds/ui-react/avatar` 의 내보내기 이름은 분리 전과 같습니다(WI-0050 D2).
+ * 이 파일은 클라이언트 지시문 목록(scripts/client-modules.mjs)에 넣지 않습니다. 넣으면 서버에서 `avatarVariants()` 를 부를 수 없습니다.
  */
-const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
-  ({ className, size, src, alt, fallback, ...props }, ref) => {
-    const [hasError, setHasError] = React.useState(false);
-
-    const initials = React.useMemo(() => {
-      if (fallback) return fallback;
-      if (!alt) return "?";
-      return alt
-        .split(" ")
-        .map((word) => word[0])
-        .join("")
-        .toUpperCase()
-        .slice(0, 2);
-    }, [alt, fallback]);
-
-    return (
-      <div
-        ref={ref}
-        className={cn(avatarVariants({ size, className }))}
-        {...props}
-      >
-        {src && !hasError ? (
-          <img
-            src={src}
-            alt={alt || "Avatar"}
-            className="aspect-square h-full w-full object-cover"
-            onError={() => setHasError(true)}
-          />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-secondary)] font-medium">
-            {initials}
-          </span>
-        )}
-      </div>
-    );
-  }
-);
-Avatar.displayName = "Avatar";
-
-export { Avatar, avatarVariants };
+export { Avatar, type AvatarProps } from "./avatar";
+export { avatarVariants } from "./variants";

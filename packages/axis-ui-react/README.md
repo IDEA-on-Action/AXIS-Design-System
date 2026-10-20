@@ -58,6 +58,51 @@ export default function App() {
 }
 ```
 
+## 서버 컴포넌트 (Next.js App Router)
+
+1.5.0 부터 `"use client"` 를 쓰지 않은 서버 컴포넌트(create-next-app 기본 `app/page.tsx` · `app/layout.tsx`)에서 바로 import 해 렌더할 수 있습니다. 루트(`@axis-ds/ui-react`)와 서브패스(`@axis-ds/ui-react/button` 등) 결과가 같습니다.
+
+```tsx
+// app/page.tsx (서버 컴포넌트)
+import { Avatar, Button, Card, buttonVariants, cn } from '@axis-ds/ui-react';
+
+export default function Page() {
+  return (
+    <Card className={cn('p-6')}>
+      <Avatar src="/me.png" alt="프로필" fallback="AX" />
+      <Button>저장</Button>
+      <a className={buttonVariants({ variant: 'outline' })} href="/docs">문서</a>
+    </Card>
+  );
+}
+```
+
+**클라이언트 경계가 있는 컴포넌트**: 아래는 패키지 안에 `"use client"` 경계가 있어 서버 컴포넌트가 렌더하면 그 부분만 브라우저에서 hydrate 됩니다. 쓰는 쪽에서 따로 할 일은 없습니다.
+
+| 경계 | 컴포넌트 |
+|---|---|
+| 모듈 전체(패키지 `dist` 파일에 `"use client"`) | `Avatar`(이미지 로드 오류 상태와 대체 표시), `Command` · `CommandInput` · `CommandList` · `CommandEmpty` · `CommandGroup` · `CommandItem` · `CommandSeparator`(cmdk) |
+| Radix 부분만(Radix 패키지 자체의 `"use client"`) | Accordion · Checkbox · Collapsible · Dialog · Dropdown Menu · Label · Popover · Radio Group · Scroll Area · Select · Separator · Sheet · Slider · Switch · Tabs · Toast · Toggle · Tooltip. 래퍼는 서버에서 렌더되고 Radix 부분이 클라이언트 참조가 됩니다 |
+| 없음(서버에서 렌더) | Alert · Badge · Breadcrumb · Button · Card · Input · Progress · Skeleton · Table · Textarea |
+
+판단 기준은 `useState` · `useEffect` · `useContext` · `createContext` 같은 클라이언트 전용 API, DOM 이벤트 핸들러를 직접 만드는 코드, `"use client"` 모듈 내보내기의 점 접근(`Command.Input` 등)입니다. 지시문을 붙이는 파일 목록은 패키지 소스 `scripts/client-modules.mjs` 한 곳에서 관리합니다.
+
+**서버에서 호출할 수 있는 함수**: `cn` 과 `*Variants` 7개(`alertVariants` · `avatarVariants` · `badgeVariants` · `buttonVariants` · `progressVariants` · `progressIndicatorVariants` · `toggleVariants`), 합 8개 함수는 서버 컴포넌트에서 직접 호출할 수 있습니다. 이 함수들을 담은 파일과 루트 배럴에는 `"use client"` 를 두지 않습니다. `avatarVariants` 는 `Avatar` 컴포넌트와 파일을 나눠 서버 호출을 유지했습니다(import 경로 · 이름은 그대로).
+
+**서버 컴포넌트에서 함수 prop 은 넘길 수 없습니다**: `onClick` · `onCheckedChange` · `onSelect` 같은 함수는 서버에서 클라이언트로 직렬화할 수 없어 React 가 오류를 냅니다(React Server Components 규칙이며 이 패키지의 제약이 아닙니다). 핸들러가 필요하면 그 부분을 `"use client"` 파일로 만들고 그 안에서 AXIS 컴포넌트를 씁니다.
+
+```tsx
+// app/save-button.tsx
+'use client';
+import { Button } from '@axis-ds/ui-react';
+
+export function SaveButton() {
+  return <Button onClick={() => console.log('저장')}>저장</Button>;
+}
+```
+
+- 서버 컴포넌트가 루트 배럴을 import 하면 Radix 컴포넌트의 클라이언트 참조가 함께 실려 First Load JS 가 커질 수 있습니다(1.4.0 에도 있던 현상). 크기가 중요하면 서브패스(`@axis-ds/ui-react/button`)로 import 합니다.
+
 ## 컴포넌트 목록
 
 Accordion, Alert, Avatar, Breadcrumb, Button, Card, Checkbox, Collapsible, Command, Dialog, Dropdown Menu, Input, Popover, Progress, Radio Group, Scroll Area, Sheet, Skeleton, Slider, Switch, Table, Textarea, Toggle, Tooltip
