@@ -300,6 +300,30 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCGcRU",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0052",
+      "slug": "streaming-text-display",
+      "issueNumber": 146,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTK0",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0053",
+      "slug": "subpath-types-versions",
+      "issueNumber": 147,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTP4",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0054",
+      "slug": "avatar-hydration-fallback",
+      "issueNumber": 148,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTWI",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-20T00:00:00.000Z"
