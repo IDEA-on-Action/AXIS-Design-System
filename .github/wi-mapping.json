@@ -236,6 +236,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB-u4A",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0044",
+      "slug": "tailwind4-axis-integration",
+      "issueNumber": 134,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhB--rI",
+      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-20T00:00:00.000Z"
