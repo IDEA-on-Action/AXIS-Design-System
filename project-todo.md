@@ -43,7 +43,7 @@
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
-| 54 | Tailwind 4 프로젝트에서 `axis check` 의 `tailwind.config` 오탐 · FAIL 이 있어도 종료 코드 0 (WI-0038 배포본 확인 중 발견) | WI-0042 (#131) | P18 | P2 | ⏳ |
+| 54 | Tailwind 4 프로젝트에서 `axis check` 의 `tailwind.config` 오탐 · FAIL 이 있어도 종료 코드 0 (WI-0038 배포본 확인 중 발견) | WI-0042 (#131) | P18 | P2 | 🔄 PR #133(2026-10-20, Tailwind 4 는 CSS 의 @import "tailwindcss" 로 판정 · FAIL 시 rc 1 · MCP 동일, cli minor · mcp patch) |
 
 ### 완료
 
