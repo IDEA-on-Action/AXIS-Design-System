@@ -43,15 +43,16 @@
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
-| 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | ⏳ |
+| 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | 🔄 실측 워크플로 완료(2026-10-21), 결정: 원격 1차 + CLI 동봉 폴백 · build-registry 정규화 · -y 건너뛰기(cli minor) · WI-0047 흡수 · MCP 는 WI-0055 · 미배포 사본 삭제 |
 | 58 | 애니메이션 플러그인(tailwindcss-animate) 의존 미선언(7개 컴포넌트 0/26) · accordion · progress keyframes 부재 | WI-0046 (#137) | P18 | P2 | ⏳ |
-| 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ⏳ |
+| 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ⏳ WI-0045 에 흡수(2026-10-21 결정), WI-0045 완료 때 함께 닫음 |
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ⏳ |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ⏳ |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ⏳ |
 | 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ⏳ |
+| 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ⏳ |
 
 ### 완료
 

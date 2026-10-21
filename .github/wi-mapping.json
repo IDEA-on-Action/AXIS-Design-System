@@ -251,7 +251,7 @@
       "issueNumber": 136,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_8vs",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastStatus": "🔄"
     },
     {
       "wiId": "WI-0046",
@@ -323,6 +323,14 @@
       "issueNumber": 148,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTWI",
       "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0055",
+      "slug": "mcp-install-registry",
+      "issueNumber": 150,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCSOio",
+      "lastSyncedAt": "2026-10-21T00:00:00.000Z",
       "lastStatus": "⏳"
     }
   ],
