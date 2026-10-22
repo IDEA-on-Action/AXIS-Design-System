@@ -3,7 +3,7 @@
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
 **현재 버전**: 1.5.0 | **상태**: ✅ Active Development
-**npm 배포**: v1.5.0 배포 완료 (2026-10-21, Next 서버 컴포넌트 호환 · "use client" 경계), cli 1.4.0 · mcp 1.2.2 (2026-10-20, Tailwind 4 안내 · 검사)
+**npm 배포**: v1.5.0 배포 완료 (2026-10-21, Next 서버 컴포넌트 호환 · "use client" 경계), cli 1.5.0 (2026-10-22, axis add 레지스트리 기반 설치) · mcp 1.2.2 (2026-10-20, Tailwind 4 안내 · 검사)
 
 ---
 
@@ -128,7 +128,7 @@ pnpm publish -r --access public --no-git-checks  # 비상용 수동 배포: 로�
 - **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
 - **publish 부수효과**(로컬 수동 배포 때만): 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
 - **CI 배포**: `.github/workflows/publish.yml` - main push 시 changesets/action이 OIDC로 발행 (npm 인증용 GitHub Secret 불필요)
-- **현재 배포 버전**: 1.5.0 (2026-10-21 배포, run 39496056901, linked 4패키지 minor, 서버 컴포넌트 호환 · 모듈 보존 빌드, provenance 4/4). 이전 1.4.0 (2026-10-20 배포, run 39413301099, linked 4패키지 minor, Tailwind 4 연동, provenance 4/4). cli 1.4.0 · mcp 1.2.2 (같은 run, init 안내 · check WARN, provenance 2/2). 이전 1.3.0 (2026-10-19, run 39238361098), cli 1.3.0 · mcp 1.2.1 (2026-10-20, run 39351203366)
+- **현재 배포 버전**: cli 1.5.0 (2026-10-22 배포, run 39795328665, cli 단독 minor, axis add 레지스트리 기반 설치 · 원격 pages.dev 우선 · 동봉본 폴백, provenance). linked 4패키지 1.5.0 (2026-10-21 배포, run 39496056901, linked 4패키지 minor, 서버 컴포넌트 호환 · 모듈 보존 빌드, provenance 4/4). 이전 1.4.0 (2026-10-20 배포, run 39413301099, linked 4패키지 minor, Tailwind 4 연동, provenance 4/4). cli 1.4.0 · mcp 1.2.2 (같은 run, init 안내 · check WARN, provenance 2/2). 이전 1.3.0 (2026-10-19, run 39238361098), cli 1.3.0 · mcp 1.2.1 (2026-10-20, run 39351203366)
 
 ---
 

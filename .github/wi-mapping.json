@@ -251,7 +251,7 @@
       "issueNumber": 136,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_8vs",
       "lastSyncedAt": "2026-10-22T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0046",
@@ -266,8 +266,8 @@
       "slug": "registry-deps",
       "issueNumber": 138,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_83Y",
-      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-22T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0048",

@@ -84,7 +84,7 @@
 - [x] G2 설치 후 빌드: `scripts/registry-install-smoke.mjs`(`pnpm registry-install-smoke` 대표 5 · `:all` 전수 28). 로컬 28/28 통과, 음성 대조(정규화 전 레지스트리) 0/28
 - [x] G2 를 CI(frontend.yml ci job, Pack smoke 다음)에 대표 항목으로 배선
 - [x] G3 폴백 · G4 덮어쓰기 · 경로 이탈: cli 단위 테스트 재사용 + 실행 파일 스모크 `scripts/cli-bundled-smoke.mjs`(`pnpm cli-smoke`), CI 배선
-- [ ] CI 에서 새 step 두 개가 실제로 도는지 PR 에서 확인(미측정)
+- [x] CI 에서 새 step 이 실제로 도는지 PR 에서 확인: #152 run 39767335190 에서 G1 테스트 45/45 · cli-smoke OK · G2 대표 5/5(약 73초) 실행 확인(2026-10-22)
 - [x] `registry-integrity.test.mjs` CI 배선: 루트 `pnpm test:registry`, frontend.yml ci job 의 Build Registry 다음(검증 보정)
 - [x] publish.yml 에 Build 앞 build:registry(동봉본을 소스 재생성본으로, 검증 보정)
 - [ ] 커밋본과 재생성본 drift 게이트(Version Packages PR 과 충돌, 결정 대기)
@@ -98,8 +98,8 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0045-cli-add-registry.md`(`@axis-ds/cli` minor). ui-react 배포 파일 변경이 없어 linked 4패키지는 올리지 않음
-- [ ] 배포 순서: CLI 발행(publish.yml 의 changesets publish) 전에 새 `/r`(index.json 에 `version` 있음)을 `axis-design-system.pages.dev` 에 먼저 배포. 2026-10-22 실측 pages.dev 의 index.json 은 키가 name · homepage · items 뿐이라 기본 경로 · D18 이전 경로 모두 「형식 검증을 통과하지 못해」 포함본으로 폴백(설치는 rc 0). 배포 뒤 `curl …/r/index.json` 에 version 이 있는지 확인. 순서는 사이트 자동 배포(이 PR 머지)에 맡기고 Version PR 머지 전에 실측(사용자 결정 2026-10-22)
-- [ ] 릴리스 전 `pnpm registry-install-smoke:all`(전수 28) · `pnpm registry-shadcn-smoke`(AC5) 재실행
-- [ ] 배포 후 npm 배포본 `@axis-ds/cli@1.5.0` 으로 G2 · cli-smoke 재측정
-- [ ] #136 · #138 닫기, project-todo.md 57 · 59행 갱신(호출 쪽)
+- [x] 배포 순서: CLI 발행(publish.yml 의 changesets publish) 전에 새 `/r`(index.json 에 `version` 있음)을 `axis-design-system.pages.dev` 에 먼저 배포. 2026-10-22 실측 pages.dev 의 index.json 은 키가 name · homepage · items 뿐이라 기본 경로 · D18 이전 경로 모두 「형식 검증을 통과하지 못해」 포함본으로 폴백(설치는 rc 0). 배포 뒤 `curl …/r/index.json` 에 version 이 있는지 확인. 순서는 사이트 자동 배포(이 PR 머지)에 맡기고 Version PR 머지 전에 실측(사용자 결정 2026-10-22). 실측: #152 머지 뒤 pages.dev index.json version 1.5.0 · 32파일 main 과 바이트 동일, 미발행 CLI 로 기본 설정 list 가 「원격 레지스트리」, 그 뒤 #153 머지(2026-10-22)
+- [x] 릴리스 전 `pnpm registry-install-smoke:all`(전수 28) · `pnpm registry-shadcn-smoke`(AC5) 재실행: shadcn-smoke OK(PR 전 게이트), 전수 28/28(배포 뒤 main, 2026-10-22)
+- [x] 배포 후 npm 배포본 `@axis-ds/cli@1.5.0` 으로 재측정: tarball dist 45파일이 main 빌드와 바이트 동일 → cli-smoke OK · G2 전수 28/28. `npx @axis-ds/cli@1.5.0` 실사용(Next 15 · Tailwind 4): init · list(원격 레지스트리) · add 6개 · 의존성 설치 · next build rc 0(2026-10-22)
+- [x] #136 · #138 닫기(#152 머지로 닫힘), project-todo.md 57 · 59행 갱신(2026-10-22)
 - [x] project-todo.md 334행 삭제된 경로(`registry/r` · `public/r`) 언급을 현재 사실(`apps/web/public/r` 하나)로 정정(M6)

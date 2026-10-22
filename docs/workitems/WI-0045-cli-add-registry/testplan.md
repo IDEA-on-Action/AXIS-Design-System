@@ -410,3 +410,16 @@ n5 A/B(수정 전 사본은 `r5/n5/*.before.mjs`, ROOT 만 저장소 절대 경�
 
 게이트: `pnpm test:registry` 45/45, cli `vitest run` 15파일 637/637.
 
+
+## 21. 배포 실측 (2026-10-22)
+
+| 확인 | 결과 |
+|---|---|
+| #152 CI(run 39767335190) 새 단계 | G1 테스트 45/45, cli-smoke OK, G2 대표 5/5(약 73초) |
+| pages.dev `/r` (#152 머지 뒤) | index.json version 1.5.0 · 30항목, 32파일 모두 main 과 바이트 동일. 종전 axis.minu.best/r 는 403 그대로 |
+| 미발행 CLI(main 빌드), 기본 설정 | list 「원격 레지스트리, version 1.5.0」, add 폴백 안내 0건. 음성 대조(원격 차단)는 「접근하지 못해 … 포함된 레지스트리」, 종전 기본값 config 는 안내 1줄 뒤 원격 설치 |
+| npm `@axis-ds/cli@1.5.0` (#153, run 39795328665) | latest 1.5.0, provenance(SLSA v1). tarball dist 45파일 · 동봉 레지스트리 32파일 모두 main 과 바이트 동일 |
+| `npx @axis-ds/cli@1.5.0` 실사용(create-next-app 15.5.28, Tailwind 4, pnpm, env 없음 · 새 HOME) | init(registry pages.dev) · list(원격) · add button card dialog select agentic-tool-call-card agentic-run-progress -y(8개, rc 0) · 안내된 pnpm add rc 0 · 서버 page 에서 사용한 next build(린트 · 타입 포함) rc 0 |
+| main 에서 전수 재측정(배포본과 바이트 동일한 빌드) | cli-smoke OK, registry-install-smoke:all 28/28 |
+
+참고: 검증 하네스가 HOME 을 바꾸면 corepack 캐시 경로가 바뀌어 pnpm 실행이 실패해요(`COREPACK_HOME` 을 실경로로 지정해 해소, 배포본 결함 아님).
