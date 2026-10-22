@@ -89,6 +89,11 @@ jobs:
       - name: Build Registry
         run: pnpm build:registry
 
+      # WI-0045 AC6: G1 변이(의존 하나 제거 · 타입 위치 import 등)와 정규화(import 재작성 · 빈 interface · "use client")
+      # 단위 테스트. 방금 만든 apps/web/public/r 를 읽으므로 Build Registry 다음에 둔다
+      - name: Registry 정규화 · G1 테스트 (WI-0045 AC6)
+        run: pnpm test:registry
+
       - name: License check
         run: pnpm check-licenses
 
@@ -115,6 +120,20 @@ jobs:
             echo "::error::pack-smoke 검사 패키지 수를 읽지 못했거나 0개예요 (값: '${n}')"
             exit 1
           fi
+
+      # WI-0045 G3 · G4: 빌드한 cli(dist/index.js)를 실제로 실행해 동봉본 폴백(접속 불가 · 404 HTML), -y 건너뜀 ·
+      # --overwrite, 경로 이탈 거부를 본다. 127.0.0.1 만 쓰고 npm 설치가 없어 수 초 걸린다(2026-10-21 로컬 실측 1.4초).
+      - name: CLI 실행 스모크 (WI-0045 G3 · G4)
+        run: pnpm cli-smoke
+
+      # WI-0045 G2: apps/web/public/r 를 로컬 정적 서버로 띄우고 create-next-app 15.5.28(Tailwind 4, pnpm) 픽스처에
+      # 대표 5개(button · dialog · toast · agentic-tool-call-card · agentic-approval-card)를 항목마다 따로 axis add 한 뒤
+      # cli 가 안내한 의존성만 설치하고 린트 포함 next build · 서버 page 프리렌더 HTML 을 본다. 전수 28개는 릴리스 전
+      # `pnpm registry-install-smoke:all` (로컬 jobs 2 약 5분). 비용(2026-10-21 로컬, Node 20.19.5 · pnpm 9.15.4):
+      # 빈 store 에서 픽스처 패키지 336개를 받아 전체 148초, store 가 있으면 약 80초. 레지스트리를 받는 사용자 경로를
+      # 머지 전에 막는 유일한 검사라 PR 에 넣는다. 픽스처 next/font 는 빌드 때 Google Fonts 를 받는다.
+      - name: 레지스트리 설치 후 빌드 (WI-0045 G2 대표 항목)
+        run: pnpm registry-install-smoke
 
       # 캐시 키에 넣을 Playwright 버전은 lockfile 이 아니라 설치된 CLI 에서 읽는다
       - name: Read Playwright version

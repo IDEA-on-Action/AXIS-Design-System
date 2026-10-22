@@ -4,12 +4,25 @@
   "homepage": "https://axis.minu.best",
   "items": [
     {
+      "name": "a11y-labels",
+      "type": "registry:lib",
+      "title": "Agentic A11y Labels",
+      "description": "AXIS Agentic UI 접근성 레이블 상수 - 스크린 리더용 상태 · 심각도 · 역할 텍스트",
+      "files": [
+        {
+          "path": "registry/axis/lib/agentic-a11y-labels.ts",
+          "type": "registry:lib"
+        }
+      ],
+      "meta": {
+        "source": "src/constants/a11y-labels.ts"
+      }
+    },
+    {
       "name": "run-progress",
       "type": "registry:ui",
       "title": "Run Progress",
       "description": "AI 에이전트 실행 진행률 표시 컴포넌트",
-      "dependencies": ["framer-motion", "clsx", "tailwind-merge"],
-      "registryDependencies": ["@axis/card"],
       "files": [
         {
           "path": "components/agentic/run-progress.tsx",
@@ -22,8 +35,6 @@
       "type": "registry:ui",
       "title": "Streaming Text",
       "description": "LLM 스트리밍 텍스트 출력 컴포넌트",
-      "dependencies": ["framer-motion"],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/streaming-text.tsx",
@@ -36,8 +47,6 @@
       "type": "registry:ui",
       "title": "Approval Card",
       "description": "사용자 승인 요청 카드 컴포넌트",
-      "dependencies": ["framer-motion"],
-      "registryDependencies": ["@axis/card", "@axis/button"],
       "files": [
         {
           "path": "components/agentic/approval-card.tsx",
@@ -50,8 +59,6 @@
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "dependencies": ["framer-motion"],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/step-timeline.tsx",
@@ -64,8 +71,6 @@
       "type": "registry:ui",
       "title": "Thinking Indicator",
       "description": "AI 사고 과정 표시 컴포넌트",
-      "dependencies": ["framer-motion"],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/thinking-indicator.tsx",
@@ -78,8 +83,6 @@
       "type": "registry:ui",
       "title": "Source Panel",
       "description": "참조 소스 표시 패널 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": ["@axis/card"],
       "files": [
         {
           "path": "components/agentic/source-panel.tsx",
@@ -92,8 +95,6 @@
       "type": "registry:ui",
       "title": "Recovery Banner",
       "description": "에러 복구 배너 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": ["@axis/button"],
       "files": [
         {
           "path": "components/agentic/recovery-banner.tsx",
@@ -106,8 +107,6 @@
       "type": "registry:ui",
       "title": "Agent Avatar",
       "description": "AI 에이전트 아바타 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/agent-avatar.tsx",
@@ -120,8 +119,6 @@
       "type": "registry:ui",
       "title": "Surface Renderer",
       "description": "동적 UI Surface 렌더러 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": ["@axis/card"],
       "files": [
         {
           "path": "components/agentic/surface-renderer.tsx",
@@ -134,8 +131,6 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "dependencies": ["framer-motion"],
-      "registryDependencies": ["@axis/card", "@axis/badge"],
       "files": [
         {
           "path": "components/agentic/tool-call-card.tsx",
@@ -148,8 +143,6 @@
       "type": "registry:ui",
       "title": "Message Bubble",
       "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/message-bubble.tsx",
@@ -162,8 +155,6 @@
       "type": "registry:ui",
       "title": "Feedback Buttons",
       "description": "좋아요/싫어요 피드백 버튼 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/feedback-buttons.tsx",
@@ -176,8 +167,6 @@
       "type": "registry:ui",
       "title": "Token Usage Indicator",
       "description": "토큰 사용량 및 비용 표시 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/token-usage-indicator.tsx",
@@ -190,8 +179,6 @@
       "type": "registry:ui",
       "title": "Context Panel",
       "description": "모델/설정 메타 정보 패널 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/context-panel.tsx",
@@ -204,8 +191,6 @@
       "type": "registry:ui",
       "title": "Code Block",
       "description": "코드 표시 + 복사 버튼 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/code-block.tsx",
@@ -218,8 +203,6 @@
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": ["@axis/agentic-step-timeline", "@axis/agentic-approval-card"],
       "files": [
         {
           "path": "components/agentic/plan-card.tsx",
@@ -232,8 +215,6 @@
       "type": "registry:ui",
       "title": "Attachment Card",
       "description": "파일/이미지 첨부 표시 카드 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/attachment-card.tsx",
@@ -246,8 +227,6 @@
       "type": "registry:ui",
       "title": "Diff Viewer",
       "description": "코드 변경사항 비교 표시 컴포넌트",
-      "dependencies": [],
-      "registryDependencies": [],
       "files": [
         {
           "path": "components/agentic/diff-viewer.tsx",

@@ -16,16 +16,37 @@ npx @axis-ds/cli
 # 프로젝트 초기화
 axis init
 
-# 컴포넌트 추가
-axis add button
+# 컴포넌트 추가(여러 개 가능)
+axis add button input card
 
-# 설치된 컴포넌트 목록
+# Agentic UI 컴포넌트(아래 두 줄은 같음)
+axis add agentic-run-progress
+axis add run-progress --agentic
+
+# 레지스트리에서 추가할 수 있는 컴포넌트 목록
 axis list
 ```
+
+## 컴포넌트 추가 (`axis add`) · 목록 (`axis list`)
+
+- 레지스트리에서 항목을 읽어 복사합니다. 조회 순서는 `AXIS_REGISTRY_URL` → `axis.config.json` 의 `registry` → 기본값(`https://axis-design-system.pages.dev/r`)이고, 원격을 읽지 못하면 CLI 에 포함된 레지스트리를 쓰며 그 사실을 한 번 알립니다. 안내 문구는 원격에 닿지 못한 경우(접속 불가 · 타임아웃 · 오류 응답, 「원격 레지스트리에 접근하지 못해」)와 응답은 받았지만 내용이 검증을 통과하지 못한 경우(JSON 아님 · 형식 불일치 · sha256 불일치, 「원격 레지스트리 응답이 형식 검증을 통과하지 못해」)를 구분합니다.
+- config 의 `registry` 가 종전 기본값 `https://axis.minu.best/r` 이면(앞뒤 공백을 떼고 스킴 · 호스트 소문자, `:443` 같은 스킴 기본 포트 제거, 경로 끝 `/` 모두 제거로 정규화해 비교. `http://` · `/rx` · 다른 호스트는 다른 값) 새 기본값으로 조회하고 「종전 기본 주소라 새 기본 주소로 조회해요. axis.config.json 의 registry 를 고치면 이 안내가 사라져요」를 한 줄 알립니다(파일은 고치지 않음). 다른 주소는 그대로 쓰고, `AXIS_REGISTRY_URL` 이 있으면 그것이 우선입니다.
+- 레지스트리 주소에 공백 · 사용자 정보(`user:pass@`) · 쿼리 · 해시가 있으면 요청하지 않고 접근 실패 안내로 CLI 포함본을 씁니다. 안내 · 오류에 찍히는 주소는 사용자 정보를 `***` 로, 쿼리 · 해시 값을 `?***` · `#***` 로 가립니다. CLI 는 `AXIS_REGISTRY_PUBLIC_URL`(레지스트리 빌드 전용)을 읽지 않습니다.
+- 이름이 하나라도 없으면 없는 이름을 모두 알리고 아무것도 쓰지 않습니다(rc 1). `--agentic` 은 이름 앞에 `agentic-` 를 붙여 찾는 별칭이고, 전체 이름을 써도 됩니다.
+- `registryDependencies` 를 재귀로 따라가 `utils`(`cn`) · `agentic-a11y-labels` 같은 lib 항목도 함께 설치합니다. 값이 레지스트리 URL 이면 `<base>/<이름>.json` 형태만 받아 그 이름으로 지금 읽는 레지스트리(원격 또는 CLI 포함본)에서 찾습니다. `<base>` 는 원격을 읽을 때 지금 조회 중인 레지스트리 주소 또는 공개 기본 주소(`https://axis-design-system.pages.dev/r`)이고, CLI 포함본을 읽을 때는 공개 기본 주소입니다. 접두 없는 이름도 받습니다. 다른 호스트 · 경로, 공백 · userinfo(`user@`) · 쿼리가 든 URL, `@ns/이름` · 상대 경로 · `.json` 이 아닌 확장자 · 이름 규칙 위반은 형식 불일치로 봅니다.
+- 배치: Core UI 와 lib 은 `componentsDir`(utils 는 `axis init` 이 쓰는 `componentsDir/utils.ts` 와 같은 위치), Agentic UI 는 `agenticDir`(없으면 `componentsDir` 옆 `agentic` 디렉터리). 레지스트리 형식의 import(`@/registry/<style>/lib/utils` 등)는 설치 위치 기준 상대 경로로 바꾸고, 설치 뒤 그 경로가 실제 파일을 가리키는지 확인합니다.
+- 이미 있는 파일: 내용이 같으면 건너뜀, 다르면 대화형에서는 묻고, `-y` 는 건너뛰며 목록을 알려 주고, `--overwrite` 만 덮어씁니다. 터미널이 아닌 곳(CI · 파이프)에서는 묻지 않고 `-y` 와 같이 건너뜁니다. 출력은 새로 만든 파일 `+`, 덮어쓴 파일 `~ … (덮어씀)`, 같은 내용이라 건너뛴 파일 `=` 입니다. `--overwrite` 는 `registryDependencies` 로 끌려온 파일(예: 고친 `utils.ts`)도 덮어쓰니 출력의 `~` 를 확인하세요.
+- 쓰기 전에 실제 경로(심볼릭 링크를 따라간 위치)가 프로젝트 디렉터리 안인지 확인하고, 밖이면 쓰지 않습니다. 기존 대상 파일이 심볼릭 링크여도 내용이 같거나 `-y` 로 건너뛰면 쓰지 않으므로 건너뜁니다(예: 앱 디렉터리 안의 공용 `utils.ts`, 또는 모노레포의 다른 패키지처럼 프로젝트 밖의 `utils.ts` 에 링크해 둔 경우). 밖을 가리키는 링크는 `= <경로> (같은 내용이라 건너뜀, 링크 대상이 프로젝트 밖)` 처럼 그 사실을 함께 알립니다(rc 0). 상위 디렉터리(`componentsDir` 등)가 밖을 가리키는 링크면 경로 이탈로 거부합니다. 설치 대상이 디렉터리(또는 디렉터리를 가리키는 링크)이거나 기존 파일을 읽지 못하면 이유를 알리고 아무것도 쓰지 않고 rc 1 입니다. 링크를 실제로 덮어써야 할 때(`--overwrite` · 대화형 예, 링크가 프로젝트 안 · 밖 어디를 가리켜도)만 아무것도 쓰지 않고 rc 1 로 알립니다. 덮어써야 하는 일반 파일이 다른 경로와 하드링크로 이어져 있으면(링크 수 2 이상) 쓰기 전에 그 경로와 이유를 알리고 아무것도 쓰지 않은 채 rc 1 로 끝내며, 쓰기 직전에도 연 파일로 한 번 더 확인합니다(내용이 같거나 `-y` 로 건너뛰는 파일은 영향 없음). 덮어쓰기를 묻는 동안 새로 설치할 파일과 같은 이름의 파일이 생기면 그 파일을 덮어쓰지 않고 경로를 알린 뒤 rc 1 로 끝냅니다. 검사와 쓰기 사이의 동시 경합은 사후 검사로 감지합니다: 쓴 파일의 실제 위치가 프로젝트 밖이면 그 파일을 지우지 않고 경로를 알린 뒤 rc 1 로 끝냅니다(그 위치의 파일은 사용자 것일 수 있어 CLI 가 지우지 않음).
+- `package.json` 에 없는 의존성은 lockfile 에 맞춘 설치 명령으로 안내만 합니다(설치는 하지 않음). 안내 명령은 복사해 실행하는 셸 명령이라, 레지스트리의 `dependencies` 값이 패키지 이름(선택적 `@범위`) 형태가 아니면(`;` · `$` · 따옴표 등) 그 원격 응답을 형식 불일치로 보고 CLI 포함본을 씁니다.
+- `axis.config.json` 의 `componentsDir` · `agenticDir` 에 역슬래시(`src\components\ui`)를 적어도 `/` 로 읽습니다.
+- `axis list` 는 레지스트리 index 의 Core UI · Agentic UI 항목을 보여 줍니다(`--category ui|agentic`).
 
 ## 프로젝트 초기화 (`axis init`)
 
 - `axis.config.json` 과 `cn()` 을 담은 `utils.ts` 를 만들고, `clsx` · `tailwind-merge` 가 `package.json` 에 없으면 `dependencies` 에 더합니다. 설치는 실행하지 않고 명령만 안내합니다.
+- `axis.config.json` 의 `registry` 는 기본값(`https://axis-design-system.pages.dev/r`)이거나, 이미 있던 config 의 값입니다. 종전 기본값 `https://axis.minu.best/r` 는 Cloudflare 403 이라 바꿨습니다. add · list 는 그 값을 새 기본값으로 바꿔 읽으며 한 줄 알립니다(위 「컴포넌트 추가」, 파일은 고치지 않음). init 을 다시 실행하면 그 값을 새 기본값으로 바꿔 쓰고 「registry 를 새 기본 주소로 갱신」으로 알립니다. 사용자가 지정한 다른 값은 init 도 그대로 둡니다.
+- `utils.ts` 가 이미 있으면 같은 내용이면 「유지(이미 같은 내용)」(다시 쓰지 않음), 다르면 init 의 utils 로 덮어쓰고 「덮어씀」으로 알립니다. `utils.ts` 쓰기는 `axis add` 와 같은 규칙입니다: 심볼릭 링크면 같은 내용일 때 「유지(이미 같은 내용, 링크)」로 두고, 내용이 다른 링크(프로젝트 안 · 밖) · 깨진 링크 · 디렉터리 · 읽을 수 없는 파일 · 다른 경로와 하드링크로 이어진 파일은 쓰지 않고 그 사실을 알린 뒤 rc 1 입니다. 이 판정은 쓰기 전에 하므로 이때는 `axis.config.json` · `package.json` 도 쓰지 않습니다. 다른 경로와 하드링크로 이어진 `axis.config.json` 을 다시 써야 할 때도 같습니다.
+- config 가 이미 있으면 출력이 「생성 완료」가 아니라 사실대로 「유지(이미 같은 내용)」 또는 「갱신」입니다. 갱신은 경로 키를 init 답으로 다시 쓰고 `registry` · `agenticDir` 는 기존 값을 지킵니다(`registry` 가 종전 기본값이면 위처럼 새 기본값으로 바꿈). init 이 쓰지 않는 다른 키(`brand` · `monetDir` · `template` 등)는 갱신에서 빠지며, 빠진 키를 출력으로 알립니다. `AXIS_REGISTRY_URL` 은 config 에 기록하지 않고 add · list 를 실행할 때만 우선합니다.
 - `tailwind-merge` 범위와 아래 안내는 프로젝트의 Tailwind 버전(설치본, 없으면 `package.json` 선언)으로 정합니다. 판정하지 못하면 Tailwind 3 으로 봅니다.
 - Tailwind 4 이상이면 전역 CSS 에 넣을 줄을 안내합니다. CSS 파일은 고치지 않습니다.
 

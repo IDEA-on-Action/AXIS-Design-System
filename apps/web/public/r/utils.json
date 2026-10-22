@@ -1,0 +1,19 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "utils",
+  "type": "registry:lib",
+  "title": "Utils",
+  "description": "AXIS cn 유틸 - clsx 와 tailwind-merge(그림자 임의값 그룹 확장)로 클래스 병합",
+  "dependencies": [
+    "clsx",
+    "tailwind-merge"
+  ],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "registry/axis/lib/utils.ts",
+      "type": "registry:lib",
+      "content": "import { type ClassValue, clsx } from \"clsx\";\nimport { extendTailwindMerge } from \"tailwind-merge\";\n\n/**\n * `shadow-[shadow:<CSS 변수 참조>]` 처럼 `shadow:` 타입 힌트가 붙은 임의값 그림자 클래스인지 판정\n *\n * tailwind-merge 기본 설정은 이 클래스를 그림자 색(shadow-color) 그룹으로 분류해서\n * `cn(기본, \"shadow-none\")` 이 기본 그림자를 지우지 못하고, `shadow-black/50` 은 그림자를 통째로 지운다.\n * 그림자(shadow) 그룹에 등록해 종전 `shadow-sm` · `shadow-lg` 와 같은 병합 결과를 낸다(WI-0025 U4).\n */\nconst isArbitraryShadowWithHint = (value: string) => /^\\[shadow:.+\\]$/.test(value);\n\nconst twMerge = extendTailwindMerge({\n  extend: {\n    classGroups: {\n      shadow: [{ shadow: [isArbitraryShadowWithHint] }],\n    },\n  },\n});\n\n/**\n * Tailwind CSS 클래스를 병합하는 유틸리티 함수\n * clsx로 조건부 클래스를 처리하고 tailwind-merge로 충돌을 해결\n */\nexport function cn(...inputs: ClassValue[]) {\n  return twMerge(clsx(inputs));\n}\n"
+    }
+  ]
+}

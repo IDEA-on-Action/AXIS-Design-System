@@ -2,9 +2,16 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/web/public/r/**"
+      ]
+    },
     "test": {
       "inputs": [
         "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/web/public/r/**",
         "$TURBO_ROOT$/apps/web/public/templates/theme-only.json",
         "$TURBO_ROOT$/apps/web/templates/*/files/package.json",
         "$TURBO_ROOT$/apps/web/src/**",

@@ -7,12 +7,21 @@
  * JSON 포맷 보존 · 설치 명령 선택 · 쓰기 안전성은 theme add(WI-0028)의 함수를 그대로 씁니다.
  */
 
-import { accessSync, constants, existsSync, readFileSync, writeFileSync } from "node:fs";
+import { accessSync, constants, existsSync, lstatSync, readFileSync, realpathSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
 import fs from "fs-extra";
-import { createInitConfig, type AxisConfig } from "../config/axis-config.js";
+import { createInitConfig, readAxisConfig, type AxisConfig } from "../config/axis-config.js";
 import { TOKENS_PACKAGE } from "../theme/brand-core.js";
+import {
+  HARDLINK_ERROR_CODE,
+  hardLinkCount,
+  hardLinkMessage,
+  isSameOrInside,
+  overwriteFollowingLinks,
+  writeNoFollow,
+} from "../add/safe-write.js";
+import { isLegacyDefaultRegistryUrl, redactRegistryUrl } from "../registry/remote.js";
 import {
   detectInstallCommand,
   formatJsonLike,
@@ -108,10 +117,36 @@ export function describeTailwindBasis(tailwind: TailwindDetection): string {
   return "tailwindcss 를 찾지 못해 기본값(Tailwind 3)";
 }
 
-/** init 이 쓰는 utils.ts 내용(c131ee9 과 같음) */
+/**
+ * init 이 쓰는 utils.ts 내용(WI-0045 FR-4). 레지스트리 utils 항목(apps/web/public/r/utils.json, 원본
+ * packages/axis-ui-react/src/utils.ts)과 같은 내용이라 `axis add` 가 끌어오는 utils 와 겹쳐도 「같은 내용」으로
+ * 건너뜁니다. 종전(c131ee9 ~ 1.4.0)에는 twMerge 기본판이었습니다. 두 원본과 같은지는 init.test.ts 가 봅니다.
+ * `extendTailwindMerge({ extend })` 는 tailwind-merge 2.x · 3.x 모두에 있어 init 이 고르는 두 범위에서 같게 동작합니다.
+ */
 export const UTILS_TS_CONTENT = `import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 
+/**
+ * \`shadow-[shadow:<CSS 변수 참조>]\` 처럼 \`shadow:\` 타입 힌트가 붙은 임의값 그림자 클래스인지 판정
+ *
+ * tailwind-merge 기본 설정은 이 클래스를 그림자 색(shadow-color) 그룹으로 분류해서
+ * \`cn(기본, "shadow-none")\` 이 기본 그림자를 지우지 못하고, \`shadow-black/50\` 은 그림자를 통째로 지운다.
+ * 그림자(shadow) 그룹에 등록해 종전 \`shadow-sm\` · \`shadow-lg\` 와 같은 병합 결과를 낸다(WI-0025 U4).
+ */
+const isArbitraryShadowWithHint = (value: string) => /^\\[shadow:.+\\]$/.test(value);
+
+const twMerge = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      shadow: [{ shadow: [isArbitraryShadowWithHint] }],
+    },
+  },
+});
+
+/**
+ * Tailwind CSS 클래스를 병합하는 유틸리티 함수
+ * clsx로 조건부 클래스를 처리하고 tailwind-merge로 충돌을 해결
+ */
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -433,8 +468,122 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
 }
 
 /**
+ * 기존 axis.config.json 의 registry(비어 있지 않은 문자열)를 읽습니다. 파일이 없거나 읽지 못하면 undefined 입니다.
+ * init 은 환경변수 AXIS_REGISTRY_URL 을 config 에 기록하지 않습니다(WI-0045 D7): 환경변수는 실행할 때만 우선하는
+ * 값이라, 기록하면 한 번 준 임시 URL(로컬 서버 등)이 그 뒤 환경변수 없이 실행해도 남습니다.
+ */
+async function existingConfig(baseDir: string): Promise<AxisConfig | null> {
+  try {
+    return await readAxisConfig(baseDir);
+  } catch {
+    return null;
+  }
+}
+
+/** 뒤 단계에서 실패했을 때 axis.config.json 을 실제로 썼는지 사실대로 알리는 문구 */
+function configStateNote(state: "created" | "updated" | "kept"): string {
+  if (state === "created") return "axis.config.json 은 이미 만들었습니다.";
+  if (state === "updated") return "axis.config.json 은 이미 갱신했습니다.";
+  return "axis.config.json 은 바꾸지 않았습니다(이미 같은 내용).";
+}
+
+/** 비어 있지 않은 문자열이면 그 값, 아니면 undefined */
+function nonEmptyString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() !== "" ? value : undefined;
+}
+
+/**
+ * utils.ts 쓰기 판정(D17 · D19 · p2). 파일을 쓰지 않습니다.
+ * - create: 없음(lstat ENOENT)
+ * - keep: 내용이 같음. 링크면 link 에 대상 정보(밖이면 outside 에 실제 위치)
+ * - overwrite: 내용이 다른 일반 파일(종전 동작, 「덮어씀」)
+ * - reject: 쓰지 않고 rc 1. 내용이 다른 링크(프로젝트 안 · 밖), 깨진 링크, 디렉터리(또는 디렉터리를 가리키는 링크),
+ *   일반 파일이 아님, 읽기 불가(EACCES 등), 하드링크(nlink 2 이상, D19), ENOENT 가 아닌 lstat 오류
+ */
+export type UtilsWritePlan =
+  | { action: "create" }
+  | { action: "keep"; link?: { outside: string | null } }
+  | { action: "overwrite" }
+  | { action: "reject"; reason: string };
+
+function errCode(e: unknown): string {
+  return (e as NodeJS.ErrnoException).code ?? (e as Error).message;
+}
+
+/** add 의 링크 규칙(D12 · D15)을 init 의 utils.ts 에 그대로 적용합니다(D17) */
+export function planUtilsWrite(baseDirInput: string, utilsPath: string): UtilsWritePlan {
+  const baseDir = path.resolve(baseDirInput);
+  const shown = path.relative(baseDir, utilsPath).split(path.sep).join("/") || utilsPath;
+  let st: ReturnType<typeof lstatSync>;
+  try {
+    st = lstatSync(utilsPath);
+  } catch (e) {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") return { action: "create" };
+    return { action: "reject", reason: `${shown} 의 정보를 읽지 못했습니다(${errCode(e)})` };
+  }
+  if (st.isSymbolicLink()) {
+    let real: string;
+    try {
+      real = realpathSync(utilsPath);
+    } catch {
+      return { action: "reject", reason: `${shown} 이 깨진 심볼릭 링크라 쓰지 않습니다. 링크를 지우거나 고친 뒤 다시 실행하세요` };
+    }
+    let outside: string | null = null;
+    try {
+      outside = isSameOrInside(realpathSync(baseDir), real) ? null : real;
+    } catch {
+      outside = null;
+    }
+    let target: ReturnType<typeof statSync>;
+    try {
+      target = statSync(real);
+    } catch (e) {
+      return { action: "reject", reason: `${shown} 링크 대상(${real})의 정보를 읽지 못했습니다(${errCode(e)})` };
+    }
+    if (target.isDirectory()) return { action: "reject", reason: `${shown} 링크가 디렉터리(${real})를 가리킵니다` };
+    if (!target.isFile()) return { action: "reject", reason: `${shown} 링크 대상(${real})이 일반 파일이 아닙니다` };
+    let content: string;
+    try {
+      content = readFileSync(utilsPath, "utf8");
+    } catch (e) {
+      return { action: "reject", reason: `${shown} 링크 대상(${real})을 읽지 못해 비교할 수 없습니다(${errCode(e)})` };
+    }
+    if (content === UTILS_TS_CONTENT) return { action: "keep", link: { outside } };
+    const what = outside !== null ? `프로젝트 밖(${outside})을 가리키는 심볼릭 링크라` : "프로젝트 안을 가리키는 심볼릭 링크라";
+    return {
+      action: "reject",
+      reason:
+        `기존 ${shown} 이 ${what} 덮어쓸 수 없습니다(내용이 init 의 utils 와 다름). ` +
+        "링크는 따라가 쓰지 않으니 링크를 지우거나 실제 파일로 바꾼 뒤 다시 실행하세요",
+    };
+  }
+  if (st.isDirectory()) return { action: "reject", reason: `${shown} 이름의 디렉터리가 있어 쓰지 않습니다` };
+  if (!st.isFile()) return { action: "reject", reason: `${shown} 이 일반 파일이 아니라 쓰지 않습니다` };
+  let content: string;
+  try {
+    content = readFileSync(utilsPath, "utf8");
+  } catch (e) {
+    // p2: ENOENT 가 아닌 읽기 오류는 「생성 완료」가 아니라 그 사실을 알리고 쓰지 않습니다
+    return { action: "reject", reason: `기존 ${shown} 을 읽지 못해 비교할 수 없습니다(${errCode(e)})` };
+  }
+  if (content === UTILS_TS_CONTENT) return { action: "keep" };
+  const nlink = hardLinkCount(utilsPath);
+  if (nlink !== null) return { action: "reject", reason: hardLinkMessage(shown, nlink) };
+  try {
+    // 읽기 전용 파일은 config 를 쓴 뒤에야 실패해 부분 쓰기가 남으므로 계획 단계에서 막습니다
+    accessSync(utilsPath, constants.W_OK);
+  } catch (e) {
+    return { action: "reject", reason: `기존 ${shown} 에 쓸 권한이 없어 덮어쓸 수 없습니다(${errCode(e)})` };
+  }
+  return { action: "overwrite" };
+}
+
+/**
  * init 을 실행합니다. 쓰기 실패는 rc 1(`process.exitCode`)로 알립니다.
  * 설치 명령은 실행하지 않습니다.
+ *
+ * 쓰기 전에 axis.config.json · utils.ts 의 판정을 모두 마치고, 하나라도 쓸 수 없으면(D17 링크 · D19 하드링크 · p2 읽기 불가)
+ * 아무것도 쓰지 않고 rc 1 로 끝냅니다(add 와 같은 원칙).
  */
 export async function runInit(
   baseDirInput: string,
@@ -443,6 +592,14 @@ export async function runInit(
   log: Log = console.log
 ): Promise<void> {
   const baseDir = path.resolve(baseDirInput);
+  // 이미 axis.config.json 에 registry 가 있으면 그 값을 지킵니다(WI-0045 D7). 없으면 받은 값(기본값)을 씁니다.
+  // 기존 값이 종전 기본값(axis.minu.best/r, D18 정규화 비교)이면 새 기본값으로 바꿔 씁니다(D20). 다른 값은 그대로 둡니다
+  const current = await existingConfig(baseDir);
+  const existingRegistry = nonEmptyString(current?.registry);
+  const migratedRegistry = existingRegistry !== undefined && isLegacyDefaultRegistryUrl(existingRegistry);
+  const registry = existingRegistry !== undefined && !migratedRegistry ? existingRegistry : registryUrl;
+  // add 가 읽는 agenticDir 도 init 이 묻지 않는 값이라, 다시 실행할 때 지우면 agentic 설치 위치가 바뀝니다. 기존 값을 지킵니다
+  const existingAgenticDir = nonEmptyString(current?.agenticDir);
 
   // utils.ts 의존성 계획(D1). 파일을 쓰지 않으므로 먼저 계산해 Tailwind 판정을 config 에도 씁니다.
   const plan = planUtilsDependencies(baseDir);
@@ -452,27 +609,149 @@ export async function runInit(
   const axisConfig: AxisConfig = createInitConfig(
     {
       componentsDir: answers.componentsDir,
+      agenticDir: existingAgenticDir,
       tailwindConfig: tailwind4 ? undefined : answers.tailwindConfig,
       globalCss: answers.globalCss,
     },
-    registryUrl
+    registry
   );
 
-  await fs.writeJSON(path.join(baseDir, "axis.config.json"), axisConfig, { spaces: 2 });
-  log(chalk.green("✓ axis.config.json 생성 완료"));
-
-  // utils.ts 생성
+  // 이미 있던 파일이면 「생성」이 아니라 사실대로 알립니다(m5): 내용이 같으면 쓰지 않고 유지, 다르면 갱신
+  const configPath = path.join(baseDir, "axis.config.json");
+  const nextText = `${JSON.stringify(axisConfig, null, 2)}\n`;
+  // 쓰기 전 판정(D17 · D19 · p2). 하나라도 막히면 아무것도 쓰지 않습니다
+  const rejects: string[] = [];
+  let previousText: string | null = null;
+  try {
+    previousText = await fs.readFile(configPath, "utf8");
+  } catch (e) {
+    // ENOENT 만 「없는 파일」입니다. 읽지 못한 기존 파일(EACCES 등)을 없는 것으로 보면 사용자 값을 묻지 않고 덮어씁니다
+    if ((e as NodeJS.ErrnoException).code !== "ENOENT") {
+      rejects.push(`기존 axis.config.json 을 읽지 못해 비교할 수 없습니다(${errCode(e)})`);
+    }
+  }
+  if (previousText !== null && previousText !== nextText) {
+    // config 는 종전처럼 링크를 따라가 쓰므로 하드링크 판정도 따라간 대상(stat)으로 합니다(D19)
+    try {
+      const st = statSync(configPath);
+      if (st.isFile() && st.nlink >= 2) rejects.push(hardLinkMessage("axis.config.json", st.nlink));
+    } catch {
+      // 읽은 직후 정보를 못 읽으면 쓰기 단계가 사실대로 실패를 알립니다
+    }
+  }
   const utilsPath = path.resolve(baseDir, answers.componentsDir, "utils.ts");
-  await fs.ensureDir(path.dirname(utilsPath));
-  await fs.writeFile(utilsPath, UTILS_TS_CONTENT);
-  log(chalk.green("✓ utils.ts 생성 완료"));
+  const utilsPlan = planUtilsWrite(baseDir, utilsPath);
+  if (utilsPlan.action === "reject") rejects.push(utilsPlan.reason);
+  if (rejects.length > 0) {
+    log(chalk.red("✗ 쓸 수 없는 파일이 있어 아무것도 쓰지 않았습니다(axis.config.json · utils.ts · package.json 그대로)."));
+    for (const r of rejects) log(chalk.red(`  - ${r}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  // config 를 실제로 썼는지(뒤 단계 실패 안내를 사실대로 하려고 기록합니다)
+  let configState: "created" | "updated" | "kept";
+  if (previousText === null) {
+    try {
+      // 판정 뒤 같은 이름의 파일이 생겼으면 덮어쓰지 않습니다(wx = O_CREAT|O_EXCL)
+      await fs.writeFile(configPath, nextText, { flag: "wx" });
+    } catch (err) {
+      const reason =
+        (err as NodeJS.ErrnoException).code === "EEXIST"
+          ? "검사 뒤 쓰기 직전에 같은 이름의 파일이 생겼습니다(동시 경합)"
+          : (err as Error).message;
+      log(chalk.red(`✗ axis.config.json 을 만들지 못했습니다: ${reason}. 아무것도 쓰지 않았습니다.`));
+      process.exitCode = 1;
+      return;
+    }
+    configState = "created";
+    log(chalk.green("✓ axis.config.json 생성 완료"));
+  } else if (previousText === nextText) {
+    configState = "kept";
+    log(chalk.green("✓ axis.config.json 유지(이미 같은 내용)"));
+  } else {
+    try {
+      await overwriteFollowingLinks(configPath, nextText);
+    } catch (err) {
+      const reason =
+        (err as NodeJS.ErrnoException).code === HARDLINK_ERROR_CODE
+          ? `검사 뒤 쓰기 직전에 다른 경로와 하드링크로 이어졌습니다(동시 경합, D19)`
+          : (err as Error).message;
+      log(chalk.red(`✗ axis.config.json 을 쓰지 못했습니다: ${reason}. 아무것도 쓰지 않았습니다.`));
+      process.exitCode = 1;
+      return;
+    }
+    configState = "updated";
+    const registryNote = migratedRegistry
+      ? "registry 를 새 기본 주소로 갱신"
+      : existingRegistry !== undefined
+        ? "registry 는 기존 값 유지"
+        : "registry 는 기본값";
+    const agenticNote = existingAgenticDir !== undefined ? ", agenticDir 는 기존 값 유지" : "";
+    log(chalk.green(`✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, ${registryNote}${agenticNote})`));
+    if (migratedRegistry && existingRegistry !== undefined) {
+      // D20: 종전 기본 주소는 Cloudflare 403 이라 새 기본 주소로 바꿨다는 사실을 알립니다(사용자가 지정한 다른 값은 그대로 둠)
+      log(
+        chalk.yellow(
+          `  registry 를 새 기본 주소(${redactRegistryUrl(registry)})로 갱신했습니다(종전 axis.minu.best: ${redactRegistryUrl(existingRegistry)}).`
+        )
+      );
+    }
+    // init 이 쓰지 않는 다른 키(brand · monetDir · template 등)는 이번 갱신에서 빠집니다. 사실대로 알립니다
+    const dropped = current
+      ? Object.keys(current).filter((k) => !(k in axisConfig) && (current as Record<string, unknown>)[k] !== undefined)
+      : [];
+    if (dropped.length > 0) {
+      log(chalk.yellow(`  기존 설정에서 빠진 키: ${dropped.join(", ")} (필요하면 axis.config.json 에 다시 적어 주세요)`));
+    }
+  }
+
+  // utils.ts. 이미 있던 파일이면 사실대로 알립니다(n1 · m5 계열): 같은 내용이면 쓰지 않고 유지(링크면 그 사실도),
+  // 다른 일반 파일이면 종전 동작대로 init 의 내용으로 덮어쓰고 그렇게 알립니다. 쓰기는 add 와 같은 O_NOFOLLOW 경로입니다(D17)
+  let utilsStateNote = "utils.ts 는 바꾸지 않았습니다(이미 같은 내용).";
+  if (utilsPlan.action === "keep") {
+    if (utilsPlan.link === undefined) log(chalk.green("✓ utils.ts 유지(이미 같은 내용)"));
+    else if (utilsPlan.link.outside === null) log(chalk.green("✓ utils.ts 유지(이미 같은 내용, 링크)"));
+    else log(chalk.green(`✓ utils.ts 유지(이미 같은 내용, 링크 대상이 프로젝트 밖: ${utilsPlan.link.outside})`));
+  } else {
+    let actual: "new" | "overwrite";
+    try {
+      await fs.ensureDir(path.dirname(utilsPath));
+      actual = await writeNoFollow(utilsPath, UTILS_TS_CONTENT, utilsPlan.action === "create" ? "new" : "overwrite");
+    } catch (err) {
+      const code = (err as NodeJS.ErrnoException).code;
+      const reason =
+        code === HARDLINK_ERROR_CODE
+          ? "검사 뒤 쓰기 직전에 다른 경로와 하드링크로 이어졌습니다(동시 경합, D19)"
+          : code === "ELOOP" || code === "EEXIST"
+            ? "검사 뒤 쓰기 직전에 같은 이름의 파일 · 링크가 생겼습니다(동시 경합)"
+            : (err as Error).message;
+      // 새 파일은 「만들지 못함」, 기존 파일은 「덮어쓰지 않음」으로 나눠 사실대로 알립니다
+      log(
+        chalk.red(
+          utilsPlan.action === "create"
+            ? `✗ utils.ts 를 만들지 못했습니다: ${reason}.`
+            : `✗ utils.ts 를 쓰지 못했습니다: ${reason}. 그 파일은 덮어쓰지 않았습니다.`
+        )
+      );
+      log(chalk.yellow(`  ${configStateNote(configState)}`));
+      process.exitCode = 1;
+      return;
+    }
+    log(
+      chalk.green(
+        actual === "new" ? "✓ utils.ts 생성 완료" : "✓ utils.ts 덮어씀(기존 내용과 달라 init 의 utils 로 다시 씀)"
+      )
+    );
+    utilsStateNote = actual === "new" ? "utils.ts 는 이미 만들었습니다." : "utils.ts 는 이미 덮어썼습니다.";
+  }
 
   // utils.ts 의존성(D1)
   try {
     applyUtilsDependencies(baseDir, plan);
   } catch (err) {
     log(chalk.red(`✗ package.json 을 쓰지 못했습니다: ${(err as Error).message}`));
-    log(chalk.yellow("  axis.config.json 과 utils.ts 는 이미 만들어졌습니다."));
+    log(chalk.yellow(`  ${configStateNote(configState)} ${utilsStateNote}`));
     log(chalk.yellow(`  utils.ts 의존성 설치: ${chalk.cyan(plan.addCommand)}`));
     process.exitCode = 1;
     return;

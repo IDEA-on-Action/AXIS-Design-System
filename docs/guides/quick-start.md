@@ -166,11 +166,42 @@ import { Button } from "@axis-ds/ui-react/button";
 npx @axis-ds/cli add button
 ```
 
-여러 컴포넌트를 한 번에 추가할 수도 있습니다.
+여러 컴포넌트를 한 번에 추가할 수도 있습니다. 이름이 하나라도 레지스트리에 없으면 아무것도 설치하지 않고 실패합니다.
 
 ```bash
 npx @axis-ds/cli add button input card
 ```
+
+Agentic UI 컴포넌트는 `agentic-` 이 붙은 이름으로 추가합니다. `--agentic` 을 붙이면 접두를 생략할 수 있습니다.
+
+```bash
+npx @axis-ds/cli add agentic-run-progress
+npx @axis-ds/cli add run-progress --agentic   # 위와 같음
+npx @axis-ds/cli list                         # 추가할 수 있는 이름 목록
+```
+
+- 컴포넌트가 쓰는 `utils.ts`(`cn`) · 접근성 레이블 파일도 함께 복사하고, import 는 설치 위치에 맞게 바꿉니다. Core UI 는 `axis.config.json` 의 `componentsDir`, Agentic UI 는 그 옆 `agentic` 디렉터리(`agenticDir` 로 바꿀 수 있음)에 들어갑니다.
+- `package.json` 에 없는 의존성은 설치 명령으로 안내만 합니다. 안내된 명령을 실행하세요.
+- 이미 있는 파일은 내용이 같으면 건너뛰고, 다르면 덮어쓸지 묻습니다. `-y` 는 묻지 않고 건너뛰며, 덮어쓰려면 `--overwrite` 를 붙입니다. CI · 파이프처럼 터미널이 아닌 곳에서 실행하면 묻지 않고 `-y` 와 같이 건너뜁니다. 출력에서 새로 만든 파일은 `+`, 덮어쓴 파일은 `~` 로 표시합니다. 덮어써야 하는 파일이 심볼릭 링크이거나 다른 경로와 하드링크로 이어져 있으면 아무것도 쓰지 않고 그 경로와 이유를 알린 뒤 실패합니다(`axis init` 의 `utils.ts` 도 같은 규칙).
+- 컴포넌트는 레지스트리(기본 `https://axis-design-system.pages.dev/r`, `AXIS_REGISTRY_URL` 이나 `axis.config.json` 의 `registry` 로 바꿀 수 있음)에서 받고, 받지 못하면 CLI 에 포함된 레지스트리로 설치하며 그 사실을 한 번 알립니다.
+
+### shadcn CLI 로 직접 설치하기
+
+AXIS 레지스트리는 shadcn 레지스트리 형식이라 shadcn CLI 로 URL 을 지정해 직접 설치할 수도 있습니다. 이때는 아래 순서를 따릅니다.
+
+```bash
+# radix 프리셋(-b radix)과 스타일 프리셋(-p nova)을 함께 지정해 초기화합니다. 기본 프리셋(base-ui)은 쓰지 않습니다
+npx shadcn@latest init -b radix -p nova
+# init 이 만든 utils.ts 를 AXIS utils 로 바꾸도록 --overwrite 를 붙입니다
+npx shadcn@latest add https://axis-design-system.pages.dev/r/button.json --overwrite
+```
+
+- `shadcn init` 은 radix 프리셋(`-b radix`)에 스타일 프리셋 `-p nova` 를 함께 붙여 실행합니다. `-p` 를 빼면 프리셋 선택 프롬프트가 뜨고, CI · 파이프처럼 입력이 닫힌 곳에서는 rc 0 으로 끝나면서 `components.json` · `utils.ts` 를 만들지 않습니다(이어서 실행한 `add` 도 rc 0 으로 아무것도 설치하지 않음). 비대화 실행에는 `--yes --no-monorepo` 도 붙입니다.
+- 이 순서는 shadcn 4.21.4(저장소 스모크 `pnpm registry-shadcn-smoke` 의 고정 버전)와 4.22.1(확인 당시 `@latest`)에서 확인했습니다. 다른 버전에서는 프롬프트 · 옵션이 다를 수 있습니다.
+- `-b radix` 를 쓰는 이유: 기본 프리셋(Base UI 기반, `init --defaults`)으로 만든 프로젝트에서는 select 항목이 shadcn 의 `asChild` → `render` 변환을 거쳐 빌드가 실패합니다.
+- `shadcn add` 에는 `--overwrite` 를 붙입니다. init 이 만든 `lib/utils.ts`(npm 패키지 `cn` 을 다시 내보냄)를 AXIS utils(`clsx` + `extendTailwindMerge`)로 바꾸기 위해서입니다. 붙이지 않으면 이미 있는 utils.ts 가 AXIS utils 로 바뀌지 않습니다.
+- init 이 `package.json` 에 넣은 npm 패키지 `cn` 은 add 뒤에도 남습니다(설치된 AXIS 파일은 쓰지 않음). 필요 없으면 직접 지웁니다.
+- 의존 항목(`utils` · `agentic-a11y-labels`)은 같은 레지스트리 URL 로 함께 받습니다. 공식 레지스트리(`ui.shadcn.com`)에는 `components.json` 의 `baseColor` 색 정의(`/r/colors/`)만 요청합니다.
 
 ## 다음 단계
 
