@@ -20,4 +20,4 @@
 ## 검증
 - [x] AC1 grep, AC2 cli · mcp 실행, AC4 별칭 주소, AC5 게이트
 - [x] changeset(cli · mcp patch), release-notes, testplan
-- [ ] 배포 뒤 AC3 schema.json 200 · 검증
+- [x] 배포 뒤 AC3 schema.json 200 · 검증(2026-10-23, 아래 testplan 3절)

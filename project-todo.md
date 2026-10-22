@@ -53,7 +53,7 @@
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ⏳ |
 | 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ⏳ |
 | 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ⏳ |
-| 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | 🔄 착수(2026-10-23), 결정 D1~D4(pages.dev 전면 전환 · schema.json 배포 · GitHub quick-start 링크 · cli · mcp patch) |
+| 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
 | 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ⏳ |
 
 ### 완료
