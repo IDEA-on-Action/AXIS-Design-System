@@ -35,7 +35,7 @@ GitHub `docs/guides/quick-start.md` 는 200(공개 저장소)입니다.
 
 | # | 결정 |
 |---|---|
-| D1 | 정식 주소는 `https://axis-design-system.pages.dev` 로 전면 전환합니다. 코드에서는 사이트 주소를 상수 한 곳(cli · mcp 각각)에 두고 나머지는 거기서 만들어, 도메인을 다시 바꿀 때 한 곳만 고치게 합니다 |
+| D1 | 정식 주소는 `https://axis-design-system.pages.dev` 로 전면 전환합니다. 코드에서는 사이트 주소를 상수 한 곳(cli · mcp 각각)에 두고 나머지는 거기서 만듭니다. 다만 「한 곳만 고치면 된다」는 코드 안에서만 맞습니다. 이 주소는 `axis init` 이 사용자 프로젝트의 `axis.config.json`(`registry` · `$schema`)에 기록하고, 발행된 cli 1.5.0 · 이번 패치 · npm `homepage` 에도 들어갑니다. 따라서 **pages.dev 프로젝트(`axis-design-system`)는 지우거나 이름을 바꾸지 않고 계속 유지**합니다. 장기용 자체 도메인을 둘 경우 사용자 config 가 더 쌓이기 전에 정하고, 옮긴 뒤에도 pages.dev 는 살려 둡니다 |
 | D2 | `$schema`: `AxisConfig` 와 같은 JSON Schema 를 `apps/web/public/schema.json` 으로 만들어 pages.dev 에 배포하고, 타입과 어긋나지 않게 테스트로 묶습니다 |
 | D3 | config 없음 안내 링크는 GitHub `docs/guides/quick-start.md` 로 바꿉니다 |
 | D4 | 릴리스: `@axis-ds/cli` · `@axis-ds/mcp` patch. linked 4패키지는 `homepage` · README 만 바뀌므로 changeset 없이 다음 릴리스에 함께 나갑니다 |

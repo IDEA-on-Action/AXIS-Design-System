@@ -340,6 +340,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCrYHw",
       "lastSyncedAt": "2026-10-23T00:00:00.000Z",
       "lastStatus": "🔄"
+    },
+    {
+      "wiId": "WI-0057",
+      "slug": "library-stale-docs-links",
+      "issueNumber": 155,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhC18d8",
+      "lastSyncedAt": "2026-10-23T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-23T00:00:00.000Z"
