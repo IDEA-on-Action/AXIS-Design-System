@@ -65,7 +65,7 @@ const mockIndex: LibraryIndex = {
       slug: "streaming-text",
       name: "Streaming Text",
       description: "Streaming text component",
-      source: { type: "axis", registry: "@axis", url: "https://axis.minu.best" },
+      source: { type: "axis", registry: "@axis", url: "https://axis-design-system.pages.dev" },
       category: "agentic",
       tags: ["agentic", "streaming"],
       code: [{ path: "streaming-text.tsx", content: "export const StreamingText = () => {}", type: "component" }],

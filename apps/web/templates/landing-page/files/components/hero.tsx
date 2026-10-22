@@ -15,7 +15,7 @@ export function Hero() {
           시작하기
         </a>
         <a
-          href="https://axis.minu.best"
+          href="https://axis-design-system.pages.dev"
           className="inline-flex h-10 items-center justify-center rounded-md border px-6 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >
           문서 보기

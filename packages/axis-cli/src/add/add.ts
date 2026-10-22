@@ -48,6 +48,7 @@ import {
 } from "../registry/index.js";
 import { detectInstallCommand, hasDependency, isPlainObject } from "../theme/theme-add.js";
 import { detectTailwind } from "../template/tailwind-core.js";
+import { AXIS_QUICK_START_URL } from "../site.js";
 import { selectUtilsDependencies } from "../init/init.js";
 import {
   HARDLINK_ERROR_CODE,
@@ -550,7 +551,7 @@ export async function runAdd(
     error(
       "axis.config.json을 찾을 수 없습니다.\n" +
         "  해결: 프로젝트 루트에서 'npx @axis-ds/cli init'을 실행하세요.\n" +
-        "  참고: https://axis.minu.best/docs/guides/quick-start"
+        `  참고: ${AXIS_QUICK_START_URL}`
     );
     return result;
   }

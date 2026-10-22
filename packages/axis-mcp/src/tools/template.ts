@@ -9,6 +9,7 @@ import fs from "fs-extra";
 import path from "path";
 import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
 import { checkGlobalsCss, checkTailwindSetup } from "./tailwind-core.js";
+import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
 
@@ -72,7 +73,7 @@ interface CheckResult {
 // --- 레지스트리 클라이언트 ---
 
 const TEMPLATE_REGISTRY_URL =
-  process.env.AXIS_TEMPLATE_URL || "https://axis.minu.best/templates";
+  process.env.AXIS_TEMPLATE_URL || `${AXIS_SITE_URL}/templates`;
 
 async function fetchTemplateIndex(): Promise<TemplateIndex> {
   const url = `${TEMPLATE_REGISTRY_URL}/index.json`;

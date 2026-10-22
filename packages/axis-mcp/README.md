@@ -40,7 +40,7 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 
 ## 문서
 
-자세한 사용법은 [AXIS Design System 문서](https://axis.minu.best)를 참고하세요.
+자세한 사용법은 [AXIS Design System 문서](https://axis-design-system.pages.dev)를 참고하세요.
 
 ## 라이선스
 

@@ -1,7 +1,7 @@
 {
   "$schema": "https://ui.shadcn.com/schema/registry.json",
   "name": "axis-agentic",
-  "homepage": "https://axis.minu.best",
+  "homepage": "https://axis-design-system.pages.dev",
   "items": [
     {
       "name": "a11y-labels",

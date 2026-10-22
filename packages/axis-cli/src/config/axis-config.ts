@@ -1,8 +1,9 @@
 import fs from "fs-extra";
 import path from "path";
+import { AXIS_SITE_URL } from "../site.js";
 
-/** `axis.config.json` 의 `$schema` 값. 스키마 파일 자체는 아직 없습니다(WI-0028 U11). */
-export const AXIS_CONFIG_SCHEMA_URL = "https://axis.minu.best/schema.json";
+/** `axis.config.json` 의 `$schema` 값. 파일은 apps/web/public/schema.json 이고 사이트에 배포됩니다(WI-0056 D2) */
+export const AXIS_CONFIG_SCHEMA_URL = `${AXIS_SITE_URL}/schema.json`;
 
 /** 설정 파일 이름 */
 export const AXIS_CONFIG_FILE = "axis.config.json";

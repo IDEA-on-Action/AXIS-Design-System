@@ -1,5 +1,5 @@
 {
-  "$schema": "https://axis.minu.best/schema.json",
+  "$schema": "https://axis-design-system.pages.dev/schema.json",
   "componentsDir": "./src/components/ui",
   "tailwindConfig": "./tailwind.config.ts",
   "globalCss": "./src/app/globals.css",

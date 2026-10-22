@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/agentic/streaming-text"
+    "url": "https://axis-design-system.pages.dev/agentic/streaming-text"
   },
   "tags": [
     "stateful",

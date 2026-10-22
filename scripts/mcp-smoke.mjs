@@ -12,7 +12,7 @@
  *   2. 번들 레지스트리 데이터를 읽는 도구 6개를 실제 호출해 isError 가 없고 결과에서만 나오는 기대 문자열이
  *      있는지(install_component 는 targetDir 에 파일이 실제로 생겼는지도)
  *
- * 템플릿 도구(list/get/apply/diff_template)는 원격 `axis.minu.best` 를 읽고 번들 데이터를 읽지 않아
+ * 템플릿 도구(list/get/apply/diff_template)는 원격 사이트(기본 `axis-design-system.pages.dev`, WI-0056)를 읽고 번들 데이터를 읽지 않아
  * 이 스모크의 대상이 아니다(사이트 가용성이 배포를 막지 않게 하려는 것).
  *
  * 사용:

@@ -105,7 +105,7 @@ axis theme add ontology
 
 ## 문서
 
-자세한 사용법은 [AXIS Design System 문서](https://axis.minu.best)를 참고하세요.
+자세한 사용법은 [AXIS Design System 문서](https://axis-design-system.pages.dev)를 참고하세요.
 
 ## 라이선스
 
