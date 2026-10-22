@@ -5,9 +5,14 @@
 import type { Command } from "commander";
 import chalk from "chalk";
 import prompts from "prompts";
+import { DEFAULT_REGISTRY_URL } from "../registry/remote.js";
 import { INIT_DEFAULTS, isTailwind4, planUtilsDependencies, runInit, type InitAnswers } from "./init.js";
 
-export function registerInitCommand(program: Command, registryUrl: string) {
+/**
+ * registryUrl: 새 axis.config.json 에 적을 registry. 기본값은 DEFAULT_REGISTRY_URL 이고, 환경변수 AXIS_REGISTRY_URL 은
+ * 여기서 읽지 않습니다(WI-0045 D7: 환경변수는 add · list 실행 때만 우선, config 에는 기본값 또는 기존 값만 기록).
+ */
+export function registerInitCommand(program: Command, registryUrl: string = DEFAULT_REGISTRY_URL) {
   program
     .command("init")
     .description("프로젝트에 AXIS Design System 초기화")

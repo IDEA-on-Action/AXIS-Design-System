@@ -250,7 +250,7 @@
       "slug": "cli-add-registry",
       "issueNumber": 136,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_8vs",
-      "lastSyncedAt": "2026-10-20T00:00:00.000Z",
+      "lastSyncedAt": "2026-10-22T00:00:00.000Z",
       "lastStatus": "🔄"
     },
     {
@@ -332,7 +332,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCSOio",
       "lastSyncedAt": "2026-10-21T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0056",
+      "slug": "minu-best-residual-refs",
+      "issueNumber": 151,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhCrYHw",
+      "lastSyncedAt": "2026-10-22T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-20T00:00:00.000Z"
+  "updatedAt": "2026-10-22T00:00:00.000Z"
 }

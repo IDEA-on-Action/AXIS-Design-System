@@ -3,5 +3,5 @@
   "componentsDir": "./src/components/ui",
   "tailwindConfig": "./tailwind.config.ts",
   "globalCss": "./src/app/globals.css",
-  "registry": "https://axis.minu.best/r"
+  "registry": "https://axis-design-system.pages.dev/r"
 }

@@ -17,7 +17,7 @@ const INIT_Y_BEFORE = `{
   "componentsDir": "./src/components/ui",
   "tailwindConfig": "./tailwind.config.ts",
   "globalCss": "./src/app/globals.css",
-  "registry": "https://axis.minu.best/r"
+  "registry": "https://axis-design-system.pages.dev/r"
 }
 `;
 
@@ -55,7 +55,7 @@ describe("createInitConfig (axis init)", () => {
         tailwindConfig: "./tailwind.config.ts",
         globalCss: "./src/app/globals.css",
       },
-      "https://axis.minu.best/r"
+      "https://axis-design-system.pages.dev/r"
     );
     expect(await writeAndRead(config)).toBe(INIT_Y_BEFORE);
   });
@@ -82,7 +82,7 @@ describe("createInitConfig (axis init)", () => {
         tailwindConfig: "./tailwind.config.ts",
         globalCss: "./app/globals.css",
       },
-      "https://axis.minu.best/r"
+      "https://axis-design-system.pages.dev/r"
     );
     expect(await writeAndRead(config)).not.toBe(INIT_Y_BEFORE);
   });

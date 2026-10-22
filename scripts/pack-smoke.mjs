@@ -45,6 +45,8 @@ const REQUIRED_FILES = {
   '@axis-ds/tokens': ['dist/css/tailwind4.css'],
   '@axis-ds/ui-react': ['tailwind.css'],
   '@axis-ds/agentic-ui': ['tailwind.css'],
+  // WI-0045 FR-3: add · list 의 동봉 레지스트리(원격 실패 시 폴백). 빠지면 오프라인 설치가 조용히 불가능해진다
+  '@axis-ds/cli': ['dist/registry/index.json'],
 };
 const requiredSeen = new Set();
 const g1Seen = new Set();

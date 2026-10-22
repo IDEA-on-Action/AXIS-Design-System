@@ -31,13 +31,41 @@ vi.mock("ora", () => ({
 describe("LibraryCurator", () => {
   let curator: LibraryCurator;
 
+  // 실제 원격(ui.shadcn.com · registry.monet.design)에 접속하지 않도록 fetch 를 mock 으로 바꿉니다(WI-0045 D10).
+  // collectAll 과 같은 수집 경로를 타는 generateIndex · saveIndex 도 같은 mock 을 씁니다.
+  // 테스트 의도(소스별 결과 Map · 결과 형태)는 같고, 네트워크가 막힌 환경에서도 같은 결과가 나옵니다.
+  // shadcn index 는 두 항목을 주고, 항목 조회는 그 이름만 200, 나머지는 404 로 답합니다.
+  const requested: string[] = [];
+  // vi.fn 이 아닌 일반 함수: 바깥 afterEach 의 vi.resetAllMocks 가 구현을 지우지 않게 합니다
+  const mockFetch = async (input: unknown): Promise<Response> => {
+    const url = String(input);
+    requested.push(url);
+    const json = (status: number, body: unknown) =>
+      ({ ok: status >= 200 && status < 300, status, json: async () => body, text: async () => JSON.stringify(body) }) as unknown as Response;
+    if (url === "https://ui.shadcn.com/r/index.json") {
+      return json(200, { items: [{ name: "button", description: "Button" }, { name: "card" }] });
+    }
+    const m = /^https:\/\/ui\.shadcn\.com\/r\/(button|card)\.json$/.exec(url);
+    if (m) {
+      return json(200, {
+        name: m[1],
+        type: "registry:ui",
+        files: [{ path: `ui/${m[1]}.tsx`, content: `export const ${m[1]} = 1;\n`, type: "registry:ui" }],
+      });
+    }
+    return json(404, { error: "not found" });
+  };
+
   beforeEach(() => {
     curator = new LibraryCurator({ dataDir: ".test/library" });
     vi.clearAllMocks();
+    requested.length = 0;
+    vi.stubGlobal("fetch", mockFetch);
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    vi.unstubAllGlobals();
   });
 
   describe("constructor", () => {
@@ -53,6 +81,15 @@ describe("LibraryCurator", () => {
   });
 
   describe("collectAll", () => {
+    it("fetch mock 이 실제 원격 대신 응답한다(측정 대조)", async () => {
+      const results = await curator.collectAll(["shadcn"]);
+      expect(requested).toContain("https://ui.shadcn.com/r/index.json");
+      // mock index 의 두 항목(button · card)만 수집된다(실제 원격 · 기본 목록이 아님)
+      expect(results.get("shadcn")?.collected).toBe(2);
+      expect(results.get("shadcn")?.success).toBe(true);
+      expect(requested.every((u) => u.startsWith("https://"))).toBe(true);
+    });
+
     it("should collect from all sources by default", async () => {
       const results = await curator.collectAll();
 

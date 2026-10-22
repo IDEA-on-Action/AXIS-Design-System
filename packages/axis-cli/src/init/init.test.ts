@@ -34,6 +34,7 @@ import { Command } from "commander";
 import prompts from "prompts";
 import { createHash } from "crypto";
 import fs from "fs-extra";
+import { readFileSync } from "node:fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -51,9 +52,13 @@ import {
   tailwindWarnings,
   tailwind4GuideLines,
   TAILWIND4_TOKENS_VERSION,
+  UTILS_TS_CONTENT,
+  INIT_DEFAULTS,
+  planUtilsWrite,
 } from "./init.js";
+import { DEFAULT_REGISTRY_URL } from "../registry/remote.js";
 
-const REGISTRY = "https://axis.minu.best/r";
+const REGISTRY = "https://axis-design-system.pages.dev/r";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 /**
@@ -75,7 +80,8 @@ const BASELINE = {
     '  "componentsDir": "./src/components/ui",\n' +
     '  "tailwindConfig": "./tailwind.config.ts",\n' +
     '  "globalCss": "./src/app/globals.css",\n' +
-    '  "registry": "https://axis.minu.best/r"\n' +
+    // WI-0045 D8: 기본 registry 를 axis.minu.best/r(403) 에서 pages.dev 로 바꿨습니다(실측 당시 값은 axis.minu.best/r)
+    '  "registry": "https://axis-design-system.pages.dev/r"\n' +
     "}\n",
   utilsTs:
     'import { type ClassValue, clsx } from "clsx";\n' +
@@ -85,6 +91,17 @@ const BASELINE = {
     "  return twMerge(clsx(inputs));\n" +
     "}\n",
 } as const;
+
+/**
+ * WI-0045 FR-4: init 이 쓰는 utils.ts 는 레지스트리 utils 항목과 같은 내용입니다(BASELINE.utilsTs 의 twMerge 기본판에서 바뀜).
+ * 기대값은 코드 상수가 아니라 두 원본(배포 레지스트리 · ui-react 소스)에서 읽어, 어느 한쪽이 바뀌면 이 테스트가 갈립니다.
+ */
+const REGISTRY_UTILS_TS = (
+  JSON.parse(readFileSync(path.join(HERE, "../../../../apps/web/public/r/utils.json"), "utf8")) as {
+    files: { content: string }[];
+  }
+).files[0].content;
+const UI_REACT_UTILS_TS = readFileSync(path.join(HERE, "../../../axis-ui-react/src/utils.ts"), "utf8");
 
 /** D2 로 바뀐 마지막 줄 */
 const NEXT_STEP = "  npx @axis-ds/cli add button\n";
@@ -175,8 +192,16 @@ function childProcessCalls(): number {
   return n;
 }
 
+describe("axis init: utils.ts 내용(WI-0045 FR-4)", () => {
+  it("레지스트리 utils 항목 · ui-react src/utils.ts 와 같고, 종전 twMerge 기본판과는 다름", () => {
+    expect(UTILS_TS_CONTENT).toBe(REGISTRY_UTILS_TS);
+    expect(UTILS_TS_CONTENT).toBe(UI_REACT_UTILS_TS);
+    expect(UTILS_TS_CONTENT).not.toBe(BASELINE.utilsTs);
+  });
+});
+
 describe("axis init: 기준값 불변(AC7)", () => {
-  it("package.json 이 없으면 기존 줄 · axis.config.json · utils.ts 가 c131ee9 과 같고, 의존성 안내 2줄과 D2 문구만 다름", async () => {
+  it("package.json 이 없으면 기존 줄 · axis.config.json 이 c131ee9 과 같고(utils.ts 는 WI-0045 로 레지스트리 utils), 의존성 안내 2줄과 D2 문구만 다름", async () => {
     const dir = await tmpDir();
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(0);
@@ -191,7 +216,7 @@ describe("axis init: 기준값 불변(AC7)", () => {
       NEXT_STEP,
     ]);
     expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
-    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(BASELINE.utilsTs);
+    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
     // 파일은 두 개만 생기고 package.json 은 만들지 않음(AC3)
     expect(Object.keys(await snapshot(dir)).sort()).toEqual(
       ["axis.config.json", path.join("src", "components", "ui", "utils.ts")].sort()
@@ -214,7 +239,7 @@ describe("axis init: 기준값 불변(AC7)", () => {
       NEXT_STEP,
     ]);
     expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
-    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(BASELINE.utilsTs);
+    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
   });
 });
 
@@ -1276,5 +1301,550 @@ describe("axis init: 설치를 실행하지 않음(FR-5)", () => {
     await fs.writeFile(path.join(c, "package.json"), "nope");
     await runInitCli(c);
     expect(childProcessCalls()).toBe(0);
+  });
+});
+
+describe("axis init: 환경변수 AXIS_REGISTRY_URL 을 config 에 기록하지 않음(WI-0045 D7)", () => {
+  const ENV_URL = "http://127.0.0.1:9/r";
+  let envBefore: string | undefined;
+  beforeEach(() => {
+    envBefore = process.env.AXIS_REGISTRY_URL;
+    process.env.AXIS_REGISTRY_URL = ENV_URL;
+  });
+  afterEach(() => {
+    if (envBefore === undefined) delete process.env.AXIS_REGISTRY_URL;
+    else process.env.AXIS_REGISTRY_URL = envBefore;
+  });
+
+  // 이 describe 는 registerInitCommand 를 직접 부릅니다. 실제 진입점(src/index.ts)이 env 를 넘기도록 바뀌는 회귀는
+  // 아래 「진입점 등록」 검사와, 빌드한 dist 를 실행하는 scripts/cli-bundled-smoke.mjs(pnpm cli-smoke, CI) D7 단계가 잡습니다.
+  it("진입점 등록: src/index.ts 는 registerInitCommand 에 registryUrl 을 넘기지 않음(env 를 init 에 전달하지 않음)", () => {
+    const entry = readFileSync(fileURLToPath(new URL("../index.ts", import.meta.url)), "utf8");
+    const calls = entry.match(/registerInitCommand\([^)]*\)/g) ?? [];
+    // 양성 대조: 호출이 실제로 있어야 함(0건이면 검사 자체가 빗나간 것)
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe("registerInitCommand(program)");
+  });
+
+  /** src/index.ts 와 같은 등록(registryUrl 인자 없음)으로 `axis init -y` */
+  async function runInitAsEntry(dir: string): Promise<void> {
+    const program = new Command();
+    program.exitOverride();
+    registerInitCommand(program);
+    process.chdir(dir);
+    try {
+      await program.parseAsync(["init", "-y"], { from: "user" });
+    } finally {
+      process.chdir(cwd0);
+    }
+  }
+
+  it("env 를 준 init 뒤 config.registry 는 기본값", async () => {
+    const dir = await tmpDir();
+    // 대조: 이 테스트 안에서 env 가 실제로 걸려 있음
+    expect(process.env.AXIS_REGISTRY_URL).toBe(ENV_URL);
+    await runInitAsEntry(dir);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.registry).toBe(DEFAULT_REGISTRY_URL);
+    expect(config.registry).not.toBe(ENV_URL);
+  });
+
+  it("이미 있던 config 의 registry 는 지킴(env 가 있어도)", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", registry: "https://mirror.example/r" });
+    await runInitAsEntry(dir);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.registry).toBe("https://mirror.example/r");
+    // 나머지 키는 init 답으로 다시 씀(종전 동작)
+    expect(config.componentsDir).toBe(INIT_DEFAULTS.componentsDir);
+  });
+
+  it("기존 config 에 registry 가 없거나 비었으면 기본값", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", registry: "  " });
+    await runInitAsEntry(dir);
+    expect((await fs.readJSON(path.join(dir, "axis.config.json"))).registry).toBe(DEFAULT_REGISTRY_URL);
+  });
+});
+
+describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
+  it("양성 대조: config 가 없으면 「생성 완료」", async () => {
+    const dir = await tmpDir();
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ axis.config.json 생성 완료");
+  });
+
+  it("같은 내용의 config 가 이미 있으면 「유지」이고 파일을 다시 쓰지 않음", async () => {
+    const dir = await tmpDir();
+    await runInitCli(dir);
+    const file = path.join(dir, "axis.config.json");
+    const before = await fs.readFile(file, "utf8");
+    const mtimeBefore = (await fs.stat(file)).mtimeMs;
+    await new Promise((ok) => setTimeout(ok, 20));
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ axis.config.json 유지(이미 같은 내용)");
+    expect(r.logs.some((l) => l.includes("axis.config.json 생성 완료"))).toBe(false);
+    expect(await fs.readFile(file, "utf8")).toBe(before);
+    expect((await fs.stat(file)).mtimeMs).toBe(mtimeBefore);
+  });
+
+  it("내용이 다른 config 가 있으면 「갱신」(registry 기존 값 유지를 함께 알림)", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", registry: "https://mirror.example/r" });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기존 값 유지)");
+    expect(r.logs.some((l) => l.includes("axis.config.json 생성 완료"))).toBe(false);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.componentsDir).toBe(INIT_DEFAULTS.componentsDir);
+    expect(config.registry).toBe("https://mirror.example/r");
+  });
+
+  it("registry 가 없던 config 를 갱신하면 「registry 는 기본값」", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x" });
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기본값)");
+  });
+
+  it("다시 실행해도 add 가 읽는 agenticDir 를 지키고(키 순서는 componentsDir 다음), 갱신 문구에 알림", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "src/components/ui", agenticDir: "src/ai" });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain(
+      "✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기본값, agenticDir 는 기존 값 유지)"
+    );
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.agenticDir).toBe("src/ai");
+    expect(Object.keys(config).indexOf("agenticDir")).toBe(Object.keys(config).indexOf("componentsDir") + 1);
+    // 같은 내용으로 다시 실행하면 「유지」
+    const r2 = await runInitCli(dir);
+    expect(r2.logs).toContain("✓ axis.config.json 유지(이미 같은 내용)");
+    expect((await fs.readJSON(path.join(dir, "axis.config.json"))).agenticDir).toBe("src/ai");
+  });
+
+  it("init 이 쓰지 않는 키(brand · monetDir)는 갱신에서 빠지며, 빠진 키를 알림", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", brand: "acme", monetDir: "monet" });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs.some((l) => l.includes("기존 설정에서 빠진 키: brand, monetDir"))).toBe(true);
+  });
+
+  it("음성 대조: agenticDir 가 없던 config 에는 agenticDir 를 만들지 않고 빠진 키 안내도 없음", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x" });
+    const r = await runInitCli(dir);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect("agenticDir" in config).toBe(false);
+    expect(r.logs.some((l) => l.includes("빠진 키"))).toBe(false);
+  });
+});
+
+describe("axis init: 기존 utils.ts 출력(WI-0045 n1)", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+
+  it("양성 대조: utils.ts 가 없으면 「생성 완료」", async () => {
+    const dir = await tmpDir();
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 생성 완료");
+    expect(await fs.readFile(utilsFile(dir), "utf8")).toBe(UTILS_TS_CONTENT);
+  });
+
+  it("같은 내용의 utils.ts 가 있으면 「유지」이고 파일을 다시 쓰지 않음", async () => {
+    const dir = await tmpDir();
+    await runInitCli(dir);
+    const mtimeBefore = (await fs.stat(utilsFile(dir))).mtimeMs;
+    await new Promise((ok) => setTimeout(ok, 20));
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 유지(이미 같은 내용)");
+    expect(r.logs.some((l) => l.includes("utils.ts 생성 완료"))).toBe(false);
+    expect((await fs.stat(utilsFile(dir))).mtimeMs).toBe(mtimeBefore);
+  });
+
+  it("내용이 다른 utils.ts 가 있으면 종전처럼 덮어쓰고 「덮어씀」으로 알림", async () => {
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.writeFile(utilsFile(dir), "// 사용자 utils\n");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 덮어씀(기존 내용과 달라 init 의 utils 로 다시 씀)");
+    expect(r.logs.some((l) => l.includes("utils.ts 생성 완료") || l.includes("utils.ts 유지"))).toBe(false);
+    expect(await fs.readFile(utilsFile(dir), "utf8")).toBe(UTILS_TS_CONTENT);
+  });
+});
+
+describe("axis init: utils.ts 링크 규칙(WI-0045 D17)", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const configFile = (dir: string) => path.join(dir, "axis.config.json");
+
+  /** utils.ts 자리에 target 을 가리키는 심볼릭 링크를 둡니다 */
+  async function linkUtils(dir: string, target: string): Promise<void> {
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.symlink(target, utilsFile(dir));
+  }
+
+  it("프로젝트 안 링크 · 같은 내용: 쓰지 않고 「유지(이미 같은 내용, 링크)」, rc 0, 링크 그대로", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.join(dir, "shared"));
+    await fs.writeFile(path.join(dir, "shared/utils.ts"), UTILS_TS_CONTENT);
+    await linkUtils(dir, path.join(dir, "shared/utils.ts"));
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 유지(이미 같은 내용, 링크)");
+    expect((await fs.lstat(utilsFile(dir))).isSymbolicLink()).toBe(true);
+    expect(await fs.pathExists(configFile(dir))).toBe(true);
+  });
+
+  it("프로젝트 밖 링크 · 같은 내용: 쓰지 않고 유지, 링크 대상이 밖이라는 사실을 알림(rc 0)", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    const outside = await tmpDir();
+    const real = path.join(await fs.realpath(outside), "utils.ts");
+    await fs.writeFile(real, UTILS_TS_CONTENT);
+    await linkUtils(dir, real);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain(`✓ utils.ts 유지(이미 같은 내용, 링크 대상이 프로젝트 밖: ${real})`);
+    expect(await fs.readFile(real, "utf8")).toBe(UTILS_TS_CONTENT);
+  });
+
+  it.each([
+    ["프로젝트 안", false],
+    ["프로젝트 밖", true],
+  ])("%s 링크 · 다른 내용: 아무것도 쓰지 않고(config 포함) 그 사실을 알린 뒤 rc 1", async (_label, outsideLink) => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    const base = outsideLink ? await fs.realpath(await tmpDir()) : path.join(dir, "shared");
+    await fs.ensureDir(base);
+    const real = path.join(base, "utils.ts");
+    await fs.writeFile(real, "// 사용자 utils\n");
+    await linkUtils(dir, real);
+    const before = await snapshot(dir);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    const all = r.logs.join("\n");
+    expect(all).toContain("아무것도 쓰지 않았습니다");
+    expect(all).toContain(outsideLink ? `프로젝트 밖(${real})을 가리키는 심볼릭 링크라` : "프로젝트 안을 가리키는 심볼릭 링크라");
+    expect(all).not.toContain("생성 완료");
+    expect(all).not.toContain("덮어씀");
+    expect(await fs.pathExists(configFile(dir))).toBe(false);
+    expect(await snapshot(dir)).toEqual(before);
+    expect(await fs.readFile(real, "utf8")).toBe("// 사용자 utils\n");
+    expect((await fs.lstat(utilsFile(dir))).isSymbolicLink()).toBe(true);
+  });
+
+  it("깨진 링크 · 디렉터리 · 디렉터리를 가리키는 링크는 쓰지 않고 rc 1(config 도 쓰지 않음)", async () => {
+    if (process.platform === "win32") return;
+    const cases: { label: string; setup: (dir: string) => Promise<void>; expected: string }[] = [
+      { label: "깨진 링크", setup: (dir) => linkUtils(dir, path.join(dir, "missing.ts")), expected: "깨진 심볼릭 링크" },
+      { label: "디렉터리", setup: (dir) => fs.ensureDir(utilsFile(dir)), expected: "이름의 디렉터리가 있어" },
+      {
+        label: "디렉터리 링크",
+        setup: async (dir) => {
+          await fs.ensureDir(path.join(dir, "somedir"));
+          await linkUtils(dir, path.join(dir, "somedir"));
+        },
+        expected: "링크가 디렉터리",
+      },
+    ];
+    for (const c of cases) {
+      const dir = await tmpDir();
+      await c.setup(dir);
+      const r = await runInitCli(dir);
+      expect(r.exitCode, c.label).toBe(1);
+      expect(r.logs.join("\n"), c.label).toContain(c.expected);
+      expect(await fs.pathExists(configFile(dir)), c.label).toBe(false);
+    }
+  });
+
+  it("양성 대조: 링크가 아닌 다른 내용의 일반 파일은 종전처럼 덮어씀", async () => {
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.writeFile(utilsFile(dir), "// 사용자 utils\n");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 덮어씀(기존 내용과 달라 init 의 utils 로 다시 씀)");
+  });
+
+  it("쓰기는 add 와 같은 O_NOFOLLOW 경로: 판정 뒤 쓰기 직전에 링크로 바뀌면 따라가 쓰지 않고 rc 1", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    const outside = await fs.realpath(await tmpDir());
+    const victim = path.join(outside, "victim.ts");
+    await fs.writeFile(victim, "원본\n");
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.writeFile(utilsFile(dir), "// 사용자 utils\n");
+    const realOpen = fs.open.bind(fs) as (...a: unknown[]) => Promise<number>;
+    vi.spyOn(fs, "open").mockImplementation((async (...args: unknown[]) => {
+      if (args[0] === utilsFile(dir) && !(await fs.lstat(utilsFile(dir))).isSymbolicLink()) {
+        await fs.remove(utilsFile(dir));
+        await fs.symlink(victim, utilsFile(dir));
+      }
+      return realOpen(...args);
+    }) as unknown as typeof fs.open);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    expect(r.logs.join("\n")).toContain("utils.ts 를 쓰지 못했습니다");
+    expect(await fs.readFile(victim, "utf8")).toBe("원본\n");
+  });
+});
+
+describe("axis init: utils.ts 를 읽지 못할 때(WI-0045 p2)", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+
+  it("읽을 수 없는 기존 axis.config.json(EACCES)은 없는 파일로 보지 않고 쓰지 않음(rc 1, 사용자 값 보존)", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+    const dir = await tmpDir();
+    const cfg = path.join(dir, "axis.config.json");
+    const original = `${JSON.stringify({ registry: "https://my.example/r", brand: "keep" }, null, 2)}\n`;
+    await fs.writeFile(cfg, original);
+    await fs.chmod(cfg, 0o200);
+    try {
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(1);
+      const all = r.logs.join("\n");
+      expect(all).toContain("기존 axis.config.json 을 읽지 못해 비교할 수 없습니다(EACCES)");
+      expect(all).not.toContain("axis.config.json 생성 완료");
+      expect(await fs.pathExists(utilsFile(dir))).toBe(false);
+    } finally {
+      await fs.chmod(cfg, 0o644);
+    }
+    expect(await fs.readFile(cfg, "utf8")).toBe(original);
+  });
+
+  it("읽기 전용 utils.ts(내용이 다름)는 계획 단계에서 막아 config 도 쓰지 않음(rc 1, 부분 쓰기 없음)", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.writeFile(utilsFile(dir), "// 사용자 utils\n");
+    await fs.chmod(utilsFile(dir), 0o444);
+    try {
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(1);
+      expect(r.logs.join("\n")).toContain("쓸 권한이 없어 덮어쓸 수 없습니다(EACCES)");
+      expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(false);
+    } finally {
+      await fs.chmod(utilsFile(dir), 0o644);
+    }
+    expect(await fs.readFile(utilsFile(dir), "utf8")).toBe("// 사용자 utils\n");
+  });
+
+  it("읽을 수 없는 utils.ts(EACCES)는 「생성 완료」가 아니라 그 사실을 알리고 쓰지 않음(rc 1)", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.writeFile(utilsFile(dir), "// 사용자 utils\n");
+    await fs.chmod(utilsFile(dir), 0o000);
+    try {
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(1);
+      const all = r.logs.join("\n");
+      expect(all).toContain("읽지 못해 비교할 수 없습니다(EACCES)");
+      expect(all).not.toContain("utils.ts 생성 완료");
+      expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(false);
+    } finally {
+      await fs.chmod(utilsFile(dir), 0o644);
+    }
+    expect(await fs.readFile(utilsFile(dir), "utf8")).toBe("// 사용자 utils\n");
+  });
+
+  it("ENOENT 가 아닌 정보 오류(ENOTDIR: 상위 경로가 파일)는 rc 1, 「생성 완료」 없음", async () => {
+    const dir = await tmpDir();
+    await fs.ensureDir(path.join(dir, "src"));
+    await fs.writeFile(path.join(dir, "src/components"), "파일\n");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    const all = r.logs.join("\n");
+    expect(all).toContain("ENOTDIR");
+    expect(all).not.toContain("utils.ts 생성 완료");
+  });
+
+  it("양성 대조: 없는 utils.ts(ENOENT)는 「생성 완료」", async () => {
+    const dir = await tmpDir();
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 생성 완료");
+  });
+});
+
+describe("axis init: 하드링크로 이어진 파일은 덮어쓰지 않음(WI-0045 D19)", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+
+  it("다른 내용의 utils.ts 가 하드링크면 아무것도 쓰지 않고 경로 · 이유를 알린 뒤 rc 1", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    const other = path.join(dir, "other-utils.ts");
+    await fs.writeFile(other, "// 사용자 utils\n");
+    await fs.link(other, utilsFile(dir));
+    const before = await snapshot(dir);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    const all = r.logs.join("\n");
+    expect(all).toContain("src/components/ui/utils.ts 이 다른 경로와 하드링크로 이어진 파일이라");
+    expect(all).toContain("아무것도 쓰지 않았습니다");
+    expect(await snapshot(dir)).toEqual(before);
+    expect(await fs.readFile(other, "utf8")).toBe("// 사용자 utils\n");
+  });
+
+  it("같은 내용의 하드링크는 쓰지 않으므로 영향 없음(유지, rc 0)", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    const other = path.join(dir, "other-utils.ts");
+    await fs.writeFile(other, UTILS_TS_CONTENT);
+    await fs.link(other, utilsFile(dir));
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs).toContain("✓ utils.ts 유지(이미 같은 내용)");
+  });
+
+  it("다른 내용의 axis.config.json 이 하드링크면 아무것도 쓰지 않고 rc 1", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    const other = path.join(dir, "config-copy.json");
+    await fs.writeJSON(other, { componentsDir: "./x" });
+    await fs.link(other, path.join(dir, "axis.config.json"));
+    const before = await snapshot(dir);
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    expect(r.logs.join("\n")).toContain("axis.config.json 이 다른 경로와 하드링크로 이어진 파일이라");
+    expect(await snapshot(dir)).toEqual(before);
+  });
+
+  it("양성 대조: 하드링크가 아닌 다른 내용의 config 는 「갱신」", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x" });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(r.logs.some((l) => l.startsWith("✓ axis.config.json 갱신"))).toBe(true);
+  });
+});
+
+describe("axis init: 종전 기본 registry 를 새 기본값으로 갱신(WI-0045 D20)", () => {
+  it.each(["https://axis.minu.best/r", "https://axis.minu.best/r/", "HTTPS://AXIS.MINU.BEST:443/r//", " https://axis.minu.best/r "])(
+    "기존 registry %j 는 새 기본값으로 바꿔 쓰고 알림",
+    async (legacy) => {
+      const dir = await tmpDir();
+      await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: INIT_DEFAULTS.componentsDir, registry: legacy });
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(0);
+      expect((await fs.readJSON(path.join(dir, "axis.config.json"))).registry).toBe(REGISTRY);
+      expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 를 새 기본 주소로 갱신)");
+      expect(r.logs.some((l) => l.includes(`registry 를 새 기본 주소(${REGISTRY})로 갱신했습니다(종전 axis.minu.best:`))).toBe(true);
+      // 다시 실행하면 같은 내용이라 「유지」
+      const r2 = await runInitCli(dir);
+      expect(r2.logs).toContain("✓ axis.config.json 유지(이미 같은 내용)");
+    }
+  );
+
+  it.each(["https://axis.minu.best/rx", "https://mirror.example/r", "http://axis.minu.best/r"])(
+    "사용자가 지정한 다른 값 %j 는 그대로 둠(m5 · D7)",
+    async (custom) => {
+      const dir = await tmpDir();
+      await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", registry: custom });
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(0);
+      expect((await fs.readJSON(path.join(dir, "axis.config.json"))).registry).toBe(custom);
+      expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기존 값 유지)");
+      expect(r.logs.some((l) => l.includes("새 기본 주소"))).toBe(false);
+    }
+  );
+});
+
+describe("axis init: 링크 대상이 일반 파일이 아님(WI-0045 D17)", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+
+  it("문자 장치(/dev/null)를 가리키는 링크는 읽기 전에 「일반 파일이 아님」으로 거부(판정 단계)", async () => {
+    if (process.platform === "win32" || !(await fs.pathExists("/dev/null"))) return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.symlink("/dev/null", utilsFile(dir));
+    const plan = planUtilsWrite(dir, utilsFile(dir));
+    expect(plan.action).toBe("reject");
+    // 가드가 빠지면 /dev/null 을 읽어 빈 내용으로 비교하고 「심볼릭 링크라 덮어쓸 수 없습니다」로 갈립니다
+    expect(plan.action === "reject" && plan.reason).toContain("일반 파일이 아닙니다");
+  });
+
+  it("문자 장치를 가리키는 링크면 init 은 아무것도 쓰지 않고 rc 1", async () => {
+    if (process.platform === "win32" || !(await fs.pathExists("/dev/null"))) return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.symlink("/dev/null", utilsFile(dir));
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(1);
+    expect(r.logs.join("\n")).toContain("일반 파일이 아닙니다");
+    expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(false);
+    expect((await fs.lstat(utilsFile(dir))).isSymbolicLink()).toBe(true);
+  });
+
+  it("양성 대조: 일반 파일을 가리키는 링크는 같은 판정에서 일반 파일 거부가 나오지 않음", async () => {
+    if (process.platform === "win32") return;
+    const dir = await tmpDir();
+    await fs.ensureDir(path.join(dir, "shared"));
+    await fs.writeFile(path.join(dir, "shared/utils.ts"), UTILS_TS_CONTENT);
+    await fs.ensureDir(path.dirname(utilsFile(dir)));
+    await fs.symlink(path.join(dir, "shared/utils.ts"), utilsFile(dir));
+    expect(planUtilsWrite(dir, utilsFile(dir))).toEqual({ action: "keep", link: { outside: null } });
+  });
+});
+
+describe("axis init: utils.ts 쓰기 실패 때 config 안내는 사실대로", () => {
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const configPath = (dir: string) => path.join(dir, "axis.config.json");
+
+  /** utils.ts 를 만들 수 없게(디렉터리 쓰기 불가) 둡니다 */
+  async function readonlyComponentsDir(dir: string): Promise<string> {
+    const ui = path.dirname(utilsFile(dir));
+    await fs.ensureDir(ui);
+    await fs.chmod(ui, 0o555);
+    return ui;
+  }
+
+  it("config 가 이미 같은 내용(유지)이면 「이미 썼습니다」 류 문구 없이 「바꾸지 않았습니다」, 새 파일은 「만들지 못했습니다」", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+    const dir = await tmpDir();
+    const first = await runInitCli(dir);
+    expect(first.exitCode).toBe(0);
+    await fs.remove(utilsFile(dir));
+    const ui = await readonlyComponentsDir(dir);
+    const before = await fs.readFile(configPath(dir), "utf8");
+    try {
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(1);
+      const all = r.logs.join("\n");
+      expect(all).toContain("✓ axis.config.json 유지(이미 같은 내용)");
+      expect(all).toContain("axis.config.json 은 바꾸지 않았습니다(이미 같은 내용).");
+      expect(all).not.toContain("이미 썼습니다");
+      expect(all).not.toContain("이미 만들었습니다");
+      expect(all).toContain("✗ utils.ts 를 만들지 못했습니다");
+      expect(all).not.toContain("덮어쓰지 않았습니다");
+    } finally {
+      await fs.chmod(ui, 0o755);
+    }
+    expect(await fs.readFile(configPath(dir), "utf8")).toBe(before);
+  });
+
+  it("대조: config 를 새로 만든 실행이면 「이미 만들었습니다」로 알림(부분 쓰기 사실)", async () => {
+    if (process.platform === "win32" || process.getuid?.() === 0) return;
+    const dir = await tmpDir();
+    const ui = await readonlyComponentsDir(dir);
+    try {
+      const r = await runInitCli(dir);
+      expect(r.exitCode).toBe(1);
+      const all = r.logs.join("\n");
+      expect(all).toContain("axis.config.json 은 이미 만들었습니다.");
+      expect(all).not.toContain("바꾸지 않았습니다");
+    } finally {
+      await fs.chmod(ui, 0o755);
+    }
+    expect(await fs.pathExists(configPath(dir))).toBe(true);
   });
 });

@@ -15,6 +15,8 @@ export interface AxisConfig {
   $schema?: string;
   template?: string;
   componentsDir?: string;
+  /** `axis add` 가 agentic- 항목을 쓰는 위치. 없으면 componentsDir 의 형제 `agentic` 입니다(WI-0045 FR-4) */
+  agenticDir?: string;
   tailwindConfig?: string;
   globalCss?: string;
   registry?: string;
@@ -27,6 +29,8 @@ export interface AxisConfig {
 /** `axis init` 이 받는 경로 3개. `tailwindConfig` 는 Tailwind 4 이상에서 없습니다(WI-0044 FR-3). */
 export interface InitConfigAnswers {
   componentsDir: string;
+  /** 기존 axis.config.json 의 agenticDir. init 은 묻지 않고, 다시 실행할 때 기존 값을 지키는 데만 씁니다 */
+  agenticDir?: string;
   tailwindConfig?: string;
   globalCss: string;
 }
@@ -40,6 +44,7 @@ export function createInitConfig(answers: InitConfigAnswers, registry: string): 
   return {
     $schema: AXIS_CONFIG_SCHEMA_URL,
     componentsDir: answers.componentsDir,
+    ...(answers.agenticDir !== undefined ? { agenticDir: answers.agenticDir } : {}),
     ...(answers.tailwindConfig !== undefined ? { tailwindConfig: answers.tailwindConfig } : {}),
     globalCss: answers.globalCss,
     registry,

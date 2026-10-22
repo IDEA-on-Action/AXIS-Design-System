@@ -1,0 +1,16 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "agentic-a11y-labels",
+  "type": "registry:lib",
+  "title": "Agentic A11y Labels",
+  "description": "AXIS Agentic UI 접근성 레이블 상수 - 스크린 리더용 상태 · 심각도 · 역할 텍스트",
+  "dependencies": [],
+  "registryDependencies": [],
+  "files": [
+    {
+      "path": "registry/axis/lib/agentic-a11y-labels.ts",
+      "type": "registry:lib",
+      "content": "/**\n * 접근성(a11y)을 위한 레이블 상수\n * WCAG 2.1 AA 기준 준수를 위한 스크린 리더 텍스트\n */\n\n/** 상태 레이블 (도구 호출, 실행 단계 등) */\nexport const STATUS_LABELS = {\n  pending: \"대기 중\",\n  running: \"실행 중\",\n  complete: \"완료\",\n  success: \"성공\",\n  error: \"오류\",\n  skipped: \"건너뜀\",\n  idle: \"대기 중\",\n} as const;\n\n/** 심각도 레이블 (알림, 승인 카드 등) */\nexport const SEVERITY_LABELS = {\n  info: \"정보\",\n  warning: \"주의\",\n  error: \"오류\",\n} as const;\n\n/** 에이전트 상태 레이블 */\nexport const AGENT_STATUS_LABELS = {\n  online: \"온라인\",\n  busy: \"사용 중\",\n  offline: \"오프라인\",\n} as const;\n\n/** 에이전트 타입 레이블 */\nexport const AGENT_TYPE_LABELS = {\n  assistant: \"어시스턴트\",\n  tool: \"도구\",\n  system: \"시스템\",\n} as const;\n\n/** 소스 타입 레이블 */\nexport const SOURCE_TYPE_LABELS = {\n  web: \"웹 페이지\",\n  file: \"파일\",\n  database: \"데이터베이스\",\n  api: \"API\",\n} as const;\n\nexport type StatusLabel = keyof typeof STATUS_LABELS;\nexport type SeverityLabel = keyof typeof SEVERITY_LABELS;\nexport type AgentStatusLabel = keyof typeof AGENT_STATUS_LABELS;\nexport type AgentTypeLabel = keyof typeof AGENT_TYPE_LABELS;\n/** 메시지 역할 레이블 */\nexport const MESSAGE_ROLE_LABELS = {\n  user: \"사용자\",\n  assistant: \"어시스턴트\",\n  system: \"시스템\",\n} as const;\n\n/** 피드백 레이블 */\nexport const FEEDBACK_LABELS = {\n  like: \"좋아요\",\n  dislike: \"싫어요\",\n  none: \"피드백 없음\",\n} as const;\n\n/** 첨부파일 타입 레이블 */\nexport const ATTACHMENT_TYPE_LABELS = {\n  image: \"이미지\",\n  document: \"문서\",\n  code: \"코드\",\n  archive: \"압축 파일\",\n  other: \"기타 파일\",\n} as const;\n\n/** Diff 변경 타입 레이블 */\nexport const DIFF_LABELS = {\n  added: \"추가됨\",\n  removed: \"삭제됨\",\n  unchanged: \"변경 없음\",\n} as const;\n\n/** 계획 상태 레이블 */\nexport const PLAN_STATUS_LABELS = {\n  draft: \"초안\",\n  pending: \"승인 대기\",\n  approved: \"승인됨\",\n  rejected: \"거절됨\",\n  executing: \"실행 중\",\n  completed: \"완료\",\n} as const;\n\nexport type SourceTypeLabel = keyof typeof SOURCE_TYPE_LABELS;\nexport type MessageRoleLabel = keyof typeof MESSAGE_ROLE_LABELS;\nexport type FeedbackLabel = keyof typeof FEEDBACK_LABELS;\nexport type AttachmentTypeLabel = keyof typeof ATTACHMENT_TYPE_LABELS;\nexport type DiffLabel = keyof typeof DIFF_LABELS;\nexport type PlanStatusLabel = keyof typeof PLAN_STATUS_LABELS;\n"
+    }
+  ]
+}

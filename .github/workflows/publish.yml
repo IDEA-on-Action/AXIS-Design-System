@@ -58,6 +58,12 @@ jobs:
       - name: Type check
         run: pnpm type-check
 
+      # WI-0045: cli 빌드가 apps/web/public/r 를 dist/registry(동봉본)로 복사하므로, 커밋된 사본이 아니라 소스에서 다시
+      # 만든 레지스트리를 싣는다. 배포 사이트(frontend.yml)도 같은 명령으로 다시 만든 것을 올린다. Version Packages PR 이
+      # ui-react 버전을 올린 뒤의 publish run 에서 index.json version 이 커밋본(이전 버전)으로 남는 것도 여기서 맞춰진다
+      - name: Build Registry
+        run: pnpm build:registry
+
       - name: Build
         run: pnpm build
 

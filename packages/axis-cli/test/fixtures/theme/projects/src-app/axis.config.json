@@ -2,5 +2,5 @@
   "$schema": "https://axis.minu.best/schema.json",
   "componentsDir": "./src/components/ui",
   "tailwindConfig": "./tailwind.config.ts",
-  "registry": "https://axis.minu.best/r"
+  "registry": "https://axis-design-system.pages.dev/r"
 }
