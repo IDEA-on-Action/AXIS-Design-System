@@ -290,7 +290,7 @@ export async function writeRegistry({ version, items }, outDir, { owned = false 
     await fs.writeFile(path.join(outDir, `${item.name}.json`), JSON.stringify(item, null, 2) + "\n");
   }
 
-  const header = { name: "axis", homepage: "https://axis.minu.best", version };
+  const header = { name: "axis", homepage: "https://axis-design-system.pages.dev", version };
   // registry.json: shadcn 레지스트리 루트 형식
   await fs.writeFile(
     path.join(outDir, "registry.json"),

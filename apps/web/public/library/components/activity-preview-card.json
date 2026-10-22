@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/agentic/activity-preview-card"
+    "url": "https://axis-design-system.pages.dev/agentic/activity-preview-card"
   },
   "tags": [
     "container"

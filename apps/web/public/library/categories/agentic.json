@@ -14,7 +14,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/agent-avatar"
+        "url": "https://axis-design-system.pages.dev/agentic/agent-avatar"
       },
       "tags": [],
       "code": {
@@ -43,7 +43,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/approval-card"
+        "url": "https://axis-design-system.pages.dev/agentic/approval-card"
       },
       "tags": [
         "animated",
@@ -75,7 +75,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/recovery-banner"
+        "url": "https://axis-design-system.pages.dev/agentic/recovery-banner"
       },
       "tags": [
         "animated"
@@ -106,7 +106,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/run-progress"
+        "url": "https://axis-design-system.pages.dev/agentic/run-progress"
       },
       "tags": [
         "animated"
@@ -137,7 +137,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/source-panel"
+        "url": "https://axis-design-system.pages.dev/agentic/source-panel"
       },
       "tags": [
         "stateful"
@@ -168,7 +168,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/step-timeline"
+        "url": "https://axis-design-system.pages.dev/agentic/step-timeline"
       },
       "tags": [
         "animated"
@@ -199,7 +199,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/streaming-text"
+        "url": "https://axis-design-system.pages.dev/agentic/streaming-text"
       },
       "tags": [
         "stateful",
@@ -232,7 +232,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/surface-renderer"
+        "url": "https://axis-design-system.pages.dev/agentic/surface-renderer"
       },
       "tags": [],
       "code": {
@@ -261,7 +261,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/thinking-indicator"
+        "url": "https://axis-design-system.pages.dev/agentic/thinking-indicator"
       },
       "tags": [
         "animated"
@@ -292,7 +292,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/tool-call-card"
+        "url": "https://axis-design-system.pages.dev/agentic/tool-call-card"
       },
       "tags": [
         "stateful",
@@ -325,7 +325,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/activity-preview-card"
+        "url": "https://axis-design-system.pages.dev/agentic/activity-preview-card"
       },
       "tags": [
         "container"
@@ -357,7 +357,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/agent-run-container"
+        "url": "https://axis-design-system.pages.dev/agentic/agent-run-container"
       },
       "tags": [
         "stateful"
@@ -389,7 +389,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/approval-dialog"
+        "url": "https://axis-design-system.pages.dev/agentic/approval-dialog"
       },
       "tags": [
         "stateful"
@@ -421,7 +421,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/collector-health-bar"
+        "url": "https://axis-design-system.pages.dev/agentic/collector-health-bar"
       },
       "tags": [
         "stateful"
@@ -453,7 +453,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/file-upload-zone"
+        "url": "https://axis-design-system.pages.dev/agentic/file-upload-zone"
       },
       "tags": [],
       "code": {
@@ -483,7 +483,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/seminar-chat-panel"
+        "url": "https://axis-design-system.pages.dev/agentic/seminar-chat-panel"
       },
       "tags": [
         "stateful"
@@ -516,7 +516,7 @@
       "source": {
         "type": "axis",
         "registry": "@axis",
-        "url": "https://axis.minu.best/agentic/step-indicator"
+        "url": "https://axis-design-system.pages.dev/agentic/step-indicator"
       },
       "tags": [
         "stateful",

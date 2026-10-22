@@ -2,9 +2,10 @@
 
 import fetch from "node-fetch";
 import type { TemplateIndex, TemplateDetail } from "./types.js";
+import { AXIS_SITE_URL } from "../site.js";
 
 const TEMPLATE_REGISTRY_URL =
-  process.env.AXIS_TEMPLATE_URL || "https://axis.minu.best/templates";
+  process.env.AXIS_TEMPLATE_URL || `${AXIS_SITE_URL}/templates`;
 
 /**
  * 템플릿 인덱스(목록) 가져오기

@@ -76,7 +76,7 @@ const BASELINE = {
   ],
   axisConfig:
     "{\n" +
-    '  "$schema": "https://axis.minu.best/schema.json",\n' +
+    '  "$schema": "https://axis-design-system.pages.dev/schema.json",\n' +
     '  "componentsDir": "./src/components/ui",\n' +
     '  "tailwindConfig": "./tailwind.config.ts",\n' +
     '  "globalCss": "./src/app/globals.css",\n' +
@@ -1040,7 +1040,7 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
     }
     const config = await fs.readJSON(path.join(dir, "axis.config.json"));
     expect(config).toEqual({
-      $schema: "https://axis.minu.best/schema.json",
+      $schema: "https://axis-design-system.pages.dev/schema.json",
       componentsDir: "./components/ui",
       globalCss: "./app/globals.css",
       registry: REGISTRY,
@@ -1062,7 +1062,7 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
       process.chdir(cwd0);
     }
     expect(await fs.readJSON(path.join(dir, "axis.config.json"))).toEqual({
-      $schema: "https://axis.minu.best/schema.json",
+      $schema: "https://axis-design-system.pages.dev/schema.json",
       componentsDir: "./components/ui",
       tailwindConfig: "./tailwind.config.js",
       globalCss: "./app/globals.css",

@@ -14,6 +14,7 @@ import type {
   ComponentCategory,
 } from "./types.js";
 import { BaseCollector } from "./base-collector.js";
+import { AXIS_SITE_URL } from "../site.js";
 
 // AXIS 컴포넌트 경로 설정
 interface AxisPaths {
@@ -315,7 +316,7 @@ export class AxisCollector extends BaseCollector {
    * 문서 URL 생성
    */
   private getDocsUrl(slug: string, category: ComponentCategory): string {
-    const baseUrl = "https://axis.minu.best";
+    const baseUrl = AXIS_SITE_URL;
     // 문서 사이트 라우트: agentic 컴포넌트만 /agentic/, 그 외 전 카테고리는 /components/
     const route = category === "agentic" ? "agentic" : "components";
     return `${baseUrl}/${route}/${slug}`;

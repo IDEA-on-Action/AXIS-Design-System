@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/components/radio-group"
+    "url": "https://axis-design-system.pages.dev/components/radio-group"
   },
   "tags": [
     "forwardRef",

@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://axis-design-system.pages.dev/schema.json",
+  "title": "AXIS axis.config.json",
+  "description": "@axis-ds/cli 설정 파일. axis init · axis template init 이 만들고, axis add · list · theme · monet 이 읽습니다. 원본 타입은 packages/axis-cli/src/config/axis-config.ts 의 AxisConfig 입니다(WI-0056 D2).",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "이 스키마의 주소"
+    },
+    "template": {
+      "type": "string",
+      "description": "axis template init 으로 적용한 템플릿 이름"
+    },
+    "componentsDir": {
+      "type": "string",
+      "description": "Core UI · lib 을 설치할 디렉터리(프로젝트 루트 기준). 예: ./src/components/ui"
+    },
+    "agenticDir": {
+      "type": "string",
+      "description": "Agentic UI(agentic- 항목)를 설치할 디렉터리. 없으면 componentsDir 옆 agentic 입니다"
+    },
+    "tailwindConfig": {
+      "type": "string",
+      "description": "Tailwind 설정 파일 경로. Tailwind 4 이상은 설정 파일이 없어 기록하지 않습니다"
+    },
+    "globalCss": {
+      "type": "string",
+      "description": "전역 CSS 파일 경로. 예: ./src/app/globals.css"
+    },
+    "registry": {
+      "type": "string",
+      "format": "uri",
+      "description": "컴포넌트 레지스트리 base URL. 기본값 https://axis-design-system.pages.dev/r. 환경변수 AXIS_REGISTRY_URL 이 있으면 그것이 우선합니다"
+    },
+    "monetDir": {
+      "type": "string",
+      "description": "axis monet 의 저장 위치"
+    },
+    "brand": {
+      "type": "string",
+      "description": "axis theme add 가 기록하는 브랜드 이름"
+    }
+  },
+  "additionalProperties": false
+}

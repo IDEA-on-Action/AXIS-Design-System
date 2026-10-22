@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/agentic/collector-health-bar"
+    "url": "https://axis-design-system.pages.dev/agentic/collector-health-bar"
   },
   "tags": [
     "stateful"

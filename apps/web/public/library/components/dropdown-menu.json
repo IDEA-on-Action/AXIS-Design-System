@@ -7,7 +7,7 @@
   "source": {
     "type": "axis",
     "registry": "@axis",
-    "url": "https://axis.minu.best/components/dropdown-menu"
+    "url": "https://axis-design-system.pages.dev/components/dropdown-menu"
   },
   "tags": [
     "forwardRef",

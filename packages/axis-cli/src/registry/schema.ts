@@ -18,6 +18,7 @@
  */
 
 import { createHash } from "node:crypto";
+import { AXIS_SITE_URL } from "../site.js";
 
 /** 항목 이름 규칙(kebab-case slug). 이름이 URL · 파일 경로에 그대로 들어가므로 이 규칙 밖은 조회 전에 거부합니다 */
 export const REGISTRY_NAME_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -75,7 +76,7 @@ export function isValidRegistryName(name: unknown): name is string {
  * 값입니다. CLI 는 이 환경변수를 읽지 않고, 의존 URL 을 해석할 때 받아 주는 base 와 기본 원격(D8)으로 씁니다.
  * remote.ts 가 이 모듈을 import 하므로 순환을 피하려고 여기에 둡니다.
  */
-export const REGISTRY_PUBLIC_BASE_URL = "https://axis-design-system.pages.dev/r";
+export const REGISTRY_PUBLIC_BASE_URL = `${AXIS_SITE_URL}/r`;
 
 /**
  * URL 의 사용자 정보(userinfo)와 쿼리 · 해시 값을 가립니다(n4 · p1). 안내 · 오류 문구에 URL 을 찍을 때 씁니다.
