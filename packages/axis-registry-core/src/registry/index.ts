@@ -79,7 +79,12 @@ export interface RegistryClientOptions {
   fetchImpl?: FetchLike;
   /** 안내 출력. 기본은 console.warn */
   notify?: (message: string) => void;
+  /** 동봉본을 부르는 이름(안내 · 오류 문구). 기본은 「CLI 에 포함된 레지스트리」, mcp 는 「MCP 에 포함된 레지스트리」(WI-0055) */
+  bundledLabel?: string;
 }
+
+/** 동봉본을 부르는 기본 이름(cli) */
+export const DEFAULT_BUNDLED_LABEL = "CLI 에 포함된 레지스트리";
 
 /**
  * 폴백 사유 종류(m1). access: 원격에 닿지 못함(접속 · 타임아웃 · 상태 코드 · URL 없음 · URL 형식),
@@ -88,12 +93,17 @@ export interface RegistryClientOptions {
 export type FallbackKind = "access" | "invalid";
 
 /** 폴백 안내 문구(FR-3 · m1). version 은 동봉본의 index.json version 입니다 */
-export function bundledFallbackMessage(version: string, reason: string, kind: FallbackKind = "access"): string {
+export function bundledFallbackMessage(
+  version: string,
+  reason: string,
+  kind: FallbackKind = "access",
+  label: string = DEFAULT_BUNDLED_LABEL
+): string {
   const lead =
     kind === "invalid"
       ? "원격 레지스트리 응답이 형식 검증을 통과하지 못해"
       : "원격 레지스트리에 접근하지 못해";
-  return `${lead} CLI 에 포함된 레지스트리(version ${version})를 사용합니다. (원인: ${reason})`;
+  return `${lead} ${label}(version ${version})를 사용합니다. (원인: ${reason})`;
 }
 
 /** 실패 종류 판정. 원격 접근 실패(RegistryAccessError)만 access 이고 나머지는 응답 내용 문제입니다 */
@@ -102,8 +112,12 @@ function fallbackKindOf(error: unknown): FallbackKind {
 }
 
 /** 원격과 동봉본의 version 이 다를 때 알림 */
-export function versionMismatchMessage(remoteVersion: string, bundledVersion: string): string {
-  return `원격 레지스트리(version ${remoteVersion})와 CLI 에 포함된 레지스트리(version ${bundledVersion})의 version 이 다릅니다. 원격 레지스트리를 우선 사용합니다.`;
+export function versionMismatchMessage(
+  remoteVersion: string,
+  bundledVersion: string,
+  label: string = DEFAULT_BUNDLED_LABEL
+): string {
+  return `원격 레지스트리(version ${remoteVersion})와 ${label}(version ${bundledVersion})의 version 이 다릅니다. 원격 레지스트리를 우선 사용합니다.`;
 }
 
 function messageOf(error: unknown): string {
@@ -117,6 +131,7 @@ export class RegistryClient {
   private readonly timeoutMs: number;
   private readonly fetchImpl?: FetchLike;
   private readonly notify: (message: string) => void;
+  private readonly bundledLabel: string;
 
   private mode: RegistryOrigin | null = null;
   private indexPromise: Promise<RegistryIndex> | null = null;
@@ -141,6 +156,7 @@ export class RegistryClient {
     this.timeoutMs = options.timeoutMs ?? DEFAULT_REGISTRY_TIMEOUT_MS;
     this.fetchImpl = options.fetchImpl;
     this.notify = options.notify ?? ((message) => console.warn(message));
+    this.bundledLabel = options.bundledLabel ?? DEFAULT_BUNDLED_LABEL;
   }
 
   /** 지금 쓰는 출처. index 를 읽기 전에는 null 입니다 */
@@ -217,7 +233,7 @@ export class RegistryClient {
   /** 동봉본 index 를 읽습니다(성공하면 한 번만). 실패하면 이유를 돌려줍니다 */
   private loadBundledIndex(): { index: RegistryIndex } | { error: string } {
     if (this.bundledIndex) return { index: this.bundledIndex };
-    if (!this.bundledDir) return { error: "CLI 에 포함된 레지스트리를 찾지 못했습니다" };
+    if (!this.bundledDir) return { error: `${this.bundledLabel}를 찾지 못했습니다` };
     try {
       this.bundledIndex = validateRegistryIndex(readBundledJson(this.bundledDir, "index.json"), "동봉 레지스트리 index.json");
       return { index: this.bundledIndex };
@@ -230,7 +246,7 @@ export class RegistryClient {
     const bundled = this.loadBundledIndex();
     // 동봉본이 없으면 비교할 대상이 없으니 알리지 않습니다(원격이 정상이므로 설치에는 영향이 없음)
     if ("index" in bundled && bundled.index.version !== remoteVersion) {
-      this.notify(versionMismatchMessage(remoteVersion, bundled.index.version));
+      this.notify(versionMismatchMessage(remoteVersion, bundled.index.version, this.bundledLabel));
     }
   }
 
@@ -246,7 +262,7 @@ export class RegistryClient {
     this.indexPromise = Promise.resolve(bundled.index);
     if (!this.fallbackAnnounced) {
       this.fallbackAnnounced = true;
-      this.notify(bundledFallbackMessage(bundled.index.version, reason, kind));
+      this.notify(bundledFallbackMessage(bundled.index.version, reason, kind, this.bundledLabel));
     }
     return bundled.index;
   }
@@ -257,7 +273,7 @@ export class RegistryClient {
     if (!index || !entry || !this.bundledDir) {
       throw new RegistryError(
         "not-found",
-        `'${name}' 항목이 CLI 에 포함된 레지스트리(version ${index?.version ?? "알 수 없음"})에 없습니다`
+        `'${name}' 항목이 ${this.bundledLabel}(version ${index?.version ?? "알 수 없음"})에 없습니다`
       );
     }
     try {
@@ -266,7 +282,7 @@ export class RegistryClient {
       checkItemSha256(item, entry);
       return item;
     } catch (error) {
-      throw new RegistryError("unavailable", `CLI 에 포함된 레지스트리의 '${name}' 항목을 읽지 못했습니다: ${messageOf(error)}`);
+      throw new RegistryError("unavailable", `${this.bundledLabel}의 '${name}' 항목을 읽지 못했습니다: ${messageOf(error)}`);
     }
   }
 }

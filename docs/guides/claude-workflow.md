@@ -73,10 +73,14 @@ AXIS MCP 외에 다음 서버도 연동 가능합니다:
 
 | 도구 | 파라미터 | 설명 |
 |------|----------|------|
-| `axis.list_components` | `category?`: core·agentic·form·layout | 전체 컴포넌트 목록 조회 |
+| `axis.list_components` | `category?`: core·agentic·form·layout·ui | 레지스트리 컴포넌트 목록 (Core UI 10 · Agentic UI 18) |
 | `axis.search_components` | `query`, `category?` | 이름·설명 기반 컴포넌트 검색 |
-| `axis.get_component` | `name` | 컴포넌트 상세 정보 (Props, 예제, 파일 구조) |
-| `axis.install_component` | `name`, `targetDir` | 컴포넌트를 프로젝트에 설치 |
+| `axis.get_component` | `name` | 컴포넌트 상세 정보 (의존성, 함께 설치되는 항목, 파일, Props, 예제) |
+| `axis.install_component` | `name` 또는 `names`, `targetDir`, `overwrite?` | `npx @axis-ds/cli add` 와 같은 결과로 프로젝트에 설치 |
+
+- 컴포넌트 도구는 레지스트리(`AXIS_REGISTRY_URL` → 서버 현재 디렉터리의 `axis.config.json` `registry` → `https://axis-design-system.pages.dev/r`)를 읽고, 원격에 닿지 못하면 MCP 에 포함된 레지스트리로 설치합니다(@axis-ds/mcp 1.3.0, WI-0055).
+- 이름은 레지스트리 이름 그대로입니다. Agentic UI 는 `agentic-` 접두를 붙입니다(예: `agentic-run-progress`).
+- `targetDir` 는 이미 있는 프로젝트 루트입니다. `axis.config.json` 이 있으면 그 배치, 없으면 `components/ui` · `components/agentic` 에 설치합니다. 내용이 다른 기존 파일은 건너뛰고 알리며 `overwrite: true` 일 때만 덮어씁니다. 의존성은 설치 명령만 안내합니다.
 
 ### 3.2 토큰 도구
 

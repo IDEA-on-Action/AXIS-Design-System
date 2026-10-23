@@ -2,11 +2,21 @@
   "$schema": "https://turbo.build/schema.json",
   "extends": ["//"],
   "tasks": {
+    "build": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/apps/web/public/r/**",
+        "$TURBO_ROOT$/packages/axis-registry-core/src/**",
+        "$TURBO_ROOT$/packages/axis-cli/scripts/copy-registry.mjs"
+      ]
+    },
     "test": {
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/axis-cli/src/theme/brand-core.ts",
-        "$TURBO_ROOT$/packages/axis-cli/test/fixtures/theme/**"
+        "$TURBO_ROOT$/packages/axis-cli/test/fixtures/theme/**",
+        "$TURBO_ROOT$/packages/axis-registry-core/src/**",
+        "$TURBO_ROOT$/apps/web/public/r/**"
       ]
     }
   }

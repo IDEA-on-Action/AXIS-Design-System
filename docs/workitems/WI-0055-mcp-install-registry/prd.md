@@ -1,6 +1,6 @@
 # WI-0055: MCP 컴포넌트 도구의 레지스트리 전환 PRD
 
-> 작성일: 2026-10-23 | 버전: v0.1 (초안, 1단계 실측 · 설계 조사) | 작성자: Sinclair Seo | WI: WI-0055 | GitHub: #150 | 우선순위: P2 | 상태: Draft (D3 ~ D12 결정 대기)
+> 작성일: 2026-10-23 | 버전: v1.0 (2026-10-23 D3 ~ D12 결정 반영, v0.1 2026-10-23 1단계 실측 · 설계 조사) | 작성자: Sinclair Seo | WI: WI-0055 | GitHub: #150 | 우선순위: P2 | 상태: Approved (2026-10-23 결정 반영)
 > 기준: `origin/main` 8a8cd5b (`@axis-ds/cli` 1.5.1 · `@axis-ds/mcp` 1.2.3 · linked 4패키지 1.5.0 배포, 레지스트리 index version 1.5.0 · 30항목)
 > 관련: WI-0045(#136) D4 에서 분리. 설치 코어(원격 우선 · 동봉본 폴백 · 안전 쓰기 · import 재작성 · 의존성 안내)는 WI-0045 의 cli 구현을 공유합니다
 
@@ -48,18 +48,18 @@
 |---|---|---|
 | D1 | 공유 방식(2026-10-23 사용자): cli 의 레지스트리 설치 코어를 **발행하지 않는 private workspace 패키지**로 분리하고 cli · mcp 가 빌드 때 번들합니다. 발행 패키지의 런타임 `dependencies` 는 바뀌지 않아야 합니다. cli 리팩터링이 포함됩니다 | 확정 |
 | D2 | 메타(2026-10-23 사용자): list · search 는 레지스트리 index.json 의 lib 를 뺀 28개를 씁니다. get 은 레지스트리 항목을 기본으로 하고 `components.json` 에 같은 이름의 props · examples 가 있으면 덧붙입니다. install 과 이름 체계(`agentic-` 접두 전체 이름)를 맞춥니다 | 확정 |
-| D3 | 덮어쓰기 정책 | 결정 대기 |
-| D4 | `targetDir` 의미와 config 가 없을 때의 배치 | 결정 대기 |
-| D5 | 의존성 처리(안내만 · 설치 실행) | 결정 대기 |
-| D6 | 도구 인자 하위 호환(`category` enum · agentic 별칭) | 결정 대기 |
-| D7 | 출력 형식 하위 호환 | 결정 대기 |
-| D8 | list · search · get 의 레지스트리 출처와 캐시 | 결정 대기 |
-| D9 | 공유 코어로 옮기는 범위(tailwind-core 사본 통합 여부) | 결정 대기 |
-| D10 | 기존 cli 테스트 위치(심 유지 · 코어로 이동) | 결정 대기 |
-| D11 | 릴리스 범위(cli · mcp 버전) | 결정 대기 |
-| D12 | 코어 패키지 이름 · 위치 | 결정 대기 |
+| D3 | 덮어쓰기(2026-10-23 사용자): 내용이 다른 기존 파일은 건너뛰고 알립니다(cli `-y`). `overwrite: true` 일 때만 덮어씁니다. 건너뛰어도 isError 는 false 이고, 결과 첫머리에 건너뛴 수를 적습니다 | 확정 |
+| D4 | `targetDir`(2026-10-23 사용자): 프로젝트 루트입니다. `axis.config.json` 이 있으면 그 배치, 없으면 기본 배치(`components/ui` · `components/agentic`)로 설치하고 알립니다. 결과에 해석한 절대 경로를 적고, 경로 이탈 검사의 루트는 `targetDir` 입니다 | 확정 |
+| D5 | 의존성(2026-10-23 사용자): 설치 명령만 안내합니다(lockfile 로 pnpm · npm · yarn 선택, cli 와 같음) | 확정 |
+| D6 | 인자(2026-10-23 사용자): `category` enum 은 그대로 받고 `ui` 를 더합니다. install 에 `names` 배열을 더합니다. agentic 별칭 인자는 두지 않고 없는 이름 안내로 전체 이름을 제안합니다 | 확정 |
+| D7 | 출력(2026-10-23 사용자): 종전 머리글 · 표 구조를 유지하고 줄을 더합니다. 부분 실패는 isError 입니다 | 확정 |
+| D8 | 출처(2026-10-23 사용자): 호출마다 install 과 같은 해석(env `AXIS_REGISTRY_URL` → 기준 디렉터리의 `axis.config.json` registry → 기본값, 실패 시 동봉본)을 하고 캐시하지 않습니다. 기준 디렉터리는 install 이 `targetDir`, list · search · get 은 서버의 현재 디렉터리입니다 | 확정 |
+| D9 | 코어 범위(2026-10-23 사용자): `tailwind-core.ts` 를 코어로 옮기고 mcp 의 바이트 사본 · 동일성 테스트를 지웁니다. brand-core 사본은 그대로 둡니다 | 확정 |
+| D10 | cli 테스트(2026-10-23 사용자): cli 에 그대로 두고 원래 경로를 심으로 유지합니다(640개 무변경) | 확정 |
+| D11 | 릴리스(2026-10-23 사용자): mcp minor(1.3.0), cli patch changeset. 두 패키지 사이 버전 범위 조정은 없습니다 | 확정 |
+| D12 | 코어 패키지(2026-10-23 사용자): `packages/axis-registry-core`, `@axis-ds/registry-core`, `private: true`, version `0.0.0`, exports 는 `src` 원본(빌드 없음) | 확정 |
 
-결정 대기 항목의 선택지와 근거는 5절에 있습니다.
+
 
 ## 2. 설계 조사
 
@@ -140,7 +140,7 @@ cli 의 원래 경로는 같은 이름을 다시 내보내는 얇은 파일(심)
 3. `vitest run` 640 passed, `pnpm --filter @axis-ds/cli build` 뒤 `pnpm cli-smoke` 통과로 리팩터링 회귀가 없음을 봅니다(변이: 코어의 덮어쓰기 판정을 뒤집으면 cli 테스트가 실패하는지 1회 확인)
 4. 그 뒤에 mcp 를 코어로 전환합니다(리팩터링과 기능 변경 커밋 분리)
 
-## 3. 요구사항 (초안, D3 ~ D12 에 따라 바뀜)
+## 3. 요구사항
 
 - FR-1 코어 분리: 2.2 의 모듈을 private 패키지로 옮기고 cli 는 심으로 같은 이름을 내보냅니다. cli 동작 · 출력 무변경
 - FR-2 mcp list · search: 레지스트리 index 의 lib 제외 28개. 각 항목에 이름 · 제목 · 설명 · 종류(ui · agentic). 출처(원격 · 동봉본)와 index version 을 함께 표시
@@ -149,18 +149,18 @@ cli 의 원래 경로는 같은 이름을 다시 내보내는 얇은 파일(심)
 - FR-5 동봉 레지스트리: mcp `dist/registry` 에 싣고 원격 실패 시 폴백(안내 1회)
 - FR-6 게이트: 코어 type-check, mcp-smoke 확장, pack-smoke REQUIRED_FILES · 코어 누출 검사, mcp turbo inputs
 
-## 4. 수용 기준 (초안)
+## 4. 수용 기준
 
 - AC1 cli vitest 640개 이상 통과, cli-smoke 통과, cli 의 `dist` 실행 결과(add separator dialog agentic-run-progress)가 1.5.1 과 같음
 - AC2 빌드한 mcp tarball 을 빈 디렉터리에 설치해 list 28 · search `progress` 에 `agentic-run-progress` · install `separator dialog agentic-run-progress` 가 cli 와 같은 파일 · 내용(바이트 비교)
 - AC3 원격 접속 불가(`127.0.0.1:9`)에서도 동봉본으로 AC2 가 성립하고 폴백 안내가 1번
-- AC4 내용이 다른 기존 파일은 D3 에 따라 처리되고 사용자 수정이 남음(표지 대조), 경로 이탈은 아무것도 쓰지 않음
+- AC4 내용이 다른 기존 파일은 건너뛰고(isError 아님) `overwrite: true` 만 덮어쓰며, 사용자 수정이 남음(표지 대조), 경로 이탈은 아무것도 쓰지 않음
 - AC5 발행 tarball 의 `dependencies` 가 1.2.3 · 1.5.1 과 같음, 코어 이름 누출 0(양성 대조: 일부러 넣으면 pack-smoke 실패)
 - AC6 기존 게이트(build · test · test:registry · cli-smoke · pack-smoke · registry-install-smoke) 통과
 
-## 5. 결정 대기 항목
+## 5. 결정 당시 선택지 (기록, 모두 ① 채택)
 
-| # | 질문 | 선택지(첫 번째가 권장) | 근거 |
+| # | 질문 | 선택지(① 채택) | 근거 |
 |---|---|---|---|
 | D3 | 내용이 다른 기존 파일을 어떻게 다루나 | ① 기본은 건너뛰고 목록을 알림, `overwrite: true` 인자일 때만 덮어씀(cli `-y` · `--overwrite` 와 같음) ② 다른 파일이 하나라도 있으면 아무것도 쓰지 않고 isError, `overwrite: true` 로 재호출 ③ 종전처럼 항상 덮어씀 | MCP 에는 대화형 확인이 없고 M9 에서 사용자 수정이 사라졌습니다. ① 은 cli 비대화형과 같은 규칙이라 코어를 그대로 씁니다. 건너뛴 경우 isError 는 false(cli rc 0 과 같음)로 두되 결과 첫머리에 건너뛴 수를 적습니다 |
 | D4 | `targetDir` 은 무엇이고 config 가 없으면 | ① 프로젝트 루트. `axis.config.json` 이 있으면 그 배치, 없으면 기본 배치 `components/ui` · `components/agentic`(종전 MCP 위치와 같음)로 설치하고 「config 없이 기본 배치」를 알림 ② 프로젝트 루트, config 가 없으면 cli 처럼 실패하고 `npx @axis-ds/cli init` 안내 ③ ① 에 더해 `targetDir` 생략 시 서버 cwd | 종전 호출(`targetDir` 만 주고 config 없음)이 실패로 바뀌지 않게 하려면 ① 입니다. ② 는 cli 와 완전히 같지만 기존 사용 흐름이 깨집니다. 상대 `targetDir` 은 서버 cwd 기준이라(M10) 결과에 해석한 절대 경로를 적습니다. 경로 이탈 검사의 루트는 `targetDir` 입니다 |

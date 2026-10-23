@@ -1,327 +1,156 @@
 /**
- * AXIS Design System MCP - 설치 도구
+ * AXIS Design System MCP - 설치 도구 (WI-0055)
+ *
+ * cli `axis add` 와 같은 공유 코어(@axis-ds/registry-core 의 runAdd)로 레지스트리 항목을 설치합니다.
+ * registryDependencies 재귀 수집 · import 재작성 · 경로 이탈 · 링크 · 하드링크 검사 · 의존성 안내가 cli 와 같습니다.
+ *
+ * MCP 고유 규칙(2026-10-23 사용자 결정)
+ * - D3 덮어쓰기: 대화형 확인이 없으므로 내용이 다른 기존 파일은 건너뛰고 알립니다(cli `-y`). `overwrite: true` 일 때만 덮어씁니다.
+ *   건너뛰어도 isError 는 false 이고, 결과 첫머리에 건너뛴 수를 적습니다.
+ * - D4 targetDir: 프로젝트 루트입니다. axis.config.json 이 있으면 그 배치, 없으면 기본 배치(components/ui · components/agentic)로
+ *   설치하고 그 사실을 알립니다. 결과에 해석한 절대 경로를 적고, 경로 이탈 검사의 루트도 targetDir 입니다.
+ *   상대 경로는 서버의 현재 디렉터리 기준이라, 없는 디렉터리면 아무것도 쓰지 않고 실패합니다.
+ * - D5 의존성: 설치 명령만 안내하고 실행하지 않습니다.
+ * - D7 출력: 종전 머리글(「# 컴포넌트 설치 완료」 · 「# 컴포넌트 설치 실패」)을 유지하고 줄을 더합니다. 실패(일부 쓰기 뒤 실패 포함)는 isError 입니다.
  */
 
-import { existsSync, mkdirSync, writeFileSync, readFileSync } from "fs";
-import { join, dirname } from "path";
-import { getComponent } from "../registry/loader.js";
-import type { ComponentMeta, InstallResult } from "../types.js";
+import { statSync } from "node:fs";
+import path from "node:path";
+import { runAdd, type AddHints } from "@axis-ds/registry-core/add";
+import type { AxisConfig } from "@axis-ds/registry-core/config";
+import { describeOrigin, noticeLines, openSource, type RegistryDeps } from "./registry-source.js";
+import type { InstallResult } from "../types.js";
 
 export interface InstallComponentParams {
-  name: string;
+  /** 설치할 이름 하나(종전 인자) */
+  name?: string;
+  /** 설치할 이름 여러 개(D6). name 과 함께 주면 합칩니다 */
+  names?: string[];
+  /** 프로젝트 루트 */
   targetDir: string;
+  /** 내용이 다른 기존 파일을 덮어쓸지(D3). 기본 false */
+  overwrite?: boolean;
 }
 
-// 컴포넌트 템플릿 (실제 구현에서는 별도 파일에서 로드)
-const COMPONENT_TEMPLATES: Record<string, Record<string, string>> = {
-  button: {
-    "components/ui/button.tsx": `import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+/** config 가 없을 때의 기본 배치(D4). agentic 은 componentsDir 의 형제 components/agentic 입니다 */
+export const DEFAULT_LAYOUT_CONFIG: AxisConfig = { componentsDir: "components/ui" };
 
-import { cn } from "@/lib/utils"
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-  {
-    variants: {
-      variant: {
-        default:
-          "bg-primary text-primary-foreground shadow hover:bg-primary/90",
-        destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
-        secondary:
-          "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
-      },
-      size: {
-        default: "h-9 px-4 py-2",
-        sm: "h-8 rounded-md px-3 text-xs",
-        lg: "h-10 rounded-md px-8",
-        icon: "h-9 w-9",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
-
-export { Button, buttonVariants }
-`,
-  },
-  input: {
-    "components/ui/input.tsx": `import * as React from "react"
-
-import { cn } from "@/lib/utils"
-
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Input.displayName = "Input"
-
-export { Input }
-`,
-  },
-  label: {
-    "components/ui/label.tsx": `"use client"
-
-import * as React from "react"
-import * as LabelPrimitive from "@radix-ui/react-label"
-import { cva, type VariantProps } from "class-variance-authority"
-
-import { cn } from "@/lib/utils"
-
-const labelVariants = cva(
-  "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-)
-
-const Label = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> &
-    VariantProps<typeof labelVariants>
->(({ className, ...props }, ref) => (
-  <LabelPrimitive.Root
-    ref={ref}
-    className={cn(labelVariants(), className)}
-    {...props}
-  />
-))
-Label.displayName = LabelPrimitive.Root.displayName
-
-export { Label }
-`,
-  },
-  card: {
-    "components/ui/card.tsx": `import * as React from "react"
-
-import { cn } from "@/lib/utils"
-
-const Card = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn(
-      "rounded-xl border bg-card text-card-foreground shadow",
-      className
-    )}
-    {...props}
-  />
-))
-Card.displayName = "Card"
-
-const CardHeader = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-6", className)}
-    {...props}
-  />
-))
-CardHeader.displayName = "CardHeader"
-
-const CardTitle = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("font-semibold leading-none tracking-tight", className)}
-    {...props}
-  />
-))
-CardTitle.displayName = "CardTitle"
-
-const CardDescription = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
-    {...props}
-  />
-))
-CardDescription.displayName = "CardDescription"
-
-const CardContent = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
-))
-CardContent.displayName = "CardContent"
-
-const CardFooter = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => (
-  <div
-    ref={ref}
-    className={cn("flex items-center p-6 pt-0", className)}
-    {...props}
-  />
-))
-CardFooter.displayName = "CardFooter"
-
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
-`,
-  },
-  badge: {
-    "components/ui/badge.tsx": `import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-
-import { cn } from "@/lib/utils"
-
-const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-  {
-    variants: {
-      variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
-        outline: "text-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps) {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  )
-}
-
-export { Badge, badgeVariants }
-`,
-  },
+/** 코어 안내 문구를 MCP 인자 이름으로 */
+export const MCP_ADD_HINTS: AddHints = {
+  listCommand: "axis.list_components",
+  overwrite: "overwrite: true",
+  agenticFlag: false,
 };
+
+function requestedNames(params: InstallComponentParams): string[] {
+  const raw = [...(params.name !== undefined ? [params.name] : []), ...(params.names ?? [])];
+  // 종전처럼 대소문자를 가리지 않습니다(레지스트리 이름은 모두 소문자)
+  return raw.map((n) => n.trim().toLowerCase()).filter((n) => n !== "");
+}
+
+function emptyResult(root: string, message: string): InstallResult {
+  return {
+    success: false,
+    root,
+    items: [],
+    installedFiles: [],
+    overwrittenFiles: [],
+    unchangedFiles: [],
+    skippedFiles: [],
+    usedDefaultLayout: false,
+    notices: [],
+    errors: [],
+    message,
+  };
+}
 
 /**
  * axis.install_component 도구 구현
- *
- * 컴포넌트를 지정된 디렉토리에 설치합니다.
  */
-export function handleInstallComponent(
-  params: InstallComponentParams
-): InstallResult {
-  const { name, targetDir } = params;
-
-  if (!name || name.trim() === "") {
-    throw new Error("컴포넌트 이름(name)은 필수입니다.");
+export async function handleInstallComponent(
+  params: InstallComponentParams,
+  deps: RegistryDeps = {}
+): Promise<InstallResult> {
+  const names = requestedNames(params);
+  if (names.length === 0) {
+    throw new Error("컴포넌트 이름(name 또는 names)은 필수입니다.");
   }
-
-  if (!targetDir || targetDir.trim() === "") {
+  if (!params.targetDir || params.targetDir.trim() === "") {
     throw new Error("대상 디렉토리(targetDir)는 필수입니다.");
   }
 
-  // 컴포넌트 메타데이터 조회
-  const component = getComponent(name);
-  if (!component) {
-    return {
-      success: false,
-      installedFiles: [],
-      dependencies: [],
-      message: `컴포넌트 '${name}'을(를) 찾을 수 없습니다.`,
-    };
-  }
-
-  // 템플릿 확인
-  const templates = COMPONENT_TEMPLATES[name.toLowerCase()];
-  if (!templates) {
-    return {
-      success: false,
-      installedFiles: [],
-      dependencies: component.dependencies,
-      message: `컴포넌트 '${name}'의 템플릿이 아직 준비되지 않았습니다. 수동으로 설치해 주세요.`,
-    };
-  }
-
-  const installedFiles: string[] = [];
-
+  const root = path.resolve(params.targetDir);
+  let isDir = false;
   try {
-    // 파일 설치
-    for (const [relativePath, content] of Object.entries(templates)) {
-      const fullPath = join(targetDir, relativePath);
-      const dir = dirname(fullPath);
-
-      // 디렉토리 생성
-      if (!existsSync(dir)) {
-        mkdirSync(dir, { recursive: true });
-      }
-
-      // 파일 쓰기
-      writeFileSync(fullPath, content, "utf-8");
-      installedFiles.push(relativePath);
-    }
-
-    return {
-      success: true,
-      installedFiles,
-      dependencies: component.dependencies,
-      message: `컴포넌트 '${name}'이(가) 성공적으로 설치되었습니다.`,
-    };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "알 수 없는 오류";
-    return {
-      success: false,
-      installedFiles,
-      dependencies: component.dependencies,
-      message: `설치 중 오류 발생: ${errorMessage}`,
-    };
+    isDir = statSync(root).isDirectory();
+  } catch {
+    isDir = false;
   }
+  if (!isDir) {
+    return emptyResult(
+      root,
+      `대상 디렉터리가 없습니다: ${root}. targetDir 에는 이미 있는 프로젝트 루트를 주세요(상대 경로는 서버의 현재 디렉터리 기준).`
+    );
+  }
+
+  const { client, notices } = await openSource(root, deps);
+  const logs: string[] = [];
+  const errors: string[] = [];
+  const add = await runAdd(
+    root,
+    names,
+    { overwrite: params.overwrite === true, yes: true },
+    {
+      client,
+      log: (...a) => logs.push(a.map(String).join(" ")),
+      error: (...a) => errors.push(a.map(String).join(" ")),
+      hints: MCP_ADD_HINTS,
+      fallbackConfig: DEFAULT_LAYOUT_CONFIG,
+    }
+  );
+
+  let source: string | undefined;
+  if (client.origin !== null) {
+    try {
+      source = describeOrigin(client, (await client.getIndex()).version);
+    } catch {
+      source = undefined;
+    }
+  }
+  const usedDefaultLayout = add.usedFallbackConfig === true;
+  if (usedDefaultLayout) {
+    notices.push("axis.config.json 이 없어 기본 배치(components/ui · components/agentic)로 설치했습니다. 배치를 바꾸려면 프로젝트 루트에서 `npx @axis-ds/cli init` 으로 config 를 만드세요");
+  }
+
+  const overwritten = new Set(add.overwritten);
+  const success = add.exitCode === 0;
+  const items = add.items ?? [];
+  return {
+    success,
+    root,
+    ...(source ? { source } : {}),
+    items,
+    installedFiles: add.written.filter((p) => !overwritten.has(p)),
+    overwrittenFiles: add.overwritten,
+    unchangedFiles: add.unchanged,
+    skippedFiles: add.skipped,
+    ...(add.dependencyCommand ? { dependencyCommand: add.dependencyCommand } : {}),
+    usedDefaultLayout,
+    notices,
+    errors,
+    message: success
+      ? `컴포넌트 ${names.map((n) => `'${n}'`).join(", ")} 설치를 마쳤습니다(설치 항목 ${items.length}개: ${items.join(", ")}).`
+      : `컴포넌트 ${names.map((n) => `'${n}'`).join(", ")} 를 설치하지 못했습니다.`,
+  };
+}
+
+function fileList(title: string, files: string[], note?: string): string[] {
+  if (files.length === 0) return [];
+  const lines = [`## ${title}`];
+  if (note) lines.push(note);
+  for (const f of files) lines.push(`- \`${f}\``);
+  lines.push("");
+  return lines;
 }
 
 /**
@@ -330,41 +159,41 @@ export function handleInstallComponent(
 export function formatInstallResult(result: InstallResult): string {
   const lines: string[] = [];
 
-  if (result.success) {
-    lines.push("# 컴포넌트 설치 완료");
+  lines.push(result.success ? "# 컴포넌트 설치 완료" : "# 컴포넌트 설치 실패");
+  lines.push("");
+  // D3: 건너뛴 수는 결과 첫머리에 적습니다
+  if (result.skippedFiles.length > 0) {
+    lines.push(
+      `> 내용이 다른 기존 파일 ${result.skippedFiles.length}개를 건너뛰었습니다(사용자 수정 유지). 덮어쓰려면 \`overwrite: true\` 로 다시 호출하세요.`
+    );
     lines.push("");
-    lines.push(result.message);
+  }
+  lines.push(result.message);
+  lines.push("");
+  lines.push(`- **프로젝트 루트**: \`${result.root}\``);
+  if (result.source) lines.push(`- **레지스트리**: ${result.source}`);
+  lines.push(...noticeLines(result.notices));
+  lines.push("");
+
+  if (!result.success && result.errors.length > 0) {
+    lines.push("## 오류");
+    for (const e of result.errors) lines.push(e.startsWith("  ") ? e : `- ${e}`);
     lines.push("");
-
-    if (result.installedFiles.length > 0) {
-      lines.push("## 설치된 파일");
-      for (const file of result.installedFiles) {
-        lines.push(`- \`${file}\``);
-      }
-      lines.push("");
-    }
-
-    if (result.dependencies.length > 0) {
-      lines.push("## 필요한 의존성");
-      lines.push("다음 패키지를 설치해 주세요:");
-      lines.push("");
-      lines.push("```bash");
-      lines.push(`npm install ${result.dependencies.join(" ")}`);
-      lines.push("```");
-    }
-  } else {
-    lines.push("# 컴포넌트 설치 실패");
-    lines.push("");
-    lines.push(result.message);
-
-    if (result.dependencies.length > 0) {
-      lines.push("");
-      lines.push("## 필요한 의존성 (참고)");
-      for (const dep of result.dependencies) {
-        lines.push(`- \`${dep}\``);
-      }
-    }
   }
 
-  return lines.join("\n");
+  lines.push(...fileList("설치된 파일", result.installedFiles));
+  lines.push(...fileList("덮어쓴 파일", result.overwrittenFiles));
+  lines.push(...fileList("같은 내용이라 건너뛴 파일", result.unchangedFiles));
+  lines.push(...fileList("내용이 달라 건너뛴 파일", result.skippedFiles, "덮어쓰려면 `overwrite: true` 로 다시 호출하세요."));
+
+  if (result.dependencyCommand) {
+    lines.push("## 필요한 의존성");
+    lines.push("package.json 에 없는 패키지입니다. 다음 명령으로 설치해 주세요(서버는 설치를 실행하지 않았습니다):");
+    lines.push("");
+    lines.push("```bash");
+    lines.push(result.dependencyCommand);
+    lines.push("```");
+  }
+
+  return lines.join("\n").replace(/\n+$/, "");
 }

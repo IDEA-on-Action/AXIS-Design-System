@@ -18,6 +18,8 @@
  *   6. G1 "use client" 정적 검사(WI-0050): ui-react · agentic-ui · theme 의 지시문 목록 파일에는
  *      ESM · CJS 모두 지시문이 있고, 루트 배럴 · cn · *Variants 파일에는 없으며, 목록 밖 파일에
  *      상태 훅 · createContext/useContext · "use client" 모듈 점 접근이 없다(scripts/use-client-gate.mjs)
+ *   7. 발행하지 않는 공유 코어(@axis-ds/registry-core, WI-0055)가 발행본에 새지 않는다: dependencies · peer · optional 에
+ *      이름이 없고, 배포 .js 에 그 패키지를 import · require 하는 문이 없다(cli · mcp 는 빌드 때 번들한다)
  *
  * 사용: node scripts/pack-smoke.mjs        (실패 시 exit 1)
  */
@@ -47,7 +49,26 @@ const REQUIRED_FILES = {
   '@axis-ds/agentic-ui': ['tailwind.css'],
   // WI-0045 FR-3: add · list 의 동봉 레지스트리(원격 실패 시 폴백). 빠지면 오프라인 설치가 조용히 불가능해진다
   '@axis-ds/cli': ['dist/registry/index.json'],
+  // WI-0055 FR-5: mcp 컴포넌트 도구의 동봉 레지스트리
+  '@axis-ds/mcp': ['dist/registry/index.json'],
 };
+
+// 7. 발행하지 않는 공유 코어(WI-0055 D1). 이름이 발행본의 의존이나 런타임 import 로 남으면 소비자 설치 · 실행이 깨진다
+const PRIVATE_CORE = '@axis-ds/registry-core';
+const PRIVATE_CORE_IMPORT = new RegExp(
+  String.raw`(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)["']` + PRIVATE_CORE.replace('/', '\\/') + String.raw`(?:["'/])`
+);
+
+/** 디렉토리 재귀 .js · .mjs · .cjs 수집 */
+function collectJs(dir, acc = []) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (e.name !== 'node_modules') collectJs(full, acc);
+    } else if (/\.(?:m|c)?js$/.test(e.name)) acc.push(full);
+  }
+  return acc;
+}
 const requiredSeen = new Set();
 const g1Seen = new Set();
 
@@ -89,6 +110,18 @@ for (const pkgPath of packages) {
         if (String(ver).startsWith('workspace:')) {
           fail(name, `${field}.${dep} = "${ver}" (workspace 프로토콜 누출)`);
         }
+      }
+    }
+
+    // 7. 공유 코어 누출 검사
+    for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
+      if (published[field] && PRIVATE_CORE in published[field]) {
+        fail(name, `${field}.${PRIVATE_CORE} (발행하지 않는 공유 코어가 의존으로 남음)`);
+      }
+    }
+    for (const js of collectJs(root)) {
+      if (PRIVATE_CORE_IMPORT.test(readFileSync(js, 'utf8'))) {
+        fail(name, `${js.replace(root + '/', '')} 가 ${PRIVATE_CORE} 를 import 함(번들되지 않음)`);
       }
     }
 

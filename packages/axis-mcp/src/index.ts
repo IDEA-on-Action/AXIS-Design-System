@@ -52,7 +52,8 @@ import {
   formatGetBrandResult,
 } from "./tools/index.js";
 
-import type { ComponentCategory, TokenCategory } from "./types.js";
+import type { TokenCategory } from "./types.js";
+import type { ComponentFilter } from "./tools/registry-source.js";
 import type { PromptCategory } from "./tools/prompt/index.js";
 
 // 버전은 package.json 에서 읽습니다. 이 파일이 src/ 바로 아래(빌드 뒤 dist/index.js)에 있어야
@@ -68,10 +69,11 @@ const server = new McpServer({
 });
 
 // 도구 스키마 정의
+// WI-0055 D6: 종전 enum(core · agentic · form · layout)을 그대로 받고 ui(Core UI 전체)를 더했습니다
 const ComponentCategorySchema = z
-  .enum(["core", "agentic", "form", "layout"])
+  .enum(["core", "agentic", "form", "layout", "ui"])
   .optional()
-  .describe("컴포넌트 카테고리 필터");
+  .describe("컴포넌트 카테고리 필터 (ui = Core UI 전체, agentic = Agentic UI)");
 
 const TokenCategorySchema = z
   .enum(["color", "typography", "spacing", "radius", "shadow", "animation"])
@@ -88,9 +90,9 @@ server.tool(
   },
   async ({ query, category }) => {
     try {
-      const result = handleSearchComponents({
+      const result = await handleSearchComponents({
         query,
-        category: category as ComponentCategory | undefined,
+        category: category as ComponentFilter | undefined,
       });
       const formatted = formatSearchResult(result);
 
@@ -122,11 +124,11 @@ server.tool(
   "axis.get_component",
   "AXIS 디자인 시스템 컴포넌트의 상세 정보를 조회합니다.",
   {
-    name: z.string().describe("컴포넌트 이름 (예: button, input)"),
+    name: z.string().describe("컴포넌트 이름 (예: button, agentic-run-progress)"),
   },
   async ({ name }) => {
     try {
-      const component = handleGetComponent({ name });
+      const component = await handleGetComponent({ name });
       const formatted = formatComponentDetail(component);
 
       return {
@@ -155,14 +157,14 @@ server.tool(
 // 도구 등록: axis.list_components
 server.tool(
   "axis.list_components",
-  "AXIS 디자인 시스템의 모든 컴포넌트 목록을 조회합니다.",
+  "AXIS 디자인 시스템 레지스트리의 컴포넌트 목록(Core UI · Agentic UI)을 조회합니다.",
   {
     category: ComponentCategorySchema,
   },
   async ({ category }) => {
     try {
-      const result = handleListComponents({
-        category: category as ComponentCategory | undefined,
+      const result = await handleListComponents({
+        category: category as ComponentFilter | undefined,
       });
       const formatted = formatComponentList(result);
 
@@ -264,14 +266,18 @@ server.tool(
 // 도구 등록: axis.install_component
 server.tool(
   "axis.install_component",
-  "AXIS 디자인 시스템 컴포넌트를 프로젝트에 설치합니다.",
+  "AXIS 레지스트리 컴포넌트를 프로젝트에 설치합니다(cli `axis add` 와 같은 결과). 내용이 다른 기존 파일은 건너뛰고, 의존성은 설치 명령만 안내합니다.",
   {
-    name: z.string().describe("설치할 컴포넌트 이름"),
-    targetDir: z.string().describe("설치 대상 디렉토리 경로"),
+    name: z.string().optional().describe("설치할 컴포넌트 이름 (예: button, agentic-run-progress)"),
+    names: z.array(z.string()).optional().describe("설치할 컴포넌트 이름 여러 개 (name 과 함께 주면 합침)"),
+    targetDir: z
+      .string()
+      .describe("프로젝트 루트(이미 있는 디렉터리). axis.config.json 이 있으면 그 배치, 없으면 components/ui · components/agentic"),
+    overwrite: z.boolean().optional().describe("내용이 다른 기존 파일을 덮어씀 (기본 false: 건너뛰고 알림)"),
   },
-  async ({ name, targetDir }) => {
+  async ({ name, names, targetDir, overwrite }) => {
     try {
-      const result = handleInstallComponent({ name, targetDir });
+      const result = await handleInstallComponent({ name, names, targetDir, overwrite });
       const formatted = formatInstallResult(result);
 
       return {

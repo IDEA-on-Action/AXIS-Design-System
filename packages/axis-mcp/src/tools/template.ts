@@ -8,7 +8,7 @@ import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
 import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
-import { checkGlobalsCss, checkTailwindSetup } from "./tailwind-core.js";
+import { checkGlobalsCss, checkTailwindSetup } from "@axis-ds/registry-core/tailwind-core";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---

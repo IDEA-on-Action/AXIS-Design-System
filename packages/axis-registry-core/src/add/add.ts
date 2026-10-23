@@ -40,6 +40,7 @@ import { readAxisConfig, type AxisConfig } from "../config/axis-config.js";
 import {
   RegistryClient,
   RegistryError,
+  type RegistryClientOptions,
   LEGACY_REGISTRY_NOTICE,
   isValidRegistryName,
   resolveRegistryUrl,
@@ -84,7 +85,31 @@ export interface AddContext {
   log?: Log;
   error?: Log;
   confirm?: ConfirmFn;
+  /** 안내 문구. 생략하면 cli 문구입니다(WI-0055, mcp 는 도구 인자 이름으로 바꿉니다) */
+  hints?: Partial<AddHints>;
+  /**
+   * axis.config.json 이 없을 때 쓸 배치(WI-0055 D4, mcp 기본 배치). 주면 config 없음으로 실패하지 않고 이 값으로 설치하며
+   * 그 사실을 log 로 알립니다. 생략하면 cli 처럼 init 안내와 함께 실패합니다
+   */
+  fallbackConfig?: AxisConfig;
 }
+
+/** 실행 환경마다 다른 안내 문구 */
+export interface AddHints {
+  /** 목록을 보는 방법 */
+  listCommand: string;
+  /** 내용이 다른 기존 파일을 덮어쓰는 방법 */
+  overwrite: string;
+  /** `--agentic` 별칭이 있는지. false 면 없는 이름 안내에서 전체 이름만 제안합니다 */
+  agenticFlag: boolean;
+}
+
+/** cli 안내 문구(기본값) */
+export const CLI_ADD_HINTS: AddHints = {
+  listCommand: "npx @axis-ds/cli list",
+  overwrite: "--overwrite",
+  agenticFlag: true,
+};
 
 /** `--agentic` 별칭. 이미 `agentic-` 로 시작하면 그대로 둡니다 */
 export function applyAgenticAlias(name: string, agentic: boolean | undefined): string {
@@ -97,7 +122,8 @@ export function describeMissingName(
   requested: string,
   resolved: string,
   index: RegistryIndex,
-  agentic: boolean | undefined
+  agentic: boolean | undefined,
+  agenticFlag = true
 ): string {
   const names = new Set(index.items.map((it) => it.name));
   if (!isValidRegistryName(resolved)) {
@@ -107,6 +133,9 @@ export function describeMissingName(
     return `'${requested}': Agentic UI 에 '${resolved}' 가 없습니다. '${requested}' 는 Core UI 항목이니 --agentic 없이 실행하세요`;
   }
   if (!agentic && names.has(`${AGENTIC_PREFIX}${requested}`)) {
+    if (!agenticFlag) {
+      return `'${requested}': 없습니다. Agentic UI 항목을 뜻했다면 전체 이름 '${AGENTIC_PREFIX}${requested}' 를 쓰세요`;
+    }
     return `'${requested}': 없습니다. Agentic UI 항목 '${AGENTIC_PREFIX}${requested}' 를 뜻했다면 전체 이름을 쓰거나 --agentic 을 붙이세요`;
   }
   return `'${requested}': 레지스트리에 없습니다`;
@@ -515,6 +544,12 @@ export interface AddResult {
   overwritten: string[];
   unchanged: string[];
   skipped: string[];
+  /** 설치한 항목 이름(의존 항목 먼저). 계획 전에 멈추면 비어 있습니다(WI-0055) */
+  items?: string[];
+  /** package.json 에 없는 의존성 추가 명령. 없으면 undefined 입니다(WI-0055) */
+  dependencyCommand?: string;
+  /** config 가 없어 fallbackConfig 로 설치했는지(WI-0055 D4) */
+  usedFallbackConfig?: boolean;
 }
 
 function rel(root: string, p: string): string {
@@ -532,11 +567,12 @@ export async function runAdd(
 ): Promise<AddResult> {
   const log = ctx.log ?? console.log;
   const error = ctx.error ?? console.error;
+  const hints: AddHints = { ...CLI_ADD_HINTS, ...ctx.hints };
   const root = path.resolve(cwd);
   const result: AddResult = { exitCode: 1, written: [], overwritten: [], unchanged: [], skipped: [] };
 
   if (requested.length === 0) {
-    error("추가할 컴포넌트 이름을 하나 이상 적으세요. 목록: npx @axis-ds/cli list");
+    error(`추가할 컴포넌트 이름을 하나 이상 적으세요. 목록: ${hints.listCommand}`);
     return result;
   }
 
@@ -546,6 +582,11 @@ export async function runAdd(
   } catch (e) {
     error(`axis.config.json 을 읽지 못했습니다: ${(e as Error).message}`);
     return result;
+  }
+  if (!config && ctx.fallbackConfig) {
+    config = ctx.fallbackConfig;
+    result.usedFallbackConfig = true;
+    log(`axis.config.json 이 없어 기본 배치(componentsDir ${config.componentsDir ?? "(없음)"})로 설치합니다`);
   }
   if (!config) {
     error(
@@ -576,13 +617,13 @@ export async function runAdd(
   const missing: string[] = [];
   for (const req of requested) {
     const name = applyAgenticAlias(req, options.agentic);
-    if (!isValidRegistryName(name) || !names.has(name)) missing.push(describeMissingName(req, name, index, options.agentic));
+    if (!isValidRegistryName(name) || !names.has(name)) missing.push(describeMissingName(req, name, index, options.agentic, hints.agenticFlag));
     else if (!resolved.includes(name)) resolved.push(name);
   }
   if (missing.length > 0) {
     error(`컴포넌트를 찾을 수 없어 아무것도 설치하지 않았습니다(레지스트리 version ${index.version}).`);
     for (const m of missing) error(`  - ${m}`);
-    error("  사용 가능한 목록: npx @axis-ds/cli list");
+    error(`  사용 가능한 목록: ${hints.listCommand}`);
     return result;
   }
 
@@ -596,6 +637,7 @@ export async function runAdd(
       return result;
     }
     items = collected.items;
+    result.items = items.map((it) => it.name);
   } catch (e) {
     const msg = e instanceof RegistryError ? e.message : `레지스트리 항목을 읽지 못했습니다: ${(e as Error).message}`;
     error(msg);
@@ -776,7 +818,7 @@ export async function runAdd(
     log(outsideRel.has(p) ? `  = ${p} (같은 내용이라 건너뜀, 링크 대상이 프로젝트 밖)` : `  = ${p} (같은 내용이라 건너뜀)`);
   }
   if (result.skipped.length > 0) {
-    log(`내용이 다른 기존 파일 ${result.skipped.length}개를 건너뛰었습니다(덮어쓰려면 --overwrite):`);
+    log(`내용이 다른 기존 파일 ${result.skipped.length}개를 건너뛰었습니다(덮어쓰려면 ${hints.overwrite}):`);
     for (const p of result.skipped) log(outsideRel.has(p) ? `  - ${p} (링크 대상이 프로젝트 밖)` : `  - ${p}`);
   }
 
@@ -789,8 +831,9 @@ export async function runAdd(
   // 9. 의존성 안내
   const deps = missingDependencies(root, items);
   if (Object.keys(deps.specs).length > 0) {
+    result.dependencyCommand = addCommandForSpecs(deps.installCommand, deps.specs);
     log("\npackage.json 에 없는 의존성(설치는 실행하지 않았습니다):");
-    log(`  ${addCommandForSpecs(deps.installCommand, deps.specs)}`);
+    log(`  ${result.dependencyCommand}`);
   }
 
   return { ...result, exitCode: 0 };
@@ -823,7 +866,8 @@ export function groupIndex(index: RegistryIndex): { ui: ListEntry[]; agentic: Li
 export async function createClientFor(
   cwd: string,
   notify?: (message: string) => void,
-  env: NodeJS.ProcessEnv = process.env
+  env: NodeJS.ProcessEnv = process.env,
+  clientOptions: Pick<RegistryClientOptions, "bundledLabel" | "bundledDir" | "timeoutMs" | "fetchImpl"> = {}
 ): Promise<RegistryClient> {
   let config: AxisConfig | null = null;
   try {
@@ -834,5 +878,5 @@ export async function createClientFor(
   const resolved = resolveRegistryUrl({ config, env });
   const say = notify ?? ((message: string) => console.warn(message));
   if (resolved.migratedFrom !== undefined) say(LEGACY_REGISTRY_NOTICE);
-  return new RegistryClient({ url: resolved.url, ...(notify ? { notify } : {}) });
+  return new RegistryClient({ ...clientOptions, url: resolved.url, ...(notify ? { notify } : {}) });
 }

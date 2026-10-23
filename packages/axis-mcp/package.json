@@ -16,11 +16,13 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup src/index.ts --format esm --dts --clean && npm run copy-data",
+    "build": "tsup src/index.ts --format esm --dts --clean && npm run copy-data && npm run copy-registry",
     "copy-data": "node -e \"const fs=require('fs');fs.cpSync('src/registry/data','dist/data',{recursive:true})\"",
+    "copy-registry": "node ../axis-cli/scripts/copy-registry.mjs ../../apps/web/public/r dist/registry",
     "dev": "tsup src/index.ts --format esm --watch",
     "clean": "rm -rf dist",
     "test": "vitest run",
+    "type-check": "tsc --noEmit",
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
