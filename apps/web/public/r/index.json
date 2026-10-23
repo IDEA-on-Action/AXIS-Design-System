@@ -99,7 +99,7 @@
       "type": "registry:ui",
       "title": "Streaming Text",
       "description": "LLM 스트리밍 텍스트 출력 컴포넌트",
-      "sha256": "cb69396b9436fb17c670d1fa368a7579be344d24dfd438dc56eaa6f94dbd896e"
+      "sha256": "e39ef3ef19e7ce5d0a22ba4c9d168c7cd219ea0234b5df75bf74cfa70c6a4056"
     },
     {
       "name": "agentic-approval-card",

@@ -103,6 +103,64 @@
     },
     "./tailwind.css": "./tailwind.css"
   },
+  "typesVersions": {
+    "*": {
+      "run-progress": [
+        "./dist/run-progress/index.d.ts"
+      ],
+      "approval-card": [
+        "./dist/approval-card/index.d.ts"
+      ],
+      "streaming-text": [
+        "./dist/streaming-text/index.d.ts"
+      ],
+      "tool-call-card": [
+        "./dist/tool-call-card/index.d.ts"
+      ],
+      "message-bubble": [
+        "./dist/message-bubble/index.d.ts"
+      ],
+      "feedback-buttons": [
+        "./dist/feedback-buttons/index.d.ts"
+      ],
+      "code-block": [
+        "./dist/code-block/index.d.ts"
+      ],
+      "diff-viewer": [
+        "./dist/diff-viewer/index.d.ts"
+      ],
+      "plan-card": [
+        "./dist/plan-card/index.d.ts"
+      ],
+      "context-panel": [
+        "./dist/context-panel/index.d.ts"
+      ],
+      "token-usage-indicator": [
+        "./dist/token-usage-indicator/index.d.ts"
+      ],
+      "attachment-card": [
+        "./dist/attachment-card/index.d.ts"
+      ],
+      "agent-avatar": [
+        "./dist/agent-avatar/index.d.ts"
+      ],
+      "recovery-banner": [
+        "./dist/recovery-banner/index.d.ts"
+      ],
+      "source-panel": [
+        "./dist/source-panel/index.d.ts"
+      ],
+      "step-timeline": [
+        "./dist/step-timeline/index.d.ts"
+      ],
+      "surface-renderer": [
+        "./dist/surface-renderer/index.d.ts"
+      ],
+      "thinking-indicator": [
+        "./dist/thinking-indicator/index.d.ts"
+      ]
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist",
