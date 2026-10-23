@@ -1,5 +1,25 @@
 # @axis-ds/cli
 
+## 1.5.2
+
+### Patch Changes
+
+- d73447e: MCP 컴포넌트 도구가 레지스트리를 읽고 `npx @axis-ds/cli add` 와 같은 결과로 설치합니다(WI-0055).
+  - `axis.install_component` 가 하드코딩 템플릿 5개(shadcn 원형) 대신 레지스트리 항목을 설치합니다. 의존 항목(`utils` · `agentic-a11y-labels`)을 함께 설치하고, import 를 설치 위치 기준 상대 경로로 바꾸며, 프로젝트 밖으로 나가는 경로 · 링크는 쓰지 않습니다. 종전에는 separator · dialog 등 5개 밖의 ui 와 agentic 전부가 설치되지 않았습니다.
+  - 내용이 다른 기존 파일은 덮어쓰지 않고 건너뛰며 응답 첫머리에 건너뛴 수를 적습니다. `overwrite: true` 일 때만 덮어씁니다(종전에는 묻지 않고 덮어썼습니다).
+  - `targetDir` 는 이미 있는 프로젝트 루트입니다. `axis.config.json` 이 있으면 그 배치, 없으면 `components/ui` · `components/agentic` 에 설치하고 알립니다. 없는 디렉터리는 만들지 않고 실패합니다. 여러 개는 `names` 배열로 줍니다.
+  - 의존성은 설치하지 않고 lockfile 에 맞는 설치 명령을 안내합니다.
+  - `axis.list_components` · `axis.search_components` 가 Core UI 10개 · Agentic UI 18개(28개)를 보여 주고, `category` 에 `ui` 를 더했습니다(종전 값은 그대로). `axis.get_component` 는 레지스트리의 설명 · 의존성 · 파일에 Props · 예제를 덧붙입니다.
+  - 레지스트리는 `AXIS_REGISTRY_URL` → `axis.config.json` 의 `registry` → `https://axis-design-system.pages.dev/r` 순으로 읽고, 원격에 닿지 못하면 패키지에 포함된 레지스트리(`dist/registry`)를 씁니다. 응답에 사용한 주소와 출처를 항상 적습니다.
+  - 보안: `axis.config.json` 의 `registry` 는 https 이고 루프백 · 사설 · 링크로컬 주소가 아닐 때만 씁니다. 아니면 무시하고 기본 주소로 조회하며 알리고, 쓰는 경우에도 리다이렉트를 따라가지 않습니다(신뢰할 수 없는 저장소의 config 로 내부망에 요청하는 것을 막음). 사내 레지스트리는 환경변수 `AXIS_REGISTRY_URL` 로 주세요(제한 없음). 판정은 IANA 특수 목적 주소(문서용 · 벤치마크 · 6to4 · Teredo · NAT64 등 포함) 전부이고, 연결 단계에서 고른 주소를 다시 판정해 DNS 리바인딩도 막습니다.
+  - `@axis-ds/cli` 는 설치 코어를 MCP 와 공유하도록 내부 구조만 바꿨습니다. 명령 동작과 출력은 같습니다.
+
+- 006836a: `axis library` 의 AXIS 수집기가 문서 사이트에 없는 페이지로 링크하던 문제를 고쳤습니다(WI-0057).
+  - 문서 링크는 문서 사이트에 그 페이지(`apps/web/src/app/(docs)/<경로>/page.tsx`)가 있을 때만 만듭니다. 이름이 다른 것은 별칭 표로 잇고(`approval-card` → `/agentic/approval-dialog`), 둘 다 없으면 링크를 비웁니다. 종전에는 이름 그대로 `/agentic/<이름>` 을 만들어 404 가 났습니다.
+  - 문서 사이트 데모 페이지(`page.tsx`)를 컴포넌트로 잡지 않습니다. 패키지 루트의 단일 파일(`a11y.test.tsx` 등)과 컴포넌트 디렉터리 안의 테스트 · 스토리 파일도 수집하지 않습니다. 코드 파일 순서는 이름순입니다.
+  - 설명은 컴포넌트 이름으로 선언된 곳 바로 앞의 JSDoc 을 먼저 씁니다(종전에는 파일의 첫 JSDoc 이라 Props 설명이 나오기도 했습니다).
+  - `axis library refresh-axis` 를 더했습니다. AXIS 항목만 저장소 소스에서 다시 만들고 외부 소스(shadcn · monet) 항목은 그대로 둡니다. 원격에 접속하지 않고, 같은 소스로 다시 돌리면 아무 파일도 바뀌지 않습니다.
+
 ## 1.5.1
 
 ### Patch Changes
