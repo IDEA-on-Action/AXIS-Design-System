@@ -22,6 +22,10 @@
  *   - 훅(use*)은 클라이언트 참조여야 함(서버에서 호출할 수 없음. 예: theme 의 useTheme)
  * 을 확인합니다. 하네스는 ESM import 경로만 봅니다(CJS 지시문 위치는 G1 이 정적으로 봅니다).
  *
+ * G2 타입 해석(WI-0053 FR-3): 같은 소비자 디렉터리에서 4패키지 exports 의 types · .json 항목 전수를
+ * moduleResolution node · node16(CJS · ESM) · bundler 로 tsc 하고, 각 탐침이 exports 가 가리키는 파일로
+ * 해석됐는지 explainFiles 로 봅니다(scripts/types-resolution-gate.mjs). node 는 Next 15 가 만드는 tsconfig 값입니다.
+ *
  * 사용:
  *   node scripts/pack-install-smoke.mjs                          (tokens 설치 스모크 + G2)
  *   node scripts/pack-install-smoke.mjs [패키지 디렉터리...]     (설치 스모크만)
@@ -36,6 +40,7 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { runTypesResolutionGate, summarize } from './types-resolution-gate.mjs';
 
 const ROOT = process.cwd();
 const rawArgs = process.argv.slice(2);
@@ -252,6 +257,28 @@ console.log(`\n[pack-install-smoke] OK - ${[
 ].filter(Boolean).join(', ')}`);
 
 // ---------------------------------------------------------------------------
+// G2 타입 해석 게이트 (WI-0053)
+// ---------------------------------------------------------------------------
+function runTypesGate(consumer, packages) {
+  const TG = 'G2-types';
+  if (!existsSync(TSC)) { measureFail(TG, `tsc 없음(${TSC})`); return; }
+  const t0 = Date.now();
+  const res = runTypesResolutionGate({ consumer, tsc: TSC, packages });
+  for (const m of res.measureErrors) measureFail(TG, m);
+  const probes = res.rows.length;
+  const expected = res.targets.length * res.modes.length;
+  if (probes !== expected) measureFail(TG, `탐침 결과 ${probes}건 != 대상 ${res.targets.length}개 × 방식 ${res.modes.length}`);
+  console.log(`  - [${TG}] 탐침 ${res.targets.length}개 × ${res.modes.join(' · ')} = ${probes}건, 실패 ${res.failures.length}건 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
+  for (const line of summarize(res)) console.log(`    ${line}`);
+  for (const f of res.failures.slice(0, 10)) fail(TG, f);
+  // 나머지는 줄을 아끼되 결함 수에는 모두 센다
+  if (res.failures.length > 10) {
+    failures += res.failures.length - 10;
+    console.error(`  ✗ [${TG}] 그 밖 ${res.failures.length - 10}건(위 요약 참고)`);
+  }
+}
+
+// ---------------------------------------------------------------------------
 // G2: RSC 하네스 (WI-0050)
 // ---------------------------------------------------------------------------
 async function runRscSmoke() {
@@ -316,6 +343,10 @@ async function runRscSmoke() {
       const got = JSON.parse(readFileSync(join(consumer, copies[0]), 'utf8')).version;
       if (got !== want) { measureFail(G2, `${name} 설치 버전 ${got} != tarball ${want}`); return; }
     }
+
+    // 2b. 타입 해석 게이트(WI-0053 FR-3): 같은 소비자 디렉터리의 4패키지 exports(types · .json) 전수를
+    //     node · node16 CJS · node16 ESM · bundler 로 tsc. 탐침 수를 찍어 0 으로 무너지지 않았음을 남긴다
+    runTypesGate(consumer, RSC_PACKAGES);
 
     // 3. 대상 spec: 루트 + exports 서브패스(.css · package.json 제외)
     const specs = [];

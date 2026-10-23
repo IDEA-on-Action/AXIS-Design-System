@@ -8,23 +8,23 @@
 - [x] create-next-app@15.5.28 템플릿 9종 `bundler` 확인
 - [x] 시제품 A(명시 typesVersions) · B(와일드카드) · B'(와일드카드 + 루트 보호) · C(stub 디렉터리) 실측
 - [x] skipLibCheck=false 재실측으로 cva `/types` 변형 타입 소실 발견(PRD 1.4)
-- [ ] D1~D7 결정 반영(PRD 2절 「결정」 표로 교체)
+- [x] D1~D7 결정 반영(2026-10-23, PRD v1.0)
 
 ## FR-1 typesVersions
-- [ ] ui-react · agentic-ui · tokens `package.json` 에 생성 결과 기록
+- [x] ui-react(30) · agentic-ui(18) · tokens(4) `package.json` 에 생성 결과 기록, theme 은 없음
 
 ## FR-2 생성 · 검사
-- [ ] `scripts/sync-types-versions.mjs`(쓰기 · `--check`)
-- [ ] ui-react `build` 에 연결, 루트 `package.json` 스크립트와 CI(frontend.yml) 에 `--check`
-- [ ] 변이: exports 항목 추가 · 삭제 시 `--check` rc 1
+- [x] `scripts/sync-types-versions.mjs`(쓰기 · `--check` · `--only`) + `scripts/sync-types-versions.test.mjs`(8건)
+- [x] ui-react `build` 에 연결, 루트 `sync-types-versions` · `check-types-versions` 스크립트, CI(frontend.yml) 한 단계
+- [x] 변이: exports 항목 추가 · 삭제 · 타깃 변경, theme 임의 추가 시 `--check` rc 1, 생성 후 rc 0
 
 ## FR-3 소비자 해석 게이트
-- [ ] pack-install-smoke G2 소비자에서 node · node16 · bundler tsc, explainFiles 해석 수 판정, 대상 0 개는 exit 2
-- [ ] 음성 대조: 1.5.0 tarball 로 node 52건 실패 확인
+- [x] `scripts/types-resolution-gate.mjs` + pack-install-smoke G2 연결(탐침 56 × 4방식 = 224건, 해석 파일 대조, 대상 0 · 행 수 불일치는 exit 2)
+- [x] 음성 대조: 1.5.0 tarball 결함 52건, typesVersions 만 뺀 ui-react 30건, 잘못된 타깃 변이 1건
 
 ## FR-4 문서
-- [ ] README 지원 해석 방식 안내
+- [x] changeset · release-notes 에 해석 방식과 영향 기록
 
 ## 검증
-- [ ] AC1~AC5, tsconfig 없는 Next 앱 `next build` rc 0
-- [ ] changeset(D7), release-notes, testplan
+- [x] AC1~AC5, tsconfig 없는 Next 앱 `next build` rc 0(testplan)
+- [x] changeset(tokens · ui-react · agentic-ui patch), release-notes, testplan

@@ -24,6 +24,22 @@
     "./css/brands/ontology": "./dist/css/brands/ontology.css",
     "./brands/ontology/brand.json": "./dist/brands/ontology/brand.json"
   },
+  "typesVersions": {
+    "*": {
+      "tailwind": [
+        "./dist/tailwind-preset.d.ts"
+      ],
+      "json": [
+        "./dist/json/tokens.json"
+      ],
+      "brands": [
+        "./dist/brands/index.json"
+      ],
+      "brands/ontology/brand.json": [
+        "./dist/brands/ontology/brand.json"
+      ]
+    }
+  },
   "sideEffects": [
     "*.css"
   ],

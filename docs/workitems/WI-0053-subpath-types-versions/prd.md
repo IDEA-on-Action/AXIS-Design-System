@@ -1,6 +1,6 @@
 # WI-0053: 서브패스 타입 해석 실패(moduleResolution node) - typesVersions PRD
 
-> 작성일: 2026-10-23 | 버전: v0.1(초안) | 작성자: Sinclair Seo | WI: WI-0053 | GitHub: #147 | 우선순위: P2 | 상태: Draft (결정 대기)
+> 작성일: 2026-10-23 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0053 | GitHub: #147 | 우선순위: P2 | 상태: Approved (2026-10-23 결정 반영)
 > 기준: `main` 8a8cd5b (linked 4패키지 1.5.0 · cli 1.5.1 · mcp 1.2.3 배포)
 > 관련: WI-0050(#143) 구현 검증(2026-10-20)에서 발견한 기존 결함(1.4.0 에도 같음). WI-0050 testplan 「TypeScript node10」 행
 
@@ -16,7 +16,7 @@ Next 15.5.28 은 tsconfig 가 없는 프로젝트에서 `next build` 할 때 tsc
 
 ### 1.2 실측 (2026-10-23, npm 배포본 1.5.0)
 
-환경: Node 20, TypeScript 5.9.3, next 15.5.28, react 19.2.0, `@types/react` 19.2.2. 빈 디렉터리에 4패키지 1.5.0 을 npm 으로 설치하고, `exports` 항목마다 탐침 파일 1개(`import * as m from '<spec>'`)를 두어 `tsc --noEmit` 했습니다. 컴파일 옵션은 Next 가 만드는 값(`skipLibCheck: true` · `strict: false` · `resolveJsonModule: true` 등)에 `module`/`moduleResolution` 만 바꿨습니다. CSS 서브패스 6개(`tokens/css` 4 · `ui-react/tailwind.css` · `agentic-ui/tailwind.css`)는 부수효과 import 라 tsc 가 검사하지 않으므로 뺐습니다.
+환경: Node 22.22.0, TypeScript 5.9.3, next 15.5.28, react 19.2.0, `@types/react` 19.2.2. 빈 디렉터리에 4패키지 1.5.0 을 npm 으로 설치하고, `exports` 항목마다 탐침 파일 1개(`import * as m from '<spec>'`)를 두어 `tsc --noEmit` 했습니다. 컴파일 옵션은 Next 가 만드는 값(`skipLibCheck: true` · `strict: false` · `resolveJsonModule: true` 등)에 `module`/`moduleResolution` 만 바꿨습니다. CSS 서브패스 6개(`tokens/css` 4 · `ui-react/tailwind.css` · `agentic-ui/tailwind.css`)는 부수효과 import 라 tsc 가 검사하지 않으므로 뺐습니다.
 
 | 패키지 | 대상 | 수 | node(node10) | node16 CJS(.cts) | node16 ESM(.mts) | bundler |
 |---|---|---|---|---|---|---|
@@ -54,30 +54,28 @@ Next 15.5.28 은 tsconfig 가 없는 프로젝트에서 `next build` 할 때 tsc
 
 `scripts/pack-install-smoke.mjs` 의 타입 검사(2단계)는 `module/moduleResolution: node16` 한 가지로, 그리고 기본 대상인 tokens 에만 돕니다. G2 RSC 하네스는 4패키지 서브패스를 모두 불러 보지만 런타임(ESM import)만 봅니다. node10 · bundler 해석은 어디에서도 재지 않았습니다.
 
-## 2. 결정 대기
+## 2. 결정 (2026-10-23 사용자, 모두 권장안)
 
-| # | 질문 | 권장안 |
-|---|---|---|
-| D1 | 적용 패키지 범위 | ui-react · agentic-ui · tokens(`tailwind` + JSON 3). theme 은 서브패스가 없어 typesVersions 를 두지 않고 검사만 |
-| D2 | 해결 방식 | A. 명시 typesVersions(exports 와 1:1) |
-| D3 | 생성 · 유지 방식 | 루트 공용 스크립트가 각 package.json 의 `exports` 에서 `typesVersions` 를 생성해 커밋하고, `--check` 로 드리프트 게이트 |
-| D4 | 소비자 쪽 해석 게이트 | pack-install-smoke 의 G2 소비자 디렉터리(4패키지 tarball 설치)에서 전 서브패스 × node · node16 · bundler tsc |
-| D5 | JSON 서브패스(tokens 3개) 포함 여부 | 포함 |
-| D6 | cva `/types` 로 인한 변형 타입 소실(1.4) | 별도 WI 로 분리 |
-| D7 | 릴리스 | 바뀐 3패키지(tokens · ui-react · agentic-ui) changeset patch |
+| # | 결정 |
+|---|---|
+| D1 | 적용 범위는 ui-react · agentic-ui · tokens(`tailwind` + JSON 3)입니다. theme 은 서브패스가 없어 typesVersions 를 두지 않고, 생기면 드리프트로 잡도록 검사 대상에만 넣습니다 |
+| D2 | 명시 typesVersions(exports 와 1:1)로 고칩니다. 와일드카드(1.3 B · B')와 stub 디렉터리(C)는 쓰지 않습니다 |
+| D3 | 루트 공용 스크립트 `scripts/sync-types-versions.mjs` 가 각 package.json 의 `exports` 에서 생성해 커밋하고, `--check` 를 CI 드리프트 게이트로 둡니다. ui-react 는 `build` 의 `sync-exports` 뒤에서 다시 생성합니다 |
+| D4 | pack-install-smoke 의 G2 소비자 디렉터리(4패키지 tarball 설치)에서 types · JSON 항목 전수를 node · node16(CJS · ESM) · bundler 로 tsc 합니다 |
+| D5 | JSON 서브패스(tokens 3개)를 포함합니다 |
+| D6 | cva `/types` 로 인한 변형 타입 소실(1.4)은 범위 밖입니다. Master 가 별도 WI 로 등록합니다 |
+| D7 | tokens · ui-react · agentic-ui 를 changeset patch 로 냅니다. theme 은 바뀌지 않아 올리지 않습니다 |
 
-선택지와 근거는 이 WI 의 결정 목록 보고(Master 전달)에 있고, 결정 후 이 표를 「결정」으로 바꿉니다.
-
-## 3. 요구사항 (권장안 기준 초안)
+## 3. 요구사항
 
 - FR-1 typesVersions: ui-react · agentic-ui · tokens `package.json` 에 `typesVersions: {"*": {...}}` 를 둡니다. 키는 `exports` 키에서 `./` 를 뗀 값, 값은 그 항목의 `types` 타깃(JSON 은 파일 타깃) 1개입니다. `.` 와 CSS 항목은 넣지 않습니다. 와일드카드 키는 쓰지 않습니다(1.3 B: 루트가 깨짐)
-- FR-2 생성 · 검사: `scripts/sync-types-versions.mjs`(이름 가안)가 FR-1 규칙으로 생성하고 `--check` 는 드리프트 시 exit 1 입니다. ui-react 는 `build` 의 `sync-exports` 뒤에 이어 실행해 exports 가 바뀌면 함께 바뀌게 합니다. agentic-ui · tokens 는 exports 를 손으로 고치므로 `--check` 가 CI 에서 잡습니다
-- FR-3 소비자 해석 게이트: pack-install-smoke G2 소비자 디렉터리에서 `types` 조건이 있는 모든 exports 항목과 JSON 항목을 node · node16 · bundler 로 tsc 합니다. 판정은 rc 와 함께 「탐침 import 가 `.d.ts`/`.json` 으로 해석된 수 = 대상 수」(explainFiles)로 하고, 대상 0 개는 측정 실패(exit 2)입니다
-- FR-4 문서: README(또는 설치 안내)에 지원 해석 방식과 node10 한계(D6 결과에 따라)를 적습니다
+- FR-2 생성 · 검사: `scripts/sync-types-versions.mjs` 가 FR-1 규칙으로 생성하고 `--check` 는 드리프트 시 exit 1, package.json 을 못 읽으면 exit 2 입니다. ui-react 는 `build` 의 `sync-exports` 뒤에 이어 실행해 exports 가 바뀌면 함께 바뀌게 합니다. agentic-ui · tokens 는 exports 를 손으로 고치므로 CI 의 `pnpm check-types-versions`(검사 + 단위 테스트)가 잡습니다
+- FR-3 소비자 해석 게이트: pack-install-smoke G2 소비자 디렉터리에서 `types` 조건이 있는 모든 exports 항목(루트 포함)과 JSON 항목을 node · node16 CJS · node16 ESM · bundler 로 tsc 합니다(`scripts/types-resolution-gate.mjs`). 항목 × 방식마다 「탐침 파일 오류 0」과 「explainFiles 의 해석 파일 = exports 타깃」을 함께 봅니다. 대상 0 개, 결과 행 수 ≠ 대상 × 방식, explainFiles 해석 0 건, 탐침 밖 오류는 측정 실패(exit 2)입니다
+- FR-4 문서: changeset · release-notes 에 해당 해석 방식과 영향을 적습니다(README 의 설치 안내는 바꾸지 않음)
 
-## 4. 수용 기준 (초안)
+## 4. 수용 기준
 
-- AC1 수정 없는 1.5.0 tarball 로 FR-3 게이트가 node 에서 52건 실패합니다(음성 대조, `--rsc-tarball` 류 옵션)
+- AC1 수정 없는 1.5.0 tarball 로 FR-3 게이트가 node 에서 52건 실패합니다(음성 대조, `pack-install-smoke.mjs --rsc-only --rsc-tarball`)
 - AC2 수정본 tarball 로 4패키지 TS 진입점 53 + JSON 3 이 node · node16 · bundler 모두 해석되고 rc 0 입니다
 - AC3 tsconfig 없는 Next 15.5.28 탐침 앱이 수정본으로 `next build` rc 0 입니다(1.2 의 실패 재현과 같은 페이지)
 - AC4 exports 에 항목을 하나 더하거나 빼면 `--check` 가 rc 1 입니다(변이)
@@ -86,5 +84,5 @@ Next 15.5.28 은 tsconfig 가 없는 프로젝트에서 `next build` 할 때 tsc
 ## 5. 범위 밖
 
 - CSS 서브패스(tsc 검사 대상 아님)
-- cva `/types` 변형 타입 소실(D6 결정에 따름)
+- cva `/types` 변형 타입 소실(D6, 별도 WI)
 - `exports` 구조 자체의 변경
