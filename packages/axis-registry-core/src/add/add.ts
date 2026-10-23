@@ -44,7 +44,9 @@ import {
   normalizeRegistryBaseUrl,
   publicRegistryUrlProblem,
   redactRegistryUrl,
+  createPinnedFetch,
   type LookupAll,
+  type PinnedFetchOptions,
   type RegistryClientOptions,
   LEGACY_REGISTRY_NOTICE,
   isValidRegistryName,
@@ -895,6 +897,14 @@ export async function createClientFor(
     } else {
       // 판정한 주소에서 리다이렉트로 내부 주소에 가지 않게 따라가지 않습니다(D13)
       rejectRedirects = true;
+      // DNS 리바인딩 대비: 연결 단계에서 고른 주소를 다시 판정하는 요청으로 보냅니다(pinned-fetch.ts).
+      // fetchImpl 을 직접 준 경우(테스트)는 그것을 씁니다
+      if (!options.fetchImpl) {
+        options.fetchImpl = createPinnedFetch({
+          ...(guardConfigRegistry.lookup ? { lookupAll: guardConfigRegistry.lookup } : {}),
+          ...guardConfigRegistry.connect,
+        });
+      }
     }
   }
   return new RegistryClient({
@@ -911,8 +921,10 @@ export async function createClientFor(
  * 아니면 무시하고 기본 주소로 조회하며 안내합니다. 쓰는 경우에도 리다이렉트를 따라가지 않습니다. 환경변수는 제한하지 않습니다
  */
 export interface ConfigRegistryGuard {
-  /** DNS 조회(테스트에서 주입). 기본은 dns.lookup(all) */
+  /** DNS 조회(테스트에서 주입). 기본은 dns.lookup(all). 요청 전 판정과 연결 단계 재판정이 같이 씁니다 */
   lookup?: LookupAll;
+  /** 연결 단계 요청의 테스트 전용 대체(판정 · 요청 함수 · 포트) */
+  connect?: Omit<PinnedFetchOptions, "lookupAll">;
 }
 
 function isDefaultRegistry(url: string): boolean {

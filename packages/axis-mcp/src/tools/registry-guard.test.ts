@@ -6,12 +6,20 @@
  */
 
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, existsSync } from "node:fs";
+import { createServer, request as httpRequest, type Server } from "node:http";
+import type { AddressInfo } from "node:net";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { createClientFor } from "@axis-ds/registry-core/add";
-import { publicRegistryUrlProblem, type FetchLike, type LookupAll } from "@axis-ds/registry-core/registry";
+import {
+  blockedAddressReason,
+  createPinnedFetch,
+  publicRegistryUrlProblem,
+  type FetchLike,
+  type LookupAll,
+} from "@axis-ds/registry-core/registry";
 import { formatInstallResult, handleInstallComponent } from "./install.js";
 import { formatComponentList, handleListComponents } from "./list.js";
 import { mcpClientFactory } from "./registry-source.js";
@@ -115,6 +123,32 @@ describe("publicRegistryUrlProblem (코어 host-guard)", () => {
     });
   }
   const allowed = ["https://registry.example.com/r", "https://8.8.8.8/r", "https://[2606:4700::1]/r", "https://172.32.0.1/r", "https://100.128.0.1/r"];
+  // IANA 특수 목적 주소 보강(2026-10-24 보안 리뷰)
+  const blockedMore = [
+    "198.18.0.1", "198.19.255.255", "192.0.0.8", "192.0.2.1", "198.51.100.7", "203.0.113.9", "192.88.99.1",
+    "240.0.0.1", "255.255.255.255", "64:ff9b:1::1", "100::1", "100:0:0:1::5",
+    "2002:a00:1::1", // 6to4 가 품은 10.0.0.1
+    "2002:7f00:1::",
+    "2001:0:a00:1::1", // Teredo 서버 10.0.0.1
+    "2001:0:4136:e378:8000:63bf:80ff:fffe", // Teredo 클라이언트(비트 반전) 127.0.0.1
+    "2001:db8::1", "2001:2::1", "2001:10::1", "3fff::1", "5f00::1", "::ffff:198.18.0.1",
+  ];
+  for (const ip of blockedMore) {
+    it(`거부(보강): ${ip}`, () => {
+      expect(blockedAddressReason(ip)).not.toBeNull();
+    });
+  }
+  const allowedMore = [
+    "198.20.0.1", "192.0.3.1", "203.0.114.1",
+    "2002:5db8:d822::1", // 6to4 가 품은 93.184.216.34
+    "2001:0:4136:e378:8000:63bf:a247:27dd", // Teredo 서버 65.54.227.120 · 클라이언트 93.184.216.34
+    "2001:4860:4860::8888",
+  ];
+  for (const ip of allowedMore) {
+    it(`허용(보강): ${ip}`, () => {
+      expect(blockedAddressReason(ip)).toBeNull();
+    });
+  }
   for (const url of allowed) {
     it(`허용: ${url}`, async () => {
       expect(await publicRegistryUrlProblem(url, lookup)).toBeNull();
@@ -213,6 +247,77 @@ describe("cli 는 바뀌지 않음", () => {
     const client = await createClientFor(dir, (m) => notices.push(m), {}, { bundledDir: REGISTRY_DIR });
     expect(client.remote).toEqual({ url: "https://10.0.0.1/r", source: "config" });
     expect(notices).toEqual([]);
+    expect(lookup.calls).toEqual([]);
+  });
+});
+
+describe("연결 단계 재판정 (DNS 리바인딩)", () => {
+  let server: Server | undefined;
+  let hits: { url: string; host?: string }[] = [];
+  beforeEach(async () => {
+    hits = [];
+    server = createServer((req, res) => {
+      hits.push({ url: req.url ?? "", host: req.headers.host });
+      const file = path.join(REGISTRY_DIR, path.basename(req.url ?? ""));
+      if (existsSync(file)) res.writeHead(200, { "content-type": "application/json" }).end(readFileSync(file));
+      else res.writeHead(404).end();
+    });
+    await new Promise<void>((done) => server!.listen(0, "127.0.0.1", () => done()));
+  });
+  afterEach(async () => {
+    await new Promise<void>((done) => server!.close(() => done()));
+  });
+  const port = () => (server!.address() as AddressInfo).port;
+
+  it("양성 대조: 판정이 허용하면 lookup 결과 주소로 연결하고 Host 는 원래 이름", async () => {
+    const lookup = fakeLookup({ "registry.example.com": ["127.0.0.1"] });
+    const fetchImpl = createPinnedFetch({ lookupAll: lookup, judge: () => null, request: httpRequest, port: port() });
+    const res = await fetchImpl("https://registry.example.com/r/index.json", { headers: { accept: "application/json" } });
+    expect(res.status).toBe(200);
+    expect(JSON.parse(await res.text()).items.length).toBe(30);
+    expect(hits).toEqual([{ url: "/r/index.json", host: `registry.example.com:${port()}` }]);
+    expect(lookup.calls).toEqual(["registry.example.com"]);
+  });
+
+  it("검사 때는 공인, 연결 때는 루프백으로 바뀌면 연결하지 않고 동봉본으로(서버 요청 0건)", async () => {
+    let n = 0;
+    const calls: string[] = [];
+    const rebinding: LookupAll = async (host) => {
+      calls.push(host);
+      n++;
+      return n === 1 ? [{ address: "93.184.216.34", family: 4 }] : [{ address: "127.0.0.1", family: 4 }];
+    };
+    const dir = project("https://registry.example.com/r");
+    const r = await handleListComponents({}, {
+      cwd: dir,
+      createClient: mcpClientFactory({ env: {}, lookup: rebinding, bundledDir: REGISTRY_DIR, connect: { request: httpRequest, port: port() } }),
+    });
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+    expect(hits).toEqual([]);
+    expect(r.totalCount).toBe(28);
+    expect(r.source).toContain("출처 동봉본 · 시도한 원격 https://registry.example.com/r (axis.config.json registry)");
+    expect(r.notices.join("\n")).toContain("연결 단계에서 registry.example.com 가 127.0.0.1(루프백 주소(127.0.0.0/8))로 풀려 연결하지 않습니다");
+  });
+
+  it("공인 결과에 사설 주소가 하나라도 섞이면 연결하지 않음", async () => {
+    const lookup = fakeLookup({ "registry.example.com": ["93.184.216.34", "10.1.1.1"] });
+    const fetchImpl = createPinnedFetch({ lookupAll: lookup, request: httpRequest, port: port() });
+    await expect(fetchImpl("https://registry.example.com/r/index.json")).rejects.toThrow("10.1.1.1");
+    expect(hits).toEqual([]);
+  });
+
+  it("응답 크기 상한을 넘으면 실패", async () => {
+    const lookup = fakeLookup({ "registry.example.com": ["127.0.0.1"] });
+    const fetchImpl = createPinnedFetch({ lookupAll: lookup, judge: () => null, request: httpRequest, port: port(), maxBytes: 100 });
+    await expect(fetchImpl("https://registry.example.com/r/index.json")).rejects.toThrow("100 바이트를 넘어");
+  });
+
+  it("env · 기본값 경로는 재판정 fetch 를 쓰지 않음(제한 없는 경로는 종전 fetch)", async () => {
+    const lookup = fakeLookup({});
+    const env = { AXIS_REGISTRY_URL: `http://127.0.0.1:${port()}/r` };
+    const r = await handleListComponents({}, { cwd: work, createClient: mcpClientFactory({ env, lookup, bundledDir: REGISTRY_DIR }) });
+    expect(r.source).toContain("(환경변수 AXIS_REGISTRY_URL)");
+    expect(hits.map((h) => h.url)).toEqual(["/r/index.json"]);
     expect(lookup.calls).toEqual([]);
   });
 });

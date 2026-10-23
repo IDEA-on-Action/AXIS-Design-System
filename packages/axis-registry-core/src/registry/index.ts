@@ -61,6 +61,13 @@ export {
   publicRegistryUrlProblem,
   type LookupAll,
 } from "./host-guard.js";
+export {
+  BLOCKED_CONNECT_CODE,
+  PINNED_FETCH_MAX_BYTES,
+  createPinnedFetch,
+  guardedLookup,
+  type PinnedFetchOptions,
+} from "./pinned-fetch.js";
 
 export type RegistryErrorCode = "invalid-name" | "not-found" | "unavailable";
 

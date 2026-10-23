@@ -35,6 +35,7 @@
 - [x] 코어 `registry/host-guard.ts`(https · 리터럴 IP · localhost · .local · dns.lookup(all)), `createClientFor` 의 `guardConfigRegistry`, `rejectRedirects`, `RegistryClient.remote`(주소 · 출처)
 - [x] mcp 만 켬(`mcpClientFactory`), 결과에 주소 · 출처 항상 표시, cli 무변경(640)
 - [x] 테스트 41개 · 변이 10건, tarball 실측(config 루프백 요청 0건 · env 3건)
+- [x] 보강(보안 리뷰 2차): IANA 특수 목적 주소 대조 · 6to4 · Teredo, 연결 단계 재판정(`pinned-fetch.ts`), 테스트 +33 · 변이 7건, tarball 회귀 · 공인 https 재판정 경로 실측
 
 ## 검증 · 문서
 - [x] AC1 ~ AC6, cli 1.5.1 대 새 mcp 설치 결과 바이트 비교

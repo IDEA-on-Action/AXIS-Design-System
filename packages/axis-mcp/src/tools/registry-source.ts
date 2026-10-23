@@ -17,6 +17,7 @@ import { createClientFor, itemKind } from "@axis-ds/registry-core/add";
 import type {
   FetchLike,
   LookupAll,
+  PinnedFetchOptions,
   RegistryClient,
   RegistryIndex,
   RegistryIndexEntry,
@@ -39,12 +40,22 @@ export interface RegistryDeps {
 
 /** mcp 클라이언트 생성기. config 의 registry 제한(D13)을 켭니다. 인자는 테스트에서만 줍니다 */
 export function mcpClientFactory(
-  overrides: { env?: NodeJS.ProcessEnv; lookup?: LookupAll; fetchImpl?: FetchLike; bundledDir?: string | null } = {}
+  overrides: {
+    env?: NodeJS.ProcessEnv;
+    lookup?: LookupAll;
+    fetchImpl?: FetchLike;
+    bundledDir?: string | null;
+    /** 연결 단계 재판정 요청의 테스트 전용 대체 */
+    connect?: Omit<PinnedFetchOptions, "lookupAll">;
+  } = {}
 ): CreateClient {
   return (baseDir, notify) =>
     createClientFor(baseDir, notify, overrides.env ?? process.env, {
       bundledLabel: MCP_BUNDLED_LABEL,
-      guardConfigRegistry: overrides.lookup ? { lookup: overrides.lookup } : {},
+      guardConfigRegistry: {
+        ...(overrides.lookup ? { lookup: overrides.lookup } : {}),
+        ...(overrides.connect ? { connect: overrides.connect } : {}),
+      },
       ...(overrides.fetchImpl ? { fetchImpl: overrides.fetchImpl } : {}),
       ...(overrides.bundledDir !== undefined ? { bundledDir: overrides.bundledDir } : {}),
     });
