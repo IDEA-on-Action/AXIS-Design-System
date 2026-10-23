@@ -120,9 +120,14 @@ export class RegistryAccessError extends Error {
   }
 }
 
-export type FetchLike = (input: string, init?: { signal?: AbortSignal; headers?: Record<string, string> }) => Promise<{
+export type FetchLike = (
+  input: string,
+  init?: { signal?: AbortSignal; headers?: Record<string, string>; redirect?: "manual" }
+) => Promise<{
   ok: boolean;
   status: number;
+  /** redirect: "manual" 에서 브라우저형 구현이 주는 "opaqueredirect" */
+  type?: string;
   text(): Promise<string>;
 }>;
 
@@ -132,7 +137,12 @@ export type FetchLike = (input: string, init?: { signal?: AbortSignal; headers?:
  */
 export async function fetchRegistryJson(
   url: string,
-  options: { timeoutMs?: number; fetchImpl?: FetchLike } = {}
+  options: {
+    timeoutMs?: number;
+    fetchImpl?: FetchLike;
+    /** 리다이렉트를 따라가지 않고 접근 실패로 봅니다(WI-0055 D13, mcp 의 config registry). 기본은 따라감(cli 종전) */
+    rejectRedirects?: boolean;
+  } = {}
 ): Promise<unknown> {
   const timeoutMs = options.timeoutMs ?? DEFAULT_REGISTRY_TIMEOUT_MS;
   const fetchImpl = options.fetchImpl ?? (globalThis.fetch as unknown as FetchLike | undefined);
@@ -154,9 +164,17 @@ export async function fetchRegistryJson(
   try {
     let res: Awaited<ReturnType<FetchLike>>;
     try {
-      res = await fetchImpl(url, { signal: controller.signal, headers: { accept: "application/json" } });
+      res = await fetchImpl(url, {
+        signal: controller.signal,
+        headers: { accept: "application/json" },
+        ...(options.rejectRedirects ? { redirect: "manual" as const } : {}),
+      });
     } catch (error) {
       throw describe(error);
+    }
+    if (options.rejectRedirects && (res.type === "opaqueredirect" || (res.status >= 300 && res.status < 400) || res.status === 0)) {
+      await res.text().catch(() => undefined);
+      throw new RegistryAccessError(`${shown}: 리다이렉트(HTTP ${res.status})를 따라가지 않습니다`);
     }
     if (!res.ok) {
       // 본문을 비워 연결을 돌려줍니다(남은 본문이 프로세스 종료를 붙잡지 않게). 실패해도 판정은 상태 코드로 끝납니다

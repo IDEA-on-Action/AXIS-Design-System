@@ -24,12 +24,14 @@ import {
   fetchRegistryJson,
   normalizeRegistryBaseUrl,
   type FetchLike,
+  type RegistryUrlSource,
 } from "./remote.js";
 import {
   DEFAULT_DEPENDENCY_BASES,
   REGISTRY_PUBLIC_BASE_URL,
   checkItemSha256,
   isValidRegistryName,
+  redactRegistryUrl,
   validateRegistryIndex,
   validateRegistryItem,
   type RegistryIndex,
@@ -53,6 +55,12 @@ export {
   type ResolvedRegistryUrl,
 } from "./remote.js";
 export { findBundledRegistryDir } from "./bundled.js";
+export {
+  blockedAddressReason,
+  defaultLookupAll,
+  publicRegistryUrlProblem,
+  type LookupAll,
+} from "./host-guard.js";
 
 export type RegistryErrorCode = "invalid-name" | "not-found" | "unavailable";
 
@@ -81,6 +89,10 @@ export interface RegistryClientOptions {
   notify?: (message: string) => void;
   /** 동봉본을 부르는 이름(안내 · 오류 문구). 기본은 「CLI 에 포함된 레지스트리」, mcp 는 「MCP 에 포함된 레지스트리」(WI-0055) */
   bundledLabel?: string;
+  /** url 을 어디서 골랐는지(표시용, WI-0055 D13) */
+  urlSource?: RegistryUrlSource;
+  /** 원격 요청의 리다이렉트를 따라가지 않습니다(WI-0055 D13, mcp 가 config 의 registry 를 쓸 때). 기본 false(cli 종전) */
+  rejectRedirects?: boolean;
 }
 
 /** 동봉본을 부르는 기본 이름(cli) */
@@ -132,6 +144,9 @@ export class RegistryClient {
   private readonly fetchImpl?: FetchLike;
   private readonly notify: (message: string) => void;
   private readonly bundledLabel: string;
+  private readonly rawUrl: string | null;
+  private readonly urlSource: RegistryUrlSource | undefined;
+  private readonly rejectRedirects: boolean;
 
   private mode: RegistryOrigin | null = null;
   private indexPromise: Promise<RegistryIndex> | null = null;
@@ -157,6 +172,15 @@ export class RegistryClient {
     this.fetchImpl = options.fetchImpl;
     this.notify = options.notify ?? ((message) => console.warn(message));
     this.bundledLabel = options.bundledLabel ?? DEFAULT_BUNDLED_LABEL;
+    this.rawUrl = options.url;
+    this.urlSource = options.urlSource;
+    this.rejectRedirects = options.rejectRedirects === true;
+  }
+
+  /** 원격 주소(가림 적용)와 그 출처. 표시용입니다(WI-0055 D13) */
+  get remote(): { url: string | null; source: RegistryUrlSource | undefined } {
+    const url = this.baseUrl ?? this.rawUrl;
+    return { url: url === null ? null : redactRegistryUrl(url), source: this.urlSource };
   }
 
   /** 지금 쓰는 출처. index 를 읽기 전에는 null 입니다 */
@@ -207,7 +231,11 @@ export class RegistryClient {
   }
 
   private fetchOptions() {
-    return { timeoutMs: this.timeoutMs, ...(this.fetchImpl ? { fetchImpl: this.fetchImpl } : {}) };
+    return {
+      timeoutMs: this.timeoutMs,
+      ...(this.fetchImpl ? { fetchImpl: this.fetchImpl } : {}),
+      ...(this.rejectRedirects ? { rejectRedirects: true } : {}),
+    };
   }
 
   private async loadIndex(): Promise<RegistryIndex> {

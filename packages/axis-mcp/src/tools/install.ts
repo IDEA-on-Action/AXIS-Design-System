@@ -52,6 +52,7 @@ function emptyResult(root: string, message: string): InstallResult {
   return {
     success: false,
     root,
+    source: "레지스트리를 조회하지 않음(설치 전에 멈춤)",
     items: [],
     installedFiles: [],
     overwrittenFiles: [],
@@ -109,12 +110,13 @@ export async function handleInstallComponent(
     }
   );
 
-  let source: string | undefined;
+  // D13: 사용한 주소와 출처는 실패해도 항상 적습니다
+  let source = describeOrigin(client);
   if (client.origin !== null) {
     try {
       source = describeOrigin(client, (await client.getIndex()).version);
     } catch {
-      source = undefined;
+      // index 를 다시 읽지 못하면 version 없이 둡니다
     }
   }
   const usedDefaultLayout = add.usedFallbackConfig === true;
@@ -128,7 +130,7 @@ export async function handleInstallComponent(
   return {
     success,
     root,
-    ...(source ? { source } : {}),
+    source,
     items,
     installedFiles: add.written.filter((p) => !overwritten.has(p)),
     overwrittenFiles: add.overwritten,

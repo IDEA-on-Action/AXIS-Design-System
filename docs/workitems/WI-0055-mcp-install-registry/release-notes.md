@@ -12,11 +12,20 @@
 - **사본 정리(D9)**: mcp 의 `tailwind-core.ts` 바이트 사본과 동일성 테스트를 지우고 코어를 씁니다. brand-core 사본은 그대로입니다
 - **게이트**: mcp-smoke(원격 차단 동봉본으로 28개 · agentic 설치 · 건너뜀 · overwrite · 이탈 거부), pack-smoke(mcp `dist/registry` 필수, 코어 누출 검사), mcp turbo inputs(레지스트리 · 코어 src · copy-registry), cli turbo build inputs(코어 src)
 
+- **config 의 registry 제한(D13, 2026-10-24)**: AI 가 고른 저장소의 `axis.config.json` registry 가 내부 주소를 가리키면 서버가 내부망으로 GET 을 보내고(SSRF) 그 저장소가 고른 코드가 설치됩니다. mcp 는 config 의 registry 를 공개 https 주소일 때만 씁니다(코어 `registry/host-guard.ts` 판정, `createClientFor` 의 `guardConfigRegistry` 옵션을 mcp 만 켬). 조건을 못 맞추면 무시하고 기본 주소로 조회하며 안내하고, 쓰는 경우에도 리다이렉트를 따라가지 않습니다. 환경변수와 cli 는 제한하지 않습니다. 결과의 「레지스트리」 · 「출처」 줄에 주소(가림)와 출처(환경변수 · config · 기본값 · 동봉본)를 항상 적습니다
+
 ## 호환성
 
 - 도구 이름 · `targetDir` · `name` · `category` 종전 값은 그대로 받습니다. 결과 머리글(「# 컴포넌트 설치 완료」 · 「# 컴포넌트 설치 실패」 · 「# AXIS Design System 컴포넌트 목록」)도 유지합니다
 - 바뀐 동작: 없는 `targetDir` 는 만들지 않고 실패합니다(종전에는 만들었음). 기존 파일을 묻지 않고 덮어쓰지 않습니다. button 등 5개도 shadcn 원형이 아니라 AXIS 레지스트리 내용이 설치되고 utils 가 함께 설치됩니다. search 결과의 「의존성」 줄은 빠졌습니다(index 에 의존성이 없음, get 에서 봅니다)
 - 컴포넌트 도구가 이제 네트워크(기본 pages.dev, 5초 timeout)를 씁니다. 막힌 환경에서는 동봉본으로 동작하고 그 사실을 응답에 적습니다
+
+## 남는 위험 (D13)
+
+- **DNS 리바인딩**: 판정할 때의 DNS 조회와 실제 요청 때의 조회가 따로라, 판정 뒤 공격자 DNS 가 내부 주소를 돌려주면 막지 못합니다. 주소를 고정해 요청하려면 fetch 의 연결 단계(undici dispatcher)를 바꿔야 해서 이번 범위에서 뺐습니다
+- 공개 https 레지스트리 자체가 악의적이면(공격자가 운영하는 공인 주소) 그 코드가 설치됩니다. sha256 은 같은 레지스트리의 index 와 항목이 맞는지만 봅니다. 결과에 주소와 출처를 항상 적어 사용자 · AI 가 알아볼 수 있게 했습니다
+- 환경변수 `AXIS_REGISTRY_URL` 은 제한하지 않습니다(서버를 띄운 사람의 값). MCP 클라이언트 설정에서 이 값을 넣는 쪽이 책임집니다
+- 판정은 IPv4 · IPv6 주소 범위 목록입니다. 목록 밖의 특수 대역(예: 198.18/15 벤치마크, 2001:db8::/32 문서용)은 공인으로 봅니다
 
 ## 알려진 한계
 

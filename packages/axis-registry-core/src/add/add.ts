@@ -38,8 +38,13 @@ import path from "node:path";
 import fs from "fs-extra";
 import { readAxisConfig, type AxisConfig } from "../config/axis-config.js";
 import {
+  DEFAULT_REGISTRY_URL,
   RegistryClient,
   RegistryError,
+  normalizeRegistryBaseUrl,
+  publicRegistryUrlProblem,
+  redactRegistryUrl,
+  type LookupAll,
   type RegistryClientOptions,
   LEGACY_REGISTRY_NOTICE,
   isValidRegistryName,
@@ -867,16 +872,61 @@ export async function createClientFor(
   cwd: string,
   notify?: (message: string) => void,
   env: NodeJS.ProcessEnv = process.env,
-  clientOptions: Pick<RegistryClientOptions, "bundledLabel" | "bundledDir" | "timeoutMs" | "fetchImpl"> = {}
+  clientOptions: Pick<RegistryClientOptions, "bundledLabel" | "bundledDir" | "timeoutMs" | "fetchImpl"> & {
+    guardConfigRegistry?: ConfigRegistryGuard;
+  } = {}
 ): Promise<RegistryClient> {
+  const { guardConfigRegistry, ...options } = clientOptions;
   let config: AxisConfig | null = null;
   try {
     config = await readAxisConfig(path.resolve(cwd));
   } catch {
     config = null;
   }
-  const resolved = resolveRegistryUrl({ config, env });
+  let resolved = resolveRegistryUrl({ config, env });
   const say = notify ?? ((message: string) => console.warn(message));
   if (resolved.migratedFrom !== undefined) say(LEGACY_REGISTRY_NOTICE);
-  return new RegistryClient({ ...clientOptions, url: resolved.url, ...(notify ? { notify } : {}) });
+  let rejectRedirects = false;
+  if (guardConfigRegistry && resolved.source === "config" && resolved.migratedFrom === undefined && !isDefaultRegistry(resolved.url)) {
+    const problem = await publicRegistryUrlProblem(resolved.url, guardConfigRegistry.lookup);
+    if (problem !== null) {
+      say(configRegistryRejectedMessage(resolved.url, problem));
+      resolved = { url: DEFAULT_REGISTRY_URL, source: "default" };
+    } else {
+      // 판정한 주소에서 리다이렉트로 내부 주소에 가지 않게 따라가지 않습니다(D13)
+      rejectRedirects = true;
+    }
+  }
+  return new RegistryClient({
+    ...options,
+    url: resolved.url,
+    urlSource: resolved.source,
+    ...(rejectRedirects ? { rejectRedirects: true } : {}),
+    ...(notify ? { notify } : {}),
+  });
+}
+
+/**
+ * config 의 registry 제한(WI-0055 D13). mcp 만 켭니다. 켜면 config 의 registry 는 공개 https 주소일 때만 쓰고(host-guard.ts),
+ * 아니면 무시하고 기본 주소로 조회하며 안내합니다. 쓰는 경우에도 리다이렉트를 따라가지 않습니다. 환경변수는 제한하지 않습니다
+ */
+export interface ConfigRegistryGuard {
+  /** DNS 조회(테스트에서 주입). 기본은 dns.lookup(all) */
+  lookup?: LookupAll;
+}
+
+function isDefaultRegistry(url: string): boolean {
+  try {
+    return normalizeRegistryBaseUrl(url.trim()) === DEFAULT_REGISTRY_URL;
+  } catch {
+    return false;
+  }
+}
+
+/** config 의 registry 를 무시할 때 안내(D13) */
+export function configRegistryRejectedMessage(url: string, problem: string): string {
+  return (
+    `axis.config.json 의 registry(${redactRegistryUrl(url)})를 쓰지 않습니다: ${problem}. ` +
+    `config 의 registry 는 공개 https 주소일 때만 씁니다(루프백 · 사설 · 링크로컬 주소 제외). 기본 주소(${DEFAULT_REGISTRY_URL})로 조회합니다`
+  );
 }

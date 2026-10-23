@@ -63,3 +63,31 @@
 | cli 리팩터링 회귀 | 새 cli 와 1.5.1 의 `add separator dialog agentic-run-progress` 가 원격 · 원격 차단 두 경우 모두 파일 `diff -r` rc 0, 출력 diff rc 0 | |
 
 참고: `127.0.0.1:1` 은 Node fetch 가 「bad port」로 요청 전에 거부합니다. 코어는 이것도 원격 접근 실패로 보고 동봉본으로 폴백하므로 원격 차단 측정으로는 같습니다. 접속 거부(ECONNREFUSED) · 404 HTML 은 cli-smoke 와 cli 단위 테스트가 덮습니다.
+
+## 4. D13 config registry 제한 (2026-10-24)
+
+단위 테스트 `packages/axis-mcp/src/tools/registry-guard.test.ts` 41개(네트워크 없음, DNS · fetch 주입). mcp vitest 6파일 105/105, cli 640/640(무변경).
+
+| 경우 | 결과 |
+|---|---|
+| 판정 거부 25종 | 10/8 · 172.16/12 경계 · 192.168/16 · 100.64/10 · 169.254.169.254 · 127.0.0.1 · 0.0.0.0 · 10진 · 16진 IPv4 표기, `[::1]` · `[::]` · `[fe80::1]` · `[fd12::1]` · `[::ffff:10.0.0.1]` · `[::ffff:7f00:1]` · NAT64 `[64:ff9b::a9fe:a9fe]`, `localhost` · `*.localhost` · `*.local`, `http://`, 사설로 풀리는 이름 · 공인과 사설이 섞인 이름 · `::ffff:127.0.0.1` 로 풀리는 이름 · 조회 실패 |
+| 판정 허용 5종 | 공인으로 풀리는 이름, `8.8.8.8`, `[2606:4700::1]`, 경계 밖 `172.32.0.1` · `100.128.0.1` |
+| mcp 사설 IP · http · localhost · 사설로 풀리는 이름 config | 무시하고 기본 주소로만 요청, 안내 「axis.config.json 의 registry(…)를 쓰지 않습니다」, 출처 「기본값」 |
+| 공인 https config | 그 주소로 요청(`redirect: "manual"`), 출처 「axis.config.json registry」 |
+| 공인 config 가 302 | 따라가지 않고 동봉본, 다른 주소 요청 0건, 안내 「리다이렉트(HTTP 302)를 따라가지 않습니다」 |
+| env `http://127.0.0.1:4873/r` | 제한 없이 사용, DNS 조회 0건, redirect 옵션 없음 |
+| install 사설 config | 기본 주소 → 동봉본으로 설치, 결과에 주소 · 출처 · 안내 |
+| userinfo 가 든 config | 안내 · 출처에 비밀번호 없음(`https://***@10.0.0.1/r`) |
+| cli(제한 끔) | 사설 config 그대로, 안내 · DNS 조회 0건 |
+
+변이 10건 모두 테스트 실패로 잡힘(원복 확인): 판정 끔(mcp 가 옵션 미전달, 7건 실패) · 판정 결과 무시(5건) · https 조건 제거(2건) · DNS 판정 생략(4건) · `::ffff:` 매핑 판정 제거(3건) · 100.64/10 제거(1건) · 리다이렉트 거부 끔(2건) · env 에도 제한(1건) · 결과에서 주소 · 출처 생략(6건) · 안내의 주소 가림 제거(1건).
+
+tarball 실측(D13 반영 mcp 를 `pnpm pack` 해 설치, 로컬 http 서버 접근 기록):
+
+| 실행 | 로컬 서버 요청 | 결과 |
+|---|---|---|
+| mcp, config `registry: http://127.0.0.1:<포트>/r`, env 없음 | **0건** | 「https 가 아님(http)」 안내 뒤 기본 주소(pages.dev)에서 설치, 출처 「기본값」 |
+| mcp, env `AXIS_REGISTRY_URL` 에 같은 주소(양성 대조) | 3건(index · separator · utils) | 출처 「환경변수 AXIS_REGISTRY_URL」 |
+| 빌드한 cli, 같은 config(cli 무변경 대조) | 3건 | 종전대로 config 주소 사용 |
+
+게이트(재실행): `turbo run type-check --force` rc 0(10/10, Cached 0), cli · mcp `build --force` · `test --force` rc 0(Cached 0), cli-smoke · mcp-smoke · pack-smoke rc 0.

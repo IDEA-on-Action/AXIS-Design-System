@@ -102,8 +102,8 @@ export interface InstallResult {
   success: boolean;
   /** 해석한 프로젝트 루트(절대 경로) */
   root: string;
-  /** 레지스트리 출처와 version */
-  source?: string;
+  /** 레지스트리 주소(가림)와 출처 · version(D13, 항상) */
+  source: string;
   /** 설치 항목(의존 항목 먼저) */
   items: string[];
   /** 새로 만든 파일(프로젝트 루트 기준) */

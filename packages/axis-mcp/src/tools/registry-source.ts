@@ -7,10 +7,20 @@
  * - 기준 디렉터리: install 은 targetDir(프로젝트 루트), list · search · get 은 서버의 현재 디렉터리입니다.
  * - 캐시 없음: 호출마다 클라이언트를 새로 만듭니다(장수 서버가 낡은 목록을 주지 않게, D8).
  * - stdout 금지: stdio MCP 는 stdout 이 JSON-RPC 통로라, 안내는 notify 로 모아 도구 결과에 싣습니다.
+ * - config 의 registry 제한(D13, 2026-10-24): AI 가 고른 저장소의 config 가 내부 주소를 가리키면 서버가 내부망에 요청하고(SSRF)
+ *   그 저장소가 고른 코드가 써집니다. 그래서 config 의 registry 는 공개 https 주소일 때만 쓰고(코어 host-guard), 아니면 무시하고
+ *   기본 주소로 조회하며 안내합니다. 쓸 때도 리다이렉트를 따라가지 않습니다. 환경변수는 서버를 띄운 사람이 정한 값이라 제한하지 않습니다.
+ * - 결과에는 사용한 레지스트리 주소(가림 적용)와 출처(환경변수 · config · 기본값 · 동봉본)를 항상 적습니다(D13).
  */
 
 import { createClientFor, itemKind } from "@axis-ds/registry-core/add";
-import type { RegistryClient, RegistryIndex, RegistryIndexEntry } from "@axis-ds/registry-core/registry";
+import type {
+  FetchLike,
+  LookupAll,
+  RegistryClient,
+  RegistryIndex,
+  RegistryIndexEntry,
+} from "@axis-ds/registry-core/registry";
 import { getComponentMeta } from "../registry/loader.js";
 import type { ComponentCategory, PackageName } from "../types.js";
 
@@ -27,8 +37,20 @@ export interface RegistryDeps {
   cwd?: string;
 }
 
-export const defaultCreateClient: CreateClient = (baseDir, notify) =>
-  createClientFor(baseDir, notify, process.env, { bundledLabel: MCP_BUNDLED_LABEL });
+/** mcp 클라이언트 생성기. config 의 registry 제한(D13)을 켭니다. 인자는 테스트에서만 줍니다 */
+export function mcpClientFactory(
+  overrides: { env?: NodeJS.ProcessEnv; lookup?: LookupAll; fetchImpl?: FetchLike; bundledDir?: string | null } = {}
+): CreateClient {
+  return (baseDir, notify) =>
+    createClientFor(baseDir, notify, overrides.env ?? process.env, {
+      bundledLabel: MCP_BUNDLED_LABEL,
+      guardConfigRegistry: overrides.lookup ? { lookup: overrides.lookup } : {},
+      ...(overrides.fetchImpl ? { fetchImpl: overrides.fetchImpl } : {}),
+      ...(overrides.bundledDir !== undefined ? { bundledDir: overrides.bundledDir } : {}),
+    });
+}
+
+export const defaultCreateClient: CreateClient = mcpClientFactory();
 
 /** 클라이언트와 그 클라이언트가 낸 안내(폴백 · version 차이 등) */
 export interface Source {
@@ -42,10 +64,29 @@ export async function openSource(baseDir: string, deps: RegistryDeps = {}): Prom
   return { client, notices };
 }
 
-/** 출처 표시. index 를 읽은 뒤에만 의미가 있습니다 */
-export function describeOrigin(client: RegistryClient, version: string): string {
-  const where = client.origin === "bundled" ? MCP_BUNDLED_LABEL : "원격 레지스트리";
-  return `${where} (version ${version})`;
+const SOURCE_LABELS = {
+  env: "환경변수 AXIS_REGISTRY_URL",
+  config: "axis.config.json registry",
+  default: "기본값",
+} as const;
+
+/** 원격 주소(가림 적용)와 그 출처 */
+function remoteLabel(client: RegistryClient): string {
+  const { url, source } = client.remote;
+  if (url === null) return "원격 주소 없음";
+  return `${url} (${source ? SOURCE_LABELS[source] : "직접 지정"})`;
+}
+
+/**
+ * 출처 표시(D13: 항상 주소와 출처). version 을 모르면(index 를 읽기 전에 멈춤) 생략합니다.
+ * - 원격: `원격 레지스트리 (version V) · 주소 <URL> (<출처>)`
+ * - 동봉본: `MCP 에 포함된 레지스트리 (version V) · 출처 동봉본 · 시도한 원격 <URL> (<출처>)`
+ */
+export function describeOrigin(client: RegistryClient, version?: string): string {
+  const v = version !== undefined ? ` (version ${version})` : "";
+  if (client.origin === "bundled") return `${MCP_BUNDLED_LABEL}${v} · 출처 동봉본 · 시도한 원격 ${remoteLabel(client)}`;
+  if (client.origin === "remote") return `원격 레지스트리${v} · 주소 ${remoteLabel(client)}`;
+  return `레지스트리를 읽지 못함 · 원격 ${remoteLabel(client)}`;
 }
 
 /** list · search 에 쓰는 컴포넌트 요약. 이름은 레지스트리 이름(agentic 은 agentic- 접두 전체 이름)입니다 */
