@@ -12,6 +12,11 @@
  * 「오류 0」만으로는 부족합니다. strict 가 꺼져 있으면 타입 없이 JS 로 해석돼도 오류가 나지 않기 때문입니다.
  * 컴파일 옵션은 Next 가 만드는 값(skipLibCheck · strict false · resolveJsonModule 등)을 따릅니다.
  *
+ * 변형 타입 탐침(WI-0059): ui-react 가 대상이면 방식마다 `variants<ext>` 를 함께 컴파일합니다. 없는 변형 값
+ * (`variant: 'nope'` 등)에 `@ts-expect-error` 를 붙여 두므로, 변형 타입이 any 로 무너지면(예: d.ts 의
+ * `class-variance-authority/types` 미해석) 「쓰이지 않은 @ts-expect-error」(TS2578)로 실패합니다. 올바른 값은
+ * 오류가 없어야 합니다(양성 대조).
+ *
  * 반환: { modes, targets, rows, failures, measureErrors }
  */
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -62,6 +67,22 @@ export function parseExplain(out) {
 /**
  * @param {{ consumer: string, tsc: string, packages: string[] }} opts
  */
+/** 변형 타입 탐침 본문. 없는 값 3곳은 오류가 나야 하고(@ts-expect-error), 올바른 값은 통과해야 한다 */
+export const VARIANT_PROBE = [
+  "import type { ButtonProps } from '@axis-ds/ui-react';",
+  "import type { BadgeProps } from '@axis-ds/ui-react/badge';",
+  "import { buttonVariants } from '@axis-ds/ui-react/button';",
+  "export const ok: ButtonProps = { variant: 'secondary', size: 'sm' };",
+  "export const okClass: string = buttonVariants({ variant: 'ghost', className: 'x' });",
+  '// @ts-expect-error 없는 변형 값',
+  "export const bad1: ButtonProps = { variant: 'nope' };",
+  '// @ts-expect-error 없는 변형 값',
+  "export const bad2: BadgeProps = { variant: 'nope' };",
+  '// @ts-expect-error 없는 변형 값',
+  "export const bad3: string = buttonVariants({ size: 'huge' });",
+  '',
+].join('\n');
+
 export function runTypesResolutionGate({ consumer, tsc, packages }) {
   const targets = collectTargets(consumer, packages);
   const rows = [];
@@ -84,13 +105,15 @@ export function runTypesResolutionGate({ consumer, tsc, packages }) {
       writeFileSync(join(dir, f), body);
       return f;
     });
+    const variantFile = packages.includes('@axis-ds/ui-react') ? `variants${cfg.ext}` : null;
+    if (variantFile) writeFileSync(join(dir, variantFile), VARIANT_PROBE);
     writeFileSync(join(dir, 'tsconfig.json'), JSON.stringify({
       compilerOptions: {
         target: 'ES2017', lib: ['dom', 'dom.iterable', 'esnext'], allowJs: true, skipLibCheck: true,
         strict: false, noEmit: true, esModuleInterop: true, resolveJsonModule: true, isolatedModules: true,
         jsx: 'preserve', types: [], module: cfg.module, moduleResolution: cfg.moduleResolution,
       },
-      files,
+      files: variantFile ? [...files, variantFile] : files,
     }));
     const r = spawnSync(process.execPath, [tsc, '-p', 'tsconfig.json', '--pretty', 'false', '--explainFiles'], {
       cwd: dir, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 300000,
@@ -112,8 +135,14 @@ export function runTypesResolutionGate({ consumer, tsc, packages }) {
       rows.push({ mode, spec: t.spec, kind: t.kind, root: t.root, ok, got, errors: errs.map((e) => (e.match(/TS\d+/) || [''])[0]) });
       if (!ok) failures.push(`${mode} ${t.spec}: ${errs.length ? errs.map((e) => e.replace(/^\S+\(\d+,\d+\): /, '')).join(' | ') : `해석 파일 ${got ?? '없음'} != ${t.expected}`}`);
     });
+    if (variantFile) {
+      const verrs = errLines.filter((l) => l.startsWith(`${variantFile}(`));
+      rows.push({ mode, spec: 'variants', kind: 'variant', root: false, ok: verrs.length === 0, got: null, errors: verrs.map((e) => (e.match(/TS\d+/) || [''])[0]) });
+      if (verrs.length) failures.push(`${mode} 변형 타입: ${verrs.map((e) => e.replace(/^\S+\(\d+,\d+\): /, '')).join(' | ')}`);
+    }
     // 탐침 밖 오류(설정 문제 등)는 skipLibCheck 로 라이브러리 오류가 빠지므로 원래 0 이어야 한다
-    const outside = errLines.filter((l) => !files.some((f) => l.startsWith(`${f}(`)));
+    const known = variantFile ? [...files, variantFile] : files;
+    const outside = errLines.filter((l) => !known.some((f) => l.startsWith(`${f}(`)));
     if (outside.length) measureErrors.push(`${mode}: 탐침 밖 오류 ${outside.length}건 ${outside[0]}`);
   }
   return { modes: Object.keys(RESOLUTION_MODES), targets, rows, failures, measureErrors };
@@ -130,6 +159,10 @@ export function summarize(result) {
       return `${m} ${rs.filter((r) => !r.ok).length}/${rs.length}`;
     });
     lines.push(`${name}: 대상 ${ts.length}개(루트 ${ts.filter((t) => t.root).length} · TS 서브패스 ${ts.filter((t) => !t.root && t.kind === 'ts').length} · JSON ${ts.filter((t) => t.kind === 'json').length}) 실패 ${cells.join(', ')}`);
+  }
+  const vrows = result.rows.filter((r) => r.kind === 'variant');
+  if (vrows.length) {
+    lines.push(`변형 타입 탐침(ui-react): ${vrows.map((r) => `${r.mode} ${r.ok ? '통과' : `실패(${r.errors.join(',')})`}`).join(', ')}`);
   }
   return lines;
 }

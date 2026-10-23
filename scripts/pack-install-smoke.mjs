@@ -265,9 +265,13 @@ function runTypesGate(consumer, packages) {
   const t0 = Date.now();
   const res = runTypesResolutionGate({ consumer, tsc: TSC, packages });
   for (const m of res.measureErrors) measureFail(TG, m);
-  const probes = res.rows.length;
+  // 변형 타입 탐침(WI-0059)은 해석 탐침과 따로 센다. ui-react 가 대상이면 방식마다 1건이어야 한다
+  const vrows = res.rows.filter((r) => r.kind === 'variant').length;
+  const probes = res.rows.length - vrows;
   const expected = res.targets.length * res.modes.length;
   if (probes !== expected) measureFail(TG, `탐침 결과 ${probes}건 != 대상 ${res.targets.length}개 × 방식 ${res.modes.length}`);
+  const vexpected = packages.includes('@axis-ds/ui-react') ? res.modes.length : 0;
+  if (vrows !== vexpected) measureFail(TG, `변형 타입 탐침 ${vrows}건 != ${vexpected}건`);
   console.log(`  - [${TG}] 탐침 ${res.targets.length}개 × ${res.modes.join(' · ')} = ${probes}건, 실패 ${res.failures.length}건 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
   for (const line of summarize(res)) console.log(`    ${line}`);
   for (const f of res.failures.slice(0, 10)) fail(TG, f);
