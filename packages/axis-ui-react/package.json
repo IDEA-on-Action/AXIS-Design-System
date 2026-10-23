@@ -163,6 +163,100 @@
     },
     "./tailwind.css": "./tailwind.css"
   },
+  "typesVersions": {
+    "*": {
+      "accordion": [
+        "./dist/accordion/index.d.ts"
+      ],
+      "alert": [
+        "./dist/alert/index.d.ts"
+      ],
+      "avatar": [
+        "./dist/avatar/index.d.ts"
+      ],
+      "badge": [
+        "./dist/badge/index.d.ts"
+      ],
+      "breadcrumb": [
+        "./dist/breadcrumb/index.d.ts"
+      ],
+      "button": [
+        "./dist/button/index.d.ts"
+      ],
+      "card": [
+        "./dist/card/index.d.ts"
+      ],
+      "checkbox": [
+        "./dist/checkbox/index.d.ts"
+      ],
+      "collapsible": [
+        "./dist/collapsible/index.d.ts"
+      ],
+      "command": [
+        "./dist/command/index.d.ts"
+      ],
+      "dialog": [
+        "./dist/dialog/index.d.ts"
+      ],
+      "dropdown-menu": [
+        "./dist/dropdown-menu/index.d.ts"
+      ],
+      "input": [
+        "./dist/input/index.d.ts"
+      ],
+      "label": [
+        "./dist/label/index.d.ts"
+      ],
+      "popover": [
+        "./dist/popover/index.d.ts"
+      ],
+      "progress": [
+        "./dist/progress/index.d.ts"
+      ],
+      "radio-group": [
+        "./dist/radio-group/index.d.ts"
+      ],
+      "scroll-area": [
+        "./dist/scroll-area/index.d.ts"
+      ],
+      "select": [
+        "./dist/select/index.d.ts"
+      ],
+      "separator": [
+        "./dist/separator/index.d.ts"
+      ],
+      "sheet": [
+        "./dist/sheet/index.d.ts"
+      ],
+      "skeleton": [
+        "./dist/skeleton/index.d.ts"
+      ],
+      "slider": [
+        "./dist/slider/index.d.ts"
+      ],
+      "switch": [
+        "./dist/switch/index.d.ts"
+      ],
+      "table": [
+        "./dist/table/index.d.ts"
+      ],
+      "tabs": [
+        "./dist/tabs/index.d.ts"
+      ],
+      "textarea": [
+        "./dist/textarea/index.d.ts"
+      ],
+      "toast": [
+        "./dist/toast/index.d.ts"
+      ],
+      "toggle": [
+        "./dist/toggle/index.d.ts"
+      ],
+      "tooltip": [
+        "./dist/tooltip/index.d.ts"
+      ]
+    }
+  },
   "sideEffects": false,
   "files": [
     "dist",
@@ -172,7 +266,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node scripts/postbuild.mjs && node scripts/sync-exports.mjs",
+    "build": "tsup && node scripts/postbuild.mjs && node scripts/sync-exports.mjs && node ../../scripts/sync-types-versions.mjs --only .",
     "dev": "tsup --watch --onSuccess \"node scripts/postbuild.mjs\"",
     "clean": "rm -rf dist",
     "lint": "eslint .",
