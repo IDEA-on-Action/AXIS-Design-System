@@ -33,7 +33,9 @@
     "check-contrast-pairs": "node scripts/check-contrast-pairs.mjs",
     "check-library-links": "node scripts/check-library-links.mjs",
     "check-library-links:remote": "node scripts/check-library-remote-links.mjs",
-    "library:refresh-axis": "pnpm --filter @axis-ds/cli build && node packages/axis-cli/dist/index.js library refresh-axis"
+    "library:refresh-axis": "pnpm --filter @axis-ds/cli build && node packages/axis-cli/dist/index.js library refresh-axis",
+    "sync-types-versions": "node scripts/sync-types-versions.mjs",
+    "check-types-versions": "node scripts/sync-types-versions.mjs --check && node --test scripts/sync-types-versions.test.mjs"
   },
   "devDependencies": {
     "@changesets/changelog-git": "^0.2.1",

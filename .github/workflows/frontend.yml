@@ -83,6 +83,11 @@ jobs:
       - name: Contrast pair table check
         run: pnpm check-contrast-pairs
 
+      # WI-0053: tokens · ui-react · agentic-ui 의 typesVersions 가 exports 와 1:1 인지(moduleResolution node 서브패스 타입).
+      # 드리프트면 exit 1, package.json 을 못 읽으면 exit 2. 생성 · 검사 단위 테스트(변이 포함)도 함께 돈다. dist 불필요
+      - name: typesVersions 드리프트 검사 (WI-0053)
+        run: pnpm check-types-versions
+
       # WI-0057 D4: library 데이터의 사이트 링크마다 문서 라우트(page.tsx)가 실재하는지와 index · search-index ·
       # categories · components · stats 정합을 네트워크 없이 본다. 외부 링크 GET 은 `pnpm check-library-links:remote`(수동)
       - name: Library link check (offline)
