@@ -41,4 +41,4 @@
 - [x] AC1 ~ AC6, cli 1.5.1 대 새 mcp 설치 결과 바이트 비교
 - [x] `docs/guides/claude-workflow.md` 도구 표, mcp README · CHANGELOG(changeset)
 - [x] changeset(D11), testplan.md, release-notes.md
-- [ ] 배포 뒤 npm `@axis-ds/mcp@1.3.0` tarball 로 list 28 · install 실측(Master, 머지 · 발행 뒤)
+- [x] 배포 뒤 npm `@axis-ds/mcp@1.3.0` 실측(2026-10-24): list 28(출처 원격 1.5.1 · 기본값), install dialog 기본 배치 · 의존성 안내, D13 config `http://127.0.0.1` 로컬 서버 요청 0건 · env 양성 대조 3건

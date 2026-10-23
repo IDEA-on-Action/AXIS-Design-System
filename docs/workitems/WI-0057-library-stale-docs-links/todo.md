@@ -29,4 +29,4 @@
 ## 검증 · 릴리스
 - [x] 게이트(type-check · lint · build · test --force, test:registry · cli-smoke · pack-smoke)
 - [x] changeset(cli patch), release-notes, testplan
-- [ ] 배포 뒤 pages.dev 링크 전수 200 재확인(`pnpm check-library-links:remote --host axis-design-system.pages.dev`)
+- [x] 배포 뒤 링크 전수 재확인(2026-10-24): `check-library-links:remote` 109개 모두 2xx, 오프라인 위반 0, 프로덕션 `/library/agentic/approval-card` · `/library/ui/alert` 200, 지운 `/library/agentic/step-indicator` 404

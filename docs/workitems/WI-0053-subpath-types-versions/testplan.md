@@ -61,3 +61,7 @@
 ## 5. 범위 밖 확인
 
 - node10 에서 ui-react 변형 prop(`variant` 등) 타입이 any 로 떨어지는 cva `/types` 문제(PRD 1.4)는 이 게이트가 잡지 않습니다. 게이트는 `skipLibCheck: true`(Next 기본)라 d.ts 안의 외부 서브패스 미해석이 보이지 않습니다. 별도 WI(D6)
+
+## 6. 배포 실측 (2026-10-24)
+
+- npm `@axis-ds/ui-react` · `agentic-ui` · `tokens` 1.5.1 을 tsconfig 없는 Next 15.5.28 앱에 설치해 `next build`: Next 가 `"moduleResolution": "node"` 로 tsconfig 를 만들고 rc 0(서브패스 `ui-react/avatar` · `agentic-ui/agent-avatar` · `tokens/json` + 루트). `<AgentAvatar />`(필수 prop 누락)는 rc 1 「Property 'name' is missing」로 서브패스 타입이 실제로 검사됨

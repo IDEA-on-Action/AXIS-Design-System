@@ -49,12 +49,12 @@
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ⏳ |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
-| 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | 🔄 착수(2026-10-23, 병렬 배치 1), 결정 D1~D7 권장안 |
-| 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | 🔄 착수(2026-10-23, 병렬 배치 1), 결정 D1~D7 권장안(명시 typesVersions · --check 게이트) |
+| 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
+| 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
 | 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ⏳ |
-| 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | 🔄 착수(2026-10-23, 병렬 배치 1), 결정 D1~D12 권장안(private 코어 packages/axis-registry-core) |
+| 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ✅ 완료(2026-10-24). mcp 1.3.0 · cli 1.5.2(#164 · #163), 배포본 list 28 · install 기본 배치, D13 config 사설 주소 요청 0건(env 양성 대조 3건) |
 | 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
-| 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | 🔄 착수(2026-10-23, 병렬 배치 1), 결정 D1~D6 권장안(수집기 수정 · axis 부분 오프라인 재생성) |
+| 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ✅ 완료(2026-10-24). cli 1.5.2(#162 · #163), 프로덕션 library 링크 109개 모두 2xx, 오프라인 검사 위반 0 |
 | 70 | 문서 사이트 `/agentic/streaming-text` 가 실제 컴포넌트가 아니라 mock 을 써서 컴포넌트 결함이 드러나지 않음(WI-0052 에서 분리) | WI-0058 (#157) | P18 | P3 | ⏳ |
 | 71 | node10 해석에서 ui-react cva 변형 prop 타입이 any 로 떨어짐(`class-variance-authority/types`, WI-0053 에서 분리) | WI-0059 (#158) | P18 | P2 | ⏳ |
 | 72 | library 데이터 slug 충돌 10개로 shadcn 상세에 axis 코드 표시(WI-0057 에서 분리) | WI-0060 (#159) | P18 | P3 | ⏳ |

@@ -306,16 +306,16 @@
       "slug": "streaming-text-display",
       "issueNumber": 146,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTK0",
-      "lastSyncedAt": "2026-10-23T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0053",
       "slug": "subpath-types-versions",
       "issueNumber": 147,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCJTP4",
-      "lastSyncedAt": "2026-10-23T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0054",
@@ -330,8 +330,8 @@
       "slug": "mcp-install-registry",
       "issueNumber": 150,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCSOio",
-      "lastSyncedAt": "2026-10-23T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0056",
@@ -346,8 +346,8 @@
       "slug": "library-stale-docs-links",
       "issueNumber": 155,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhC18d8",
-      "lastSyncedAt": "2026-10-23T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0058",
@@ -374,5 +374,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-23T00:00:00.000Z"
+  "updatedAt": "2026-10-24T00:00:00.000Z"
 }

@@ -24,4 +24,4 @@
 - [x] `pnpm build:registry` 재생성(streaming-text 항목과 sha256 2줄만 변경, templates 변경은 되돌림)
 - [x] changeset `.changeset/wi-0052-streaming-text-display.md`(agentic-ui patch), testplan.md · release-notes.md
 - [x] 게이트(AC3): type-check · lint · build · test(모두 --force, Cached 0) · test:registry · pack-smoke · registry-install-smoke
-- [ ] 배포 뒤 발행본 실측(AC4)
+- [x] 배포 뒤 발행본 실측(AC4): `@axis-ds/agentic-ui@1.5.1` + React 19.2.3 jsdom, StrictMode 끔 · 켬 모두 「스트리밍 완료 문장」 · onComplete 1회. 음성 대조 1.5.0 은 끔 「undefined」 반복 · 켬 빈 화면(2026-10-24)
