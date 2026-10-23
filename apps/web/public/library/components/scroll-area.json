@@ -1,8 +1,8 @@
 {
   "id": "axis-scroll-area",
   "slug": "scroll-area",
-  "name": "ScrollArea",
-  "description": "AXIS ScrollArea component",
+  "name": "Scroll Area",
+  "description": "커스텀 스크롤바를 제공하는 스크롤 영역 컴포넌트. 뷰포트, 스크롤바, 코너를 포함한다.",
   "category": "ui",
   "source": {
     "type": "axis",
@@ -10,13 +10,14 @@
     "url": "https://axis-design-system.pages.dev/components/scroll-area"
   },
   "tags": [
-    "forwardRef"
+    "forwardRef",
+    "animated"
   ],
   "code": {
     "files": [
       {
         "path": "index.tsx",
-        "content": "import * as React from \"react\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport { cn } from \"../utils\";\n\nconst ScrollArea = React.forwardRef<\n  React.ElementRef<typeof ScrollAreaPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>\n>(({ className, children, ...props }, ref) => (\n  <ScrollAreaPrimitive.Root\n    ref={ref}\n    className={cn(\"relative overflow-hidden\", className)}\n    {...props}\n  >\n    <ScrollAreaPrimitive.Viewport className=\"h-full w-full rounded-[inherit]\">\n      {children}\n    </ScrollAreaPrimitive.Viewport>\n    <ScrollBar />\n    <ScrollAreaPrimitive.Corner />\n  </ScrollAreaPrimitive.Root>\n));\nScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;\n\nconst ScrollBar = React.forwardRef<\n  React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>\n>(({ className, orientation = \"vertical\", ...props }, ref) => (\n  <ScrollAreaPrimitive.ScrollAreaScrollbar\n    ref={ref}\n    orientation={orientation}\n    className={cn(\n      \"flex touch-none select-none transition-colors\",\n      orientation === \"vertical\" &&\n        \"h-full w-2.5 border-l border-l-transparent p-[1px]\",\n      orientation === \"horizontal\" &&\n        \"h-2.5 flex-col border-t border-t-transparent p-[1px]\",\n      className\n    )}\n    {...props}\n  >\n    <ScrollAreaPrimitive.ScrollAreaThumb className=\"relative flex-1 rounded-full bg-[var(--axis-border-default)]\" />\n  </ScrollAreaPrimitive.ScrollAreaScrollbar>\n));\nScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName;\n\nexport { ScrollArea, ScrollBar };\n",
+        "content": "import * as React from \"react\";\nimport * as ScrollAreaPrimitive from \"@radix-ui/react-scroll-area\";\nimport { cn } from \"../utils\";\n\n/** 커스텀 스크롤바를 제공하는 스크롤 영역 컴포넌트. 뷰포트, 스크롤바, 코너를 포함한다. */\nconst ScrollArea = React.forwardRef<\n  React.ElementRef<typeof ScrollAreaPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>\n>(({ className, children, ...props }, ref) => (\n  <ScrollAreaPrimitive.Root\n    ref={ref}\n    className={cn(\"relative overflow-hidden\", className)}\n    {...props}\n  >\n    <ScrollAreaPrimitive.Viewport className=\"h-full w-full rounded-[inherit]\">\n      {children}\n    </ScrollAreaPrimitive.Viewport>\n    <ScrollBar />\n    <ScrollAreaPrimitive.Corner />\n  </ScrollAreaPrimitive.Root>\n));\nScrollArea.displayName = \"ScrollArea\";\n\n/** 스크롤 영역의 스크롤바 컴포넌트. 수직(vertical) 및 수평(horizontal) 방향을 지원한다. */\nconst ScrollBar = React.forwardRef<\n  React.ElementRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>,\n  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.ScrollAreaScrollbar>\n>(({ className, orientation = \"vertical\", ...props }, ref) => (\n  <ScrollAreaPrimitive.ScrollAreaScrollbar\n    ref={ref}\n    orientation={orientation}\n    className={cn(\n      \"flex touch-none select-none transition-colors\",\n      orientation === \"vertical\" &&\n        \"h-full w-2.5 border-l border-l-transparent p-[1px]\",\n      orientation === \"horizontal\" &&\n        \"h-2.5 flex-col border-t border-t-transparent p-[1px]\",\n      className\n    )}\n    {...props}\n  >\n    <ScrollAreaPrimitive.ScrollAreaThumb className=\"relative flex-1 rounded-full bg-[var(--axis-border-default)]\" />\n  </ScrollAreaPrimitive.ScrollAreaScrollbar>\n));\nScrollBar.displayName = \"ScrollBar\";\n\nexport { ScrollArea, ScrollBar };\n",
         "type": "component"
       }
     ],
@@ -27,5 +28,5 @@
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-02-01T00:00:00.000Z"
+  "updatedAt": "2026-10-23T00:00:00.000Z"
 }

@@ -2,8 +2,8 @@
   "id": "axis-slider",
   "slug": "slider",
   "name": "Slider",
-  "description": "AXIS Slider component",
-  "category": "form",
+  "description": "범위 내에서 값을 선택할 수 있는 슬라이더 컴포넌트. 트랙, 범위 표시, 드래그 가능한 썸을 포함한다.",
+  "category": "ui",
   "source": {
     "type": "axis",
     "registry": "@axis",
@@ -11,13 +11,14 @@
   },
   "tags": [
     "forwardRef",
-    "interactive"
+    "animated",
+    "accessible"
   ],
   "code": {
     "files": [
       {
         "path": "index.tsx",
-        "content": "import * as React from \"react\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { cn } from \"../utils\";\n\nconst Slider = React.forwardRef<\n  React.ElementRef<typeof SliderPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <SliderPrimitive.Root\n    ref={ref}\n    className={cn(\n      \"relative flex w-full touch-none select-none items-center\",\n      className\n    )}\n    {...props}\n  >\n    <SliderPrimitive.Track className=\"relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--axis-surface-tertiary)]\">\n      <SliderPrimitive.Range className=\"absolute h-full bg-[var(--axis-interactive-primary)]\" />\n    </SliderPrimitive.Track>\n    <SliderPrimitive.Thumb className=\"block h-5 w-5 rounded-full border-2 border-[var(--axis-interactive-primary)] bg-[var(--axis-surface-default)] ring-offset-[var(--axis-surface-default)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50\" />\n  </SliderPrimitive.Root>\n));\nSlider.displayName = SliderPrimitive.Root.displayName;\n\nexport { Slider };\n",
+        "content": "import * as React from \"react\";\nimport * as SliderPrimitive from \"@radix-ui/react-slider\";\nimport { cn } from \"../utils\";\n\n/** 범위 내에서 값을 선택할 수 있는 슬라이더 컴포넌트. 트랙, 범위 표시, 드래그 가능한 썸을 포함한다. */\nconst Slider = React.forwardRef<\n  React.ElementRef<typeof SliderPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>\n>(\n  (\n    {\n      className,\n      \"aria-label\": ariaLabel,\n      \"aria-labelledby\": ariaLabelledby,\n      ...props\n    },\n    ref\n  ) => (\n    <SliderPrimitive.Root\n      ref={ref}\n      className={cn(\n        \"relative flex w-full touch-none select-none items-center\",\n        className\n      )}\n      {...props}\n    >\n      <SliderPrimitive.Track className=\"relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--axis-surface-tertiary)]\">\n        <SliderPrimitive.Range className=\"absolute h-full bg-[var(--axis-interactive-primary)]\" />\n      </SliderPrimitive.Track>\n      {/* 썸에 접근 가능한 이름 전달 (WI-0020 axe): aria-label/labelledby를 root에서 받아 thumb에 부여 */}\n      <SliderPrimitive.Thumb\n        aria-label={ariaLabel}\n        aria-labelledby={ariaLabelledby}\n        className=\"block h-5 w-5 rounded-full border-2 border-[var(--axis-interactive-primary)] bg-[var(--axis-surface-default)] ring-offset-[var(--axis-surface-default)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50\"\n      />\n    </SliderPrimitive.Root>\n  )\n);\nSlider.displayName = \"Slider\";\n\nexport { Slider };\n",
         "type": "component"
       }
     ],
@@ -28,5 +29,5 @@
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-02-01T00:00:00.000Z"
+  "updatedAt": "2026-10-23T00:00:00.000Z"
 }

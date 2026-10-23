@@ -11,6 +11,7 @@ export * from "./monet-collector.js";
 export * from "./v0-collector.js";
 export * from "./axis-collector.js";
 export * from "./publisher.js";
+export * from "./axis-refresh.js";
 
 import fs from "fs-extra";
 import path from "path";
