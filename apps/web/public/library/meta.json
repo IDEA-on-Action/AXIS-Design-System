@@ -1,15 +1,15 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-01-23T12:59:43.865Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
   "stats": {
-    "total": 108,
+    "total": 129,
     "bySource": {
       "shadcn": 47,
       "monet": 34,
-      "axis": 27
+      "axis": 48
     },
     "byCategory": {
-      "ui": 47,
+      "ui": 67,
       "feedback": 5,
       "layout": 4,
       "data-display": 7,
@@ -17,7 +17,7 @@
       "chart": 2,
       "form": 11,
       "overlay": 5,
-      "agentic": 17
+      "agentic": 18
     }
   },
   "categories": [
@@ -96,22 +96,27 @@
     {
       "id": "animated",
       "name": "animated",
-      "count": 15
+      "count": 35
     },
     {
       "id": "forwardRef",
       "name": "forwardRef",
-      "count": 10
+      "count": 29
+    },
+    {
+      "id": "accessible",
+      "name": "accessible",
+      "count": 22
+    },
+    {
+      "id": "container",
+      "name": "container",
+      "count": 8
     },
     {
       "id": "stateful",
       "name": "stateful",
       "count": 8
-    },
-    {
-      "id": "container",
-      "name": "container",
-      "count": 7
     },
     {
       "id": "input",
@@ -121,7 +126,7 @@
     {
       "id": "interactive",
       "name": "interactive",
-      "count": 2
+      "count": 3
     },
     {
       "id": "side-effects",

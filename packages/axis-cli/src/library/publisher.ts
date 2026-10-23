@@ -46,6 +46,107 @@ export interface SearchIndexItem {
   url: string;
 }
 
+// ============================================================================
+// 공개 데이터 형태 (Publisher 와 axis 재생성(axis-refresh)이 같은 형태 · 키 순서를 쓰도록 한 곳에 둡니다)
+// ============================================================================
+
+/** index.json 의 항목 (코드 제외) */
+export interface PublicIndexEntry {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  source: string;
+  tags: string[];
+  status: string;
+}
+
+/**
+ * components/<slug>.json · categories/<id>.json 의 항목.
+ * 예전 판은 `dependencies: component.dependencies` 도 넣었지만 ComponentMeta 에 없는 필드라(TS2339) 늘 undefined 였고
+ * JSON 에서 빠졌습니다. 출력 바이트는 같습니다.
+ */
+export function toPublicComponent(component: ComponentMeta): PublicComponent {
+  return {
+    id: component.id,
+    slug: component.slug,
+    name: component.name,
+    description: component.description,
+    category: component.category,
+    source: {
+      type: component.source.type,
+      registry: component.source.registry,
+      url: component.source.url,
+    },
+    tags: component.tags,
+    code: component.code,
+    preview: component.preview,
+    status: component.status,
+    updatedAt: component.updatedAt,
+  };
+}
+
+/** 공개 컴포넌트 JSON 형태 */
+export interface PublicComponent {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  source: { type: string; registry: string; url: string };
+  tags: string[];
+  code: ComponentMeta["code"];
+  preview?: ComponentMeta["preview"];
+  status: string;
+  updatedAt: string;
+}
+
+/** index.json 항목. 공개 컴포넌트에서도 만들 수 있게 공통 필드만 받습니다 */
+export function toIndexEntry(c: {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  source: { type: string };
+  tags: string[];
+  status: string;
+}): PublicIndexEntry {
+  return {
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    description: c.description,
+    category: c.category,
+    source: c.source.type,
+    tags: c.tags,
+    status: c.status,
+  };
+}
+
+/** search-index.json 항목 */
+export function toSearchItem(c: {
+  id: string;
+  slug: string;
+  name: string;
+  description: string;
+  category: string;
+  source: { type: string };
+  tags: string[];
+}): SearchIndexItem {
+  return {
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+    description: c.description,
+    category: c.category,
+    source: c.source.type,
+    tags: c.tags,
+    url: `/library/${c.category}/${c.slug}`,
+  };
+}
+
 /**
  * Publisher 클래스
  */
@@ -170,16 +271,7 @@ export class Publisher {
       updatedAt: index.updatedAt,
       stats: index.stats,
       categories: index.categories,
-      components: index.components.map((c) => ({
-        id: c.id,
-        slug: c.slug,
-        name: c.name,
-        description: c.description,
-        category: c.category,
-        source: c.source.type,
-        tags: c.tags,
-        status: c.status,
-      })),
+      components: index.components.map(toIndexEntry),
     };
   }
 
@@ -187,40 +279,14 @@ export class Publisher {
    * 공개용 컴포넌트 생성
    */
   private createPublicComponent(component: ComponentMeta): object {
-    return {
-      id: component.id,
-      slug: component.slug,
-      name: component.name,
-      description: component.description,
-      category: component.category,
-      source: {
-        type: component.source.type,
-        registry: component.source.registry,
-        url: component.source.url,
-      },
-      tags: component.tags,
-      code: component.code,
-      preview: component.preview,
-      dependencies: component.dependencies,
-      status: component.status,
-      updatedAt: component.updatedAt,
-    };
+    return toPublicComponent(component);
   }
 
   /**
    * 검색 인덱스 생성
    */
   private generateSearchIndex(index: LibraryIndex): SearchIndexItem[] {
-    return index.components.map((c) => ({
-      id: c.id,
-      slug: c.slug,
-      name: c.name,
-      description: c.description,
-      category: c.category,
-      source: c.source.type,
-      tags: c.tags,
-      url: `/library/${c.category}/${c.slug}`,
-    }));
+    return index.components.map(toSearchItem);
   }
 
   /**

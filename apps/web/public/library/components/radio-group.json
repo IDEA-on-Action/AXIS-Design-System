@@ -1,23 +1,22 @@
 {
   "id": "axis-radio-group",
   "slug": "radio-group",
-  "name": "RadioGroup",
-  "description": "AXIS RadioGroup component",
-  "category": "form",
+  "name": "Radio Group",
+  "description": "라디오 버튼 그룹의 루트 컴포넌트. 단일 선택 상태를 관리하며 키보드 네비게이션을 지원한다.",
+  "category": "ui",
   "source": {
     "type": "axis",
     "registry": "@axis",
     "url": "https://axis-design-system.pages.dev/components/radio-group"
   },
   "tags": [
-    "forwardRef",
-    "interactive"
+    "forwardRef"
   ],
   "code": {
     "files": [
       {
         "path": "index.tsx",
-        "content": "import * as React from \"react\";\nimport * as RadioGroupPrimitive from \"@radix-ui/react-radio-group\";\nimport { cn } from \"../utils\";\n\nconst RadioGroup = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Root\n    className={cn(\"grid gap-2\", className)}\n    {...props}\n    ref={ref}\n  />\n));\nRadioGroup.displayName = RadioGroupPrimitive.Root.displayName;\n\nconst RadioGroupItem = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Item\n    ref={ref}\n    className={cn(\n      \"aspect-square h-4 w-4 rounded-full border border-[var(--axis-border-default)]\",\n      \"ring-offset-[var(--axis-surface-default)]\",\n      \"focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"data-[state=checked]:border-[var(--axis-interactive-primary)] data-[state=checked]:text-[var(--axis-interactive-primary)]\",\n      className\n    )}\n    {...props}\n  >\n    <RadioGroupPrimitive.Indicator className=\"flex items-center justify-center\">\n      <svg\n        xmlns=\"http://www.w3.org/2000/svg\"\n        width=\"8\"\n        height=\"8\"\n        viewBox=\"0 0 8 8\"\n        fill=\"currentColor\"\n      >\n        <circle cx=\"4\" cy=\"4\" r=\"4\" />\n      </svg>\n    </RadioGroupPrimitive.Indicator>\n  </RadioGroupPrimitive.Item>\n));\nRadioGroupItem.displayName = RadioGroupPrimitive.Item.displayName;\n\nexport { RadioGroup, RadioGroupItem };\n",
+        "content": "import * as React from \"react\";\nimport * as RadioGroupPrimitive from \"@radix-ui/react-radio-group\";\nimport { cn } from \"../utils\";\n\n/** 라디오 버튼 그룹의 루트 컴포넌트. 단일 선택 상태를 관리하며 키보드 네비게이션을 지원한다. */\nconst RadioGroup = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Root>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Root>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Root\n    className={cn(\"grid gap-2\", className)}\n    {...props}\n    ref={ref}\n  />\n));\nRadioGroup.displayName = \"RadioGroup\";\n\n/** 라디오 그룹 내 개별 라디오 버튼 컴포넌트. 선택 시 내부에 원형 인디케이터가 표시된다. */\nconst RadioGroupItem = React.forwardRef<\n  React.ElementRef<typeof RadioGroupPrimitive.Item>,\n  React.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>\n>(({ className, ...props }, ref) => (\n  <RadioGroupPrimitive.Item\n    ref={ref}\n    className={cn(\n      \"aspect-square h-4 w-4 rounded-full border border-[var(--axis-border-default)]\",\n      \"ring-offset-[var(--axis-surface-default)]\",\n      \"focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      \"data-[state=checked]:border-[var(--axis-interactive-primary)] data-[state=checked]:text-[var(--axis-interactive-primary)]\",\n      className\n    )}\n    {...props}\n  >\n    <RadioGroupPrimitive.Indicator className=\"flex items-center justify-center\">\n      <svg\n        xmlns=\"http://www.w3.org/2000/svg\"\n        width=\"8\"\n        height=\"8\"\n        viewBox=\"0 0 8 8\"\n        fill=\"currentColor\"\n      >\n        <circle cx=\"4\" cy=\"4\" r=\"4\" />\n      </svg>\n    </RadioGroupPrimitive.Indicator>\n  </RadioGroupPrimitive.Item>\n));\nRadioGroupItem.displayName = \"RadioGroupItem\";\n\nexport { RadioGroup, RadioGroupItem };\n",
         "type": "component"
       }
     ],
@@ -28,5 +27,5 @@
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-02-01T00:00:00.000Z"
+  "updatedAt": "2026-10-23T00:00:00.000Z"
 }

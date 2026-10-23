@@ -83,6 +83,11 @@ jobs:
       - name: Contrast pair table check
         run: pnpm check-contrast-pairs
 
+      # WI-0057 D4: library 데이터의 사이트 링크마다 문서 라우트(page.tsx)가 실재하는지와 index · search-index ·
+      # categories · components · stats 정합을 네트워크 없이 본다. 외부 링크 GET 은 `pnpm check-library-links:remote`(수동)
+      - name: Library link check (offline)
+        run: pnpm check-library-links
+
       - name: Test
         run: pnpm test
 

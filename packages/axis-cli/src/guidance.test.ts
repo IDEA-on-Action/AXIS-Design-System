@@ -36,7 +36,8 @@ function isGuidanceViolation(text: string): boolean {
  * - .changeset/*.md · CHANGELOG.md: 무엇을 고쳤는지 설명하는 문장에 옛 안내를 인용합니다.
  * - 테스트 파일(*.test.ts)과 test/ fixture: 이 테스트처럼 나쁜 문자열을 양성 대조로 담습니다.
  *   walk 는 *.test.ts 를 건너뛰고, 패키지는 src 만 내려가므로 test/ 는 들어오지 않습니다.
- * - apps/web/public/library/**: 외부 소스에서 수집한 데이터라 손으로 고치지 않습니다(별도 WI).
+ * - apps/web/public/library/**: 수집기가 만든 데이터라 손으로 고치지 않습니다. AXIS 항목은 소스를 고친 뒤
+ *   `pnpm library:refresh-axis` 로 다시 만들고, 외부 소스(shadcn · monet) 항목은 그대로 둡니다(WI-0057).
  *   apps/web 은 src 만 봅니다.
  * 새로 실행 안내를 쓰는 곳이 생기면 성격이 위 제외에 해당하지 않는 한 여기에 더합니다.
  */

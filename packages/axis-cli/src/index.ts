@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { createRequire } from "module";
 import { MonetClient, MONET_CATEGORIES } from "./monet.js";
 import { V0Client } from "./v0.js";
-import { LibraryCurator, Publisher } from "./library/index.js";
+import { LibraryCurator, Publisher, registerRefreshAxisCommand } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";
 import { registerTemplateCommand, registerCheckCommand } from "./template/index.js";
 import { registerThemeCommand } from "./theme/index.js";
@@ -326,6 +326,9 @@ libraryCmd
     }
     console.log();
   });
+
+// AXIS 항목만 저장소 소스에서 다시 만들기 (WI-0057)
+registerRefreshAxisCommand(libraryCmd);
 
 // ==========================================
 // Sync 명령어

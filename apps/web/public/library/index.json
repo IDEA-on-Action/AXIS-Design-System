@@ -1,23 +1,23 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-02-01T00:00:00.000Z",
+  "updatedAt": "2026-10-23T00:00:00.000Z",
   "stats": {
-    "total": 108,
+    "total": 129,
     "bySource": {
-      "shadcn": 32,
+      "shadcn": 47,
       "monet": 34,
-      "axis": 42
+      "axis": 48
     },
     "byCategory": {
-      "ui": 47,
+      "ui": 67,
       "feedback": 5,
       "layout": 4,
       "data-display": 7,
       "navigation": 10,
-      "chart": 1,
+      "chart": 2,
       "form": 11,
       "overlay": 5,
-      "agentic": 17
+      "agentic": 18
     }
   },
   "categories": [
@@ -94,13 +94,13 @@
   ],
   "components": [
     {
-      "id": "axis-accordion",
+      "id": "shadcn-accordion",
       "slug": "accordion",
-      "name": "Accordion",
-      "description": "AXIS Accordion component",
+      "name": "accordion",
+      "description": "shadcn/ui accordion component",
       "category": "ui",
-      "source": "axis",
-      "tags": ["forwardRef", "animated"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -154,13 +154,13 @@
       "status": "active"
     },
     {
-      "id": "axis-breadcrumb",
+      "id": "shadcn-breadcrumb",
       "slug": "breadcrumb",
-      "name": "Breadcrumb",
-      "description": "AXIS Breadcrumb component",
+      "name": "breadcrumb",
+      "description": "shadcn/ui breadcrumb component",
       "category": "navigation",
-      "source": "axis",
-      "tags": ["forwardRef"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -218,33 +218,33 @@
       "status": "active"
     },
     {
-      "id": "axis-checkbox",
+      "id": "shadcn-checkbox",
       "slug": "checkbox",
-      "name": "Checkbox",
-      "description": "AXIS Checkbox component",
+      "name": "checkbox",
+      "description": "shadcn/ui checkbox component",
       "category": "form",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
-      "status": "active"
-    },
-    {
-      "id": "axis-collapsible",
-      "slug": "collapsible",
-      "name": "Collapsible",
-      "description": "AXIS Collapsible component",
-      "category": "ui",
-      "source": "axis",
+      "source": "shadcn",
       "tags": [],
       "status": "active"
     },
     {
-      "id": "axis-command",
-      "slug": "command",
-      "name": "Command",
-      "description": "AXIS Command component",
+      "id": "shadcn-collapsible",
+      "slug": "collapsible",
+      "name": "collapsible",
+      "description": "shadcn/ui collapsible component",
       "category": "ui",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
+      "source": "shadcn",
+      "tags": [],
+      "status": "active"
+    },
+    {
+      "id": "shadcn-command",
+      "slug": "command",
+      "name": "command",
+      "description": "shadcn/ui command component",
+      "category": "ui",
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -278,13 +278,13 @@
       "status": "active"
     },
     {
-      "id": "axis-dropdown-menu",
+      "id": "shadcn-dropdown-menu",
       "slug": "dropdown-menu",
-      "name": "DropdownMenu",
-      "description": "AXIS DropdownMenu component",
+      "name": "dropdown-menu",
+      "description": "shadcn/ui dropdown-menu component",
       "category": "navigation",
-      "source": "axis",
-      "tags": ["forwardRef", "animated", "interactive"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -376,13 +376,13 @@
       "status": "active"
     },
     {
-      "id": "axis-popover",
+      "id": "shadcn-popover",
       "slug": "popover",
-      "name": "Popover",
-      "description": "AXIS Popover component",
+      "name": "popover",
+      "description": "shadcn/ui popover component",
       "category": "overlay",
-      "source": "axis",
-      "tags": ["forwardRef", "animated"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -396,13 +396,13 @@
       "status": "active"
     },
     {
-      "id": "axis-radio-group",
+      "id": "shadcn-radio-group",
       "slug": "radio-group",
-      "name": "RadioGroup",
-      "description": "AXIS RadioGroup component",
+      "name": "radio-group",
+      "description": "shadcn/ui radio-group component",
       "category": "form",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -416,13 +416,13 @@
       "status": "active"
     },
     {
-      "id": "axis-scroll-area",
+      "id": "shadcn-scroll-area",
       "slug": "scroll-area",
-      "name": "ScrollArea",
-      "description": "AXIS ScrollArea component",
-      "category": "ui",
-      "source": "axis",
-      "tags": ["forwardRef"],
+      "name": "scroll-area",
+      "description": "shadcn/ui scroll-area component",
+      "category": "chart",
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -446,13 +446,13 @@
       "status": "active"
     },
     {
-      "id": "axis-sheet",
+      "id": "shadcn-sheet",
       "slug": "sheet",
-      "name": "Sheet",
-      "description": "AXIS Sheet component",
+      "name": "sheet",
+      "description": "shadcn/ui sheet component",
       "category": "overlay",
-      "source": "axis",
-      "tags": ["forwardRef", "animated"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -476,13 +476,13 @@
       "status": "active"
     },
     {
-      "id": "axis-slider",
+      "id": "shadcn-slider",
       "slug": "slider",
-      "name": "Slider",
-      "description": "AXIS Slider component",
+      "name": "slider",
+      "description": "shadcn/ui slider component",
       "category": "form",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -496,23 +496,23 @@
       "status": "active"
     },
     {
-      "id": "axis-switch",
+      "id": "shadcn-switch",
       "slug": "switch",
-      "name": "Switch",
-      "description": "AXIS Switch component",
+      "name": "switch",
+      "description": "shadcn/ui switch component",
       "category": "form",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
-      "id": "axis-table",
+      "id": "shadcn-table",
       "slug": "table",
-      "name": "Table",
-      "description": "AXIS Table component",
+      "name": "table",
+      "description": "shadcn/ui table component",
       "category": "data-display",
-      "source": "axis",
-      "tags": ["forwardRef"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -526,13 +526,13 @@
       "status": "active"
     },
     {
-      "id": "axis-textarea",
+      "id": "shadcn-textarea",
       "slug": "textarea",
-      "name": "Textarea",
-      "description": "AXIS Textarea component",
+      "name": "textarea",
+      "description": "shadcn/ui textarea component",
       "category": "form",
-      "source": "axis",
-      "tags": ["forwardRef"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -546,13 +546,13 @@
       "status": "active"
     },
     {
-      "id": "axis-toggle",
+      "id": "shadcn-toggle",
       "slug": "toggle",
-      "name": "Toggle",
-      "description": "AXIS Toggle component",
+      "name": "toggle",
+      "description": "shadcn/ui toggle component",
       "category": "ui",
-      "source": "axis",
-      "tags": ["forwardRef", "interactive"],
+      "source": "shadcn",
+      "tags": [],
       "status": "active"
     },
     {
@@ -920,10 +920,10 @@
       "status": "active"
     },
     {
-      "id": "axis-badge",
-      "slug": "badge",
-      "name": "Badge",
-      "description": "AXIS Badge component",
+      "id": "axis-accordion",
+      "slug": "accordion",
+      "name": "Accordion",
+      "description": "아코디언 루트 컴포넌트. 하나 이상의 접이식 패널을 관리한다.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -933,10 +933,62 @@
       "status": "active"
     },
     {
+      "id": "axis-alert",
+      "slug": "alert",
+      "name": "Alert",
+      "description": "사용자에게 중요한 메시지를 전달하는 알림 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-avatar",
+      "slug": "avatar",
+      "name": "Avatar",
+      "description": "사용자 프로필 이미지를 표시하는 아바타 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "stateful",
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-badge",
+      "slug": "badge",
+      "name": "Badge",
+      "description": "상태나 카테고리를 나타내는 작은 라벨 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-breadcrumb",
+      "slug": "breadcrumb",
+      "name": "Breadcrumb",
+      "description": "브레드크럼 루트 네비게이션 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
       "id": "axis-button",
       "slug": "button",
       "name": "Button",
-      "description": "AXIS Button component",
+      "description": "다양한 스타일 변형과 크기를 지원하는 버튼 컴포넌트",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -950,7 +1002,7 @@
       "id": "axis-card",
       "slug": "card",
       "name": "Card",
-      "description": "AXIS Card component",
+      "description": "관련 콘텐츠를 그룹화하여 표시하는 카드 컨테이너 컴포넌트",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -960,10 +1012,58 @@
       "status": "active"
     },
     {
+      "id": "axis-checkbox",
+      "slug": "checkbox",
+      "name": "Checkbox",
+      "description": "선택/해제 상태를 토글하는 체크박스 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-collapsible",
+      "slug": "collapsible",
+      "name": "Collapsible",
+      "description": "콘텐츠를 펼치거나 접을 수 있는 접이식 루트 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [],
+      "status": "active"
+    },
+    {
+      "id": "axis-command",
+      "slug": "command",
+      "name": "Command",
+      "description": "명령어 팔레트 루트 컴포넌트",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
       "id": "axis-dialog",
       "slug": "dialog",
       "name": "Dialog",
-      "description": "AXIS Dialog component",
+      "description": "다이얼로그의 루트 컴포넌트. 열림/닫힘 상태를 관리한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-dropdown-menu",
+      "slug": "dropdown-menu",
+      "name": "Dropdown Menu",
+      "description": "드롭다운 메뉴의 루트 컴포넌트. 열림/닫힘 상태를 관리한다.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -976,7 +1076,7 @@
       "id": "axis-input",
       "slug": "input",
       "name": "Input",
-      "description": "AXIS Input component",
+      "description": "텍스트 입력 필드 컴포넌트.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -990,7 +1090,7 @@
       "id": "axis-label",
       "slug": "label",
       "name": "Label",
-      "description": "AXIS Label component",
+      "description": "폼 요소에 연결되는 레이블 컴포넌트.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -999,10 +1099,62 @@
       "status": "active"
     },
     {
+      "id": "axis-popover",
+      "slug": "popover",
+      "name": "Popover",
+      "description": "팝오버의 루트 컴포넌트. 열림/닫힘 상태를 관리한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-progress",
+      "slug": "progress",
+      "name": "Progress",
+      "description": "진행 상태를 시각적으로 표시하는 프로그레스 바 컴포넌트.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-radio-group",
+      "slug": "radio-group",
+      "name": "Radio Group",
+      "description": "라디오 버튼 그룹의 루트 컴포넌트. 단일 선택 상태를 관리하며 키보드 네비게이션을 지원한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-scroll-area",
+      "slug": "scroll-area",
+      "name": "Scroll Area",
+      "description": "커스텀 스크롤바를 제공하는 스크롤 영역 컴포넌트. 뷰포트, 스크롤바, 코너를 포함한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
       "id": "axis-select",
       "slug": "select",
       "name": "Select",
-      "description": "AXIS Select component",
+      "description": "셀렉트의 루트 컴포넌트. 열림/닫힘 및 선택 상태를 관리한다.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -1015,7 +1167,7 @@
       "id": "axis-separator",
       "slug": "separator",
       "name": "Separator",
-      "description": "AXIS Separator component",
+      "description": "콘텐츠 사이의 시각적 구분선 컴포넌트.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -1024,10 +1176,24 @@
       "status": "active"
     },
     {
-      "id": "axis-tabs",
-      "slug": "tabs",
-      "name": "Tabs",
-      "description": "AXIS Tabs component",
+      "id": "axis-sheet",
+      "slug": "sheet",
+      "name": "Sheet",
+      "description": "화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-skeleton",
+      "slug": "skeleton",
+      "name": "Skeleton",
+      "description": "콘텐츠 로딩 상태를 시각적으로 나타내는 스켈레톤 컴포넌트. 펄스 애니메이션이 적용된다.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -1037,10 +1203,101 @@
       "status": "active"
     },
     {
+      "id": "axis-slider",
+      "slug": "slider",
+      "name": "Slider",
+      "description": "범위 내에서 값을 선택할 수 있는 슬라이더 컴포넌트. 트랙, 범위 표시, 드래그 가능한 썸을 포함한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-switch",
+      "slug": "switch",
+      "name": "Switch",
+      "description": "켜짐/꺼짐 상태를 전환하는 스위치 컴포넌트. 키보드 접근성과 포커스 링을 지원한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-table",
+      "slug": "table",
+      "name": "Table",
+      "description": "데이터를 행과 열로 표시하는 테이블 컴포넌트. 가로 스크롤 가능한 래퍼를 포함한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-tabs",
+      "slug": "tabs",
+      "name": "Tabs",
+      "description": "탭 기반 네비게이션의 루트 컴포넌트. 활성 탭 상태를 관리한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-textarea",
+      "slug": "textarea",
+      "name": "Textarea",
+      "description": "여러 줄의 텍스트를 입력받는 텍스트 영역 컴포넌트. 최소 높이, 포커스 링, 비활성 상태 스타일을 포함한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef"
+      ],
+      "status": "active"
+    },
+    {
       "id": "axis-toast",
       "slug": "toast",
       "name": "Toast",
-      "description": "AXIS Toast component",
+      "description": "토스트 알림의 루트 컴포넌트. default, success, error, warning 변형을 지원하며 스와이프로 닫을 수 있다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-toggle",
+      "slug": "toggle",
+      "name": "Toggle",
+      "description": "눌림/해제 상태를 전환하는 토글 버튼 컴포넌트. variant(default, outline)와 size(sm, default, lg) 변형을 지원한다.",
+      "category": "ui",
+      "source": "axis",
+      "tags": [
+        "forwardRef",
+        "animated"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-tooltip",
+      "slug": "tooltip",
+      "name": "Tooltip",
+      "description": "툴팁의 루트 컴포넌트. 열림/닫힘 상태를 관리한다.",
       "category": "ui",
       "source": "axis",
       "tags": [
@@ -1056,7 +1313,9 @@
       "description": "에이전트 아바타 컴포넌트",
       "category": "agentic",
       "source": "axis",
-      "tags": [],
+      "tags": [
+        "accessible"
+      ],
       "status": "active"
     },
     {
@@ -1068,6 +1327,105 @@
       "source": "axis",
       "tags": [
         "animated",
+        "accessible",
+        "container"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-attachment-card",
+      "slug": "attachment-card",
+      "name": "Attachment Card",
+      "description": "파일/이미지 첨부를 표시하는 카드 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "animated",
+        "accessible",
+        "container"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-code-block",
+      "slug": "code-block",
+      "name": "Code Block",
+      "description": "코드 표시 + 복사 버튼 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "stateful",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-context-panel",
+      "slug": "context-panel",
+      "name": "Context Panel",
+      "description": "모델/설정 메타 정보를 표시하는 패널 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "stateful",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-diff-viewer",
+      "slug": "diff-viewer",
+      "name": "Diff Viewer",
+      "description": "코드 변경사항 비교 표시 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "stateful",
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-feedback-buttons",
+      "slug": "feedback-buttons",
+      "name": "Feedback Buttons",
+      "description": "좋아요/싫어요 피드백 버튼 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "stateful",
+        "animated",
+        "accessible",
+        "interactive"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-message-bubble",
+      "slug": "message-bubble",
+      "name": "Message Bubble",
+      "description": "대화 메시지 버블 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-plan-card",
+      "slug": "plan-card",
+      "name": "Plan Card",
+      "description": "AI 실행 계획을 표시하고 승인/거절하는 카드 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "animated",
+        "accessible",
         "container"
       ],
       "status": "active"
@@ -1080,7 +1438,8 @@
       "category": "agentic",
       "source": "axis",
       "tags": [
-        "animated"
+        "animated",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1092,7 +1451,8 @@
       "category": "agentic",
       "source": "axis",
       "tags": [
-        "animated"
+        "animated",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1104,7 +1464,8 @@
       "category": "agentic",
       "source": "axis",
       "tags": [
-        "stateful"
+        "stateful",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1116,7 +1477,8 @@
       "category": "agentic",
       "source": "axis",
       "tags": [
-        "animated"
+        "animated",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1130,7 +1492,8 @@
       "tags": [
         "stateful",
         "side-effects",
-        "animated"
+        "animated",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1152,7 +1515,21 @@
       "category": "agentic",
       "source": "axis",
       "tags": [
-        "animated"
+        "animated",
+        "accessible"
+      ],
+      "status": "active"
+    },
+    {
+      "id": "axis-token-usage-indicator",
+      "slug": "token-usage-indicator",
+      "name": "Token Usage Indicator",
+      "description": "토큰 사용량 및 비용 표시 컴포넌트",
+      "category": "agentic",
+      "source": "axis",
+      "tags": [
+        "animated",
+        "accessible"
       ],
       "status": "active"
     },
@@ -1166,90 +1543,8 @@
       "tags": [
         "stateful",
         "animated",
+        "accessible",
         "container"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-activity-preview-card",
-      "slug": "activity-preview-card",
-      "name": "Activity Preview Card",
-      "description": "AXIS Activity Preview Card component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "container"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-agent-run-container",
-      "slug": "agent-run-container",
-      "name": "Agent Run Container",
-      "description": "실행 중",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "stateful"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-approval-dialog",
-      "slug": "approval-dialog",
-      "name": "Approval Dialog",
-      "description": "AXIS Approval Dialog component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "stateful"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-collector-health-bar",
-      "slug": "collector-health-bar",
-      "name": "Collector Health Bar",
-      "description": "AXIS Collector Health Bar component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "stateful"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-file-upload-zone",
-      "slug": "file-upload-zone",
-      "name": "File Upload Zone",
-      "description": "AXIS File Upload Zone component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [],
-      "status": "active"
-    },
-    {
-      "id": "axis-seminar-chat-panel",
-      "slug": "seminar-chat-panel",
-      "name": "Seminar Chat Panel",
-      "description": "AXIS Seminar Chat Panel component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "stateful"
-      ],
-      "status": "active"
-    },
-    {
-      "id": "axis-step-indicator",
-      "slug": "step-indicator",
-      "name": "Step Indicator",
-      "description": "AXIS Step Indicator component",
-      "category": "agentic",
-      "source": "axis",
-      "tags": [
-        "stateful",
-        "animated"
       ],
       "status": "active"
     }
