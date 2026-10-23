@@ -34,42 +34,49 @@ export function StreamingText({
   "aria-label": ariaLabel,
   className,
 }: StreamingTextProps) {
-  const [displayedText, setDisplayedText] = React.useState("");
-  const [isStreaming, setIsStreaming] = React.useState(false);
-  const prevTextRef = React.useRef("");
+  // 글자는 코드 포인트 단위로 센다(이모지 등 서로게이트 쌍을 반쪽으로 보이지 않게)
+  const chars = React.useMemo(() => Array.from(text), [text]);
+  // 상태는 "보여 줄 글자 수"만 두고 화면 문자열은 text 에서 잘라 만든다.
+  // effect 가 정리 후 다시 실행돼도(StrictMode · 부모 재렌더) 이 위치에서 이어 간다.
+  const [visibleLength, setVisibleLength] = React.useState(0);
+  const [prevText, setPrevText] = React.useState(text);
+  // text 변경: 이어 붙이기면 진행 위치 유지, 통째 교체면 처음부터(렌더 중 상태 조정)
+  if (text !== prevText) {
+    setPrevText(text);
+    if (!text.startsWith(prevText)) setVisibleLength(0);
+  }
+
+  const targetLength = chars.length;
+  const isStreaming = !isComplete && visibleLength < targetLength;
+
+  // onComplete 는 ref 로 읽어 effect 의존성에서 뺀다(부모가 매 렌더 새 함수를 넘겨도 진행 유지)
+  const onCompleteRef = React.useRef(onComplete);
+  React.useEffect(() => {
+    onCompleteRef.current = onComplete;
+  });
 
   React.useEffect(() => {
-    if (isComplete) {
-      setDisplayedText(text);
-      setIsStreaming(false);
+    if (!isStreaming) return;
+    const interval = setInterval(() => {
+      setVisibleLength((n) => Math.min(n + 1, targetLength));
+    }, speed);
+    return () => clearInterval(interval);
+  }, [isStreaming, targetLength, speed]);
+
+  // 화면이 text 끝까지 따라잡은 순간 한 번 onComplete 를 부른다(isComplete 로 즉시 표시한 경우는 제외)
+  const wasStreamingRef = React.useRef(false);
+  React.useEffect(() => {
+    if (isStreaming) {
+      wasStreamingRef.current = true;
       return;
     }
-
-    // 새로운 텍스트가 추가된 경우에만 스트리밍
-    if (text.length > prevTextRef.current.length && text.startsWith(prevTextRef.current)) {
-      const newText = text.slice(prevTextRef.current.length);
-      let charIndex = 0;
-      setIsStreaming(true);
-
-      const interval = setInterval(() => {
-        if (charIndex < newText.length) {
-          setDisplayedText((prev) => prev + newText[charIndex]);
-          charIndex++;
-        } else {
-          clearInterval(interval);
-          setIsStreaming(false);
-          if (onComplete) onComplete();
-        }
-      }, speed);
-
-      prevTextRef.current = text;
-      return () => clearInterval(interval);
-    } else if (text !== prevTextRef.current) {
-      // 텍스트가 완전히 변경된 경우 리셋
-      setDisplayedText("");
-      prevTextRef.current = "";
+    if (wasStreamingRef.current) {
+      wasStreamingRef.current = false;
+      if (!isComplete) onCompleteRef.current?.();
     }
-  }, [text, speed, isComplete, onComplete]);
+  }, [isStreaming, isComplete]);
+
+  const displayedText = isComplete ? text : chars.slice(0, visibleLength).join("");
 
   return (
     <div

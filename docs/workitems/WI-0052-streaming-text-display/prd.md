@@ -1,6 +1,6 @@
 # WI-0052: StreamingText 표시 결함(첫 글자 누락 · undefined 덧붙음) 수정 PRD
 
-> 작성일: 2026-10-23 | 버전: v0.1 (초안) | 작성자: Sinclair Seo | WI: WI-0052 | GitHub: #146 | 우선순위: P2 | 상태: Draft (결정 대기)
+> 작성일: 2026-10-23 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0052 | GitHub: #146 | 우선순위: P2 | 상태: Approved (2026-10-23 결정 반영)
 > 기준: `origin/main` 8a8cd5b (linked 4패키지 1.5.0 배포, `@axis-ds/agentic-ui@1.5.0` dist 의 streaming-text 도 같은 코드임을 확인)
 > 관련: WI-0050(#143) 구현 검증(2026-10-20)에서 발견
 
@@ -35,19 +35,21 @@ D 가 정상이라 렌더 · 측정 경로 자체는 살아 있고, 결함은 �
 
 누적 문자열과 interval 안의 지역 인덱스를 버리고, **표시할 글자 수(`visibleLength`)만 상태로 두고 화면 문자열은 `text.slice(0, visibleLength)` 로 만들어요.** effect 는 「아직 다 안 보였으면 interval 로 1씩 늘린다」만 하고, 정리 후 다시 실행돼도(StrictMode · 부모 재렌더) 현재 위치에서 이어 가요. 이어 붙임이면 위치를 유지하고, 통째 교체면 렌더 중 상태 조정으로 0 으로 돌려요. onComplete 는 ref 로 받아 의존성에서 빼고, 「스트리밍 중 → 끝」 전환에서 한 번만 불러요.
 
-시제품을 같은 재현 테스트에 태우면 A~D 가 React 18 · 19, StrictMode 켬 · 끔 모두 통과했어요(8/8 × 2). 패키지 기존 테스트 83개 · `tsc --noEmit` · `eslint` 도 통과했어요. 시제품 diff 는 1단계 보고에 첨부했고 커밋하지 않았어요.
+시제품을 같은 재현 테스트에 태우면 A~D 가 React 18 · 19, StrictMode 켬 · 끔 모두 통과했어요(8/8 × 2). 구현본은 D4 에 따라 글자를 코드 포인트(`Array.from(text)`)로 세고 `chars.slice(0, visibleLength).join("")` 로 화면 문자열을 만들어요. 결과는 [testplan.md](./testplan.md) 에 있어요.
 
-## 2. 결정 (사용자 결정 대기)
+## 2. 결정 (2026-10-23 사용자)
 
-| # | 질문 | 선택지 (첫 번째가 권장) |
-|---|---|---|
-| D1 | onComplete 는 언제 부르나 | ① 화면이 text 끝까지 따라잡을 때마다 1회(이어 붙인 뒤 다시 따라잡으면 또 1회), `isComplete=true` 로 즉시 표시할 때는 안 부름(종전 의도 유지) ② `isComplete=true` 로 즉시 표시할 때도 부름 ③ text 가 통째 바뀔 때까지 최초 1회만 |
-| D2 | 스트리밍 도중 text 를 이어 붙이면 | ① 지금 위치에서 계속 흘림 ② 이어 붙인 부분은 즉시 표시 |
-| D3 | text 가 통째 바뀌면(이전 text 로 시작하지 않으면) | ① 처음부터 다시 흘림(종전 주석 의도) ② 새 text 를 즉시 전부 표시 |
-| D4 | 글자 단위 | ① 코드 포인트(`Array.from`, 이모지 반쪽 표시 방지) ② UTF-16 코드 유닛 유지(종전, 한글은 문제없음) ③ 자소 묶음(`Intl.Segmenter`) |
-| D5 | 문서 사이트 `/agentic/streaming-text` 의 mock | ① 이번 범위 밖, 후속 WI 로 등록 ② 이번에 실제 컴포넌트로 교체 |
-| D6 | `apps/web/public/library/components/streaming-text.json` · `categories/agentic.json` 에 든 옛 소스 | ① WI-0057(library 데이터) 에서 함께 재생성 ② 이번에 손으로 갱신 |
-| D7 | 릴리스 | ① agentic-ui patch changeset 1개(linked 4패키지 1.5.1 동반) ② 다른 WI(0053) 와 한 릴리스로 묶을 때까지 changeset 보류 |
+모두 1단계 권장안으로 정했어요.
+
+| # | 결정 |
+|---|---|
+| D1 | onComplete 는 화면이 text 끝까지 따라잡을 때마다 1회 불러요(이어 붙인 뒤 다시 따라잡으면 또 1회). `isComplete=true` 로 즉시 표시할 때는 부르지 않아요(종전 의도 유지) |
+| D2 | 스트리밍 도중 text 를 이어 붙이면 지금 위치에서 계속 흘려요 |
+| D3 | text 가 통째 바뀌면(이전 text 로 시작하지 않으면) 처음부터 다시 흘려요 |
+| D4 | 글자 단위는 코드 포인트(`Array.from`)예요. 이모지 같은 서로게이트 쌍이 반쪽으로 보이지 않아요 |
+| D5 | 문서 사이트 `/agentic/streaming-text` 의 mock 은 이번 범위 밖이에요(Master 가 별도 WI 등록) |
+| D6 | `apps/web/public/library/**` 의 옛 소스 사본은 WI-0057 에서 재생성해요. 이 WI 에서는 건드리지 않아요 |
+| D7 | `@axis-ds/agentic-ui` patch changeset 1개(`.changeset/wi-0052-streaming-text-display.md`). linked 그룹은 함께 bump 되는 패키지끼리 버전을 맞추는 설정이라, 이 changeset 만 있으면 agentic-ui 만 1.5.1 로 나가요 |
 
 ## 3. 요구사항
 
@@ -61,13 +63,13 @@ D 가 정상이라 렌더 · 측정 경로 자체는 살아 있고, 결함은 �
 
 ## 4. 수용 기준
 
-- AC1 신규 단위 테스트 `streaming-text.test.tsx` 가 StrictMode 켬 · 끔 각각 A(중간 상태 `스` → `스트` → `스트리`, 완료 텍스트, onComplete 1회) · B · C · D 를 고정하고, **수정 전 소스에서는 실패**(음성 대조)하고 수정 후 통과해요
+- AC1 신규 단위 테스트 `streaming-text.test.tsx` 가 StrictMode 켬 · 끔 각각 A(중간 상태 `스` → `스트` → `스트리`, 완료 텍스트, onComplete 1회) · B · C · D 와 코드 포인트 사례(E)를 고정하고, **수정 전 소스에서는 실패**(음성 대조)하고 수정 후 통과해요. 고친 핵심 줄을 하나씩 되돌리면(변이) 테스트가 잡아요
 - AC2 React 19.2.3 로 같은 시나리오를 1회 실측해 통과해요(패키지 테스트는 React 18 devDependency)
-- AC3 기존 게이트(type-check · lint · build · test · test:registry) 통과, 레지스트리 재생성본의 streaming-text 소스가 패키지 소스와 같아요
+- AC3 기존 게이트(type-check · lint · build · test · test:registry · pack-smoke · registry-install-smoke) 통과, 레지스트리 재생성본의 streaming-text 소스가 패키지 소스와 같아요(빌드 변환인 `"use client"` 머리말 · `cn` import 경로만 달라요)
 - AC4 배포 뒤 발행본으로 A 시나리오를 실측해 `스트리밍 완료 문장` 이 나와요
 
 ## 5. 범위 밖
 
-- 문서 사이트 mock 교체(D5 ①일 때)
-- library 데이터 재생성(D6 ①일 때, WI-0057)
+- 문서 사이트 mock 교체(D5, 별도 WI)
+- library 데이터 재생성(D6, WI-0057)
 - 다른 agentic 컴포넌트의 같은 유형 결함 점검(필요하면 별도 WI)
