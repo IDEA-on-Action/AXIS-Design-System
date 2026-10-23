@@ -8,6 +8,7 @@
 import { accessSync, constants, existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
+import { detectInstallCommand, hasDependency, isPlainObject } from "@axis-ds/registry-core/project";
 import {
   BRAND_NAME_PATTERN,
   MIN_BRAND_TOKENS_VERSION,
@@ -24,6 +25,9 @@ export const TOKENS_DEPENDENCY_RANGE = `^${MIN_BRAND_TOKENS_VERSION}`;
 
 /** Provider 안내에 쓰는 패키지 */
 export const THEME_PACKAGE = "@axis-ds/theme";
+
+// 설치 명령 선택 · package.json 판정 헬퍼는 add 와 같이 쓰려고 공유 코어(@axis-ds/registry-core, WI-0055)로 옮겼습니다. 종전 이름은 그대로 내보냅니다
+export { detectInstallCommand, hasDependency, isPlainObject };
 
 /** 계획을 멈추게 하는 오류. 하나라도 있으면 쓸 파일이 0개입니다. */
 export type ThemeAddError =
@@ -179,28 +183,6 @@ export function realPathInside(baseDir: string, file: string): { inside: boolean
 /** 실제 경로(심볼릭 링크를 따라간 경로)가 `.css` 파일인지 봅니다. */
 function isStylesheet(realPath: string): boolean {
   return path.extname(realPath).toLowerCase() === ".css";
-}
-
-/** 프로젝트의 lockfile 로 설치 명령을 고릅니다(없으면 pnpm). */
-export function detectInstallCommand(baseDir: string): string {
-  if (existsSync(path.join(baseDir, "pnpm-lock.yaml"))) return "pnpm install";
-  if (existsSync(path.join(baseDir, "yarn.lock"))) return "yarn install";
-  if (existsSync(path.join(baseDir, "package-lock.json"))) return "npm install";
-  return "pnpm install";
-}
-
-export function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
-  for (const field of ["dependencies", "devDependencies"]) {
-    const deps = pkg[field];
-    if (typeof deps === "object" && deps !== null && name in deps) {
-      return String((deps as Record<string, unknown>)[name]);
-    }
-  }
-  return undefined;
-}
-
-export function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 /**
