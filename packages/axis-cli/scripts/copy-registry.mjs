@@ -15,6 +15,8 @@
  *
  * 사용: node scripts/copy-registry.mjs [원본 디렉터리 대상 디렉터리]
  *   인자를 생략하면 apps/web/public/r -> dist/registry 입니다(두 인자는 테스트용).
+ *   @axis-ds/mcp 도 빌드 때 두 인자를 주어 자기 dist/registry 로 같은 검증을 거쳐 복사합니다(WI-0055 FR-5,
+ *   packages/axis-mcp/package.json 의 copy-registry).
  */
 
 import fs from "node:fs";

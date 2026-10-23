@@ -85,8 +85,10 @@ export interface GetTokenInput {
 }
 
 export interface InstallComponentInput {
-  name: string;
+  name?: string;
+  names?: string[];
   targetDir: string;
+  overwrite?: boolean;
 }
 
 // MCP 도구 결과 타입
@@ -95,9 +97,28 @@ export interface SearchResult {
   totalCount: number;
 }
 
+// axis.install_component 결과(WI-0055: 레지스트리 · 공유 코어 기반)
 export interface InstallResult {
   success: boolean;
+  /** 해석한 프로젝트 루트(절대 경로) */
+  root: string;
+  /** 레지스트리 주소(가림)와 출처 · version(D13, 항상) */
+  source: string;
+  /** 설치 항목(의존 항목 먼저) */
+  items: string[];
+  /** 새로 만든 파일(프로젝트 루트 기준) */
   installedFiles: string[];
-  dependencies: string[];
+  /** 덮어쓴 파일(overwrite: true) */
+  overwrittenFiles: string[];
+  /** 같은 내용이라 건너뛴 파일 */
+  unchangedFiles: string[];
+  /** 내용이 달라 건너뛴 파일(사용자 수정 유지) */
+  skippedFiles: string[];
+  /** package.json 에 없는 의존성 추가 명령 */
+  dependencyCommand?: string;
+  /** axis.config.json 이 없어 기본 배치로 설치했는지 */
+  usedDefaultLayout: boolean;
+  notices: string[];
+  errors: string[];
   message: string;
 }

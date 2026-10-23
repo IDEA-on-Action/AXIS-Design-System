@@ -14,7 +14,9 @@ export {
   handleGetToken,
   formatComponentDetail,
   formatTokenDetail,
+  type ComponentDetail,
   type GetComponentParams,
+  type GetComponentResult,
   type GetTokenParams,
 } from "./get.js";
 
@@ -34,6 +36,13 @@ export {
   formatInstallResult,
   type InstallComponentParams,
 } from "./install.js";
+
+export {
+  MCP_BUNDLED_LABEL,
+  type ComponentFilter,
+  type RegistryComponent,
+  type RegistryDeps,
+} from "./registry-source.js";
 
 // 프롬프트 도구
 export {

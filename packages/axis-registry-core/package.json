@@ -1,0 +1,32 @@
+{
+  "name": "@axis-ds/registry-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AXIS 레지스트리 설치 코어(발행하지 않음). @axis-ds/cli · @axis-ds/mcp 가 빌드 때 번들합니다 (WI-0055)",
+  "exports": {
+    "./add": "./src/add/add.ts",
+    "./safe-write": "./src/add/safe-write.ts",
+    "./config": "./src/config/axis-config.ts",
+    "./registry": "./src/registry/index.ts",
+    "./registry/bundled": "./src/registry/bundled.ts",
+    "./registry/remote": "./src/registry/remote.ts",
+    "./registry/schema": "./src/registry/schema.ts",
+    "./site": "./src/site.ts",
+    "./tailwind-core": "./src/template/tailwind-core.ts",
+    "./project": "./src/project.ts",
+    "./utils-deps": "./src/utils-deps.ts"
+  },
+  "scripts": {
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "fs-extra": "^11.2.0"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "license": "MIT"
+}

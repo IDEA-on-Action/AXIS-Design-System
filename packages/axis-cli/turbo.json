@@ -5,7 +5,8 @@
     "build": {
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/apps/web/public/r/**"
+        "$TURBO_ROOT$/apps/web/public/r/**",
+        "$TURBO_ROOT$/packages/axis-registry-core/src/**"
       ]
     },
     "test": {

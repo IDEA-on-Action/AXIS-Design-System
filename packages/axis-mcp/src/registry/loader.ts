@@ -9,7 +9,6 @@ import type {
   ComponentMeta,
   TokenMeta,
   Registry,
-  ComponentCategory,
   TokenCategory,
 } from "../types.js";
 
@@ -64,51 +63,14 @@ export function clearRegistryCache(): void {
 }
 
 /**
- * 컴포넌트 검색
+ * 컴포넌트 보조 메타 조회(이름으로). 목록 · 설치의 기준은 레지스트리이고(WI-0055 D2),
+ * 이 메타(components.json)는 get 의 props · examples 와 ui 항목의 category · package 를 덧붙이는 데만 씁니다.
  */
-export function searchComponents(
-  query: string,
-  category?: ComponentCategory
-): ComponentMeta[] {
-  const registry = getRegistry();
-  const lowerQuery = query.toLowerCase();
-
-  return registry.components.filter((component) => {
-    // 카테고리 필터
-    if (category && component.category !== category) {
-      return false;
-    }
-
-    // 검색어 매칭 (이름, 설명, displayName)
-    return (
-      component.name.toLowerCase().includes(lowerQuery) ||
-      component.displayName.toLowerCase().includes(lowerQuery) ||
-      component.description.toLowerCase().includes(lowerQuery)
-    );
-  });
-}
-
-/**
- * 컴포넌트 조회 (이름으로)
- */
-export function getComponent(name: string): ComponentMeta | undefined {
+export function getComponentMeta(name: string): ComponentMeta | undefined {
   const registry = getRegistry();
   return registry.components.find(
     (c) => c.name.toLowerCase() === name.toLowerCase()
   );
-}
-
-/**
- * 컴포넌트 목록 조회
- */
-export function listComponents(category?: ComponentCategory): ComponentMeta[] {
-  const registry = getRegistry();
-
-  if (category) {
-    return registry.components.filter((c) => c.category === category);
-  }
-
-  return registry.components;
 }
 
 /**
@@ -132,25 +94,6 @@ export function getToken(path: string): TokenMeta | undefined {
   return registry.tokens.find(
     (t) => t.path.toLowerCase() === path.toLowerCase()
   );
-}
-
-/**
- * 컴포넌트 카테고리별 개수
- */
-export function getComponentStats(): Record<ComponentCategory, number> {
-  const registry = getRegistry();
-  const stats: Record<ComponentCategory, number> = {
-    core: 0,
-    agentic: 0,
-    form: 0,
-    layout: 0,
-  };
-
-  for (const component of registry.components) {
-    stats[component.category]++;
-  }
-
-  return stats;
 }
 
 /**

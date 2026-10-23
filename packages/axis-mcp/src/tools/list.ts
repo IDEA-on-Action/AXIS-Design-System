@@ -1,22 +1,24 @@
 /**
  * AXIS Design System MCP - 목록 도구
+ *
+ * 컴포넌트 목록은 레지스트리 index(lib 제외 28개, WI-0055 D2)를, 토큰 목록은 번들 tokens.json 을 읽습니다.
  */
 
+import { listTokens, getTokenStats } from "../registry/loader.js";
+import type { ComponentCategory, TokenCategory, TokenMeta } from "../types.js";
 import {
-  listComponents,
-  listTokens,
-  getComponentStats,
-  getTokenStats,
-} from "../registry/loader.js";
-import type {
-  ComponentCategory,
-  TokenCategory,
-  ComponentMeta,
-  TokenMeta,
-} from "../types.js";
+  componentsOf,
+  describeOrigin,
+  matchesFilter,
+  noticeLines,
+  openSource,
+  type ComponentFilter,
+  type RegistryComponent,
+  type RegistryDeps,
+} from "./registry-source.js";
 
 export interface ListComponentsParams {
-  category?: ComponentCategory;
+  category?: ComponentFilter;
 }
 
 export interface ListTokensParams {
@@ -24,10 +26,16 @@ export interface ListTokensParams {
 }
 
 export interface ListComponentsResult {
-  components: ComponentMeta[];
+  components: RegistryComponent[];
   totalCount: number;
+  /** 레지스트리 전체(필터 전) 카테고리별 개수 */
   stats: Record<ComponentCategory, number>;
-  category?: ComponentCategory;
+  /** 레지스트리 전체 ui · agentic 개수 */
+  kinds: { ui: number; agentic: number };
+  category?: ComponentFilter;
+  /** 출처 표시(원격 · 동봉본과 version) */
+  source: string;
+  notices: string[];
 }
 
 export interface ListTokensResult {
@@ -40,20 +48,31 @@ export interface ListTokensResult {
 /**
  * axis.list_components 도구 구현
  *
- * 컴포넌트 목록을 조회합니다.
+ * 레지스트리의 컴포넌트 목록을 조회합니다. lib 항목은 다른 항목이 끌어오는 것이라 뺍니다(cli list 와 같음).
  */
-export function handleListComponents(
-  params: ListComponentsParams
-): ListComponentsResult {
+export async function handleListComponents(
+  params: ListComponentsParams,
+  deps: RegistryDeps = {}
+): Promise<ListComponentsResult> {
   const { category } = params;
-  const components = listComponents(category);
-  const stats = getComponentStats();
-
+  const { client, notices } = await openSource(deps.cwd ?? process.cwd(), deps);
+  const index = await client.getIndex();
+  const all = componentsOf(index);
+  const stats: Record<ComponentCategory, number> = { core: 0, agentic: 0, form: 0, layout: 0 };
+  const kinds = { ui: 0, agentic: 0 };
+  for (const c of all) {
+    stats[c.category]++;
+    kinds[c.kind]++;
+  }
+  const components = all.filter((c) => matchesFilter(c, category));
   return {
     components,
     totalCount: components.length,
     stats,
+    kinds,
     category,
+    source: describeOrigin(client, index.version),
+    notices,
   };
 }
 
@@ -83,6 +102,10 @@ export function formatComponentList(result: ListComponentsResult): string {
 
   lines.push("# AXIS Design System 컴포넌트 목록");
   lines.push("");
+  lines.push(`- **출처**: ${result.source}`);
+  lines.push(`- **전체**: UI ${result.kinds.ui}개 · Agentic ${result.kinds.agentic}개`);
+  lines.push(...noticeLines(result.notices));
+  lines.push("");
 
   // 통계
   lines.push("## 카테고리별 통계");
@@ -103,7 +126,7 @@ export function formatComponentList(result: ListComponentsResult): string {
   lines.push("");
 
   // 카테고리별 그룹핑
-  const grouped: Record<string, ComponentMeta[]> = {};
+  const grouped: Record<string, RegistryComponent[]> = {};
   for (const component of result.components) {
     if (!grouped[component.category]) {
       grouped[component.category] = [];
@@ -120,6 +143,8 @@ export function formatComponentList(result: ListComponentsResult): string {
     }
     lines.push("");
   }
+
+  lines.push("설치: `axis.install_component` 에 `name`(또는 `names`)과 프로젝트 루트 `targetDir` 를 주세요. 이름은 위 표의 이름 그대로입니다(agentic 은 `agentic-` 접두 포함).");
 
   return lines.join("\n");
 }
