@@ -81,6 +81,27 @@ CSS 변수 예시:
 --axis-input-border-focus: #3B82F6;
 ```
 
+### 밀도 토큰 (1.7.0부터)
+
+컨트롤 높이 · 글자 크기 · 단계별 둥글기를 CSS 변수로 엽니다(WI-0026). 기본값은 1.6.x 의 고정 클래스와 같은 크기라, 브랜드를 지정하지 않은 화면은 바뀌지 않습니다(1.6.3 배포본과 Chromium 계산값 186개 대조, 차이 0). 줄 높이는 토큰이 아니라 크기별 고정값(Button sm · default · lg 16 · 20 · 24px, Input · Table 20px)이라 ontology 에서도 같습니다.
+
+| 변수 | 기본값 | ontology | 쓰는 곳 |
+|---|---|---|---|
+| `--axis-control-h-sm` · `-md` · `-lg` | 32 · 40 · 48px | 27 · 34 · 42px | Button `sm` · `default`(`icon` 은 높이 · 너비 모두 md) · `lg` |
+| `--axis-control-font-size-sm` · `-md` · `-lg` | 12 · 14 · 16px | 13 · 14 · 15px | Button 크기별 글자, Input 글자(md) |
+| `--axis-field-h` | 40px | 36px | Input · Select 트리거 높이 |
+| `--axis-toggle-h-sm` · `-md` · `-lg` | 36 · 40 · 44px | 기본값과 같음 | Toggle 높이와 최소 너비 |
+| `--axis-table-font-size` | 14px | 13.5px | Table 본문 |
+| `--axis-table-head-font-size` | 14px | 13px | TableHead |
+| `--axis-radius-control` | `calc(var(--radius) - 2px)` (6px) | 8px | Button · Toggle |
+| `--axis-radius-field` | `calc(var(--radius) - 2px)` (6px) | 6px | Input · Select 트리거 |
+| `--axis-radius-surface` | `var(--radius)` (8px) | 12px | Card · Dialog(640px 이상) |
+
+- 컴포넌트는 `h-[var(--axis-control-h-md,2.5rem)]` 처럼 리터럴 fallback 을 함께 둡니다. 토큰 CSS 가 1.6.x 이하이거나 `--radius` 가 없을 때(`@axis-ds/tokens/css/shadcn` 을 빼고 `@axis-ds/tokens/css` 만 쓸 때)도 위 기본 크기가 나옵니다. 둥글기 3개는 `--radius` 에서 계산되므로, shadcn 을 뺀 구성에서는 1.6.x 의 0px 가 아니라 fallback 6 · 6 · 8px 가 됩니다(Chromium 실측).
+- 둥글기 기본값은 `:root` 에서 계산됩니다. 하위 요소에서 `--radius` 만 바꾸면 위 7개 컴포넌트는 따라가지 않으니, 그 요소에서 `--axis-radius-control|field|surface` 를 함께 바꿉니다.
+- 대상 밖 컴포넌트(Select 팝업 · Popover · Dropdown Menu · Toast · agentic-ui 등)와 Sheet 는 지금처럼 preset 의 `rounded-*`(`--radius`)를 따릅니다. ontology 에서 Select 팝업은 10px, Sheet 는 0px 로 남습니다(디자인 시스템 v1 의 드로어도 0px).
+- 버튼 27 · 34 · 42px 와 입력 36px 는 디자인 시스템 v1 화면의 렌더값(패딩과 Pretendard 줄 높이로 정해진 값)을 옮겨 적은 것입니다. 터치 화면에 쓰는 브랜드는 최소 크기를 브랜드에서 정합니다.
+
 ---
 
 ## 2. CSS 변수 오버라이드
@@ -216,7 +237,7 @@ function ThemeToggle() {
 @import "@axis-ds/tokens/css/brands/ontology";     /* 브랜드: 마지막 */
 ```
 
-- [ ] 쓰는 컴포넌트 패키지의 `tailwind.css` 를 넣었다. 빠지면 변수는 ontology 값(`--axis-button-bg-default` #326ADA)으로 바뀌지만 Button 바탕이 투명(`rgba(0, 0, 0, 0)`)하고 둥글기 0px, PlanCard 왼쪽 색 선 0px 입니다. 넣으면 rgb(50, 106, 218) · 10px · 1px 입니다.
+- [ ] 쓰는 컴포넌트 패키지의 `tailwind.css` 를 넣었다. 빠지면 변수는 ontology 값(`--axis-button-bg-default` #326ADA)으로 바뀌지만 Button 바탕이 투명(`rgba(0, 0, 0, 0)`)하고 둥글기 0px, PlanCard 왼쪽 색 선 0px 입니다. 넣으면 rgb(50, 106, 218) · 10px · 1px 입니다. 1.7.0 부터 Button 둥글기는 밀도 토큰 `--axis-radius-control` 이라 8px 이고 높이는 34px 입니다(1.7.0 후보 빌드 · Tailwind 4.1 측정용 페이지 실측, 2026-10-25).
 - [ ] create-next-app 기본 `globals.css` 의 `:root` · `@theme inline` · `body` 블록을 지웠다([Quick Start](./quick-start.md) 「Tailwind CSS 4」).
 
 **1. 전역 CSS (Tailwind CSS 3)** - preset 과 CSS 를 함께 씁니다. 전체 설정은 [Quick Start](./quick-start.md) 「Tailwind CSS 3」에 있습니다.
@@ -242,8 +263,8 @@ export default {
 @tailwind utilities;
 ```
 
-- [ ] `presets: [axisPreset]` 를 넣었다. 빠지면 브랜드를 켜도 Button 둥글기가 6px(Tailwind 기본 `rounded-md`)이고 글꼴이 Tailwind 기본(`ui-sans-serif`)입니다. 넣으면 10px · Pretendard 스택입니다.
-- [ ] `@axis-ds/tokens/css/shadcn` 을 넣었다. preset 의 `rounded-*` 는 shadcn 변수 `--radius` 를 읽으므로, 빠지면 브랜드를 켰을 때는 ontology 가 `--radius` 를 정의해 드러나지 않다가 **브랜드를 끄면 둥글기가 0px** 이 됩니다. 넣으면 켬 10px · 끔 6px 입니다.
+- [ ] `presets: [axisPreset]` 를 넣었다. 빠지면 브랜드를 켜도 Button 둥글기가 6px(Tailwind 기본 `rounded-md`)이고 글꼴이 Tailwind 기본(`ui-sans-serif`)입니다. 넣으면 10px · Pretendard 스택입니다. 1.7.0 부터 Button · Toggle · Input · Select 트리거 · Card · Dialog 의 둥글기는 preset 이 아니라 밀도 토큰을 읽어 preset 과 상관없이 ontology 8 · 8 · 6 · 6 · 12 · 12px 이고, preset 이 빠지면 `rounded-md` 를 쓰는 Select 팝업 등이 6px 가 됩니다(넣으면 10px, 1.7.0 후보 빌드 · Tailwind 3.4 실측).
+- [ ] `@axis-ds/tokens/css/shadcn` 을 넣었다. preset 의 `rounded-*` 는 shadcn 변수 `--radius` 를 읽으므로, 빠지면 브랜드를 켰을 때는 ontology 가 `--radius` 를 정의해 드러나지 않다가 **브랜드를 끄면 둥글기가 0px** 이 됩니다. 넣으면 켬 10px · 끔 6px 입니다. 1.7.0 부터 밀도 토큰 대상(Button 등)은 빠져도 리터럴 fallback 으로 끔 6px(Card · Dialog 8px) · 켬 8px 입니다(1.7.0 후보 빌드 실측). 0px 가 되는 것은 Select 팝업처럼 `rounded-*` 를 쓰는 나머지 컴포넌트입니다.
 - [ ] create-next-app 형태 `globals.css` 의 `body { font-family: Arial, Helvetica, sans-serif; }` 를 지웠다(WI-0070). 레이어 밖 규칙이라 preset 의 Pretendard 스택(`html` 에 적용)을 이기고, Button 은 preflight 의 `font-family: inherit` 로 Arial 을 물려받습니다(Tailwind 3.4.19 빌드 CSS 의 Chromium 계산값 실측: 그 줄이 있으면 클래스 없는 `<button>` 이 Arial, 지우면 Pretendard. `font-sans` 를 붙인 요소는 영향 없음). `axis check` 는 1.6.1 부터 이 줄이 남아 있으면 `globals.css` WARN 을 냅니다.
 - [ ] 설정 파일이 CommonJS(`module.exports` · `.cjs`)이면 `presets: [require("@axis-ds/tokens/tailwind").default]` 처럼 `.default` 를 붙였다(WI-0072). `@axis-ds/tokens` 1.6.2 이하에서 `.default` 없는 `require` 는 preset 이 아니라 `{ default }` 를 돌려줘 색 · keyframes · 글꼴이 통째로 빠집니다(1.1.0 부터의 결함, 회귀 아님). 1.7.0 부터는 `.default` 없이도 됩니다. `.ts` 의 `export default { presets: [require(...)] }` 와 위 `import axisPreset from` 형태는 Tailwind 가 `.default` 를 꺼내 줘서 모든 버전에서 됩니다.
 - [ ] Tailwind 3 CLI(`tailwindcss -i`)나 Vite 의 postcss-import 로 CSS 를 묶으면 `@import "@axis-ds/tokens/css"` 가 `Failed to find '@axis-ds/tokens/css'` 로 실패합니다(이슈 #189 코멘트, Tailwind 3.4.19 CLI 로 다시 실측). postcss-import 는 package.json 의 `exports` 하위 경로를 읽지 않기 때문입니다. 이때는 CSS 대신 앱 진입점 JS 에서 `import "@axis-ds/tokens/css"` · `import "@axis-ds/tokens/css/shadcn"` 처럼 불러오거나(번들러가 `exports` 를 해석, 이 경로는 재지 않음), 실제 파일 경로(`@import "@axis-ds/tokens/dist/css/variables.css";` · `.../dist/css/shadcn-compat.css`)를 씁니다. 실제 파일 경로는 공개 진입점이 아니라 패키지 구조가 바뀌면 깨질 수 있습니다. Next.js 는 CSS `@import` 의 `exports` 하위 경로를 해석합니다(이 가이드의 측정값은 Next 구성).
@@ -384,7 +405,7 @@ Tailwind CSS 4 에서는 토큰 CSS 대신 토큰 진입점을 쓰고, 브랜드
 
 컴포넌트 패키지의 `tailwind.css` 는 브랜드와 상관없이 필요합니다. Tailwind 4 는 `node_modules` 를 스캔하지 않아서, 이 줄이 없으면 컴포넌트가 쓰는 `bg-[var(--axis-button-bg-default)]` 같은 클래스가 생성되지 않습니다. 그러면 브랜드 변수는 바뀌어도 Button · PlanCard 바탕이 투명합니다(위 「브랜드 적용 빠른 시작」).
 
-진입점이 `rounded-sm|md|lg` 를 `--radius` 로, `font-mono` · `font-sans` 를 `--axis-font-family-*` 로 매핑하므로 ontology 를 적용한 요소에서는 `rounded-lg` 12px · `rounded-md` 10px 이고 `font-mono` 가 JetBrains Mono 로 시작합니다. 진입점은 토큰 변수를 base 레이어로 불러오고 브랜드 CSS 는 레이어가 없어서, 브랜드 값이 토큰 기본값을 이깁니다.
+진입점이 `rounded-sm|md|lg` 를 `--radius` 로, `font-mono` · `font-sans` 를 `--axis-font-family-*` 로 매핑하므로 ontology 를 적용한 요소에서는 `rounded-lg` 12px · `rounded-md` 10px 이고 `font-mono` 가 JetBrains Mono 로 시작합니다. 이 매핑은 유틸리티 클래스 자체의 값입니다. 1.7.0 부터 Button · Input 등 밀도 토큰 대상 컴포넌트는 `rounded-md` 대신 `--axis-radius-control|field|surface` 를 직접 읽어 ontology 에서 8 · 6 · 12px 입니다(위 「밀도 토큰」). 진입점은 토큰 변수를 base 레이어로 불러오고 브랜드 CSS 는 레이어가 없어서, 브랜드 값이 토큰 기본값을 이깁니다.
 
 Tailwind CSS 3 에서 같은 CSS 파일에 import 할 때는 `@import` 를 `@tailwind` 지시문보다 앞에 둡니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다). 위 「브랜드 적용 빠른 시작」의 값은 이 순서(`tokens/css` · `css/shadcn` · 브랜드 다음 `@tailwind` 3줄)로 잰 것입니다. 이 순서에서는 `@tailwind base` 의 preflight(`*, ::before, ::after { border: 0 solid #e5e7eb }`)가 `css/shadcn` 의 `* { border-color: hsl(var(--border)) }` 보다 뒤에 오므로, 색을 지정하지 않은 `border` 는 다크 · 브랜드에서도 gray-200(#e5e7eb)입니다(Next.js 15.5 빌드 산출 CSS 의 규칙 순서로 확인, 브라우저 계산값은 재지 않음). AXIS `--border` 색이 필요한 곳은 `border-border` 처럼 색을 지정합니다.
 
@@ -464,7 +485,7 @@ Tailwind 의 `dark:` 변형도 같은 `.dark` 클래스를 봅니다. Tailwind 3
 - `.dark` 를 브랜드 컨테이너 바깥(조상)에 둡니다: `<div class="dark"><div data-brand="ontology">`(실측 #6B98F0, 위 지원 구성 「`.dark` 조상 아래의 브랜드 컨테이너」)
 - `.dark` 를 붙인 요소에 `data-brand` 를 함께 붙입니다: `<div class="dark" data-brand="ontology">`(지원 구성 「같은 요소」)
 
-같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개 가운데 기본 `.dark`와 값이 달라지는 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 다크에서도 브랜드 라이트 값이 유지됩니다. 브랜드 라이트 (0,2,0)가 기본 `.dark` (0,1,0)를 이기므로 import 순서와 상관없습니다. 나머지 2개(`--axis-button-border-default` · `--axis-button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다.
+같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 26개(1.7.0, 1.6.x 는 11개) 가운데 기본 `.dark`와 값이 달라지는 19개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px, 밀도 토큰 10개: `--axis-radius-control|field`, `--axis-control-h-sm|md|lg`, `--axis-control-font-size-sm|lg`, `--axis-field-h`, `--axis-table-font-size`, `--axis-table-head-font-size`)는 다크에서도 브랜드 라이트 값이 유지됩니다. 브랜드 라이트 (0,2,0)가 기본 `.dark` (0,1,0)를 이기므로 import 순서와 상관없습니다. 나머지 7개는 화면 차이가 없습니다: `--axis-button-border-default` · `--axis-button-ghost-bg-default` 는 양쪽 모두 `transparent`이고, 밀도 토큰 5개(`--axis-radius-surface` 는 기본 `.dark` 에서도 `var(--radius)` 12px, `--axis-control-font-size-md` 14px, `--axis-toggle-h-*` 는 기본값과 같음)는 계산값이 같습니다(값 대조, 브라우저 미측정).
 
 ### Provider 없이 적용 · 첫 화면
 

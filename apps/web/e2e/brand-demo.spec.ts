@@ -48,6 +48,9 @@ interface DemoColors {
 interface DemoShape {
   cardRadius: string
   buttonRadius: string
+  buttonHeight: string
+  inputRadius: string
+  inputHeight: string
   planCardAccentWidth: string
   cardShadowMaxAlpha: number
 }
@@ -88,9 +91,14 @@ async function readDemoShape(page: Page): Promise<DemoShape> {
       return getComputedStyle(node)
     }
     const card = q('[data-testid="demo-card"]')
+    const button = q('[data-testid="demo-button-default"]')
+    const input = q('[data-testid="demo-input"]')
     return {
       cardRadius: card.borderTopLeftRadius,
-      buttonRadius: q('[data-testid="demo-button-default"]').borderTopLeftRadius,
+      buttonRadius: button.borderTopLeftRadius,
+      buttonHeight: button.height,
+      inputRadius: input.borderTopLeftRadius,
+      inputHeight: input.height,
       planCardAccentWidth: q('[data-testid="demo-plan-card"] [role="region"]').borderLeftWidth,
       cardShadow: card.boxShadow,
     }

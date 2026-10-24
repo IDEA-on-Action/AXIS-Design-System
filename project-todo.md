@@ -31,7 +31,7 @@
 
 | # | 항목 | WI ID | Phase | 우선순위 | 상태 |
 |---|------|-------|-------|----------|------|
-| 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
+| 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | 🔄 PR 대기(2026-10-25, `feat/wi-0026-density-tokens`, 배치 3 ②). tokens · ui-react minor changeset, 1.6.3 대비 브랜드 미지정 계산값 186개(줄 높이 · 표 셀 높이 포함) 차이 0 · ontology 33항목 일치(Chromium), review 지적으로 크기별 leading 명시 |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ✅ 완료(2026-10-24, 배포 없음). cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(a) 재확인 조건을 pages.dev 기본 레지스트리 배포본 재측정으로 바꿈(사용자 결정, PRD D-AC2a-2). npm cli 1.5.4 · mcp 1.3.2 로 AC1 ~ AC4 · T7-2 · T7-4 재측정 통과: theme-only 7파일 차이 0 · 2회차 해시 차이 0, App Router build rc 0 · data-brand 5건, brand 어긋남 WARN(CLI · MCP), 토큰 표 12/12 (testplan T8) |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ✅ 완료(2026-10-24). linked 4패키지 1.6.0 · cli 1.5.4 · mcp 1.3.2(#172 · #173, run 40089793369, provenance 6/6). 기본 브랜드 a11y 위반 0(기준선 46노드 해소), pages.dev · npm 배포본 실측. 잔여는 WI-0062 · WI-0063 |

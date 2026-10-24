@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center whitespace-nowrap rounded-[var(--axis-radius-control,0.375rem)] text-[length:var(--axis-control-font-size-md,0.875rem)] leading-5 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
@@ -21,10 +21,10 @@ const buttonVariants = cva(
         link: "text-[var(--axis-text-brand)] underline-offset-4 hover:underline",
       },
       size: {
-        sm: "h-8 px-3 text-xs",
-        default: "h-10 px-4 py-2",
-        lg: "h-12 px-6 text-base",
-        icon: "h-10 w-10",
+        sm: "h-[var(--axis-control-h-sm,2rem)] px-3 text-[length:var(--axis-control-font-size-sm,0.75rem)] leading-4",
+        default: "h-[var(--axis-control-h-md,2.5rem)] px-4 py-2",
+        lg: "h-[var(--axis-control-h-lg,3rem)] px-6 text-[length:var(--axis-control-font-size-lg,1rem)] leading-6",
+        icon: "h-[var(--axis-control-h-md,2.5rem)] w-[var(--axis-control-h-md,2.5rem)]",
       },
     },
     defaultVariants: {

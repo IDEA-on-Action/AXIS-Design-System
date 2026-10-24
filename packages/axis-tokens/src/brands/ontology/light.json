@@ -8,7 +8,38 @@
   "radius": {
     "md": { "value": "8px" },
     "lg": { "value": "12px" },
-    "sm": { "value": "6px" }
+    "sm": { "value": "6px" },
+    "control": { "value": "8px" },
+    "field": { "value": "6px" },
+    "surface": { "value": "12px" }
+  },
+  "control": {
+    "h": {
+      "sm": { "value": "27px" },
+      "md": { "value": "34px" },
+      "lg": { "value": "42px" }
+    },
+    "font-size": {
+      "sm": { "value": "13px" },
+      "md": { "value": "14px" },
+      "lg": { "value": "15px" }
+    }
+  },
+  "field": {
+    "h": { "value": "36px" }
+  },
+  "toggle": {
+    "h": {
+      "sm": { "value": "2.25rem" },
+      "md": { "value": "2.5rem" },
+      "lg": { "value": "2.75rem" }
+    }
+  },
+  "table": {
+    "font-size": { "value": "13.5px" },
+    "head": {
+      "font-size": { "value": "13px" }
+    }
   },
   "shadow": {
     "sm": { "value": "0 1px 2px rgba(17,20,24,.06)" },
