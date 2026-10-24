@@ -26,7 +26,7 @@ axis-design-system/
 - **Build Tool**: Turborepo 2.3.3+
 - **Framework**: Next.js 15, React 19
 - **Language**: TypeScript 5.7+
-- **Styling**: Tailwind CSS 4
+- **Styling**: 개발 · 문서 사이트 Tailwind CSS 3.4, 소비 프로젝트는 Tailwind 3 · 4 모두 지원(`@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 1.4.0+)
 
 ## 설치 및 실행
 

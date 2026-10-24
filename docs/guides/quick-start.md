@@ -205,6 +205,6 @@ npx shadcn@latest add https://axis-design-system.pages.dev/r/button.json --overw
 
 ## 다음 단계
 
-- 전체 컴포넌트 목록은 [컴포넌트 문서](/docs/components)를 참고하세요.
+- 전체 컴포넌트 목록은 [컴포넌트 문서](https://axis-design-system.pages.dev/components/)를 참고하세요.
 - 다크모드 설정은 `ThemeProvider`의 `defaultTheme="dark"`으로 전환하거나, `useTheme()` 훅으로 런타임에 제어할 수 있습니다.
 - AI/Agent 전용 컴포넌트가 필요하다면 `@axis-ds/agentic-ui` 패키지를 확인하세요.
