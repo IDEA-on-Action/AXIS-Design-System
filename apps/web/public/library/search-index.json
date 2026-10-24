@@ -859,6 +859,7 @@
     "source": "axis",
     "tags": [
       "stateful",
+      "side-effects",
       "forwardRef"
     ],
     "url": "/library/ui/avatar"
