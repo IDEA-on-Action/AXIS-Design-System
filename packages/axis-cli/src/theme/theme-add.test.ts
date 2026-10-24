@@ -574,7 +574,7 @@ describe("T3-9: 브랜드 켜기 안내 (WI-0065 D7: defaultBrand 대신 data-br
     expect(out).toContain('import { useTheme } from "@axis-ds/theme";');
     expect(out).toContain('setBrand("sample");');
     expect(out).not.toContain("defaultBrand");
-    expect(out).toContain("app/layout.tsx 에서 ThemeProvider · data-brand 를 찾지 못했습니다");
+    expect(out).toContain("app/layout.tsx 에서 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다");
     expect(out).toContain("@axis-ds/theme 1.3.0 이상");
     expect(out).toContain('@axis-ds/theme 설치: pnpm add "@axis-ds/theme@^1.3.0"');
   });
@@ -584,17 +584,27 @@ describe("T3-9: 브랜드 켜기 안내 (WI-0065 D7: defaultBrand 대신 data-br
     const layout = path.join(dir, "app", "layout.tsx");
     await fs.writeFile(layout, (await fs.readFile(layout, "utf8")).replace('<html lang="ko"', '<html lang="ko" data-brand="sample"'));
     const { out } = await runAdd(["sample", "-d", dir]);
-    expect(out).toContain("app/layout.tsx 에 ThemeProvider · data-brand · setBrand 가 있습니다");
+    expect(out).toContain("app/layout.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
     expect(out).not.toContain("찾지 못했습니다");
   });
 
-  it("레이아웃이 import 하는 ./providers 의 ThemeProvider 도 찾음(한 단계)", async () => {
+  it("레이아웃이 import 하는 ./providers 의 setBrand 도 찾음(한 단계)", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
     const layout = path.join(dir, "app", "layout.tsx");
     await fs.writeFile(layout, `import { Providers } from "./providers";\n${await fs.readFile(layout, "utf8")}`);
-    await fs.writeFile(path.join(dir, "app", "providers.tsx"), 'import { ThemeProvider } from "@axis-ds/theme";\n');
+    await fs.writeFile(path.join(dir, "app", "providers.tsx"), 'import { ThemeProvider, useTheme } from "@axis-ds/theme";\nconst { setBrand } = useTheme();\nsetBrand("sample");\n');
     const { out } = await runAdd(["sample", "-d", dir]);
-    expect(out).toContain("app/providers.tsx 에 ThemeProvider · data-brand · setBrand 가 있습니다");
+    expect(out).toContain("app/providers.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
+  });
+
+  it("ThemeProvider 만 있고 켜는 코드가 없으면 찾지 못한 것으로 보고 예시를 출력(마운트 때 브랜드가 지워지는 구성)", async () => {
+    const dir = await project({ tokens: "none", layout: "theme-only" });
+    const layout = path.join(dir, "app", "layout.tsx");
+    await fs.writeFile(layout, `import { Providers } from "./providers";\n${await fs.readFile(layout, "utf8")}`);
+    await fs.writeFile(path.join(dir, "app", "providers.tsx"), 'import { ThemeProvider } from "@axis-ds/theme";\n<ThemeProvider defaultTheme="system">{children}</ThemeProvider>\n');
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("를 찾지 못했습니다");
+    expect(out).toContain('setBrand("sample");');
   });
 
   it("코드는 고치지 않음(layout.tsx 불변)", async () => {

@@ -435,7 +435,7 @@ export function providerExample(name: string): string {
   ].join("\n");
 }
 
-/** 브랜드를 켜는 코드(ThemeProvider · `data-brand`)를 찾는 파일(앞에서부터, WI-0065 D8) */
+/** 브랜드를 켜는 코드(`data-brand` · `setBrand` · `defaultBrand`)를 찾는 파일(앞에서부터, WI-0065 D8) */
 export const BRAND_ACTIVATION_FILES = [
   "app/layout.tsx",
   "app/layout.jsx",
@@ -455,7 +455,7 @@ export const BRAND_ACTIVATION_FILES = [
 
 /** 브랜드를 켜는 코드를 찾은 결과(WI-0065 D8) */
 export interface BrandActivationLocation {
-  /** `ThemeProvider` · `data-brand` · `setBrand(` 가 있는 첫 파일(`baseDir` 기준 상대 경로, `/` 구분) */
+  /** `data-brand` · `setBrand(` · `defaultBrand=` 가 있는 첫 파일(`baseDir` 기준 상대 경로, `/` 구분) */
   found?: string;
   /** 읽은 루트 레이아웃 후보. 비어 있으면 레이아웃을 찾지 못한 것입니다 */
   layoutFiles: string[];
@@ -465,7 +465,11 @@ export interface BrandActivationCheck extends BrandActivationLocation {
   brand: string;
 }
 
-const BRAND_ACTIVATION_PATTERN = /ThemeProvider|data-brand|setBrand\s*\(/;
+/**
+ * 브랜드를 실제로 켜는 코드만 셉니다. `ThemeProvider` 단독은 넣지 않습니다: 브랜드 상태가 비어 있으면 마운트 때
+ * `data-brand` 를 지우므로, Provider 만 있는 레이아웃은 브랜드가 꺼진 상태입니다(2026-10-25 WI-0064 검토 실측).
+ */
+const BRAND_ACTIVATION_PATTERN = /data-brand|setBrand\s*\(|defaultBrand\s*=/;
 
 /** JS · TS 의 블록 주석과 줄 주석을 지웁니다(`https://` 같은 문자열 안의 `//` 는 앞 글자로 구분해 남김). */
 function stripJsLikeComments(src: string): string {

@@ -339,12 +339,12 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   const act = plan.activation;
   lines.push("", chalk.bold(`브랜드 켜기 (ThemeProvider 는 ${THEME_PACKAGE} ${THEME_MIN_VERSION} 이상)`));
   if (act?.found) {
-    lines.push(`  ${chalk.gray("-")} ${act.found} 에 ThemeProvider · data-brand · setBrand 가 있습니다. "${plan.brand}" 로 켜는지 확인하세요.`);
+    lines.push(`  ${chalk.gray("-")} ${act.found} 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다. "${plan.brand}" 로 켜는지 확인하세요.`);
   } else {
     lines.push(
       ...providerExample(plan.brand).split("\n").map((l) => (l ? `  ${l}` : "")),
       chalk.yellow(
-        `  ! ${act && act.layoutFiles.length > 0 ? act.layoutFiles.join(" · ") : "루트 레이아웃"} 에서 ThemeProvider · data-brand 를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.`
+        `  ! ${act && act.layoutFiles.length > 0 ? act.layoutFiles.join(" · ") : "루트 레이아웃"} 에서 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.`
       )
     );
   }

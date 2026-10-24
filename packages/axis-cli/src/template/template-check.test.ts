@@ -220,7 +220,7 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
     expect(results[6]).toEqual({
       name: "brand.activation",
       severity: "pass",
-      message: "app/layout.tsx에 ThemeProvider · data-brand 가 있습니다",
+      message: "app/layout.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다",
     });
     expect(results.filter((r) => r.severity !== "pass")).toEqual([]);
   });
@@ -1321,24 +1321,31 @@ describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", ()
     for (const dir of [tw4, noConfig, noTarget]) expect(await item(dir, "tailwind.content")).toBeUndefined();
   });
 
-  it("brand.activation: brand 가 있고 레이아웃에 ThemeProvider · data-brand 가 없으면 WARN, 있으면 PASS, brand 없으면 항목 없음", async () => {
+  it("brand.activation: brand 가 있고 레이아웃에 켜는 코드(data-brand · setBrand · defaultBrand)가 없으면 WARN(ThemeProvider 단독 포함), 있으면 PASS, brand 없으면 항목 없음", async () => {
     const none = await project({ "app/layout.tsx": '<html lang="en">' }, TW3, { brand: "ontology" });
     const attr = await project({ "app/layout.tsx": '<html lang="en" data-brand="ontology">' }, TW3, { brand: "ontology" });
     const provider = await project(
-      { "src/app/layout.tsx": 'import { Providers } from "./providers";', "src/app/providers.tsx": "<ThemeProvider>{children}</ThemeProvider>" },
+      { "src/app/layout.tsx": 'import { Providers } from "./providers";', "src/app/providers.tsx": '<ThemeProvider defaultBrand="ontology">{children}</ThemeProvider>' },
       TW3,
       { brand: "ontology" }
     );
     const commented = await project({ "app/layout.tsx": '// <html data-brand="ontology">\n<html lang="en">' }, TW3, { brand: "ontology" });
+    // ThemeProvider 만 있으면 마운트 때 data-brand 를 지우므로 켜진 것이 아니다(2026-10-25 WI-0064 검토 실측)
+    const providerOnly = await project(
+      { "src/app/layout.tsx": 'import { Providers } from "./providers";', "src/app/providers.tsx": '<ThemeProvider defaultTheme="system">{children}</ThemeProvider>' },
+      TW3,
+      { brand: "ontology" }
+    );
     const noBrand = await project({ "app/layout.tsx": '<html lang="en">' }, TW3, {});
     expect(await item(none, "brand.activation")).toEqual({
       name: "brand.activation",
       severity: "warn",
-      message: 'brand "ontology" 가 설정됐지만 app/layout.tsx에 ThemeProvider · data-brand 가 없습니다 → <html data-brand="ontology"> 또는 setBrand("ontology")',
+      message: 'brand "ontology" 가 설정됐지만 app/layout.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없습니다(ThemeProvider 만으로는 마운트 때 꺼짐) → <html data-brand="ontology"> 또는 setBrand("ontology")',
     });
     expect(await item(attr, "brand.activation")).toMatchObject({ severity: "pass" });
-    expect(await item(provider, "brand.activation")).toMatchObject({ severity: "pass", message: "src/app/providers.tsx에 ThemeProvider · data-brand 가 있습니다" });
+    expect(await item(provider, "brand.activation")).toMatchObject({ severity: "pass", message: "src/app/providers.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다" });
     expect(await item(commented, "brand.activation")).toMatchObject({ severity: "warn" });
+    expect(await item(providerOnly, "brand.activation")).toMatchObject({ severity: "warn" });
     expect(await item(noBrand, "brand.activation")).toBeUndefined();
   });
 

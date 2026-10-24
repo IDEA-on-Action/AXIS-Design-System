@@ -131,7 +131,7 @@ export interface ThemeAddPlan {
   installCommand: string;
   /** Tailwind 3 설정 안내(Tailwind 4 이상이면 없음) */
   tailwindConfig?: TailwindConfigStep;
-  /** 브랜드를 켜는 코드(ThemeProvider · data-brand)를 찾은 결과(WI-0065 D7, 안내용) */
+  /** 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾은 결과(WI-0065 D7, 안내용) */
   activation?: BrandActivationLocation;
   writes: PlannedWrite[];
 }

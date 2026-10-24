@@ -106,7 +106,7 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
     expect(results[6]).toEqual({
       name: "brand.activation",
       severity: "pass",
-      message: "app/layout.tsx에 ThemeProvider · data-brand 가 있습니다",
+      message: "app/layout.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다",
     });
     expect(summary).toEqual({ pass: 7, warn: 0, fail: 0 });
   });

@@ -17,7 +17,7 @@ const SEVERITY_ICON: Record<CheckSeverity, string> = {
  * 프로젝트 상태 검증 결과만 모읍니다(출력하지 않음, WI-0028 FR-5).
  * 기존 5항목의 순서는 그대로이고, `axis.config.json` 에 `brand` 가 있을 때만 brand 항목을 더합니다.
  * WI-0065 D8 에서 해당할 때만 더하는 항목 3개를 그 뒤에 둡니다(순서: brand · brand.activation · tailwind.content · animation).
- * - brand.activation: brand 가 있을 때. 루트 레이아웃에 ThemeProvider · data-brand 가 없으면 WARN(휴리스틱)
+ * - brand.activation: brand 가 있을 때. 루트 레이아웃에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없으면 WARN(ThemeProvider 단독은 켜지 않음)(휴리스틱)
  * - tailwind.content: Tailwind 3 설정 파일이 있고 componentsDir · 선언된 컴포넌트 패키지가 있을 때. 덮지 않으면 FAIL(정적 판독)
  * - animation: ui-react 를 쓸 때. 애니메이션 플러그인이 없으면 WARN
  * MCP `axis.check_project` 도 같은 순서 · 문구입니다.
@@ -250,13 +250,13 @@ export function brandActivationResult(check: BrandActivationCheck): CheckResult 
     return {
       name: "brand.activation",
       severity: "pass",
-      message: `${check.found}에 ThemeProvider · data-brand 가 있습니다`,
+      message: `${check.found}에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다`,
     };
   }
   const where = check.layoutFiles.length > 0 ? check.layoutFiles.join(" · ") : "루트 레이아웃(app/layout.tsx 등)";
   return {
     name: "brand.activation",
     severity: "warn",
-    message: `brand "${check.brand}" 가 설정됐지만 ${where}에 ThemeProvider · data-brand 가 없습니다 → <html data-brand="${check.brand}"> 또는 setBrand("${check.brand}")`,
+    message: `brand "${check.brand}" 가 설정됐지만 ${where}에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없습니다(ThemeProvider 만으로는 마운트 때 꺼짐) → <html data-brand="${check.brand}"> 또는 setBrand("${check.brand}")`,
   };
 }
