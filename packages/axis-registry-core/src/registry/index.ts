@@ -130,7 +130,49 @@ function fallbackKindOf(error: unknown): FallbackKind {
   return error instanceof RegistryAccessError ? "access" : "invalid";
 }
 
-/** 원격과 동봉본의 version 이 다를 때 알림 */
+/**
+ * 원격과 동봉본 index 의 항목 내용 비교(WI-0061).
+ * 레지스트리 version 은 ui-react 버전을 따라가므로 ui-react 만 릴리스해도 바뀝니다. 그래서 version 문자열이 아니라
+ * 항목별 sha256 으로 실제 내용이 다른지 봅니다. 한쪽에만 있는 항목도 다른 것으로 셉니다.
+ * 양쪽에 있는 항목 중 하나라도 sha256 이 없으면 비교할 수 없으므로 comparable=false(호출 쪽은 종전 version 비교).
+ */
+export function registryContentDiff(
+  remote: Pick<RegistryIndex, "items">,
+  bundled: Pick<RegistryIndex, "items">
+): { comparable: boolean; differ: string[] } {
+  const r = new Map(remote.items.map((i) => [i.name, i.sha256]));
+  const b = new Map(bundled.items.map((i) => [i.name, i.sha256]));
+  const differ: string[] = [];
+  let comparable = true;
+  for (const name of [...new Set([...r.keys(), ...b.keys()])].sort()) {
+    if (!r.has(name) || !b.has(name)) {
+      differ.push(name);
+      continue;
+    }
+    const rs = r.get(name);
+    const bs = b.get(name);
+    if (rs === undefined || bs === undefined) {
+      comparable = false;
+      continue;
+    }
+    if (rs !== bs) differ.push(name);
+  }
+  return { comparable, differ };
+}
+
+/** 원격과 동봉본의 항목 내용이 다를 때 알림(다른 항목 이름을 5개까지) */
+export function contentMismatchMessage(
+  remoteVersion: string,
+  bundledVersion: string,
+  differ: string[],
+  label: string = DEFAULT_BUNDLED_LABEL
+): string {
+  const shown = differ.slice(0, 5).join(", ");
+  const more = differ.length > 5 ? ` 외 ${differ.length - 5}개` : "";
+  return `원격 레지스트리(version ${remoteVersion})와 ${label}(version ${bundledVersion})의 내용이 다른 항목이 ${differ.length}개 있습니다(${shown}${more}). 원격 레지스트리를 우선 사용합니다.`;
+}
+
+/** 원격과 동봉본의 version 이 다를 때 알림(항목 sha256 으로 비교할 수 없을 때만 씀) */
 export function versionMismatchMessage(
   remoteVersion: string,
   bundledVersion: string,
@@ -253,7 +295,7 @@ export class RegistryClient {
         const data = await fetchRegistryJson(`${this.baseUrl}/index.json`, this.fetchOptions());
         const index = validateRegistryIndex(data, `${this.baseUrl}/index.json`);
         this.mode = "remote";
-        this.warnVersionMismatch(index.version);
+        this.warnVersionMismatch(index);
         return index;
       } catch (error) {
         remoteError = messageOf(error);
@@ -277,11 +319,21 @@ export class RegistryClient {
     }
   }
 
-  private warnVersionMismatch(remoteVersion: string): void {
+  private warnVersionMismatch(remote: RegistryIndex): void {
     const bundled = this.loadBundledIndex();
     // 동봉본이 없으면 비교할 대상이 없으니 알리지 않습니다(원격이 정상이므로 설치에는 영향이 없음)
-    if ("index" in bundled && bundled.index.version !== remoteVersion) {
-      this.notify(versionMismatchMessage(remoteVersion, bundled.index.version, this.bundledLabel));
+    if (!("index" in bundled)) return;
+    const diff = registryContentDiff(remote, bundled.index);
+    if (diff.comparable) {
+      // 내용이 같으면 version 이 달라도(ui-react 만 릴리스한 경우 등) 알리지 않습니다(WI-0061)
+      if (diff.differ.length > 0) {
+        this.notify(contentMismatchMessage(remote.version, bundled.index.version, diff.differ, this.bundledLabel));
+      }
+      return;
+    }
+    // sha256 이 없는 항목이 있어 내용을 비교할 수 없으면 종전처럼 version 으로 판정합니다
+    if (bundled.index.version !== remote.version) {
+      this.notify(versionMismatchMessage(remote.version, bundled.index.version, this.bundledLabel));
     }
   }
 
