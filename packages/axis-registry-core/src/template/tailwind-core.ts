@@ -22,7 +22,7 @@
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 /** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
@@ -951,18 +951,24 @@ export const ANIMATION_PLUGIN_TAILWIND3 = "tailwindcss-animate";
 /** Tailwind 4 애니메이션 CSS(WI-0046 과 같은 이름) */
 export const ANIMATION_PLUGIN_TAILWIND4 = "tw-animate-css";
 
-/** 열고 닫는 애니메이션 유틸리티(`animate-in` · `animate-out`)를 쓰는지 볼 때 읽는 최대 파일 수 */
-const ANIMATION_SCAN_LIMIT = 200;
+/**
+ * 열고 닫는 애니메이션 유틸리티(`animate-in` · `animate-out`)를 쓰는지 볼 때의 스캔 상한.
+ * 상한은 읽은 파일 수가 아니라 **방문한 항목 전체**(디렉터리 · 파일 · 링크)에 건다. 파일 수만 세면
+ * 디렉터리나 다른 확장자가 많은 트리에서 상한이 걸리지 않는다. 심링크는 따라가지 않아 순환 링크
+ * (모노레포 workspace 링크 등)에서도 끝나며, 깊이와 파일 크기에도 상한을 둔다.
+ */
+const ANIMATION_SCAN_ENTRY_LIMIT = 2000;
+const ANIMATION_SCAN_DEPTH_LIMIT = 8;
+const ANIMATION_SCAN_FILE_BYTES = 512 * 1024;
 
 /** componentsDir 아래 `.tsx` · `.ts` · `.jsx` · `.js` 에 `animate-in` · `animate-out` 클래스가 있는지(복사 설치 판정) */
-function componentsUseAnimation(baseDir: string, componentsDir: string): boolean {
+export function componentsUseAnimation(baseDir: string, componentsDir: string): boolean {
   const rel = normalizeRel(componentsDir);
   if (rel === undefined) return false;
-  const root = join(baseDir, rel);
-  const stack = [root];
-  let seen = 0;
-  while (stack.length > 0 && seen < ANIMATION_SCAN_LIMIT) {
-    const dir = stack.pop()!;
+  const stack: Array<[string, number]> = [[join(baseDir, rel), 0]];
+  let visited = 0;
+  while (stack.length > 0) {
+    const [dir, depth] = stack.pop()!;
     let names: string[];
     try {
       names = readdirSync(dir);
@@ -970,17 +976,18 @@ function componentsUseAnimation(baseDir: string, componentsDir: string): boolean
       continue;
     }
     for (const name of names) {
+      if (++visited > ANIMATION_SCAN_ENTRY_LIMIT) return false;
       const p = join(dir, name);
-      let st: ReturnType<typeof statSync>;
+      let st: ReturnType<typeof lstatSync>;
       try {
-        st = statSync(p);
+        st = lstatSync(p);
       } catch {
         continue;
       }
+      if (st.isSymbolicLink()) continue;
       if (st.isDirectory()) {
-        if (name !== "node_modules") stack.push(p);
-      } else if (/\.(tsx|ts|jsx|js)$/.test(name)) {
-        seen++;
+        if (name !== "node_modules" && depth < ANIMATION_SCAN_DEPTH_LIMIT) stack.push([p, depth + 1]);
+      } else if (st.isFile() && st.size <= ANIMATION_SCAN_FILE_BYTES && /\.(tsx|ts|jsx|js)$/.test(name)) {
         if (/\banimate-(?:in|out)\b/.test(readFileSync(p, "utf8"))) return true;
       }
     }

@@ -1374,6 +1374,25 @@ describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", ()
     expect(await item(tw4Ok, "animation")).toMatchObject({ severity: "pass" });
   });
 
+  it("animation 스캔: 심링크는 따라가지 않아 순환 링크에서도 끝나고, 링크 너머의 animate-in 은 세지 않음", async () => {
+    const dir = await project({ "components/ui/button.tsx": 'const c = "rounded-md";', "outside/dialog.tsx": 'const c = "animate-in";', "tailwind.config.ts": "export default {};" }, TW3, {
+      componentsDir: "./components/ui",
+    });
+    await fs.symlink(path.join(dir, "components"), path.join(dir, "components/ui/loop"), "dir");
+    await fs.symlink(path.join(dir, "outside"), path.join(dir, "components/ui/linked"), "dir");
+    expect(await item(dir, "animation")).toBeUndefined();
+  });
+
+  it("animation 스캔: 깊이 상한(8) 밖의 파일은 읽지 않음(상한 안이면 잡힘)", async () => {
+    const deep = "components/ui/" + Array.from({ length: 9 }, (_, i) => `d${i}`).join("/") + "/dialog.tsx";
+    const shallow = "components/ui/" + Array.from({ length: 8 }, (_, i) => `d${i}`).join("/") + "/dialog.tsx";
+    const cfg = { "tailwind.config.ts": "export default {};" };
+    const tooDeep = await project({ [deep]: 'const c = "animate-in";', ...cfg }, TW3, { componentsDir: "./components/ui" });
+    const within = await project({ [shallow]: 'const c = "animate-in";', ...cfg }, TW3, { componentsDir: "./components/ui" });
+    expect(await item(tooDeep, "animation")).toBeUndefined();
+    expect(await item(within, "animation")).toMatchObject({ severity: "warn" });
+  });
+
   it("음성 대조: ui-react 를 쓰지 않으면(선언 없음 · componentsDir 에 animate-in 없음) 항목 없음", async () => {
     const dir = await project({ "components/ui/button.tsx": 'const c = "rounded-md";', "tailwind.config.ts": "export default {};" }, TW3, {
       componentsDir: "./components/ui",

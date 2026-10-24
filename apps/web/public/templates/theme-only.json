@@ -42,12 +42,12 @@
     },
     {
       "path": "app/layout.tsx",
-      "content": "import type { Metadata } from 'next'\nimport { Inter } from 'next/font/google'\nimport './globals.css'\n\nconst inter = Inter({ subsets: ['latin'] })\n\nexport const metadata: Metadata = {\n  title: 'AXIS Theme Only',\n  description: 'AXIS 디자인 토큰 기반 테마 시스템 스타터',\n}\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"ko\" suppressHydrationWarning>\n      <body className={inter.className}>{children}</body>\n    </html>\n  )\n}\n",
+      "content": "import type { Metadata } from 'next'\nimport { Inter } from 'next/font/google'\nimport './globals.css'\n\nconst inter = Inter({ subsets: ['latin'] })\n\nexport const metadata: Metadata = {\n  title: 'AXIS Theme Only',\n  description: 'CSS 변수 기반 테마 시스템 스타터',\n}\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return (\n    <html lang=\"ko\" suppressHydrationWarning>\n      <body className={inter.className}>{children}</body>\n    </html>\n  )\n}\n",
       "type": "tsx"
     },
     {
       "path": "app/page.tsx",
-      "content": "import { ThemeToggle } from './theme-toggle'\n\nexport default function Home() {\n  return (\n    <main className=\"min-h-screen flex flex-col items-center justify-center gap-8 p-8 bg-background text-foreground\">\n      <div className=\"text-center space-y-4\">\n        <h1 className=\"text-4xl font-bold tracking-tight\">AXIS Theme Only</h1>\n        <p className=\"text-lg text-muted-foreground max-w-md\">\n          AXIS 디자인 토큰과 테마 시스템이 적용된 최소 구성 템플릿입니다.\n        </p>\n      </div>\n\n      <ThemeToggle />\n\n      <div className=\"grid grid-cols-2 gap-4 max-w-lg w-full\">\n        <div className=\"rounded-lg border bg-card p-4 text-card-foreground\">\n          <h3 className=\"font-semibold mb-1\">디자인 토큰</h3>\n          <p className=\"text-sm text-muted-foreground\">CSS 변수 기반 테마 시스템</p>\n        </div>\n        <div className=\"rounded-lg border bg-card p-4 text-card-foreground\">\n          <h3 className=\"font-semibold mb-1\">다크모드</h3>\n          <p className=\"text-sm text-muted-foreground\">시스템 설정 연동 지원</p>\n        </div>\n      </div>\n    </main>\n  )\n}\n",
+      "content": "import { ThemeToggle } from './theme-toggle'\n\nexport default function Home() {\n  return (\n    <main className=\"min-h-screen flex flex-col items-center justify-center gap-8 p-8 bg-background text-foreground\">\n      <div className=\"text-center space-y-4\">\n        <h1 className=\"text-4xl font-bold tracking-tight\">AXIS Theme Only</h1>\n        <p className=\"text-lg text-muted-foreground max-w-md\">\n          CSS 변수(HSL) 기반 테마와 다크모드 토글을 담은 최소 구성 템플릿입니다.\n        </p>\n      </div>\n\n      <ThemeToggle />\n\n      <div className=\"grid grid-cols-2 gap-4 max-w-lg w-full\">\n        <div className=\"rounded-lg border bg-card p-4 text-card-foreground\">\n          <h3 className=\"font-semibold mb-1\">디자인 토큰</h3>\n          <p className=\"text-sm text-muted-foreground\">CSS 변수 기반 테마 시스템</p>\n        </div>\n        <div className=\"rounded-lg border bg-card p-4 text-card-foreground\">\n          <h3 className=\"font-semibold mb-1\">다크모드</h3>\n          <p className=\"text-sm text-muted-foreground\">시스템 설정 연동 지원</p>\n        </div>\n      </div>\n    </main>\n  )\n}\n",
       "type": "tsx"
     },
     {
@@ -76,5 +76,5 @@
       "type": "json"
     }
   ],
-  "updatedAt": "2026-10-24T14:35:12.368Z"
+  "updatedAt": "2026-10-24T14:53:08.869Z"
 }

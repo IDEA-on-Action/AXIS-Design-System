@@ -6,7 +6,7 @@ export default function Home() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">AXIS Theme Only</h1>
         <p className="text-lg text-muted-foreground max-w-md">
-          AXIS 디자인 토큰과 테마 시스템이 적용된 최소 구성 템플릿입니다.
+          CSS 변수(HSL) 기반 테마와 다크모드 토글을 담은 최소 구성 템플릿입니다.
         </p>
       </div>
 
