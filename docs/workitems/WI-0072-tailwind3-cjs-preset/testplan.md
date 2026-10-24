@@ -56,3 +56,9 @@
 ## 4. 남는 확인 (추정 · 미실행)
 
 - 발행 뒤 npm 1.7.0 으로 2.1 을 다시 잰다(version-packages 결과가 1.7.0 인지 대조 포함).
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. tokens 1.7.0 과 1.6.2(음성 대조)로 CJS · .cjs · .js · .ts · .mjs 등 10형태의 loadConfig 결과와 Tailwind 3.4.19 빌드 CSS 를 쟀고 모두 일치했어요(1.6.2 의 bare require 3형태에서만 preset 이 빠짐). d.cts · d.mts 타입 해석과 check 의 CommonJS WARN 도 일치했어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

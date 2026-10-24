@@ -31,7 +31,7 @@
 
 | # | 항목 | WI ID | Phase | 우선순위 | 상태 |
 |---|------|-------|-------|----------|------|
-| 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | 🔄 PR 대기(2026-10-25, `feat/wi-0026-density-tokens`, 배치 3 ②). tokens · ui-react minor changeset, 1.6.3 대비 브랜드 미지정 계산값 186개(줄 높이 · 표 셀 높이 포함) 차이 0 · ontology 33항목 일치(Chromium), review 지적으로 크기별 leading 명시 |
+| 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ✅ 2026-10-25 (#198, 1.7.0, 디자인 오너 사후 확인 2건 남음) |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ✅ 완료(2026-10-24, 배포 없음). cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(a) 재확인 조건을 pages.dev 기본 레지스트리 배포본 재측정으로 바꿈(사용자 결정, PRD D-AC2a-2). npm cli 1.5.4 · mcp 1.3.2 로 AC1 ~ AC4 · T7-2 · T7-4 재측정 통과: theme-only 7파일 차이 0 · 2회차 해시 차이 0, App Router build rc 0 · data-brand 5건, brand 어긋남 WARN(CLI · MCP), 토큰 표 12/12 (testplan T8) |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ✅ 완료(2026-10-24). linked 4패키지 1.6.0 · cli 1.5.4 · mcp 1.3.2(#172 · #173, run 40089793369, provenance 6/6). 기본 브랜드 a11y 위반 0(기준선 46노드 해소), pages.dev · npm 배포본 실측. 잔여는 WI-0062 · WI-0063 |
@@ -48,7 +48,7 @@
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ✅ WI-0045 에 흡수해 완료(2026-10-22, #152 로 닫힘) |
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ✅ 완료(2026-10-24, 배포 없음). README · monorepo-setup · .claude/prompts 를 「개발 · 문서 사이트 3.4, 소비자 3 · 4 지원(1.4.0+)」 두 축으로, quick-start:208 을 pages.dev 절대 URL(200)로. 대상 13개 파일 링크 6개 깨짐 0 |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ✅ 완료(2026-10-25). cli 1.6.0 · mcp 1.3.3(#186 · #187, run 40110014386, provenance), 배포본 실측 통과(브랜드 적용 · 템플릿 4종 · 문서 사이트) |
-| 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | 🔄 PR 대기(배치 3 ①, 브랜치 `fix/wi-0051-0070-0068-0072-check-brand-cjs`) |
+| 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ✅ 2026-10-25 (#196, cli 1.6.1 · mcp 1.3.4) |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
 | 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ✅ 완료(2026-10-24). ui-react · agentic-ui 1.6.1(#177 · #179, run 40100713780, provenance), npm 배포본 avatar.mjs 에 마운트 판정 포함 확인 |
@@ -63,13 +63,13 @@
 | 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
 | 76 | 브랜드 테마 가이드 현행화: 1.6.0 사실 반영(249 → 263개), Tailwind 4 컴포넌트 tailwind.css 누락, Tailwind 3 preset · shadcn CSS, defaultBrand · 다크 하위 요소 · 첫 화면 깜빡임 실측 함정(2026-10-24 브랜드 적용 점검에서 발견) | WI-0064 (#174) | P18 | P2 | ✅ 완료(2026-10-25). 문서(npm 없음)(#188 · #187, run 40110014386, provenance), 배포본 실측 통과(브랜드 적용 · 템플릿 4종 · 문서 사이트) |
 | 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | ✅ 완료(2026-10-25). cli 1.6.0 · mcp 1.3.3(#186 · #187, run 40110014386, provenance), 배포본 실측 통과(브랜드 적용 · 템플릿 4종 · 문서 사이트) |
-| 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | 🔄 구현 · 검증 완료(2026-10-25), PR 대기 |
+| 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | ✅ 2026-10-25 (#195, Pages) |
 | 79 | 템플릿 4종을 AXIS 토큰 · 컴포넌트 기반으로 전환(원본 `@axis-ds` 참조 0건 실측, WI-0037 에서 분리) | WI-0067 (#181) | P18 | P3 | ⏳ |
-| 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | 🔄 PR 대기(배치 3 ①, 브랜치 `fix/wi-0051-0070-0068-0072-check-brand-cjs`) |
+| 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ✅ 2026-10-25 (#196, theme 1.7.0) |
 | 81 | agentic-ui 비대비 a11y 결함(aria-prohibited-attr · scrollable-region-focusable · 시각 포맷 하이드레이션, WI-0058 브리프에서 분리) | WI-0069 (#183) | P18 | P2 | ⏳ |
-| 82 | cli `check` · `theme add` 판정 정확도: animation(import 만 있고 plugins 비어도 PASS) · globals.css(자체 HSL 변수에도 PASS) 거짓 PASS, 재실행 「브랜드 앞」 문구, Tailwind 3 body 글꼴 안내(배치 2 배포 후 재측정에서 발견, 배치 3 WI-0051 과 합류) | WI-0070 (#189) | P18 | P2 | 🔄 PR 대기(배치 3 ①, 브랜치 `fix/wi-0051-0070-0068-0072-check-brand-cjs`) |
+| 82 | cli `check` · `theme add` 판정 정확도: animation(import 만 있고 plugins 비어도 PASS) · globals.css(자체 HSL 변수에도 PASS) 거짓 PASS, 재실행 「브랜드 앞」 문구, Tailwind 3 body 글꼴 안내(배치 2 배포 후 재측정에서 발견, 배치 3 WI-0051 과 합류) | WI-0070 (#189) | P18 | P2 | ✅ 2026-10-25 (#196, cli 1.6.1 · mcp 1.3.4) |
 | 83 | 움직임 줄이기 설정에서 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · ThinkingIndicator 등 11곳)가 멈춰 앱이 멈춘 것처럼 보임 → 멈추지 않고 2~3배 느리게, 열고 닫기 · Accordion 11곳은 계속 정지(2026-10-25 사용자 결정, WI-0046 후속) | WI-0071 (#190) | P18 | P2 | ✅ 완료(2026-10-25). ui-react · agentic-ui 1.6.3(#192 · #193, run 40127935334, provenance), npm 배포본에 reduce 느린 주기(2.5 · 3 · 4 · 5초) 클래스 확인 |
-| 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | 🔄 PR 대기(배치 3 ①, 브랜치 `fix/wi-0051-0070-0068-0072-check-brand-cjs`) |
+| 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ✅ 2026-10-25 (#196, tokens 1.7.0) |
 | 85 | Tooltip 이 스크롤에 닫혀 화면 밖 트리거로 Tab 이동 시 바로 사라짐(WCAG 1.4.13 후보, WI-0066 브리프에서 발견) | WI-0073 (#194) | P18 | P3 | ⏳ |
 
 ### 완료
@@ -352,7 +352,7 @@
 
 | 배치 | 묶음(브랜치) | 릴리스 | 머지 순서 · 근거 |
 |------|------|------|------|
-| 3 | ① WI-0051 + 0070 + 0068 + 0072 check · 브랜드 판정 · CJS preset(template-check.ts · mcp template.ts · brand-core 사본 · 가이드 4절 · tokens tailwind 진입점) ② WI-0026 밀도 토큰 ③ WI-0066 문서 mock 4페이지 | linked minor(1.7.0) · cli · mcp patch | ③ → ① → ②. brand-core.ts(cli · mcp 바이트 사본)는 ① 소유, ② 는 KEY_TOKENS 를 고를 때만 ① 머지 뒤 rebase · cp. ② 는 착수 직전 WI-0071 브랜치가 packages/axis-tokens 를 건드리지 않는지 재측정. quick-start 는 WI-0071 과 ① 이 다른 hunk 를 고침(나중 머지가 rebase) |
+| 3 | ✅ 2026-10-25 완료(#195 · #196 · #198, Release #197 → linked 1.7.0 · cli 1.6.1 · mcp 1.3.4, 발행본 재측정 불일치 0) ① WI-0051 + 0070 + 0068 + 0072 check · 브랜드 판정 · CJS preset(template-check.ts · mcp template.ts · brand-core 사본 · 가이드 4절 · tokens tailwind 진입점) ② WI-0026 밀도 토큰 ③ WI-0066 문서 mock 4페이지 | linked minor(1.7.0) · cli · mcp patch | ③ → ① → ②. brand-core.ts(cli · mcp 바이트 사본)는 ① 소유, ② 는 KEY_TOKENS 를 고를 때만 ① 머지 뒤 rebase · cp. ② 는 착수 직전 WI-0071 브랜치가 packages/axis-tokens 를 건드리지 않는지 재측정. quick-start 는 WI-0071 과 ① 이 다른 hunk 를 고침(나중 머지가 rebase) |
 | 4 | ① WI-0060 library slug ② WI-0062 + 0063 + 0069 대비 · 비대비 ③ WI-0067 템플릿 AXIS 전환 | linked minor 또는 patch · cli patch | 전제: WI-0071 머지(그 PR 에 public/templates churn 이 없는지 확인). ③ → ① → ②. ② 는 ontology-pairs.mjs(줄 번호 대조 표)를 커밋마다 갱신 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0051 + 0070 + 0068 · 0026 · 0062 · 0063 · 0067. PRD 전제(defaultBrand · 고정 5항목 · AC5 게이트) 갱신 필요 |
 

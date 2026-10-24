@@ -48,3 +48,9 @@
 
 - Next.js App Router 실앱에서의 하이드레이션(이번 실측은 renderToString + hydrateRoot 정적 페이지).
 - 발행 뒤 npm 1.7.0 으로 2.1 다시 재기.
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. theme 1.7.0 과 1.6.2(음성 대조)로 S1~S6 과 우선순위 시나리오(저장값 > 마크업 > defaultBrand)를 브라우저에서 쟀고 모두 일치했어요. 1.7.0 은 recoverable 오류 · 콘솔 오류가 0건이에요. check 의 theme 버전 분기 WARN 도 문구까지 일치했어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

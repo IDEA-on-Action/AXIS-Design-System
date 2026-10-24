@@ -48,3 +48,9 @@ frontend.yml 과 같은 env(`E2E_SERVER=static`) · reporter 로 4종을 실행�
 
 - 첫 실행의 a11y 는 22 통과 · 18 실패(`net::ERR_CONNECTION_REFUSED http://127.0.0.1:3101`)였어요. 로컬은 `reuseExistingServer` 가 켜져 있어 이미 3101 을 쓰던 다른 정적 서버를 재사용하다가 그 서버가 도중에 내려간 것으로 보여요(그 서버 PID 의 cwd 는 확인 전에 사라짐, 추정). `CI=1`(재사용 끔, 자기 서버 기동)로 4종을 다시 돌린 결과가 위 표이고, 첫 실행의 nontext · demo · tokens 결과는 같은 이유로 근거에서 뺐어요.
 - 문서 사이트(apps/web)는 next-themes 를 쓰고 `@axis-ds/theme` 의 ThemeProvider 를 쓰지 않아요(`src/app/providers.tsx`). 그래서 이 E2E 는 WI-0068 의 새 동작을 직접 재지 않고 회귀가 없다는 것만 보여요. ThemeProvider 동작은 WI-0068 testplan 2절의 브라우저 실측이 근거예요.
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. cli 1.6.1 · mcp 1.3.4 의 check 결과: 선언만 있고 미설치이면 WARN(npm · pnpm 설치 명령 안내), 상위 디렉터리 설치본이면 PASS, PASS 문구의 확인 개수도 일치했어요. Plug'n'Play 경로는 재지 않았어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

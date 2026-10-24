@@ -17,5 +17,5 @@
 
 ## 릴리스
 - [x] changeset(cli · mcp patch)
-- [ ] PR · 머지 · 발행
-- [ ] 템플릿 4종 globals.css WARN 해소는 WI-0067
+- [x] PR · 머지 · 발행 (2026-10-25 #196 머지, npm 1.7.0 · cli 1.6.1 · mcp 1.3.4, run 40137182470, provenance 6/6)
+- [x] 템플릿 4종 globals.css WARN 해소는 WI-0067 (2026-10-25 WI-0067 로 이관, 사용자 결정으로 그때까지 WARN 수용)

@@ -18,5 +18,5 @@
 
 ## 릴리스
 - [x] changeset(theme minor, 동작 변경 S5 기록)
-- [ ] PR · 머지 · Release PR 버전 1.7.0 대조 · 발행
-- [ ] 발행본 1.7.0 으로 testplan 2 다시 재기
+- [x] PR · 머지 · Release PR 버전 1.7.0 대조 · 발행 (2026-10-25 #196 머지, Release #197 1.7.0 대조, npm 1.7.0 · cli 1.6.1 · mcp 1.3.4, run 40137182470, provenance 6/6)
+- [x] 발행본 1.7.0 으로 testplan 2 다시 재기 (2026-10-25 완료: S1~S6 + 우선순위 시나리오 1.6.2 음성 대조 포함 일치, recoverable 0)

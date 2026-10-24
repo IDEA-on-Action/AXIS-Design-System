@@ -21,5 +21,5 @@
 
 ## 릴리스
 - [x] changeset(묶음 ① 공통 `.changeset/wi-0051-0068-0070-0072-check-brand-cjs.md`, tokens patch)
-- [ ] PR · 머지 · Release PR 버전 1.7.0 대조 · 발행
-- [ ] 발행본 1.7.0 으로 testplan 2.1 다시 재기
+- [x] PR · 머지 · Release PR 버전 1.7.0 대조 · 발행 (2026-10-25 #196 머지, Release #197 1.7.0 대조, npm 1.7.0 · cli 1.6.1 · mcp 1.3.4, run 40137182470, provenance 6/6)
+- [x] 발행본 1.7.0 으로 testplan 2.1 다시 재기 (2026-10-25 완료: CJS · .cjs · .js · .ts 등 10형태 loadConfig · 빌드 CSS 일치, 1.6.2 음성 대조로 결함 재현)

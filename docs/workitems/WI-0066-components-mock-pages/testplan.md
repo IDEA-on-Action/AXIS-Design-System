@@ -101,3 +101,9 @@ E2E 건수는 CI 의 실행 건수 가드와 같은 jq 식으로 JSON 리포트�
 ## 5. 배포 뒤 확인 (Master, 머지 · Pages 배포 뒤)
 
 - pages.dev `/components/skeleton/` HTML 에 `motion-reduce:![animation-duration:5s]` 15개, `/components/alert/` HTML 에 `surface-info` 1 · `bg-blue-50` 0, tooltip 페이지에서 키보드 포커스 시 `role="tooltip"` 생성(1280x3000 처럼 트리거가 화면 안일 때). avatar 는 정적 HTML 로는 전 · 후가 갈리지 않아요(`/_next/image` 가 before · after 모두 0, mock 이 `unoptimized` 였음) - 외부 이미지 차단 폴백으로 확인해요
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. https://axis-design-system.pages.dev 에서 testplan 5절 항목(skeleton 의 motion-reduce 5s, alert surface-info, tooltip 키보드 열림, avatar 이니셜 폴백)이 모두 일치했어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

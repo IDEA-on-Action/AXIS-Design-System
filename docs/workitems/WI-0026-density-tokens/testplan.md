@@ -91,3 +91,9 @@
 
 - 배포 뒤 npm 1.7.0 발행본으로 3 · 4 절을 다시 재요(이번 측정은 로컬 빌드).
 - Pretendard 를 실은 화면에서 표 셀 높이 · 카드 높이는 재지 않았어요(기준과 새 빌드를 같은 시스템 글꼴로 대조).
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. Tailwind 3 · 4 새 소비자에서 ui-react 1.6.3 + tokens 1.6.2(기준)와 1.7.0(발행본)을 대조했어요. 브랜드 미지정 계산값 차이 0(1280 · 375, 라이트 · 다크), ontology 값은 FR-4 기대값과 일치, tokens CSS 만 쓰는 구성의 둥글기 변화는 의도된 차이로 확인했어요. 하네스가 달라 값 개수는 748값이에요(문서 750값과 직접 비교하지 않음).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

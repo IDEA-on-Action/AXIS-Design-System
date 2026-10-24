@@ -37,3 +37,9 @@ npm 으로 tokens · theme 1.6.2 · tailwindcss 3.4.19 · tailwindcss-animate 1.
 ## 4. 남는 확인
 
 - 템플릿 4종은 WI-0067 전까지 globals.css WARN(사용자 결정, 종료 코드 불변).
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.7.0, cli 1.6.1, mcp 1.3.4(run 40137182470, provenance 6/6). 레지스트리에서 설치해 node_modules 의 version 으로 확인했어요.
+- 결과: 불일치 0. cli 1.6.1 · mcp 1.3.4 의 animation plugins 배열 판독(식별자 · 직접 require PASS, import 만 · 주석 · 키 없음 WARN, 펼침은 「확인하지 못함」), globals.css AXIS 근거 판정, theme add 안내가 testplan 과 일치했어요. 문서 fixture 의 합계 재현은 하지 않았고, 축별 변형으로 판정을 하나씩 쟀어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/post3`

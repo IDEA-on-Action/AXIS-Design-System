@@ -20,4 +20,4 @@
 - [x] 4페이지 + progress 대조군 x 기본 · ontology x 라이트 · 다크 axe 측정(before · after), skeleton reduce · tooltip 키보드 · avatar 폴백 · alert 토큰(testplan)
 - [x] 빌드 churn(templates · registry version) 되돌림
 - [x] release-notes, project-todo · wi-mapping 🔄
-- [ ] PR · 머지 · Pages 배포 뒤 pages.dev 확인(Master, testplan 5절)
+- [x] PR · 머지 · Pages 배포 뒤 pages.dev 확인(Master, testplan 5절) (2026-10-25 #195 머지 860bf15, pages.dev 실측 일치)

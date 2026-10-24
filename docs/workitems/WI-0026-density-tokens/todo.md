@@ -26,6 +26,6 @@
 - [x] `build:registry`(5항목, version 1.5.0 유지) · `library:refresh-axis`(8파일, 재실행 0) · 템플릿 churn 되돌림
 - [x] changeset `.changeset/wi-0026-density-tokens.md`(tokens · ui-react minor)
 - [x] 게이트: `turbo run type-check lint test build --force`(Cached 0) · frontend.yml run 단계 · E2E 4종
-- [ ] PR 생성 · 머지(배치 3 순서 ③ → ① → ②, ① 이 `packages/axis-tokens/package.json` 을 고치면 rebase)
-- [ ] 배포 뒤 npm 1.7.0 발행본으로 testplan 3 · 4 절 다시 재기
+- [x] PR 생성 · 머지(배치 3 순서 ③ → ① → ②, ① 이 `packages/axis-tokens/package.json` 을 고치면 rebase) (2026-10-25 #198 머지 4e91855, Release #197)
+- [x] 배포 뒤 npm 1.7.0 발행본으로 testplan 3 · 4 절 다시 재기 (2026-10-25 완료: Tailwind 3 · 4 발행본 대조, 브랜드 미지정 1.6.3 대비 차이 0 · ontology 기대값 일치 · tokens-only 의도된 차이 확인, 불일치 0)
 - [ ] 디자인 오너 확인: ontology Toggle 40px(Q4) · Select 팝업 10px(R3)
