@@ -68,6 +68,8 @@
 | 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ⏳ |
 | 81 | agentic-ui 비대비 a11y 결함(aria-prohibited-attr · scrollable-region-focusable · 시각 포맷 하이드레이션, WI-0058 브리프에서 분리) | WI-0069 (#183) | P18 | P2 | ⏳ |
 | 82 | cli `check` · `theme add` 판정 정확도: animation(import 만 있고 plugins 비어도 PASS) · globals.css(자체 HSL 변수에도 PASS) 거짓 PASS, 재실행 「브랜드 앞」 문구, Tailwind 3 body 글꼴 안내(배치 2 배포 후 재측정에서 발견, 배치 3 WI-0051 과 합류) | WI-0070 (#189) | P18 | P2 | ⏳ |
+| 83 | reduced-motion 에서 로딩 · 진행 표시는 멈추지 않고 느리게(WI-0046 결정 변경, 사용자 결정 2026-10-25) | WI-0071 (#190) | P18 | P2 | 🔄 구현 · 검증 완료(2026-10-25), PR 대기 |
+| 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ⏳ |
 
 ### 완료
 
@@ -343,21 +345,17 @@
 - 착수 전: WI-0025 부록 B(2026-10-16 v0.24 · 디자인 시스템 v1 기준: 라이트 보조 글자 `sub` 1개 값 보정, 미달 쌍 처리, 입력 테두리 1.40:1 유지 여부, PlanCard 색 선 두께, 에이전트 상태 색 접기) 2026-10-16 사용자 대리 승인, 디자인 오너 사후 확인 8건 완료(2026-10-19, M3 머지 전) ✅
 - 착수: `/ax-wi start <WI>` 로 WI마다 진행
 
-### WI 배치 계획 (2026-10-24 재계획, `/ax:todo plan`)
+### WI 배치 계획 (2026-10-25 재계획, 배치 1 · 2 완료 뒤)
 
-> 근거: 미완료 WI 16건을 main 9e9e623(1.6.0 배포 직후)에서 WI 마다 실측했어요(재현 여부 · 수정 파일 · 릴리스 영향 · 선행). 이미 해소 2건(WI-0028 · WI-0040), 부분 해소 4건(WI-0039 · 0041 · 0048 · 0062), 재현 10건. 같은 배치 안 묶음은 병렬 착수, 머지는 아래 순서, 배치마다 Release PR 하나로 발행해요. WI 별 설계 결정은 그 배치를 시작할 때 정해요.
+> 근거: 미완료 WI 11건을 main 3368786(linked 1.6.2 · cli 1.6.0 · mcp 1.3.3)에서 재실측, 비판 검토 major 1 · minor 4 반영. 종료 후보 0. 배치 1 ✅(#176~#179) · 배치 2 ✅(#184~#188, #187). 지난 계획(2026-10-24) 대비: WI-0060 을 배치 3 → 4(library 사본 14개가 WI-0071 뒤 재생성 필요), 새 WI-0066~0070 · 0072 배정. 진행 중 WI-0071(#190)은 배치와 별도로 먼저 머지 · 배포.
 
 | 배치 | 묶음(브랜치) | 릴리스 | 머지 순서 · 근거 |
 |------|------|------|------|
-| 1 ✅ | ① 종결 · 문서: WI-0028(AC2(a) 조건을 pages.dev 배포본 재측정으로 변경 + AC4 WARN 경로 재측정 뒤 종결) · WI-0040(guidance.test.ts 회귀 방지 + 양성 대조 픽스처 뒤 종결) · WI-0048 ② WI-0054 Avatar ③ WI-0039 cli · mcp 품질 게이트 | 문서 배포 없음 · ui-react · agentic-ui patch · cli · mcp patch(선택) | ① → ② → ③. ③ 이 뒤 cli WI 들의 lint · type-check 게이트가 돼요 |
-| 2 ✅ | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 + 0065 init · 템플릿 · theme add(2026-10-24 WI-0065 합류) ④ WI-0064 브랜드 가이드 현행화(문서, ③ 의 cli 동작 변경 뒤 서술을 맞춤) | linked patch · cli minor · mcp patch(③ D9, 2026-10-24 정정) | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
-| 3 | ① WI-0051 + WI-0070 check 판정 정확도(2026-10-25 WI-0070 합류) ② WI-0060 library slug 충돌 ③ WI-0026 밀도 토큰 | linked minor(1.7.0) · cli · mcp patch | ① → ② → ③. ③ 은 library 를 ② 의 새 구조 위에서 다시 만듦 |
-| 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
-| 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
+| 3 | ① WI-0051 + 0070 + 0068 + 0072 check · 브랜드 판정 · CJS preset(template-check.ts · mcp template.ts · brand-core 사본 · 가이드 4절 · tokens tailwind 진입점) ② WI-0026 밀도 토큰 ③ WI-0066 문서 mock 4페이지 | linked minor(1.7.0) · cli · mcp patch | ③ → ① → ②. brand-core.ts(cli · mcp 바이트 사본)는 ① 소유, ② 는 KEY_TOKENS 를 고를 때만 ① 머지 뒤 rebase · cp. ② 는 착수 직전 WI-0071 브랜치가 packages/axis-tokens 를 건드리지 않는지 재측정. quick-start 는 WI-0071 과 ① 이 다른 hunk 를 고침(나중 머지가 rebase) |
+| 4 | ① WI-0060 library slug ② WI-0062 + 0063 + 0069 대비 · 비대비 ③ WI-0067 템플릿 AXIS 전환 | linked minor 또는 patch · cli patch | 전제: WI-0071 머지(그 PR 에 public/templates churn 이 없는지 확인). ③ → ① → ②. ② 는 ontology-pairs.mjs(줄 번호 대조 표)를 커밋마다 갱신 |
+| 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0051 + 0070 + 0068 · 0026 · 0062 · 0063 · 0067. PRD 전제(defaultBrand · 고정 5항목 · AC5 게이트) 갱신 필요 |
 
-- 배치 2 결정(2026-10-24, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① 17페이지 교체 · approval 경로 유지 · 페이지 결함만 ② optional peer + tokens keyframes + Progress 부분 폭 + prose text-sm + reduced-motion, progress 페이지 실컴포넌트화 ③ 템플릿 app/ 구조 · Tailwind 3 유지 · init 기존 키 병합 · 실재 파일 탐색 · theme add CSS 자동 · check FAIL/WARN, cli minor · mcp patch ④ 4절 체크리스트 · quick-start Tailwind 3 블록 소유 · cli 서술은 ③ 뒤. 분리: WI-0066 · 0067 · 0068 · 0069
-- 결정 대기 부수 결함(범위 밖, 새 WI 후보): ~~WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦~~(2026-10-24 WI-0049 D6 에 포함해 수정, 묶음 ③) · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · ~~템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정)~~(2026-10-24 측정으로 확정, WI-0067 로 분리) · theme type-check 오류 12건(WI-0034 D3 제외분)
-- 공통 허브 파일(project-todo.md · .github/wi-mapping.json)은 나중에 머지하는 쪽이 rebase 해요. 생성물(public/r · public/library · public/templates)은 손으로 병합하지 않고 생성 명령을 다시 돌려요
+- WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보
 - E2E a11y 별도 워크플로우(야간/수동, 브라우저 설치 비용으로 main CI 미포함)

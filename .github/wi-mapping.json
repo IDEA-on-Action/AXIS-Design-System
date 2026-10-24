@@ -452,6 +452,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDPbzo",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0072",
+      "slug": "tailwind3-cjs-preset",
+      "issueNumber": 191,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDQnCk",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T00:00:00.000Z"
