@@ -18,4 +18,4 @@
 ## 릴리스
 - [x] changeset(cli · mcp patch)
 - [x] PR · 머지 · 발행 (2026-10-25 #196 머지 4f54bba, npm 1.7.0 · cli 1.6.1 · mcp 1.3.4, run 40137182470, provenance 6/6)
-- [ ] (사용자 확인) 기존 `installedVersion` 호출지(detectTailwind · axisPackagesBelowTailwind4)도 상위 탐색으로 옮길지
+- [x] (사용자 확인) 기존 `installedVersion` 호출지(detectTailwind · axisPackagesBelowTailwind4)도 상위 탐색으로 옮길지 (2026-10-25 사용자 결정: 후속 WI-0074(#199) 로 분리)

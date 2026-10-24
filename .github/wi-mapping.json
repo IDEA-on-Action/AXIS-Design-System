@@ -476,6 +476,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDQ7zs",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0074",
+      "slug": "check-installed-hoisting",
+      "issueNumber": 199,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDR-o4",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T00:00:00.000Z"
