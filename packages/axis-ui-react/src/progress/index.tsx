@@ -81,7 +81,12 @@ const Progress = React.forwardRef<HTMLDivElement, ProgressProps>(
         <div
           className={cn(
             progressIndicatorVariants({ variant }),
-            indeterminate && "animate-progress-indeterminate"
+            // 불확정: 트랙 폭 1/3 인 표시기가 왕복한다(@axis-ds/tokens 의 progress-indeterminate keyframes).
+            // 꽉 찬 막대(100% 완료)로 보이지 않도록 폭을 줄이고, 움직임 줄이기 설정에서는 왼쪽에 멈춘다.
+            // duration-[1500ms]: tailwindcss-animate 는 duration-300 을 animation-duration 에도 적용해 왕복이
+            // 0.3s 로 빨라진다(실측). keyframes 의 1.5s 와 같은 값으로 덮는다(progress.test 가 토큰 값과 대조)
+            indeterminate &&
+              "w-1/3 duration-[1500ms] animate-progress-indeterminate motion-reduce:!animate-none"
           )}
           style={
             indeterminate

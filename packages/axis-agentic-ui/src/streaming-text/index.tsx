@@ -90,7 +90,7 @@ export function StreamingText({
         {displayedText}
       </span>
       {showCursor && isStreaming && (
-        <span className="inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse" aria-hidden="true" />
+        <span className="inline-block w-0.5 h-4 ml-0.5 bg-[var(--axis-text-primary)] animate-pulse motion-reduce:!animate-none" aria-hidden="true" />
       )}
     </div>
   );
