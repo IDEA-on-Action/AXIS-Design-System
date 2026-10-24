@@ -84,7 +84,7 @@ body {
 - `dark:` 변형은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 입니다. Tailwind 3 preset(`darkMode: ["class"]`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라가지만, Tailwind 4 진입점은 `.dark` 를 붙인 요소 자신에도 적용되고 명시도를 올리지 않습니다.
 - Accordion 열고 닫기와 Progress 불확정 상태의 애니메이션(`animate-accordion-down` · `animate-accordion-up` · `animate-progress-indeterminate`)은 토큰 진입점이 `@keyframes` 와 `--animate-*` 로 정의합니다(Tailwind 3 preset 도 같은 keyframes 를 가집니다).
 - Dialog · Sheet · Popover · Select · DropdownMenu · Tooltip · Toast 가 쓰는 `animate-in` · `fade-in-0` 같은 열고 닫는 애니메이션 클래스는 AXIS 진입점이 정의하지 않습니다. 애니메이션이 필요하면 `tw-animate-css` 를 앱에 설치하고(`pnpm add -D tw-animate-css`) `@import "tailwindcss";` 바로 다음 줄에 `@import "tw-animate-css";` 를 넣습니다. tw-animate-css 도 같은 이름의 Accordion keyframes 를 정의하지만 같은 Radix 높이 변수(`--radix-accordion-content-height`)를 써서 토큰 진입점 앞뒤 어느 쪽에 두어도 동작합니다. Tailwind 3 은 `tailwindcss-animate` 를 `plugins` 에 넣습니다. `@axis-ds/ui-react` 는 두 플러그인을 선택적 peer 의존으로 선언하지만, 설치 경고는 나오지 않습니다.
-- 움직임 줄이기(`prefers-reduced-motion: reduce`) 설정에서는 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 컴포넌트의 애니메이션이 멈춥니다(`motion-reduce:!animate-none`). Progress 불확정 상태는 트랙 왼쪽에 1/3 폭으로 멈춰 꽉 찬 막대와 구별됩니다.
+- 움직임 줄이기(`prefers-reduced-motion: reduce`) 설정에서는 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 컴포넌트의 열고 닫는 애니메이션과 Accordion 이 멈춥니다(`motion-reduce:!animate-none`). 로딩 · 진행 표시(Progress 불확정 · Skeleton · 스피너 · ThinkingIndicator 같은 실행 중 표시)는 멈추면 앱이 응답하지 않는 것처럼 보이므로 멈추지 않고 기본 주기의 2~3배로 느리게 움직입니다(`motion-reduce:![animation-duration:...]`, 예: Progress 불확정 1.5s → 4s, 스피너 1s → 3s). Tailwind 3 · 4 기본 유틸리티만 쓰므로 설정을 더할 필요가 없습니다.
 
 ### Tailwind CSS 3
 

@@ -31,7 +31,9 @@ describe("Progress (WI-0046)", () => {
     // tailwind-merge 가 기본 w-full 을 지워야 폭이 1/3 이 된다
     expect(classes).not.toContain("w-full");
     expect(classes).toContain("animate-progress-indeterminate");
-    expect(classes).toContain("motion-reduce:!animate-none");
+    // 움직임 줄이기: 멈추지 않고 느리게(토큰 1.5s 의 2~3배) 왕복한다(WI-0071)
+    expect(classes).not.toContain("motion-reduce:!animate-none");
+    expect(classes).toContain("motion-reduce:![animation-duration:4s]");
     // tailwindcss-animate 가 duration-300 을 animation-duration 에 적용하지 않도록 같은 값으로 덮는다
     expect(classes).toContain("duration-[1500ms]");
     expect(classes).not.toContain("duration-300");

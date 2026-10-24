@@ -93,14 +93,14 @@
       "type": "registry:ui",
       "title": "Run Progress",
       "description": "AI 에이전트 실행 진행률 표시 컴포넌트",
-      "sha256": "bd197371ac791da7319dc72551d7fe86e020ae7f756852b40ede9123aa5d2186"
+      "sha256": "4d7611b71d67ccf57ce89b1a3ffdf954575e22e8dd8ff13aa86b7710367e8b24"
     },
     {
       "name": "agentic-streaming-text",
       "type": "registry:ui",
       "title": "Streaming Text",
       "description": "LLM 스트리밍 텍스트 출력 컴포넌트",
-      "sha256": "c40ac5afe7fd49b22bcc66aeebb77d23d7d8dd6b4b36f8fe4472750eaeae14d9"
+      "sha256": "cddc2676622d324cb3f8d8bd1fddb97caa4808350cccaf8b6fde754a8ac8780a"
     },
     {
       "name": "agentic-approval-card",
@@ -114,14 +114,14 @@
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "sha256": "2c93015b0ae012b517781c555297a79cc4c5a19842ab55ef7a847db5002c6875"
+      "sha256": "cd6719280a88c471f6d1e20493f07b5d1055d37bf899129462ac89df6dfe883c"
     },
     {
       "name": "agentic-thinking-indicator",
       "type": "registry:ui",
       "title": "Thinking Indicator",
       "description": "AI 사고 과정 표시 컴포넌트",
-      "sha256": "0878b1f0b83b199239f4159beafc9a477ea1ad6c27a0587395e0e05dae85b3e6"
+      "sha256": "77d5b051c48416067927ba269bf8546e65f8e3942de1fca81d40f159e01ed4b1"
     },
     {
       "name": "agentic-source-panel",
@@ -156,14 +156,14 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "b31a198cbb8aa9a84dd7475724abb1c75cfc57e98ce27ab6835b09f320f1f4a2"
+      "sha256": "22f55b62257075be3e5bb393aea8077eb26cf913ae0595802213769025492b1f"
     },
     {
       "name": "agentic-message-bubble",
       "type": "registry:ui",
       "title": "Message Bubble",
       "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)",
-      "sha256": "9d5bebd9102dabc7afa8eb80c326abdae30ad174d1afd35cdccc9ce321ec90b9"
+      "sha256": "9833745acfd486a8375e4ede01f51e9e440dd3f7f06a52850c82f951d14b3fec"
     },
     {
       "name": "agentic-feedback-buttons",
@@ -198,7 +198,7 @@
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "sha256": "c6d2f255b90b302966abd50091190b2af7e979bfe95e54141c538915b4b645e9"
+      "sha256": "ed6e7145a338b2b59a05aa3f829cf3f95e391d73d5a66c685cbd9349271e26da"
     },
     {
       "name": "agentic-attachment-card",

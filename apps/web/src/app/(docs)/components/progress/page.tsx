@@ -106,8 +106,8 @@ export default function ProgressPage() {
 
       <DocSection title="Indeterminate">
         <p className="mb-4 text-sm text-muted-foreground">
-          진행률을 알 수 없을 때는 트랙 폭 1/3 의 막대가 왕복합니다. 움직임 줄이기 설정에서는 왼쪽에
-          멈춥니다. keyframes 는 @axis-ds/tokens 가 정의합니다(Tailwind 3 preset · Tailwind 4 진입점).
+          진행률을 알 수 없을 때는 트랙 폭 1/3 의 막대가 왕복합니다. 움직임 줄이기 설정에서는 멈추지
+          않고 느리게(1.5초 → 4초) 왕복해 처리 중임을 알립니다. keyframes 는 @axis-ds/tokens 가 정의합니다(Tailwind 3 preset · Tailwind 4 진입점).
         </p>
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <Progress indeterminate aria-label="불러오는 중" />

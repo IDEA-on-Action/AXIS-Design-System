@@ -28,7 +28,7 @@ export interface RunProgressProps {
 
 const statusColors: Record<StepStatus, string> = {
   pending: "bg-[var(--axis-status-neutral-muted)] text-[var(--axis-status-neutral-muted-contrast)]",
-  running: "bg-[var(--axis-status-running)] text-[var(--axis-status-running-contrast)] animate-pulse motion-reduce:!animate-none",
+  running: "bg-[var(--axis-status-running)] text-[var(--axis-status-running-contrast)] animate-pulse motion-reduce:![animation-duration:5s]",
   complete: "bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)]",
   error: "bg-[var(--axis-status-error)] text-[var(--axis-status-error-contrast)]",
 };
@@ -36,7 +36,7 @@ const statusColors: Record<StepStatus, string> = {
 const statusIcons: Record<StepStatus, React.ReactNode> = {
   pending: null,
   running: (
-    <svg className="w-3 h-3 animate-spin motion-reduce:!animate-none" viewBox="0 0 24 24" fill="none">
+    <svg className="w-3 h-3 animate-spin motion-reduce:![animation-duration:3s]" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
@@ -81,7 +81,7 @@ export function RunProgress({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           {status === "running" && (
-            <div className="w-2 h-2 rounded-full bg-[var(--axis-status-running)] animate-pulse motion-reduce:!animate-none" />
+            <div className="w-2 h-2 rounded-full bg-[var(--axis-status-running)] animate-pulse motion-reduce:![animation-duration:5s]" />
           )}
           <span className="text-sm font-medium text-[var(--axis-text-primary)]">
             {status === "idle" && "대기 중"}
