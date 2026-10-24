@@ -16,7 +16,10 @@
   },
   "plan-card": {
     "accent-width": { "value": "1px" },
-    "reject-hover-text": { "value": "#A8281F" }
+    "reject-hover-text": { "value": "#A8281F" },
+    "reject-text": { "value": "#C8332E" },
+    "approve-bg": { "value": "#2A2F36" },
+    "approve-hover-bg": { "value": "#111418" }
   },
   "surface": {
     "default": { "value": "#FFFFFF" },

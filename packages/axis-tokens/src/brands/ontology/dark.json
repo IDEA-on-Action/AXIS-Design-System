@@ -4,7 +4,10 @@
     "lg": { "value": "0 8px 24px rgba(0,0,0,.50)" }
   },
   "plan-card": {
-    "reject-hover-text": { "value": "#F49890" }
+    "reject-hover-text": { "value": "#F49890" },
+    "reject-text": { "value": "#F07A72" },
+    "approve-bg": { "value": "#D0D4D9" },
+    "approve-hover-bg": { "value": "#F1F3F5" }
   },
   "surface": {
     "default": { "value": "#17191D" },

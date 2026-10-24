@@ -108,7 +108,7 @@ test('선언 검사: axis.deprecated 는 허용 키이고 대체 경로를 같�
   }
 })
 
-test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에서 센 값, 색 leaf 44)', () => {
+test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에서 센 값, 색 leaf 47)', () => {
   const r = findThemeDeclarationViolations(components())
   assert.deepEqual(r.violations, [])
   // 측정 대상이 0이면 위반 0도 의미가 없으므로 leaf 수를 별도 순회로 센 값과 함께 단언합니다
@@ -116,7 +116,8 @@ test('선언 검사: 실제 components.json은 위반 0 (leaf 수는 소스에�
   assert.equal(r.leaves, componentPaths().length)
   // 색 leaf 수는 고정값입니다(main 45 leaf · WI-0025 M3 47 leaf 모두 43, plan 6장).
   // M3 적대 검증 보정(2026-10-18)에서 plan-card.reject-hover-text 1개를 더해 48 leaf · 색 leaf 44 입니다.
-  assert.equal(r.colorLeaves, 44)
+  // WI-0029 에서 plan-card.reject-text · approve-bg · approve-hover-bg 3개를 더해 51 leaf · 색 leaf 47 입니다.
+  assert.equal(r.colorLeaves, 47)
 })
 
 test('resolveTokenValue: 참조를 끝까지 풀고, 풀 수 없는 참조 · 순환은 예외', () => {

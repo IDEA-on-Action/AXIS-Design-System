@@ -49,8 +49,10 @@ const NON_TEXT = 3;
  */
 export const CONTRAST_PAIRS = [
   // 흰 글자 짝 토큰 (D-5)
-  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: TEXT, sameString: true, where: 'run-progress:32 · plan-card:179' },
-  { fg: '--axis-status-success-contrast', bg: '--axis-status-success-strong', min: TEXT, sameString: true, where: 'plan-card:179 hover' },
+  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: TEXT, sameString: true, where: 'run-progress:32' },
+  // PlanCard 승인 버튼: WI-0029 에서 status-success 대신 전용 component 토큰(기본 green.700 · green.800)
+  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-bg', min: TEXT, sameString: true, where: 'plan-card:179' },
+  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-hover-bg', min: TEXT, sameString: true, where: 'plan-card:179 hover' },
   { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: NON_TEXT, where: 'step-timeline:68 · 76 (점 위 아이콘)' },
   { fg: '--axis-status-running-contrast', bg: '--axis-status-running', min: TEXT, sameString: true, where: 'run-progress:31' },
   { fg: '--axis-status-error-contrast', bg: '--axis-status-error', min: TEXT, sameString: true, where: 'run-progress:33' },
@@ -91,7 +93,9 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-diff-removed-text', bg: { mix: '--axis-diff-removed', pct: 10 }, min: TEXT, where: 'diff-viewer:72 · 78' },
   { fg: '--axis-status-success', bg: { mix: '--axis-status-success', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:62' },
   { fg: '--axis-status-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, where: 'feedback-buttons:78' },
-  // PlanCard 거절 버튼 hover: 하단 영역(surface-secondary) 위 옅은 바탕, 글자는 전용 component 토큰(기본값 status-error)
+  // PlanCard 거절 버튼 글자: 하단 영역(surface-secondary) 위, 전용 component 토큰(WI-0029, 기본 라이트 red.700 · 다크 status-error)
+  { fg: '--axis-plan-card-reject-text', bg: '--axis-surface-secondary', min: TEXT, where: 'plan-card:195 (하단 영역 :175)', parent: { at: 'plan-card/index.tsx:175', fgAt: 'plan-card/index.tsx:195' } },
+  // PlanCard 거절 버튼 hover: 하단 영역(surface-secondary) 위 옅은 바탕, 글자는 전용 component 토큰(WI-0029 기본 라이트 red.700 · 다크 red.400)
   { fg: '--axis-plan-card-reject-hover-text', bg: { mix: '--axis-status-error', pct: 10, over: '--axis-surface-secondary' }, min: TEXT, sameString: true, where: 'plan-card:195 hover (하단 영역 :175)', parent: { at: 'plan-card/index.tsx:175', fgAt: 'plan-card/index.tsx:195' } },
   // 비활성 버튼 글자 (WCAG 예외지만 D2 에 따라 sub-aa 로 통과시킨다)
   { fg: '--axis-button-text-disabled', bg: '--axis-button-bg-disabled', min: TEXT, where: '소비처 없음' },

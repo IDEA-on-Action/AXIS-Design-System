@@ -1,9 +1,9 @@
 {
   "button": {
     "bg": {
-      "default": { "value": "{color.blue.500}", "$extensions": { "axis": { "themeIndependent": true } } },
-      "hover": { "value": "{color.blue.600}", "$extensions": { "axis": { "themeIndependent": true } } },
-      "active": { "value": "{color.blue.700}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "default": { "value": "{color.blue.600}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.blue.700}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "active": { "value": "{color.blue.800}", "$extensions": { "axis": { "themeIndependent": true } } },
       "disabled": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{color.gray.700}" } } }
     },
     "text": {
@@ -37,9 +37,9 @@
   },
   "button-destructive": {
     "bg": {
-      "default": { "value": "{color.red.500}", "$extensions": { "axis": { "themeIndependent": true } } },
-      "hover": { "value": "{color.red.600}", "$extensions": { "axis": { "themeIndependent": true } } },
-      "active": { "value": "{color.red.700}", "$extensions": { "axis": { "themeIndependent": true } } }
+      "default": { "value": "{color.red.600}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.red.700}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "active": { "value": "{color.red.800}", "$extensions": { "axis": { "themeIndependent": true } } }
     },
     "text": {
       "default": { "value": "{color.white}", "$extensions": { "axis": { "themeIndependent": true } } }
@@ -52,7 +52,7 @@
     },
     "text": {
       "default": { "value": "{color.gray.900}", "$extensions": { "axis": { "dark": "{text.primary}" } } },
-      "placeholder": { "value": "{color.gray.400}", "$extensions": { "axis": { "dark": "{text.secondary}" } } }
+      "placeholder": { "value": "{color.gray.400}", "$extensions": { "axis": { "themeIndependent": true } } }
     },
     "border": {
       "default": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{border.secondary}" } } },
@@ -106,7 +106,10 @@
   },
   "plan-card": {
     "accent-width": { "value": "4px", "$extensions": { "axis": { "themeIndependent": true } } },
-    "reject-hover-text": { "value": "{status.error}", "$extensions": { "axis": { "themeIndependent": true } } }
+    "reject-hover-text": { "value": "{color.red.700}", "$extensions": { "axis": { "dark": "{color.red.400}" } } },
+    "reject-text": { "value": "{color.red.700}", "$extensions": { "axis": { "dark": "{status.error}" } } },
+    "approve-bg": { "value": "{color.green.700}", "$extensions": { "axis": { "themeIndependent": true } } },
+    "approve-hover-bg": { "value": "{color.green.800}", "$extensions": { "axis": { "themeIndependent": true } } }
   },
   "card-shadow": { "value": "{shadow.sm}", "$extensions": { "axis": { "themeIndependent": true } } }
 }

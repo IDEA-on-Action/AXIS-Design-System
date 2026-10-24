@@ -8,6 +8,7 @@ import { resolve } from 'node:path'
  * 빌드된 `@axis-ds/tokens` 의 `dist/css/variables.css` 를 Chromium 에 올려 `getComputedStyle` 계산값을 잽니다.
  * 단언
  *   - 라이트: component 토큰의 계산값이 M1 반영 빌드 3b52976 에서 옮긴 고정 기준값(fixtures/dark-tokens-light-3b52976.json)과 같음.
+ *     WI-0029 가 라이트 값을 의도적으로 바꾼 버튼 바탕 6개는 fixture 에 새 값으로 고쳐 두었습니다($wi0029).
  *     같은 산출물에서 만든 기준선과 비교하지 않으므로 라이트 값 회귀를 잡습니다. semantic · primitive 의 라이트 값은 범위 밖입니다.
  *   - 다크(`html.dark` · 하위 `div.dark`): 기준선(같은 파일에서 `.dark` 블록의 component 토큰 줄을 지운 CSS, 수정 전 구성)
  *     대비 바뀐 변수가 아래 맵의 이름과 정확히 같고, 각 계산값이 맵의 다크 hex 와 같음(값은 plan.md 4.1 표).
@@ -24,11 +25,14 @@ const COMPONENTS_JSON = resolve(TOKENS_DIR, 'src/component/components.json')
 const LIGHT_FIXTURE = resolve(__dirname, 'fixtures/dark-tokens-light-3b52976.json')
 
 /**
- * 다크 계산값이 바뀌어야 하는 component 토큰과 그 다크 값 (WI-0033 plan 4.1).
- * placeholder · button-text-disabled 는 다크 값이 라이트와 같아 제외합니다.
+ * 다크 계산값이 바뀌어야 하는 component 토큰과 그 다크 값 (WI-0033 plan 4.1, WI-0029 PRD 2.1 · 2.2).
+ * placeholder 는 다크 값이 라이트와 같아(gray.400 고정, WI-0029 D2) 제외합니다.
+ * button-text-disabled 는 다크 text.tertiary 가 gray.400 으로 바뀌어(WI-0029) 라이트 gray.500 과 달라져 들어갑니다.
+ * plan-card approve-bg · approve-hover-bg 는 테마 무관 값이라 제외합니다.
  */
 const EXPECTED_DARK: Record<string, string> = {
   '--axis-button-bg-disabled': '#374151',
+  '--axis-button-text-disabled': '#9CA3AF',
   '--axis-button-secondary-bg-default': '#111827',
   '--axis-button-secondary-bg-hover': '#1F2937',
   '--axis-button-secondary-bg-active': '#374151',
@@ -57,6 +61,8 @@ const EXPECTED_DARK: Record<string, string> = {
   '--axis-badge-info-text': '#60A5FA',
   '--axis-dialog-content-bg': '#030712',
   '--axis-dialog-content-border': '#1F2937',
+  '--axis-plan-card-reject-hover-text': '#F87171',
+  '--axis-plan-card-reject-text': '#EF4444',
 }
 
 /** components.json leaf 수 */
