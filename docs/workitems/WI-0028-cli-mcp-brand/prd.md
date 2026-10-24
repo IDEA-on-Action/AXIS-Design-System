@@ -1,6 +1,6 @@
 # WI-0028: CLI · MCP 브랜드 명령 PRD
 
-> 작성일: 2026-10-15 | 버전: v0.4(2026-10-16, 디자인 기준 v0.24 교체) | 작성자: Sinclair Seo | WI: WI-0028 | GitHub: #87 | 상태: Draft
+> 작성일: 2026-10-15 | 버전: v0.4(2026-10-16, 디자인 기준 v0.24 교체) | 작성자: Sinclair Seo | WI: WI-0028 | GitHub: #87 | 상태: 완료(2026-10-24, AC1 ~ AC4 배포본 재측정 통과, 6장 결정 D-close)
 > v0.4 변경 요지(v0.3(2026-10-15) 이후): 온톨로지 디자인 기준이 프로토타입 v0.22에서 v0.24(디자인 시스템 v1)로 바뀌었습니다. 이 WI는 색 · 둥글기 같은 토큰 값을 직접 정하지 않으므로 요구사항 · 수용 기준은 바뀌지 않았고, FR-3 보정 내역의 근거 문서가 WI-0025 부록 B라는 점만 명시했습니다. 보정 전 값의 데이터 출처는 Q6으로 남겼습니다.
 > 선행: WI-0025 FR-4 · FR-5(브랜드 토큰 소스, `dist/css/brands/*`, `brand.json`)와 FR-6(`ThemeProvider` brand 옵션). 빌드 경로는 WI-0025 M2로 main에 들어왔으므로 개발은 지금 착수하고, 실제 `ontology` 프리셋 확인은 M3 머지 뒤(M3는 2026-10-19 main 머지, 8253a82), `@axis-ds/cli` · `@axis-ds/mcp` 배포는 1.3.0 배포 뒤에 합니다(2026-10-19 사용자 결정, 종전 「1.3.0 배포 이후 착수」를 정정).
 > 기준 버전: `@axis-ds/cli` · `@axis-ds/mcp` 1.1.3, `@axis-ds/tokens` · `@axis-ds/theme` 1.2.0(2026-10-15 실측)
@@ -71,3 +71,12 @@
 - Q4: theme-only 템플릿은 `axis template init` 시 `globals.css` · `layout.tsx` · `page.tsx`가 `app/` 없이 루트에 놓입니다. 이 구조의 `pnpm build` 기준선(미실행)과, 템플릿 구조를 App Router로 고칠지는 이 WI 밖에서 정해야 합니다.
 - Q5: MCP 브랜드 도구가 대상 프로젝트에 `@axis-ds/tokens`가 설치되지 않았을 때 번들 스냅샷으로 대신 응답할지 정해야 합니다(현재 안: 설치 안내만 반환).
 - Q6: FR-3의 「원본 대비 보정 내역」에 필요한 보정 전 값의 데이터 출처를 정해야 합니다. WI-0025 D6 · FR-4의 `brand.json`은 name · description · themes · a11y 상태만 담고, 배포 토큰에는 보정 후 값만 있어 지금 출처만으로는 원본 대비 차이를 낼 수 없습니다. `brand.json`에 보정 내역 필드를 두는 안은 WI-0025 D6 변경이 필요합니다.
+
+## 6. 결정 기록
+
+| ID | 날짜 | 결정 | 근거 |
+|---|---|---|---|
+| D-AC2a-1 | 2026-10-19 | AC2(a) 를 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제로 통과로 둔다. 재확인 조건은 「`axis.minu.best` Cloudflare 403 해소 뒤 기본 레지스트리로 한 번 더 잰다」 | 받은 템플릿 7개 파일이 저장소 `theme-only.json` 과 같아 판정은 유효(testplan T6-6) |
+| D-AC2b-1 | 2026-10-19 | AC2(b) 실패 원인(`axis init -y` 의 utils.ts 의존성 누락)을 WI-0038(#124)로 분리하고 「선행 결함으로 보류」로 머지 | 원인이 이 WI 밖(testplan T7-2) |
+| **D-AC2a-2** | **2026-10-24** | **AC2(a) 재확인 조건을 「axis.minu.best 403 해소 뒤」에서 「pages.dev 기본 레지스트리 배포본 재측정」으로 바꾸고, 그 재측정 통과로 AC2(a) 를 통과로 인정한다** | WI-0056(cli 1.5.1)이 CLI 기본 사이트를 `https://axis-design-system.pages.dev` 로 바꿔 `axis.minu.best` 는 더 이상 기본 레지스트리가 아님. 403 해소를 기다리는 조건은 지금 기본 경로를 재지 않음 |
+| D-close | 2026-10-24 | 종결 전에 AC4 의 brand 어긋남 WARN 경로를 npm 배포본(`@axis-ds/cli@1.5.4` · `@axis-ds/mcp@1.3.2`)으로 직접 재고, AC1 ~ AC3 · T7-2 · T7-4 도 배포본으로 다시 잰 뒤 종결한다. 이슈(#87) 닫기는 머지 뒤 | 2026-10-24 재측정 모두 통과(testplan 「T8. 종결 재측정」) |

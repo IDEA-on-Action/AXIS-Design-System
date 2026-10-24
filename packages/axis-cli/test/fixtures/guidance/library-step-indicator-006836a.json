@@ -1,0 +1,18 @@
+{
+  "$comment": "WI-0040 양성 대조 fixture. 커밋 006836a~1 의 apps/web/public/library/components/step-indicator.json $.code.files[0].content 에서 Installation 절만 그대로 옮긴 조각(WI-0057 이 006836a 에서 지움). 이 조각이 library 데이터에 다시 들어오면 guidance.test.ts 가 실패해야 합니다.",
+  "id": "axis-step-indicator",
+  "slug": "step-indicator",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis-design-system.pages.dev/agentic/step-indicator"
+  },
+  "code": {
+    "files": [
+      {
+        "path": "page.tsx",
+        "content": "        {/* Installation */}\n        <section className=\"mb-12\">\n          <h2 className=\"text-2xl font-semibold mb-4\">Installation</h2>\n          <CodeBlock code=\"npx axis-cli add step-indicator\" language=\"bash\" />\n        </section>"
+      }
+    ]
+  }
+}

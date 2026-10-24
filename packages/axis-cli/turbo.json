@@ -16,6 +16,7 @@
         "$TURBO_ROOT$/apps/web/public/templates/theme-only.json",
         "$TURBO_ROOT$/apps/web/templates/*/files/package.json",
         "$TURBO_ROOT$/apps/web/src/**",
+        "$TURBO_ROOT$/apps/web/public/library/**",
         "$TURBO_ROOT$/packages/*/src/**",
         "$TURBO_ROOT$/packages/*/README.md",
         "$TURBO_ROOT$/docs/guides/**",

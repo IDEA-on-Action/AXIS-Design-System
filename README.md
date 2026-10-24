@@ -35,7 +35,7 @@ pnpm install
 pnpm dev:web
 ```
 
-**접속**: http://localhost:3000
+**접속**: http://localhost:3100
 
 ### CLI로 컴포넌트 설치
 
@@ -71,7 +71,7 @@ axis-design-system/
 | React | 19 |
 | Next.js | 15 |
 | TypeScript | 5.7+ |
-| Tailwind CSS | 4 |
+| Tailwind CSS | 개발 · 문서 사이트 3.4, 소비 프로젝트는 Tailwind 3 · 4 모두 지원(1.4.0+) |
 | pnpm | 9.15.4+ |
 | Turborepo | 2.3.3+ |
 
