@@ -61,6 +61,8 @@
 | 73 | ui-react 만 릴리스하면 cli 가 「원격 · 포함본 version 다름」을 매번 안내(레지스트리 version 이 ui-react 를 따름, WI-0059 배포 확인에서 발견) | WI-0061 (#167) | P18 | P2 | ✅ 완료(2026-10-24). cli 1.5.3 · mcp 1.3.1(#168 · #169, run 40048194529, provenance), pages.dev 1.5.2 대상 배포본 list 안내 없음(cli 1.5.2 는 「version 이 다릅니다」) |
 | 74 | 텍스트 대비 잔여 쌍(Toast opacity · tertiary hover/focus · AgentAvatar · RunProgress pending · DiffViewer 등)과 a11y 측정 범위 확대(PAGES 밖 11페이지 · axe incomplete, WI-0029 조사에서 분리) | WI-0062 (#170) | P18 | P2 | ⏳ |
 | 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
+| 76 | 브랜드 테마 가이드 현행화: 1.6.0 사실 반영(249 → 263개), Tailwind 4 컴포넌트 tailwind.css 누락, Tailwind 3 preset · shadcn CSS, defaultBrand · 다크 하위 요소 · 첫 화면 깜빡임 실측 함정(2026-10-24 브랜드 적용 점검에서 발견) | WI-0064 (#174) | P18 | P2 | ⏳ |
+| 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | ⏳ |
 
 ### 완료
 
@@ -343,7 +345,7 @@
 | 배치 | 묶음(브랜치) | 릴리스 | 머지 순서 · 근거 |
 |------|------|------|------|
 | 1 | ① 종결 · 문서: WI-0028(AC2(a) 조건을 pages.dev 배포본 재측정으로 변경 + AC4 WARN 경로 재측정 뒤 종결) · WI-0040(guidance.test.ts 회귀 방지 + 양성 대조 픽스처 뒤 종결) · WI-0048 ② WI-0054 Avatar ③ WI-0039 cli · mcp 품질 게이트 | 문서 배포 없음 · ui-react · agentic-ui patch · cli · mcp patch(선택) | ① → ② → ③. ③ 이 뒤 cli WI 들의 lint · type-check 게이트가 돼요 |
-| 2 | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 init · 템플릿 | linked patch · cli patch | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
+| 2 | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 + 0065 init · 템플릿 · theme add(2026-10-24 WI-0065 합류) ④ WI-0064 브랜드 가이드 현행화(문서, ③ 의 cli 동작 변경 뒤 서술을 맞춤) | linked patch · cli patch | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
 | 3 | ① WI-0051 check 의존성 판정 ② WI-0060 library slug 충돌 ③ WI-0026 밀도 토큰 | linked minor(1.7.0) · cli · mcp patch | ① → ② → ③. ③ 은 library 를 ② 의 새 구조 위에서 다시 만듦 |
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
