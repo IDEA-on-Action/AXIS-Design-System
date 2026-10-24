@@ -3,7 +3,13 @@
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
-import { inspectBrandActivation, inspectBrandImport, type BrandActivationCheck, type BrandImportCheck } from "../theme/brand-core.js";
+import {
+  THEME_MARKUP_BRAND_MIN_VERSION,
+  inspectBrandActivation,
+  inspectBrandImport,
+  type BrandActivationCheck,
+  type BrandImportCheck,
+} from "../theme/brand-core.js";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
 import { checkAnimationPlugin, checkGlobalsCss, checkTailwindContent, checkTailwindSetup, versionGateLabel } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
@@ -211,11 +217,11 @@ export function brandActivationResult(check: BrandActivationCheck): CheckResult 
     const why =
       check.theme.status === "below"
         ? `@axis-ds/theme ${label} 의 ThemeProvider 가 마운트 때 지웁니다`
-        : `@axis-ds/theme 버전을 확인하지 못했습니다(${label}). 1.7.0 미만이면 ThemeProvider 가 마운트 때 지웁니다`;
+        : `@axis-ds/theme 버전을 확인하지 못했습니다(${label}). ${THEME_MARKUP_BRAND_MIN_VERSION} 미만이면 ThemeProvider 가 마운트 때 지웁니다`;
     return {
       name: "brand.activation",
       severity: "warn",
-      message: `${check.found}의 <html data-brand> 를 ${why} → @axis-ds/theme 1.7.0 이상으로 올리거나 setBrand("${check.brand}")`,
+      message: `${check.found}의 <html data-brand> 를 ${why} → @axis-ds/theme ${THEME_MARKUP_BRAND_MIN_VERSION} 이상으로 올리거나 setBrand("${check.brand}")`,
     };
   }
   if (check.found) {

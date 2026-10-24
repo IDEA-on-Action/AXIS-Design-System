@@ -688,8 +688,34 @@ export const TOKENS_CJS_PRESET_FIXED_VERSION = "1.7.0";
 /** CommonJS 로 preset 을 받는 안내 형태(모든 버전에서 동작, WI-0072). ESM · TS 는 `import axisPreset from` 입니다. */
 export const TOKENS_TAILWIND3_CJS_REQUIRE = `require("${TOKENS_TAILWIND3_PRESET}").default`;
 
-/** `.default` 없이 받는 bare require(WI-0072). 뒤에 `.default` · `["default"]` 가 붙으면 걸리지 않습니다. */
-const BARE_PRESET_REQUIRE = /\brequire\s*\(\s*(["'])@axis-ds\/tokens\/tailwind\1\s*\)(?!\s*(?:\.\s*default\b|\[\s*["']default["']\s*\]))/;
+/** `@axis-ds/tokens/tailwind` 를 받는 require 호출(WI-0072) */
+const PRESET_REQUIRE_CALL = /\brequire\s*\(\s*(["'])@axis-ds\/tokens\/tailwind\1\s*\)/g;
+/** 바로 뒤에 `.default` · `["default"]` 가 붙는지(문자열 맨 앞에서 봄) */
+const DEFAULT_ACCESS_AHEAD = /^\s*(?:\.\s*default\b|\[\s*["']default["']\s*\])/;
+
+/**
+ * `.default` 없이 preset 을 쓰는 bare require 가 있는지(WI-0072). 주석은 미리 지운 소스를 받습니다.
+ * - `require(X).default` · `require(X)["default"]` 는 bare 가 아닙니다
+ * - 구조분해(`const { default: preset } = require(X)`)는 bare 가 아닙니다. 이름 내보내기만 받는 구조분해도 preset 자체를 쓰지 않아 넣지 않습니다
+ * - 변수에 받으면(`const preset = require(X)`) 그 식별자를 `.default` 없이 쓰는 곳이 하나라도 있을 때만 bare 입니다
+ * - 그 밖(`presets: [require(X)]` 등)은 bare 입니다
+ */
+export function hasBareCjsPresetRequire(code: string): boolean {
+  for (const m of code.matchAll(PRESET_REQUIRE_CALL)) {
+    const start = m.index ?? 0;
+    const end = start + m[0].length;
+    if (DEFAULT_ACCESS_AHEAD.test(code.slice(end))) continue;
+    const before = code.slice(0, start);
+    if (/\b(?:const|let|var)\s*\{[^{}]*\}\s*=\s*$/.test(before)) continue;
+    const bound = /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*$/.exec(before);
+    if (!bound) return true;
+    const ident = escapeRegExp(bound[1]);
+    const rest = code.slice(0, bound.index) + code.slice(end);
+    const bareUse = new RegExp(`(?<![\\w$.])${ident}(?![\\w$])(?!\\s*(?:\\.\\s*default\\b|\\[\\s*["']default["']\\s*\\]))`);
+    if (bareUse.test(rest)) return true;
+  }
+  return false;
+}
 
 /**
  * 설정 파일이 CommonJS 형태인지(WI-0072). `.cjs` 이거나 소스에 `module.exports` 가 있으면 CommonJS 입니다.
@@ -853,7 +879,7 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     if (hasTokensPresetReference(content)) {
       // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
       const code = stripJsComments(content);
-      if (isCommonJsConfig(file, code) && BARE_PRESET_REQUIRE.test(code)) {
+      if (isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code)) {
         const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION);
         if (gate.status !== "ok") {
           const why =

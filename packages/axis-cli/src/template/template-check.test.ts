@@ -1460,6 +1460,9 @@ describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", ()
       ["ESM 식별자", 'import animate from "tailwindcss-animate";\nexport default { plugins: [animate] };', "pass"],
       ["CJS 변수", 'const animate = require("tailwindcss-animate");\nmodule.exports = { plugins: [require("@tailwindcss/forms"), animate] };', "pass"],
       ["require 직접 + 다른 플러그인", 'module.exports = { plugins: [require("@tailwindcss/typography"), require("tailwindcss-animate")] };', "pass"],
+      // 리뷰 변이 C10(식별자를 import 했으면 배열의 아무 요소나 found)을 잡는 케이스
+      ["import 식별자 + 다른 플러그인만", 'import animate from "tailwindcss-animate";\nexport default { plugins: [require("@tailwindcss/forms")] };', "warn", "plugins 에 없음"],
+      ["CJS 변수 + 다른 플러그인만", 'const animate = require("tailwindcss-animate");\nmodule.exports = { plugins: [require("@tailwindcss/forms")] };', "warn", "plugins 에 없음"],
       ["plugins 키 없음", "export default { content: [] };", "warn", "plugins 에 없음"],
       ["주석 안 require", 'export default { plugins: [/* require("tailwindcss-animate") */] };', "warn", "plugins 에 없음"],
       ["펼침(동적)", 'import shared from "./shared";\nexport default { plugins: [...shared.plugins] };', "warn", "정적으로 다 읽지 못해 확인하지 못함"],
@@ -1722,6 +1725,46 @@ describe("배치 3 ①: 설치본 기반 판정", () => {
       );
       await writeInstalledStub(tsDefault, "@axis-ds/tokens", "1.5.0");
       expect(await item(tsDefault, "tailwind.config")).toMatchObject({ severity: "pass" });
+    });
+
+    it("변수에 받은 뒤 .default · 구조분해 default 는 1.6.2 에서도 PASS, 변수를 .default 없이 쓰면 WARN", async () => {
+      const R = 'require("@axis-ds/tokens/tailwind")';
+      const passForms: Record<string, string> = {
+        "변수 + .default": `const preset = ${R};\nmodule.exports = { content: [], presets: [preset.default] };`,
+        '변수 + ["default"]': `const preset = ${R};\nmodule.exports = { presets: [preset["default"]] };`,
+        "구조분해 default": `const { default: preset } = ${R};\nmodule.exports = { presets: [preset] };`,
+        "구조분해 default + 이름": `const { default: axis, axisKeyframes } = ${R};\nmodule.exports = { presets: [axis] };`,
+        "require(...).default 를 변수에": `const preset = ${R}.default;\nmodule.exports = { presets: [preset] };`,
+      };
+      const warnForms: Record<string, string> = {
+        "변수 bare": `const preset = ${R};\nmodule.exports = { presets: [preset] };`,
+        "변수 .default 와 bare 섞임": `const preset = ${R};\nconst p = preset.default;\nmodule.exports = { presets: [preset] };`,
+        "변수 bare + 인라인 bare": `const preset = ${R}.default;\nmodule.exports = { presets: [preset, ${R}] };`,
+      };
+      for (const [label, src] of Object.entries(passForms)) {
+        const dir = await project({ "tailwind.config.js": src }, { devDependencies: { tailwindcss: "^3.4.17", "@axis-ds/tokens": "^1.6.2" } });
+        await writeInstalledStub(dir, "@axis-ds/tokens", "1.6.2");
+        expect({ label, severity: (await item(dir, "tailwind.config"))?.severity }).toEqual({ label, severity: "pass" });
+      }
+      for (const [label, src] of Object.entries(warnForms)) {
+        const dir = await project({ "tailwind.config.js": src }, { devDependencies: { tailwindcss: "^3.4.17", "@axis-ds/tokens": "^1.6.2" } });
+        await writeInstalledStub(dir, "@axis-ds/tokens", "1.6.2");
+        expect({ label, item: await item(dir, "tailwind.config") }).toEqual({
+          label,
+          item: { name: "tailwind.config", severity: "warn", message: WARN_BELOW("tailwind.config.js", "설치본 1.6.2") },
+        });
+      }
+    });
+
+    // 리뷰 변이 C12(prerelease 비교 무력화)를 잡는 케이스. changesets pre 모드로 발행하면 1.7.0-beta.N 이 설치될 수 있어요
+    it("설치본 prerelease 1.7.0-beta.1 은 1.7.0 미만이라 WARN", async () => {
+      const dir = await project({ "tailwind.config.cjs": BARE_CJS }, { devDependencies: { tailwindcss: "^3.4.17", "@axis-ds/tokens": "^1.7.0-beta.1" } });
+      await writeInstalledStub(dir, "@axis-ds/tokens", "1.7.0-beta.1");
+      expect(await item(dir, "tailwind.config")).toEqual({
+        name: "tailwind.config",
+        severity: "warn",
+        message: WARN_BELOW("tailwind.config.cjs", "설치본 1.7.0-beta.1"),
+      });
     });
 
     it("설치본이 없으면 선언 하한으로, 둘 다 없으면 「확인하지 못했습니다」 WARN", async () => {
