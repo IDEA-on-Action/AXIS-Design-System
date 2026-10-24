@@ -244,10 +244,13 @@ export default {
 
 - [ ] `presets: [axisPreset]` 를 넣었다. 빠지면 브랜드를 켜도 Button 둥글기가 6px(Tailwind 기본 `rounded-md`)이고 글꼴이 Tailwind 기본(`ui-sans-serif`)입니다. 넣으면 10px · Pretendard 스택입니다.
 - [ ] `@axis-ds/tokens/css/shadcn` 을 넣었다. preset 의 `rounded-*` 는 shadcn 변수 `--radius` 를 읽으므로, 빠지면 브랜드를 켰을 때는 ontology 가 `--radius` 를 정의해 드러나지 않다가 **브랜드를 끄면 둥글기가 0px** 이 됩니다. 넣으면 켬 10px · 끔 6px 입니다.
+- [ ] create-next-app 형태 `globals.css` 의 `body { font-family: Arial, Helvetica, sans-serif; }` 를 지웠다(WI-0070). 레이어 밖 규칙이라 preset 의 Pretendard 스택(`html` 에 적용)을 이기고, Button 은 preflight 의 `font-family: inherit` 로 Arial 을 물려받습니다(Tailwind 3.4.19 빌드 CSS 의 Chromium 계산값 실측: 그 줄이 있으면 클래스 없는 `<button>` 이 Arial, 지우면 Pretendard. `font-sans` 를 붙인 요소는 영향 없음). `axis check` 는 1.6.1 부터 이 줄이 남아 있으면 `globals.css` WARN 을 냅니다.
+- [ ] 설정 파일이 CommonJS(`module.exports` · `.cjs`)이면 `presets: [require("@axis-ds/tokens/tailwind").default]` 처럼 `.default` 를 붙였다(WI-0072). `@axis-ds/tokens` 1.6.2 이하에서 `.default` 없는 `require` 는 preset 이 아니라 `{ default }` 를 돌려줘 색 · keyframes · 글꼴이 통째로 빠집니다(1.1.0 부터의 결함, 회귀 아님). 1.7.0 부터는 `.default` 없이도 됩니다. `.ts` 의 `export default { presets: [require(...)] }` 와 위 `import axisPreset from` 형태는 Tailwind 가 `.default` 를 꺼내 줘서 모든 버전에서 됩니다.
+- [ ] Tailwind 3 CLI(`tailwindcss -i`)나 Vite 의 postcss-import 로 CSS 를 묶으면 `@import "@axis-ds/tokens/css"` 가 `Failed to find '@axis-ds/tokens/css'` 로 실패합니다(이슈 #189 코멘트, Tailwind 3.4.19 CLI 로 다시 실측). postcss-import 는 package.json 의 `exports` 하위 경로를 읽지 않기 때문입니다. 이때는 CSS 대신 앱 진입점 JS 에서 `import "@axis-ds/tokens/css"` · `import "@axis-ds/tokens/css/shadcn"` 처럼 불러오거나(번들러가 `exports` 를 해석, 이 경로는 재지 않음), 실제 파일 경로(`@import "@axis-ds/tokens/dist/css/variables.css";` · `.../dist/css/shadcn-compat.css`)를 씁니다. 실제 파일 경로는 공개 진입점이 아니라 패키지 구조가 바뀌면 깨질 수 있습니다. Next.js 는 CSS `@import` 의 `exports` 하위 경로를 해석합니다(이 가이드의 측정값은 Next 구성).
 
 **2. 브랜드 켜기** - `ThemeProvider` 를 쓰는지에 따라 다릅니다. 브랜드 CSS 를 import 하는 것만으로는 화면이 바뀌지 않습니다.
 
-- [ ] `ThemeProvider` 를 쓰는 앱: `defaultBrand` 또는 `setBrand`(아래 「브랜드 적용」). 첫 화면까지 맞추려면 마크업 속성 `<html data-brand="ontology">` 를 함께 넣되, 마크업 속성만으로는 안 됩니다. 브랜드가 `undefined` 이면 `ThemeProvider` 가 마운트 때 속성을 지웁니다. 사용자가 브랜드를 끌 수 있게 하려면 `defaultBrand` 를 쓰지 않습니다(같은 절의 「`defaultBrand` 와 해제」)
+- [ ] `ThemeProvider` 를 쓰는 앱: 마크업 속성 `<html data-brand="ontology">`, `defaultBrand` 또는 `setBrand`(아래 「브랜드 적용」). `@axis-ds/theme` 1.7.0 부터는 마크업 속성을 초기값으로 읽어 마운트 때 지우지 않고, `setBrand(undefined)` 로 끈 상태도 새로고침 뒤 유지됩니다(WI-0068). 1.6.2 이하는 브랜드가 `undefined` 이면 마운트 때 마크업 속성을 지우므로 마크업만으로는 안 되고, `defaultBrand` 를 쓰면 끈 상태가 새로고침 뒤 풀립니다(같은 절의 「`defaultBrand` 와 해제」)
 - [ ] `ThemeProvider` 없이 쓰는 앱: 마크업 속성 `<html data-brand="ontology">` 단독(아래 「Provider 없이 적용 · 첫 화면」)
 
 **3. 글꼴**
@@ -265,7 +268,8 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
 
 **알아 둘 함정** (자세한 내용은 각 절)
 
-- `defaultBrand` 를 쓰면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 풀립니다(「브랜드 적용」, [WI-0068 #182](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182))
+- `@axis-ds/theme` 1.6.2 이하에서 `defaultBrand` 를 쓰면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 풀리고, 마크업 `<html data-brand>` 만 두면 마운트 때 지워집니다. 1.7.0 에서 고쳤습니다(「브랜드 적용」, [WI-0068 #182](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182))
+- Tailwind 3 CommonJS 설정의 `.default` 없는 `require("@axis-ds/tokens/tailwind")` 는 `@axis-ds/tokens` 1.6.2 이하에서 preset 이 빠집니다(위 1번, [WI-0072 #191](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/191))
 - 브랜드 컨테이너 안쪽 요소에 `.dark` 를 붙이면 그 아래는 브랜드가 꺼진 기본 다크가 됩니다(「선택자와 다크 모드」)
 - SPA 첫 화면에서 기본 색에서 브랜드 색으로 넘어가는 전환이 보일 수 있습니다(「Provider 없이 적용 · 첫 화면」)
 
@@ -277,7 +281,7 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
 
 - 전역 CSS(`axis.config.json` 의 `globalCss`)에 기본 토큰 CSS 와 브랜드 import 를 넣습니다. 위치는 파일 앞쪽 import 구간의 끝, 첫 규칙보다 앞입니다. 이미 있는 줄은 넣지 않고, 같은 명령을 다시 실행하면 「바꾼 파일이 없습니다」로 끝납니다.
   - Tailwind 3: 파일 맨 앞, `@tailwind` 3줄보다 앞에 `@import "@axis-ds/tokens/css";` · `@import "@axis-ds/tokens/css/shadcn";` · `@import "@axis-ds/tokens/css/brands/ontology";` 순서로 넣습니다. 위 체크리스트 블록과 같습니다
-  - Tailwind 4: `@import "tailwindcss";` 다음에 `@import "@axis-ds/tokens/css/tailwind4";` · `package.json` 에 선언된 컴포넌트 패키지의 `tailwind.css`(`@axis-ds/ui-react` · `@axis-ds/agentic-ui`) · 브랜드 순서로 넣습니다. 선언하지 않은 패키지의 줄은 넣지 않으므로, 나중에 `@axis-ds/agentic-ui` 를 더했으면 `theme add` 를 다시 실행합니다. 이때 새 줄은 import 구간의 끝, 곧 브랜드 줄 뒤에 들어갑니다. `tailwind.css` 는 `@source` 한 줄이라 위치가 브랜드 값에 영향을 주지 않지만, 위 순서대로 두려면 브랜드 줄을 맨 끝으로 옮깁니다
+  - Tailwind 4: `@import "tailwindcss";` 다음에 `@import "@axis-ds/tokens/css/tailwind4";` · `package.json` 에 선언된 컴포넌트 패키지의 `tailwind.css`(`@axis-ds/ui-react` · `@axis-ds/agentic-ui`) · 브랜드 순서로 넣습니다. 선언하지 않은 패키지의 줄은 넣지 않으므로, 나중에 `@axis-ds/agentic-ui` 를 더했으면 `theme add` 를 다시 실행합니다. 이때 새 줄은 import 구간의 끝, 곧 브랜드 줄 뒤에 들어갑니다. `tailwind.css` 는 `@source` 한 줄이라 위치가 브랜드 값에 영향을 주지 않지만, 위 순서대로 두려면 브랜드 줄을 맨 끝으로 옮깁니다. 1.6.1 부터 출력은 이 줄을 「컴포넌트 스캔 경로, 위치 무관」으로 적고, 「브랜드 앞」은 실제로 브랜드 줄보다 앞에 넣은 기본 토큰 CSS 에만 붙입니다(1.6.0 은 모든 줄을 「기본 토큰 CSS, 브랜드 앞」으로 적었습니다, WI-0070). 기본 토큰 CSS 가 브랜드 줄 뒤에 들어가면(브랜드 줄만 손으로 넣어 둔 경우 등) 브랜드 값이 덮이므로 옮기라는 경고를 냅니다
   - 첫 규칙 뒤에 있는 기존 `@import` 는 옮기지 않고 맨 앞으로 옮기라고 알립니다
 - `package.json` 의 `dependencies` 에 `"@axis-ds/tokens": "^1.6.0"` 을 더합니다(이미 선언돼 있으면 범위를 바꾸지 않음). 설치는 실행하지 않고 lockfile 에 맞는 명령(npm 프로젝트면 `npm install`)을 안내합니다. `@axis-ds/tokens` 가 설치돼 있지 않으면 브랜드 이름 규칙만 확인했다고 알립니다
 - `axis.config.json` 에 `"brand": "ontology"` 를 기록합니다. 나머지 키와 순서는 그대로입니다
@@ -299,10 +303,11 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
   ```text
   브랜드 켜기 (ThemeProvider 는 @axis-ds/theme 1.3.0 이상)
-    // 1) Provider 없이: 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)
+    // 1) 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)
+    //    ThemeProvider 를 함께 쓰면 @axis-ds/theme 1.7.0 이상이 필요합니다(그 아래는 마운트 때 속성을 지움)
     <html lang="ko" data-brand="ontology">
 
-    // 2) ThemeProvider 를 쓰면 마운트 때 브랜드가 없으면 속성을 지우므로 setBrand 로 켭니다(저장돼 유지, setBrand(undefined) 로 끔)
+    // 2) 사용자가 고르게 하려면 setBrand 로 켜고 끕니다(저장돼 유지, setBrand(undefined) 로 끈 상태 유지는 1.7.0 이상)
     import { useTheme } from "@axis-ds/theme";
     const { setBrand } = useTheme();
     setBrand("ontology");
@@ -310,8 +315,8 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
     ThemeProvider 를 쓰면 @axis-ds/theme 설치: npm install "@axis-ds/theme@^1.3.0"
   ```
 
-  cli 예시에 `defaultBrand` 가 없는 것은 끈 상태가 새로고침 뒤 풀리는 한계(아래 「`defaultBrand` 와 해제」, WI-0068) 때문입니다. 사용자가 끌 수 없게 늘 켜 두는 앱이면 `defaultBrand="ontology"` 를 써도 됩니다(「브랜드 적용」).
-- [ ] Tailwind 3: preset 을 넣습니다. cli 는 `tailwind.config.*` 에 preset 이 없으면 `presets: [require("@axis-ds/tokens/tailwind")] (ESM 이면 import axisPreset from "@axis-ds/tokens/tailwind")` 를 안내합니다. `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로를 덮지 않으면 넣을 경로도 함께 안내합니다
+  위 예시는 cli 1.6.1 출력입니다(1.6.0 은 1) 을 「Provider 없이」, 2) 를 「마운트 때 브랜드가 없으면 속성을 지우므로」로 적었습니다). cli 예시에 `defaultBrand` 가 없는 것은 `@axis-ds/theme` 1.6.2 이하에서 끈 상태가 새로고침 뒤 풀리는 한계(아래 「`defaultBrand` 와 해제」, WI-0068) 때문입니다. 1.7.0 이상이거나 사용자가 끌 수 없게 늘 켜 두는 앱이면 `defaultBrand="ontology"` 를 써도 됩니다(「브랜드 적용」). 마크업 `data-brand` 와 `ThemeProvider` 를 함께 쓰는 레이아웃을 찾으면 「`@axis-ds/theme 1.7.0 이상이어야 마운트 때 지워지지 않습니다`」 경고를 한 줄 더 냅니다(설치본 판정은 `axis check`).
+- [ ] Tailwind 3: preset 을 넣습니다. cli 1.6.1 은 `tailwind.config.*` 에 preset 이 없으면 `presets: [require("@axis-ds/tokens/tailwind").default] (ESM · TypeScript 이면 import axisPreset from "@axis-ds/tokens/tailwind" 뒤 presets: [axisPreset])` 를 안내합니다. CommonJS 형태는 모든 tokens 버전에서 되는 `.default` 입니다(1.6.0 이 안내하던 `.default` 없는 형태는 tokens 1.6.2 이하에서 preset 이 빠짐, WI-0072). `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로를 덮지 않으면 넣을 경로도 함께 안내합니다
 - [ ] Tailwind 4: create-next-app 기본 `globals.css` 의 `:root` · `@theme inline` · `@media (prefers-color-scheme: dark)` · `body` 블록을 지웁니다. `theme add` 는 이 블록을 그대로 두고, `axis init` 의 안내와 `axis check` 의 WARN 이 남은 정의 이름을 알려 줍니다
 - [ ] 안내된 설치 명령(`npm install`, `ThemeProvider` 를 쓰면 `@axis-ds/theme`)을 실행합니다
 - [ ] Pretendard 웹폰트를 로드합니다(위 3번). cli 는 글꼴을 다루지 않습니다
@@ -322,14 +327,16 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
 | 항목 이름 | 판정 | 언제 | 체크리스트 |
 |---|---|---|---|
-| `tailwind.config` | WARN | Tailwind 3 에서 `@axis-ds/tokens/tailwind` preset 이 없음. 1.5.x 이하는 자체 CSS 변수 매핑만 있어도 PASS 였습니다 | 1번 preset |
-| `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 브랜드를 켜는 코드(`data-brand` · `setBrand(` · `defaultBrand=`)가 없음. `ThemeProvider` 만 있어도 WARN(문구에 「ThemeProvider 만으로는 마운트 때 꺼짐」). 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내 | 2번 |
+| `tailwind.config` | WARN | Tailwind 3 에서 `@axis-ds/tokens/tailwind` preset 이 없음. 1.5.x 이하는 자체 CSS 변수 매핑만 있어도 PASS 였습니다. 1.6.1 부터는 CommonJS 설정(`module.exports` · `.cjs`)의 `.default` 없는 `require` 도 설치본 `@axis-ds/tokens` 가 1.7.0 미만이면(설치본이 없으면 선언 하한) WARN 입니다 | 1번 preset |
+| `globals.css` | WARN | 1.6.1 부터 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 `import "@axis-ds/tokens/css"`)가 없으면 WARN. 자체 `--background` · `--primary` 만 있으면 「AXIS 토큰이 없습니다」(1.6.0 은 PASS). Tailwind 3 에서 create-next-app 기본 `body` `font-family: Arial` 이 남아도 WARN | 1번 · 1번 글꼴 |
+| `dependencies` | WARN | 1.6.1 부터 `package.json` 에 선언된 `tailwindcss` · `clsx` · `tailwind-merge` · `@axis-ds/*` 가 설치되지 않았으면 WARN(상위 디렉터리 `node_modules` 까지 찾음, Plug'n'Play 는 선언 기준). 1.6.0 은 선언만 보고 「모두 설치되어 있습니다」였습니다 | - |
+| `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 브랜드를 켜는 코드(`data-brand` · `setBrand(` · `defaultBrand=`)가 없음. `ThemeProvider` 만 있어도 WARN(문구에 「ThemeProvider 만으로는 마운트 때 꺼짐」). 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내. 1.6.1 부터 마크업 `data-brand` 와 `ThemeProvider` 만 있고 `setBrand(` · `defaultBrand=` 가 없으면 설치본 `@axis-ds/theme` 가 1.7.0 미만일 때 WARN | 2번 |
 | `tailwind.content` | FAIL(종료 코드 1) | Tailwind 3 `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로(`./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 등)를 덮지 않음 | 1번 content |
-| `animation` | WARN | `@axis-ds/ui-react` 를 선언했는데 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate`, Tailwind 4 `tw-animate-css`)이 없음 | - |
+| `animation` | WARN | `@axis-ds/ui-react` 를 선언했는데 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate`, Tailwind 4 `tw-animate-css`)이 없음. 1.6.1 부터 Tailwind 3 은 `plugins` 배열 안의 `require("tailwindcss-animate")` 나 그 패키지를 받은 식별자로 판정하고(import 만 있거나 다른 곳의 같은 문자열은 PASS 아님), 「미설치」는 설치본 기준입니다. `plugins` 를 정적으로 다 읽지 못하면(펼침 · 변수) 「확인하지 못함」 WARN | - |
 
-`brand.activation` 은 루트 레이아웃(과 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` · `./provider`)에서 주석을 뺀 소스에 `data-brand` · `setBrand(` · `defaultBrand=` 글자가 있는지만 봅니다. 그래서 `ThemeProvider` 만 둔 레이아웃은 WARN 이지만, PASS 가 브랜드가 켜졌다는 뜻은 아닙니다. 마크업 `<html data-brand="ontology">` 와 `ThemeProvider` 를 함께 두고 `defaultBrand` 를 빼면 PASS 인데 마운트 때 속성이 지워지고(위 2번), `defaultBrand=` 의 값이 다른 브랜드여도 PASS 입니다. PASS 가 나오면 `"ontology"` 로 켜는지 확인합니다.
+`brand.activation` 은 루트 레이아웃(과 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` · `./provider`)에서 주석을 뺀 소스에 `data-brand` · `setBrand(` · `defaultBrand=` 글자가 있는지만 봅니다. 그래서 `ThemeProvider` 만 둔 레이아웃은 WARN 이지만, PASS 가 브랜드가 켜졌다는 뜻은 아닙니다. 1.6.0 은 마크업 `<html data-brand="ontology">` 와 `ThemeProvider` 를 함께 두고 `defaultBrand` 를 빼도 PASS 였는데, `@axis-ds/theme` 1.6.2 이하에서는 마운트 때 속성이 지워집니다(위 2번). 1.6.1 은 이 구성에서 설치본(없으면 선언) `@axis-ds/theme` 버전을 보고 1.7.0 미만이거나 판정할 수 없으면 WARN 입니다. `defaultBrand=` 의 값이 다른 브랜드여도 PASS 이니, PASS 가 나오면 `"ontology"` 로 켜는지 확인합니다.
 
-위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)입니다. 레이아웃을 `ThemeProvider` 만 둔 형태로 바꿔도 같고, `defaultBrand="ontology"` 를 더하면 7 pass / 1 warn 입니다. `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
+위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 cli 1.6.0 에서 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)입니다. 1.6.1 은 create-next-app 기본 `body` 의 `font-family: Arial` 이 남아 있으면 `globals.css` 도 WARN 이라 하나 더 늘어납니다(판정 규칙에서 읽은 값, 같은 프로젝트로 다시 재지는 않음). 레이아웃을 `ThemeProvider` 만 둔 형태로 바꿔도 같고, `defaultBrand="ontology"` 를 더하면 7 pass / 1 warn 입니다. `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
 
 ### 개념
 
@@ -415,16 +422,23 @@ function BrandToggle() {
 }
 ```
 
-`brandStorageKey`(기본 `"axis-brand"`)에 저장값이 있으면 `defaultBrand`보다 저장값이 먼저 적용됩니다. `setBrand(undefined)`는 `data-brand` 속성과 저장값을 함께 지웁니다.
+초기 브랜드는 `@axis-ds/theme` 1.7.0 부터 **저장값 > 서버 마크업 `<html data-brand>` > `defaultBrand`** 순서입니다(WI-0068). 저장값(`brandStorageKey`, 기본 `"axis-brand"`)이 있으면 그것을 쓰고, 없으면 마운트 전 `<html>` 에 있던 `data-brand` 를, 그것도 없으면 `defaultBrand` 를 씁니다. `setBrand(undefined)` 는 `data-brand` 속성을 지우고 저장값에 빈 문자열(「끔」)을 남겨, 새로고침 뒤에도 꺼진 채 유지됩니다.
 
-**`defaultBrand` 와 해제**: `defaultBrand` 를 지정하면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤에 유지되지 않습니다. `setBrand(undefined)` 가 저장값을 지우므로 다음 마운트에서는 저장값이 없고, 그러면 `defaultBrand` 가 다시 적용되기 때문입니다(`packages/axis-theme/src/index.ts` 의 `readBrand(brandStorageKey) ?? (defaultBrand || undefined)`). 실측(1.6.0, Vite 앱): `defaultBrand="ontology"` 에서 끈 뒤 새로고침하면 다시 ontology 이고, `defaultBrand` 없이 `setBrand` 로 켜고 끄면 새로고침을 거듭해도 마지막 선택이 유지됩니다. 끈 상태를 저장할 값이 없어서, 지금은 「기본은 ontology 이면서 사용자가 끌 수 있음」을 만들 수 없습니다. 해제 상태 저장은 [WI-0068 (#182)](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182)에서 다룹니다.
+- 마크업과 `defaultBrand` 가 다르면 마크업이 이깁니다(1.6.2 까지는 `defaultBrand`). 서버가 그린 값을 진실로 보는 규칙입니다(2026-10-25 사용자 결정).
+- 서버 렌더와 하이드레이션 첫 렌더는 `defaultBrand` 로 그리고 하이드레이션이 끝난 뒤 위 순서의 값으로 맞춥니다. 그래서 `useTheme().brand` 를 화면에 그려도 하이드레이션 불일치가 나지 않고, 첫 커밋은 서버 마크업 속성을 건드리지 않습니다(jsdom `hydrateRoot` 측정, `packages/axis-theme/src/theme.hydrate.test.tsx`).
+- `ThemeProvider` 를 언마운트하면 마운트 전 마크업 값으로 되돌립니다. 다른 `defaultBrand` 로 다시 마운트한 Provider 가 앞 인스턴스가 붙인 속성을 마크업으로 읽지 않게 하려는 것입니다.
+- 1.6.2 이하로 내리면 빈 문자열 저장값을 「저장값 없음」으로 읽어 그 버전의 동작(`defaultBrand`)으로 돌아갑니다.
+- 남는 한계: 서버 마크업에 `data-brand` 가 있는데 사용자가 끈 상태로 새로고침하면, 하이드레이션이 끝날 때까지 첫 화면에 브랜드가 보입니다(추정, 브라우저로 재지 않음). 없애려면 아래 「Provider 없이 적용 · 첫 화면」의 `<head>` 인라인 스크립트로 저장값을 먼저 반영합니다.
 
-| 용도 | 설정 | 새로고침 뒤 |
-|---|---|---|
-| 브랜드 고정(끄지 않음) | `defaultBrand="ontology"`, 첫 화면까지 맞추려면 `<html data-brand="ontology">` 도 함께 | 늘 ontology |
-| 사용자가 켜고 끔 | `defaultBrand` 없이 `setBrand("ontology")` · `setBrand(undefined)` | 마지막 선택 유지(켠 상태는 저장값, 끈 상태는 저장값 없음). 첫 방문은 브랜드 없음 |
+**`defaultBrand` 와 해제 (1.6.2 이하)**: `defaultBrand` 를 지정하면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤에 유지되지 않습니다. `setBrand(undefined)` 가 저장값을 지우므로 다음 마운트에서는 저장값이 없고, 그러면 `defaultBrand` 가 다시 적용되기 때문입니다(`packages/axis-theme/src/index.ts` 의 `readBrand(brandStorageKey) ?? (defaultBrand || undefined)`). 실측(1.6.0, Vite 앱): `defaultBrand="ontology"` 에서 끈 뒤 새로고침하면 다시 ontology 이고, `defaultBrand` 없이 `setBrand` 로 켜고 끄면 새로고침을 거듭해도 마지막 선택이 유지됩니다. 끈 상태를 저장할 값이 없어서, 지금은 「기본은 ontology 이면서 사용자가 끌 수 있음」을 만들 수 없습니다. 1.7.0 에서 해제 상태를 빈 문자열로 저장해 고쳤습니다([WI-0068 (#182)](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182)).
 
-위 `BrandToggle` 예시의 「기본」 버튼을 `defaultBrand` 와 함께 쓰면 누른 그 화면에서만 꺼지고, 새로고침하면 다시 켜집니다.
+| 용도 | 설정 | 새로고침 뒤(1.7.0 부터) | 1.6.2 이하 |
+|---|---|---|---|
+| 브랜드 고정(끄지 않음) | `defaultBrand="ontology"` 또는 `<html data-brand="ontology">`(첫 화면까지 맞추려면 마크업) | 늘 ontology | 마크업만 두면 마운트 때 지워짐, `defaultBrand` 필요 |
+| 기본은 켜고 사용자가 끌 수 있음 | `defaultBrand="ontology"`(또는 마크업) + `setBrand(undefined)` | 마지막 선택 유지(끈 상태는 빈 문자열 저장값) | 끈 상태가 새로고침 뒤 풀림(만들 수 없음) |
+| 기본은 끄고 사용자가 켬 | `defaultBrand` 없이 `setBrand("ontology")` · `setBrand(undefined)` | 마지막 선택 유지. 첫 방문은 브랜드 없음 | 같음 |
+
+1.6.2 이하에서는 위 `BrandToggle` 예시의 「기본」 버튼을 `defaultBrand` 와 함께 쓰면 누른 그 화면에서만 꺼지고, 새로고침하면 다시 켜집니다.
 
 ### 선택자와 다크 모드
 
@@ -463,14 +477,14 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 
 서버 마크업에 `<html data-brand="ontology">`를 넣을 수도 있습니다. 문서 사이트는 next-themes(`attribute="class"`)를 쓰므로 브랜드 전환 데모(`/docs/brand-demo/`)가 이 방식으로 속성을 다룹니다.
 
-- 서버 마크업에 속성을 넣고 `ThemeProvider`를 함께 쓰면 같은 브랜드를 `defaultBrand`로 지정합니다(브랜드 고정용 조합). 브랜드가 `undefined`이면 `ThemeProvider`가 마운트 때 속성을 지웁니다.
+- 서버 마크업에 속성을 넣고 `ThemeProvider`를 함께 쓰면, `@axis-ds/theme` 1.7.0 부터는 Provider 가 그 속성을 초기값으로 읽어 유지합니다. 1.6.2 이하는 브랜드가 `undefined`이면 마운트 때 속성을 지우므로 같은 브랜드를 `defaultBrand`로도 지정합니다(`axis check` 1.6.1 의 `brand.activation` 이 설치본 버전으로 가려 알려 줌).
 - 브랜드 이름은 검증하지 않습니다. 해당 브랜드 CSS를 import하지 않으면 속성이 있어도 기본 화면입니다.
 
 **첫 화면의 색 전환**: `ThemeProvider` 만 쓰는 SPA 에서는 첫 화면에서 Button 같은 요소가 기본 색에서 브랜드 색으로 넘어가는 전환이 보일 수 있습니다. 원인은 「첫 페인트가 기본 브랜드」가 아닙니다. 다시 잰 결과(Vite SPA, 10회) `data-brand` 는 첫 콘텐츠 페인트(FCP) 전에 붙었지만(10/10), 그보다 먼저 요소 스타일이 기본값으로 계산되고 나서 속성이 붙어, Button 의 `transition-colors` 가 기본 색(rgb(37, 99, 235))에서 브랜드 색(rgb(50, 106, 218))으로 약 150ms 동안 넘어갔습니다. 빈도는 조건에 따라 다릅니다(FCP 시점에 전환이 진행 중이던 비율: 처음 측정 3/10, 다른 Chromium 빌드 · 정적 서버로 다시 잰 값 6/10, CPU 1배 · 4배 모두).
 
 처방은 React 보다 먼저 속성을 붙이는 것입니다.
 
-- 서버에서 그리는 앱이고 브랜드를 고정한다면 서버 마크업에 `<html data-brand="ontology">` 를 넣습니다. `ThemeProvider` 를 함께 쓰면 같은 브랜드를 `defaultBrand` 로도 지정합니다(빼면 마운트 때 속성이 지워집니다).
+- 서버에서 그리는 앱이고 브랜드를 고정한다면 서버 마크업에 `<html data-brand="ontology">` 를 넣습니다. `ThemeProvider` 를 함께 쓰면 1.7.0 부터는 그대로 유지되고, 1.6.2 이하는 같은 브랜드를 `defaultBrand` 로도 지정합니다(빼면 마운트 때 속성이 지워집니다).
 - SPA 는 `<head>` 의 인라인 스크립트로 저장값을 붙입니다. 이 스크립트를 넣은 측정에서는 FCP 시점의 전환이 없었습니다(CPU 1배 0/9, FCP 를 수집하지 못한 1회 제외 · 4배 0/10).
 
 ```html
@@ -490,7 +504,7 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 </script>
 ```
 
-- 저장값이 없으면 브랜드를 붙이지 않습니다. `defaultBrand` 없는 `ThemeProvider` 와 같은 규칙이라, 끈 상태가 새로고침 뒤에도 유지됩니다(위 「`defaultBrand` 와 해제」의 「사용자가 켜고 끔」). 여기에 `|| "ontology"` 를 더하면 `defaultBrand` 와 같은 한계(끈 상태가 새로고침 뒤 풀림)를 그대로 되풀이합니다. 브랜드를 고정하는 앱은 스크립트 대신 마크업 속성을 씁니다.
+- 저장값이 없으면 브랜드를 붙이지 않습니다. `defaultBrand` 없는 `ThemeProvider` 와 같은 규칙이라, 끈 상태가 새로고침 뒤에도 유지됩니다(위 표의 「기본은 끄고 사용자가 켬」). 1.7.0 의 「끔」은 빈 문자열 저장값이라 `if (brand)` 로 걸러집니다. 기본 브랜드를 두려면 `|| "ontology"` 가 아니라 `brand === null ? "ontology" : brand` 처럼 저장값이 없을 때(`null`)만 대체합니다. `||` 는 빈 문자열(끔)도 바꿔 끈 상태를 풀어 버립니다. 브랜드를 고정하는 앱은 스크립트 대신 마크업 속성을 씁니다.
 - 키 이름과 기본값은 `ThemeProvider` 의 `brandStorageKey` · `storageKey` · `defaultTheme` 과 맞춥니다.
 - 측정에 쓴 스크립트는 저장값이 없을 때 ontology 를 붙이는 형태였습니다. 위 예시는 해제를 유지하려고 그 대체값만 뺀 것이고, 속성을 붙이는 시점은 같습니다.
 - Next.js App Router 에서 이 스크립트를 쓰는 방법(`<html>` 의 `suppressHydrationWarning` 필요 여부 등)은 재지 않았습니다.
