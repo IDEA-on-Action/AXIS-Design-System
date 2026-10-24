@@ -1,57 +1,30 @@
 import type { Config } from 'tailwindcss'
+import axisPreset from '@axis-ds/tokens/tailwind'
 
+/**
+ * 색 · 둥글기 · 글꼴(Pretendard 스택) · darkMode 는 AXIS preset 이 정합니다.
+ * 템플릿 로컬 확장은 두 가지뿐입니다.
+ * - status: AXIS 상태 색(--axis-status-*). 값이 hex 라 Tailwind 3 의 `/20` 투명도 수식이 붙지 않아
+ *   옅은 배경은 status-soft(color-mix 20%)로 따로 둡니다
+ * - fade-in-up: KPI 카드 진입 애니메이션
+ * 차트 · Zone 색은 preset 의 chart-1~5(--chart-1~5)를 씁니다
+ */
 const config: Config = {
-  darkMode: 'class',
+  presets: [axisPreset],
   content: ['./app/**/*.{ts,tsx}', './components/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        border: 'hsl(var(--border))',
-        input: 'hsl(var(--input))',
-        ring: 'hsl(var(--ring))',
-        background: 'hsl(var(--background))',
-        foreground: 'hsl(var(--foreground))',
-        primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+        status: {
+          success: 'var(--axis-status-success)',
+          warning: 'var(--axis-status-warning)',
+          error: 'var(--axis-status-error)',
         },
-        secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+        'status-soft': {
+          success: 'color-mix(in srgb, var(--axis-status-success) 20%, transparent)',
+          warning: 'color-mix(in srgb, var(--axis-status-warning) 20%, transparent)',
+          error: 'color-mix(in srgb, var(--axis-status-error) 20%, transparent)',
         },
-        muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
-        },
-        accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
-        },
-        destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
-        },
-        card: {
-          DEFAULT: 'hsl(var(--card))',
-          foreground: 'hsl(var(--card-foreground))',
-        },
-        zone: {
-          ingest: 'hsl(var(--zone-ingest))',
-          struct: 'hsl(var(--zone-struct))',
-          graph: 'hsl(var(--zone-graph))',
-          path: 'hsl(var(--zone-path))',
-        },
-        chart: {
-          success: 'hsl(var(--chart-success))',
-          warning: 'hsl(var(--chart-warning))',
-          alert: 'hsl(var(--chart-alert))',
-          blue: 'hsl(var(--chart-blue))',
-        },
-      },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
       },
       keyframes: {
         'fade-in-up': {

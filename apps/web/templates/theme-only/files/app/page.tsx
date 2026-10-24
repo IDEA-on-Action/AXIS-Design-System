@@ -6,7 +6,7 @@ export default function Home() {
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-bold tracking-tight">AXIS Theme Only</h1>
         <p className="text-lg text-muted-foreground max-w-md">
-          CSS 변수(HSL) 기반 테마와 다크모드 토글을 담은 최소 구성 템플릿입니다.
+          AXIS 토큰(@axis-ds/tokens) 기반 테마와 다크모드 토글을 담은 최소 구성 템플릿입니다.
         </p>
       </div>
 
@@ -15,7 +15,7 @@ export default function Home() {
       <div className="grid grid-cols-2 gap-4 max-w-lg w-full">
         <div className="rounded-lg border bg-card p-4 text-card-foreground">
           <h3 className="font-semibold mb-1">디자인 토큰</h3>
-          <p className="text-sm text-muted-foreground">CSS 변수 기반 테마 시스템</p>
+          <p className="text-sm text-muted-foreground">AXIS 토큰 CSS 변수 · Tailwind preset</p>
         </div>
         <div className="rounded-lg border bg-card p-4 text-card-foreground">
           <h3 className="font-semibold mb-1">다크모드</h3>

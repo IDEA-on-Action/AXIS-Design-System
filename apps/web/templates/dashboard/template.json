@@ -1,16 +1,18 @@
 {
   "name": "Dashboard",
   "slug": "dashboard",
-  "description": "사이드바 네비게이션과 통계 카드가 포함된 대시보드 템플릿입니다. CSS 변수(HSL) 기반 자체 테마로 레이아웃을 제공합니다.",
+  "description": "사이드바 네비게이션과 통계 카드가 포함된 대시보드 템플릿입니다. AXIS 토큰(@axis-ds/tokens CSS 변수 · Tailwind preset) 기반 테마로 레이아웃을 제공합니다.",
   "category": "dashboard",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "AXIS Design System",
   "tags": ["dashboard", "sidebar", "stats", "admin"],
   "features": [
     "사이드바 네비게이션",
     "통계 카드 컴포넌트",
     "반응형 레이아웃",
-    "CSS 변수(HSL) 기반 자체 테마 (AXIS 토큰 패키지 미사용)",
+    "AXIS 토큰 기반 테마 (@axis-ds/tokens CSS 변수 · Tailwind preset)",
+    "ontology 브랜드 켜기 안내 (globals.css 주석 한 줄 + <html data-brand>)",
+    "Pretendard 글꼴",
     "다크모드 지원",
     "Tailwind CSS 설정"
   ],
@@ -19,7 +21,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "tailwind-merge": "^2.6.0",
-    "clsx": "^2.1.1"
+    "clsx": "^2.1.1",
+    "@axis-ds/tokens": "^1.7.0",
+    "pretendard": "^1.3.9"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0",

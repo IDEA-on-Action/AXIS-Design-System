@@ -95,7 +95,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
                   width={barW}
                   height={d.inflow * barScale}
                   rx={2}
-                  fill="hsl(var(--chart-blue))"
+                  fill="hsl(var(--chart-1))"
                   opacity={hoveredIdx === i ? 1 : 0.7}
                   className="transition-opacity"
                 />
@@ -108,7 +108,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
                   width={barW}
                   height={d.outflow * barScale}
                   rx={2}
-                  fill="hsl(var(--chart-alert))"
+                  fill="var(--axis-status-error)"
                   opacity={hoveredIdx === i ? 1 : 0.7}
                   className="transition-opacity"
                 />
@@ -125,7 +125,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
         <polyline
           points={actualPoints}
           fill="none"
-          stroke="hsl(var(--chart-success))"
+          stroke="var(--axis-status-success)"
           strokeWidth={2}
           strokeLinejoin="round"
         />
@@ -137,7 +137,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
               cx={padL + idx * gap + gap / 2}
               cy={hcY(d.actualHeadcount)}
               r={3}
-              fill="hsl(var(--chart-success))"
+              fill="var(--axis-status-success)"
             />
           )
         })}
@@ -146,7 +146,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
         <polyline
           points={predictedPoints}
           fill="none"
-          stroke="hsl(var(--chart-warning))"
+          stroke="var(--axis-status-warning)"
           strokeWidth={2}
           strokeDasharray="6 3"
           strokeLinejoin="round"
@@ -159,7 +159,7 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
               cx={padL + idx * gap + gap / 2}
               cy={hcY(d.predictedHeadcount!)}
               r={3}
-              fill="hsl(var(--chart-warning))"
+              fill="var(--axis-status-warning)"
               strokeWidth={1}
               stroke="hsl(var(--background))"
             />
@@ -191,10 +191,10 @@ export function WorkforceFlowChart({ data }: WorkforceFlowChartProps) {
 
       {/* 범례 */}
       <div className="flex gap-5 mt-3 text-xs text-muted-foreground justify-center">
-        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[hsl(217,91%,60%)] inline-block" /> 유입</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[hsl(0,72%,51%)] inline-block" /> 유출</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[hsl(142,71%,45%)] inline-block" /> 실제 인원</span>
-        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-[hsl(38,92%,50%)] inline-block border-dashed" /> 예측 인원</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-chart-1 inline-block" /> 유입</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-status-error inline-block" /> 유출</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-status-success inline-block" /> 실제 인원</span>
+        <span className="flex items-center gap-1.5"><span className="w-3 h-0.5 bg-status-warning inline-block border-dashed" /> 예측 인원</span>
       </div>
     </div>
   )
