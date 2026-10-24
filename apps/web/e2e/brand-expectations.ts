@@ -95,7 +95,10 @@ export function maxChannelDiff(a: [number, number, number], b: [number, number, 
  * 브랜드별 모양 기대값 (WI-0025 FR-9 · Q9, 브랜드 전환 데모 spec 이 씁니다).
  *
  * 출처는 PRD FR-9(prd.md 「FR-9」 줄과 변경 주석)이고, 손으로 옮겨 적었습니다.
- * - 둥글기: `--radius` 기본 0.5rem(8px) · ontology 12px. Card `rounded-lg` = `--radius`, Button `rounded-md` = `--radius` - 2px.
+ * - 둥글기: Card 는 `--axis-radius-surface`, Button 은 `--axis-radius-control`, Input 은 `--axis-radius-field`(WI-0026 FR-3).
+ *   기본값은 `--radius`(0.5rem) 계산식이라 8 · 6 · 6px, ontology 는 12 · 8 · 6px(디자인 시스템 v1). 1.6.3 까지 Button 은
+ *   `rounded-md`(`--radius` - 2px)라 ontology 10px 였어요.
+ * - 높이: Button default 는 `--axis-control-h-md`, Input 은 `--axis-field-h`(WI-0026 FR-1). 기본 40 · 40px, ontology 34 · 36px.
  * - PlanCard 왼쪽 색 선: `--axis-plan-card-accent-width` 기본 4px · ontology 1px(plan U8).
  * - Card 그림자: `--axis-card-shadow` 기본 `0 1px 2px 0 rgb(0 0 0 / 0.05)` · ontology `0 0 #0000`(plan U2).
  *   계산 box-shadow 는 ring-offset · ring · shadow 세 레이어이고 앞 두 레이어는 늘 알파 0 이라,
@@ -103,8 +106,8 @@ export function maxChannelDiff(a: [number, number, number], b: [number, number, 
  * 라이트 · 다크 값이 같습니다(ontology 다크는 이 셋을 다시 정의하지 않음).
  */
 export const SHAPE_EXPECTED = {
-  default: { cardRadius: '8px', buttonRadius: '6px', planCardAccentWidth: '4px', cardShadowMaxAlpha: 0.05 },
-  ontology: { cardRadius: '12px', buttonRadius: '10px', planCardAccentWidth: '1px', cardShadowMaxAlpha: 0 },
+  default: { cardRadius: '8px', buttonRadius: '6px', buttonHeight: '40px', inputRadius: '6px', inputHeight: '40px', planCardAccentWidth: '4px', cardShadowMaxAlpha: 0.05 },
+  ontology: { cardRadius: '12px', buttonRadius: '8px', buttonHeight: '34px', inputRadius: '6px', inputHeight: '36px', planCardAccentWidth: '1px', cardShadowMaxAlpha: 0 },
 } as const
 
 /**

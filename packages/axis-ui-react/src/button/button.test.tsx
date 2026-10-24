@@ -51,30 +51,37 @@ describe("Button", () => {
   it("size=sm 시 sm 클래스 포함", () => {
     const { container } = render(<Button size="sm">작은</Button>);
     const button = container.querySelector("button")!;
-    expect(button.className).toContain("h-8");
+    expect(button.className).toContain("h-[var(--axis-control-h-sm,2rem)]");
     expect(button.className).toContain("px-3");
-    expect(button.className).toContain("text-xs");
+    expect(button.className).toContain("text-[length:var(--axis-control-font-size-sm,0.75rem)]");
+    // 크기별 글자가 기본 글자를 대체 (tailwind-merge 가 font-size 로 묶는지)
+    expect(button.className).not.toContain("text-[length:var(--axis-control-font-size-md,0.875rem)]");
   });
 
   it("size=default 시 기본 크기 클래스 포함", () => {
     const { container } = render(<Button size="default">기본</Button>);
     const button = container.querySelector("button")!;
-    expect(button.className).toContain("h-10");
+    expect(button.className).toContain("h-[var(--axis-control-h-md,2.5rem)]");
+    expect(button.className).toContain("text-[length:var(--axis-control-font-size-md,0.875rem)]");
+    expect(button.className).toContain("rounded-[var(--axis-radius-control,0.375rem)]");
+    // 글자 색 임의값(text-[var(--axis-button-text-default)])은 font-size 와 다른 그룹이라 남는다
+    expect(button.className).toContain("text-[var(--axis-button-text-default)]");
     expect(button.className).toContain("px-4");
   });
 
   it("size=lg 시 lg 클래스 포함", () => {
     const { container } = render(<Button size="lg">큰</Button>);
     const button = container.querySelector("button")!;
-    expect(button.className).toContain("h-12");
+    expect(button.className).toContain("h-[var(--axis-control-h-lg,3rem)]");
+    expect(button.className).toContain("text-[length:var(--axis-control-font-size-lg,1rem)]");
     expect(button.className).toContain("px-6");
   });
 
   it("size=icon 시 icon 클래스 포함", () => {
     const { container } = render(<Button size="icon">아이콘</Button>);
     const button = container.querySelector("button")!;
-    expect(button.className).toContain("h-10");
-    expect(button.className).toContain("w-10");
+    expect(button.className).toContain("h-[var(--axis-control-h-md,2.5rem)]");
+    expect(button.className).toContain("w-[var(--axis-control-h-md,2.5rem)]");
   });
 
   it("disabled 상태 적용", () => {

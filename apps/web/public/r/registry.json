@@ -16,14 +16,14 @@
       "type": "registry:ui",
       "title": "Button",
       "description": "AXIS 버튼 컴포넌트 - 다양한 variant와 size 지원",
-      "sha256": "14cb5f00cdbe68fba7e07a3436c5bf4cbf865c4de75d01b1c4ef978649778b25"
+      "sha256": "f19bc1f2e6d6026232f0fad919533bff3a13d2688f811ea84ab0bdd3b71c4d93"
     },
     {
       "name": "input",
       "type": "registry:ui",
       "title": "Input",
       "description": "AXIS 입력 필드 컴포넌트",
-      "sha256": "99ca683f4c3821ab74ef40b9d95bf6d3b499841934cf731b3e69b360e58db9c0"
+      "sha256": "4b393471c0d5cbc3577a42087c97e0dd1dbb593e1d5465e8fea7d955e28b1bbb"
     },
     {
       "name": "label",
@@ -37,7 +37,7 @@
       "type": "registry:ui",
       "title": "Card",
       "description": "AXIS 카드 컴포넌트 - Header, Content, Footer 포함",
-      "sha256": "a12d3e5468b0247e564d09040bc4ba0cb818406244f11a6f0d781e54ab640be7"
+      "sha256": "34ae5904281cef4468c283d33183e4319da87b2f390afe4fe138b0037b231b36"
     },
     {
       "name": "badge",
@@ -58,14 +58,14 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "AXIS 다이얼로그 컴포넌트 - 모달 UI",
-      "sha256": "cd2307dca13b830e0f34cfbe6ce800f1d4ee3a5a373bf9bf9dd7087758ea82b3"
+      "sha256": "17453188103044027ccb4379bc0f8163a73b4edb7f119e1144831c60a1c5eb16"
     },
     {
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
       "description": "AXIS 셀렉트 컴포넌트 - 드롭다운 선택",
-      "sha256": "3680a718874d05f153d8b46f8a9affbee9fe9bcf0509e20f4d6250c4e3307f81"
+      "sha256": "e5bb8064708798ae0cab6f8ee4b3ede34e334c5b16af6d54640ca875a4fb0db2"
     },
     {
       "name": "tabs",

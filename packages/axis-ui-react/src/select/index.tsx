@@ -19,7 +19,7 @@ const SelectTrigger = React.forwardRef<
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-10 w-full items-center justify-between rounded-md border px-3 py-2 text-sm",
+      "flex h-[var(--axis-field-h,2.5rem)] w-full items-center justify-between rounded-[var(--axis-radius-field,0.375rem)] border px-3 py-2 text-sm",
       "bg-[var(--axis-input-bg-default)] border-[var(--axis-input-border-default)]",
       "placeholder:text-[var(--axis-input-text-placeholder)]",
       "hover:border-[var(--axis-input-border-hover)]",

@@ -80,6 +80,33 @@ const WI0029_NEW = {
   },
 };
 /**
+ * WI-0026 밀도 토큰 신규 변수(PRD FR-1 · FR-2 · FR-3)와 기본값. 라이트 · 다크가 같다(테마와 무관한 길이).
+ * 둥글기 3개는 `--radius`(shadcn-compat.css) 계산식이라 var() 를 담는다. 이 셋만 아래 WI0026_VAR_NAMES 로
+ * 텍스트 비교를 허용한다: 1.2.1 에 없던 이름이라 「1.2.1 과 같은 텍스트 = 같은 계산값」 전제가 걸리지 않고,
+ * 계산값이 1.6.3 과 같은지는 브라우저 실측(WI-0026 AC1)이 본다.
+ */
+const WI0026_DENSITY = {
+  '--axis-radius-control': 'calc(var(--radius) - 2px)',
+  '--axis-radius-field': 'calc(var(--radius) - 2px)',
+  '--axis-radius-surface': 'var(--radius)',
+  '--axis-control-h-sm': '2rem',
+  '--axis-control-h-md': '2.5rem',
+  '--axis-control-h-lg': '3rem',
+  '--axis-control-font-size-sm': '0.75rem',
+  '--axis-control-font-size-md': '0.875rem',
+  '--axis-control-font-size-lg': '1rem',
+  '--axis-field-h': '2.5rem',
+  '--axis-toggle-h-sm': '2.25rem',
+  '--axis-toggle-h-md': '2.5rem',
+  '--axis-toggle-h-lg': '2.75rem',
+  '--axis-table-font-size': '0.875rem',
+  '--axis-table-head-font-size': '0.875rem',
+};
+const WI0026_NEW = { ':root': { ...WI0026_DENSITY }, '.dark': { ...WI0026_DENSITY } };
+/** var() 를 담아도 되는 신규 변수 이름(WI-0026 둥글기 3개). 1.2.1 변수와 이 밖의 이름은 계속 var() 금지다 */
+export const WI0026_VAR_NAMES = new Set(['--axis-radius-control', '--axis-radius-field', '--axis-radius-surface']);
+
+/**
  * WI-0029 shadcn-compat.css 예외(PRD D6 · 2.3 · AC5): 블록 · 변수 · 1.2.1 값 · 새 값.
  * 새 값 216 12% 84% 는 gray.300 #D1D5DB 의 HSL 이다(다크 text.secondary, PRD D2).
  */
@@ -119,15 +146,16 @@ export function diffLines(aText, bText) {
 }
 
 const EXPECTED_NEW = Object.fromEntries(
-  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel] }]),
+  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel], ...WI0026_NEW[sel] }]),
 );
 
 /**
  * 최상위 블록을 선택자별 Map(변수 이름 -> 값)으로 읽는다.
  * 블록 안의 모든 줄은 `  --이름: 값;` 이어야 하고, 아니면 throw 한다(조용히 줄어드는 파싱 방지).
  * 이름은 대문자를 허용한다(--axis-font-lineHeight-*).
+ * allowVarNames: var() 를 담아도 되는 이름 집합(기본 없음). 기준선(1.2.1) 파싱에는 넘기지 않는다.
  */
-export function parseBlocks(css) {
+export function parseBlocks(css, allowVarNames = new Set()) {
   const lines = css.split('\n');
   const blocks = new Map();
   let current = null;
@@ -158,7 +186,7 @@ export function parseBlocks(css) {
     if (!m) throw new Error(`블록 안에서 해석할 수 없는 줄 ${i + 1}: ${line}`);
     if (current.has(m[1])) throw new Error(`변수 중복: ${m[1]}`);
     // 텍스트 비교가 계산값 비교와 같다는 전제의 가드: 참조(var())가 있으면 텍스트로 비교할 수 없다.
-    if (m[2].includes('var(')) throw new Error(`var() 참조가 있어 텍스트 비교 불가: ${m[1]}`);
+    if (m[2].includes('var(') && !allowVarNames.has(m[1])) throw new Error(`var() 참조가 있어 텍스트 비교 불가: ${m[1]}`);
     current.set(m[1], m[2]);
   }
   if (current !== null) throw new Error('닫히지 않은 블록이 있다');
@@ -173,9 +201,12 @@ export function parseBlocks(css) {
  * exceptionMismatch: 예외 목록(allowedChanges)에 있는데 값이 목록의 새 값이 아님(1.2.1 그대로인 경우 포함)
  * 예외 목록 값과 같으면 allowed 로 센다(위반 아님).
  */
-export function compareBaseline(baseText, curText, expectedNew, allowedChanges = {}) {
+export function compareBaseline(baseText, curText, expectedNew, allowedChanges = {}, allowVarNames = new Set()) {
   const base = parseBlocks(baseText);
-  const cur = parseBlocks(curText);
+  for (const name of allowVarNames) {
+    for (const [sel, vars] of base) if (vars.has(name)) throw new Error(`var() 허용 목록에 1.2.1 변수가 들어 있다: ${sel} ${name}`);
+  }
+  const cur = parseBlocks(curText, allowVarNames);
   const result = { missingBlocks: [], extraBlocks: [], blocks: {} };
   for (const sel of base.keys()) if (!cur.has(sel)) result.missingBlocks.push(sel);
   for (const sel of cur.keys()) if (!base.has(sel)) result.extraBlocks.push(sel);
@@ -374,6 +405,23 @@ describe('compareBaseline 변이 단위 테스트', () => {
     assert.throws(() => parseBlocks('/* 비어 있음 */\n'), /블록 0개/);
     assert.throws(() => parseBlocks(':root {\n  --a: 1;'), /닫히지 않은/);
   });
+
+  test('WI-0026 var() 허용은 목록의 신규 이름에만 적용된다', () => {
+    const l = lineOf(':root', '--axis-text-primary');
+    const add = (name, value) => mutate(':root', l, `${l}\n  ${name}: ${value};`);
+    const exp = { ':root': { '--axis-radius-control': 'calc(var(--radius) - 2px)' }, '.dark': {} };
+    // 양성: 목록의 이름이 기대 텍스트이면 위반 0
+    const ok = compareBaseline(baseVariables, add('--axis-radius-control', 'calc(var(--radius) - 2px)'), exp, {}, WI0026_VAR_NAMES);
+    assert.equal(violationCount(ok), 0);
+    // 목록의 이름이어도 텍스트가 다르면 newMismatch
+    const bad = compareBaseline(baseVariables, add('--axis-radius-control', 'var(--radius)'), exp, {}, WI0026_VAR_NAMES);
+    assert.deepEqual(bad.blocks[':root'].newMismatch.map(c => c.name), ['--axis-radius-control']);
+    // 목록 밖 이름의 var() 는 계속 throw
+    assert.throws(() => compareBaseline(baseVariables, add('--axis-zz', 'var(--x)'), none, {}, WI0026_VAR_NAMES), /var\(\)/);
+    // 1.2.1 변수 값이 var() 로 바뀌면 throw, 허용 목록에 1.2.1 이름을 넣어도 throw
+    assert.throws(() => compareBaseline(baseVariables, mutate(':root', l, l.replace(/: [^;]*;/, ': var(--x);')), none, {}, WI0026_VAR_NAMES), /var\(\)/);
+    assert.throws(() => compareBaseline(baseVariables, baseVariables, none, {}, new Set(['--axis-text-primary'])), /1\.2\.1 변수/);
+  });
 });
 
 describe('shadcn-compat.css 예외 변이 단위 테스트', () => {
@@ -434,7 +482,7 @@ describe('실제 기본 출력 대조 (dist/css)', () => {
 
   test('variables.css: 1.2.1 변수 불변 + 신규 변수는 기본값만', t => {
     const cur = readFileSync(join(cssDir, 'variables.css'), 'utf8');
-    const r = compareBaseline(baseVariables, cur, EXPECTED_NEW, WI0029_CHANGED);
+    const r = compareBaseline(baseVariables, cur, EXPECTED_NEW, WI0029_CHANGED, WI0026_VAR_NAMES);
     t.diagnostic(`AC3 variables.css: ${summary(r)}`);
     assert.equal(violationCount(r), 0, JSON.stringify(r, null, 1));
     for (const sel of BLOCKS) {

@@ -206,18 +206,52 @@ describe('src/brands/ontology (FR-8)', () => {
     }
   });
 
+  // WI-0026 밀도 값(PRD FR-4, 디자인 시스템 v1 실측). WI-0025 초안 2 뒤에 생긴 이름이라 초안에는 없어요.
+  // 이 표의 이름만 U18 초안 대조에서 빼고, 아래 테스트가 이 표와 정확히 같은지 봐요(라이트 전용, 테마와 무관한 길이).
+  // Toggle 은 Q4 결정으로 덮어쓰지 않아 기본값과 같은 값을 명시해요(D4 결정 36).
+  const WI0026_DENSITY = {
+    '--axis-radius-control': '8px',
+    '--axis-radius-field': '6px',
+    '--axis-radius-surface': '12px',
+    '--axis-control-h-sm': '27px',
+    '--axis-control-h-md': '34px',
+    '--axis-control-h-lg': '42px',
+    '--axis-control-font-size-sm': '13px',
+    '--axis-control-font-size-md': '14px',
+    '--axis-control-font-size-lg': '15px',
+    '--axis-field-h': '36px',
+    '--axis-toggle-h-sm': '2.25rem',
+    '--axis-toggle-h-md': '2.5rem',
+    '--axis-toggle-h-lg': '2.75rem',
+    '--axis-table-font-size': '13.5px',
+    '--axis-table-head-font-size': '13px',
+  };
+
   // U18 역반영(2026-10-17) 뒤에는 반대 방향도 성립해야 해요: 브랜드 JSON 선언은 모두 초안에 같은 값으로 있다.
   // 참조(다크 interactive.primary = {color.blue.500})는 기본 소스로 풀어 초안의 hex 와 비교해요.
-  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 제외)', () => {
+  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 · WI-0026 밀도 제외)', () => {
     const draft = draftBlocks();
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
       assert.ok(mine.size > 100, `${theme} 브랜드 선언 ${mine.size}개`);
       for (const [name, value] of mine) {
         if (D2_OVERRIDES[theme][name] !== undefined) continue;
+        if (WI0026_DENSITY[name] !== undefined) continue;
         assert.equal(draft[theme].get(name), resolveRef(value), `${theme} ${name}`);
       }
     }
+  });
+
+  test('WI-0026: 밀도 값이 FR-4 표와 같고 라이트에만 있다', () => {
+    const light = brandDecls('light');
+    const dark = brandDecls('dark');
+    const isDensity = name => /^--axis-(control|field|toggle|table)-/.test(name) || /^--axis-radius-(control|field|surface)$/.test(name);
+    const got = Object.fromEntries([...light].filter(([name]) => isDensity(name)));
+    assert.deepEqual(got, WI0026_DENSITY);
+    assert.deepEqual([...dark.keys()].filter(isDensity), []);
+    // 초안에는 이 이름이 없어야 예외가 필요해요(초안에 같은 이름이 생기면 예외를 지우고 초안 대조로 돌려요)
+    const draft = draftBlocks();
+    assert.deepEqual(Object.keys(WI0026_DENSITY).filter(n => draft.light.has(n) || draft.dark.has(n)), []);
   });
 
   test('D2: bad-line 값은 warning 아이콘에만 쓰이고, destructive 버튼 글자는 모든 바탕 상태에서 4.5:1 이상', () => {

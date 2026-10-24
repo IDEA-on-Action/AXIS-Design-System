@@ -126,6 +126,10 @@ declare const tokens: {
   dialog: Record<string, Record<string, string>>;
   'plan-card': Record<string, string>;
   'card-shadow': string;
+  control: { h: Record<string, string>; 'font-size': Record<string, string> };
+  field: { h: string };
+  toggle: { h: Record<string, string> };
+  table: { 'font-size': string; head: { 'font-size': string } };
 };
 
 export = tokens;

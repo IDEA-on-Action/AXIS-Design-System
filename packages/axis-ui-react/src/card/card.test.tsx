@@ -21,7 +21,7 @@ describe("Card", () => {
   it("기본 클래스 포함", () => {
     const { container } = render(<Card>내용</Card>);
     const card = container.firstElementChild!;
-    expect(card.className).toContain("rounded-lg");
+    expect(card.className).toContain("rounded-[var(--axis-radius-surface,0.5rem)]");
     expect(card.className).toContain("border");
     expect(card.className).toContain("shadow-[shadow:var(--axis-card-shadow)]");
     expect(card.className).not.toContain("shadow-sm");
@@ -45,7 +45,7 @@ describe("Card", () => {
     const { container } = render(<Card className="my-card">내용</Card>);
     const card = container.firstElementChild!;
     expect(card.className).toContain("my-card");
-    expect(card.className).toContain("rounded-lg");
+    expect(card.className).toContain("rounded-[var(--axis-radius-surface,0.5rem)]");
   });
 
   it("ref 전달", () => {

@@ -23,6 +23,14 @@ const TOKENS_DIR = resolve(__dirname, '../../../packages/axis-tokens')
 const VARIABLES_CSS = resolve(TOKENS_DIR, 'dist/css/variables.css')
 const COMPONENTS_JSON = resolve(TOKENS_DIR, 'src/component/components.json')
 const LIGHT_FIXTURE = resolve(__dirname, 'fixtures/dark-tokens-light-3b52976.json')
+const SHADCN_CSS = resolve(TOKENS_DIR, 'dist/css/shadcn-compat.css')
+
+/** WI-0026: `--radius`(shadcn-compat.css)에서 계산되는 밀도 둥글기와 shadcn 을 함께 올렸을 때의 계산값 */
+const RADIUS_FROM_SHADCN: Record<string, string> = {
+  '--axis-radius-control': 'calc(0.5rem - 2px)',
+  '--axis-radius-field': 'calc(0.5rem - 2px)',
+  '--axis-radius-surface': '0.5rem',
+}
 
 /**
  * 다크 계산값이 바뀌어야 하는 component 토큰과 그 다크 값 (WI-0033 plan 4.1, WI-0029 PRD 2.1 · 2.2).
@@ -149,7 +157,18 @@ test.describe('토큰 CSS 다크 계산값 (WI-0033)', () => {
     const fixtureNames = Object.keys(lightFixture)
     expect(fixtureNames.length).toBeGreaterThan(0)
     const after = await measure(page, css, 'light', names)
-    expect(Object.values(after).filter((v) => v === '')).toEqual([])
+    // WI-0026 AC5: 밀도 둥글기 3개는 shadcn-compat.css 의 --radius 에서 계산돼, variables.css 만 올리면 비어요
+    // (guaranteed-invalid, 컴포넌트는 리터럴 fallback 을 씀). 그 밖의 변수는 모두 값을 가져야 해요.
+    expect(
+      Object.entries(after)
+        .filter(([, v]) => v === '')
+        .map(([n]) => n)
+        .sort(),
+    ).toEqual(Object.keys(RADIUS_FROM_SHADCN).sort())
+    // shadcn-compat.css 를 함께 올리면 세 변수도 값을 가지고, 1.6.3 의 rounded-md · rounded-lg 와 같은 식이에요
+    const withShadcn = await measure(page, `${css}\n${readFileSync(SHADCN_CSS, 'utf-8')}`, 'light', names)
+    expect(Object.values(withShadcn).filter((v) => v === '')).toEqual([])
+    expect(Object.fromEntries(Object.keys(RADIUS_FROM_SHADCN).map((n) => [n, withShadcn[n]]))).toEqual(RADIUS_FROM_SHADCN)
     const measured = Object.fromEntries(fixtureNames.map((n) => [n, after[n]]))
     expect(measured).toEqual(lightFixture)
   })

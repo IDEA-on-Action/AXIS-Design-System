@@ -60,6 +60,7 @@ describe("Input", () => {
     const input = container.querySelector("input")!;
     expect(input.className).toContain("my-custom-class");
     // 기본 클래스도 유지됨
-    expect(input.className).toContain("rounded-md");
+    expect(input.className).toContain("rounded-[var(--axis-radius-field,0.375rem)]");
+    expect(input.className).toContain("h-[var(--axis-field-h,2.5rem)]");
   });
 });

@@ -10,7 +10,7 @@ const Table = React.forwardRef<
     <table
       ref={ref}
       className={cn(
-        "w-full caption-bottom text-sm text-[var(--axis-text-primary)]",
+        "w-full caption-bottom text-[length:var(--axis-table-font-size,0.875rem)] text-[var(--axis-text-primary)]",
         className
       )}
       {...props}
@@ -87,7 +87,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-12 px-4 text-left align-middle font-medium text-[var(--axis-text-secondary)]",
+      "h-12 px-4 text-left align-middle text-[length:var(--axis-table-head-font-size,0.875rem)] font-medium text-[var(--axis-text-secondary)]",
       "[&:has([role=checkbox])]:pr-0",
       className
     )}

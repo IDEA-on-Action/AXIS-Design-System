@@ -44,6 +44,9 @@
     "xl": { "value": "0.75rem" },
     "2xl": { "value": "1rem" },
     "3xl": { "value": "1.5rem" },
-    "full": { "value": "9999px" }
+    "full": { "value": "9999px" },
+    "control": { "value": "calc(var(--radius) - 2px)" },
+    "field": { "value": "calc(var(--radius) - 2px)" },
+    "surface": { "value": "var(--radius)" }
   }
 }
