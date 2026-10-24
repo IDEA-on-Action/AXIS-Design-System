@@ -1,5 +1,29 @@
 # @axis-ds/tokens
 
+## 1.7.0
+
+### Minor Changes
+
+- 4e91855: 밀도 토큰을 추가했습니다(WI-0026). 컨트롤 높이 · 글자 크기 · 단계별 둥글기를 CSS 변수로 바꿀 수 있습니다.
+  - `@axis-ds/tokens`: 새 변수 15개. `--axis-control-h-sm|md|lg`(32 · 40 · 48px), `--axis-control-font-size-sm|md|lg`(12 · 14 · 16px), `--axis-field-h`(40px), `--axis-toggle-h-sm|md|lg`(36 · 40 · 44px), `--axis-table-font-size` · `--axis-table-head-font-size`(14px), `--axis-radius-control|field`(`calc(var(--radius) - 2px)`) · `--axis-radius-surface`(`var(--radius)`). JS export 에도 `control` · `field` · `toggle` · `table` · `radius.control|field|surface` 가 생깁니다.
+  - `@axis-ds/ui-react`: Button · Input · Select 트리거 · Toggle · Table · Card · Dialog 가 고정 클래스 대신 이 변수를 읽습니다. 모든 참조에 1.6.x 와 같은 크기의 리터럴 fallback 이 있어, 토큰 CSS 가 옛 버전이어도 크기가 유지됩니다.
+  - 브랜드를 지정하지 않은 화면은 바뀌지 않습니다(1.6.3 배포본과 Chromium 계산값 대조). 예외: `@axis-ds/tokens/css/shadcn` 없이 `@axis-ds/tokens/css` 만 쓰는 구성에서는 위 7개 컴포넌트의 둥글기가 0px 에서 fallback 6px(Card · Dialog 8px)로 바뀝니다.
+  - `ontology` 브랜드는 디자인 시스템 v1 밀도를 씁니다. Button 27 · 34 · 42px(글자 13 · 14 · 15px), Input · Select 트리거 36px, Table 본문 13.5px · 머리 13px, 둥글기 Button · Toggle 10px → 8px, Input · Select 트리거 10px → 6px, Card · Dialog 12px. Toggle 높이와 Sheet(0px), 그 밖의 컴포넌트(Select 팝업 · Popover 10px 등)는 그대로입니다.
+
+### Patch Changes
+
+- 4f54bba: 배치 3 묶음 ①: Tailwind 3 CommonJS preset, ThemeProvider 브랜드 해제 유지 · 마크업 존중, check 판정 정확도 (WI-0072 · WI-0068 · WI-0070 · WI-0051)
+  - tokens(WI-0072): CommonJS 의 `require("@axis-ds/tokens/tailwind")` 가 preset 객체 자체를 돌려줘요. 1.1.0~1.6.2 는 `{ default, axisKeyframes, axisAnimation }` 를 돌려줘 `module.exports` · `.cjs` 설정에서 preset 이 통째로 빠졌어요(회귀가 아니라 첫 발행부터의 결함). `.default` · `axisKeyframes` · `axisAnimation` 은 열거되지 않는 속성으로 남아 기존 `require(...).default` 와 이름 내보내기도 그대로예요. require 조건용 타입 `tailwind-preset.d.cts`(`export =`)와 import 조건용 `tailwind-preset.d.mts` 를 exports 에 연결했어요. 토큰 값은 바뀌지 않아요.
+  - theme(WI-0068, 동작 변경): `setBrand(undefined)` 가 저장값을 지우지 않고 빈 문자열(「끔」)을 남겨 새로고침 뒤에도 꺼진 채 유지돼요. 초기 브랜드는 저장값 > 서버 마크업 `<html data-brand>` > `defaultBrand` 순서예요. 마크업과 `defaultBrand` 가 다르면 이제 마크업이 이겨요(1.6.2 까지는 `defaultBrand`). 마크업만 있는 구성도 마운트 때 지우지 않아요. 하이드레이션 첫 렌더는 서버와 같은 값(`defaultBrand`)으로 그리고 끝난 뒤 맞춰 `ctx.brand` 불일치가 나지 않아요. 언마운트하면 마운트 전 마크업 값으로 되돌려요. 1.6.2 이하로 내리면 빈 문자열을 저장값 없음으로 읽어 그 버전 동작으로 돌아가요.
+  - cli · mcp(WI-0072 · WI-0068 · WI-0070 · WI-0051): `axis check` · `axis.check_project` 판정을 설치본 기준으로 바꿨어요. 설치본은 상위 디렉터리까지 찾는 공유 판독 함수 하나로 읽어요.
+    - dependencies: 선언만 있고 설치되지 않으면 WARN 과 설치 명령(종전 「모두 설치되어 있습니다」 거짓 PASS). 선언된 `@axis-ds/*` 도 대상, Plug'n'Play 는 선언 기준
+    - tailwind.config: CommonJS 설정의 `.default` 없는 bare require 는 설치본 tokens 1.7.0 미만이면 WARN(`.ts` · `.mjs` 의 export default 형태는 PASS)
+    - brand.activation: 마크업 `data-brand` + `ThemeProvider` 만 있는 구성은 설치본 theme 1.7.0 미만이면 WARN
+    - globals.css: AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃 JS import)가 있을 때만 PASS. 자체 `--background` · `--primary` 만 있으면 WARN(템플릿 4종은 WI-0067 까지 WARN). Tailwind 3 에서 create-next-app 기본 `body` 의 `font-family: Arial` 이 남으면 WARN
+    - animation: Tailwind 3 은 `plugins` 배열 안의 참조로 판정(import 만 · 무관한 문자열은 PASS 아님), 「미설치」는 설치본 기준
+    - `theme add`: CommonJS preset 안내를 모든 버전에서 되는 `require("@axis-ds/tokens/tailwind").default` 로, 넣은 import 줄 문구를 실제 위치 · 분류(컴포넌트 스캔 경로 · 브랜드 앞)대로, 마크업 + ThemeProvider 구성에는 theme 1.7.0 조건을 안내
+    - WARN 만 늘어나고 FAIL 조건은 그대로라 종료 코드는 바뀌지 않아요
+
 ## 1.6.2
 
 ### Patch Changes

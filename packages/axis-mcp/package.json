@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/mcp",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "type": "module",
   "description": "AXIS Design System - MCP Server for AI-assisted component discovery",
   "bin": {
