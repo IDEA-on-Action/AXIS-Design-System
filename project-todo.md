@@ -34,7 +34,7 @@
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | 🔄 cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(b) 는 cli 1.2.1 배포본으로 통과(2026-10-20, init -> theme add ontology -> install -> build rc 0, check brand PASS), AC2(a) 는 minu.best 403 해소 뒤 기본 레지스트리로 재확인 |
-| 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | 🔄 PRD 승인(2026-10-24, 컴포넌트 한정 재지정 · linked minor) |
+| 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ✅ 완료(2026-10-24). linked 4패키지 1.6.0 · cli 1.5.4 · mcp 1.3.2(#172 · #173, run 40089793369, provenance 6/6). 기본 브랜드 a11y 위반 0(기준선 46노드 해소), pages.dev · npm 배포본 실측. 잔여는 WI-0062 · WI-0063 |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |

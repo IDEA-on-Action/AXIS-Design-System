@@ -13,4 +13,4 @@
 - [x] testplan · release-notes, project-todo 현행화, 후속 WI-0062(#170) · WI-0063(#171) 등록
 - [x] (추가) 결정 D6: shadcn 다크 `--muted-foreground` 는 text.secondary 파생 유지 + baseline 예외 1줄
 - [x] (추가) cli · mcp patch: 커밋 레지스트리 PlanCard 항목 · sha256(version 1.5.0 유지, WI-0052 선례), 라이브러리 스냅샷(`library:refresh-axis`), 재설치 안내
-- [ ] 머지 · 배포 뒤 npm 배포본과 pages.dev 로 AC1 재확인
+- [x] 머지 · 배포 뒤 재확인(2026-10-24): pages.dev CSS `--axis-button-bg-default` #2563eb · 새 변수 3개 · ontology 값 불변, `/r` PlanCard sha256 f0b0a597. npm tokens 1.6.0 · agentic-ui 1.6.0 · cli 1.5.4 배포본에 새 값 · 새 className, `axis list` 원격 1.6.0 · 내용 차이 안내 없음
