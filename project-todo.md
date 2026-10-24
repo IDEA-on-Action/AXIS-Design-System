@@ -56,8 +56,9 @@
 | 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
 | 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ✅ 완료(2026-10-24). cli 1.5.2(#162 · #163), 프로덕션 library 링크 109개 모두 2xx, 오프라인 검사 위반 0 |
 | 70 | 문서 사이트 `/agentic/streaming-text` 가 실제 컴포넌트가 아니라 mock 을 써서 컴포넌트 결함이 드러나지 않음(WI-0052 에서 분리) | WI-0058 (#157) | P18 | P3 | ⏳ |
-| 71 | node10 해석에서 ui-react cva 변형 prop 타입이 any 로 떨어짐(`class-variance-authority/types`, WI-0053 에서 분리) | WI-0059 (#158) | P18 | P2 | 🔄 구현 · 검증 완료(2026-10-24, 결정 D1~D3: 빌드 후 d.ts 보정 · G2-types 변형 탐침 · ui-react patch), PR 대기 |
+| 71 | node10 해석에서 ui-react cva 변형 prop 타입이 any 로 떨어짐(`class-variance-authority/types`, WI-0053 에서 분리) | WI-0059 (#158) | P18 | P2 | ✅ 완료(2026-10-24). ui-react · agentic-ui 1.5.2(#165 · #166, run 40044378744, provenance), 배포본 Next(node) `variant="nope"` rc 1 · 올바른 값 rc 0. 업데이트 뒤 타입 오류 가능성은 CHANGELOG 에 안내 |
 | 72 | library 데이터 slug 충돌 10개로 shadcn 상세에 axis 코드 표시(WI-0057 에서 분리) | WI-0060 (#159) | P18 | P3 | ⏳ |
+| 73 | ui-react 만 릴리스하면 cli 가 「원격 · 포함본 version 다름」을 매번 안내(레지스트리 version 이 ui-react 를 따름, WI-0059 배포 확인에서 발견) | WI-0061 (#167) | P18 | P2 | ⏳ |
 
 ### 완료
 

@@ -363,7 +363,7 @@
       "issueNumber": 158,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhC65bY",
       "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0060",
@@ -371,6 +371,14 @@
       "issueNumber": 159,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhC65ew",
       "lastSyncedAt": "2026-10-23T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0061",
+      "slug": "registry-content-compare",
+      "issueNumber": 167,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDIPvE",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
       "lastStatus": "⏳"
     }
   ],
