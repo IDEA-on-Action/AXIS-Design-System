@@ -35,7 +35,7 @@ pnpm install
 pnpm dev:web
 ```
 
-**접속**: http://localhost:3000
+**접속**: http://localhost:3100
 
 ### CLI로 컴포넌트 설치
 
