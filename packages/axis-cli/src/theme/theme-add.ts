@@ -8,23 +8,41 @@
 import { accessSync, constants, existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
-import { detectInstallCommand, hasDependency, isPlainObject } from "@axis-ds/registry-core/project";
+import { addCommandFor, detectInstallCommand, hasDependency, isPlainObject } from "@axis-ds/registry-core/project";
+import {
+  TAILWIND4_COMPONENT_PACKAGES,
+  TOKENS_TAILWIND4_ENTRY,
+  detectTailwind,
+  hasTokensPresetReference,
+  inspectTailwindContent,
+  TAILWIND_CONFIG_FILES,
+  type ContentTarget,
+} from "@axis-ds/registry-core/tailwind-core";
 import {
   BRAND_NAME_PATTERN,
   MIN_BRAND_TOKENS_VERSION,
+  TOKENS_DEPENDENCY_MIN_VERSION,
   TOKENS_PACKAGE,
   brandImportPath,
+  findBrandActivation,
   findBrandImports,
   findGlobalCss,
   resolveTokens,
+  type BrandActivationLocation,
   type TokensResolution,
 } from "./brand-core.js";
 
-/** `package.json` 에 없을 때 더하는 `@axis-ds/tokens` 범위(U6) */
-export const TOKENS_DEPENDENCY_RANGE = `^${MIN_BRAND_TOKENS_VERSION}`;
+/** `package.json` 에 없을 때 더하는 `@axis-ds/tokens` 범위(U6). WI-0065 D7 부터 `^1.6.0`(종전 `^1.3.0`, 근거는 brand-core) */
+export const TOKENS_DEPENDENCY_RANGE = `^${TOKENS_DEPENDENCY_MIN_VERSION}`;
+
+/** Tailwind 3 이하에서 브랜드 import 앞에 넣는 기본 토큰 CSS(WI-0065 D7, 순서: variables → shadcn → 브랜드) */
+export const TAILWIND3_BASE_IMPORTS = [`${TOKENS_PACKAGE}/css`, `${TOKENS_PACKAGE}/css/shadcn`] as const;
 
 /** Provider 안내에 쓰는 패키지 */
 export const THEME_PACKAGE = "@axis-ds/theme";
+
+/** `ThemeProvider` 의 브랜드 기능(`brand` · `setBrand`)이 처음 들어간 `@axis-ds/theme` 버전 */
+export const THEME_MIN_VERSION = "1.3.0";
 
 // 설치 명령 선택 · package.json 판정 헬퍼는 add 와 같이 쓰려고 공유 코어(@axis-ds/registry-core, WI-0055)로 옮겼습니다. 종전 이름은 그대로 내보냅니다
 export { detectInstallCommand, hasDependency, isPlainObject };
@@ -53,10 +71,31 @@ export interface CssStep {
   file?: string;
   /** `globalCss` 가 가리키는데 없던 경로(경고용) */
   configuredMissing?: string;
-  /** `add`: 줄을 넣음 · `exists`: 같은 브랜드 import 가 이미 있음 · `manual`: 대상 파일이 없어 수동 안내 */
+  /** `add`: 줄을 넣음(기본 토큰 CSS · 브랜드 가운데 빠진 것) · `exists`: 모두 이미 있음 · `manual`: 대상 파일이 없어 수동 안내 */
   action: "add" | "exists" | "manual";
   /** 이미 있던 다른 브랜드 import (U13: 지우지 않고 안내만) */
   otherBrands: string[];
+  /** 브랜드 import 를 넣는지(이미 있으면 false) */
+  brandAdded: boolean;
+  /** 브랜드 앞에 넣는 기본 토큰 CSS import 경로(WI-0065 D7, 이미 있는 것은 빠짐). `manual` 이면 넣어야 할 전체 */
+  baseImports: string[];
+  /** 브랜드 앞에 와야 하는 기본 토큰 CSS(전체, Tailwind major 별) */
+  requiredBaseImports: string[];
+  /** 규칙(`@tailwind` 등) 뒤에 있는 기존 `@import` 줄(CSS 규칙상 무시될 수 있어 경고, WI-0065 D7 삽입 위치 규칙) */
+  lateImports: string[];
+  /** Tailwind major 4 이상으로 판정했는지 */
+  tailwind4: boolean;
+}
+
+/** Tailwind 3 설정 안내(WI-0065 D7: 파일은 고치지 않고 감지 결과로 안내, check 가 판정) */
+export interface TailwindConfigStep {
+  /** 찾은 설정 파일 이름. 없으면 없음 */
+  configFile?: string;
+  /** preset 참조가 없음 */
+  presetMissing: boolean;
+  /** content 가 덮지 않는 대상(정적 판독). 판독할 수 없으면 `contentUnknown` */
+  contentMissing: ContentTarget[];
+  contentUnknown: boolean;
 }
 
 export interface DependencyStep {
@@ -66,6 +105,10 @@ export interface DependencyStep {
   declaredRange?: string;
   /** 설치된 버전이 1.3.0 미만이라 업그레이드를 안내해야 함 */
   upgrade: boolean;
+  /** 설치 · 업그레이드 안내 명령(lockfile 로 고름, 예: `npm install "@axis-ds/tokens@^1.6.0"`) */
+  tokensAddCommand: string;
+  /** `@axis-ds/theme` 설치 안내 명령(lockfile 로 고름) */
+  themeAddCommand: string;
   /** `@axis-ds/theme` 이 package.json 에 없음(Provider 안내에 설치 안내를 붙임) */
   themeMissing: boolean;
 }
@@ -86,6 +129,10 @@ export interface ThemeAddPlan {
   configChanged: boolean;
   /** 설치 안내에 쓸 명령(lockfile 로 고름) */
   installCommand: string;
+  /** Tailwind 3 설정 안내(Tailwind 4 이상이면 없음) */
+  tailwindConfig?: TailwindConfigStep;
+  /** 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾은 결과(WI-0065 D7, 안내용) */
+  activation?: BrandActivationLocation;
   writes: PlannedWrite[];
 }
 
@@ -153,6 +200,41 @@ export function insertImportLine(css: string, line: string): string {
   }
   lines.splice(insertAt, 0, line);
   return bom + lines.join(eol);
+}
+
+/** 여러 줄을 한 번에 넣습니다(`insertImportLine` 과 같은 위치, 순서 유지). */
+export function insertImportLines(css: string, lines: readonly string[]): string {
+  if (lines.length === 0) return css;
+  const body = css.startsWith("\uFEFF") ? css.slice(1) : css;
+  return insertImportLine(css, lines.join(eolOf(body)));
+}
+
+/**
+ * 규칙(`@tailwind base;` · 선택자 블록 등) 뒤에 나오는 `@import` 줄(WI-0065 D7 삽입 위치 규칙). 주석 안은 보지 않습니다.
+ * CSS 규칙상 `@import` 는 `@charset` · 다른 `@import` 뒤 맨 앞에만 올 수 있어 다른 도구에서는 무시될 수 있습니다.
+ * Next.js 15(webpack · css-loader)는 위치와 관계없이 앞으로 끌어올려 적용합니다(2026-10-24 측정, 출력 CSS 순서가 같음).
+ */
+export function findLateImports(css: string): string[] {
+  const body = css.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "));
+  const lines = body.split(/\r?\n/);
+  let rulesStarted = false;
+  const late: string[] = [];
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (line === "") continue;
+    if (/^@(charset|import)\b/i.test(line)) {
+      if (rulesStarted && /^@import\b/i.test(line)) late.push(line);
+      continue;
+    }
+    rulesStarted = true;
+  }
+  return late;
+}
+
+/** CSS 에 `<specifier>` 를 가리키는 `@import` 가 있는지(큰 · 작은따옴표 · `url()` · 뒤의 `layer()` 받음, 주석 안은 보지 않음). 닫는 따옴표까지 맞춥니다 */
+export function hasCssImport(css: string, specifier: string): boolean {
+  const esc = specifier.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`@import\\s+(?:url\\(\\s*)?["']${esc}(?:\\.css)?["']`).test(css.replace(/\/\*[\s\S]*?\*\//g, ""));
 }
 
 /** `x.y.z` 비교(프리릴리스는 같은 x.y.z 보다 낮게 봄). 읽을 수 없으면 `undefined` */
@@ -246,7 +328,35 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     plan.unverifiedBrand = true;
   }
 
+  // package.json 은 CSS 단계(Tailwind major · 선언된 컴포넌트 패키지)와 의존성 단계가 같이 읽습니다
+  const pkgFile = path.join(baseDir, "package.json");
+  const pkgText = readText(pkgFile);
+  let pkg: Record<string, unknown> | undefined;
+  if (pkgText !== null) {
+    try {
+      const parsed: unknown = JSON.parse(pkgText);
+      if (!isPlainObject(parsed)) throw new Error("최상위가 객체가 아닙니다");
+      pkg = parsed;
+    } catch (err) {
+      plan.errors.push({ kind: "invalid-package-json", message: (err as Error).message });
+      plan.writes = [];
+      return plan;
+    }
+  }
+
   // 3. CSS (FR-2 탐색 순서, U14 (A), U2 대안 2 위치, U13)
+  // WI-0065 D7: 브랜드 import 앞에 기본 토큰 CSS 를 넣습니다(Tailwind 3: variables → shadcn, Tailwind 4: tailwind4 진입점 →
+  // 선언된 컴포넌트 패키지의 tailwind.css). 이미 있는 것은 넣지 않고, 위치는 파일 앞쪽 import 구간의 끝(규칙보다 앞)입니다.
+  const tailwind = detectTailwind(baseDir, pkg);
+  const tailwind4 = tailwind.major !== undefined && tailwind.major >= 4;
+  const requiredBaseImports = tailwind4
+    ? [
+        TOKENS_TAILWIND4_ENTRY,
+        ...TAILWIND4_COMPONENT_PACKAGES.filter((n) => pkg !== undefined && hasDependency(pkg, n) !== undefined).map(
+          (n) => `${n}/tailwind.css`
+        ),
+      ]
+    : [...TAILWIND3_BASE_IMPORTS];
   const location = findGlobalCss(baseDir, config);
   if (location.path) {
     // 쓰기 대상은 프로젝트 안 파일만(globalCss 의 `../` · 절대경로 · 밖을 가리키는 심볼릭 링크는 거절, 아무것도 쓰지 않음)
@@ -265,48 +375,68 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     const before = readFileSync(location.path, "utf8");
     const imported = findBrandImports(before);
     const otherBrands = [...new Set(imported.filter((n) => n !== brand))];
-    if (imported.includes(brand)) {
-      plan.css = { file: location.path, configuredMissing: location.configuredMissing, action: "exists", otherBrands };
-    } else {
-      plan.css = { file: location.path, configuredMissing: location.configuredMissing, action: "add", otherBrands };
-      plan.writes.push({
-        file: location.path,
-        before,
-        after: insertImportLine(before, `@import "${plan.importPath}";`),
-      });
+    const brandAdded = !imported.includes(brand);
+    const baseImports = requiredBaseImports.filter((spec) => !hasCssImport(before, spec));
+    const lines = [...baseImports.map((spec) => `@import "${spec}";`), ...(brandAdded ? [`@import "${plan.importPath}";`] : [])];
+    plan.css = {
+      file: location.path,
+      configuredMissing: location.configuredMissing,
+      action: lines.length > 0 ? "add" : "exists",
+      otherBrands,
+      brandAdded,
+      baseImports,
+      requiredBaseImports,
+      lateImports: findLateImports(before),
+      tailwind4,
+    };
+    if (lines.length > 0) {
+      plan.writes.push({ file: location.path, before, after: insertImportLines(before, lines) });
     }
   } else {
-    plan.css = { configuredMissing: location.configuredMissing, action: "manual", otherBrands: [] };
+    plan.css = {
+      configuredMissing: location.configuredMissing,
+      action: "manual",
+      otherBrands: [],
+      brandAdded: true,
+      baseImports: requiredBaseImports,
+      requiredBaseImports,
+      lateImports: [],
+      tailwind4,
+    };
   }
 
-  // 4. package.json (U6: 없을 때만 ^1.3.0 추가, 설치는 실행하지 않음)
-  const pkgFile = path.join(baseDir, "package.json");
-  const pkgText = readText(pkgFile);
+  // Tailwind 3 설정 안내(D7: 파일은 고치지 않고 감지 결과로 안내)
+  if (!tailwind4) {
+    const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(path.join(baseDir, f)));
+    const content = inspectTailwindContent(baseDir);
+    plan.tailwindConfig = {
+      configFile,
+      presetMissing: configFile === undefined || !hasTokensPresetReference(readFileSync(path.join(baseDir, configFile), "utf8")),
+      contentMissing: content?.targets.filter((t) => !t.covered) ?? [],
+      contentUnknown: content !== null && (content.unreadable || content.dynamic),
+    };
+  }
+  // 브랜드를 켜는 코드(D7: 코드는 고치지 않고 찾은 결과로 안내)
+  plan.activation = findBrandActivation(baseDir);
+
+  // 4. package.json (U6: 없을 때만 추가, 설치는 실행하지 않음. 안내 명령은 lockfile 로 고름, WI-0065 D7)
   const installed = plan.tokens.version;
   const upgrade =
     installed !== undefined && (compareVersions(installed, MIN_BRAND_TOKENS_VERSION) ?? 0) < 0;
-  if (pkgText === null) {
-    plan.dependency = { action: "no-package-json", upgrade, themeMissing: false };
+  const tokensAddCommand = addCommandFor(plan.installCommand, { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
+  const themeAddCommand = addCommandFor(plan.installCommand, { [THEME_PACKAGE]: `^${THEME_MIN_VERSION}` });
+  if (pkgText === null || pkg === undefined) {
+    plan.dependency = { action: "no-package-json", upgrade, themeMissing: false, tokensAddCommand, themeAddCommand };
   } else {
-    let pkg: Record<string, unknown>;
-    try {
-      const parsed: unknown = JSON.parse(pkgText);
-      if (!isPlainObject(parsed)) throw new Error("최상위가 객체가 아닙니다");
-      pkg = parsed;
-    } catch (err) {
-      plan.errors.push({ kind: "invalid-package-json", message: (err as Error).message });
-      plan.writes = [];
-      return plan;
-    }
     const themeMissing = hasDependency(pkg, THEME_PACKAGE) === undefined;
     const declared = hasDependency(pkg, TOKENS_PACKAGE);
     if (declared !== undefined) {
-      plan.dependency = { action: "present", declaredRange: declared, upgrade, themeMissing };
+      plan.dependency = { action: "present", declaredRange: declared, upgrade, themeMissing, tokensAddCommand, themeAddCommand };
     } else {
       const deps = isPlainObject(pkg.dependencies) ? { ...pkg.dependencies } : {};
       deps[TOKENS_PACKAGE] = TOKENS_DEPENDENCY_RANGE;
       const next = { ...pkg, dependencies: deps };
-      plan.dependency = { action: "add", upgrade, themeMissing };
+      plan.dependency = { action: "add", upgrade, themeMissing, tokensAddCommand, themeAddCommand };
       plan.writes.push({ file: pkgFile, before: pkgText, after: formatJsonLike(pkgText, next) });
     }
   }

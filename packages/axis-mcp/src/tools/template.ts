@@ -7,8 +7,13 @@
 import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
-import { inspectBrandImport, type BrandImportCheck } from "./brand-core.js";
-import { checkGlobalsCss, checkTailwindSetup } from "@axis-ds/registry-core/tailwind-core";
+import { inspectBrandActivation, inspectBrandImport, type BrandActivationCheck, type BrandImportCheck } from "./brand-core.js";
+import {
+  checkAnimationPlugin,
+  checkGlobalsCss,
+  checkTailwindContent,
+  checkTailwindSetup,
+} from "@axis-ds/registry-core/tailwind-core";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
@@ -326,6 +331,26 @@ function brandCheckResult(check: BrandImportCheck): CheckResult {
 }
 
 /** 프로젝트 상태 검증 */
+/**
+ * 브랜드를 켜는 코드 검사 결과(WI-0065 D8). CLI `axis check` 의 `brandActivationResult`
+ * (packages/axis-cli/src/template/template-check.ts)와 같은 문구입니다.
+ */
+function brandActivationResult(check: BrandActivationCheck): CheckResult {
+  if (check.found) {
+    return {
+      name: "brand.activation",
+      severity: "pass",
+      message: `${check.found}에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다`,
+    };
+  }
+  const where = check.layoutFiles.length > 0 ? check.layoutFiles.join(" · ") : "루트 레이아웃(app/layout.tsx 등)";
+  return {
+    name: "brand.activation",
+    severity: "warn",
+    message: `brand "${check.brand}" 가 설정됐지만 ${where}에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없습니다(ThemeProvider 만으로는 마운트 때 꺼짐) → <html data-brand="${check.brand}"> 또는 setBrand("${check.brand}")`,
+  };
+}
+
 export async function handleCheckProject(
   params: CheckProjectParams
 ): Promise<CheckProjectResult> {
@@ -421,6 +446,14 @@ export async function handleCheckProject(
   // 6. brand 와 CSS import 대조 (WI-0028 FR-5, brand 가 없으면 추가하지 않음)
   const brandCheck = inspectBrandImport(baseDir);
   if (brandCheck) results.push(brandCheckResult(brandCheck));
+
+  // 7~9. 해당할 때만 더하는 항목(WI-0065 D8, CLI `axis check` 와 같은 순서 · 문구 · 같은 코어)
+  const activation = inspectBrandActivation(baseDir);
+  if (activation) results.push(brandActivationResult(activation));
+  const content = checkTailwindContent(baseDir);
+  if (content) results.push(content);
+  const animation = checkAnimationPlugin(baseDir);
+  if (animation) results.push(animation);
 
   const summary = {
     pass: results.filter((r) => r.severity === "pass").length,

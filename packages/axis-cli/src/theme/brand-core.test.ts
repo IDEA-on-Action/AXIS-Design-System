@@ -194,7 +194,10 @@ describe("getBrand (T2-6 · T2-7 코어)", () => {
       "--axis-button-bg-default": "#15C7C7",
       "--axis-border-focus": "#60A5FA",
     });
-    expect(b.providerExample).toContain('defaultBrand="sample"');
+    // WI-0065 D7: defaultBrand 대신 data-brand · setBrand 를 안내합니다(defaultBrand 는 끈 상태가 유지되지 않음, WI-0068)
+    expect(b.providerExample).toContain('<html lang="ko" data-brand="sample">');
+    expect(b.providerExample).toContain('setBrand("sample");');
+    expect(b.providerExample).not.toContain("defaultBrand");
     expect(b.adjustments).toEqual({
       a11y: { status: "unchecked", checkedAt: null, gate: null },
       reference: BRAND_ADJUSTMENT_REFERENCE,
@@ -246,20 +249,14 @@ describe("부분 빌드(index.json 은 있는데 항목 파일이 없음)는 not
 });
 
 describe("test-helpers", () => {
-  it("theme-only 레이아웃은 템플릿 files[] 7개와 initTemplate 형태 config 를 펼침", async () => {
+  it("theme-only 레이아웃은 템플릿 files[] 8개(app/ 4개 · postcss 포함, WI-0037)와 initTemplate 형태 config 를 펼침", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
     const files = (await fs.readdir(dir)).sort();
     expect(files).toEqual(
-      [
-        "axis.config.json",
-        "globals.css",
-        "layout.tsx",
-        "package.json",
-        "page.tsx",
-        "tailwind.config.ts",
-        "theme-toggle.tsx",
-        "tsconfig.json",
-      ].sort()
+      ["app", "axis.config.json", "package.json", "postcss.config.mjs", "tailwind.config.ts", "tsconfig.json"].sort()
+    );
+    expect((await fs.readdir(path.join(dir, "app"))).sort()).toEqual(
+      ["globals.css", "layout.tsx", "page.tsx", "theme-toggle.tsx"].sort()
     );
     const config = await fs.readJSON(path.join(dir, "axis.config.json"));
     expect(Object.keys(config)).toEqual([

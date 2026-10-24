@@ -52,14 +52,17 @@ export function createInitConfig(answers: InitConfigAnswers, registry: string): 
   };
 }
 
-/** `axis template init` 이 쓰는 설정. 키 순서가 곧 파일의 키 순서입니다. */
+/**
+ * `axis template init` 이 쓰는 설정. 키 순서가 곧 파일의 키 순서입니다.
+ * 템플릿은 create-next-app 구조(`app/layout.tsx` · `app/globals.css`)라 globalCss 는 `./app/globals.css` 입니다(WI-0037 D1, 종전 `./globals.css`).
+ */
 export function createTemplateConfig(template: string): AxisConfig {
   return {
     $schema: AXIS_CONFIG_SCHEMA_URL,
     template,
     componentsDir: "./components/ui",
     tailwindConfig: "./tailwind.config.ts",
-    globalCss: "./globals.css",
+    globalCss: "./app/globals.css",
   };
 }
 

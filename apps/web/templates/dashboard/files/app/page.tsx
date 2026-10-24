@@ -1,5 +1,5 @@
-import { Sidebar } from './components/sidebar'
-import { StatsCard } from './components/stats-card'
+import { Sidebar } from '../components/sidebar'
+import { StatsCard } from '../components/stats-card'
 
 const stats = [
   { title: '총 사용자', value: '2,340', change: '+12%', trend: 'up' as const },

@@ -46,6 +46,8 @@ import {
 import { makeProject, type MakeProjectOptions } from "./test-helpers.js";
 
 const IMPORT_SAMPLE = '@import "@axis-ds/tokens/css/brands/sample";';
+/** WI-0065 D7: Tailwind 3 에서 브랜드 앞에 넣는 기본 토큰 CSS 두 줄(variables → shadcn) */
+const BASE3 = ['@import "@axis-ds/tokens/css";', '@import "@axis-ds/tokens/css/shadcn";'];
 
 const created: string[] = [];
 let logs: string[];
@@ -260,7 +262,7 @@ describe("T3-3: import 삽입 위치", () => {
     const { exitCode } = await runAdd(["sample", "-d", dir]);
     expect(exitCode).toBe(0);
     const css = await fs.readFile(file, "utf8");
-    expect(css).toBe(`\uFEFF${line}\n@tailwind base;\n`);
+    expect(css).toBe(`\uFEFF${BASE3.join("\n")}\n${line}\n@tailwind base;\n`);
     expect(css.slice(1).includes("\uFEFF")).toBe(false);
   });
 
@@ -269,12 +271,12 @@ describe("T3-3: import 삽입 위치", () => {
     expect(out).toBe(`${line}\r\n@tailwind base;\r\n.a{}\r\n`);
   });
 
-  it("theme-only 의 globals.css 에서 첫 줄 · @tailwind base; 보다 앞", async () => {
+  it("theme-only 의 app/globals.css 에서 기본 토큰 CSS 2줄 다음 · @tailwind base; 보다 앞 (WI-0037 app/ 구조)", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
     applyThemeAdd(planThemeAdd(dir, "sample"));
-    const lines = (await fs.readFile(path.join(dir, "globals.css"), "utf8")).split("\n");
-    expect(lines[0]).toBe(line);
-    expect(lines[1]).toBe("@tailwind base;");
+    const lines = (await fs.readFile(path.join(dir, "app", "globals.css"), "utf8")).split("\n");
+    expect(lines.slice(0, 3)).toEqual([...BASE3, line]);
+    expect(lines[3]).toBe("@tailwind base;");
   });
 });
 
@@ -416,7 +418,7 @@ describe("T3-4 (AC2(a) fixture 판): theme-only 에서 2회 실행", () => {
     expect(planThemeAdd(dir, "sample").writes).toEqual([]);
     expect(await snapshot(dir)).toEqual(afterFirst);
 
-    const css = await fs.readFile(path.join(dir, "globals.css"), "utf8");
+    const css = await fs.readFile(path.join(dir, "app", "globals.css"), "utf8");
     expect(countLines(css, IMPORT_SAMPLE)).toBe(1);
     expect(findBrandImports(css)).toEqual(["sample"]);
     const pkgText = await fs.readFile(path.join(dir, "package.json"), "utf8");
@@ -439,7 +441,8 @@ describe("T3-5: tokens 가 package.json 에 없을 때", () => {
     const { out, exitCode } = await runAdd(["sample", "-d", dir]);
     expect(exitCode).toBe(0);
     const pkg = await readJson(path.join(dir, "package.json"));
-    expect((pkg.dependencies as Record<string, string>)["@axis-ds/tokens"]).toBe("^1.3.0");
+    // WI-0065 D7: 기록 범위는 ^1.6.0(종전 ^1.3.0)
+    expect((pkg.dependencies as Record<string, string>)["@axis-ds/tokens"]).toBe("^1.6.0");
     expect(out).toContain("설치는 실행하지 않았습니다");
     expect(out).toContain("pnpm install");
     expect(spies.reduce((n, s) => n + s.mock.calls.length, 0)).toBe(0);
@@ -471,7 +474,8 @@ describe("T3-6: tokens 1.3.0 미만이 이미 있을 때", () => {
     expect(exitCode).toBe(0);
     expect(await fs.readFile(pkgFile, "utf8")).toBe(pkgBefore);
     expect(out).toContain("1.2.1 은 브랜드를 지원하지 않습니다");
-    expect(out).toContain("업그레이드: pnpm add @axis-ds/tokens@^1.3.0");
+    // lockfile 이 없으면 pnpm, 범위는 기록 범위와 같은 ^1.6.0(따옴표로 감쌈, WI-0065 D7)
+    expect(out).toContain('업그레이드: pnpm add "@axis-ds/tokens@^1.6.0"');
     expect(out).toContain("^1.2.1 가 이미 있어 범위를 바꾸지 않음");
   });
 
@@ -506,7 +510,7 @@ describe("T3-7: 브랜드 이름 검증(U5)", () => {
     const { out, exitCode } = await runAdd(["ontology", "-d", dir]);
     expect(exitCode).toBe(0);
     expect(out).toContain("이름 규칙만 확인했습니다");
-    const css = await fs.readFile(path.join(dir, "globals.css"), "utf8");
+    const css = await fs.readFile(path.join(dir, "app", "globals.css"), "utf8");
     expect(findBrandImports(css)).toEqual(["ontology"]);
   });
 
@@ -520,7 +524,7 @@ describe("T3-7: 브랜드 이름 검증(U5)", () => {
 describe("T3-8: 다른 브랜드 import 가 있을 때(U13)", () => {
   it("기존 줄 유지 + 새 줄 추가 + 안내", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
-    const cssFile = path.join(dir, "globals.css");
+    const cssFile = path.join(dir, "app", "globals.css");
     const original = await fs.readFile(cssFile, "utf8");
     await fs.writeFile(cssFile, `@import "@axis-ds/tokens/css/brands/other";\n${original}`);
 
@@ -528,24 +532,33 @@ describe("T3-8: 다른 브랜드 import 가 있을 때(U13)", () => {
     expect(exitCode).toBe(0);
     const css = await fs.readFile(cssFile, "utf8");
     expect(findBrandImports(css)).toEqual(["other", "sample"]);
-    expect(css.split("\n").slice(0, 2)).toEqual(['@import "@axis-ds/tokens/css/brands/other";', IMPORT_SAMPLE]);
+    // 기존 import 구간 끝에 기본 토큰 CSS 2줄 · 새 브랜드 순으로 넣음(WI-0065 D7)
+    expect(css.split("\n").slice(0, 4)).toEqual(['@import "@axis-ds/tokens/css/brands/other";', ...BASE3, IMPORT_SAMPLE]);
     expect(out).toContain("다른 브랜드 import(other)는 그대로 두었습니다");
     expect(out).toContain("이전 브랜드 import 를 지워도 됩니다");
   });
 
   it("같은 브랜드가 url() · 작은따옴표 형태로 있으면 추가하지 않음", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
-    const cssFile = path.join(dir, "globals.css");
+    const cssFile = path.join(dir, "app", "globals.css");
     const original = await fs.readFile(cssFile, "utf8");
     await fs.writeFile(cssFile, `@import url('@axis-ds/tokens/css/brands/sample');\n${original}`);
     const plan = planThemeAdd(dir, "sample");
-    expect(plan.css?.action).toBe("exists");
-    expect(plan.writes.map((w) => w.file)).not.toContain(cssFile);
+    // 브랜드는 넣지 않고(이미 있음) 빠진 기본 토큰 CSS 만 넣음(WI-0065 D7)
+    expect(plan.css?.brandAdded).toBe(false);
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css", "@axis-ds/tokens/css/shadcn"]);
+    const after = plan.writes.find((w) => w.file === cssFile)?.after ?? "";
+    expect(findBrandImports(after)).toEqual(["sample"]);
+    // 기본 토큰 CSS 도 이미 있으면 CSS 는 쓰지 않음(종전 「exists」)
+    await fs.writeFile(cssFile, `${BASE3.join("\n")}\n@import url('@axis-ds/tokens/css/brands/sample');\n${original}`);
+    const plan2 = planThemeAdd(dir, "sample");
+    expect(plan2.css?.action).toBe("exists");
+    expect(plan2.writes.map((w) => w.file)).not.toContain(cssFile);
   });
 
   it("주석 안의 import 는 있는 것으로 보지 않음", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
-    const cssFile = path.join(dir, "globals.css");
+    const cssFile = path.join(dir, "app", "globals.css");
     const original = await fs.readFile(cssFile, "utf8");
     await fs.writeFile(cssFile, `/* ${IMPORT_SAMPLE} */\n${original}`);
     const plan = planThemeAdd(dir, "sample");
@@ -553,20 +566,50 @@ describe("T3-8: 다른 브랜드 import 가 있을 때(U13)", () => {
   });
 });
 
-describe("T3-9: Provider 안내", () => {
-  it("defaultBrand 예시 · 화면이 바뀌지 않는 조건 · theme 1.3.0 조건 · theme 설치 안내", async () => {
+describe("T3-9: 브랜드 켜기 안내 (WI-0065 D7: defaultBrand 대신 data-brand · setBrand)", () => {
+  it("data-brand · setBrand 예시 · 찾지 못한 레이아웃 · theme 1.3.0 조건 · theme 설치 안내, defaultBrand 없음", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
     const { out } = await runAdd(["sample", "-d", dir]);
-    expect(out).toContain('<ThemeProvider defaultBrand="sample">');
-    expect(out).toContain('import { ThemeProvider } from "@axis-ds/theme";');
-    expect(out).toContain('ThemeProvider 나 <html data-brand="sample"> 가 없으면 import 만으로는 화면이 바뀌지 않습니다');
+    expect(out).toContain('<html lang="ko" data-brand="sample">');
+    expect(out).toContain('import { useTheme } from "@axis-ds/theme";');
+    expect(out).toContain('setBrand("sample");');
+    expect(out).not.toContain("defaultBrand");
+    expect(out).toContain("app/layout.tsx 에서 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다");
     expect(out).toContain("@axis-ds/theme 1.3.0 이상");
-    expect(out).toContain("@axis-ds/theme 설치: pnpm add @axis-ds/theme@^1.3.0");
+    expect(out).toContain('@axis-ds/theme 설치: pnpm add "@axis-ds/theme@^1.3.0"');
+  });
+
+  it("레이아웃에 data-brand 가 있으면 예시 대신 찾은 파일을 알림 (음성 대조: 없을 때는 위 경고)", async () => {
+    const dir = await project({ tokens: "none", layout: "theme-only" });
+    const layout = path.join(dir, "app", "layout.tsx");
+    await fs.writeFile(layout, (await fs.readFile(layout, "utf8")).replace('<html lang="ko"', '<html lang="ko" data-brand="sample"'));
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("app/layout.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
+    expect(out).not.toContain("찾지 못했습니다");
+  });
+
+  it("레이아웃이 import 하는 ./providers 의 setBrand 도 찾음(한 단계)", async () => {
+    const dir = await project({ tokens: "none", layout: "theme-only" });
+    const layout = path.join(dir, "app", "layout.tsx");
+    await fs.writeFile(layout, `import { Providers } from "./providers";\n${await fs.readFile(layout, "utf8")}`);
+    await fs.writeFile(path.join(dir, "app", "providers.tsx"), 'import { ThemeProvider, useTheme } from "@axis-ds/theme";\nconst { setBrand } = useTheme();\nsetBrand("sample");\n');
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("app/providers.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
+  });
+
+  it("ThemeProvider 만 있고 켜는 코드가 없으면 찾지 못한 것으로 보고 예시를 출력(마운트 때 브랜드가 지워지는 구성)", async () => {
+    const dir = await project({ tokens: "none", layout: "theme-only" });
+    const layout = path.join(dir, "app", "layout.tsx");
+    await fs.writeFile(layout, `import { Providers } from "./providers";\n${await fs.readFile(layout, "utf8")}`);
+    await fs.writeFile(path.join(dir, "app", "providers.tsx"), 'import { ThemeProvider } from "@axis-ds/theme";\n<ThemeProvider defaultTheme="system">{children}</ThemeProvider>\n');
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("를 찾지 못했습니다");
+    expect(out).toContain('setBrand("sample");');
   });
 
   it("코드는 고치지 않음(layout.tsx 불변)", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
-    const layout = path.join(dir, "layout.tsx");
+    const layout = path.join(dir, "app", "layout.tsx");
     const before = await fs.readFile(layout, "utf8");
     await runAdd(["sample", "-d", dir]);
     expect(await fs.readFile(layout, "utf8")).toBe(before);
@@ -580,9 +623,9 @@ describe("T3-10: CSS 후보가 모두 없을 때(A1)", () => {
     const { out, exitCode } = await runAdd(["sample", "-d", dir]);
     expect(exitCode).toBe(0);
     expect(out).toContain("CSS 진입점");
-    expect(out).toContain(`직접 넣으세요: ${IMPORT_SAMPLE}`);
+    expect(out).toContain(`이 순서로 직접 넣으세요: ${BASE3.join(" ")} ${IMPORT_SAMPLE}`);
     const pkg = await readJson(path.join(dir, "package.json"));
-    expect((pkg.dependencies as Record<string, string>)["@axis-ds/tokens"]).toBe("^1.3.0");
+    expect((pkg.dependencies as Record<string, string>)["@axis-ds/tokens"]).toBe("^1.6.0");
     expect((await readJson(path.join(dir, "axis.config.json"))).brand).toBe("sample");
     const files = await snapshot(dir);
     expect(Object.keys(files).filter((f) => f.endsWith(".css"))).toEqual([]);
@@ -625,5 +668,98 @@ describe("T3-11: 파일 형식 유지", () => {
     expect(formatJsonLike('{\n    "a": 1\n}\n', { a: 1, b: 2 })).toBe('{\n    "a": 1,\n    "b": 2\n}\n');
     expect(formatJsonLike('{\n\t"a": 1\n}', { a: 1 })).toBe('{\n\t"a": 1\n}');
     expect(formatJsonLike('{\r\n  "a": 1\r\n}\r\n', { a: 2 })).toBe('{\r\n  "a": 2\r\n}\r\n');
+  });
+});
+
+describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치 명령", () => {
+  it("Tailwind 3: 이미 있는 기본 토큰 CSS 는 다시 넣지 않고 빠진 것만(멱등, 2회차 변경 0)", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const file = path.join(dir, "app", "globals.css");
+    await fs.writeFile(file, '@import "@axis-ds/tokens/css";\n@tailwind base;\n');
+    applyThemeAdd(planThemeAdd(dir, "sample"));
+    expect(await fs.readFile(file, "utf8")).toBe(`${BASE3.join("\n")}\n${IMPORT_SAMPLE}\n@tailwind base;\n`);
+    expect(planThemeAdd(dir, "sample").writes).toEqual([]);
+  });
+
+  it("Tailwind 4: tailwindcss import 다음에 tailwind4 진입점 · 선언된 컴포넌트 패키지 tailwind.css · 브랜드 순", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const pkgFile = path.join(dir, "package.json");
+    const pkg = await readJson(pkgFile);
+    await fs.writeJSON(
+      pkgFile,
+      { ...pkg, dependencies: { "@axis-ds/ui-react": "^1.6.0" }, devDependencies: { tailwindcss: "^4.1.0" } },
+      { spaces: 2 }
+    );
+    const file = path.join(dir, "app", "globals.css");
+    await fs.writeFile(file, '@import "tailwindcss";\n\nbody { margin: 0; }\n');
+    const plan = planThemeAdd(dir, "sample");
+    expect(plan.css?.tailwind4).toBe(true);
+    expect(plan.tailwindConfig).toBeUndefined();
+    applyThemeAdd(plan);
+    expect((await fs.readFile(file, "utf8")).split("\n").slice(0, 4)).toEqual([
+      '@import "tailwindcss";',
+      '@import "@axis-ds/tokens/css/tailwind4";',
+      '@import "@axis-ds/ui-react/tailwind.css";',
+      IMPORT_SAMPLE,
+    ]);
+  });
+
+  it("규칙 뒤에 있는 기존 @import 는 경고하고, 새 줄은 맨 앞 import 구간에 넣음(quick-start 종전 예시 형태)", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const file = path.join(dir, "app", "globals.css");
+    await fs.writeFile(file, '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n@import "@axis-ds/tokens/css";\n');
+    const plan = planThemeAdd(dir, "sample");
+    expect(plan.css?.lateImports).toEqual(['@import "@axis-ds/tokens/css";']);
+    // 규칙 뒤의 tokens/css 도 「있음」으로 봄(Next.js 는 끌어올려 적용, 측정) → shadcn 과 브랜드만 맨 앞에
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/shadcn"]);
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("규칙(@tailwind 등) 뒤에 있는 @import 1줄은 CSS 규칙상 무시될 수 있습니다");
+    expect((await fs.readFile(file, "utf8")).split("\n").slice(0, 3)).toEqual([BASE3[1], IMPORT_SAMPLE, "@tailwind base;"]);
+  });
+
+  it("음성 대조: import 가 맨 앞에만 있으면 위치 경고 없음", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    await fs.writeFile(path.join(dir, "app", "globals.css"), '@import "@axis-ds/tokens/css";\n@tailwind base;\n');
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).not.toContain("CSS 규칙상 무시될 수 있습니다");
+  });
+
+  it("설치 안내 명령은 lockfile 을 따름(npm · yarn), theme 설치 안내도 같음", async () => {
+    for (const [lock, verb] of [
+      ["package-lock.json", "npm install"],
+      ["yarn.lock", "yarn add"],
+    ] as const) {
+      const dir = await project({ tokens: "1.2", layout: "src-app" });
+      await fs.writeFile(path.join(dir, lock), "");
+      const { out } = await runAdd(["sample", "-d", dir]);
+      expect({ lock, upgrade: out.includes(`업그레이드: ${verb} "@axis-ds/tokens@^1.6.0"`) }).toEqual({ lock, upgrade: true });
+      expect({ lock, theme: out.includes(`@axis-ds/theme 설치: ${verb} "@axis-ds/theme@^1.3.0"`) }).toEqual({ lock, theme: true });
+      expect(out).not.toContain("pnpm add");
+    }
+  });
+});
+
+describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () => {
+  it("preset 없음 · content 가 componentsDir 를 덮지 않음 → 안내 2줄, tailwind.config 불변", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const tw = path.join(dir, "tailwind.config.ts");
+    await fs.writeFile(tw, 'export default { content: ["./app/**/*.{ts,tsx}"], plugins: [] };\n');
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./src/components/ui", globalCss: "./app/globals.css" }, { spaces: 2 });
+    const before = await fs.readFile(tw, "utf8");
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain('AXIS preset 이 없습니다. presets 에 넣으세요: presets: [require("@axis-ds/tokens/tailwind")]');
+    expect(out).toContain('content 가 componentsDir(./src/components/ui) 를 덮지 않습니다. 넣으세요: "./src/components/ui/**/*.{ts,tsx}"');
+    expect(await fs.readFile(tw, "utf8")).toBe(before);
+  });
+
+  it("음성 대조: preset 이 있고 content 가 componentsDir 를 덮으면 Tailwind 설정 안내 없음", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    await fs.writeFile(
+      path.join(dir, "tailwind.config.ts"),
+      'import axisPreset from "@axis-ds/tokens/tailwind";\nexport default { presets: [axisPreset], content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"] };\n'
+    );
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" }, { spaces: 2 });
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).not.toContain("Tailwind 설정 (");
   });
 });

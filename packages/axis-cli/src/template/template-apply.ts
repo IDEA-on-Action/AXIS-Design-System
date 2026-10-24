@@ -9,6 +9,42 @@ import { fetchTemplateDetail } from "./registry-client.js";
 import { runPostInstall } from "./post-install.js";
 import type { ApplyOptions, TemplateDetail } from "./types.js";
 import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js";
+import { detectTailwind, tailwindMajorFromRange } from "./tailwind-core.js";
+
+/**
+ * 기존 프로젝트에 apply 할 때의 경고(WI-0037 D3: 템플릿은 빈 디렉터리의 `template init` 을 보장하고, 기존 프로젝트 apply 는
+ * 구조가 다르면 경고만 함). 파일은 고치지 않습니다. 빈 디렉터리(package.json · src/app 없음)에서는 빈 배열입니다.
+ * - Tailwind major 가 템플릿 선언과 다름(예: create-next-app@latest 의 Tailwind 4 위에 Tailwind 3 템플릿)
+ * - `src/app` 이 있는데 템플릿이 루트 `app/` 을 씀(Next.js 는 루트 `app/` 이 있으면 `src/app` 을 쓰지 않음)
+ */
+export async function templateApplyWarnings(baseDir: string, detail: TemplateDetail): Promise<string[]> {
+  const warnings: string[] = [];
+  const pkgPath = path.join(baseDir, "package.json");
+  const templateRange = detail.devDependencies?.tailwindcss ?? detail.dependencies?.tailwindcss;
+  const templateMajor = templateRange !== undefined ? tailwindMajorFromRange(templateRange) : undefined;
+  if (templateMajor !== undefined && (await fs.pathExists(pkgPath))) {
+    let pkg: Record<string, unknown> | undefined;
+    try {
+      pkg = (await fs.readJSON(pkgPath)) as Record<string, unknown>;
+    } catch {
+      pkg = undefined;
+    }
+    const project = detectTailwind(baseDir, pkg);
+    if (project.major !== undefined && project.major !== templateMajor) {
+      warnings.push(
+        `템플릿은 Tailwind ${templateMajor} 기준인데 이 프로젝트는 Tailwind ${project.major}(${project.value}) 입니다. ` +
+          "빌드 · 스타일이 맞지 않을 수 있어 빈 디렉터리에 'axis template init' 으로 만드는 것을 권장합니다."
+      );
+    }
+  }
+  const usesRootApp = detail.files.some((f) => f.path.startsWith("app/"));
+  if (usesRootApp && (await fs.pathExists(path.join(baseDir, "src", "app")))) {
+    warnings.push(
+      "src/app 이 있는데 템플릿은 루트 app/ 을 씁니다. Next.js 는 루트 app/ 이 있으면 src/app 을 쓰지 않아 기존 라우트가 빠집니다."
+    );
+  }
+  return warnings;
+}
 
 /**
  * 템플릿 apply 로직 — 파일 쓰기 + postInstall 실행
@@ -29,6 +65,11 @@ export async function applyTemplate(
   }
 
   const baseDir = path.resolve(options.dir || ".");
+
+  // 기존 프로젝트 구조 경고(WI-0037 D3, 쓰기는 막지 않음)
+  for (const w of await templateApplyWarnings(baseDir, detail)) {
+    console.log(chalk.yellow(`! ${w}`));
+  }
 
   // 충돌 파일 탐지
   const conflicts: string[] = [];

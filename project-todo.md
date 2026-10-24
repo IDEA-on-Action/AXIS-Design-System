@@ -39,15 +39,15 @@
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
-| 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
+| 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | 🔄 PR 대기(2026-10-24 구현 · 검증 완료, 브랜치 `feat/wi-0037-0041-0049-0065-init-theme`, 묶음 ③). 템플릿 4종 app/ 구조 · postcss · tailwind-merge ^2.6.0 · @types/node, features 정정(AXIS 전환은 WI-0067). 스모크 4/4 PASS(CSS 내용 판정), 음성 대조 HEAD 4/4 · postcss 없는 변형(build rc 0) FAIL |
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ✅ 완료(2026-10-24, 브랜치 `chore/wi-0039-cli-mcp-quality-gate` 머지 대기, changeset · 배포 없음). cli lint · type-check, mcp · registry-core lint 를 turbo 에 등록(lint 태스크 4 → 7). 재측정 cli tsc 19 · cli eslint 25 · mcp eslint 11 · registry-core eslint 1 → 0, 양성 대조 4/4 rc 비0, `--force` 게이트 rc 0(cli 661 · mcp 138 유지). theme 은 범위 밖 |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ✅ 완료(2026-10-24, 배포 없음). 데이터는 WI-0057(006836a)에서 0건. guidance.test.ts 가 library JSON 을 이스케이프를 풀어 검사, 006836a~1 조각 양성 대조 fixture. 006836a~1 데이터 복원 시 14곳 모두 잡혀 실패 |
-| 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
+| 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | 🔄 PR 대기(2026-10-24, 묶음 ③). init 이 다루는 키만 병합 · 나머지 키 순서 보존, componentsDir 보존 · 없는 파일 경로만 찾은 파일로 교체 안내. 병합 끔 변이 5건 실패 |
 | 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | ✅ 완료(2026-10-22). cli 1.5.0 배포(#152 · #153, run 39795328665, provenance), pages.dev /r version 1.5.0 반영. 배포본 실측: init · list(원격) · add · next build rc 0, 28/28 설치 후 빌드 |
 | 58 | 애니메이션 플러그인(tailwindcss-animate) 의존 미선언(7개 컴포넌트 0/26) · accordion · progress keyframes 부재 | WI-0046 (#137) | P18 | P2 | 🔄 PR 대기(2026-10-24 구현 · 검증 완료, 배포 전, 브랜치 `fix/wi-0046-animation-keyframes`). tokens preset 에 keyframes 3개 + tailwind4 변환기 `@keyframes` · `--animate-*` 경로, ui-react 플러그인 2종 optional peer, Progress 불확정 1/3 폭 왕복, ui-react · agentic-ui 모든 `animate-*` 에 `motion-reduce:!animate-none`, SurfaceRenderer `prose` → `text-sm`, 사이트는 preset 없이 keyframes 객체만 import · /components/progress 실컴포넌트. 실빌드 커버리지 33개 중 tw3+tailwindcss-animate · tw4+tw-animate-css 33/33(1.6.0 은 30 · 32). linked patch(tokens · ui-react · agentic-ui) changeset |
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ✅ WI-0045 에 흡수해 완료(2026-10-22, #152 로 닫힘) |
 | 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ✅ 완료(2026-10-24, 배포 없음). README · monorepo-setup · .claude/prompts 를 「개발 · 문서 사이트 3.4, 소비자 3 · 4 지원(1.4.0+)」 두 축으로, quick-start:208 을 pages.dev 절대 URL(200)로. 대상 13개 파일 링크 6개 깨짐 0 |
-| 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
+| 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | 🔄 PR 대기(2026-10-24, 묶음 ③). 실재 파일 · src 유무로 componentsDir · globalCss · tailwindConfig 결정(src/ 생성 · tailwind.config.js 오기록 함께 해소), 후보 상수를 registry-core 한 곳에 |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
@@ -62,7 +62,7 @@
 | 74 | 텍스트 대비 잔여 쌍(Toast opacity · tertiary hover/focus · AgentAvatar · RunProgress pending · DiffViewer 등)과 a11y 측정 범위 확대(PAGES 밖 11페이지 · axe incomplete, WI-0029 조사에서 분리) | WI-0062 (#170) | P18 | P2 | ⏳ |
 | 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
 | 76 | 브랜드 테마 가이드 현행화: 1.6.0 사실 반영(249 → 263개), Tailwind 4 컴포넌트 tailwind.css 누락, Tailwind 3 preset · shadcn CSS, defaultBrand · 다크 하위 요소 · 첫 화면 깜빡임 실측 함정(2026-10-24 브랜드 적용 점검에서 발견) | WI-0064 (#174) | P18 | P2 | ⏳ |
-| 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | ⏳ |
+| 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | 🔄 PR 대기(2026-10-24, 묶음 ③, cli minor · mcp patch changeset). 경로 A 실측: cli 명령만으로 투명 · 0px → #2563EB · 6px, 안내된 data-brand 1줄 뒤 #326ADA, preset 1줄 뒤 10px. 1.5.4 결과물에 새 check content FAIL · rc 1(1.5.4 는 rc 0). Tailwind 3 preflight 가 `--border` 를 덮는 것은 범위 밖 |
 | 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | ⏳ |
 | 79 | 템플릿 4종을 AXIS 토큰 · 컴포넌트 기반으로 전환(원본 `@axis-ds` 참조 0건 실측, WI-0037 에서 분리) | WI-0067 (#181) | P18 | P3 | ⏳ |
 | 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ⏳ |
@@ -349,13 +349,13 @@
 | 배치 | 묶음(브랜치) | 릴리스 | 머지 순서 · 근거 |
 |------|------|------|------|
 | 1 ✅ | ① 종결 · 문서: WI-0028(AC2(a) 조건을 pages.dev 배포본 재측정으로 변경 + AC4 WARN 경로 재측정 뒤 종결) · WI-0040(guidance.test.ts 회귀 방지 + 양성 대조 픽스처 뒤 종결) · WI-0048 ② WI-0054 Avatar ③ WI-0039 cli · mcp 품질 게이트 | 문서 배포 없음 · ui-react · agentic-ui patch · cli · mcp patch(선택) | ① → ② → ③. ③ 이 뒤 cli WI 들의 lint · type-check 게이트가 돼요 |
-| 2 | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 + 0065 init · 템플릿 · theme add(2026-10-24 WI-0065 합류) ④ WI-0064 브랜드 가이드 현행화(문서, ③ 의 cli 동작 변경 뒤 서술을 맞춤) | linked patch · cli patch | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
+| 2 | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 + 0065 init · 템플릿 · theme add(2026-10-24 WI-0065 합류) ④ WI-0064 브랜드 가이드 현행화(문서, ③ 의 cli 동작 변경 뒤 서술을 맞춤) | linked patch · cli minor · mcp patch(③ D9, 2026-10-24 정정) | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
 | 3 | ① WI-0051 check 의존성 판정 ② WI-0060 library slug 충돌 ③ WI-0026 밀도 토큰 | linked minor(1.7.0) · cli · mcp patch | ① → ② → ③. ③ 은 library 를 ② 의 새 구조 위에서 다시 만듦 |
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
 
 - 배치 2 결정(2026-10-24, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① 17페이지 교체 · approval 경로 유지 · 페이지 결함만 ② optional peer + tokens keyframes + Progress 부분 폭 + prose text-sm + reduced-motion, progress 페이지 실컴포넌트화 ③ 템플릿 app/ 구조 · Tailwind 3 유지 · init 기존 키 병합 · 실재 파일 탐색 · theme add CSS 자동 · check FAIL/WARN, cli minor · mcp patch ④ 4절 체크리스트 · quick-start Tailwind 3 블록 소유 · cli 서술은 ③ 뒤. 분리: WI-0066 · 0067 · 0068 · 0069
-- 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
+- 결정 대기 부수 결함(범위 밖, 새 WI 후보): ~~WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦~~(2026-10-24 WI-0049 D6 에 포함해 수정, 묶음 ③) · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · ~~템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정)~~(2026-10-24 측정으로 확정, WI-0067 로 분리) · theme type-check 오류 12건(WI-0034 D3 제외분)
 - 공통 허브 파일(project-todo.md · .github/wi-mapping.json)은 나중에 머지하는 쪽이 rebase 해요. 생성물(public/r · public/library · public/templates)은 손으로 병합하지 않고 생성 명령을 다시 돌려요
 
 ### 향후 후보

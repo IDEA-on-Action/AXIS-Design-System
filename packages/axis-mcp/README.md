@@ -50,7 +50,7 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 | 도구 | 인자 | 응답 |
 |------|------|------|
 | `axis.list_brands` | `targetDir?` | 브랜드 이름 · 설명 · 테마 · import 경로 |
-| `axis.get_brand` | `name`, `targetDir?` | import 경로 · Provider 예시(`defaultBrand`) · 주요 토큰(라이트 · 다크) · 보정 내역(a11y 메타) |
+| `axis.get_brand` | `name`, `targetDir?` | import 경로 · 브랜드 켜기 예시(`<html data-brand>` · `setBrand`) · 주요 토큰(라이트 · 다크) · 보정 내역(a11y 메타) |
 
 - `targetDir` 를 주지 않으면 서버의 현재 디렉터리를 봅니다.
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이거나 빌드 산출물이 없으면 오류(`isError`)가 아니라 설치 · 업그레이드 안내를 돌려줍니다. 빈 목록으로 답하지 않습니다.

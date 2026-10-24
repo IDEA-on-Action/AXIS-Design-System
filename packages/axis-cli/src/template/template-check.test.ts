@@ -4,7 +4,15 @@ import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import { collectCheckResults, runCheck } from "./template-check.js";
-import { axisPackagesBelowTailwind4, findCreateNextAppDefaults, hasComponentSource, rangeLowerAtLeast } from "./tailwind-core.js";
+import {
+  axisPackagesBelowTailwind4,
+  contentGlobToRegExp,
+  findCreateNextAppDefaults,
+  hasComponentSource,
+  rangeLowerAtLeast,
+  readTailwindContent,
+} from "./tailwind-core.js";
+import { templateApplyWarnings } from "./template-apply.js";
 import { tailwind4GuideLines } from "../init/init.js";
 import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
 import { makeProject } from "../theme/test-helpers.js";
@@ -76,12 +84,38 @@ async function captureRunCheck(dir: string): Promise<string[]> {
   return logs;
 }
 
+/**
+ * 기준선(1e84f15) 대비 의도한 변경(WI-0037 · WI-0065). 여기 적은 줄 말고는 기준선과 같아야 합니다.
+ * - theme-only: 템플릿 구조가 app/ 로 바뀌어(WI-0037 D1) globals.css 항목이 app/globals.css 를 봄 · Tailwind 3 은 preset 이
+ *   있어야 pass 라 자체 hsl(var()) 매핑은 WARN(WI-0065 D8 거짓 초록 정정) · componentsDir 가 있어 content 항목(PASS)이 더해짐
+ * - allPass: 같은 거짓 초록 정정으로 tailwind.config 가 WARN(fixture 는 기준선 캡처 때와 같은 "hsl(var(--x))")
+ * 바뀌지 않은 4개 프로젝트(emptyDir · app-init · src-app · brokenConfig)는 기준선 그대로입니다(음성 대조).
+ */
+const INTENDED: Partial<Record<BaselineName, (l: string[]) => string[]>> = {
+  "theme-only": (l) => [
+    l[0],
+    l[1],
+    "  WARN  tailwind.config.ts에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (자체 CSS 변수 매핑만 있음, presets 에 넣으세요)",
+    "  PASS  app/globals.css에 AXIS CSS 변수가 정의되어 있습니다",
+    l[4],
+    l[5],
+    "  PASS  tailwind.config.ts의 content 가 componentsDir(./components/ui) 를 덮습니다",
+    "",
+    "  결과: 4 pass / 2 warn / 0 fail",
+    l[8],
+  ],
+  allPass: (l) => [l[0], l[1], "  WARN  tailwind.config.ts에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (자체 CSS 변수 매핑만 있음, presets 에 넣으세요)", l[3], l[4], l[5], "", "  결과: 4 pass / 1 warn / 0 fail", "\n권장 항목을 확인하세요."],
+};
+
+/** 기준선에 의도한 변경을 적용한 기대 출력 */
+const expectedOutput = (name: BaselineName, lines: string[]) => (INTENDED[name] ?? ((l: string[]) => l))(lines);
+
 /** 기존 5항목 이름(package.json 이 없으면 5번째는 "package.json") */
 const EXISTING_NAMES = ["axis.config.json", "tailwind.config", "globals.css", "utils.ts", "dependencies"];
 
 const ICON: Record<CheckResult["severity"], string> = { pass: "PASS", warn: "WARN", fail: "FAIL" };
 
-describe("T4-1: collectCheckResults 분리 뒤 출력 불변 (brand 없는 프로젝트)", async () => {
+describe("T4-1: collectCheckResults 분리 뒤 출력 불변 (brand 없는 프로젝트, WI-0037 · WI-0065 의 의도한 변경만 반영)", async () => {
   const baseline = (await fs.readJSON(BASELINE_FILE)) as {
     head: string;
     outputs: Record<BaselineName, string[]>;
@@ -93,19 +127,28 @@ describe("T4-1: collectCheckResults 분리 뒤 출력 불변 (brand 없는 프�
     expect(names).toEqual(["emptyDir", "theme-only", "app-init", "src-app", "brokenConfig", "allPass"]);
   });
 
+  it("의도한 변경은 theme-only · allPass 두 곳뿐(나머지 4개는 기준선 그대로)", () => {
+    expect(Object.keys(INTENDED).sort()).toEqual(["allPass", "theme-only"]);
+  });
+
   for (const name of names) {
-    it(`${name}: runCheck 출력이 정정 전과 줄 단위로 같음`, async () => {
+    it(`${name}: runCheck 출력이 정정 전과 줄 단위로 같음(의도한 변경 제외)`, async () => {
       const dir = await buildBaselineProject(name);
-      expect(await captureRunCheck(dir)).toEqual(baseline.outputs[name]);
+      expect(await captureRunCheck(dir)).toEqual(expectedOutput(name, baseline.outputs[name]));
     });
 
-    it(`${name}: collectCheckResults 가 5항목이고 이름 · severity · 문구가 정정 전 출력 줄과 같음`, async () => {
+    it(`${name}: collectCheckResults 의 이름 · severity · 문구가 기대 출력 줄과 같음`, async () => {
       const dir = await buildBaselineProject(name);
       const results = await collectCheckResults(dir);
-      expect(results).toHaveLength(5);
+      const expected = expectedOutput(name, baseline.outputs[name]);
+      const items = expected.slice(1, expected.indexOf(""));
+      expect(results).toHaveLength(items.length);
+      expect(results.slice(0, 5).map((r) => r.name)).toEqual(
+        EXISTING_NAMES.slice(0, 4).concat(results[4].name === "package.json" ? "package.json" : "dependencies")
+      );
       expect(results.some((r) => r.name === "brand")).toBe(false);
       const lines = results.map((r) => `  ${ICON[r.severity]}  ${r.message}`);
-      expect(lines).toEqual(baseline.outputs[name].slice(1, 6));
+      expect(lines).toEqual(items);
     });
   }
 });
@@ -150,10 +193,12 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
     dir = await tempDir();
   });
 
+  // WI-0065 D8: brand 가 있으면 brand 다음에 brand.activation 항목이 더해집니다(7항목)
   async function brandResult(): Promise<CheckResult> {
     const results = await collectCheckResults(dir);
-    expect(results).toHaveLength(6);
+    expect(results).toHaveLength(7);
     expect(results.slice(0, 4).map((r) => r.name)).toEqual(EXISTING_NAMES.slice(0, 4));
+    expect(results[6].name).toBe("brand.activation");
     return results[5];
   }
 
@@ -163,11 +208,19 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
       { globalCss: "./app/globals.css", brand: "sample" },
       '@import "@axis-ds/tokens/css/brands/sample";\n:root{--background:0;--primary:0;}\n'
     );
+    // 브랜드를 켜는 코드(data-brand)와 preset 이 있어야 warn 0 입니다(WI-0065 D8)
+    await fs.writeFile(path.join(dir, "tailwind.config.ts"), 'import axis from "@axis-ds/tokens/tailwind";\nhsl(var(--x))');
+    await fs.writeFile(path.join(dir, "app/layout.tsx"), '<html lang="ko" data-brand="sample">');
     const results = await collectCheckResults(dir);
     expect(results[5]).toEqual({
       name: "brand",
       severity: "pass",
       message: 'brand "sample" import 가 app/globals.css에 있습니다',
+    });
+    expect(results[6]).toEqual({
+      name: "brand.activation",
+      severity: "pass",
+      message: "app/layout.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다",
     });
     expect(results.filter((r) => r.severity !== "pass")).toEqual([]);
   });
@@ -250,7 +303,9 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
     applyThemeAdd(plan);
 
     const results = await collectCheckResults(project);
-    expect(results).toHaveLength(6);
+    // app-init 은 componentsDir 가 있지만 tailwind.config 가 없어 content 항목은 없음. brand.activation 은 레이아웃에 없어 WARN
+    expect(results.map((r) => r.name)).toEqual([...EXISTING_NAMES, "brand", "brand.activation"]);
+    expect(results[6]).toMatchObject({ name: "brand.activation", severity: "warn" });
     expect(results[5]).toEqual({
       name: "brand",
       severity: "pass",
@@ -277,7 +332,8 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
     await writeAllPassProject(dir, { globalCss: "./app/globals.css", brand: "sample" });
     const out = await captureRunCheck(dir);
     expect(out).toContain("  WARN  brand \"sample\" import 가 app/globals.css에 없습니다 → 'axis theme add sample'");
-    expect(out).toContain("  결과: 5 pass / 1 warn / 0 fail");
+    // tailwind.config(자체 hsl 매핑만) · brand · brand.activation 이 WARN(WI-0065 D8)
+    expect(out).toContain("  결과: 4 pass / 3 warn / 0 fail");
     expect(out).toContain("\n권장 항목을 확인하세요.");
   });
 });
@@ -346,11 +402,17 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
     expect((await tailwindItem(dir)).severity).toBe("warn");
   });
 
-  it("Tailwind 3: .mjs · .cjs 설정은 warn(TypeScript 권장), 종전에는 fail", async () => {
+  it("Tailwind 3: .mjs · .cjs 설정은 warn(preset 없음), 종전에는 fail", async () => {
     const mjs = await project({ "tailwind.config.mjs": "export default {}" }, { tailwindcss: "^3.4.0" });
     const cjs = await project({ "tailwind.config.cjs": "module.exports = {}" }, { tailwindcss: "^3.4.0" });
-    expect(await tailwindItem(mjs)).toMatchObject({ severity: "warn", message: "tailwind.config.mjs 존재 (TypeScript 권장)" });
-    expect(await tailwindItem(cjs)).toMatchObject({ severity: "warn", message: "tailwind.config.cjs 존재 (TypeScript 권장)" });
+    expect(await tailwindItem(mjs)).toMatchObject({
+      severity: "warn",
+      message: "tailwind.config.mjs에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)",
+    });
+    expect(await tailwindItem(cjs)).toMatchObject({
+      severity: "warn",
+      message: "tailwind.config.cjs에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)",
+    });
   });
 
   it("Tailwind 3 · 판정 불가에서 설정 파일이 없으면 종전대로 fail", async () => {
@@ -437,7 +499,7 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
       expect(await tailwindItem(dir)).toMatchObject({ severity: "warn", message: WARN_MESSAGE("globals.css") });
     });
 
-    it("Tailwind 3 은 CSS 진입점과 관계없이 종전 규칙(tailwind.config.ts)", async () => {
+    it("Tailwind 3 은 CSS 진입점과 관계없이 설정 파일 규칙(WI-0065 D8: 자체 hsl(var()) 만 있으면 WARN)", async () => {
       const withEntry = await project(
         { "tailwind.config.ts": "hsl(var(--x))", "globals.css": `@import "tailwindcss";\n${TOKENS_LINE}` },
         { tailwindcss: "^3.4.0" }
@@ -446,8 +508,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
       for (const dir of [withEntry, withoutEntry]) {
         expect(await tailwindItem(dir)).toEqual({
           name: "tailwind.config",
-          severity: "pass",
-          message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다",
+          severity: "warn",
+          message: "tailwind.config.ts에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (자체 CSS 변수 매핑만 있음, presets 에 넣으세요)",
         });
       }
     });
@@ -879,12 +941,16 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
       }
     });
 
-    it(".js · .mjs · .cjs 도 preset 참조면 pass, 없으면 종전 warn(TypeScript 권장)", async () => {
+    it(".js · .mjs · .cjs 도 preset 참조면 pass, 없으면 warn(preset 없음)", async () => {
       for (const file of ["tailwind.config.js", "tailwind.config.mjs", "tailwind.config.cjs"]) {
         const withPreset = await project({ [file]: "module.exports = { presets: [require('@axis-ds/tokens/tailwind')] };" }, { tailwindcss: "^3.4.0" });
         const without = await project({ [file]: "module.exports = { content: ['./app/**/*.tsx'] };" }, { tailwindcss: "^3.4.0" });
         expect(await tailwindItem(withPreset)).toEqual(PRESET(file));
-        expect(await tailwindItem(without)).toEqual({ name: "tailwind.config", severity: "warn", message: `${file} 존재 (TypeScript 권장)` });
+        expect(await tailwindItem(without)).toEqual({
+          name: "tailwind.config",
+          severity: "warn",
+          message: `${file}에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)`,
+        });
       }
     });
 
@@ -901,17 +967,18 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
         { "tailwind.config.ts": 'const u = "https://example.com"; const p = require("@axis-ds/tokens/tailwind");\nexport default { presets: [p] };' },
         { tailwindcss: "^3.4.0" }
       );
-      expect((await tailwindItem(commented)).message).toBe("tailwind.config.ts에 AXIS 토큰 설정이 없습니다");
-      expect((await tailwindItem(other)).message).toBe("tailwind.config.ts에 AXIS 토큰 설정이 없습니다");
+      const NO_PRESET = "tailwind.config.ts에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)";
+      expect((await tailwindItem(commented)).message).toBe(NO_PRESET);
+      expect((await tailwindItem(other)).message).toBe(NO_PRESET);
       expect(await tailwindItem(urlString)).toEqual(PRESET("tailwind.config.ts"));
     });
 
-    it("종전 기준(hsl(var( · --background))으로 pass 면 preset 이 함께 있어도 종전 문구(기준선 유지)", async () => {
+    it("preset 과 자체 hsl(var()) 매핑이 함께 있으면 preset pass 문구(WI-0065 D8: 판정 근거는 preset)", async () => {
       const dir = await project(
         { "tailwind.config.ts": "import axis from '@axis-ds/tokens/tailwind';\nexport default { presets: [axis], theme: { extend: { colors: { x: 'hsl(var(--x))' } } } };" },
         { tailwindcss: "^3.4.0" }
       );
-      expect(await tailwindItem(dir)).toEqual({ name: "tailwind.config", severity: "pass", message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다" });
+      expect(await tailwindItem(dir)).toEqual(PRESET("tailwind.config.ts"));
     });
 
     it("Tailwind 4 에서는 preset 참조가 있어도 설정 파일을 보지 않음", async () => {
@@ -1184,5 +1251,240 @@ describe("WI-0044 보정 3차: B2 라벨 · 설치본 우선 버전 판정 · �
       );
       expect((await tailwindItem(old)).severity).toBe("pass");
     });
+  });
+});
+
+describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", () => {
+  async function project(files: Record<string, string>, pkg: Record<string, unknown> | null, config?: Record<string, unknown>) {
+    const dir = await tempDir();
+    if (pkg) await fs.writeJSON(path.join(dir, "package.json"), pkg);
+    if (config) await fs.writeJSON(path.join(dir, "axis.config.json"), config);
+    for (const [rel, content] of Object.entries(files)) {
+      await fs.outputFile(path.join(dir, rel), content);
+    }
+    return dir;
+  }
+  const item = async (dir: string, name: string) => (await collectCheckResults(dir)).find((r) => r.name === name);
+  const TW3 = { devDependencies: { tailwindcss: "^3.4.17" } };
+  /** create-next-app(Tailwind 3) 기본 content */
+  const CNA_CONTENT = 'export default { content: ["./pages/**/*.{js,ts,jsx,tsx,mdx}", "./components/**/*.{js,ts,jsx,tsx,mdx}", "./app/**/*.{js,ts,jsx,tsx,mdx}"] };';
+
+  it("이슈 #175 재현 조합: content 가 src/components/ui 를 덮지 않으면 FAIL(rc 1 의 근거), 넣을 glob 안내", async () => {
+    const dir = await project({ "tailwind.config.ts": CNA_CONTENT }, TW3, { componentsDir: "./src/components/ui" });
+    expect(await item(dir, "tailwind.content")).toEqual({
+      name: "tailwind.content",
+      severity: "fail",
+      message:
+        'tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): componentsDir(./src/components/ui) → "./src/components/ui/**/*.{ts,tsx}"',
+    });
+  });
+
+  it("음성 대조: componentsDir ./components/ui 는 create-next-app content(./components/**)가 덮어 PASS", async () => {
+    const dir = await project({ "tailwind.config.ts": CNA_CONTENT }, TW3, { componentsDir: "./components/ui" });
+    expect(await item(dir, "tailwind.content")).toMatchObject({ severity: "pass" });
+  });
+
+  it("npm 패키지(ui-react) 선언: node_modules 경로를 덮어야 함(quick-start 의 {js,jsx} glob 도 dist/*.js 를 덮음)", async () => {
+    const pkg = { dependencies: { "@axis-ds/ui-react": "^1.6.0" }, ...TW3 };
+    const missing = await project({ "tailwind.config.ts": CNA_CONTENT }, pkg, {});
+    const covered = await project(
+      { "tailwind.config.ts": 'export default { content: ["./app/**/*.tsx", "./node_modules/@axis-ds/ui-react/**/*.{js,jsx}"] };' },
+      pkg,
+      {}
+    );
+    expect(await item(missing, "tailwind.content")).toMatchObject({ severity: "fail", message: expect.stringContaining("@axis-ds/ui-react") });
+    expect(await item(covered, "tailwind.content")).toMatchObject({ severity: "pass" });
+  });
+
+  it("content 를 정적으로 다 읽지 못하면(변수 · 펼침) FAIL 대신 WARN", async () => {
+    const dir = await project(
+      { "tailwind.config.ts": 'const extra = ["./src/**/*.tsx"];\nexport default { content: ["./app/**/*.tsx", ...extra] };' },
+      TW3,
+      { componentsDir: "./src/components/ui" }
+    );
+    expect(await item(dir, "tailwind.content")).toMatchObject({ severity: "warn" });
+  });
+
+  it("content: { files: [...] } 형태와 negated glob(!) 을 읽음", async () => {
+    const dir = await project(
+      { "tailwind.config.js": 'module.exports = { content: { files: ["./src/**/*.{ts,tsx}", "!./src/**/*.test.tsx"] } };' },
+      TW3,
+      { componentsDir: "./src/components/ui" }
+    );
+    expect(await item(dir, "tailwind.content")).toMatchObject({ severity: "pass" });
+  });
+
+  it("해당하지 않으면 항목을 더하지 않음: Tailwind 4 · 설정 파일 없음 · 대상(componentsDir · 패키지) 없음", async () => {
+    const tw4 = await project({ "app/globals.css": '@import "tailwindcss";' }, { devDependencies: { tailwindcss: "^4" } }, { componentsDir: "./components/ui" });
+    const noConfig = await project({}, TW3, { componentsDir: "./components/ui" });
+    const noTarget = await project({ "tailwind.config.ts": CNA_CONTENT }, TW3, {});
+    for (const dir of [tw4, noConfig, noTarget]) expect(await item(dir, "tailwind.content")).toBeUndefined();
+  });
+
+  it("brand.activation: brand 가 있고 레이아웃에 켜는 코드(data-brand · setBrand · defaultBrand)가 없으면 WARN(ThemeProvider 단독 포함), 있으면 PASS, brand 없으면 항목 없음", async () => {
+    const none = await project({ "app/layout.tsx": '<html lang="en">' }, TW3, { brand: "ontology" });
+    const attr = await project({ "app/layout.tsx": '<html lang="en" data-brand="ontology">' }, TW3, { brand: "ontology" });
+    const provider = await project(
+      { "src/app/layout.tsx": 'import { Providers } from "./providers";', "src/app/providers.tsx": '<ThemeProvider defaultBrand="ontology">{children}</ThemeProvider>' },
+      TW3,
+      { brand: "ontology" }
+    );
+    const commented = await project({ "app/layout.tsx": '// <html data-brand="ontology">\n<html lang="en">' }, TW3, { brand: "ontology" });
+    // ThemeProvider 만 있으면 마운트 때 data-brand 를 지우므로 켜진 것이 아니다(2026-10-25 WI-0064 검토 실측)
+    const providerOnly = await project(
+      { "src/app/layout.tsx": 'import { Providers } from "./providers";', "src/app/providers.tsx": '<ThemeProvider defaultTheme="system">{children}</ThemeProvider>' },
+      TW3,
+      { brand: "ontology" }
+    );
+    const noBrand = await project({ "app/layout.tsx": '<html lang="en">' }, TW3, {});
+    expect(await item(none, "brand.activation")).toEqual({
+      name: "brand.activation",
+      severity: "warn",
+      message: 'brand "ontology" 가 설정됐지만 app/layout.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없습니다(ThemeProvider 만으로는 마운트 때 꺼짐) → <html data-brand="ontology"> 또는 setBrand("ontology")',
+    });
+    expect(await item(attr, "brand.activation")).toMatchObject({ severity: "pass" });
+    expect(await item(provider, "brand.activation")).toMatchObject({ severity: "pass", message: "src/app/providers.tsx에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다" });
+    expect(await item(commented, "brand.activation")).toMatchObject({ severity: "warn" });
+    expect(await item(providerOnly, "brand.activation")).toMatchObject({ severity: "warn" });
+    expect(await item(noBrand, "brand.activation")).toBeUndefined();
+  });
+
+  it("animation: ui-react 선언 + 플러그인 없음 → WARN, tailwindcss-animate 선언 + plugins 참조 → PASS", async () => {
+    const pkg = { dependencies: { "@axis-ds/ui-react": "^1.6.0" }, ...TW3 };
+    const none = await project({ "tailwind.config.ts": "export default { plugins: [] };" }, pkg, {});
+    const declaredOnly = await project(
+      { "tailwind.config.ts": "export default { plugins: [] };" },
+      { ...pkg, devDependencies: { ...TW3.devDependencies, "tailwindcss-animate": "^1.0.7" } },
+      {}
+    );
+    const ok = await project(
+      { "tailwind.config.ts": 'export default { plugins: [require("tailwindcss-animate")] };' },
+      { ...pkg, devDependencies: { ...TW3.devDependencies, "tailwindcss-animate": "^1.0.7" } },
+      {}
+    );
+    expect(await item(none, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("tailwindcss-animate 미설치") });
+    expect(await item(declaredOnly, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("plugins 에 없음") });
+    expect(await item(ok, "animation")).toMatchObject({ severity: "pass" });
+  });
+
+  it("animation: 복사 설치(componentsDir 에 animate-in 클래스)도 대상, Tailwind 4 는 tw-animate-css import 로 판정", async () => {
+    const copied = await project(
+      { "components/ui/dialog.tsx": 'const c = "data-[state=open]:animate-in fade-in-0";', "tailwind.config.ts": "export default {};" },
+      TW3,
+      { componentsDir: "./components/ui" }
+    );
+    const tw4 = { devDependencies: { tailwindcss: "^4" }, dependencies: { "@axis-ds/ui-react": "^1.6.0" } };
+    const tw4None = await project({ "app/globals.css": '@import "tailwindcss";' }, tw4, {});
+    const tw4Ok = await project({ "app/globals.css": '@import "tailwindcss";\n@import "tw-animate-css";' }, tw4, {});
+    expect(await item(copied, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("componentsDir 의 animate-in 류 클래스") });
+    expect(await item(tw4None, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining('@import "tw-animate-css";') });
+    expect(await item(tw4Ok, "animation")).toMatchObject({ severity: "pass" });
+  });
+
+  it("animation 스캔: 심링크는 따라가지 않아 순환 링크에서도 끝나고, 링크 너머의 animate-in 은 세지 않음", async () => {
+    const dir = await project({ "components/ui/button.tsx": 'const c = "rounded-md";', "outside/dialog.tsx": 'const c = "animate-in";', "tailwind.config.ts": "export default {};" }, TW3, {
+      componentsDir: "./components/ui",
+    });
+    await fs.symlink(path.join(dir, "components"), path.join(dir, "components/ui/loop"), "dir");
+    await fs.symlink(path.join(dir, "outside"), path.join(dir, "components/ui/linked"), "dir");
+    expect(await item(dir, "animation")).toBeUndefined();
+  });
+
+  it("animation 스캔: 깊이 상한(8) 밖의 파일은 읽지 않음(상한 안이면 잡힘)", async () => {
+    const deep = "components/ui/" + Array.from({ length: 9 }, (_, i) => `d${i}`).join("/") + "/dialog.tsx";
+    const shallow = "components/ui/" + Array.from({ length: 8 }, (_, i) => `d${i}`).join("/") + "/dialog.tsx";
+    const cfg = { "tailwind.config.ts": "export default {};" };
+    const tooDeep = await project({ [deep]: 'const c = "animate-in";', ...cfg }, TW3, { componentsDir: "./components/ui" });
+    const within = await project({ [shallow]: 'const c = "animate-in";', ...cfg }, TW3, { componentsDir: "./components/ui" });
+    expect(await item(tooDeep, "animation")).toBeUndefined();
+    expect(await item(within, "animation")).toMatchObject({ severity: "warn" });
+  });
+
+  it("음성 대조: ui-react 를 쓰지 않으면(선언 없음 · componentsDir 에 animate-in 없음) 항목 없음", async () => {
+    const dir = await project({ "components/ui/button.tsx": 'const c = "rounded-md";', "tailwind.config.ts": "export default {};" }, TW3, {
+      componentsDir: "./components/ui",
+    });
+    expect(await item(dir, "animation")).toBeUndefined();
+  });
+
+  it("FAIL 이 생기면 axis check 종료 코드 1(content FAIL 단독)", async () => {
+    const dir = await project(
+      { "tailwind.config.ts": 'import a from "@axis-ds/tokens/tailwind";\n' + CNA_CONTENT, "app/globals.css": '@import "@axis-ds/tokens/css";', "lib/utils.ts": "export function cn() {}" },
+      { dependencies: { clsx: "1", "tailwind-merge": "1" }, ...TW3 },
+      { componentsDir: "./src/components/ui" }
+    );
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    expect(await runCheck(dir)).toEqual({ pass: 5, warn: 0, fail: 1 });
+  });
+});
+
+describe("WI-0037 D3: template apply 는 기존 프로젝트 구조가 다르면 경고만", () => {
+  const detail = (files: string[], tailwind = "^3.4.0") =>
+    ({
+      name: "t",
+      slug: "t",
+      description: "",
+      category: "minimal",
+      version: "0.1.0",
+      files: files.map((p) => ({ path: p, content: "", type: "text" })),
+      dependencies: {},
+      devDependencies: { tailwindcss: tailwind },
+    }) as unknown as Parameters<typeof templateApplyWarnings>[1];
+
+  it("빈 디렉터리(template init 경로)는 경고 없음", async () => {
+    const dir = await tempDir();
+    expect(await templateApplyWarnings(dir, detail(["app/page.tsx"]))).toEqual([]);
+  });
+
+  it("Tailwind major 가 다르면(create-next-app@latest 의 Tailwind 4 위) 경고", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "package.json"), { devDependencies: { tailwindcss: "^4" } });
+    const w = await templateApplyWarnings(dir, detail(["app/page.tsx"]));
+    expect(w).toHaveLength(1);
+    expect(w[0]).toContain("템플릿은 Tailwind 3 기준인데 이 프로젝트는 Tailwind 4(^4) 입니다");
+  });
+
+  it("음성 대조: 같은 major(Tailwind 3)면 경고 없음", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "package.json"), { devDependencies: { tailwindcss: "^3.4.17" } });
+    expect(await templateApplyWarnings(dir, detail(["app/page.tsx"]))).toEqual([]);
+  });
+
+  it("src/app 이 있는데 템플릿이 루트 app/ 을 쓰면 경고, app/ 을 쓰지 않는 템플릿은 경고 없음", async () => {
+    const dir = await tempDir();
+    await fs.ensureDir(path.join(dir, "src", "app"));
+    expect((await templateApplyWarnings(dir, detail(["app/page.tsx"])))[0]).toContain("src/app 이 있는데 템플릿은 루트 app/ 을 씁니다");
+    expect(await templateApplyWarnings(dir, detail(["components/x.tsx"]))).toEqual([]);
+  });
+
+  it("저장소 템플릿 4종은 app/layout.tsx · app/page.tsx · app/globals.css · postcss.config.mjs 를 담고 루트 page.tsx 는 없음", async () => {
+    const dirTemplates = path.resolve(HERE, "../../../../apps/web/public/templates");
+    for (const slug of ["theme-only", "dashboard", "landing-page", "hr-dashboard"]) {
+      const t = (await fs.readJSON(path.join(dirTemplates, `${slug}.json`))) as { files: { path: string }[]; dependencies: Record<string, string> };
+      const paths = t.files.map((f) => f.path);
+      expect({ slug, has: ["app/layout.tsx", "app/page.tsx", "app/globals.css", "postcss.config.mjs"].every((p) => paths.includes(p)) }).toEqual({ slug, has: true });
+      expect({ slug, root: paths.filter((p) => ["page.tsx", "layout.tsx", "globals.css"].includes(p)) }).toEqual({ slug, root: [] });
+      expect({ slug, twMerge: t.dependencies["tailwind-merge"] }).toEqual({ slug, twMerge: "^2.6.0" });
+    }
+  });
+});
+
+describe("WI-0065 D8: content glob 판독 단위", () => {
+  it("contentGlobToRegExp: ** · * · {a,b} · 앞의 ./", () => {
+    const m = (g: string, f: string) => contentGlobToRegExp(g).test(f);
+    expect(m("./components/**/*.{js,ts,jsx,tsx,mdx}", "components/ui/button.tsx")).toBe(true);
+    expect(m("./components/**/*.{js,ts,jsx,tsx,mdx}", "src/components/ui/button.tsx")).toBe(false);
+    expect(m("./src/**/*.{ts,tsx}", "src/components/ui/button.tsx")).toBe(true);
+    expect(m("./app/**/*.tsx", "app/page.tsx")).toBe(true);
+    expect(m("./node_modules/@axis-ds/ui-react/**/*.{js,jsx}", "node_modules/@axis-ds/ui-react/dist/index.js")).toBe(true);
+    expect(m("./node_modules/@axis-ds/ui-react/dist/*.mjs", "node_modules/@axis-ds/ui-react/dist/index.js")).toBe(false);
+  });
+
+  it("readTailwindContent: 배열 · files 객체 · 주석 안 content 무시 · 문자열 아닌 요소는 dynamic", () => {
+    expect(readTailwindContent('export default { content: ["./a/**/*.tsx", \'./b/*.ts\'] }')).toEqual({ globs: ["./a/**/*.tsx", "./b/*.ts"], dynamic: false });
+    expect(readTailwindContent("module.exports = { content: { files: ['./x/**'] } }")).toEqual({ globs: ["./x/**"], dynamic: false });
+    expect(readTailwindContent('// content: ["./nope"]\nexport default { content: ["./yes/**"] }')).toEqual({ globs: ["./yes/**"], dynamic: false });
+    expect(readTailwindContent('export default { content: [...base, "./a/**"] }')).toEqual({ globs: ["./a/**"], dynamic: true });
+    expect(readTailwindContent("export default { theme: {} }")).toBeUndefined();
   });
 });

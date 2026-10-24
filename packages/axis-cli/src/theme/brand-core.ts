@@ -3,12 +3,14 @@
  *
  * 원본은 `packages/axis-cli/src/theme/brand-core.ts` 이고, `packages/axis-mcp/src/tools/brand-core.ts` 에
  * 바이트 단위로 같은 사본을 둡니다(U1). 사본 동일성은 MCP 테스트가 막습니다.
- * 두 패키지에서 똑같이 컴파일되도록 Node 내장 모듈만 쓰고, 출력 문자열은 만들지 않고 구조화된 값만 돌려줍니다.
+ * 두 패키지에서 똑같이 컴파일되도록 Node 내장 모듈과 공유 코어(@axis-ds/registry-core, 두 패키지가 번들)만 쓰고,
+ * 출력 문자열은 만들지 않고 구조화된 값만 돌려줍니다. 전역 CSS 후보는 init 과 같이 쓰려고 공유 코어에 둡니다(WI-0065).
  */
 
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import { GLOBAL_CSS_CANDIDATES } from "@axis-ds/registry-core/project";
 
 /** 브랜드를 담는 패키지 이름 */
 export const TOKENS_PACKAGE = "@axis-ds/tokens";
@@ -18,6 +20,13 @@ export const BRAND_NAME_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
 
 /** 브랜드 산출물(`./brands` exports)이 처음 들어간 `@axis-ds/tokens` 버전 */
 export const MIN_BRAND_TOKENS_VERSION = "1.3.0";
+
+/**
+ * `axis theme add` 가 package.json 에 기록하고 설치 안내에 쓰는 `@axis-ds/tokens` 하한(WI-0065 D7, 종전 1.3.0).
+ * linked 현행 버전이고, theme add 가 넣는 기본 토큰 CSS(Tailwind 4 진입점은 1.4.0 부터)와 agentic-ui 1.6.0 이 쓰는 변수
+ * (이슈 #175 서술, 미측정)를 담습니다. 설치본 업그레이드 안내 기준은 `MIN_BRAND_TOKENS_VERSION` 그대로입니다.
+ */
+export const TOKENS_DEPENDENCY_MIN_VERSION = "1.6.0";
 
 /** `axis theme info` · `axis.get_brand` 가 보여 주는 주요 토큰(U4, 라이트 · 다크 각각 브랜드 CSS 에 있는 것만) */
 export const KEY_TOKENS = [
@@ -184,8 +193,11 @@ export interface GlobalCssLocation {
   configuredMissing?: string;
 }
 
-/** `globalCss` 다음으로 보는 후보(PRD FR-2 순서) */
-export const GLOBAL_CSS_CANDIDATES = ["app/globals.css", "src/app/globals.css", "globals.css"] as const;
+/**
+ * `globalCss` 다음으로 보는 후보(PRD FR-2 순서). 원본은 공유 코어(`@axis-ds/registry-core/project`)이고 init 의 탐색과 같은
+ * 목록입니다(WI-0065, `styles/globals.css` · `src/styles/globals.css` 추가).
+ */
+export { GLOBAL_CSS_CANDIDATES };
 
 function isFile(file: string): boolean {
   try {
@@ -197,7 +209,8 @@ function isFile(file: string): boolean {
 
 /**
  * 브랜드 import 를 넣거나 검사할 CSS 파일을 찾습니다(PRD FR-2 · A1, plan 4.1 U14 (A)).
- * 후보는 `config.globalCss` → `app/globals.css` → `src/app/globals.css` → 루트 `globals.css` 순이고,
+ * 후보는 `config.globalCss` → `GLOBAL_CSS_CANDIDATES`(`app/globals.css` → `src/app/globals.css` → `styles/globals.css` →
+ * `src/styles/globals.css` → 루트 `globals.css`) 순이고,
  * `globalCss` 는 키가 없을 때와 키가 가리키는 파일이 없을 때 모두 다음 후보로 넘어갑니다.
  * 파일이 없을 때는 `configuredMissing` 에 그 값을 담아 호출한 쪽이 경고하게 합니다.
  */
@@ -403,13 +416,99 @@ function pickKeyTokens(decls: Record<string, string>): Record<string, string> {
   return out;
 }
 
-/** Provider 설정 예시(FR-3 · FR-4). `defaultBrand` 는 `@axis-ds/theme` 1.3.0 이상에 있습니다. */
+/**
+ * 브랜드를 켜는 예시(FR-3 · FR-4, WI-0065 D7). `defaultBrand` 는 쓰지 않습니다: 저장값이 없으면 매번 다시 적용돼
+ * `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 유지되지 않기 때문입니다(WI-0068). 대신 두 방법을 함께 안내합니다.
+ * 1. 서버 마크업: 루트 레이아웃의 `<html>` 에 `data-brand` 를 붙입니다(첫 화면부터 적용, Provider 불필요).
+ * 2. ThemeProvider(`@axis-ds/theme` 1.3.0 이상): 브랜드 상태가 비어 있으면 마운트 때 `data-brand` 를 지우므로
+ *    `useTheme().setBrand` 로 켭니다(저장값으로 유지, `setBrand(undefined)` 로 끔).
+ */
 export function providerExample(name: string): string {
   return [
-    'import { ThemeProvider } from "@axis-ds/theme";',
+    "// 1) Provider 없이: 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)",
+    `<html lang="ko" data-brand="${name}">`,
     "",
-    `<ThemeProvider defaultBrand="${name}">{children}</ThemeProvider>`,
+    "// 2) ThemeProvider 를 쓰면 마운트 때 브랜드가 없으면 속성을 지우므로 setBrand 로 켭니다(저장돼 유지, setBrand(undefined) 로 끔)",
+    'import { useTheme } from "@axis-ds/theme";',
+    "const { setBrand } = useTheme();",
+    `setBrand("${name}");`,
   ].join("\n");
+}
+
+/** 브랜드를 켜는 코드(`data-brand` · `setBrand` · `defaultBrand`)를 찾는 파일(앞에서부터, WI-0065 D8) */
+export const BRAND_ACTIVATION_FILES = [
+  "app/layout.tsx",
+  "app/layout.jsx",
+  "app/layout.js",
+  "src/app/layout.tsx",
+  "src/app/layout.jsx",
+  "src/app/layout.js",
+  "pages/_app.tsx",
+  "pages/_app.jsx",
+  "pages/_document.tsx",
+  "pages/_document.jsx",
+  "src/pages/_app.tsx",
+  "src/pages/_app.jsx",
+  "src/pages/_document.tsx",
+  "src/pages/_document.jsx",
+] as const;
+
+/** 브랜드를 켜는 코드를 찾은 결과(WI-0065 D8) */
+export interface BrandActivationLocation {
+  /** `data-brand` · `setBrand(` · `defaultBrand=` 가 있는 첫 파일(`baseDir` 기준 상대 경로, `/` 구분) */
+  found?: string;
+  /** 읽은 루트 레이아웃 후보. 비어 있으면 레이아웃을 찾지 못한 것입니다 */
+  layoutFiles: string[];
+}
+
+export interface BrandActivationCheck extends BrandActivationLocation {
+  brand: string;
+}
+
+/**
+ * 브랜드를 실제로 켜는 코드만 셉니다. `ThemeProvider` 단독은 넣지 않습니다: 브랜드 상태가 비어 있으면 마운트 때
+ * `data-brand` 를 지우므로, Provider 만 있는 레이아웃은 브랜드가 꺼진 상태입니다(2026-10-25 WI-0064 검토 실측).
+ */
+const BRAND_ACTIVATION_PATTERN = /data-brand|setBrand\s*\(|defaultBrand\s*=/;
+
+/** JS · TS 의 블록 주석과 줄 주석을 지웁니다(`https://` 같은 문자열 안의 `//` 는 앞 글자로 구분해 남김). */
+function stripJsLikeComments(src: string): string {
+  return src.replace(/\/\*[\s\S]*?\*\//g, "").replace(/(^|[^:"'`])\/\/[^\n]*/g, "$1");
+}
+
+/**
+ * 루트 레이아웃 후보(`BRAND_ACTIVATION_FILES`)에서 브랜드를 켜는 코드를 찾습니다(WI-0065 D7 · D8, 휴리스틱).
+ * Provider 를 다른 파일에서 감싸는 구성(예: `app/providers.tsx`)도 있어, 레이아웃이 import 하는 같은 디렉터리의
+ * `./providers` · `./provider` 파일을 한 단계만 더 봅니다. 그보다 깊으면 못 찾을 수 있으므로 검사기는 WARN 만 냅니다.
+ */
+export function findBrandActivation(baseDir: string): BrandActivationLocation {
+  const root = resolve(baseDir);
+  const layoutFiles: string[] = [];
+  for (const candidate of BRAND_ACTIVATION_FILES) {
+    const file = join(root, candidate);
+    if (!isFile(file)) continue;
+    layoutFiles.push(candidate);
+    const text = stripJsLikeComments(readFileSync(file, "utf8"));
+    if (BRAND_ACTIVATION_PATTERN.test(text)) return { found: candidate, layoutFiles };
+    for (const m of text.matchAll(/from\s+["']\.\/(providers?)["']/g)) {
+      for (const ext of [".tsx", ".jsx", ".ts", ".js"]) {
+        const rel = `${dirname(candidate)}/${m[1]}${ext}`;
+        const p = join(root, rel);
+        if (isFile(p) && BRAND_ACTIVATION_PATTERN.test(stripJsLikeComments(readFileSync(p, "utf8")))) {
+          return { found: rel, layoutFiles };
+        }
+      }
+    }
+  }
+  return { layoutFiles };
+}
+
+/** `brand` 가 설정된 프로젝트의 활성화 검사(WI-0065 D8). config 가 없거나 `brand` 가 비어 있으면 `null` 입니다 */
+export function inspectBrandActivation(baseDir: string): BrandActivationCheck | null {
+  const config = readBrandConfig(baseDir);
+  const brand = config?.brand;
+  if (typeof brand !== "string" || brand.trim() === "") return null;
+  return { brand, ...findBrandActivation(baseDir) };
 }
 
 /**

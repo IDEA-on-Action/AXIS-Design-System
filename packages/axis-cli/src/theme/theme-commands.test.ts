@@ -71,6 +71,15 @@ describe("axis theme list", () => {
     ["1.3-unbuilt", "빌드 산출물이 없어", "pnpm --filter @axis-ds/tokens build"],
   ];
 
+  it("WI-0065 D7: 설치 안내는 lockfile 을 따름(npm 프로젝트에 pnpm 명령을 내지 않음), lockfile 이 없으면 종전 pnpm", async () => {
+    const dir = await project("none");
+    await fs.writeFile(`${dir}/package-lock.json`, "");
+    const { out } = await runTheme(["list", "-d", dir]);
+    expect(out).toContain('설치: npm install "@axis-ds/tokens@^1.6.0"');
+    expect(out).not.toContain("pnpm add");
+    expect(TOKENS_INSTALL_COMMAND).toBe('pnpm add "@axis-ds/tokens@^1.6.0"');
+  });
+
   for (const [tokens, reason, command] of guides) {
     it(`T2-5: tokens ${tokens} 는 안내와 rc 1, 빈 목록 문구 없음`, async () => {
       const dir = await project(tokens);
@@ -85,13 +94,14 @@ describe("axis theme list", () => {
 });
 
 describe("axis theme info", () => {
-  it("T2-6: import 경로 · defaultBrand 예시 · 주요 토큰 라이트 · 다크", async () => {
+  it("T2-6: import 경로 · 브랜드 켜기 예시(data-brand · setBrand, WI-0065 D7) · 주요 토큰 라이트 · 다크", async () => {
     const dir = await project("1.3");
     const { out, exitCode } = await runTheme(["info", "sample", "-d", dir]);
     expect(exitCode).toBe(0);
     expect(out).toContain('@import "@axis-ds/tokens/css/brands/sample";');
-    expect(out).toContain('import { ThemeProvider } from "@axis-ds/theme";');
-    expect(out).toContain('<ThemeProvider defaultBrand="sample">');
+    expect(out).toContain('import { useTheme } from "@axis-ds/theme";');
+    expect(out).toContain('<html lang="ko" data-brand="sample">');
+    expect(out).not.toContain("defaultBrand");
     expect(out).toContain('<html data-brand="sample">');
     expect(out).toContain("@axis-ds/theme 1.3.0 이상");
     expect(out).toMatch(/--background\s+210 22% 96%\s+217 41% 10%/);

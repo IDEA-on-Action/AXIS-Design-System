@@ -212,22 +212,27 @@ function FilesTab({ files }: { files: TemplateFile[] }) {
 }
 
 function SetupTab({ template }: { template: TemplateDetail }) {
+  // WI-0037 D3: 템플릿은 빈 디렉터리에 `axis template init` 으로 만드는 경로를 보장합니다(next build 스모크로 고정).
+  // 종전 안내(create-next-app@latest 뒤 파일 복사)는 create-next-app 기본이 Tailwind 4 라 Tailwind 3 템플릿과 어긋났습니다.
   const steps = [
     {
-      title: '1. 새 프로젝트 생성',
-      code: 'npx create-next-app@latest my-app',
+      title: '1. 템플릿으로 새 프로젝트 생성',
+      description: '빈 디렉터리에 템플릿 파일과 axis.config.json 을 만듭니다(package.json 에 버전이 정해진 의존성 포함).',
+      code: `npx @axis-ds/cli template init ${template.slug} --dir my-app`,
     },
     {
-      title: '2. 템플릿 파일 복사',
-      description: '위 Files 탭에서 각 파일을 프로젝트에 복사합니다.',
+      title: '2. 의존성 설치',
+      code: 'cd my-app && npm install',
     },
     {
-      title: '3. 의존성 설치',
-      code: `pnpm add ${Object.keys(template.dependencies).join(' ')}`,
+      title: '3. 개발 서버 실행',
+      code: 'npm run dev',
     },
     {
-      title: '4. 개발 서버 실행',
-      code: 'pnpm dev',
+      title: '기존 프로젝트에 적용할 때',
+      description:
+        'axis template apply 는 파일을 덮어쓰며, 프로젝트의 Tailwind major 가 템플릿(Tailwind 3)과 다르거나 src/app 이 있으면 경고만 합니다. 빌드는 빈 디렉터리 경로만 보장합니다.',
+      code: `npx @axis-ds/cli template apply ${template.slug} --dry-run`,
     },
   ]
 

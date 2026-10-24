@@ -16,6 +16,7 @@ import {
   type TokensStatus,
 } from "./brand-core.js";
 import {
+  THEME_MIN_VERSION,
   THEME_PACKAGE,
   TOKENS_DEPENDENCY_RANGE,
   ThemeApplyError,
@@ -23,6 +24,8 @@ import {
   planThemeAdd,
   type ThemeAddPlan,
 } from "./theme-add.js";
+import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
+import { TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
 
 /** 명령 출력: 줄 목록과 종료 코드 */
 export interface ThemeOutput {
@@ -30,40 +33,53 @@ export interface ThemeOutput {
   exitCode: number;
 }
 
-/** tokens 를 설치 · 업그레이드할 때 안내하는 명령 (U6 범위) */
-export const TOKENS_INSTALL_COMMAND = `pnpm add ${TOKENS_PACKAGE}@^${MIN_BRAND_TOKENS_VERSION}`;
+/**
+ * tokens 를 설치 · 업그레이드할 때 안내하는 명령(U6 범위, WI-0065 D7 에서 lockfile 로 고르도록 바꿈).
+ * 종전에는 `pnpm add` 로 고정이라 npm · yarn 프로젝트에도 pnpm 명령이 나왔습니다. lockfile 이 없으면 종전과 같은 pnpm 입니다.
+ */
+export function tokensInstallCommand(baseDir: string): string {
+  return addCommandFor(detectInstallCommand(baseDir), { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
+}
+
+/** lockfile 이 없을 때의 안내 명령(종전 상수 이름 유지, 범위는 `TOKENS_DEPENDENCY_RANGE`) */
+export const TOKENS_INSTALL_COMMAND = addCommandFor("pnpm install", { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
 
 /**
  * `status` 가 `ok` 가 아닐 때의 안내. 빈 목록이 아니라 「측정을 못 했다」를 알립니다(plan 3장 5-3).
+ * `installCommand` 는 `tokensInstallCommand(baseDir)` 로 고른 명령입니다(주지 않으면 lockfile 이 없을 때와 같은 pnpm).
  */
-export function tokensStatusGuide(status: Exclude<TokensStatus, "ok">, version?: string): string[] {
+export function tokensStatusGuide(
+  status: Exclude<TokensStatus, "ok">,
+  version?: string,
+  installCommand: string = TOKENS_INSTALL_COMMAND
+): string[] {
   switch (status) {
     case "not-installed":
       return [
         chalk.yellow(`${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`),
-        `  설치: ${chalk.cyan(TOKENS_INSTALL_COMMAND)}`,
+        `  설치: ${chalk.cyan(installCommand)}`,
       ];
     case "unsupported":
       return [
         chalk.yellow(
           `${TOKENS_PACKAGE} ${version ?? "(버전 모름)"} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`
         ),
-        `  업그레이드: ${chalk.cyan(TOKENS_INSTALL_COMMAND)}`,
+        `  업그레이드: ${chalk.cyan(installCommand)}`,
       ];
     case "not-built":
       return [
         chalk.yellow(
           `${TOKENS_PACKAGE}${version ? ` ${version}` : ""} 는 있지만 빌드 산출물이 없어 브랜드를 읽을 수 없습니다.`
         ),
-        `  워크스페이스면 ${chalk.cyan(`pnpm --filter ${TOKENS_PACKAGE} build`)}, 아니면 재설치: ${chalk.cyan(TOKENS_INSTALL_COMMAND)}`,
+        `  워크스페이스면 ${chalk.cyan(`pnpm --filter ${TOKENS_PACKAGE} build`)}, 아니면 재설치: ${chalk.cyan(installCommand)}`,
       ];
   }
 }
 
 /** `axis theme list` 출력 (FR-1). a11y 상태는 길 수 있어 info 에서만 냅니다(plan 6.2-5). */
-export function renderThemeList(result: BrandListResult): ThemeOutput {
+export function renderThemeList(result: BrandListResult, installCommand?: string): ThemeOutput {
   if (result.status !== "ok") {
-    return { lines: ["", ...tokensStatusGuide(result.status, result.version), ""], exitCode: 1 };
+    return { lines: ["", ...tokensStatusGuide(result.status, result.version, installCommand), ""], exitCode: 1 };
   }
   if (result.brands.length === 0) {
     return {
@@ -114,9 +130,9 @@ function tokenTable(brand: BrandDetail): string[] {
 }
 
 /** `axis theme info <brand>` 출력 (FR-3, 보정 내역은 U3 (A)) */
-export function renderThemeInfo(result: BrandGetResult, name: string): ThemeOutput {
+export function renderThemeInfo(result: BrandGetResult, name: string, installCommand?: string): ThemeOutput {
   if (result.status !== "ok") {
-    return { lines: ["", ...tokensStatusGuide(result.status, result.version), ""], exitCode: 1 };
+    return { lines: ["", ...tokensStatusGuide(result.status, result.version, installCommand), ""], exitCode: 1 };
   }
   const brand = result.brand;
   if (!brand) {
@@ -141,7 +157,7 @@ export function renderThemeInfo(result: BrandGetResult, name: string): ThemeOutp
     chalk.bold("Import (globals.css, @charset · 다른 @import 다음)"),
     `  @import "${brand.importPath}";`,
     "",
-    chalk.bold("Provider (@axis-ds/theme 1.3.0 이상)"),
+    chalk.bold("브랜드 켜기 (ThemeProvider 는 @axis-ds/theme 1.3.0 이상)"),
     ...brand.providerExample.split("\n").map((l) => (l ? `  ${l}` : "")),
     chalk.gray(
       `  ThemeProvider 나 <html data-brand="${brand.name}"> 가 없으면 import 만으로는 화면이 바뀌지 않습니다.`
@@ -237,14 +253,31 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
       )
     );
   }
+  const brandLine = `@import "${plan.importPath}";`;
   if (css?.action === "add" && css.file) {
-    lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: @import "${plan.importPath}"; 추가`);
+    for (const spec of css.baseImports) {
+      lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: @import "${spec}"; 추가(기본 토큰 CSS, 브랜드 앞)`);
+    }
+    if (css.brandAdded) lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: ${brandLine} 추가`);
+    else lines.push(`  ${chalk.gray("-")} ${rel(plan, css.file)}: 브랜드 import 가 이미 있어 건너뜀`);
   } else if (css?.action === "exists" && css.file) {
     lines.push(`  ${chalk.gray("-")} ${rel(plan, css.file)}: import 가 이미 있어 건너뜀`);
   } else {
     lines.push(
-      chalk.yellow("  ! CSS 진입점(globalCss · app/globals.css · src/app/globals.css · globals.css)을 찾지 못했습니다."),
-      `    전역 CSS 맨 앞(@charset · 다른 @import 다음)에 직접 넣으세요: @import "${plan.importPath}";`
+      chalk.yellow(
+        "  ! CSS 진입점(globalCss · app/globals.css · src/app/globals.css · styles/globals.css · src/styles/globals.css · globals.css)을 찾지 못했습니다."
+      ),
+      `    전역 CSS 맨 앞(@charset · 다른 @import 다음)에 이 순서로 직접 넣으세요: ${[
+        ...(css?.requiredBaseImports ?? []).map((spec) => `@import "${spec}";`),
+        brandLine,
+      ].join(" ")}`
+    );
+  }
+  if (css && css.lateImports.length > 0) {
+    lines.push(
+      chalk.yellow(
+        `  ! 규칙(@tailwind 등) 뒤에 있는 @import ${css.lateImports.length}줄은 CSS 규칙상 무시될 수 있습니다(Next.js 는 앞으로 끌어올려 적용). 맨 앞으로 옮기세요: ${css.lateImports.join(" ")}`
+      )
     );
   }
   if (css && css.otherBrands.length > 0) {
@@ -265,16 +298,14 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   } else if (dep?.action === "present") {
     lines.push(`  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 이미 있어 범위를 바꾸지 않음`);
   } else if (dep?.action === "no-package-json") {
-    lines.push(
-      chalk.yellow(`  ! package.json 이 없어 의존성을 추가하지 않았습니다. 설치: ${TOKENS_INSTALL_COMMAND}`)
-    );
+    lines.push(chalk.yellow(`  ! package.json 이 없어 의존성을 추가하지 않았습니다. 설치: ${dep.tokensAddCommand}`));
   }
   if (dep?.upgrade) {
     lines.push(
       chalk.yellow(
         `  ! 설치된 ${TOKENS_PACKAGE} ${plan.tokens.version} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`
       ),
-      `    업그레이드: ${chalk.cyan(TOKENS_INSTALL_COMMAND)}`
+      `    업그레이드: ${chalk.cyan(dep.tokensAddCommand)}`
     );
   }
 
@@ -285,17 +316,40 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     lines.push(`  ${chalk.gray("-")} axis.config.json: brand 가 이미 "${plan.brand}"`);
   }
 
-  // Provider 안내(FR-2, Q1 · U10: 코드는 고치지 않음)
-  lines.push(
-    "",
-    chalk.bold(`Provider (${THEME_PACKAGE} 1.3.0 이상)`),
-    ...providerExample(plan.brand).split("\n").map((l) => (l ? `  ${l}` : "")),
-    chalk.gray(
-      `  ThemeProvider 나 <html data-brand="${plan.brand}"> 가 없으면 import 만으로는 화면이 바뀌지 않습니다.`
-    )
-  );
+  // Tailwind 3 설정 안내(WI-0065 D7: 파일은 고치지 않음, axis check 가 판정)
+  const tw = plan.tailwindConfig;
+  if (tw && (tw.presetMissing || tw.contentMissing.length > 0)) {
+    lines.push("", chalk.bold(`Tailwind 설정 (${tw.configFile ?? "tailwind.config"}, 파일은 고치지 않았습니다)`));
+    if (tw.presetMissing) {
+      lines.push(
+        chalk.yellow(`  ! AXIS preset 이 없습니다. presets 에 넣으세요: presets: [require("${TOKENS_TAILWIND3_PRESET}")]`) +
+          chalk.gray(` (ESM 이면 import axisPreset from "${TOKENS_TAILWIND3_PRESET}")`)
+      );
+    }
+    for (const t of tw.contentMissing) {
+      lines.push(
+        chalk.yellow(
+          `  ! content 가 ${t.label} 를 덮지 ${tw.contentUnknown ? "않는 것으로 보입니다(정적 판독)" : "않습니다"}. 넣으세요: "${t.suggest}"`
+        )
+      );
+    }
+  }
+
+  // 브랜드 켜기 안내(FR-2, Q1 · U10: 코드는 고치지 않음). WI-0065 D7: defaultBrand 대신 data-brand · setBrand 를 안내합니다
+  const act = plan.activation;
+  lines.push("", chalk.bold(`브랜드 켜기 (ThemeProvider 는 ${THEME_PACKAGE} ${THEME_MIN_VERSION} 이상)`));
+  if (act?.found) {
+    lines.push(`  ${chalk.gray("-")} ${act.found} 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다. "${plan.brand}" 로 켜는지 확인하세요.`);
+  } else {
+    lines.push(
+      ...providerExample(plan.brand).split("\n").map((l) => (l ? `  ${l}` : "")),
+      chalk.yellow(
+        `  ! ${act && act.layoutFiles.length > 0 ? act.layoutFiles.join(" · ") : "루트 레이아웃"} 에서 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.`
+      )
+    );
+  }
   if (dep?.themeMissing) {
-    lines.push(`  ${THEME_PACKAGE} 설치: ${chalk.cyan(`pnpm add ${THEME_PACKAGE}@^1.3.0`)}`);
+    lines.push(`  ThemeProvider 를 쓰면 ${THEME_PACKAGE} 설치: ${chalk.cyan(dep.themeAddCommand)}`);
   }
 
   lines.push("", chalk.gray(written.length > 0 ? `파일 ${written.length}개를 바꿨습니다.` : "바꾼 파일이 없습니다."), "");
@@ -347,7 +401,7 @@ export function registerThemeCommand(program: Command): void {
     .option("-d, --dir <path>", "대상 디렉토리")
     .action((options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
-      print(renderThemeList(listBrands(baseDir)));
+      print(renderThemeList(listBrands(baseDir), tokensInstallCommand(baseDir)));
     });
 
   themeCmd
@@ -356,7 +410,7 @@ export function registerThemeCommand(program: Command): void {
     .option("-d, --dir <path>", "대상 디렉토리")
     .action((name: string, options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
-      print(renderThemeInfo(getBrand(baseDir, name), name));
+      print(renderThemeInfo(getBrand(baseDir, name), name, tokensInstallCommand(baseDir)));
     });
 
   themeCmd

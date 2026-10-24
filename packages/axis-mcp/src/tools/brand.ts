@@ -8,9 +8,11 @@
  */
 
 import path from "node:path";
+import { addCommandFor } from "@axis-ds/registry-core/project";
 import {
   KEY_TOKENS,
   MIN_BRAND_TOKENS_VERSION,
+  TOKENS_DEPENDENCY_MIN_VERSION,
   TOKENS_PACKAGE,
   getBrand,
   listBrands,
@@ -35,8 +37,12 @@ export interface GetBrandParams {
 export type ListBrandsResult = BrandListResult;
 export type GetBrandResult = BrandGetResult;
 
-/** tokens 를 설치 · 업그레이드할 때 안내하는 명령. CLI `TOKENS_INSTALL_COMMAND` 와 같은 값입니다(U6 범위). */
-export const TOKENS_INSTALL_COMMAND = `pnpm add ${TOKENS_PACKAGE}@^${MIN_BRAND_TOKENS_VERSION}`;
+/**
+ * tokens 를 설치 · 업그레이드할 때 안내하는 명령. CLI `TOKENS_INSTALL_COMMAND`(lockfile 이 없을 때의 값)와 같습니다(U6 범위).
+ * WI-0065 D7 에서 범위를 CLI 기록 범위(`^1.6.0`)와 맞추고 `^` 가 셸에서 사라지지 않게 따옴표로 감쌌습니다.
+ * CLI 는 대상 프로젝트의 lockfile 로 npm · yarn 명령을 고르지만, 이 도구는 종전처럼 pnpm 한 가지로 안내합니다.
+ */
+export const TOKENS_INSTALL_COMMAND = addCommandFor("pnpm install", { [TOKENS_PACKAGE]: `^${TOKENS_DEPENDENCY_MIN_VERSION}` });
 
 function baseDirOf(targetDir?: string): string {
   return path.resolve(targetDir || process.cwd());

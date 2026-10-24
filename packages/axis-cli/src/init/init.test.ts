@@ -54,6 +54,9 @@ import {
   TAILWIND4_TOKENS_VERSION,
   UTILS_TS_CONTENT,
   INIT_DEFAULTS,
+  INIT_DEFAULTS_NO_SRC,
+  mergeInitConfig,
+  resolveInitAnswers,
   planUtilsWrite,
 } from "./init.js";
 import { DEFAULT_REGISTRY_URL } from "../registry/remote.js";
@@ -102,6 +105,24 @@ const REGISTRY_UTILS_TS = (
   }
 ).files[0].content;
 const UI_REACT_UTILS_TS = readFileSync(path.join(HERE, "../../../axis-ui-react/src/utils.ts"), "utf8");
+
+/**
+ * WI-0049 D6: src/ 가 없는 빈 디렉터리의 axis.config.json. 기준값(c131ee9)에서 componentsDir · globalCss 만
+ * src 없는 기본값(./components/ui · ./app/globals.css)으로 바뀝니다(나머지 키 · 순서 · 값은 같음).
+ */
+const NO_SRC_CONFIG = BASELINE.axisConfig
+  .replace('"./src/components/ui"', '"./components/ui"')
+  .replace('"./src/app/globals.css"', '"./app/globals.css"');
+/** WI-0049 D6: 실재 파일을 찾지 못했을 때의 안내 줄(빈 디렉터리) */
+const NOTE_CSS_DEFAULT =
+  "! 전역 CSS 파일을 찾지 못해 기본값 ./app/globals.css 를 기록합니다. 파일 위치에 맞게 axis.config.json 을 고치세요.";
+const NOTE_TW_DEFAULT =
+  "! Tailwind 설정 파일을 찾지 못해 기본값 ./tailwind.config.ts 를 기록합니다. 파일 위치에 맞게 axis.config.json 을 고치세요.";
+/** WI-0065 D8: 애니메이션 플러그인 안내 한 줄(Tailwind 3 · lockfile 별 명령) */
+const ANIMATION_TW3 = (cmd = "pnpm add") =>
+  `  애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. ${cmd} tailwindcss-animate 뒤 tailwind.config 의 plugins 에 require("tailwindcss-animate") 를 넣으세요.`;
+/** 기존 config 를 병합 갱신할 때의 문구 앞부분(WI-0041 D4) */
+const UPDATED = (note: string) => `✓ axis.config.json 갱신(init 이 다루는 키만 바꾸고 나머지 키는 그대로 둠, ${note})`;
 
 /** D2 로 바뀐 마지막 줄 */
 const NEXT_STEP = "  npx @axis-ds/cli add button\n";
@@ -205,21 +226,25 @@ describe("axis init: 기준값 불변(AC7)", () => {
     const dir = await tmpDir();
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(0);
+    // WI-0049 D6: 경로를 찾지 못한 안내 2줄(머리 뒤), WI-0065 D8: 애니메이션 안내 1줄(마무리 앞)이 더해집니다
     expect(r.logs).toEqual([
       BASELINE.logs[0],
+      NOTE_CSS_DEFAULT,
+      NOTE_TW_DEFAULT,
       BASELINE.logs[1],
       BASELINE.logs[2],
       "! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다.",
       `  설치: ${ADD_CMD}`,
       BASIS_NONE,
+      ANIMATION_TW3(),
       BASELINE.logs[3],
       NEXT_STEP,
     ]);
-    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
-    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
-    // 파일은 두 개만 생기고 package.json 은 만들지 않음(AC3)
+    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(NO_SRC_CONFIG);
+    expect(await fs.readFile(path.join(dir, "components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
+    // 파일은 두 개만 생기고 package.json 은 만들지 않음(AC3). src/ 를 새로 만들지 않음(WI-0049 부수 결함)
     expect(Object.keys(await snapshot(dir)).sort()).toEqual(
-      ["axis.config.json", path.join("src", "components", "ui", "utils.ts")].sort()
+      ["axis.config.json", path.join("components", "ui", "utils.ts")].sort()
     );
   });
 
@@ -230,16 +255,19 @@ describe("axis init: 기준값 불변(AC7)", () => {
     expect(r.exitCode).toBe(0);
     expect(r.logs).toEqual([
       BASELINE.logs[0],
+      NOTE_CSS_DEFAULT,
+      NOTE_TW_DEFAULT,
       BASELINE.logs[1],
       BASELINE.logs[2],
       ADDED_BOTH,
       BASIS_NONE,
       NO_INSTALL("pnpm install"),
+      ANIMATION_TW3(),
       BASELINE.logs[3],
       NEXT_STEP,
     ]);
-    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
-    expect(await fs.readFile(path.join(dir, "src/components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
+    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(NO_SRC_CONFIG);
+    expect(await fs.readFile(path.join(dir, "components/ui/utils.ts"), "utf8")).toBe(REGISTRY_UTILS_TS);
   });
 });
 
@@ -335,9 +363,9 @@ describe("axis init: package.json 의존성(D1)", () => {
     }
   });
 
-  it("tailwind-merge: 템플릿 4종은 1.6 규칙과 어긋남을 알려진 불일치로 고정 (prd 1.6 참고)", async () => {
-    // 템플릿은 tailwindcss ^3.4.0(Tailwind 3)인데 tailwind-merge ^3.4.0 을 씁니다. 규칙값은 ^2.6.0 입니다.
-    // 템플릿을 고치거나 더 어긋나면 이 기대값이 깨져 신호가 납니다. 템플릿 불일치는 WI-0037(#119)에서 다룹니다.
+  it("tailwind-merge: 템플릿 4종은 1.6 규칙(Tailwind 3 → ^2.6.0)과 같음 (WI-0037 D2 로 정정)", async () => {
+    // 종전에는 tailwindcss ^3.4.0(Tailwind 3)에 tailwind-merge ^3.4.0 을 써서 알려진 불일치로 고정했습니다.
+    // WI-0037 D2(Tailwind 3 유지 + ^2.6)로 고쳤으므로 이제 규칙값과 같아야 합니다. 다시 어긋나면 이 기대값이 깨집니다.
     const templatesDir = path.resolve(HERE, "../../../../apps/web/templates");
     const names = (await fs.readdir(templatesDir)).filter((n) =>
       fs.existsSync(path.join(templatesDir, n, "files", "package.json"))
@@ -355,7 +383,7 @@ describe("axis init: package.json 의존성(D1)", () => {
       }).toEqual({
         template: n,
         tailwind: { major: 3, source: "declared", value: "^3.4.0" },
-        current: "^3.4.0",
+        current: "^2.6.0",
         rule: "^2.6.0",
       });
     }
@@ -915,7 +943,8 @@ describe("axis init: 쓸 수 없는 package.json(FR-3 · FR-4)", () => {
 });
 
 describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
-  const GLOBAL_CSS = "./src/app/globals.css";
+  // WI-0049 D6: src 없는 임시 디렉터리라 제목의 경로가 ./app/globals.css 입니다(종전에는 없는 경로 ./src/app/globals.css)
+  const GLOBAL_CSS = "./app/globals.css";
   const HEAD = `\nTailwind 4: 전역 CSS(${GLOBAL_CSS}) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).`;
   const TW_LINE = '  @import "tailwindcss";';
   const TOKENS_LINE = '  @import "@axis-ds/tokens/css/tailwind4";';
@@ -1076,15 +1105,18 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
     const r = await runInitCli(dir);
     expect(r.logs).toEqual([
       BASELINE.logs[0],
+      NOTE_CSS_DEFAULT,
+      NOTE_TW_DEFAULT,
       BASELINE.logs[1],
       BASELINE.logs[2],
       ADDED_BOTH,
       "  tailwind-merge 범위 기준: package.json 의 tailwindcss ^3.4.0",
       NO_INSTALL("pnpm install"),
+      ANIMATION_TW3(),
       BASELINE.logs[3],
       NEXT_STEP,
     ]);
-    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(BASELINE.axisConfig);
+    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(NO_SRC_CONFIG);
   });
 
   it("설치본 3.x · 판정 불가(catalog:) · tailwindcss 없음은 안내 없음, tailwindConfig 기록", async () => {
@@ -1355,8 +1387,8 @@ describe("axis init: 환경변수 AXIS_REGISTRY_URL 을 config 에 기록하지 
     await runInitAsEntry(dir);
     const config = await fs.readJSON(path.join(dir, "axis.config.json"));
     expect(config.registry).toBe("https://mirror.example/r");
-    // 나머지 키는 init 답으로 다시 씀(종전 동작)
-    expect(config.componentsDir).toBe(INIT_DEFAULTS.componentsDir);
+    // WI-0041 D5: 기존 componentsDir 는 보존합니다(종전에는 init 기본값으로 되돌림)
+    expect(config.componentsDir).toBe("./x");
   });
 
   it("기존 config 에 registry 가 없거나 비었으면 기본값", async () => {
@@ -1395,10 +1427,10 @@ describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", registry: "https://mirror.example/r" });
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(0);
-    expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기존 값 유지)");
+    expect(r.logs).toContain(UPDATED("registry 는 기존 값 유지"));
     expect(r.logs.some((l) => l.includes("axis.config.json 생성 완료"))).toBe(false);
     const config = await fs.readJSON(path.join(dir, "axis.config.json"));
-    expect(config.componentsDir).toBe(INIT_DEFAULTS.componentsDir);
+    expect(config.componentsDir).toBe("./x");
     expect(config.registry).toBe("https://mirror.example/r");
   });
 
@@ -1406,7 +1438,7 @@ describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
     const dir = await tmpDir();
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x" });
     const r = await runInitCli(dir);
-    expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기본값)");
+    expect(r.logs).toContain(UPDATED("registry 는 기본값"));
   });
 
   it("다시 실행해도 add 가 읽는 agenticDir 를 지키고(키 순서는 componentsDir 다음), 갱신 문구에 알림", async () => {
@@ -1414,9 +1446,7 @@ describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "src/components/ui", agenticDir: "src/ai" });
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(0);
-    expect(r.logs).toContain(
-      "✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기본값, agenticDir 는 기존 값 유지)"
-    );
+    expect(r.logs).toContain(UPDATED("registry 는 기본값, agenticDir 는 기존 값 유지"));
     const config = await fs.readJSON(path.join(dir, "axis.config.json"));
     expect(config.agenticDir).toBe("src/ai");
     expect(Object.keys(config).indexOf("agenticDir")).toBe(Object.keys(config).indexOf("componentsDir") + 1);
@@ -1426,12 +1456,28 @@ describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
     expect((await fs.readJSON(path.join(dir, "axis.config.json"))).agenticDir).toBe("src/ai");
   });
 
-  it("init 이 쓰지 않는 키(brand · monetDir)는 갱신에서 빠지며, 빠진 키를 알림", async () => {
+  it("WI-0041 D4: init 이 쓰지 않는 키(brand · monetDir)는 값 · 순서를 그대로 지키고, 빠진 키 안내가 없음", async () => {
     const dir = await tmpDir();
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./x", brand: "acme", monetDir: "monet" });
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(0);
-    expect(r.logs.some((l) => l.includes("기존 설정에서 빠진 키: brand, monetDir"))).toBe(true);
+    expect(r.logs.some((l) => l.includes("빠진 키"))).toBe(false);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.brand).toBe("acme");
+    expect(config.monetDir).toBe("monet");
+    // 기존 키 순서(componentsDir · brand · monetDir)를 지키고, 없던 init 키는 init 순서의 앞 키 다음에 들어감
+    expect(Object.keys(config)).toEqual(["$schema", "componentsDir", "tailwindConfig", "globalCss", "registry", "brand", "monetDir"]);
+  });
+
+  it("음성 대조(종전 결함 재현 조건): theme add 가 쓴 brand 가 init 재실행 뒤에도 남음", async () => {
+    const dir = await tmpDir();
+    await runInitCli(dir);
+    const file = path.join(dir, "axis.config.json");
+    await fs.writeJSON(file, { ...(await fs.readJSON(file)), brand: "ontology" }, { spaces: 2 });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect((await fs.readJSON(file)).brand).toBe("ontology");
+    expect(r.logs).toContain("✓ axis.config.json 유지(이미 같은 내용)");
   });
 
   it("음성 대조: agenticDir 가 없던 config 에는 agenticDir 를 만들지 않고 빠진 키 안내도 없음", async () => {
@@ -1445,7 +1491,7 @@ describe("axis init: 기존 axis.config.json 출력(WI-0045 m5)", () => {
 });
 
 describe("axis init: 기존 utils.ts 출력(WI-0045 n1)", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
 
   it("양성 대조: utils.ts 가 없으면 「생성 완료」", async () => {
     const dir = await tmpDir();
@@ -1480,7 +1526,7 @@ describe("axis init: 기존 utils.ts 출력(WI-0045 n1)", () => {
 });
 
 describe("axis init: utils.ts 링크 규칙(WI-0045 D17)", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
   const configFile = (dir: string) => path.join(dir, "axis.config.json");
 
   /** utils.ts 자리에 target 을 가리키는 심볼릭 링크를 둡니다 */
@@ -1597,7 +1643,7 @@ describe("axis init: utils.ts 링크 규칙(WI-0045 D17)", () => {
 });
 
 describe("axis init: utils.ts 를 읽지 못할 때(WI-0045 p2)", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
 
   it("읽을 수 없는 기존 axis.config.json(EACCES)은 없는 파일로 보지 않고 쓰지 않음(rc 1, 사용자 값 보존)", async () => {
     if (process.platform === "win32" || process.getuid?.() === 0) return;
@@ -1675,7 +1721,7 @@ describe("axis init: utils.ts 를 읽지 못할 때(WI-0045 p2)", () => {
 });
 
 describe("axis init: 하드링크로 이어진 파일은 덮어쓰지 않음(WI-0045 D19)", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
 
   it("다른 내용의 utils.ts 가 하드링크면 아무것도 쓰지 않고 경로 · 이유를 알린 뒤 rc 1", async () => {
     if (process.platform === "win32") return;
@@ -1688,7 +1734,9 @@ describe("axis init: 하드링크로 이어진 파일은 덮어쓰지 않음(WI-
     const r = await runInitCli(dir);
     expect(r.exitCode).toBe(1);
     const all = r.logs.join("\n");
-    expect(all).toContain("src/components/ui/utils.ts 이 다른 경로와 하드링크로 이어진 파일이라");
+    // src 없는 임시 디렉터리라 utils 는 components/ui 아래(WI-0049 D6)
+    expect(all).toContain("components/ui/utils.ts 이 다른 경로와 하드링크로 이어진 파일이라");
+    expect(all).not.toContain("src/components/ui/utils.ts");
     expect(all).toContain("아무것도 쓰지 않았습니다");
     expect(await snapshot(dir)).toEqual(before);
     expect(await fs.readFile(other, "utf8")).toBe("// 사용자 utils\n");
@@ -1737,7 +1785,7 @@ describe("axis init: 종전 기본 registry 를 새 기본값으로 갱신(WI-00
       const r = await runInitCli(dir);
       expect(r.exitCode).toBe(0);
       expect((await fs.readJSON(path.join(dir, "axis.config.json"))).registry).toBe(REGISTRY);
-      expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 를 새 기본 주소로 갱신)");
+      expect(r.logs).toContain(UPDATED("registry 를 새 기본 주소로 갱신"));
       expect(r.logs.some((l) => l.includes(`registry 를 새 기본 주소(${REGISTRY})로 갱신했습니다(종전 axis.minu.best:`))).toBe(true);
       // 다시 실행하면 같은 내용이라 「유지」
       const r2 = await runInitCli(dir);
@@ -1753,14 +1801,14 @@ describe("axis init: 종전 기본 registry 를 새 기본값으로 갱신(WI-00
       const r = await runInitCli(dir);
       expect(r.exitCode).toBe(0);
       expect((await fs.readJSON(path.join(dir, "axis.config.json"))).registry).toBe(custom);
-      expect(r.logs).toContain("✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, registry 는 기존 값 유지)");
+      expect(r.logs).toContain(UPDATED("registry 는 기존 값 유지"));
       expect(r.logs.some((l) => l.includes("새 기본 주소"))).toBe(false);
     }
   );
 });
 
 describe("axis init: 링크 대상이 일반 파일이 아님(WI-0045 D17)", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
 
   it("문자 장치(/dev/null)를 가리키는 링크는 읽기 전에 「일반 파일이 아님」으로 거부(판정 단계)", async () => {
     if (process.platform === "win32" || !(await fs.pathExists("/dev/null"))) return;
@@ -1797,7 +1845,7 @@ describe("axis init: 링크 대상이 일반 파일이 아님(WI-0045 D17)", () 
 });
 
 describe("axis init: utils.ts 쓰기 실패 때 config 안내는 사실대로", () => {
-  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS.componentsDir, "utils.ts");
+  const utilsFile = (dir: string) => path.join(dir, INIT_DEFAULTS_NO_SRC.componentsDir, "utils.ts");
   const configPath = (dir: string) => path.join(dir, "axis.config.json");
 
   /** utils.ts 를 만들 수 없게(디렉터리 쓰기 불가) 둡니다 */
@@ -1846,5 +1894,149 @@ describe("axis init: utils.ts 쓰기 실패 때 config 안내는 사실대로", 
       await fs.chmod(ui, 0o755);
     }
     expect(await fs.pathExists(configPath(dir))).toBe(true);
+  });
+});
+
+describe("WI-0049 D6: 경로 기본값을 실재 파일 · src 유무로 정함", () => {
+  it("src 없는 Tailwind 3 프로젝트(app/globals.css · tailwind.config.js): 찾은 경로를 기록, src/ 를 만들지 않음, 안내 없음", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.17" } }));
+    await fs.outputFile(path.join(dir, "app/globals.css"), "@tailwind base;\n");
+    await fs.writeFile(path.join(dir, "tailwind.config.js"), "module.exports = {};\n");
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config).toMatchObject({
+      componentsDir: "./components/ui",
+      tailwindConfig: "./tailwind.config.js",
+      globalCss: "./app/globals.css",
+    });
+    expect(await fs.pathExists(path.join(dir, "src"))).toBe(false);
+    expect(await fs.pathExists(path.join(dir, "components/ui/utils.ts"))).toBe(true);
+    expect(r.logs.some((l) => l.includes("찾지 못해"))).toBe(false);
+  });
+
+  it("음성 대조: src/ 가 있으면 종전 기본값(./src/components/ui · ./src/app/globals.css)", async () => {
+    const dir = await tmpDir();
+    await fs.ensureDir(path.join(dir, "src"));
+    const { answers } = await resolveInitAnswers(dir);
+    expect(answers).toEqual({ ...INIT_DEFAULTS });
+  });
+
+  it("후보 순서: app/globals.css → src/app/globals.css → styles/globals.css → src/styles/globals.css → globals.css", async () => {
+    const order = ["app/globals.css", "src/app/globals.css", "styles/globals.css", "src/styles/globals.css", "globals.css"];
+    for (let i = 0; i < order.length; i++) {
+      const dir = await tmpDir();
+      for (const f of order.slice(i)) await fs.outputFile(path.join(dir, f), "");
+      expect({ i, css: (await resolveInitAnswers(dir, false)).answers.globalCss }).toEqual({ i, css: `./${order[i]}` });
+    }
+  });
+
+  it("Tailwind 4 이면 tailwindConfig 를 정하지 않고 그 안내도 없음", async () => {
+    const dir = await tmpDir();
+    const { answers, notes } = await resolveInitAnswers(dir, true);
+    expect(answers.tailwindConfig).toBeUndefined();
+    expect(notes).toEqual([NOTE_CSS_DEFAULT]);
+  });
+});
+
+describe("WI-0041 D4 · D5: 재실행은 기존 키를 병합하고 값을 보존", () => {
+  it("기존 componentsDir 는 디렉터리가 없어도 보존, 실재하는 globalCss · tailwindConfig 는 보존", async () => {
+    const dir = await tmpDir();
+    await fs.outputFile(path.join(dir, "styles/main.css"), "");
+    await fs.writeFile(path.join(dir, "tw.config.ts"), "");
+    await fs.writeJSON(path.join(dir, "axis.config.json"), {
+      componentsDir: "./ui",
+      globalCss: "./styles/main.css",
+      tailwindConfig: "./tw.config.ts",
+    });
+    const r = await runInitCli(dir);
+    expect(r.exitCode).toBe(0);
+    expect(await fs.readJSON(path.join(dir, "axis.config.json"))).toMatchObject({
+      componentsDir: "./ui",
+      globalCss: "./styles/main.css",
+      tailwindConfig: "./tw.config.ts",
+    });
+    expect(r.logs.some((l) => l.startsWith("!") && (l.includes("globalCss") || l.includes("tailwindConfig")))).toBe(false);
+  });
+
+  it("실재하지 않는 globalCss 는 찾은 파일로 바꾸고 알림(cli 1.5.4 템플릿 config ./globals.css 사례)", async () => {
+    const dir = await tmpDir();
+    await fs.outputFile(path.join(dir, "app/globals.css"), "");
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { template: "theme-only", componentsDir: "./components/ui", globalCss: "./globals.css" });
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain("! 기존 globalCss(./globals.css)가 없어 찾은 파일 ./app/globals.css 로 바꿉니다.");
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect(config.globalCss).toBe("./app/globals.css");
+    expect(config.template).toBe("theme-only");
+  });
+
+  it("실재하지 않는데 찾은 파일도 없으면 기존 값을 그대로 두고 알림(재실행 때 값이 오가지 않음)", async () => {
+    const dir = await tmpDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./src/components/ui", globalCss: "./src/app/globals.css" });
+    const r1 = await runInitCli(dir);
+    const after1 = await fs.readFile(path.join(dir, "axis.config.json"), "utf8");
+    expect(JSON.parse(after1).globalCss).toBe("./src/app/globals.css");
+    expect(r1.logs.some((l) => l.includes("기존 globalCss(./src/app/globals.css) 파일이 없고"))).toBe(true);
+    const r2 = await runInitCli(dir);
+    expect(r2.logs).toContain("✓ axis.config.json 유지(이미 같은 내용)");
+    expect(await fs.readFile(path.join(dir, "axis.config.json"), "utf8")).toBe(after1);
+  });
+
+  it("mergeInitConfig: 기존 키 순서 유지 · init 이 다루지 않는 키 보존 · 없던 init 키는 앞 키 다음 · next 에 없는 init 키는 지움", () => {
+    const { merged, removed } = mergeInitConfig(
+      { brand: "ontology", componentsDir: "./a", tailwindConfig: "./t.ts", monetDir: "m" },
+      { $schema: "s", componentsDir: "./b", globalCss: "./g.css", registry: "r" }
+    );
+    expect(Object.entries(merged)).toEqual([
+      ["$schema", "s"],
+      ["brand", "ontology"],
+      ["componentsDir", "./b"],
+      ["globalCss", "./g.css"],
+      ["registry", "r"],
+      ["monetDir", "m"],
+    ]);
+    expect(removed).toEqual(["tailwindConfig"]);
+  });
+
+  it("Tailwind 4 로 바뀐 프로젝트에서 재실행하면 tailwindConfig 를 지우고 알림, brand 는 남김", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4.1.0" } }));
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", tailwindConfig: "./tailwind.config.ts", brand: "ontology" });
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain("  지운 키: tailwindConfig (Tailwind 4 이상은 설정 파일을 쓰지 않습니다)");
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect("tailwindConfig" in config).toBe(false);
+    expect(config.brand).toBe("ontology");
+  });
+
+  it("기존 파일의 들여쓰기(4칸)를 따름", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "axis.config.json"), JSON.stringify({ componentsDir: "./x", brand: "b" }, null, 4) + "\n");
+    await runInitCli(dir);
+    const text = await fs.readFile(path.join(dir, "axis.config.json"), "utf8");
+    expect(text).toContain('\n    "componentsDir": "./x"');
+  });
+});
+
+describe("WI-0065 D8: init 애니메이션 플러그인 안내", () => {
+  it("Tailwind 4 는 tw-animate-css import 를 안내, lockfile 을 따름", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package-lock.json"), "");
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }));
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain(
+      '  애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. npm install tw-animate-css 뒤 전역 CSS 에 @import "tw-animate-css"; 를 넣으세요.'
+    );
+  });
+
+  it("음성 대조: 플러그인이 이미 선언돼 있으면 안내 없음", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(
+      path.join(dir, "package.json"),
+      JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0", "tailwindcss-animate": "^1.0.7" } })
+    );
+    const r = await runInitCli(dir);
+    expect(r.logs.some((l) => l.includes("애니메이션:"))).toBe(false);
   });
 });

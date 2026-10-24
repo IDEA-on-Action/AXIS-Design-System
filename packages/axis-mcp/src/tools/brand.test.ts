@@ -76,7 +76,9 @@ describe("handleListBrands · handleGetBrand (T5-2)", () => {
     expect(got.brand?.importPath).toBe("@axis-ds/tokens/css/brands/sample");
     expect(got.brand?.tokens.light["--primary"]).toBe("180 81% 43%");
     expect(got.brand?.tokens.dark["--background"]).toBe("217 41% 10%");
-    expect(got.brand?.providerExample).toContain('defaultBrand="sample"');
+    // WI-0065 D7: defaultBrand 대신 data-brand · setBrand(CLI 와 같은 코어)
+    expect(got.brand?.providerExample).toContain('<html lang="ko" data-brand="sample">');
+    expect(got.brand?.providerExample).not.toContain("defaultBrand");
   });
 
   it("없는 브랜드는 brand null 과 설치된 이름 목록, isError 대상 아님(throw 없음)", async () => {
@@ -110,7 +112,8 @@ describe("미설치 · 미지원 · 빌드 전 안내 (T5-4)", () => {
       expect(list.brands).toEqual([]);
       const listText = formatListBrandsResult(list);
       expect(listText).toContain(guide);
-      expect(listText).toContain("pnpm add @axis-ds/tokens@^1.3.0");
+      // WI-0065 D7: CLI 와 같은 범위(^1.6.0), ^ 가 셸에서 사라지지 않게 따옴표
+      expect(listText).toContain('pnpm add "@axis-ds/tokens@^1.6.0"');
 
       const got = await handleGetBrand({ name: "sample", targetDir: dir });
       expect(got.status).toBe(status);
@@ -131,7 +134,7 @@ describe("CLI · MCP 응답 동일성 (T5-5, AC3)", () => {
     });
   }
 
-  it("format 글에 CLI 출력 항목(이름 · 설명 · 테마 · import 경로 · defaultBrand 예시 · 주요 토큰 값)이 모두 있음", async () => {
+  it("format 글에 CLI 출력 항목(이름 · 설명 · 테마 · import 경로 · 브랜드 켜기 예시 · 주요 토큰 값)이 모두 있음", async () => {
     const dir = await project("1.3");
     const list = await handleListBrands({ targetDir: dir });
     const got = await handleGetBrand({ name: "sample", targetDir: dir });
@@ -151,7 +154,7 @@ describe("CLI · MCP 응답 동일성 (T5-5, AC3)", () => {
     expect(text).toContain(brand.themes.join(" · "));
     expect(text).toContain(`@import "${brand.importPath}";`);
     expect(text).toContain(brand.providerExample);
-    expect(text).toContain('<ThemeProvider defaultBrand="sample">');
+    expect(text).toContain('setBrand("sample");');
 
     const light = Object.entries(brand.tokens.light);
     const dark = Object.entries(brand.tokens.dark);
