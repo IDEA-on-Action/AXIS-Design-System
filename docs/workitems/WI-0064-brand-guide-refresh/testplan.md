@@ -50,3 +50,19 @@ docs/guides 만 바꾸면 frontend CI 가 돌지 않을 수 있어(paths 필터�
 | 표 안의 파이프 | 파이프로 시작하는 표 행에서 연속 파이프 2개를 검색(코드 안 파이프는 표를 깨므로) | 0건 |
 | 상대 링크 | `./quick-start.md` · `./theme-customization.md` 는 같은 docs/guides 디렉터리 | 파일 실재 |
 | 외부 링크 | WI-0068 이슈 #182 | 이슈 번호는 project-todo 80행 · wi-mapping 과 같음 |
+
+## 4. 검토 지적 반영 (I6, 2026-10-24)
+
+| 항목 | 방법 | 결과 |
+|---|---|---|
+| 지적 근거 | `packages/axis-theme/src/index.ts` 브랜드 초기값(111-112행)과 브랜드 effect(127-133행) 읽기 | 저장값 · `defaultBrand` 가 모두 없으면 `undefined`, effect 가 `removeAttribute("data-brand")`. 코드 확인(브라우저 측정 아님) |
+| 남은 「둘 중 하나」 서술 | `docs/guides` 에서 `data-brand` · `defaultBrand` 를 담은 행 전수 확인 | quick-start 156행 · theme-customization 빠른 시작 2번 · 첫 화면 처방 첫 항목 · 사용자 브랜드 절 적용 문장(「`<html data-brand="acme">`나 `defaultBrand`」) 4곳을 고침. 용도별 표 · 「Provider 없이 적용」 절의 Provider 병용 항목은 이미 Provider 유무를 갈라 그대로 둠 |
+| 자동 테스트 | 2절과 같은 명령 재실행 | 아래 결과 |
+
+
+| 대상 | 명령 | 결과 |
+|---|---|---|
+| guidance · init | `pnpm exec vitest run src/guidance.test.ts src/init/init.test.ts` (packages/axis-cli) | 2파일 134/134, rc 0 |
+| 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 한 줄 주입 뒤 guidance.test | rc 1(이 문서를 실제로 읽음). 백업본으로 되돌리고 `sha256sum -c` OK |
+| cli 전체 | `pnpm test` (packages/axis-cli) | 662/662, rc 0 |
+| U+2014 | 변경 4파일에서 문자 계수 | 0건 |

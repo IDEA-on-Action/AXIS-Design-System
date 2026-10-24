@@ -245,10 +245,10 @@ export default {
 - [ ] `presets: [axisPreset]` 를 넣었다. 빠지면 브랜드를 켜도 Button 둥글기가 6px(Tailwind 기본 `rounded-md`)이고 글꼴이 Tailwind 기본(`ui-sans-serif`)입니다. 넣으면 10px · Pretendard 스택입니다.
 - [ ] `@axis-ds/tokens/css/shadcn` 을 넣었다. preset 의 `rounded-*` 는 shadcn 변수 `--radius` 를 읽으므로, 빠지면 브랜드를 켰을 때는 ontology 가 `--radius` 를 정의해 드러나지 않다가 **브랜드를 끄면 둥글기가 0px** 이 됩니다. 넣으면 켬 10px · 끔 6px 입니다.
 
-**2. 브랜드 켜기** - 둘 중 하나가 있어야 합니다. 브랜드 CSS 를 import 하는 것만으로는 화면이 바뀌지 않습니다.
+**2. 브랜드 켜기** - `ThemeProvider` 를 쓰는지에 따라 다릅니다. 브랜드 CSS 를 import 하는 것만으로는 화면이 바뀌지 않습니다.
 
-- [ ] `ThemeProvider` 의 `defaultBrand` 또는 `setBrand`(아래 「브랜드 적용」). 사용자가 브랜드를 끌 수 있게 하려면 `defaultBrand` 를 쓰지 않습니다(같은 절의 「`defaultBrand` 와 해제」)
-- [ ] 마크업 속성 `<html data-brand="ontology">`(아래 「Provider 없이 적용 · 첫 화면」)
+- [ ] `ThemeProvider` 를 쓰는 앱: `defaultBrand` 또는 `setBrand`(아래 「브랜드 적용」). 첫 화면까지 맞추려면 마크업 속성 `<html data-brand="ontology">` 를 함께 넣되, 마크업 속성만으로는 안 됩니다. 브랜드가 `undefined` 이면 `ThemeProvider` 가 마운트 때 속성을 지웁니다. 사용자가 브랜드를 끌 수 있게 하려면 `defaultBrand` 를 쓰지 않습니다(같은 절의 「`defaultBrand` 와 해제」)
+- [ ] `ThemeProvider` 없이 쓰는 앱: 마크업 속성 `<html data-brand="ontology">` 단독(아래 「Provider 없이 적용 · 첫 화면」)
 
 **3. 글꼴**
 
@@ -410,7 +410,7 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 
 처방은 React 보다 먼저 속성을 붙이는 것입니다.
 
-- 서버에서 그리는 앱이고 브랜드를 고정한다면 서버 마크업에 `<html data-brand="ontology">` 를 넣습니다.
+- 서버에서 그리는 앱이고 브랜드를 고정한다면 서버 마크업에 `<html data-brand="ontology">` 를 넣습니다. `ThemeProvider` 를 함께 쓰면 같은 브랜드를 `defaultBrand` 로도 지정합니다(빼면 마운트 때 속성이 지워집니다).
 - SPA 는 `<head>` 의 인라인 스크립트로 저장값을 붙입니다. 이 스크립트를 넣은 측정에서는 FCP 시점의 전환이 없었습니다(CPU 1배 0/9, FCP 를 수집하지 못한 1회 제외 · 4배 0/10).
 
 ```html
@@ -521,7 +521,7 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
 
 라이트 블록에서 바꾼 색 변수는 다크 블록에도 짝을 둡니다. 짝이 없으면 같은 요소에 `.dark`를 붙였을 때 라이트 값이 다크에도 남습니다.
 
-앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `<html data-brand="acme">`나 `ThemeProvider`의 `defaultBrand="acme"`로 적용합니다. 위 예는 `@axis-ds/tokens` 브랜드와 같은 선택자를 씁니다. 라이트 `[data-brand="acme"][data-brand="acme"]`와 다크 선택자 3종이 모두 (0,2,0)이라 기본 `:root` · `.dark`와 `globals.css`의 `:root` · `.dark`(0,1,0)보다 높으므로, import 순서가 달라도 브랜드 값이 이깁니다(권장 위치는 마지막). 라이트 · 다크 블록끼리는 명시도가 같으므로 다크 블록을 라이트 블록 **뒤에** 둡니다. 라이트 선택자를 `[data-brand="acme"]` 하나로 쓰면 명시도가 (0,1,0)이 되어 나중에 온 쪽이 이기므로, 그때는 브랜드 CSS를 반드시 토큰 CSS와 `globals.css` 뒤에 두어야 합니다.
+앱 진입점에서 토큰 CSS(와 앱의 `globals.css`) 뒤에 import하고, `ThemeProvider`를 쓰면 `defaultBrand="acme"`(첫 화면까지 맞추려면 `<html data-brand="acme">`도 함께)로, Provider 없이 쓰면 `<html data-brand="acme">`로 적용합니다. 위 예는 `@axis-ds/tokens` 브랜드와 같은 선택자를 씁니다. 라이트 `[data-brand="acme"][data-brand="acme"]`와 다크 선택자 3종이 모두 (0,2,0)이라 기본 `:root` · `.dark`와 `globals.css`의 `:root` · `.dark`(0,1,0)보다 높으므로, import 순서가 달라도 브랜드 값이 이깁니다(권장 위치는 마지막). 라이트 · 다크 블록끼리는 명시도가 같으므로 다크 블록을 라이트 블록 **뒤에** 둡니다. 라이트 선택자를 `[data-brand="acme"]` 하나로 쓰면 명시도가 (0,1,0)이 되어 나중에 온 쪽이 이기므로, 그때는 브랜드 CSS를 반드시 토큰 CSS와 `globals.css` 뒤에 두어야 합니다.
 
 ```tsx
 import "@axis-ds/tokens/css"

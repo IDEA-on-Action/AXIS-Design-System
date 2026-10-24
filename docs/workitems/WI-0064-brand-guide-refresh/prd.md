@@ -47,6 +47,7 @@
 | I3 | Tailwind 3 의 색 없는 `border` 는 gray-200 이라고 적었어요(quick-start · README 의 Tailwind 4 비교 문장 괄호도 같은 내용으로 정정) | A3 의 Next 빌드 산출 CSS 에서 `css/shadcn` 의 `*{border-color:hsl(var(--border))}`(21904번째 문자) 뒤에 preflight `*,:after,:before{...border:0 solid #e5e7eb}`(33452번째)가 와요. 브라우저 계산값은 재지 않았어요 |
 | I4 | quick-start Tailwind 3 블록에서 `darkMode: "class"` 를 뺐어요 | preset 이 `darkMode: ["class"]` 를 정해요(`tailwind-preset.ts` 4행) |
 | I5 | cli 서술 자리에는 가이드 안에 HTML 주석 TODO 를 두었어요(화면에 보이지 않음) | rebase 때 확정할 위치와 확인 항목 3개를 파일 안에 남기려는 것이에요 |
+| I6 | 브랜드 켜기 안내를 「`ThemeProvider` 를 쓰면 `defaultBrand`(첫 화면용 마크업 속성은 함께), Provider 없이 쓸 때만 마크업 속성 단독」으로 나눴어요(quick-start 3절 2단계, theme-customization 빠른 시작 2번 · 첫 화면 처방 첫 항목 · 사용자 브랜드 적용 문장) | 검토 지적(major). `ThemeProvider` 는 브랜드가 `undefined` 이면 마운트 때 `data-brand` 를 지워요(`packages/axis-theme/src/index.ts` 브랜드 effect 의 `removeAttribute`, 초기값은 저장값, 없으면 `defaultBrand`, 둘 다 없으면 `undefined`). 코드로 확인했고 이 조합을 브라우저로 재지는 않았어요 |
 
 ## 2. 요구사항
 

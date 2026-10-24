@@ -155,7 +155,7 @@ export default function App({ children }: { children: React.ReactNode }) {
 브랜드(현재 `ontology`)를 쓰려면 두 가지를 더합니다. 브랜드 CSS 를 import 하는 것만으로는 화면이 바뀌지 않습니다.
 
 1. 브랜드 CSS 를 토큰 CSS 뒤에 import 합니다. Tailwind 4 는 위 4줄 다음에 `@import "@axis-ds/tokens/css/brands/ontology";`, Tailwind 3 은 `@import "@axis-ds/tokens/css/shadcn";` 다음 줄에 같은 줄을 둡니다.
-2. 브랜드를 켭니다. 늘 쓰는 브랜드면 `<ThemeProvider defaultTheme="system" defaultBrand="ontology">` 처럼 `defaultBrand` 를 지정하거나 마크업에 `<html data-brand="ontology">` 를 넣습니다. 사용자가 끌 수 있게 하려면 `defaultBrand` 없이 `useTheme()` 의 `setBrand("ontology")` · `setBrand(undefined)` 로 켜고 끕니다(`defaultBrand` 를 쓰면 끈 상태가 새로고침 뒤 풀립니다).
+2. 브랜드를 켭니다. 위처럼 `ThemeProvider` 를 쓰는 앱에서 늘 쓰는 브랜드면 `<ThemeProvider defaultTheme="system" defaultBrand="ontology">` 처럼 `defaultBrand` 를 지정합니다(첫 화면까지 맞추려면 마크업 `<html data-brand="ontology">` 도 함께 넣습니다). 마크업 속성만 넣고 `defaultBrand` 를 빼면 `ThemeProvider` 가 마운트 때 속성을 지워 브랜드가 사라집니다. 마크업 속성 단독은 `ThemeProvider` 없이 쓸 때만 성립합니다. 사용자가 끌 수 있게 하려면 `defaultBrand` 없이 `useTheme()` 의 `setBrand("ontology")` · `setBrand(undefined)` 로 켜고 끕니다(`defaultBrand` 를 쓰면 끈 상태가 새로고침 뒤 풀립니다).
 
 글꼴은 패키지가 스택만 지정하므로 Pretendard 웹폰트를 앱에서 로드합니다. 체크리스트 · 함정 · 첫 화면 처리는 [테마 커스터마이징 가이드](./theme-customization.md) 「4. 브랜드 테마」의 「브랜드 적용 빠른 시작」에 있습니다.
 
