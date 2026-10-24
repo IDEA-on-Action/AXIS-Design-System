@@ -23,3 +23,9 @@
 ## 3. 실측 (ontology 경로 A, WI-0065 testplan 2절)
 
 src 없는 Next 15.5.28 + Tailwind 3.4.19 프로젝트에 빌드한 cli 로 `init -y` 를 돌리면 config 에 `./components/ui` · `./tailwind.config.ts`(실재) · `./app/globals.css`(실재) 가 기록되고 「찾지 못해」 안내가 없었어요(측정). 같은 프로젝트에 cli 1.5.4 코드(main 59dd6a3 빌드)는 `./src/components/ui` · `./src/app/globals.css` 를 기록하고 `src/components/ui/utils.ts` 를 만들었어요(측정, 음성 대조).
+
+## CI 스모크 정합(2026-10-25)
+
+- 첫 PR CI 에서 `pnpm cli-smoke`(scripts/cli-bundled-smoke.mjs) 3건 실패: 스모크가 종전 기본값 `src/components/ui` 를 박아 두어, src 없는 임시 프로젝트에서 init 이 이제 `./components/ui` 를 기록하자 설치 파일을 찾지 못함(의도된 동작 변경, 회귀 아님)
+- 처방: 스모크가 init 이 실제로 쓴 `axis.config.json` 의 componentsDir · agenticDir 를 읽도록 바꿈(add.ts 와 같은 형제 agentic 규칙). 로컬 `pnpm cli-smoke` rc 0, ✓ 21건
+- 구현 단계 게이트 목록에 cli-smoke 가 빠져 있었음. scripts/ · .github/workflows 의 `src/components` 하드코딩 전수 grep 0건

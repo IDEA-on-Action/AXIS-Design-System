@@ -90,6 +90,18 @@ function newProject(name) {
 }
 const count = (text, needle) => text.split(needle).length - 1;
 
+/**
+ * 설치 위치는 init 이 실제로 기록한 axis.config.json 에서 읽는다(WI-0049: src 가 없으면 ./components/ui).
+ * 경로를 스모크에 박으면 init 기본값이 바뀔 때마다 스모크가 낡는다. agentic 은 add.ts 와 같은 규칙
+ * (agenticDir 이 없으면 componentsDir 의 형제 agentic)을 따른다.
+ */
+function installDirs(dir) {
+  const cfg = JSON.parse(readFileSync(join(dir, 'axis.config.json'), 'utf8'));
+  const ui = join(dir, cfg.componentsDir);
+  const agentic = cfg.agenticDir ? join(dir, cfg.agenticDir) : join(dirname(ui), 'agentic');
+  return { ui, agentic };
+}
+
 // 동봉본이 없어도 여기서 멈추지 않습니다(G3 검사가 결함으로 잡아야 함)
 const bundledVersion = existsSync(BUNDLED) ? JSON.parse(readFileSync(BUNDLED, 'utf8')).version : '없음';
 console.log(`[cli-smoke] cli ${CLI} (동봉본 version ${bundledVersion})`);
@@ -111,11 +123,12 @@ for (const [label, registry] of [['G3-a 접속 불가(127.0.0.1:9)', 'http://127
   check(r.rc === 0, `add rc 0 (받은 값 ${r.rc})`, r.out);
   check(count(r.out, FALLBACK_NOTICE) === 1, `폴백 안내 정확히 1번(${count(r.out, FALLBACK_NOTICE)}번)`, r.out);
   check(net.includes(`fetch ${registry}/index.json`), '양성 대조: 원격 index.json 요청을 시도함', net);
+  const { ui, agentic } = installDirs(dir);
   const files = {
-    button: join(dir, 'src/components/ui/button.tsx'),
-    utils: join(dir, 'src/components/ui/utils.ts'),
-    labels: join(dir, 'src/components/ui/agentic-a11y-labels.ts'),
-    tool: join(dir, 'src/components/agentic/tool-call-card.tsx'),
+    button: join(ui, 'button.tsx'),
+    utils: join(ui, 'utils.ts'),
+    labels: join(ui, 'agentic-a11y-labels.ts'),
+    tool: join(agentic, 'tool-call-card.tsx'),
   };
   const missing = Object.values(files).filter((f) => !existsSync(f));
   check(missing.length === 0, '동봉본에서 button · utils · agentic-a11y-labels · tool-call-card 설치', missing.join('\n'));
@@ -134,7 +147,7 @@ console.log('\nG4-a 덮어쓰기(-y 건너뜀, --overwrite 만 덮어씀)');
   const reg = 'http://127.0.0.1:9/r';
   await run(['init', '-y'], dir, reg, netLog);
   const first = await run(['add', 'button', '-y'], dir, reg, netLog);
-  const file = join(dir, 'src/components/ui/button.tsx');
+  const file = join(installDirs(dir).ui, 'button.tsx');
   if (first.rc !== 0 || !existsSync(file)) {
     bad(`첫 설치 실패 rc ${first.rc}\n${first.out}`);
   } else {
