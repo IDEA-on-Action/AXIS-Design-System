@@ -14,15 +14,15 @@ type SortDir = 'asc' | 'desc'
 
 const ratingOrder: Record<string, number> = { S: 4, A: 3, B: 2, C: 1 }
 const ratingColor: Record<string, string> = {
-  S: 'bg-chart-success/20 text-chart-success',
-  A: 'bg-chart-blue/20 text-chart-blue',
-  B: 'bg-chart-warning/20 text-chart-warning',
-  C: 'bg-chart-alert/20 text-chart-alert',
+  S: 'bg-status-soft-success text-status-success',
+  A: 'bg-chart-1/20 text-chart-1',
+  B: 'bg-status-soft-warning text-status-warning',
+  C: 'bg-status-soft-error text-status-error',
 }
 const riskColor: Record<string, string> = {
-  low: 'text-chart-success',
-  mid: 'text-chart-warning',
-  high: 'text-chart-alert',
+  low: 'text-status-success',
+  mid: 'text-status-warning',
+  high: 'text-status-error',
 }
 const riskLabel: Record<string, string> = { low: '낮음', mid: '보통', high: '높음' }
 

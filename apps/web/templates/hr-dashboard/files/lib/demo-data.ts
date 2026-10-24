@@ -34,10 +34,10 @@ export interface ProjectStatus {
 }
 
 export const projectStatusData: ProjectStatus[] = [
-  { label: '정상 진행', value: 14, color: 'hsl(142, 71%, 45%)' },
-  { label: '주의 필요', value: 6, color: 'hsl(38, 92%, 50%)' },
-  { label: '지연', value: 3, color: 'hsl(0, 72%, 51%)' },
-  { label: '완료', value: 1, color: 'hsl(217, 91%, 60%)' },
+  { label: '정상 진행', value: 14, color: 'var(--axis-status-success)' },
+  { label: '주의 필요', value: 6, color: 'var(--axis-status-warning)' },
+  { label: '지연', value: 3, color: 'var(--axis-status-error)' },
+  { label: '완료', value: 1, color: 'hsl(var(--chart-1))' },
 ]
 
 // ── 인력 흐름 (바+라인 차트) ─────────────

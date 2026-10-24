@@ -45,6 +45,27 @@ async function collectFiles(dir, baseDir) {
   return files
 }
 
+/**
+ * template.json 의 dependencies · devDependencies 와 files/package.json 의 같은 필드를 비교해 다른 항목을 돌려줍니다.
+ * files/package.json 이 없으면 비교하지 않습니다(빈 배열). 키 순서는 보지 않고 이름 · 범위만 봅니다
+ */
+function dependencyMismatches(meta, templateFiles) {
+  const pkgFile = templateFiles.find((f) => f.path === 'package.json')
+  if (!pkgFile) return []
+  const pkg = JSON.parse(pkgFile.content)
+  const out = []
+  for (const field of ['dependencies', 'devDependencies']) {
+    const a = meta[field] ?? {}
+    const b = pkg[field] ?? {}
+    for (const name of new Set([...Object.keys(a), ...Object.keys(b)])) {
+      if (a[name] !== b[name]) {
+        out.push(`${field}.${name}: template.json ${a[name] ?? '(없음)'} / files/package.json ${b[name] ?? '(없음)'}`)
+      }
+    }
+  }
+  return out
+}
+
 async function loadExternalBlocks() {
   const allBlocks = []
   const sourceCounts = {}
@@ -126,6 +147,15 @@ async function build() {
       templateFiles = await collectFiles(filesDir, filesDir)
     } catch {
       console.warn(`경고: ${entry.name}/files/ 디렉토리 없음`)
+    }
+
+    // template.json 과 files/package.json 의 의존성이 같아야 합니다(WI-0067 D5). cli 는 template.json 으로 설치 안내를 하고,
+    // init 은 files/package.json 을 그대로 쓰므로 둘이 어긋나면 안내와 실제 설치가 달라집니다
+    const mismatches = dependencyMismatches(meta, templateFiles)
+    if (mismatches.length > 0) {
+      throw new Error(
+        `${entry.name}: template.json 과 files/package.json 의 의존성이 다릅니다\n  ${mismatches.join('\n  ')}`
+      )
     }
 
     // 상세 JSON 생성

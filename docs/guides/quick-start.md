@@ -233,6 +233,24 @@ npx shadcn@latest add https://axis-design-system.pages.dev/r/button.json --overw
 - init 이 `package.json` 에 넣은 npm 패키지 `cn` 은 add 뒤에도 남습니다(설치된 AXIS 파일은 쓰지 않음). 필요 없으면 직접 지웁니다.
 - 의존 항목(`utils` · `agentic-a11y-labels`)은 같은 레지스트리 URL 로 함께 받습니다. 공식 레지스트리(`ui.shadcn.com`)에는 `components.json` 의 `baseColor` 색 정의(`/r/colors/`)만 요청합니다.
 
+## 6. 템플릿에서 시작하기 · 템플릿에서 ontology 켜기
+
+빈 디렉터리에서 시작한다면 위 1~3번 대신 템플릿을 받을 수 있습니다. 템플릿 4종(`theme-only` · `dashboard` · `landing-page` · `hr-dashboard`)은 2026-10-25(WI-0067)부터 `@axis-ds/tokens` 의 CSS 변수와 Tailwind 3 preset, Pretendard 글꼴을 쓰고, ontology 브랜드 import 를 주석 한 줄로 담고 있습니다. 템플릿에는 `ThemeProvider` 가 없습니다.
+
+```bash
+npx @axis-ds/cli template init theme-only --dir my-app   # 다른 템플릿은 slug 만 바꿉니다
+cd my-app
+pnpm install                                             # npm install 도 됩니다
+npx @axis-ds/cli check                                   # tailwind.config · globals.css 가 PASS
+```
+
+ontology 를 켜려면 두 가지를 합니다.
+
+1. `app/globals.css` 의 `/* @import "@axis-ds/tokens/css/brands/ontology"; */` 주석을 풉니다. `npx @axis-ds/cli theme add ontology` 를 실행해도 같은 import 줄이 들어갑니다.
+2. `app/layout.tsx` 의 `<html>` 에 `data-brand="ontology"` 를 넣습니다. `ThemeProvider` 를 쓰는 앱으로 바꿨다면 `<ThemeProvider defaultBrand="ontology">`(`@axis-ds/theme` 1.7.0 이상) 로도 켤 수 있습니다.
+
+끄려면 `data-brand` 속성을 지웁니다(런타임에는 `document.documentElement.removeAttribute("data-brand")`, `ThemeProvider` 를 쓰면 `setBrand(undefined)` 이고 1.7.0 부터 끈 상태가 새로고침 뒤에도 유지됩니다). `axis check` 는 `axis.config.json` 에 `"brand": "ontology"` 가 있을 때(`theme add` 가 기록, 주석만 풀었다면 직접 추가) `brand` · `brand.activation` 항목으로 import 와 켜는 코드를 확인합니다. 측정값과 자세한 절차는 [테마 커스터마이징 가이드](./theme-customization.md) 「템플릿에서 ontology 켜기」에 있습니다.
+
 ## 다음 단계
 
 - 전체 컴포넌트 목록은 [컴포넌트 문서](https://axis-design-system.pages.dev/components/)를 참고하세요.

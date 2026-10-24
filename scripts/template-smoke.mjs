@@ -11,6 +11,9 @@
  *   3. npx next build
  *   4. 판정(CSS 내용): .next/static/css/*.css 에서 `@tailwind` 지시문이 0건이고 유틸리티 `.bg-background` 가 있어야 PASS.
  *      PostCSS 설정이 없으면 build 는 rc 0 인데 `@tailwind` 가 그대로 남고 유틸리티가 0건이라(WI-0037 측정) rc 로는 판정하지 않습니다.
+ *      WI-0067: AXIS 토큰 전환 회귀도 잡도록 `--axis-*` 변수 정의 1건 이상 · 전환 전 자체 --primary(240 5.9% 10%) 0건을 더합니다.
+ *      `.bg-background` 는 전환 전후 모두 1건이라 이 두 조건이 없으면 자체 변수 템플릿도 PASS 였습니다(WI-0067 측정).
+ *      AXIS 값 자체(예: --primary 221 39% 11%)는 tokens 버전마다 바뀔 수 있어 판정에 넣지 않습니다.
  *
  * 사용: node scripts/template-smoke.mjs [slug ...] [--templates-dir <dir>] [--cli <dist/index.js>] [--keep]
  *   slug 를 주지 않으면 로컬 템플릿 4종(theme-only · dashboard · landing-page · hr-dashboard)
@@ -73,12 +76,15 @@ await new Promise((ok, fail) => server.listen(0, '127.0.0.1', ok).on('error', fa
 const port = server.address().port;
 const env = { AXIS_TEMPLATE_URL: `http://127.0.0.1:${port}`, NEXT_TELEMETRY_DISABLED: '1', CI: '1' };
 
+/** 전환 전 템플릿 4종이 :root 에 직접 정의하던 --primary 값(minify 뒤 공백 유무 모두) */
+const LEGACY_PRIMARY = /--primary:\s*240 5\.9% 10%/g;
+
 const work = mkdtempSync(join(tmpdir(), 'axis-template-smoke-'));
 const rows = [];
 let measureFailed = false;
 for (const slug of SLUGS) {
   const dir = join(work, slug);
-  const row = { slug, init: '-', install: '-', build: '-', tailwindLeft: '-', bgBackground: '-', verdict: 'FAIL' };
+  const row = { slug, init: '-', install: '-', build: '-', tailwindLeft: '-', bgBackground: '-', axisVars: '-', legacyPrimary: '-', verdict: 'FAIL' };
   rows.push(row);
   const init = await run(process.execPath, [CLI, 'template', 'init', slug, '--dir', dir], ROOT, env);
   row.init = init.rc;
@@ -101,16 +107,24 @@ for (const slug of SLUGS) {
   const css = cssFiles.map((f) => readFileSync(join(cssDir, f), 'utf8')).join('\n');
   row.tailwindLeft = (css.match(/@tailwind/g) ?? []).length;
   row.bgBackground = (css.match(/\.bg-background\{/g) ?? []).length;
-  // 판정: CSS 파일이 있고, @tailwind 지시문이 남지 않았고, 유틸리티가 생성됨. build rc 0 은 필요조건일 뿐입니다
-  row.verdict = build.rc === 0 && cssFiles.length > 0 && row.tailwindLeft === 0 && row.bgBackground > 0 ? 'PASS' : 'FAIL';
+  row.axisVars = (css.match(/--axis-[a-z0-9-]+:/g) ?? []).length;
+  row.legacyPrimary = (css.match(LEGACY_PRIMARY) ?? []).length;
+  // 판정: CSS 파일이 있고, @tailwind 지시문이 남지 않았고, 유틸리티가 생성되고, AXIS 토큰 변수가 들어 있고 전환 전 자체 --primary 가 없음.
+  // build rc 0 은 필요조건일 뿐입니다
+  row.verdict =
+    build.rc === 0 && cssFiles.length > 0 && row.tailwindLeft === 0 && row.bgBackground > 0 && row.axisVars > 0 && row.legacyPrimary === 0
+      ? 'PASS'
+      : 'FAIL';
   if (row.verdict === 'FAIL') console.error(`[template-smoke] ${slug}: build 출력 끝\n${build.out.slice(-1500)}`);
 }
 server.close();
 
-console.log('\n템플릿 스모크 (CSS 내용 판정: @tailwind 0건 · .bg-background 1건 이상)');
-console.log('slug | init rc | install rc | build rc | @tailwind 잔존 | .bg-background | 판정');
+console.log('\n템플릿 스모크 (CSS 내용 판정: @tailwind 0건 · .bg-background 1건 이상 · --axis-* 정의 1건 이상 · 전환 전 --primary 0건)');
+console.log('slug | init rc | install rc | build rc | @tailwind 잔존 | .bg-background | --axis-* 정의 | 전환 전 --primary | 판정');
 for (const r of rows) {
-  console.log(`${r.slug} | ${r.init} | ${r.install} | ${r.build} | ${r.tailwindLeft} | ${r.bgBackground} | ${r.verdict}`);
+  console.log(
+    `${r.slug} | ${r.init} | ${r.install} | ${r.build} | ${r.tailwindLeft} | ${r.bgBackground} | ${r.axisVars} | ${r.legacyPrimary} | ${r.verdict}`
+  );
 }
 if (!KEEP) rmSync(work, { recursive: true, force: true });
 else console.log(`작업 디렉터리 유지: ${work}`);

@@ -181,6 +181,44 @@ describe("T4-1: collectCheckResults 분리 뒤 출력 불변 (brand 없는 프�
   }
 });
 
+/**
+ * WI-0067 D4 (다): AXIS 토큰으로 전환한 현재 theme-only 템플릿(apps/web/public/templates/theme-only.json)의 check 기준선.
+ * 위 T4-1 의 theme-only 는 전환 전 동결 사본이라(음성 대조) 같은 항목이 WARN 이고, 여기서는 tailwind.config · globals.css 가 PASS 입니다.
+ * 설치본은 fixture tokens-1.3 만 두므로 의존성 항목은 「설치되지 않은 의존성」 WARN 입니다(기준선에 그대로 고정).
+ */
+describe("WI-0067: 전환 후 theme-only 템플릿 check 기준선", () => {
+  it("tailwind.config · globals.css 가 PASS, fail 0 (동결 사본은 같은 두 항목이 WARN)", async () => {
+    const dir = await makeProject({ tokens: "1.3", layout: "theme-only-axis" });
+    created.push(dir);
+    const byName = Object.fromEntries((await collectCheckResults(dir)).map((r) => [r.name, r.severity]));
+    expect(byName["tailwind.config"]).toBe("pass");
+    expect(byName["globals.css"]).toBe("pass");
+    expect(Object.values(byName).filter((s) => s === "fail")).toEqual([]);
+
+    const frozen = await makeProject({ tokens: "1.3", layout: "theme-only" });
+    created.push(frozen);
+    const frozenByName = Object.fromEntries((await collectCheckResults(frozen)).map((r) => [r.name, r.severity]));
+    expect([frozenByName["tailwind.config"], frozenByName["globals.css"]]).toEqual(["warn", "warn"]);
+  });
+
+  it("runCheck 출력 줄 고정", async () => {
+    const dir = await makeProject({ tokens: "1.3", layout: "theme-only-axis" });
+    created.push(dir);
+    expect(await captureRunCheck(dir)).toEqual([
+      "\nAXIS 프로젝트 검증 결과:\n",
+      "  PASS  axis.config.json 파일이 존재합니다",
+      "  PASS  tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)",
+      "  PASS  app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css import)",
+      "  WARN  utils.ts를 찾을 수 없습니다 (컴포넌트 사용 시 필요)",
+      "  WARN  선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → pnpm install",
+      "  PASS  tailwind.config.ts의 content 가 componentsDir(./components/ui) 를 덮습니다",
+      "",
+      "  결과: 4 pass / 2 warn / 0 fail",
+      "\n권장 항목을 확인하세요.",
+    ]);
+  });
+});
+
 describe("T4-2: brand 항목을 추가하지 않는 경우", () => {
   it("config 없음 · brand 키 없음 · brand 빈 문자열 · brand 가 문자열이 아님 → 5항목", async () => {
     const configs: (Record<string, unknown> | null)[] = [

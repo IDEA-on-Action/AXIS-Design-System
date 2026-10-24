@@ -359,6 +359,64 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
 위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 cli 1.6.0 에서 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)입니다. 1.6.1 은 create-next-app 기본 `body` 의 `font-family: Arial` 이 남아 있으면 `globals.css` 도 WARN 이라 하나 더 늘어납니다(판정 규칙에서 읽은 값, 같은 프로젝트로 다시 재지는 않음). 레이아웃을 `ThemeProvider` 만 둔 형태로 바꿔도 같고, `defaultBrand="ontology"` 를 더하면 7 pass / 1 warn 입니다. `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
 
+### 템플릿에서 ontology 켜기
+
+`axis template init` 으로 받는 템플릿 4종(`theme-only` · `dashboard` · `landing-page` · `hr-dashboard`)은 2026-10-25(WI-0067)부터 `@axis-ds/tokens` 의 CSS 변수(`@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn`)와 Tailwind 3 preset 을 쓰고, `pretendard` 패키지로 Pretendard 를 로드합니다. ontology 브랜드 import 는 `app/globals.css` 에 주석 한 줄로 들어 있습니다. 템플릿에는 `ThemeProvider` 가 없으므로 기본은 마크업 속성으로 켭니다.
+
+1. 템플릿을 받고 설치합니다.
+
+   ```bash
+   npx @axis-ds/cli template init theme-only --dir my-app   # 다른 템플릿은 slug 만 바꿉니다
+   cd my-app
+   pnpm install                                             # npm install 도 됩니다
+   ```
+
+2. 브랜드 CSS 를 켭니다. `app/globals.css` 의 아래 줄에서 주석을 풉니다.
+
+   ```css
+   /* @import "@axis-ds/tokens/css/brands/ontology"; */   ← 이 줄을
+   @import "@axis-ds/tokens/css/brands/ontology";         ← 이렇게
+   ```
+
+   대신 `npx @axis-ds/cli theme add ontology` 를 실행해도 됩니다. cli 1.6.1 은 tokens CSS 2줄 다음에 같은 import 줄을 새로 넣고(주석 줄은 그대로 남음), `axis.config.json` 에 `"brand": "ontology"` 를 기록합니다. `package.json` 의 `@axis-ds/tokens ^1.7.0` 은 그대로 둡니다.
+
+3. 브랜드를 켭니다. 둘 중 하나입니다.
+   - `app/layout.tsx` 의 `<html>` 에 속성을 넣습니다: `<html lang="ko" data-brand="ontology" suppressHydrationWarning>`. hr-dashboard 처럼 `className="dark"` 가 같은 요소에 있어도 됩니다(위 「선택자와 다크 모드」의 같은 요소 구성).
+   - `ThemeProvider` 를 쓰는 앱으로 바꿨다면 `pnpm add @axis-ds/theme`(1.7.0 이상) 뒤 `<ThemeProvider defaultBrand="ontology">` 로 감쌉니다(아래 「브랜드 적용」). 이 구성은 템플릿에서 따로 재지 않았습니다.
+
+4. 끄기: 마크업으로 켰다면 `data-brand` 속성을 지웁니다(런타임에는 `document.documentElement.removeAttribute("data-brand")`). `ThemeProvider` 를 쓰면 `useTheme()` 의 `setBrand(undefined)` 이고, `@axis-ds/theme` 1.7.0 부터 끈 상태가 새로고침 뒤에도 유지됩니다(WI-0068). 브랜드 import 줄은 남겨 둬도 속성이 없으면 화면은 기본값입니다.
+
+5. `axis check` 로 확인합니다. `brand` · `brand.activation` 항목은 `axis.config.json` 에 `brand` 가 있을 때만 나옵니다(`theme add` 가 기록, 주석만 풀었다면 `"brand": "ontology"` 를 직접 추가).
+
+   ```bash
+   npx @axis-ds/cli check
+   ```
+
+   발행본 cli 1.6.1 로 잰 결과(2026-10-25, 이 저장소의 템플릿 JSON 을 `AXIS_TEMPLATE_URL` 로 가리켜 init · pnpm install, tokens 1.7.0 · tailwindcss 3.4.19 · next 15.5.28 설치):
+
+   | 단계 | theme-only · dashboard · landing-page | hr-dashboard |
+   |---|---|---|
+   | init · 설치 직후 | 5 pass / 1 warn / 0 fail(WARN 은 `utils.ts` 없음, 컴포넌트를 쓰지 않으면 무시) | 6 pass / 0 warn / 0 fail |
+   | `theme add ontology` 직후(`data-brand` 없음) | 6 pass / 2 warn / 0 fail(`brand` PASS, `brand.activation` WARN) | - |
+   | 주석 해제 · `data-brand` · config `brand` | 7 pass / 1 warn / 0 fail(`brand` · `brand.activation` PASS) | 8 pass / 0 warn / 0 fail |
+
+   `tailwind.config`(`@axis-ds/tokens/tailwind preset`) · `globals.css`(`@axis-ds/tokens/css import`) 는 4종 모두 PASS 입니다. 전환 전 템플릿은 두 항목이 WARN 이었습니다. 레이아웃 주석 안의 `data-brand="ontology"` 글자는 `brand.activation` 이 세지 않습니다(`theme add` 직후 WARN 으로 확인).
+
+**켜진 값(측정)**: theme-only · hr-dashboard 를 `next build` 뒤 `next start` 로 띄워 Chromium 149 에서 잰 계산값입니다. 기대값은 그 프로젝트에 설치된 `@axis-ds/tokens`(1.7.0) 의 `shadcn-compat.css` · `brands/ontology.css` 값이고, 12개 상태 모두 `--primary` · 배경 · 글자 · 테두리가 기대값과 같았습니다. tokens 를 올리면 값이 바뀔 수 있습니다.
+
+| 상태 | `--primary` | 배경 | 글자 | 테두리 |
+|---|---|---|---|---|
+| 기본 · 라이트 | `221 39% 11%` | rgb(255, 255, 255) | rgb(17, 24, 39) | rgb(229, 231, 235) |
+| 기본 · 다크 | `220 14% 96%` | rgb(3, 7, 17) | rgb(243, 244, 246) | rgb(31, 41, 55) |
+| ontology · 라이트 | `220 69.4% 52.5%` | rgb(247, 247, 247) | rgb(17, 20, 24) | rgb(230, 232, 235) |
+| ontology · 다크 | `219.7 81.6% 68%` | rgb(14, 16, 19) | rgb(241, 243, 245) | rgb(43, 47, 53) |
+
+- `data-brand` 를 지우면 같은 페이지에서 기본 · 라이트와 기본 · 다크 값으로 돌아왔습니다(두 템플릿 모두).
+- 글꼴: `body` 의 계산 `font-family` 는 기본에서 `--axis-font-family-sans`(`"Pretendard Variable", Pretendard, -apple-system, ...`), ontology 에서 브랜드 스택(`"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", ...`)이었고 `Pretendard Variable` 이 실제로 로드됐습니다(FontFace status loaded 로 확인).
+- 템플릿 `globals.css` 는 tokens CSS 뒤에 `@layer base { * { @apply border-border; } }` 를 둡니다. 빼면 Tailwind 3 preflight 의 `border-color`(gray-200)가 shadcn 호환 CSS 의 `*` 규칙보다 뒤에 와서 이겨, `border` 클래스 테두리가 다크 · 브랜드에서도 rgb(229, 231, 235) 로 남습니다(이 줄을 넣기 전 같은 측정에서 템플릿마다 6개 상태 중 기본 · 라이트 2개를 뺀 4개가 테두리 불일치). 직접 만든 Tailwind 3 프로젝트에도 같은 줄이 필요할 수 있습니다(템플릿 밖은 재지 않음).
+
+이미 받은 템플릿은 자동으로 바뀌지 않습니다(파일 복사 방식). `npx @axis-ds/cli template diff <slug>` 로 차이를 볼 수 있습니다.
+
 ### 개념
 
 브랜드는 테마(라이트 · 다크)와 독립된 축이며, 선택자는 `data-brand` 속성입니다. 같은 브랜드 안에서 라이트 · 다크를 그대로 전환할 수 있습니다. 브랜드를 지정하지 않으면 기본 토큰(`variables.css`, 1.6.0 기준 `:root` · `.dark` 각 263개)이 그대로 쓰입니다. 기본 토큰 값도 버전에 따라 바뀝니다. 1.6.0(WI-0029)에서는 기본 화면의 대비를 맞추려고 변수 11개 값(Button 기본 · destructive 바탕 6개, MessageBubble 사용자 바탕, 다크 보조 · 흐린 글자와 비활성 버튼 글자, PlanCard 거절 hover 글자)이 바뀌고 PlanCard 변수 3개(`--axis-plan-card-approve-bg` · `--axis-plan-card-approve-hover-bg` · `--axis-plan-card-reject-text`)가 새로 생겼습니다(`@axis-ds/tokens` CHANGELOG 1.6.0). 브랜드를 도입한 1.3.0 에서도 agentic-ui의 옅은 바탕 · 테두리 복원(PlanCard 상태 배지 · 거절 버튼 hover, DiffViewer, FeedbackButtons, AttachmentCard error 테두리)으로 기본 화면 일부가 바뀌었고, Card · Dialog에 그림자 색 수식어만 붙인 경우의 동작도 달라졌습니다. 자세한 내용은 1.3.0 릴리스 노트(`docs/workitems/WI-0025-brand-theme/release-notes.md`)의 「agentic-ui: 흰 글자 · 색 선 토큰과 옅은 바탕 복원」 · 「동작이 달라지는 사용 방식」 항목에 있습니다.
