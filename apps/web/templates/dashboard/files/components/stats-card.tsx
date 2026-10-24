@@ -14,7 +14,7 @@ export function StatsCard({ title, value, change, trend }: StatsCardProps) {
         className={`text-xs mt-1 ${
           trend === 'up'
             ? 'text-[var(--axis-status-success-strong)] dark:text-[var(--axis-status-success)]'
-            :'text-[var(--axis-status-error-strong)] dark:text-[var(--axis-status-error)]'
+            : 'text-[var(--axis-status-error-strong)] dark:text-[var(--axis-status-error)]'
         }`}
       >
         {change}

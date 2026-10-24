@@ -50,7 +50,7 @@ theme-only · hr-dashboard 를 `next build` 뒤 `next start`(프로젝트 next �
 | ontology 끔(`removeAttribute`) · 라이트 | 기본 · 라이트와 같음 | | | | 2/2 |
 | ontology 끔 · 다크 | 기본 · 다크와 같음 | | | | 2/2 |
 
-- 12/12 일치. body `font-family` 는 기본 `--axis-font-family-sans` 스택, ontology 는 브랜드 스택과 같고 `document.fonts.check('16px "Pretendard Variable"')` 12/12 참
+- 12/12 일치. body `font-family` 는 기본 `--axis-font-family-sans` 스택, ontology 는 브랜드 스택과 같고 실제 로드는 FontFace status 로 확인했어요(Pretendard 92면 중 loaded: theme-only 6 · hr-dashboard 9, 독립 검토 실측). `document.fonts.check` 는 없는 글꼴에도 참을 내서(음성 대조 실패) 근거에서 뺐어요
 - 음성 대조(구현 중 발견): `* { @apply border-border }` 를 뺀 첫 구현에서는 테두리가 모든 상태에서 rgb(229, 231, 235)(Tailwind 3 preflight 의 gray-200)라 템플릿마다 6상태 중 4개가 불일치였어요. 그 줄을 다시 넣어 해소했어요
 - 계측 정정: 두 번째 실측은 첫 실측이 남긴 `next start` 서버(cwd 가 지워진 옛 디렉터리)를 같은 포트에서 봐 글꼴이 Times New Roman 으로 나왔어요. `/proc/<pid>/cwd` 로 소유를 확인해 끄고, 실측 스크립트를 프로세스 그룹 종료 · 새 포트로 고친 뒤 다시 잰 값이 위 표예요
 - `ThemeProvider defaultBrand` 구성은 템플릿에서 재지 않았어요(템플릿에 Provider 없음, 가이드에 「재지 않음」 명시)
@@ -68,3 +68,5 @@ theme-only · hr-dashboard 를 `next build` 뒤 `next start`(프로젝트 next �
 
 - [ ] pages.dev `templates/<slug>.json` 4개 · index.json 이 커밋본과 `updatedAt` 외 동일
 - [ ] 발행본 cli 로 `AXIS_TEMPLATE_URL` 없이 4종 init → install → check 재측정
+- 테두리 열의 원측정은 body `borderTopColor` 라 대리 지표예요. 독립 검토가 theme-only 의 `.rounded-lg.border.bg-card`(전이 없는 요소)를 다시 재서 6/6 상태가 설치본 `--border` 와 같았어요(라이트 229,231,235 · 다크 31,41,55 · ontology 라이트 230,232,235 · ontology 다크 43,47,53). hr-dashboard 는 조건에 맞는 요소가 없어 border 클래스 요소는 미측정이고, `.glass-panel` 테두리는 rgba(31,41,55,0.6)로 AXIS `--border` 에서 온 값이에요.
+- hr-dashboard 차트 비텍스트 대비(독립 검토 실측): 기본 다크 바탕에서 success 8.84 · warning 10.51 · error 5.35 · chart-1 5.53(막대 불투명도 0.7 계산값 chart-1 3.20 · error 3.04, 전환 전 alert 2.48). 라이트로 쓰면 success 2.28 · warning 1.92 로 3:1 미만이지만 전환 전 색도 거의 같아 회귀는 아니에요. 템플릿 axe 게이트는 WI-0027 AC5 몫이에요.

@@ -412,7 +412,7 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 | ontology · 다크 | `219.7 81.6% 68%` | rgb(14, 16, 19) | rgb(241, 243, 245) | rgb(43, 47, 53) |
 
 - `data-brand` 를 지우면 같은 페이지에서 기본 · 라이트와 기본 · 다크 값으로 돌아왔습니다(두 템플릿 모두).
-- 글꼴: `body` 의 계산 `font-family` 는 기본에서 `--axis-font-family-sans`(`"Pretendard Variable", Pretendard, -apple-system, ...`), ontology 에서 브랜드 스택(`"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", ...`)이었고 `Pretendard Variable` 이 로드됐습니다(`document.fonts.check` 참).
+- 글꼴: `body` 의 계산 `font-family` 는 기본에서 `--axis-font-family-sans`(`"Pretendard Variable", Pretendard, -apple-system, ...`), ontology 에서 브랜드 스택(`"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", ...`)이었고 `Pretendard Variable` 이 실제로 로드됐습니다(FontFace status loaded 로 확인).
 - 템플릿 `globals.css` 는 tokens CSS 뒤에 `@layer base { * { @apply border-border; } }` 를 둡니다. 빼면 Tailwind 3 preflight 의 `border-color`(gray-200)가 shadcn 호환 CSS 의 `*` 규칙보다 뒤에 와서 이겨, `border` 클래스 테두리가 다크 · 브랜드에서도 rgb(229, 231, 235) 로 남습니다(이 줄을 넣기 전 같은 측정에서 템플릿마다 6개 상태 중 기본 · 라이트 2개를 뺀 4개가 테두리 불일치). 직접 만든 Tailwind 3 프로젝트에도 같은 줄이 필요할 수 있습니다(템플릿 밖은 재지 않음).
 
 이미 받은 템플릿은 자동으로 바뀌지 않습니다(파일 복사 방식). `npx @axis-ds/cli template diff <slug>` 로 차이를 볼 수 있습니다.
