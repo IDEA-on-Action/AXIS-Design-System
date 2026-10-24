@@ -29,6 +29,6 @@
 ## 생성물 · 릴리스
 - [x] `build:templates` 결과 커밋(상세 JSON 4개 + index.json, 둘 다 내용 변경)
 - [x] changeset 없음(npm 릴리스 없음, Pages 배포만)
-- [ ] PR 생성 · CI · 머지
-- [ ] 배포 뒤 pages.dev `templates/<slug>.json` 4개가 커밋본과 `updatedAt` 외 동일(AC9)
-- [ ] 이슈 #181 종료 · project-todo · wi-mapping ✅
+- [x] PR 생성 · CI · 머지(2026-10-25 #200, CI pass d86a968, 머지 bb7f1ac)
+- [x] 배포 뒤 pages.dev `templates/<slug>.json` 4개가 커밋본과 `updatedAt` 외 동일(AC9) (2026-10-25 5/5 일치, 발행본 cli 실경로 4/4 PASS)
+- [x] 이슈 #181 종료 · project-todo · wi-mapping ✅ (2026-10-25)

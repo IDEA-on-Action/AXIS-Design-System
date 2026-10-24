@@ -64,9 +64,15 @@ theme-only · hr-dashboard 를 `next build` 뒤 `next start`(프로젝트 next �
 - frontend.yml run 단계: check-token-refs · check-contrast-pairs · check-types-versions · check-library-links(위반 0) · build:registry · test:registry · check-licenses · pack-smoke(퍼블리시 대상 6개) · cli-smoke · registry-install-smoke 모두 rc 0. `build:registry` 가 바꾼 `public/r` 의 version 줄(1.5.0 → 1.7.0)은 이 WI 밖이라 되돌렸어요
 - E2E: a11y 40 · nontext 8 · demo 8(`E2E_SERVER=static`) · tokens 22 통과
 
-## 6. 배포 뒤 (AC9, 머지 후)
+### 독립 검토 보강 (2026-10-25)
 
-- [ ] pages.dev `templates/<slug>.json` 4개 · index.json 이 커밋본과 `updatedAt` 외 동일
-- [ ] 발행본 cli 로 `AXIS_TEMPLATE_URL` 없이 4종 init → install → check 재측정
 - 테두리 열의 원측정은 body `borderTopColor` 라 대리 지표예요. 독립 검토가 theme-only 의 `.rounded-lg.border.bg-card`(전이 없는 요소)를 다시 재서 6/6 상태가 설치본 `--border` 와 같았어요(라이트 229,231,235 · 다크 31,41,55 · ontology 라이트 230,232,235 · ontology 다크 43,47,53). hr-dashboard 는 조건에 맞는 요소가 없어 border 클래스 요소는 미측정이고, `.glass-panel` 테두리는 rgba(31,41,55,0.6)로 AXIS `--border` 에서 온 값이에요.
 - hr-dashboard 차트 비텍스트 대비(독립 검토 실측): 기본 다크 바탕에서 success 8.84 · warning 10.51 · error 5.35 · chart-1 5.53(막대 불투명도 0.7 계산값 chart-1 3.20 · error 3.04, 전환 전 alert 2.48). 라이트로 쓰면 success 2.28 · warning 1.92 로 3:1 미만이지만 전환 전 색도 거의 같아 회귀는 아니에요. 템플릿 axe 게이트는 WI-0027 AC5 몫이에요.
+
+## 6. 배포 뒤 (AC9, 머지 후)
+
+- [x] pages.dev `templates/<slug>.json` 4개 · index.json 이 커밋본과 `updatedAt` 외 동일(2026-10-25, #200 머지 bb7f1ac, frontend.yml run 40143822689 CI · Deploy Production success). 5/5 same-except-updatedAt, 양성 대조 dashboard 대 theme-only DIFF
+- [x] 발행본 cli 1.6.1 로 `AXIS_TEMPLATE_URL` 없이(AXIS_ 환경변수 0개, pages.dev) 4종 `template init <slug> -d <dir>` → `pnpm install` → `check`: tailwind preset · globals.css 4/4 PASS, fail 0(dashboard · landing-page · theme-only 5/1/0, hr-dashboard 6/0/0, WARN 은 utils.ts 없음), 설치본 tokens 1.7.0 · pretendard 1.3.9
+- [x] theme-only 를 가이드 「템플릿에서 ontology 켜기」대로(브랜드 import 주석 해제 + `<html data-brand="ontology">`) 바꿔 `next build` rc 0 → `next start` → Playwright Chromium 실측: ontology 라이트 `--primary` 220 69.4% 52.5% · 다크 219.7 81.6% 68%, `data-brand` 제거 시 라이트 221 39% 11% · 다크 220 14% 96%, 다시 켜면 ontology 값. 기대값은 설치본 `shadcn-compat.css` · `brands/ontology.css` 에서 읽었고 4/4 일치, body 글꼴 첫 항목 "Pretendard Variable", 서버 HTML 의 data-brand="ontology"
+- 참고: `axis template init <slug>` 를 `--dir` 없이 비대화형으로 부르면 디렉터리 질문에서 아무것도 만들지 않고 rc 0 으로 끝나요(실측). 가이드는 `--dir` 형태라 영향이 없어요
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/w67/live2/` · `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/w67/goal3c/`
