@@ -1,5 +1,12 @@
 # @axis-ds/agentic-ui
 
+## 1.6.1
+
+### Patch Changes
+
+- Updated dependencies [dff48ee]
+  - @axis-ds/ui-react@1.6.1
+
 ## 1.6.0
 
 ### Minor Changes
