@@ -70,7 +70,8 @@ export default function DocsPage() {
               • Accordion · Progress 의 keyframes 는 토큰 진입점이 정의합니다. Dialog · Popover 등의 열고 닫는
               애니메이션(animate-in 등)은 tw-animate-css 를 설치하고 @import &quot;tailwindcss&quot; 바로 다음에
               @import &quot;tw-animate-css&quot; 를 넣습니다(Tailwind 3 은 tailwindcss-animate 를 plugins 에).
-              움직임 줄이기 설정에서는 AXIS 컴포넌트 애니메이션이 멈춥니다.
+              움직임 줄이기 설정에서는 열고 닫는 애니메이션과 Accordion 이 멈추고, 스피너 · Progress 불확정 같은
+              로딩 · 진행 표시는 멈추지 않고 2~3배 느리게 움직입니다.
             </p>
           </div>
           <h3 className="text-lg font-medium mb-3">Tailwind CSS 3</h3>

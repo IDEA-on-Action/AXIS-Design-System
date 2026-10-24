@@ -110,7 +110,7 @@ Tailwind 4 에서 자주 만나는 증상은 다음과 같습니다.
 | 색을 지정하지 않은 `ring-2` 가 글자색 | Tailwind 4 의 링 기본색은 `currentColor` | `ring-ring` 처럼 색을 지정 |
 | Dialog · Popover 등이 애니메이션 없이 나타남 | `animate-in` · `fade-in-0` 류 클래스는 AXIS 진입점에 없음 | `tw-animate-css` 를 설치하고 `@import "tailwindcss";` 다음 줄에 `@import "tw-animate-css";` |
 | Accordion 이 애니메이션 없이 열리고 Progress `indeterminate` 가 꽉 찬 막대 | 토큰 진입점이 없거나 이 keyframes 가 들어가기 전 버전이라 `accordion-*` · `progress-indeterminate` keyframes 가 없음 | `@import "@axis-ds/tokens/css/tailwind4";` 를 넣고 `@axis-ds/tokens` · `@axis-ds/ui-react` 를 최신으로 올림 |
-| 움직임 줄이기 설정인데 애니메이션이 돎 | 앱 코드의 애니메이션 클래스(AXIS 컴포넌트 밖) | 그 요소에 `motion-reduce:animate-none` 을 더함. AXIS 컴포넌트는 `motion-reduce:!animate-none` 을 가짐 |
+| 움직임 줄이기 설정인데 애니메이션이 돎 | 앱 코드의 애니메이션 클래스(AXIS 컴포넌트 밖) | 그 요소에 `motion-reduce:animate-none` 을 더함. AXIS 컴포넌트는 열고 닫기 · Accordion 에 `motion-reduce:!animate-none` 을 가짐. 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · 실행 중 표시)는 의도적으로 멈추지 않고 2~3배 느리게 돎(`motion-reduce:![animation-duration:...]`) |
 
 ### 해결 (Tailwind CSS 3)
 

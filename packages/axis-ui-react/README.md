@@ -56,7 +56,7 @@ content: [
 | 4 | `tw-animate-css` | 전역 CSS 의 `@import "tailwindcss";` 바로 다음 줄에 `@import "tw-animate-css";` |
 | 3 | `tailwindcss-animate` | `tailwind.config` 의 `plugins: [require("tailwindcss-animate")]` |
 
-- 움직임 줄이기(`prefers-reduced-motion: reduce`) 설정에서는 모든 컴포넌트 애니메이션이 멈춥니다(`motion-reduce:!animate-none`).
+- 움직임 줄이기(`prefers-reduced-motion: reduce`) 설정에서는 열고 닫는 애니메이션(Dialog · Sheet · Popover · Select · DropdownMenu · Tooltip · Toast)과 Accordion 이 멈춥니다(`motion-reduce:!animate-none`). 로딩 · 진행 표시(Progress 불확정 · Skeleton, `@axis-ds/agentic-ui` 의 스피너 · 실행 중 표시)는 멈추지 않고 기본보다 2~3배 느리게 움직여 처리 중임을 계속 알립니다(`motion-reduce:![animation-duration:...]`, 예: Progress 불확정 1.5s → 4s).
 
 ## 사용법
 
