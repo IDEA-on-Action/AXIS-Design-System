@@ -40,7 +40,7 @@ Tailwind CSS 4(`@import "tailwindcss"`, create-next-app 15.5 기본)에서는 �
 @import "@axis-ds/tokens/css/tailwind4";
 ```
 
-- 아래 Tailwind 3 preset 과 같은 매핑(색 24 · radius 3 · 글꼴 3)을 `@theme inline` 으로 정의하고, 다크 모드는 `.dark` 클래스(`@custom-variant dark`)로 맞춥니다. `bg-primary` · `rounded-md` · `font-mono` · `dark:bg-primary` 가 AXIS 변수(`--primary` · `--radius` · `--axis-font-family-mono`)로 생성됩니다.
+- 아래 Tailwind 3 preset 과 같은 매핑(색 24 · radius 3 · 글꼴 3 · animate 3)을 `@theme inline` 으로, keyframes 3개(`accordion-down` · `accordion-up` · `progress-indeterminate`)를 `@keyframes` 로 정의하고, 다크 모드는 `.dark` 클래스(`@custom-variant dark`)로 맞춥니다. `bg-primary` · `rounded-md` · `font-mono` · `dark:bg-primary` 가 AXIS 변수(`--primary` · `--radius` · `--axis-font-family-mono`)로 생성됩니다.
 - 토큰 변수(`@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn`)를 base 레이어로 함께 불러오므로 따로 import 하지 않아도 됩니다. base 레이어라서 `border-red-500` 같은 유틸리티가 기본 테두리색보다 우선합니다.
 - `@import "tailwindcss"` 뒤에 둡니다. 브랜드 CSS(`@axis-ds/tokens/css/brands/ontology` 등)는 이 줄 뒤에 import 합니다.
 - create-next-app 기본 `globals.css` 의 `:root { --background: ...; --foreground: ... }`(다크용 `@media` 포함)와 `body { background: var(--background) }` 는 AXIS 의 같은 이름 변수(HSL 값)를 덮어써 `bg-background` 를 무효로 만듭니다. 같은 파일의 기본 `@theme inline`(`--color-background` · `--font-sans` · `--font-mono` 등)도 이 진입점의 매핑을 덮어써 `font-mono` 가 AXIS 글꼴이 아니게 됩니다. 이 블록들은 지웁니다.
@@ -62,6 +62,18 @@ export default {
   content: ['./src/**/*.{ts,tsx}'],
 }
 ```
+
+preset 은 `@axis-ds/ui-react` Accordion · Progress 가 쓰는 keyframes(`animate-accordion-down` · `animate-accordion-up` · `animate-progress-indeterminate`)도 정의합니다. preset 을 쓰지 않는 앱은 같은 정의만 가져올 수 있습니다.
+
+```ts
+import { axisAnimation, axisKeyframes } from '@axis-ds/tokens/tailwind'
+
+export default {
+  theme: { extend: { keyframes: axisKeyframes, animation: axisAnimation } },
+}
+```
+
+Dialog · Popover 등의 열고 닫는 애니메이션(`animate-in` · `fade-in-0` 류)은 preset 에 없습니다. Tailwind 3 은 `tailwindcss-animate`, Tailwind 4 는 `tw-animate-css` 를 앱에 넣습니다(`@axis-ds/ui-react` README).
 
 ### JavaScript / TypeScript
 

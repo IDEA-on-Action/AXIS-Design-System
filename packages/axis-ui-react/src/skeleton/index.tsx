@@ -11,7 +11,7 @@ const Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(
       <div
         ref={ref}
         className={cn(
-          "animate-pulse rounded-md bg-[var(--axis-surface-tertiary)]",
+          "animate-pulse rounded-md bg-[var(--axis-surface-tertiary)] motion-reduce:!animate-none",
           className
         )}
         {...props}

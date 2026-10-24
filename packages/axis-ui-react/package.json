@@ -280,7 +280,17 @@
   },
   "peerDependencies": {
     "react": ">=18.0.0",
-    "react-dom": ">=18.0.0"
+    "react-dom": ">=18.0.0",
+    "tailwindcss-animate": "^1.0.7",
+    "tw-animate-css": "^1.3.0"
+  },
+  "peerDependenciesMeta": {
+    "tailwindcss-animate": {
+      "optional": true
+    },
+    "tw-animate-css": {
+      "optional": true
+    }
   },
   "dependencies": {
     "@axis-ds/tokens": "workspace:*",

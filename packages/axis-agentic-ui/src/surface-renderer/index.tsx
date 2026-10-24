@@ -29,7 +29,7 @@ export function SurfaceRenderer({
     switch (surface.type) {
       case "text":
         return (
-          <div className="prose prose-sm max-w-none text-[var(--axis-text-primary)]">
+          <div className="text-sm text-[var(--axis-text-primary)]">
             {String(surface.content)}
           </div>
         );

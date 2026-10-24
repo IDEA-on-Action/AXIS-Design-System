@@ -108,7 +108,9 @@ Tailwind 4 에서 자주 만나는 증상은 다음과 같습니다.
 | `.dark` 안의 `bg-background` 가 투명, `font-mono` 가 Arial | create-next-app 기본 `:root` · `@theme inline` · `body` 블록이 같은 이름을 다른 값으로 정의 | 그 블록을 지움([Quick Start](./quick-start.md) 「Tailwind CSS 4」) |
 | `border-red-500` 같은 테두리색이 적용되지 않음 | `@axis-ds/tokens/css/shadcn` 을 레이어 없이 직접 import 해 `* { border-color }` 가 유틸리티를 이김 | 직접 import 를 지우고 토큰 진입점만 씀(진입점은 토큰 변수를 base 레이어로 불러옴) |
 | 색을 지정하지 않은 `ring-2` 가 글자색 | Tailwind 4 의 링 기본색은 `currentColor` | `ring-ring` 처럼 색을 지정 |
-| Dialog · Popover 등이 애니메이션 없이 나타남 | `animate-in` · `fade-in-0` 류 클래스는 AXIS 진입점에 없음 | tailwindcss-animate 류 애니메이션 플러그인을 앱에 설치 |
+| Dialog · Popover 등이 애니메이션 없이 나타남 | `animate-in` · `fade-in-0` 류 클래스는 AXIS 진입점에 없음 | `tw-animate-css` 를 설치하고 `@import "tailwindcss";` 다음 줄에 `@import "tw-animate-css";` |
+| Accordion 이 애니메이션 없이 열리고 Progress `indeterminate` 가 꽉 찬 막대 | 토큰 진입점이 없거나 이 keyframes 가 들어가기 전 버전이라 `accordion-*` · `progress-indeterminate` keyframes 가 없음 | `@import "@axis-ds/tokens/css/tailwind4";` 를 넣고 `@axis-ds/tokens` · `@axis-ds/ui-react` 를 최신으로 올림 |
+| 움직임 줄이기 설정인데 애니메이션이 돎 | 앱 코드의 애니메이션 클래스(AXIS 컴포넌트 밖) | 그 요소에 `motion-reduce:animate-none` 을 더함. AXIS 컴포넌트는 `motion-reduce:!animate-none` 을 가짐 |
 
 ### 해결 (Tailwind CSS 3)
 
@@ -128,6 +130,10 @@ module.exports = {
   plugins: [],
 }
 ```
+
+**애니메이션 (Tailwind 3)**: Dialog · Popover · Select 등이 애니메이션 없이 열리고 닫히면 `tailwindcss-animate` 를 설치하고 `plugins: [require('tailwindcss-animate')]` 로 넣습니다(`animate-in` · `fade-in-0` 류). Accordion · Progress `indeterminate` 의 keyframes 는 `@axis-ds/tokens/tailwind` preset 이 정의하므로 preset 을 `presets` 에 넣으면 됩니다. preset 을 쓰지 않으면 `import { axisKeyframes, axisAnimation } from '@axis-ds/tokens/tailwind'` 를 `theme.extend.keyframes` · `theme.extend.animation` 에 넣습니다.
+
+**복사 설치(`axis add` · shadcn 레지스트리)**: 레지스트리 항목의 `dependencies` 에는 애니메이션 플러그인이 들어 있지 않습니다. 플러그인 이름이 Tailwind 3 · 4 에 따라 다르고 설정 줄도 함께 넣어야 해서 패키지 설치만으로는 해결되지 않기 때문입니다. 위 Tailwind 3 · Tailwind 4 안내대로 직접 넣습니다.
 
 **pnpm 사용 시 주의 (Tailwind 3)**: pnpm은 심볼릭 링크 기반으로 `node_modules`를 관리합니다. 경로가 올바르게 해석되지 않는 경우, 절대 경로로 지정하거나 `.npmrc`에 `shamefully-hoist=true`를 설정합니다.
 

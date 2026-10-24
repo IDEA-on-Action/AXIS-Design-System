@@ -47,7 +47,7 @@ export function ThinkingIndicator({
           <div
             key={i}
             className={cn(
-              "rounded-full bg-current animate-bounce",
+              "rounded-full bg-current animate-bounce motion-reduce:!animate-none",
               dotSizes[size]
             )}
             style={{ animationDelay: `${i * 150}ms` }}

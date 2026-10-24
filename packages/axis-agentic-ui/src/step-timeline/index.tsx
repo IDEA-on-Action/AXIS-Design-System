@@ -66,7 +66,7 @@ export function StepTimeline({
             className={cn(
               "relative z-10 w-5 h-5 rounded-full flex items-center justify-center",
               step.status === "complete" && "bg-[var(--axis-status-success)]",
-              step.status === "running" && "bg-[var(--axis-status-running)] animate-pulse",
+              step.status === "running" && "bg-[var(--axis-status-running)] animate-pulse motion-reduce:!animate-none",
               step.status === "error" && "bg-[var(--axis-status-error)]",
               step.status === "skipped" && "bg-[var(--axis-status-neutral-muted)]",
               step.status === "pending" && "bg-[var(--axis-status-neutral-muted)]"
