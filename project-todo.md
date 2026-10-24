@@ -51,7 +51,7 @@
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
-| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ⏳ |
+| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | 🔄 PR 대기(2026-10-24 구현 · 검증 완료, 배포 전). 마운트 시 `complete && naturalWidth 0` 후보를 `decode()` 거부로 확정 · src 변경 시 오류 상태 초기화. SSR 하이드레이션 실측 chromium · firefox · webkit 수정 전 img 유지 → 수정 후 fallback, 크기 0 SVG 오판 없음. ui-react patch changeset |
 | 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ✅ 완료(2026-10-24). mcp 1.3.0 · cli 1.5.2(#164 · #163), 배포본 list 28 · install 기본 배치, D13 config 사설 주소 요청 0건(env 양성 대조 3건) |
 | 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
 | 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ✅ 완료(2026-10-24). cli 1.5.2(#162 · #163), 프로덕션 library 링크 109개 모두 2xx, 오프라인 검사 위반 0 |
@@ -350,7 +350,7 @@
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
 
-- 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · WI-0054 src 변경 시 hasError 미초기화 · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
+- 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
 - 공통 허브 파일(project-todo.md · .github/wi-mapping.json)은 나중에 머지하는 쪽이 rebase 해요. 생성물(public/r · public/library · public/templates)은 손으로 병합하지 않고 생성 명령을 다시 돌려요
 
 ### 향후 후보
