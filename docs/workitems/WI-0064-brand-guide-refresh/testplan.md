@@ -1,6 +1,6 @@
 # WI-0064 테스트 계획 · 결과
 
-> PRD: [prd.md](./prd.md) | 실행일: 2026-10-24 | 기준: main 59dd6a3
+> PRD: [prd.md](./prd.md) | 실행일: 2026-10-24 · 2026-10-25 | 기준: main 59dd6a3(1~6절), 7b0e157(7절)
 
 ## 1. 측정 근거 (문서 서술의 출처)
 
@@ -103,3 +103,29 @@ docs/guides 만 바꾸면 frontend CI 가 돌지 않을 수 있어(paths 필터�
 | 자동 테스트 | guidance · init, cli 전체 | 134/134 rc 0, 662/662 rc 0 |
 | 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 주입 뒤 guidance.test | rc 1, 백업본 복원 뒤 `sha256sum -c` OK, 재실행 4/4 |
 | U+2014 | 변경 2파일에서 문자 계수 | 0건 |
+
+## 7. ③ 머지 뒤 rebase · 출력 재추출 (2026-10-25)
+
+origin/main 7b0e157(① #184 · ② #185 · ③ #186 머지) 위로 rebase 했어요. ③ 의 마지막 커밋 6d8ebf5 가 `brand.activation` · theme add 판정을 바꿔(`BRAND_ACTIVATION_PATTERN` = `data-brand` · `setBrand(` · `defaultBrand=`, ThemeProvider 단독 제외) 6절의 「PASS 는 켜졌다는 뜻이 아님」 서술을 새 판정에 맞게 고쳤어요.
+
+| 항목 | 방법 | 결과 |
+|---|---|---|
+| rebase 충돌 | `git rebase origin/main` | 첫 커밋에서 `packages/axis-tokens/README.md` · `project-todo.md` 2건. README 는 ② keyframes · 애니메이션 플러그인 단락을 보존하고 ④ css/shadcn · 브랜드 · 글꼴 단락을 그 앞에 둠. project-todo 는 76행만 ④, 77행(WI-0065)은 main 그대로. 나머지 3커밋은 충돌 없음 |
+| cli 빌드 | 이 worktree 에서 `pnpm install --frozen-lockfile` 뒤 `pnpm --filter @axis-ds/cli build` | rc 0, `--version` 1.5.4(1.6.0 발행 전). dist 에 새 패턴 `defaultBrand\s*=` 있음 |
+| T3 · T4 재실행 | 2절 기준 프로젝트(`fr6-next-tw3-base` · `fr6-next-tw4-base`)를 스크래치에 복사하고 `package-lock.json`(빈 packages)만 더한 npm 프로젝트, node_modules 없음 | T3: theme add 출력 중 브랜드 켜기 블록이 가이드 인용과 `diff` 0줄, 재실행 「바꾼 파일이 없습니다」, check 6 pass / 2 warn / 0 fail rc 0. T4: theme add 3줄 · check 5 pass / 3 warn / 0 fail rc 0 |
+| ThemeProvider 단독(음성) | T3 init 뒤 layout 을 `<ThemeProvider defaultTheme="system">` 만 둔 형태로 | theme add: 예시 출력 + 「브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다」, 블록이 T3 과 `diff` 0줄. check: `brand.activation` WARN(「ThemeProvider 만으로는 마운트 때 꺼짐」), 6 pass / 2 warn |
+| defaultBrand(양성) | 같은 layout 에 `defaultBrand="ontology"` | theme add: 「app/layout.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다. "ontology" 로 켜는지 확인하세요.」. check: `brand.activation` PASS, 7 pass / 1 warn |
+| 남은 거짓 PASS | layout 에 `<html data-brand="ontology">` + `<ThemeProvider defaultTheme="system">`(defaultBrand 없음) | theme add 확인 한 줄 · check PASS. `packages/axis-theme/src/index.ts` 브랜드 effect 가 `removeAttribute("data-brand")` 하는 구성이라 실제로는 꺼짐(코드 근거, 브라우저 측정 아님). 가이드 check 표 아래 · quick-start 에 적음 |
+| T3 변형 | content 에서 `./components/**` 삭제, `@axis-ds/ui-react` 선언 | 5 pass / 3 warn / 1 fail rc 1(tailwind.content FAIL · animation WARN). 가이드 서술과 같음 |
+| T4 재실행 변형 | `@axis-ds/agentic-ui` 선언 뒤 theme add | agentic-ui/tailwind.css 가 브랜드 줄 뒤, 출력은 「브랜드 앞」. 5절과 같음(③ 에서 바뀌지 않음) |
+
+**자동 테스트 (수정 뒤)**
+
+| 대상 | 명령 | 결과 |
+|---|---|---|
+| guidance · init | `pnpm exec vitest run src/guidance.test.ts src/init/init.test.ts` (packages/axis-cli) | 2파일 147/147, rc 0 |
+| cli 전체 | `pnpm test` (packages/axis-cli) | 17파일 707/707, rc 0 |
+| 양성 대조 1 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 한 줄 주입 뒤 guidance.test | 1 failed / 3 passed, rc 1 |
+| 양성 대조 2 | quick-start 지울 블록의 `@media (prefers-color-scheme: dark) {` 를 `@media screen {` 으로 바꾼 뒤 init.test | 1 failed / 142 passed, rc 1 |
+| 복원 | 백업본 복사 뒤 `sha256sum -c` | OK 2건, 빌드 뒤 `git status` 는 문서 3파일 수정만 |
+| U+2014 | 변경 파일에서 문자 계수 | 0건 |

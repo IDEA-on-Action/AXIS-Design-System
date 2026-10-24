@@ -271,7 +271,7 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
 
 #### cli 로 적용하기 (`@axis-ds/cli` 1.6.0부터)
 
-`npx @axis-ds/cli init -y` 뒤 `npx @axis-ds/cli theme add ontology` 를 실행하면 위 1번의 전역 CSS 줄과 의존성 · 설정 기록을 cli 가 대신합니다. 2번 · 3번과 Tailwind 3 설정 파일은 cli 가 넣을 줄을 안내만 하고 고치지 않습니다. 아래 내용은 cli 1.6.0 발행 전 빌드로 src 없는 Next 15.5.28 프로젝트 2개(Tailwind 3.4.19 · Tailwind 4.3.3, 둘 다 npm)에서 확인했습니다(2026-10-25). 1.5.x 이하의 `theme add` 는 브랜드 줄만 넣고 Provider 예시가 `defaultBrand` 이므로 이 절과 다릅니다.
+`npx @axis-ds/cli init -y` 뒤 `npx @axis-ds/cli theme add ontology` 를 실행하면 위 1번의 전역 CSS 줄과 의존성 · 설정 기록을 cli 가 대신합니다. 2번 · 3번과 Tailwind 3 설정 파일은 cli 가 넣을 줄을 안내만 하고 고치지 않습니다. 아래 내용과 출력 인용은 cli 1.6.0 발행 전 빌드(main 7b0e157 의 `packages/axis-cli`)로 src 없는 Next 15.5.28 프로젝트 2개(Tailwind 3.4.19 · Tailwind 4.3.3, 둘 다 npm)에서 확인했습니다(2026-10-25). 1.5.x 이하의 `theme add` 는 브랜드 줄만 넣고 Provider 예시가 `defaultBrand` 이므로 이 절과 다릅니다.
 
 **theme add 가 자동으로 하는 것**
 
@@ -295,7 +295,7 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
 **사람이 해야 하는 것** (cli 는 안내만 함)
 
-- [ ] 브랜드 켜기(위 2번). cli 는 루트 레이아웃(`app/layout.tsx` 등)에서 `ThemeProvider` · `data-brand` 를 찾지 못하면 아래 예시를 그대로 출력합니다. 예시의 `lang="ko"` 는 예시 값이니 앱의 `lang` 을 유지합니다. `ThemeProvider` · `data-brand` · `setBrand(` 중 하나라도 글자로 있으면 찾은 것으로 보고 예시 없이 「`ThemeProvider` · `data-brand` · `setBrand` 가 있습니다. "ontology" 로 켜는지 확인하세요」 한 줄만 냅니다. 그래서 `<ThemeProvider defaultTheme="system">` 만 있고 `defaultBrand` · `setBrand` 가 없는 레이아웃([빠른 시작](./quick-start.md) 「3. ThemeProvider 설정」 예시 그대로)에서도 예시가 안 나오는데, 이 구성은 마운트 때 브랜드가 지워집니다. `ThemeProvider` 를 쓰는 앱은 이 한 줄이 나와도 `defaultBrand` 나 `setBrand("ontology")` 를 직접 확인합니다.
+- [ ] 브랜드 켜기(위 2번). cli 는 루트 레이아웃(`app/layout.tsx` 등)에서 브랜드를 켜는 코드(`data-brand` · `setBrand(` · `defaultBrand=` 중 하나)를 찾지 못하면 아래 예시를 그대로 출력합니다. 예시의 `lang="ko"` 는 예시 값이니 앱의 `lang` 을 유지합니다. `ThemeProvider` 만 있는 레이아웃([빠른 시작](./quick-start.md) 「3. ThemeProvider 설정」 예시 그대로)은 켜는 코드가 없는 것으로 보고 예시를 냅니다. 이 구성은 마운트 때 브랜드가 지워지기 때문입니다. 켜는 코드를 찾으면 예시 없이 「`app/layout.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다. "ontology" 로 켜는지 확인하세요.`」 한 줄만 냅니다.
 
   ```text
   브랜드 켜기 (ThemeProvider 는 @axis-ds/theme 1.3.0 이상)
@@ -306,7 +306,7 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
     import { useTheme } from "@axis-ds/theme";
     const { setBrand } = useTheme();
     setBrand("ontology");
-    ! app/layout.tsx 에서 ThemeProvider · data-brand 를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.
+    ! app/layout.tsx 에서 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.
     ThemeProvider 를 쓰면 @axis-ds/theme 설치: npm install "@axis-ds/theme@^1.3.0"
   ```
 
@@ -323,13 +323,13 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 | 항목 이름 | 판정 | 언제 | 체크리스트 |
 |---|---|---|---|
 | `tailwind.config` | WARN | Tailwind 3 에서 `@axis-ds/tokens/tailwind` preset 이 없음. 1.5.x 이하는 자체 CSS 변수 매핑만 있어도 PASS 였습니다 | 1번 preset |
-| `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 `ThemeProvider` · `data-brand` 가 없음. 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내 | 2번 |
+| `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 브랜드를 켜는 코드(`data-brand` · `setBrand(` · `defaultBrand=`)가 없음. `ThemeProvider` 만 있어도 WARN(문구에 「ThemeProvider 만으로는 마운트 때 꺼짐」). 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내 | 2번 |
 | `tailwind.content` | FAIL(종료 코드 1) | Tailwind 3 `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로(`./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 등)를 덮지 않음 | 1번 content |
 | `animation` | WARN | `@axis-ds/ui-react` 를 선언했는데 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate`, Tailwind 4 `tw-animate-css`)이 없음 | - |
 
-`brand.activation` 의 PASS 는 브랜드가 켜졌다는 뜻이 아닙니다. 루트 레이아웃(과 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` · `./provider`)에 `ThemeProvider` · `data-brand` · `setBrand(` 글자가 있는지만 보므로, `defaultBrand` · `setBrand` 없이 `ThemeProvider` 만 둔 레이아웃도 PASS 입니다. 이 구성은 마운트 때 브랜드가 지워지니, `ThemeProvider` 를 쓰는 앱은 PASS 가 나와도 `defaultBrand` 나 `setBrand("ontology")` 를 직접 확인합니다.
+`brand.activation` 은 루트 레이아웃(과 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` · `./provider`)에서 주석을 뺀 소스에 `data-brand` · `setBrand(` · `defaultBrand=` 글자가 있는지만 봅니다. 그래서 `ThemeProvider` 만 둔 레이아웃은 WARN 이지만, PASS 가 브랜드가 켜졌다는 뜻은 아닙니다. 마크업 `<html data-brand="ontology">` 와 `ThemeProvider` 를 함께 두고 `defaultBrand` 를 빼면 PASS 인데 마운트 때 속성이 지워지고(위 2번), `defaultBrand=` 의 값이 다른 브랜드여도 PASS 입니다. PASS 가 나오면 `"ontology"` 로 켜는지 확인합니다.
 
-위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)이고, `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
+위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)입니다. 레이아웃을 `ThemeProvider` 만 둔 형태로 바꿔도 같고, `defaultBrand="ontology"` 를 더하면 7 pass / 1 warn 입니다. `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
 
 ### 개념
 

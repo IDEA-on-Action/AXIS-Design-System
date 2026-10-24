@@ -115,15 +115,16 @@ const config: Config = {
 export default config;
 ```
 
-- preset 은 색 · `rounded-*` · `font-sans` · `font-mono` 를 AXIS 변수로 매핑하고 `darkMode: ["class"]` 를 정합니다. preset 이 없으면 `rounded-md` 가 Tailwind 기본 6px, 글꼴이 Tailwind 기본(`ui-sans-serif`)으로 남습니다.
-- `plugins` 의 `tailwindcss-animate` 는 AXIS 가 담지 않는 열고 닫는 애니메이션 클래스(`animate-in` · `fade-in-0` 등)를 만듭니다. 그 애니메이션이 필요 없으면 설치와 이 줄을 뺍니다.
+- preset 은 색 · `rounded-*` · `font-sans` · `font-mono` 를 AXIS 변수로 매핑하고 `darkMode: ["class"]` 를 정합니다. preset 이 없으면 `rounded-md` 가 Tailwind 기본 6px, 글꼴이 Tailwind 기본(`ui-sans-serif`)으로 남습니다. Accordion · Progress 의 keyframes(`animate-accordion-down` 등)도 preset 이 정의합니다.
+- `plugins` 의 `tailwindcss-animate` 는 AXIS 가 담지 않는 열고 닫는 애니메이션 클래스(`animate-in` · `fade-in-0` 등)를 만듭니다. `@axis-ds/ui-react` 는 이 플러그인을 선택적 peer 의존으로 선언해 설치 경고가 나오지 않으므로 직접 설치합니다(`axis init` 이 설치 명령을 안내하고, `@axis-ds/ui-react` 를 선언했는데 빠지면 `axis check` 가 `animation` WARN). 그 애니메이션이 필요 없으면 설치와 이 줄을 뺍니다.
 
-AXIS 컴포넌트는 `--axis-*` 접두사의 CSS 변수 기반 테마를 사용합니다. 글로벌 스타일에 토큰 CSS 와 shadcn 호환 변수를 `@tailwind` 지시문보다 **앞에** import 합니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다).
+AXIS 컴포넌트는 `--axis-*` 접두사의 CSS 변수 기반 테마를 사용합니다. 글로벌 스타일에 토큰 CSS 와 shadcn 호환 변수를 `@tailwind` 지시문보다 **앞에** import 합니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다). 브랜드를 쓰면 그 다음 줄에 브랜드 CSS 를 둡니다.
 
 ```css
 /* globals.css */
 @import "@axis-ds/tokens/css";
 @import "@axis-ds/tokens/css/shadcn";
+@import "@axis-ds/tokens/css/brands/ontology"; /* 브랜드를 쓸 때만(아래 「브랜드 적용」) */
 
 @tailwind base;
 @tailwind components;
@@ -131,6 +132,7 @@ AXIS 컴포넌트는 `--axis-*` 접두사의 CSS 변수 기반 테마를 사용�
 ```
 
 - `@axis-ds/tokens/css/shadcn` 은 preset 이 읽는 shadcn 변수(`--primary` · `--radius` 등)를 정의합니다. `--primary` · `--radius` 는 `@axis-ds/tokens/css` 에 없고 이 파일에만 있어서, 빠지면 `bg-primary` 같은 preset 색 유틸리티가 정의되지 않은 변수를 읽고 `rounded-*` 가 0px 이 됩니다(둥글기는 실측, 색은 정의 위치로 판단).
+- `@axis-ds/cli` 1.6.0 의 `theme add ontology` 도 이 세 줄을 같은 순서로 `@tailwind` 앞에 넣습니다. `tailwind.config.ts` 는 고치지 않고 preset(과 덮지 않은 `content` 경로)을 안내만 합니다.
 
 ## 3. ThemeProvider 설정
 
@@ -157,7 +159,7 @@ export default function App({ children }: { children: React.ReactNode }) {
 1. 브랜드 CSS 를 토큰 CSS 뒤에 import 합니다. Tailwind 4 는 위 4줄 다음에 `@import "@axis-ds/tokens/css/brands/ontology";`, Tailwind 3 은 `@import "@axis-ds/tokens/css/shadcn";` 다음 줄에 같은 줄을 둡니다.
 2. 브랜드를 켭니다. 위처럼 `ThemeProvider` 를 쓰는 앱에서 늘 쓰는 브랜드면 `<ThemeProvider defaultTheme="system" defaultBrand="ontology">` 처럼 `defaultBrand` 를 지정합니다(첫 화면까지 맞추려면 마크업 `<html data-brand="ontology">` 도 함께 넣습니다). 마크업 속성만 넣고 `defaultBrand` 를 빼면 `ThemeProvider` 가 마운트 때 속성을 지워 브랜드가 사라집니다. 마크업 속성 단독은 `ThemeProvider` 없이 쓸 때만 성립합니다. 사용자가 끌 수 있게 하려면 `defaultBrand` 없이 `useTheme()` 의 `setBrand("ontology")` · `setBrand(undefined)` 로 켜고 끕니다(`defaultBrand` 를 쓰면 끈 상태가 새로고침 뒤 풀립니다).
 
-`@axis-ds/cli` 1.6.0부터는 `npx @axis-ds/cli theme add ontology` 가 1번(기본 토큰 CSS 와 브랜드 import, `package.json` 의 `@axis-ds/tokens`, `axis.config.json` 의 `brand`)을 대신하고, 2번은 예시를 출력만 합니다. cli 예시는 `defaultBrand` 대신 `<html data-brand="ontology">`(Provider 없이) 와 `setBrand("ontology")`(`ThemeProvider` 를 쓸 때)입니다. 위의 끈 상태가 풀리는 한계 때문입니다. 레이아웃에 `ThemeProvider` 가 이미 있으면 cli 는 예시 없이 「켜는지 확인하세요」 한 줄만 내고 `axis check` 의 `brand.activation` 도 PASS 지만, 위 「3. ThemeProvider 설정」 예시 그대로(`defaultBrand` · `setBrand` 없음)면 브랜드는 꺼진 상태입니다. 이 경우 2번을 직접 합니다.
+`@axis-ds/cli` 1.6.0부터는 `npx @axis-ds/cli theme add ontology` 가 1번(기본 토큰 CSS 와 브랜드 import, `package.json` 의 `@axis-ds/tokens`, `axis.config.json` 의 `brand`)을 대신하고, 2번은 예시를 출력만 합니다. cli 예시는 `defaultBrand` 대신 `<html data-brand="ontology">`(Provider 없이) 와 `setBrand("ontology")`(`ThemeProvider` 를 쓸 때)입니다. 위의 끈 상태가 풀리는 한계 때문입니다. cli 는 루트 레이아웃에 브랜드를 켜는 코드(`data-brand` · `setBrand(` · `defaultBrand=`)가 있는지 글자로 봅니다. 위 「3. ThemeProvider 설정」 예시 그대로(`ThemeProvider` 만 있음)면 켜는 코드가 없는 것으로 보고 `theme add` 가 예시를 내고, `axis check` 의 `brand.activation` 도 「ThemeProvider 만으로는 마운트 때 꺼짐」 WARN 으로 알려 줍니다. 켜는 코드가 있으면 「켜는지 확인하세요」 한 줄과 PASS 만 나오므로, 그때는 `"ontology"` 로 켜는지 직접 확인합니다(마크업 `data-brand` 와 `ThemeProvider` 를 함께 두고 `defaultBrand` 를 빼도 PASS 지만 위 2번처럼 꺼집니다).
 
 글꼴은 패키지가 스택만 지정하므로 Pretendard 웹폰트를 앱에서 로드합니다. 체크리스트 · 함정 · 첫 화면 처리는 [테마 커스터마이징 가이드](./theme-customization.md) 「4. 브랜드 테마」의 「브랜드 적용 빠른 시작」에 있습니다.
 

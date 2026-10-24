@@ -77,7 +77,7 @@ preset 은 색 · `rounded-*` 를 shadcn 호환 변수(`--primary` · `--radius`
 ```
 
 - `@axis-ds/tokens/css/shadcn` 이 빠지면 `--radius` 가 정의되지 않아 `rounded-*` 가 0px 입니다. 브랜드를 켠 화면에서는 브랜드 CSS 가 `--radius` 를 정의해 드러나지 않다가 브랜드를 끄면 나타납니다.
-- 브랜드는 CSS import 만으로 켜지지 않습니다. `<html data-brand="ontology">` 나 `@axis-ds/theme` 의 `ThemeProvider` 가 필요합니다.
+- 브랜드는 CSS import 만으로 켜지지 않습니다. `ThemeProvider` 없이 쓰면 `<html data-brand="ontology">`, `@axis-ds/theme` 의 `ThemeProvider` 를 쓰면 `defaultBrand="ontology"` 나 `setBrand("ontology")` 로 켭니다. `ThemeProvider` 만 두면 마운트 때 `data-brand` 를 지워 꺼집니다.
 - 글꼴은 스택(`"Pretendard Variable"` 로 시작)만 지정하고 웹폰트(`@font-face`)는 담지 않습니다. Pretendard 는 앱에서 로드합니다(예: `pretendard` npm 패키지).
 
 preset 은 `@axis-ds/ui-react` Accordion · Progress 가 쓰는 keyframes(`animate-accordion-down` · `animate-accordion-up` · `animate-progress-indeterminate`)도 정의합니다. preset 을 쓰지 않는 앱은 같은 정의만 가져올 수 있습니다.
