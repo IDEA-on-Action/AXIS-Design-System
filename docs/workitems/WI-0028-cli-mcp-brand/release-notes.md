@@ -1,6 +1,6 @@
 # WI-0028 릴리스 노트: CLI · MCP 브랜드 명령
 
-> 릴리스일: 미정(PR 머지 뒤 열리는 Version Packages PR 을 머지할 때 CI 발행) | 유형: feat | 영향: @axis-ds/cli 1.1.4 → 1.2.0 · @axis-ds/mcp 1.1.5 → 1.2.0 (minor) | GitHub: #87
+> 릴리스일: 2026-10-19(cli · mcp 1.2.0, #123 · run 39257199603) | 유형: feat | 영향: @axis-ds/cli 1.1.4 → 1.2.0 · @axis-ds/mcp 1.1.5 → 1.2.0 (minor) | GitHub: #87 | 종결: 2026-10-24(배포본 cli 1.5.4 · mcp 1.3.2 재측정)
 
 ## 배경
 
@@ -49,9 +49,22 @@ WI-0025 로 `@axis-ds/tokens` 1.3.0 에 브랜드 산출물(`./brands` exports, 
 - AC2(a) 전제: 기본 레지스트리 `https://axis.minu.best/templates` 가 이 호스트에서 403(Cloudflare)이라 `AXIS_TEMPLATE_URL` 을 저장소 `apps/web/public/templates` 를 내보내는 로컬 서버로 주입했습니다. 받은 7개 파일은 저장소 `theme-only.json` 과 내용이 같습니다. 레지스트리 경로 자체는 검증하지 않았습니다.
 - 세부 수치는 [testplan.md](./testplan.md) T6 · T7 에 있습니다.
 
+## 종결 재측정 (2026-10-24, npm 배포본)
+
+AC2(a) 의 재확인 조건을 「axis.minu.best 403 해소 뒤」에서 「pages.dev 기본 레지스트리 배포본 재측정」으로 바꿨습니다(PRD D-AC2a-2). CLI 기본 사이트는 WI-0056(cli 1.5.1)부터 `https://axis-design-system.pages.dev` 입니다. 아래는 모두 스크래치 디렉터리에 npm 에서 받은 `@axis-ds/cli@1.5.4` · `@axis-ds/mcp@1.3.2` · `@axis-ds/tokens@1.6.0` 으로, 주입 env 없이 잰 값입니다.
+
+| 항목 | 결과 |
+|---|---|
+| AC1 | `axis theme list` rc 0, `ontology` 1개 |
+| AC2(a) | `template init theme-only`(기본 레지스트리 pages.dev) 7개 파일, 저장소 템플릿과 차이 0. `theme add ontology` 2회: import 1줄 · tokens 키 1개 · `brand: "ontology"` · 2회차 해시 차이 0 |
+| AC2(b) · T7-2 | create-next-app 15.5.28 → `init -y` → `theme add ontology` → `pnpm install` → `pnpm build` rc 0, `data-brand=ontology` 5건, check brand PASS. 음성 대조군(theme add 없음) 0건 |
+| AC3 | CLI `theme info ontology` 와 MCP `axis.get_brand` 의 주요 토큰 표 12/12 같음 |
+| AC4 | brand 와 import 가 어긋난 프로젝트에서 CLI `axis check` · MCP `axis.check_project` 모두 WARN(import 없음 · 다른 브랜드), 일치 프로젝트는 PASS |
+| T7-4 | cli `--version` 1.5.4, mcp `serverInfo.version` 1.3.2 · 도구 18개 |
+
 ## 알려진 문제
 
-- **AC2(b) 절차의 `pnpm build` 가 실패합니다.** 원인은 이 WI 가 아니라 기존 `axis init -y` 입니다. init 은 `clsx` · `tailwind-merge` 를 import 하는 `utils.ts` 를 쓰지만 의존성을 더하거나 안내하지 않습니다. 두 패키지를 손으로 설치한 보조 측정에서는 `pnpm build` rc 0, 산출 CSS 에 `data-brand=ontology` 선택자 5건이었습니다. 처리 방법은 결정 대기입니다.
+- ~~**AC2(b) 절차의 `pnpm build` 가 실패합니다.**~~ 해소: 원인(`axis init -y` 의 `utils.ts` 의존성 누락)은 WI-0038(#124)에서 고쳤고, 2026-10-24 npm 배포본 `@axis-ds/cli@1.5.4` 로 같은 절차가 `pnpm build` rc 0 · `data-brand=ontology` 5건으로 통과했습니다(testplan T8-3).
 - `theme info` 의 주요 토큰 표는 `--axis-font-family-sans` 값이 길어 한 줄이 141자입니다. 80열 터미널에서는 줄이 꺾입니다.
 
 ## 소비 프로젝트 영향

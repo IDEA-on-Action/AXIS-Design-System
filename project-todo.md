@@ -33,7 +33,7 @@
 |---|------|-------|-------|----------|------|
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
-| 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | 🔄 cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(b) 는 cli 1.2.1 배포본으로 통과(2026-10-20, init -> theme add ontology -> install -> build rc 0, check brand PASS), AC2(a) 는 minu.best 403 해소 뒤 기본 레지스트리로 재확인 |
+| 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | ✅ 완료(2026-10-24, 배포 없음). cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(a) 재확인 조건을 pages.dev 기본 레지스트리 배포본 재측정으로 바꿈(사용자 결정, PRD D-AC2a-2). npm cli 1.5.4 · mcp 1.3.2 로 AC1 ~ AC4 · T7-2 · T7-4 재측정 통과: theme-only 7파일 차이 0 · 2회차 해시 차이 0, App Router build rc 0 · data-brand 5건, brand 어긋남 WARN(CLI · MCP), 토큰 표 12/12 (testplan T8) |
 | 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ✅ 완료(2026-10-24). linked 4패키지 1.6.0 · cli 1.5.4 · mcp 1.3.2(#172 · #173, run 40089793369, provenance 6/6). 기본 브랜드 a11y 위반 0(기준선 46노드 해소), pages.dev · npm 배포본 실측. 잔여는 WI-0062 · WI-0063 |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
@@ -41,17 +41,17 @@
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
 | 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
 | 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ✅ 완료(2026-10-24, 브랜치 `chore/wi-0039-cli-mcp-quality-gate` 머지 대기, changeset · 배포 없음). cli lint · type-check, mcp · registry-core lint 를 turbo 에 등록(lint 태스크 4 → 7). 재측정 cli tsc 19 · cli eslint 25 · mcp eslint 11 · registry-core eslint 1 → 0, 양성 대조 4/4 rc 비0, `--force` 게이트 rc 0(cli 661 · mcp 138 유지). theme 은 범위 밖 |
-| 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
+| 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ✅ 완료(2026-10-24, 배포 없음). 데이터는 WI-0057(006836a)에서 0건. guidance.test.ts 가 library JSON 을 이스케이프를 풀어 검사, 006836a~1 조각 양성 대조 fixture. 006836a~1 데이터 복원 시 14곳 모두 잡혀 실패 |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
 | 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | ✅ 완료(2026-10-22). cli 1.5.0 배포(#152 · #153, run 39795328665, provenance), pages.dev /r version 1.5.0 반영. 배포본 실측: init · list(원격) · add · next build rc 0, 28/28 설치 후 빌드 |
 | 58 | 애니메이션 플러그인(tailwindcss-animate) 의존 미선언(7개 컴포넌트 0/26) · accordion · progress keyframes 부재 | WI-0046 (#137) | P18 | P2 | ⏳ |
 | 59 | 레지스트리 항목 의존성 누락(button.json 의 @radix-ui/react-slot 등) 전수 점검 · 빌드 검사 | WI-0047 (#138) | P18 | P2 | ✅ WI-0045 에 흡수해 완료(2026-10-22, #152 로 닫힘) |
-| 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ⏳ |
+| 60 | 문서 기술 스택 표기 드리프트(Tailwind CSS 4 표기 vs 실제 3.4) · 문서 라우트 점검 | WI-0048 (#139) | P18 | P3 | ✅ 완료(2026-10-24, 배포 없음). README · monorepo-setup · .claude/prompts 를 「개발 · 문서 사이트 3.4, 소비자 3 · 4 지원(1.4.0+)」 두 축으로, quick-start:208 을 pages.dev 절대 URL(200)로. 대상 13개 파일 링크 6개 깨짐 0 |
 | 61 | `axis init` 의 globalCss 기본 경로(`./src/app/globals.css`)가 src 없는 프로젝트에서 없는 경로로 기록됨(WI-0044 후속 검증에서 발견) | WI-0049 (#140) | P18 | P3 | ⏳ |
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
-| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ⏳ |
+| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | 🔄 PR 대기(2026-10-24 구현 · 검증 완료, 배포 전). 마운트 시 `complete && naturalWidth 0` 후보를 `decode()` 거부로 확정 · src 변경 시 오류 상태 초기화. SSR 하이드레이션 실측 chromium · firefox · webkit 수정 전 img 유지 → 수정 후 fallback, 크기 0 SVG 오판 없음. ui-react patch changeset |
 | 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ✅ 완료(2026-10-24). mcp 1.3.0 · cli 1.5.2(#164 · #163), 배포본 list 28 · install 기본 배치, D13 config 사설 주소 요청 0건(env 양성 대조 3건) |
 | 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
 | 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ✅ 완료(2026-10-24). cli 1.5.2(#162 · #163), 프로덕션 library 링크 109개 모두 2xx, 오프라인 검사 위반 0 |
@@ -350,7 +350,7 @@
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
 
-- 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · WI-0054 src 변경 시 hasError 미초기화 · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
+- 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
 - 공통 허브 파일(project-todo.md · .github/wi-mapping.json)은 나중에 머지하는 쪽이 rebase 해요. 생성물(public/r · public/library · public/templates)은 손으로 병합하지 않고 생성 명령을 다시 돌려요
 
 ### 향후 후보

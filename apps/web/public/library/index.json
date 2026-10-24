@@ -953,6 +953,7 @@
       "source": "axis",
       "tags": [
         "stateful",
+        "side-effects",
         "forwardRef"
       ],
       "status": "active"

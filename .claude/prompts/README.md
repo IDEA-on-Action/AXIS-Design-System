@@ -47,7 +47,7 @@ Button 컴포넌트의 구현을 시작합니다.
 ```markdown
 ## 프로젝트 컨텍스트
 - 프레임워크: Next.js 15
-- 스타일링: Tailwind CSS 4
+- 스타일링: 개발 · 문서 사이트 Tailwind CSS 3.4, 소비 프로젝트는 Tailwind 3 · 4 모두 지원(1.4.0+)
 - 테스트: Vitest
 ```
 

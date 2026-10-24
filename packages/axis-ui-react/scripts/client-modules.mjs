@@ -32,7 +32,7 @@
 export const CLIENT_MODULES = [
   {
     path: "avatar/avatar",
-    reason: "useState(이미지 로드 오류 상태) + <img onError> 인라인 핸들러",
+    reason: "useState · useEffect · useRef(이미지 로드 오류 상태와 마운트 시 판정, WI-0054) + <img onError> 인라인 핸들러",
   },
   {
     path: "command/index",

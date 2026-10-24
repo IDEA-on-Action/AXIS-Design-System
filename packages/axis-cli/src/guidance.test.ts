@@ -36,10 +36,14 @@ function isGuidanceViolation(text: string): boolean {
  * - .changeset/*.md · CHANGELOG.md: 무엇을 고쳤는지 설명하는 문장에 옛 안내를 인용합니다.
  * - 테스트 파일(*.test.ts)과 test/ fixture: 이 테스트처럼 나쁜 문자열을 양성 대조로 담습니다.
  *   walk 는 *.test.ts 를 건너뛰고, 패키지는 src 만 내려가므로 test/ 는 들어오지 않습니다.
- * - apps/web/public/library/**: 수집기가 만든 데이터라 손으로 고치지 않습니다. AXIS 항목은 소스를 고친 뒤
- *   `pnpm library:refresh-axis` 로 다시 만들고, 외부 소스(shadcn · monet) 항목은 그대로 둡니다(WI-0057).
- *   apps/web 은 src 만 봅니다.
  * 새로 실행 안내를 쓰는 곳이 생기면 성격이 위 제외에 해당하지 않는 한 여기에 더합니다.
+ *
+ * WI-0040(2026-10-24 사용자 결정): apps/web/public/library/** 도 스캔합니다. 수집기가 만든 데이터라 손으로
+ * 고치지 않지만(AXIS 항목은 소스를 고친 뒤 `pnpm library:refresh-axis` 로 다시 만듦, WI-0057), 문서 사이트가
+ * 그대로 보여 주므로 `npx axis-cli` 가 다시 들어오면 막아야 합니다. 006836a 이전 데이터에는 컴포넌트 소스를
+ * 통째로 담은 문자열 안에 `<CodeBlock code=\"npx axis-cli add ...\"` 가 14곳 있었습니다. 소스가 JSON 문자열
+ * 하나에 `\n` 으로 이어져 있어 줄 단위 검사가 원문 줄과 맞지 않으므로, JSON 을 파싱해 문자열 값 · 키의
+ * 이스케이프를 푼 뒤 줄로 나눠 검사합니다(LIBRARY_DATA_DIRS).
  */
 const SCAN_DIRS = [
   "apps/web/src",
@@ -52,6 +56,47 @@ const SCAN_DIRS = [
   ".clinerules",
 ];
 const SCAN_FILES = ["README.md"];
+/** JSON 을 파싱해 문자열의 이스케이프(`\n` · `\"` · `\u`)를 푼 뒤 줄 단위로 검사하는 데이터 디렉터리(WI-0040) */
+const LIBRARY_DATA_DIRS = ["apps/web/public/library"];
+const LIBRARY_FIXTURE = path.resolve(HERE, "../test/fixtures/guidance/library-step-indicator-006836a.json");
+
+/** JSON 안의 모든 문자열(키 포함)을 모아 이스케이프를 푼 줄 목록으로 돌려줍니다. 파싱 실패는 오류(미측정 방지) */
+function jsonStringLines(text: string, file: string): string[] {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch (e) {
+    throw new Error(`JSON 파싱 실패: ${file}: ${(e as Error).message}`);
+  }
+  const lines: string[] = [];
+  const visit = (v: unknown) => {
+    if (typeof v === "string") lines.push(...v.split(/\r?\n/));
+    else if (Array.isArray(v)) v.forEach(visit);
+    else if (v && typeof v === "object") {
+      for (const [k, child] of Object.entries(v)) {
+        lines.push(...k.split(/\r?\n/));
+        visit(child);
+      }
+    }
+  };
+  visit(data);
+  return lines;
+}
+
+function isLibraryData(file: string): boolean {
+  return (
+    file.endsWith(".json") &&
+    LIBRARY_DATA_DIRS.some((d) => file.startsWith(path.join(ROOT, d) + path.sep))
+  );
+}
+
+/** 검사할 줄 목록. library 데이터는 JSON 문자열을 풀어서, 나머지는 원문 줄 그대로 */
+async function linesOf(file: string): Promise<string[]> {
+  const text = await fs.readFile(file, "utf8");
+  return isLibraryData(file) || file === LIBRARY_FIXTURE
+    ? jsonStringLines(text, file)
+    : text.split(/\r?\n/);
+}
 /** 하위로 내려가지 않고 바로 아래 *.md 만 보는 디렉터리 */
 const SCAN_TOP_LEVEL_MD = ["docs"];
 const SOURCE_EXT = new Set([".ts", ".tsx", ".js", ".mjs", ".cjs", ".md", ".mdx", ".json"]);
@@ -75,7 +120,7 @@ async function scanTargets(): Promise<string[]> {
     const readme = path.join(pkgDir, "README.md");
     if (await fs.pathExists(readme)) files.push(readme);
   }
-  for (const d of SCAN_DIRS) await walk(path.join(ROOT, d), files);
+  for (const d of [...SCAN_DIRS, ...LIBRARY_DATA_DIRS]) await walk(path.join(ROOT, d), files);
   for (const f of SCAN_FILES) files.push(path.join(ROOT, f));
   for (const d of SCAN_TOP_LEVEL_MD) {
     const dir = path.join(ROOT, d);
@@ -119,7 +164,23 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     expect(isGuidanceViolation(INIT_NEXT_STEP_COMMAND)).toBe(false);
   });
 
-  it("패키지 소스 · README, apps/web/src, docs/guides · templates, .claude 지시문, .clinerules, docs 최상위 *.md, 루트 README 에 위반 0건", async () => {
+  it("WI-0040 양성 대조: 006836a 이전 library 데이터 조각은 걸림(JSON 이스케이프를 풀고 검사)", async () => {
+    // 006836a~1 의 step-indicator.json 원문 조각. linesOf 가 이 fixture 를 library 데이터와 같은 방식으로 읽음
+    const hits = (await linesOf(LIBRARY_FIXTURE)).filter(isGuidanceViolation);
+    expect(hits.map((l) => l.trim())).toEqual([
+      '<CodeBlock code="npx axis-cli add step-indicator" language="bash" />',
+    ]);
+    // 이스케이프를 풀어야만 잡히는 형태(합성 입력): 원문 한 줄에서는 `\nnpx` 가 이어져 npx 앞에 단어 경계가 없고,
+    // 하위 명령 앞이 `@latest` 라 BARE_PATTERN 도 걸리지 않아 놓침
+    const raw = JSON.stringify({ content: "```bash\nnpx -y axis-cli@latest init\n```" });
+    expect(isGuidanceViolation(raw)).toBe(false);
+    expect(jsonStringLines(raw, "합성").some(isGuidanceViolation)).toBe(true);
+    // 음성 대조: 우리 패키지 이름으로 바꾼 같은 조각은 걸리지 않음
+    const fixed = (await fs.readFile(LIBRARY_FIXTURE, "utf8")).replace("npx axis-cli", "npx @axis-ds/cli");
+    expect(jsonStringLines(fixed, "음성").some(isGuidanceViolation)).toBe(false);
+  });
+
+  it("패키지 소스 · README, apps/web/src, apps/web/public/library, docs/guides · templates, .claude 지시문, .clinerules, docs 최상위 *.md, 루트 README 에 위반 0건", async () => {
     const files = await scanTargets();
     // 계측 대조: 스캔이 실제로 대상을 읽는지(0건이 미측정이 아님을 보임)
     expect(files.length).toBeGreaterThan(100);
@@ -142,13 +203,22 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     ]) {
       expect(files).toContain(path.join(ROOT, f));
     }
+    // 계측 대조(WI-0040): library 데이터 JSON 이 전부 들어오고, 이스케이프를 풀어 읽힘
+    const libraryFiles = files.filter(isLibraryData);
+    expect(libraryFiles.length).toBeGreaterThan(100);
+    expect(libraryFiles).toContain(path.join(ROOT, "apps/web/public/library/components/step-timeline.json"));
+    expect(libraryFiles).toContain(path.join(ROOT, "apps/web/public/library/categories/agentic.json"));
+    const decoded = await linesOf(path.join(ROOT, "apps/web/public/library/components/step-timeline.json"));
+    expect(decoded.length).toBeGreaterThan(50);
     // 제외 확인: 결함을 설명하는 WI 문서는 스캔하지 않음
     expect(files.some((f) => f.startsWith(path.join(ROOT, "docs/workitems") + path.sep))).toBe(false);
     const hits: string[] = [];
     for (const file of files) {
-      const lines = (await fs.readFile(file, "utf8")).split(/\r?\n/);
+      const lines = await linesOf(file);
       lines.forEach((line, i) => {
-        if (isGuidanceViolation(line)) hits.push(`${path.relative(ROOT, file)}:${i + 1}: ${line.trim()}`);
+        // library 데이터는 풀어 읽은 줄 번호라 `#` 로 표기(원문 줄 번호 `:` 와 구분)
+        const at = isLibraryData(file) ? "#" : ":";
+        if (isGuidanceViolation(line)) hits.push(`${path.relative(ROOT, file)}${at}${i + 1}: ${line.trim()}`);
       });
     }
     expect(hits).toEqual([]);

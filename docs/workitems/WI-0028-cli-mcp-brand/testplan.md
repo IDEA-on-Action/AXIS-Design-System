@@ -1,6 +1,6 @@
 # 테스트 계획 - WI-0028: CLI · MCP 브랜드 명령
 
-> 작성일: 2026-10-19 | 상태: 구현 · 검증 진행(P1 ~ P6 완료, T7-2 AC2(b) WI-0038 브랜치로 재측정 통과 · 배포본 재확인 대기, T7-4 배포 뒤) | PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
+> 작성일: 2026-10-19 | 상태: 완료(2026-10-24, AC1 ~ AC4 · T7-2 · T7-4 를 npm 배포본 `@axis-ds/cli@1.5.4` · `@axis-ds/mcp@1.3.2` 로 재측정 통과, 「T8. 종결 재측정」) | PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | TODO: [todo.md](./todo.md)
 > 기준선(e690905, 2026-10-19 실측): cli `npx vitest run` 3파일 58건 통과(rc 0), mcp 테스트 파일 0개 · vitest 없음, `turbo run test --dry=json` 의 test 태스크 5개.
 > 결과는 실행한 HEAD · 명령 · `--force` 여부와 함께 적습니다. turbo cached 결과와 0건 · 무출력은 rc · 건수로 측정 수행을 증명하기 전에는 통과 근거로 쓰지 않습니다.
 
@@ -21,7 +21,7 @@
 | AC2(a) theme-only 구조에서 두 번 실행 멱등 | T3-4(fixture), **T6-6(실경로)** | P3 · P6 |
 | AC2(b) App Router 프로젝트 `pnpm build` 통과 | T3-2b(fixture), **T7-2** | P3 · P7 |
 | AC3 MCP 응답 = CLI 출력 내용 | **T5-5**(fixture), T6-4(실데이터) | P5 · P6 |
-| AC4 brand · import 불일치 경고 | **T4-3** · T4-4 | P4 |
+| AC4 brand · import 불일치 경고 | **T4-3** · T4-4, **T8-4(배포본)** | P4 · P8 |
 
 ---
 
@@ -95,21 +95,22 @@
 - [x] **T6-3 (AC1)**: tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 출력에 `ontology` → 1.3.0 이 배포돼 `file:` 대신 빈 프로젝트에 `npm install @axis-ds/tokens@1.3.0`(레지스트리) 설치본으로 판정. 빌드 CLI `theme list` rc 0, `AXIS 브랜드 (1개, @axis-ds/tokens 1.3.0)` · `ontology  디자인 시스템 v1 기반 ontology 브랜드 프리셋  (light · dark)`. 주입 env 없음(`AXIS_*` 0개)
 - [x] T6-4: 같은 프로젝트에서 `theme info ontology` 와 MCP 두 도구 응답, T5-5 기준으로 동일 → CLI `theme info ontology` rc 0. 원본 코어(`packages/axis-cli/src/theme/brand-core.ts`)와 MCP 핸들러(`src/tools/brand.ts`)를 vite-node 로 불러 같은 디렉터리에서 list · get ontology · get nope 결과 deep equal 3/3(status 모두 `ok`). 빌드 `packages/axis-mcp/dist/index.js` stdio(cwd 이 프로젝트, 주입 env 없음): `serverInfo.version` 1.1.5, `tools/list` 18개, `axis.list_brands` · `axis.get_brand(ontology)` · `axis.get_brand(nope)` 모두 `isError` false. MCP 표 12행의 토큰 · 라이트 · 다크 값이 CLI `info` 표 12행과 같고, import 경로 · `defaultBrand="ontology"` · a11y 상태 · 점검일 · 게이트 · 근거 문서가 양쪽 글에 모두 있음
 - [x] T6-5: 주요 토큰 12개 중 ontology CSS 에 있는 개수 기록, 긴 `a11y.status` 의 `info` 출력 확인 → 라이트 블록 12/12, 다크 블록 10/12(`--radius` · `--axis-font-family-sans` 없음, `info` 에 `-` 로 표시). `a11y 상태` 줄은 문장 전체가 한 줄로 나옴(134자). 출력 최대 줄 길이는 주요 토큰 표의 141자이고 원인은 `--axis-font-family-sans` 라이트 값(폰트 목록)이 라이트 열 폭을 넓히는 것. 80열 터미널에서는 줄이 꺾임(기록만, 코드 변경 없음)
-- [x] **T6-6 (AC2(a) 실경로)**: 이 브랜치 빌드 CLI 로 새 임시 디렉터리에 `axis template init theme-only -d <임시>`(`AXIS_TEMPLATE_URL` 주입 없음, 기본 레지스트리) → 받은 파일 목록이 저장소 `theme-only.json` 7개와 같은지 기록 → tokens tarball 설치 없이 `axis theme add ontology` 2회. 루트 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "ontology"`, 2회차 전후 파일 해시 차이 0 (plan 6.2-7) → **전제: 기본 레지스트리 주입 없음 조건은 지키지 못함.** 주입 없이 실행하면 rc 1(`'theme-only' 템플릿을 찾을 수 없습니다 (403)`), `curl` 로도 `theme-only.json` · `index.json` 모두 403. 그래서 `AXIS_TEMPLATE_URL=http://127.0.0.1:38761/templates`(저장소 `apps/web/public` 을 `python3 -m http.server` 로 내보냄, 빌드 전 추적 파일 상태)를 주입함. init rc 0, 7개 파일 + `axis.config.json`. 7개 모두 저장소 `theme-only.json` 내용과 같음(차이 0). tokens 미설치 상태로 1회차 rc 0 · 3파일 변경(`axis.config.json` · `globals.css` · `package.json`) · not-installed 경고, 2회차 rc 0 · 「바꾼 파일이 없습니다」 · `sha256sum` 8개 파일 차이 0. import 1줄(1행, `@tailwind base;` 앞) · tokens 키 1개 · `brand: "ontology"` · `node_modules` 미생성. 레지스트리 경로(axis.minu.best) 자체는 미검증 → 2026-10-19 사용자 결정: 템플릿 파일이 같아 판정은 유효하므로 `AXIS_TEMPLATE_URL` 주입 전제로 통과로 둔다. `axis.minu.best` Cloudflare 403 이 풀리면 기본 레지스트리로 한 번 더 잰다
+- [x] **T6-6 (AC2(a) 실경로)**: 이 브랜치 빌드 CLI 로 새 임시 디렉터리에 `axis template init theme-only -d <임시>`(`AXIS_TEMPLATE_URL` 주입 없음, 기본 레지스트리) → 받은 파일 목록이 저장소 `theme-only.json` 7개와 같은지 기록 → tokens tarball 설치 없이 `axis theme add ontology` 2회. 루트 `globals.css` 의 브랜드 import 정확히 1줄, `package.json` 의 `@axis-ds/tokens` 키 1개, `axis.config.json` `brand: "ontology"`, 2회차 전후 파일 해시 차이 0 (plan 6.2-7) → **전제: 기본 레지스트리 주입 없음 조건은 지키지 못함.** 주입 없이 실행하면 rc 1(`'theme-only' 템플릿을 찾을 수 없습니다 (403)`), `curl` 로도 `theme-only.json` · `index.json` 모두 403. 그래서 `AXIS_TEMPLATE_URL=http://127.0.0.1:38761/templates`(저장소 `apps/web/public` 을 `python3 -m http.server` 로 내보냄, 빌드 전 추적 파일 상태)를 주입함. init rc 0, 7개 파일 + `axis.config.json`. 7개 모두 저장소 `theme-only.json` 내용과 같음(차이 0). tokens 미설치 상태로 1회차 rc 0 · 3파일 변경(`axis.config.json` · `globals.css` · `package.json`) · not-installed 경고, 2회차 rc 0 · 「바꾼 파일이 없습니다」 · `sha256sum` 8개 파일 차이 0. import 1줄(1행, `@tailwind base;` 앞) · tokens 키 1개 · `brand: "ontology"` · `node_modules` 미생성. 레지스트리 경로(axis.minu.best) 자체는 미검증 → 2026-10-19 사용자 결정: 템플릿 파일이 같아 판정은 유효하므로 `AXIS_TEMPLATE_URL` 주입 전제로 통과로 둔다. `axis.minu.best` Cloudflare 403 이 풀리면 기본 레지스트리로 한 번 더 잰다 → 2026-10-24 사용자 결정(PRD D-AC2a-2): 재확인 조건을 「pages.dev 기본 레지스트리 배포본 재측정」으로 바꿈. **배포본 `@axis-ds/cli@1.5.4` 로 주입 없이 재측정 통과**(T8-2): 기본 레지스트리 `https://axis-design-system.pages.dev/templates` 에서 7개 파일, 저장소 `theme-only.json` 과 차이 0, import 1줄 · tokens 키 1개 · `brand: "ontology"` · 2회차 해시 차이 0
 - [x] T6-7 (U2 대안 2 의존 확인): ontology tarball 로 plan 8.1 vC 와 같은 구성(FR-2 위치 `@import`)에서 `<html data-brand="ontology">` 라이트 · 다크의 `--primary` · `--background` 계산값이 브랜드 값과 같음(라이트 승리가 확인 항목). 음성 대조군(브랜드 import 없음)과 양성 대조군(`--axis-surface-default`)을 함께 기록. 라이트가 지면 M3 선택자 변경 누락으로 보고 다음 단계 중단 (plan 6.2-6) → **라이트 · 다크 모두 브랜드 값이 이김.** 결과 표는 아래 「T6-7 측정」
 
 ## T7. 1.3.0 배포 뒤 (P7)
 
 - [x] T7-1: `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` · `./css/brands/ontology` · `./brands/ontology/brand.json` → rc 0, 세 키 모두 있음(브랜드 키는 이 3개뿐)
-- [ ] **T7-2 (AC2(b))**: 새 App Router Next.js 15 프로젝트(`app/globals.css` · `app/layout.tsx`)에서 `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0. env · 캐시 주입 없이 레지스트리 설치. theme-only 는 빌드 대상이 아님(PRD Q4). rc 0 만으로는 판정하지 않고 다음을 모두 봄(plan 6.3-2) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다
+- [x] **T7-2 (AC2(b))**: 새 App Router Next.js 15 프로젝트(`app/globals.css` · `app/layout.tsx`)에서 `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0. env · 캐시 주입 없이 레지스트리 설치. theme-only 는 빌드 대상이 아님(PRD Q4). rc 0 만으로는 판정하지 않고 다음을 모두 봄(plan 6.3-2) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다
   - ① `axis theme add` 출력에 globalCss(`./src/app/globals.css`) 없음 경고, `app/globals.css` 에 `@axis-ds/tokens/css/brands/ontology` import 정확히 1줄
   - ② `axis check` 의 brand 항목 pass
   - ③ `.next/static/css/*.css` 에서 `grep -E "data-brand=[\"']?ontology"` 1건 이상
   - ④ 음성 대조군: `theme add` 전 빌드 산출 CSS 에서 ③ 과 같은 grep 0건(CSS 파일 1개 이상 · grep rc 1 로 측정 수행 증명)
   - → **미통과(2026-10-19).** 결과는 아래 「T7-2 측정」. 정의된 절차의 `pnpm build` 가 rc 1 이고 원인은 기존 `axis init -y` 입니다. ① · ② · ④ 는 통과, ③ 은 보조 측정(전제 주입)에서만 통과
   - → **재측정 통과(2026-10-19, WI-0038 브랜치 CLI).** 결과는 아래 「T7-2 재측정」. ① ~ ④ 모두 통과, 전제 주입 없음. `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 재확인이 남아 체크하지 않음
+  - → **배포본 재측정 통과(2026-10-24, `@axis-ds/cli@1.5.4` npm 설치본).** 결과는 「T8-3」. ① ~ ④ 모두 통과, 주입 env 0개 · 의존성 손 설치 없음. (기록: project-todo 에는 2026-10-20 cli 1.2.1 배포본 통과가 적혀 있으나 이 testplan 에는 원 데이터가 없어, 이번 측정을 배포본 근거로 씁니다)
 - [x] T7-3: `pnpm exec turbo run build test --force --continue` rc 0, cached 0, 패키지별 테스트 수 기록 → rc 0, 14/14 태스크(build 8 · test 6), cached 0. cli 9파일 161건 · mcp 4파일 24건 · tokens 221건(node test) · theme 2파일 31건 · ui-react 8파일 110건 · agentic-ui 6파일 72건, 실패 0. 빌드가 고친 추적 파일 5개(`apps/web/public/templates/*.json`)는 `git checkout --` 로 되돌림
-- [ ] T7-4: 배포 뒤 `npx @axis-ds/cli@1.2.0 --version` = 1.2.0, `@axis-ds/mcp@1.2.0` tarball stdio `serverInfo.version` = 1.2.0 · 도구 18개
+- [x] T7-4: 배포 뒤 `npx @axis-ds/cli@1.2.0 --version` = 1.2.0, `@axis-ds/mcp@1.2.0` tarball stdio `serverInfo.version` = 1.2.0 · 도구 18개 → 1.2.0 은 2026-10-19 배포됨(#123 · run 39257199603, 기록). 지금 배포본으로 같은 항목을 잼(T8-5): `@axis-ds/cli@1.5.4` `--version` = 1.5.4, `@axis-ds/mcp@1.3.2` stdio `serverInfo.version` = 1.3.2 · `tools/list` 18개(`axis.list_brands` · `axis.get_brand` 포함). 버전 표기가 `package.json` 을 읽는다는 2.2 요구가 배포본에서 유지됨
 
 
 ### T6-7 측정 (2026-10-19)
@@ -171,6 +172,23 @@
 | ④ 음성 대조군: 같은 CLI 로 init 만 하고(theme add 없음) 빌드한 프로젝트 | build rc 0, CSS 1개, 같은 grep 0건 · rc 1 |
 
 - 판정: 정의된 절차에서 ① ~ ④ 를 모두 통과했습니다. 전제는 CLI 가 배포본이 아니라 WI-0038 브랜치 빌드라는 것 하나이고, `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 같은 절차를 다시 확인합니다. 원 데이터는 WI-0038 testplan 3.2 T15 · T16 입니다.
+
+### T8. 종결 재측정 (2026-10-24, npm 배포본)
+
+> PRD D-AC2a-2 · D-close. 이번 절의 값은 모두 **측정**입니다. 기준 main bd54e91.
+
+- 도구: 스크래치 디렉터리에 `npm install @axis-ds/cli@1.5.4 @axis-ds/mcp@1.3.2`(rc 0) 한 `node_modules/.bin/axis` 와 `node_modules/@axis-ds/mcp/dist/index.js`. Node v22.22.0, 레지스트리 https://registry.npmjs.org/. `AXIS_*` env 0개(`env | grep -i AXIS` 결과에 AXIS 변수 없음). CLI 기본 템플릿 주소는 배포본 `dist` 에서 `` TEMPLATE_REGISTRY_URL = process.env.AXIS_TEMPLATE_URL || `${AXIS_SITE_URL}/templates` ``, `AXIS_SITE_URL` 은 `https://axis-design-system.pages.dev`(`axis.minu.best` 는 이전 config 판별용 `LEGACY_DEFAULT_REGISTRY_URL` 1곳뿐). `curl` 로 `.../templates/theme-only.json` · `index.json` 모두 200.
+- tokens: 빈 프로젝트에 `npm install @axis-ds/tokens@1.6.0`(rc 0, 설치본 1.6.0).
+
+| ID | AC | 절차 | 결과 |
+|---|---|---|---|
+| T8-1 | AC1 | tokens 1.6.0 프로젝트에서 `axis theme list` | rc 0, 「AXIS 브랜드 (1개, @axis-ds/tokens 1.6.0)」 · `ontology  디자인 시스템 v1 기반 ontology 브랜드 프리셋  (light · dark)` |
+| T8-2 | AC2(a) | 빈 디렉터리(항목 0개)에서 `axis template init theme-only -d .`(주입 없음, 기본 레지스트리 pages.dev) → `axis theme add ontology` 2회 | init rc 0, 7개 파일 + `axis.config.json`(`$schema` `https://axis-design-system.pages.dev/schema.json`, `globalCss` `./globals.css`). 7개 모두 저장소 `apps/web/public/templates/theme-only.json` 과 내용 같음(same 7 · diff 0 · miss 0). 1회차 rc 0 · 「파일 3개를 바꿨습니다」(not-installed 경고), 2회차 rc 0 · 「바꾼 파일이 없습니다」, 8개 파일 `sha256sum` 차이 0(diff rc 0). 루트 `globals.css` 1행에 `@import "@axis-ds/tokens/css/brands/ontology";` 정확히 1줄, `package.json` `"@axis-ds/tokens"` 1회(`^1.3.0`), `brand: "ontology"`, `node_modules` 미생성 |
+| T8-3 | AC2(b) · T7-2 | `create-next-app@15.5.28 app --ts --tailwind --eslint --app --no-src-dir --use-pnpm --skip-install`(rc 0, next 15.5.28 · tailwindcss 4.3.3) → `axis init -y` → `axis theme add ontology` → `pnpm install` → `pnpm build`, pnpm 10.33.0 | init rc 0, theme add rc 0 · globalCss(`./src/app/globals.css`) 없음 경고 · `app/globals.css` 2행 import 1줄, install rc 0(tokens 1.6.0), **build rc 0**, `.next/static/css/*.css` 1개에 `data-brand=["']?ontology` 5건(grep rc 0), `axis check` rc 0 · `PASS brand "ontology" import 가 app/globals.css에 있습니다 (globalCss ./src/app/globals.css 없음)`. 음성 대조군(같은 절차에서 theme add 만 뺌): build rc 0 · CSS 1개 · 같은 grep 0건 · rc 1, check 에 brand 항목 없음 |
+| T8-4 | AC4 | tokens 1.6.0 프로젝트 3개(`axis.config.json` `globalCss ./globals.css`): match(brand ontology + ontology import) · noimport(brand ontology + import 없음) · other(brand `other` + ontology import). CLI `axis check`, MCP stdio `tools/call axis.check_project {targetDir}` | CLI: match `PASS  brand "ontology" import 가 globals.css에 있습니다`, noimport `WARN  brand "ontology" import 가 globals.css에 없습니다 → 'axis theme add ontology'`, other `WARN  brand "other" 와 import(ontology)가 다릅니다`(셋 다 rc 1, 원인은 fixture 에 없는 tailwind.config · tailwindcss 의 기존 FAIL 2건). MCP: 같은 세 문구가 `[PASS]` · `[WARN]` · `[WARN]` 로, 요약 `2 pass / 2 warn / 2 fail` · `1 pass / 3 warn / 2 fail` · `1 pass / 3 warn / 2 fail`, `isError` 3건 모두 false. 음성 대조군 match 는 brand WARN 0 |
+| T8-5 | AC3 · T7-4 | 같은 tokens 1.6.0 프로젝트에서 CLI `theme info ontology` 와 MCP stdio `axis.list_brands` · `axis.get_brand {name: ontology}` · `axis.get_brand {name: nope}` | `--version` 1.5.4, MCP `serverInfo` `{"name":"axis-design-system","version":"1.3.2"}` · `tools/list` 18개. MCP 3건 `isError` false. 주요 토큰 표: CLI 12행 · MCP 12행, 행마다 (토큰, 라이트, 다크) 같음 12/12. 설명 · 테마 · import 줄 · Provider 줄 · 점검일 · 근거 문서 6개 문자열이 두 출력에 모두 있음 6/6. 음성 대조: MCP 표의 값 하나를 바꾼 사본은 불일치 1행으로 잡힘. `nope` 는 「설치된 브랜드: ontology」 안내 |
+
+- 판정: AC1 ~ AC4 와 T7-2 · T7-4 를 배포본으로 모두 통과했습니다. AC3 은 배포본에서는 코어 deep equal(T5-5 · T6-4)을 다시 할 수 없어 출력 내용 대조로 쟀습니다.
 
 ---
 
@@ -240,3 +258,6 @@
 | 2026-10-19 | 724d94b | 변이 5종(BOM 처리 끔 · 프로젝트 밖 거절 끔 · 권한 확인 끔 · 되돌림 끔 · 부분 빌드 `not-built` 끔)을 하나씩 넣고 `npx vitest run src/theme` | 해당 없음 | 각각 rc 1(실패 2 · 3 · 1 · 1 · 3건), 되돌린 뒤 `cmp` 로 원본과 같음. sha256 앞 12자리 `brand-core.ts`(원본 · 사본) `945162cfc0a2` |
 | 2026-10-19 | 724d94b | 각 패키지에서 `npx tsc --noEmit -p tsconfig.json` · 루트 `npx eslint packages/axis-cli/src/theme/ packages/axis-mcp/src/tools/brand-core.ts` | 해당 없음 | mcp rc 0. cli 오류 20건으로 P1 ~ P5 기준선과 같은 분포, `src/theme/**` 0건. eslint rc 0, 0건(양성 대조군: `packages/axis-cli/src/index.ts` 는 기존 지적으로 rc 1) |
 | 2026-10-19 | 724d94b | `pnpm build`(cli · mcp) 뒤 위 재현 프로젝트를 새로 만들어 빌드 CLI · 빌드 MCP stdio 로 다시 실행 | 해당 없음 | build rc 0 · 0, 추적 파일 변경 0. BOM rc 0 · 맨 앞 BOM · postcss 8.5.6 `parse` 성공, 밖 globalCss rc 1 · 변경 0, 부분 빌드 `theme list` rc 1 빌드 전 안내 · `theme info` 스택 0줄, MCP 두 도구 안내 글 · `isError` false, 읽기 전용 config rc 1 · 변경 0 |
+| 2026-10-24 | bd54e91 | npm `@axis-ds/cli@1.5.4` 로 `template init theme-only`(주입 없음, pages.dev) → `theme add ontology` 2회 | 해당 없음 | init rc 0, 7파일 차이 0, 1회차 3파일 · 2회차 해시 차이 0 (T8-2, AC2(a) D-AC2a-2 조건 통과) |
+| 2026-10-24 | bd54e91 | create-next-app 15.5.28 → npm cli 1.5.4 `init -y` → `theme add ontology` → `pnpm install` → `pnpm build` · 음성 대조군 | 해당 없음 | build rc 0, import 1줄, check brand PASS, grep 5건, 음성 대조군 0건 · rc 1 (T8-3) |
+| 2026-10-24 | bd54e91 | npm cli 1.5.4 · mcp 1.3.2 로 `theme list` · `theme info`, MCP stdio 브랜드 도구 · `check_project`, CLI `check` 3개 프로젝트 | 해당 없음 | list `ontology`, 토큰 표 12/12 일치, `serverInfo.version` 1.3.2 · 도구 18개, brand WARN 2 · PASS 1(CLI · MCP 같음) (T8-1 · T8-4 · T8-5) |
