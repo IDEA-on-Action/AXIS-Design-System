@@ -8,6 +8,8 @@
  * - preset 에 이 변환기가 모르는 키(theme.extend 의 새 항목, darkMode 의 다른 전략 등)가 생기면
  *   조용히 빠뜨리지 않고 throw 한다. 빠진 매핑은 Tailwind 4 에서 클래스가 생성되지 않을 뿐 오류가 없어서
  *   눈에 띄지 않기 때문이다.
+ * - theme.extend.keyframes 는 테마 변수가 아니라 `@keyframes` 블록으로, theme.extend.animation 은 `--animate-*` 로 옮긴다
+ *   (WI-0046). animation 이 preset 에 없는 keyframes 를 가리키면 throw 한다(Tailwind 4 에서 이름만 있고 동작하지 않음).
  * - 맨 위에서 같은 디렉터리의 variables.css · shadcn-compat.css 를 `layer(base)` 로 불러온다.
  *   사용자는 `@import "@axis-ds/tokens/css/tailwind4";` 한 줄로 토큰 변수와 매핑을 함께 얻는다.
  *   layer(base) 로 넣는 이유: shadcn-compat.css 의 `* { border-color }` · `body { background-color }` 가
@@ -27,7 +29,17 @@ export const NAMESPACES = /** @type {const} */ ({
   colors: 'color',
   borderRadius: 'radius',
   fontFamily: 'font',
+  animation: 'animate',
 })
+
+/** theme.extend 에서 테마 변수가 아니라 `@keyframes` 블록으로 옮기는 키 */
+export const KEYFRAMES_KEY = 'keyframes'
+
+/** keyframes 단계 선택자: from · to · 0% · 12.5% 와 그 쉼표 목록 */
+const STEP_RE = /^(?:from|to|\d+(?:\.\d+)?%)(?:, (?:from|to|\d+(?:\.\d+)?%))*$/
+
+/** keyframes 안의 CSS 속성 이름. Tailwind 3 은 camelCase 도 받지만 Tailwind 4 로 그대로 옮기려고 kebab-case 만 받는다 */
+const PROP_RE = /^[a-z][a-z-]*$/
 
 /** preset 의 darkMode ['class'] 와 짝을 이루는 Tailwind 4 변형 선택자(.dark 요소 자신과 그 자손) */
 export const DARK_VARIANT = '&:where(.dark, .dark *)'
@@ -91,10 +103,50 @@ function flatten(where, obj, path = []) {
 }
 
 /**
+ * theme.extend.keyframes 를 `@keyframes` 블록 목록으로 바꾼다. 형태는 { 이름: { 단계: { 속성: 값 } } } 만 받는다.
+ *
+ * @param {unknown} keyframes
+ * @returns {Array<{ name: string, steps: Array<{ selector: string, decls: Array<[string, string]> }> }>}
+ */
+function keyframesBlocks(keyframes) {
+  const where = `preset.theme.extend.${KEYFRAMES_KEY}`
+  if (!keyframes || typeof keyframes !== 'object' || Array.isArray(keyframes)) throw new Error(`${where}: 객체가 아닙니다`)
+  return Object.entries(keyframes).map(([name, steps]) => {
+    if (!KEY_RE.test(name)) throw new Error(`${where}: 쓸 수 없는 이름 "${name}"`)
+    if (!steps || typeof steps !== 'object' || Array.isArray(steps) || Object.keys(steps).length === 0) {
+      throw new Error(`${where}.${name}: 단계 객체가 아닙니다`)
+    }
+    return {
+      name,
+      steps: Object.entries(steps).map(([selector, decls]) => {
+        if (!STEP_RE.test(selector)) throw new Error(`${where}.${name}: 단계 선택자가 아닙니다 "${selector}"`)
+        if (!decls || typeof decls !== 'object' || Array.isArray(decls) || Object.keys(decls).length === 0) {
+          throw new Error(`${where}.${name}["${selector}"]: 선언 객체가 아닙니다`)
+        }
+        return {
+          selector,
+          decls: Object.entries(decls).map(([prop, value]) => {
+            if (!PROP_RE.test(prop)) throw new Error(`${where}.${name}["${selector}"]: kebab-case 속성 이름이 아닙니다 "${prop}"`)
+            if (typeof value !== 'string' || value.trim() === '') {
+              throw new Error(`${where}.${name}["${selector}"].${prop}: 문자열 값이 아닙니다 (${JSON.stringify(value)})`)
+            }
+            return /** @type {[string, string]} */ ([prop, value])
+          }),
+        }
+      }),
+    }
+  })
+}
+
+/**
  * preset 을 Tailwind 4 테마 변수 목록으로 바꾼다. 순서는 preset 선언 순서를 따른다.
  *
  * @param {Record<string, any>} preset
- * @returns {{ darkSelector: string, vars: Array<{ namespace: string, name: string, value: string }> }}
+ * @returns {{
+ *   darkSelector: string,
+ *   vars: Array<{ namespace: string, name: string, value: string }>,
+ *   keyframes: ReturnType<typeof keyframesBlocks>,
+ * }}
  */
 export function presetToTheme(preset) {
   for (const key of Object.keys(preset)) {
@@ -111,7 +163,13 @@ export function presetToTheme(preset) {
   const extend = theme.extend ?? {}
   /** @type {Array<{ namespace: string, name: string, value: string }>} */
   const vars = []
+  /** @type {ReturnType<typeof keyframesBlocks>} */
+  let keyframes = []
   for (const [key, value] of Object.entries(extend)) {
+    if (key === KEYFRAMES_KEY) {
+      keyframes = keyframesBlocks(value)
+      continue
+    }
     const namespace = /** @type {Record<string, string>} */ (NAMESPACES)[key]
     if (!namespace) throw new Error(`preset.theme.extend.${key}: Tailwind 4 진입점 변환을 모르는 키입니다`)
     if (!value || typeof value !== 'object') throw new Error(`preset.theme.extend.${key}: 객체가 아닙니다`)
@@ -123,7 +181,15 @@ export function presetToTheme(preset) {
     if (seen.has(id)) throw new Error(`${id}: 같은 테마 변수가 두 번 만들어집니다`)
     seen.add(id)
   }
-  return { darkSelector: DARK_VARIANT, vars }
+  const keyframeNames = new Set(keyframes.map(k => k.name))
+  for (const v of vars) {
+    if (v.namespace !== NAMESPACES.animation) continue
+    const ref = v.value.trim().split(/\s+/)[0]
+    if (!keyframeNames.has(ref)) {
+      throw new Error(`preset.theme.extend.animation.${v.name}: preset.theme.extend.keyframes 에 없는 "${ref}" 를 가리킵니다`)
+    }
+  }
+  return { darkSelector: DARK_VARIANT, vars, keyframes }
 }
 
 /**
@@ -133,9 +199,17 @@ export function presetToTheme(preset) {
  * @returns {string}
  */
 export function buildTailwind4Css(preset) {
-  const { darkSelector, vars } = presetToTheme(preset)
+  const { darkSelector, vars, keyframes } = presetToTheme(preset)
   const imports = IMPORTED_CSS.map(f => `@import "./${f}" layer(base);`).join('\n')
   const decls = vars.map(v => `  --${v.namespace}-${v.name}: ${v.value};`).join('\n')
+  const keyframesCss = keyframes
+    .map(k => {
+      const steps = k.steps
+        .map(st => `  ${st.selector} {\n${st.decls.map(([p, v]) => `    ${p}: ${v};`).join('\n')}\n  }`)
+        .join('\n')
+      return `\n@keyframes ${k.name} {\n${steps}\n}\n`
+    })
+    .join('')
   return `/**
  * AXIS Design System - Tailwind CSS 4 진입점
  * Generated from src/tailwind-preset.ts (Tailwind 3 preset 과 같은 매핑)
@@ -147,6 +221,8 @@ export function buildTailwind4Css(preset) {
  *
  * 토큰 변수(variables.css · shadcn-compat.css)를 base 레이어로 함께 불러옵니다.
  * 브랜드 CSS(@axis-ds/tokens/css/brands/*)는 이 줄 뒤에 import 합니다.
+ * keyframes(accordion · progress)는 아래 @keyframes 와 --animate-* 로 정의합니다.
+ * animate-in · fade-in-0 류 열고 닫는 애니메이션은 애니메이션 플러그인(tw-animate-css 등)이 따로 필요합니다.
  */
 
 ${imports}
@@ -156,5 +232,5 @@ ${imports}
 @theme inline {
 ${decls}
 }
-`
+${keyframesCss}`
 }

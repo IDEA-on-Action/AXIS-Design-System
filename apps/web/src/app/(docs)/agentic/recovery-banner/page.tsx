@@ -2,49 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { RecoveryBanner } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-// Mock RecoveryBanner 컴포넌트
-const RecoveryBanner = ({ message, description, onRetry, onDismiss }: any) => (
-  <div
-    className="flex items-start gap-3 p-4 rounded-lg border border-red-200 bg-red-50 dark:bg-red-950/20"
-    role="alert"
-  >
-    <svg
-      className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5"
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-      />
-    </svg>
-    <div className="flex-1 min-w-0">
-      <p className="text-sm font-medium text-red-700 dark:text-red-400">{message}</p>
-      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      <div className="flex gap-2 mt-3">
-        {onRetry && (
-          <Button size="sm" variant="destructive" onClick={onRetry}>
-            재시도
-          </Button>
-        )}
-        {onDismiss && (
-          <Button size="sm" variant="ghost" onClick={onDismiss}>
-            무시
-          </Button>
-        )}
-      </div>
-    </div>
-  </div>
-)
 
 const recoveryBannerProps = [
   { name: 'message', type: 'string', required: true, description: '에러 메시지' },

@@ -57,14 +57,14 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "AXIS 다이얼로그 컴포넌트 - 모달 UI",
-      "sha256": "75276f96133c560975559f776895bff594b4c3511b303f79ff3517a72d9e86ef"
+      "sha256": "cd2307dca13b830e0f34cfbe6ce800f1d4ee3a5a373bf9bf9dd7087758ea82b3"
     },
     {
       "name": "select",
       "type": "registry:ui",
       "title": "Select",
       "description": "AXIS 셀렉트 컴포넌트 - 드롭다운 선택",
-      "sha256": "52dc633bc401b11da0a68b08c45c475292a1250aadff89357a25bd985542ff72"
+      "sha256": "3680a718874d05f153d8b46f8a9affbee9fe9bcf0509e20f4d6250c4e3307f81"
     },
     {
       "name": "tabs",
@@ -78,7 +78,7 @@
       "type": "registry:ui",
       "title": "Toast",
       "description": "AXIS 토스트 컴포넌트 - 알림 메시지",
-      "sha256": "7be5ff031c88b39b955d8d574adb04a031ac01fdb606bd5ca6d38d730047201d"
+      "sha256": "0d5168f10be4223f9d31bf815045c88abbd57a96ab932b05388d43a26e82546c"
     },
     {
       "name": "agentic-a11y-labels",
@@ -92,14 +92,14 @@
       "type": "registry:ui",
       "title": "Run Progress",
       "description": "AI 에이전트 실행 진행률 표시 컴포넌트",
-      "sha256": "7e9440054119958145eff6b3f82c814453ec80f42c23a47f83dcdf0de418df24"
+      "sha256": "bd197371ac791da7319dc72551d7fe86e020ae7f756852b40ede9123aa5d2186"
     },
     {
       "name": "agentic-streaming-text",
       "type": "registry:ui",
       "title": "Streaming Text",
       "description": "LLM 스트리밍 텍스트 출력 컴포넌트",
-      "sha256": "e39ef3ef19e7ce5d0a22ba4c9d168c7cd219ea0234b5df75bf74cfa70c6a4056"
+      "sha256": "c40ac5afe7fd49b22bcc66aeebb77d23d7d8dd6b4b36f8fe4472750eaeae14d9"
     },
     {
       "name": "agentic-approval-card",
@@ -113,14 +113,14 @@
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "sha256": "536df739e23e098f57a3e8f5093edf46a55fba2dfa2525622dd73fc81b83a9ce"
+      "sha256": "2c93015b0ae012b517781c555297a79cc4c5a19842ab55ef7a847db5002c6875"
     },
     {
       "name": "agentic-thinking-indicator",
       "type": "registry:ui",
       "title": "Thinking Indicator",
       "description": "AI 사고 과정 표시 컴포넌트",
-      "sha256": "5e495686fb1dfdb1f3a9b669269a41a0031fbb47cd75380dce294dc6aecafbbc"
+      "sha256": "0878b1f0b83b199239f4159beafc9a477ea1ad6c27a0587395e0e05dae85b3e6"
     },
     {
       "name": "agentic-source-panel",
@@ -148,21 +148,21 @@
       "type": "registry:ui",
       "title": "Surface Renderer",
       "description": "동적 UI Surface 렌더러 컴포넌트",
-      "sha256": "3dcc39db1ee4f0538725ff9a543e428880c1dba9d45e02dcecd951f92b9f998a"
+      "sha256": "b822136654ec9e6da8c8fc88773bbbca5b0db6e93de7367cd0b6439cea1bc1ac"
     },
     {
       "name": "agentic-tool-call-card",
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "4e387dbf052d5cddb90693d0eb2d1fcba6395e77c05ef8dad794ccce190f70ac"
+      "sha256": "b31a198cbb8aa9a84dd7475724abb1c75cfc57e98ce27ab6835b09f320f1f4a2"
     },
     {
       "name": "agentic-message-bubble",
       "type": "registry:ui",
       "title": "Message Bubble",
       "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)",
-      "sha256": "3bed0ec76f145b3aa01fe1efd2de9a35cfc4608429cc92968b639d8740081216"
+      "sha256": "9d5bebd9102dabc7afa8eb80c326abdae30ad174d1afd35cdccc9ce321ec90b9"
     },
     {
       "name": "agentic-feedback-buttons",
@@ -197,7 +197,7 @@
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "sha256": "f0b0a597831bfa01c5d0cf18e5d36e804d431b0fe1313ef5577ab45b7d9adff7"
+      "sha256": "c6d2f255b90b302966abd50091190b2af7e979bfe95e54141c538915b4b645e9"
     },
     {
       "name": "agentic-attachment-card",

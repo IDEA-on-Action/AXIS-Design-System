@@ -2,60 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { StepTimeline } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock StepTimeline 컴포넌트
-const StepTimeline = ({ steps, orientation = 'vertical' }: any) => {
-  const isVertical = orientation === 'vertical'
-
-  return (
-    <div className={isVertical ? 'flex flex-col gap-4' : 'flex items-center gap-2'}>
-      {steps.map((step: any, index: number) => (
-        <div
-          key={step.id}
-          className={`relative flex ${isVertical ? 'items-start gap-3' : 'flex-col items-center'}`}
-        >
-          {index < steps.length - 1 && (
-            <div
-              className={`absolute bg-border ${
-                isVertical
-                  ? 'left-2.5 top-6 w-0.5 h-full -translate-x-1/2'
-                  : 'top-2.5 left-6 h-0.5 w-full'
-              }`}
-            />
-          )}
-          <div
-            className={`relative z-10 w-5 h-5 rounded-full flex items-center justify-center ${
-              step.status === 'complete'
-                ? 'bg-green-500'
-                : step.status === 'running'
-                  ? 'bg-blue-500 animate-pulse'
-                  : step.status === 'error'
-                    ? 'bg-red-500'
-                    : 'bg-gray-300'
-            }`}
-          >
-            {step.status === 'complete' && <span className="text-white text-xs">✓</span>}
-          </div>
-          <div className={isVertical ? 'flex-1' : 'text-center mt-2'}>
-            <p className="text-sm font-medium">{step.label}</p>
-            {step.description && (
-              <p className="text-xs text-muted-foreground">{step.description}</p>
-            )}
-            {step.timestamp && (
-              <p className="text-xs text-muted-foreground/60">
-                {step.timestamp.toLocaleTimeString()}
-              </p>
-            )}
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
+import { useClientNow } from '@/lib/use-client-now'
 
 const stepTimelineProps = [
   {
@@ -100,20 +52,22 @@ export function Example() {
 
 export default function StepTimelinePage() {
   const [orientation, setOrientation] = useState<'vertical' | 'horizontal'>('vertical')
+  // 시각은 마운트 뒤에만 그린다(정적 빌드 시각과 브라우저 시각이 달라 생기는 하이드레이션 불일치 방지)
+  const now = useClientNow()
 
   const steps = [
     {
       id: '1',
       label: '요청 수신',
       status: 'complete' as const,
-      timestamp: new Date(Date.now() - 60000),
+      timestamp: now === null ? undefined : new Date(now - 60000),
       description: '사용자 요청을 수신했습니다',
     },
     {
       id: '2',
       label: '데이터 처리',
       status: 'complete' as const,
-      timestamp: new Date(Date.now() - 30000),
+      timestamp: now === null ? undefined : new Date(now - 30000),
     },
     {
       id: '3',

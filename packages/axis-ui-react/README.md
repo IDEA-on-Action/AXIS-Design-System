@@ -46,6 +46,18 @@ content: [
 ],
 ```
 
+### 애니메이션
+
+- Accordion 열고 닫기 · Progress `indeterminate` 의 keyframes 는 `@axis-ds/tokens` 가 정의합니다(Tailwind 3 preset · Tailwind 4 진입점). 따로 할 일은 없습니다.
+- Dialog · Sheet · Popover · Select · DropdownMenu · Tooltip · Toast 의 열고 닫는 애니메이션(`animate-in` · `fade-in-0` 류)은 애니메이션 플러그인이 필요합니다. 선택적 peer 의존으로 선언되어 있어 설치 경고는 나오지 않습니다. 없으면 애니메이션 없이 바로 열리고 닫힙니다.
+
+| Tailwind | 플러그인 | 넣는 곳 |
+|---|---|---|
+| 4 | `tw-animate-css` | 전역 CSS 의 `@import "tailwindcss";` 바로 다음 줄에 `@import "tw-animate-css";` |
+| 3 | `tailwindcss-animate` | `tailwind.config` 의 `plugins: [require("tailwindcss-animate")]` |
+
+- 움직임 줄이기(`prefers-reduced-motion: reduce`) 설정에서는 모든 컴포넌트 애니메이션이 멈춥니다(`motion-reduce:!animate-none`).
+
 ## 사용법
 
 ```tsx

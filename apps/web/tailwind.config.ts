@@ -1,4 +1,7 @@
 import type { Config } from 'tailwindcss'
+// WI-0046: AXIS 컴포넌트(Accordion · Progress)가 쓰는 keyframes 를 토큰 SSOT 에서 가져온다.
+// 사이트는 preset 을 채택하지 않는다(색 · radius · 글꼴 매핑은 아래 자체 정의 유지)
+import { axisAnimation, axisKeyframes } from '@axis-ds/tokens/tailwind'
 
 const config: Config = {
   darkMode: ['class'],
@@ -85,6 +88,8 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      keyframes: axisKeyframes,
+      animation: axisAnimation,
     },
   },
   plugins: [require('tailwindcss-animate')],

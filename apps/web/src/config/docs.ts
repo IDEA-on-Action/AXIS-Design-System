@@ -69,7 +69,7 @@ export const docsConfig: DocsConfig = {
       title: 'Agentic UI',
       items: [
         { title: 'AgentAvatar', href: '/agentic/agent-avatar' },
-        { title: 'ApprovalDialog', href: '/agentic/approval-dialog' },
+        { title: 'ApprovalCard', href: '/agentic/approval-dialog' },
         { title: 'AttachmentCard', href: '/agentic/attachment-card' },
         { title: 'CodeBlock', href: '/agentic/code-block' },
         { title: 'ContextPanel', href: '/agentic/context-panel' },

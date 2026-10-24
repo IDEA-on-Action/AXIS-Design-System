@@ -1,51 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Button } from '@axis-ds/ui-react'
+import { Progress } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock Progress 컴포넌트
-const sizeClasses: Record<string, string> = {
-  sm: 'h-1',
-  default: 'h-2',
-  lg: 'h-3',
-}
-
-const variantColors: Record<string, string> = {
-  default: 'bg-primary',
-  success: 'bg-green-500',
-  warning: 'bg-yellow-500',
-  destructive: 'bg-red-500',
-}
-
-const Progress = ({
-  value = 0,
-  max = 100,
-  size = 'default',
-  variant = 'default',
-  indeterminate = false,
-}: any) => {
-  const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
-
-  return (
-    <div
-      className={`relative w-full overflow-hidden rounded-full bg-muted ${sizeClasses[size]}`}
-      role="progressbar"
-      aria-valuenow={value}
-      aria-valuemax={max}
-    >
-      <div
-        className={`h-full flex-1 transition-all duration-300 ease-in-out ${variantColors[variant]} ${indeterminate ? 'animate-progress-indeterminate' : ''}`}
-        style={
-          indeterminate ? { width: '50%' } : { transform: `translateX(-${100 - percentage}%)` }
-        }
-      />
-    </div>
-  )
-}
 
 const progressProps = [
   { name: 'value', type: 'number', default: '0', description: '현재 진행률' },
@@ -82,6 +42,8 @@ const variantsExample = `<Progress value={25} variant="default" />
 <Progress value={75} variant="warning" />
 <Progress value={90} variant="destructive" />`
 
+const indeterminateExample = `<Progress indeterminate aria-label="불러오는 중" />`
+
 const sizesExample = `<Progress value={60} size="sm" />
 <Progress value={60} size="default" />
 <Progress value={60} size="lg" />`
@@ -114,7 +76,7 @@ export default function ProgressPage() {
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-4">
-            <Progress value={progress} className="flex-1" />
+            <Progress value={progress} className="flex-1" aria-label="데모 진행률" />
             <span className="text-sm text-muted-foreground w-12">{progress}%</span>
           </div>
         </div>
@@ -124,37 +86,48 @@ export default function ProgressPage() {
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div>
             <p className="text-sm text-muted-foreground mb-2">Default (25%)</p>
-            <Progress value={25} variant="default" />
+            <Progress value={25} variant="default" aria-label="Default 25%" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Success (50%)</p>
-            <Progress value={50} variant="success" />
+            <Progress value={50} variant="success" aria-label="Success 50%" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Warning (75%)</p>
-            <Progress value={75} variant="warning" />
+            <Progress value={75} variant="warning" aria-label="Warning 75%" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Destructive (90%)</p>
-            <Progress value={90} variant="destructive" />
+            <Progress value={90} variant="destructive" aria-label="Destructive 90%" />
           </div>
         </div>
         <CodeBlock code={variantsExample} />
+      </DocSection>
+
+      <DocSection title="Indeterminate">
+        <p className="mb-4 text-sm text-muted-foreground">
+          진행률을 알 수 없을 때는 트랙 폭 1/3 의 막대가 왕복합니다. 움직임 줄이기 설정에서는 왼쪽에
+          멈춥니다. keyframes 는 @axis-ds/tokens 가 정의합니다(Tailwind 3 preset · Tailwind 4 진입점).
+        </p>
+        <div className="mb-4 p-6 rounded-lg border space-y-4">
+          <Progress indeterminate aria-label="불러오는 중" />
+        </div>
+        <CodeBlock code={indeterminateExample} />
       </DocSection>
 
       <DocSection title="Sizes">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div>
             <p className="text-sm text-muted-foreground mb-2">Small</p>
-            <Progress value={60} size="sm" />
+            <Progress value={60} size="sm" aria-label="Small 60%" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Default</p>
-            <Progress value={60} size="default" />
+            <Progress value={60} size="default" aria-label="Default 60%" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground mb-2">Large</p>
-            <Progress value={60} size="lg" />
+            <Progress value={60} size="lg" aria-label="Large 60%" />
           </div>
         </div>
         <CodeBlock code={sizesExample} />

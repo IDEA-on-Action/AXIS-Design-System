@@ -64,8 +64,13 @@ export default function DocsPage() {
               않습니다.
             </p>
             <p>
-              • 색을 지정하지 않은 ring-2 는 글자색(currentColor)으로 그려집니다. 애니메이션 클래스(animate-in
-              등)는 tailwindcss-animate 류 플러그인이 따로 필요합니다.
+              • 색을 지정하지 않은 ring-2 는 글자색(currentColor)으로 그려집니다.
+            </p>
+            <p>
+              • Accordion · Progress 의 keyframes 는 토큰 진입점이 정의합니다. Dialog · Popover 등의 열고 닫는
+              애니메이션(animate-in 등)은 tw-animate-css 를 설치하고 @import &quot;tailwindcss&quot; 바로 다음에
+              @import &quot;tw-animate-css&quot; 를 넣습니다(Tailwind 3 은 tailwindcss-animate 를 plugins 에).
+              움직임 줄이기 설정에서는 AXIS 컴포넌트 애니메이션이 멈춥니다.
             </p>
           </div>
           <h3 className="text-lg font-medium mb-3">Tailwind CSS 3</h3>
