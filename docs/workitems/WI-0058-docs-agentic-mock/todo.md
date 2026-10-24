@@ -26,4 +26,4 @@
 - [x] 기존 a11y 게이트 40/40
 - [x] 18페이지 × 기본 · ontology × 라이트 · 다크 측정, 위반을 WI-0062 · WI-0069 로 분류(testplan)
 - [x] release-notes, project-todo · wi-mapping 🔄
-- [ ] PR · 머지 · Pages 배포 뒤 pages.dev 확인(Master)
+- [x] PR · 머지 · Pages 배포 뒤 pages.dev 확인(Master) 완료 (2026-10-25 실측: 배포 후 재측정 워크플로, npm 1.6.2 · cli 1.6.0 · pages.dev, env 주입 없음). agentic 18페이지 실컴포넌트 렌더 · #418 0건 · 404 양성 대조

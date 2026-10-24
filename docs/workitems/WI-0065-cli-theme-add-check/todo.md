@@ -11,5 +11,5 @@
 - [x] 테스트 갱신 · 추가(cli theme · check · init, mcp brand · template), check 기준선은 의도한 변경만 반영
 - [x] 1.3 border-color 측정, 경로 A before · after 측정
 - [x] 변이 확인, cli · mcp README, changeset(cli minor · mcp patch)
-- [ ] 머지 뒤 npm 배포본(cli 1.6.0)으로 경로 A 재측정
-- [ ] WI-0064 가 import 순서 · Provider 예시를 가이드에 옮기는지 확인(묶음 ④)
+- [x] 머지 뒤 npm 배포본(cli 1.6.0)으로 경로 A 재측정 완료 (2026-10-25 실측: 배포 후 재측정 워크플로, npm 1.6.2 · cli 1.6.0 · pages.dev, env 주입 없음). Button #326ADA · 10px · Dialog enter, 브랜드 끔 #2563EB. 남은 animation 거짓 PASS 는 WI-0070
+- [x] WI-0064 가 import 순서 · Provider 예시를 가이드에 옮기는지 확인(묶음 ④) 완료(#188, 가이드 인용이 발행본과 cmp 0)

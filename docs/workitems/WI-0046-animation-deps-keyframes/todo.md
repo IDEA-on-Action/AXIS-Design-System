@@ -26,5 +26,5 @@
 - [x] `build:registry`(version 유지) · `library refresh-axis`(재실행 변경 0) · 템플릿 churn 되돌림
 - [x] changeset `.changeset/wi-0046-animation-keyframes.md`(tokens · ui-react · agentic-ui patch, theme 제외)
 - [x] 게이트: type-check · lint · test · build(--force, Cached 0) · test:registry · pack-smoke · check-library-links · cli test
-- [ ] PR 생성 · 머지(① 다음, ③ 앞) · 배포
-- [ ] 배포 뒤 운영 사이트 · 발행본 실측(testplan 6절)
+- [x] PR 생성 · 머지(① 다음, ③ 앞) · 배포 완료(#185 · #187)
+- [x] 배포 뒤 운영 사이트 · 발행본 실측(testplan 6절) 완료 (2026-10-25 실측: 배포 후 재측정 워크플로, npm 1.6.2 · cli 1.6.0 · pages.dev, env 주입 없음). Progress 부분 폭 왕복(0.333, 양 끝 도달) · Accordion accordion-down/up · reduced-motion 정지, 발행본 Dialog enter. 미해소: /components/skeleton 문서 mock(WI-0066)

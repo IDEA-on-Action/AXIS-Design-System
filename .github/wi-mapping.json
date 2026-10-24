@@ -186,8 +186,8 @@
       "slug": "template-build",
       "issueNumber": 119,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBtnag",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0038",
@@ -218,8 +218,8 @@
       "slug": "cli-init-config-overwrite",
       "issueNumber": 128,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB2aE0",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0042",
@@ -258,8 +258,8 @@
       "slug": "animation-deps-keyframes",
       "issueNumber": 137,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhB_8z0",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0047",
@@ -282,8 +282,8 @@
       "slug": "cli-init-globalcss-path",
       "issueNumber": 140,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhCFAjg",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0050",
@@ -354,8 +354,8 @@
       "slug": "docs-agentic-mock",
       "issueNumber": 157,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhC65XQ",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0059",
@@ -403,15 +403,15 @@
       "issueNumber": 174,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDM6jw",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0065",
       "slug": "cli-theme-add-check",
       "issueNumber": 175,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDM6ks",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0066",
@@ -444,7 +444,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm_U",
       "lastSyncedAt": "2026-10-24T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0070",
+      "slug": "cli-check-accuracy",
+      "issueNumber": 189,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDPbzo",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-24T00:00:00.000Z"
+  "updatedAt": "2026-10-25T00:00:00.000Z"
 }

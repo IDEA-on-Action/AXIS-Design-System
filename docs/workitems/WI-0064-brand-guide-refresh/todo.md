@@ -33,11 +33,11 @@
 - [x] 검토 지적: ThemeProvider 만 있는 레이아웃도 check `brand.activation` PASS · theme add 예시 없음(testplan 6절). 가이드 · quick-start 에 「PASS 는 켜졌다는 뜻이 아님」을 적고 ③ 쪽에 보고
 - [x] ③ 마지막 커밋(6d8ebf5)이 판정을 바꿈: `data-brand` · `setBrand(` · `defaultBrand=` 만 켜는 코드로 보고 ThemeProvider 단독은 WARN · 예시. 가이드 4절 · quick-start · tokens README 를 새 판정으로 고치고, main dist 로 출력을 다시 뽑아 옮김(testplan 7절). 남은 거짓 PASS(마크업 `data-brand` + ThemeProvider, `defaultBrand` 없음)는 가이드에 적음
 - [x] rebase 충돌 2건 해소: tokens README(② keyframes 단락 보존 + ④ css/shadcn 단락, ④ 를 앞에), project-todo(④ 행만 ④, 77행은 main)
-- [ ] ③ 머지 · 발행 뒤 재대조: cli 버전이 1.6.0 으로 나가는지, 「cli 로 적용하기」에 옮긴 출력 문구(브랜드 켜기 예시 · preset 안내)가 발행본과 같은지
+- [x] ③ 머지 · 발행 뒤 재대조: cli 버전이 1.6.0 으로 나가는지, 「cli 로 적용하기」에 옮긴 출력 문구(브랜드 켜기 예시 · preset 안내)가 발행본과 같은지 완료 (2026-10-25 실측: 배포 후 재측정 워크플로, npm 1.6.2 · cli 1.6.0 · pages.dev, env 주입 없음). cli 1.6.0, 「브랜드 켜기」 블록 · preset 안내 · 확인 한 줄 cmp 0(음성 대조 1글자 변경 검출). Tailwind 3 body 글꼴 안내는 WI-0070
 
 ## 검증 · 릴리스
 - [x] `guidance.test.ts` · `init.test.ts` 로컬 실행 · 양성 대조(testplan)
 - [x] cli 전체 테스트 17파일 707건(rebase 뒤, 종전 662건)
 - [x] U+2014 0건
 - [x] project-todo.md · wi-mapping.json 🔄
-- [ ] PR(docs only 체크 0건이 될 수 있음, tokens README 가 packages/** 라 frontend CI 는 돌 것으로 봄) · 로컬 테스트 결과 첨부
+- [x] PR(docs only 체크 0건이 될 수 있음, tokens README 가 packages/** 라 frontend CI 는 돌 것으로 봄) · 로컬 테스트 결과 첨부 완료(#188, frontend CI 통과)

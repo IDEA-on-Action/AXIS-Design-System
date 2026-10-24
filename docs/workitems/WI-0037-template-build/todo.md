@@ -11,4 +11,4 @@
 - [x] `pnpm --filter @ax/web build:templates` 로 public/templates 재생성
 - [x] `scripts/template-smoke.mjs`(루트 `pnpm template-smoke`) 작성, 4/4 PASS · 음성 대조 2종 FAIL 확인
 - [x] 테스트 갱신(axis-config · init 템플릿 정합 · test-helpers 레이아웃 · check 기준선) · 추가(apply 경고 · 템플릿 구조)
-- [ ] 머지 뒤 pages.dev 배포본 `template init` 으로 AC1 재측정(배포 경로, 이번 스모크는 AXIS_TEMPLATE_URL 주입 전제)
+- [x] 머지 뒤 pages.dev 배포본 `template init` 으로 AC1 재측정(배포 경로, 이번 스모크는 AXIS_TEMPLATE_URL 주입 전제) 완료 (2026-10-25 실측: 배포 후 재측정 워크플로, npm 1.6.2 · cli 1.6.0 · pages.dev, env 주입 없음). 원격 템플릿 4/4 build, 유틸리티 40/40~110/110, postcss 제거 음성 대조 0/40. 남은 check globals.css 거짓 PASS 는 WI-0070
