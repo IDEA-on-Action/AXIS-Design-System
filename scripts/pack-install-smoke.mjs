@@ -89,6 +89,11 @@ for (const c of checks) {
       const m = require(c.spec);
       r.ok = m !== undefined && m !== null && (typeof m !== 'object' || Object.keys(m).length > 0);
       r.detail = 'keys: ' + (typeof m === 'object' ? Object.keys(m).length : typeof m);
+    } else if (c.kind === 'require-preset') {
+      const m = require(c.spec);
+      const colors = m && m.theme && m.theme.extend && m.theme.extend.colors;
+      r.ok = !!(colors && colors.primary) && m.default === m && Object.keys(m).join(',') === 'darkMode,theme';
+      r.detail = 'keys: ' + Object.keys(m).join(',') + ' · primary: ' + (colors && colors.primary ? 'y' : 'n');
     } else if (c.kind === 'import-json') {
       const m = await import(c.spec, { with: { type: 'json' } });
       r.ok = Object.keys(m.default).length > 0;
@@ -116,6 +121,11 @@ function exportEntries(exportsField) {
     else if (val && typeof val === 'object') {
       for (const [cond, target] of Object.entries(val)) {
         if (typeof target === 'string') out.push({ sub, cond, target });
+        // 중첩 조건(WI-0072 tokens ./tailwind: { require: { types, default } }): default 는 바깥 조건으로, types 는 types 로 본다
+        else if (target && typeof target === 'object') {
+          if (typeof target.default === 'string') out.push({ sub, cond, target: target.default });
+          if (typeof target.types === 'string') out.push({ sub, cond: 'types', target: target.types });
+        }
       }
     }
   }
@@ -128,7 +138,11 @@ function checksFor(name, entries) {
     const spec = sub === '.' ? name : `${name}/${sub.replace(/^\.\//, '')}`;
     if (cond === 'types') continue;
     if (cond === 'import') checks.push({ spec, kind: 'import', cond, target });
-    else if (cond === 'require') checks.push({ spec, kind: 'require', cond, target });
+    else if (cond === 'require') {
+      checks.push({ spec, kind: 'require', cond, target });
+      // WI-0072: CommonJS 로 받은 Tailwind preset 이 preset 자체인지(1.1.0~1.6.2 는 { default } 라 preset 이 빠졌다)
+      if (name === '@axis-ds/tokens' && sub === './tailwind') checks.push({ spec, kind: 'require-preset', cond, target });
+    }
     else if (target.endsWith('.json')) {
       checks.push({ spec, kind: 'require', cond, target });
       checks.push({ spec, kind: 'import-json', cond, target });

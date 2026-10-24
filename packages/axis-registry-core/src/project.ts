@@ -4,7 +4,7 @@
  * add(설치 코어) · init · theme add 가 함께 씁니다.
  */
 
-import { existsSync, statSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
 /** 프로젝트의 lockfile 로 설치 명령을 고릅니다(없으면 pnpm). */
@@ -121,4 +121,100 @@ export function detectProjectPaths(baseDirInput: string): ProjectPathDefaults {
 /** `baseDir` 기준 경로가 실제 파일인지(설정 값 보존 판정, WI-0041 D5) */
 export function projectFileExists(baseDir: string, relPath: string): boolean {
   return isFile(path.resolve(baseDir, relPath));
+}
+
+/**
+ * 루트 레이아웃 후보(앞에서부터, WI-0065 D8 에서 brand-core 에 만든 목록을 WI-0070 에서 옮김).
+ * brand.activation(브랜드를 켜는 코드)과 globals.css 항목(레이아웃의 tokens CSS JS import)이 같은 목록을 씁니다.
+ */
+export const ROOT_LAYOUT_FILES = [
+  "app/layout.tsx",
+  "app/layout.jsx",
+  "app/layout.js",
+  "src/app/layout.tsx",
+  "src/app/layout.jsx",
+  "src/app/layout.js",
+  "pages/_app.tsx",
+  "pages/_app.jsx",
+  "pages/_document.tsx",
+  "pages/_document.jsx",
+  "src/pages/_app.tsx",
+  "src/pages/_app.jsx",
+  "src/pages/_document.tsx",
+  "src/pages/_document.jsx",
+] as const;
+
+// ---------------------------------------------------------------------------------------------------------------------
+// 설치본 판독 (WI-0051 · WI-0068 · WI-0072 공용)
+
+/** 설치본 하나 */
+export interface InstalledPackage {
+  /** 패키지 디렉터리(절대 경로) */
+  dir: string;
+  /** package.json 의 정확한 version(`1.6.2` · `1.7.0-beta.1`). 없거나 정확한 버전이 아니면 `undefined` */
+  version?: string;
+}
+
+/** 정확한 버전(`1.4.2` · `1.4.0-beta.1`)이면 그대로, 아니면 `undefined`. `0.0.0-*` 은 읽지 않습니다. */
+export function exactVersionOf(version: unknown): string | undefined {
+  if (typeof version !== "string") return undefined;
+  const v = version.trim();
+  if (!/^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(v) || /^v?0\.0\.0-/.test(v)) return undefined;
+  return v;
+}
+
+/**
+ * `baseDir` 부터 상위 디렉터리로 거슬러 올라가며 `node_modules/<name>/package.json` 을 찾습니다(Node 의 패키지 탐색 방향).
+ * - `require.resolve("<name>/package.json")` 를 쓰지 않습니다: exports 에 `./package.json` 이 없는 패키지(`@axis-ds/tokens` 실측
+ *   ERR_PACKAGE_PATH_NOT_EXPORTED)에서 실패하기 때문입니다.
+ * - 모노레포 호이스팅(설치본이 상위 node_modules 에 있음)도 찾습니다. pnpm 의 심볼릭 링크는 그대로 따라 읽습니다.
+ * - Plug'n'Play(`.pnp.cjs`)처럼 node_modules 가 없는 설치는 찾지 못합니다. 판정하는 쪽이 `isPnpProject` 로 먼저 가릅니다.
+ * 찾지 못하면 `undefined` 입니다.
+ */
+export function findInstalledPackage(baseDirInput: string, name: string): InstalledPackage | undefined {
+  let dir = path.resolve(baseDirInput);
+  for (;;) {
+    const pkgDir = path.join(dir, "node_modules", ...name.split("/"));
+    const file = path.join(pkgDir, "package.json");
+    if (isFile(file)) {
+      let version: string | undefined;
+      try {
+        const parsed: unknown = JSON.parse(readFileSync(file, "utf8"));
+        version = isPlainObject(parsed) ? exactVersionOf(parsed.version) : undefined;
+      } catch {
+        version = undefined;
+      }
+      return { dir: pkgDir, version };
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+}
+
+/** Plug'n'Play 설치인지(`baseDir` 부터 상위로 `.pnp.cjs` · `.pnp.js` 를 찾음). 이때는 node_modules 로 설치본을 판정하지 않습니다. */
+export function isPnpProject(baseDirInput: string): boolean {
+  let dir = path.resolve(baseDirInput);
+  for (;;) {
+    if (isFile(path.join(dir, ".pnp.cjs")) || isFile(path.join(dir, ".pnp.js"))) return true;
+    const parent = path.dirname(dir);
+    if (parent === dir) return false;
+    dir = parent;
+  }
+}
+
+/**
+ * 버전 비교(a < b 이면 음수, 같으면 0). 정확한 버전만 받습니다(`exactVersionOf`). 읽지 못하면 `undefined`.
+ * core 가 같으면 prerelease 가 낮습니다(`1.7.0-beta.1` < `1.7.0`).
+ */
+export function compareExactVersions(a: string, b: string): number | undefined {
+  const parse = (v: string) => {
+    const m = /^v?(\d+)\.(\d+)\.(\d+)(-[0-9A-Za-z.-]+)?/.exec(v.trim());
+    return m ? { core: [Number(m[1]), Number(m[2]), Number(m[3])], pre: m[4] !== undefined } : undefined;
+  };
+  const x = parse(a);
+  const y = parse(b);
+  if (!x || !y) return undefined;
+  for (let i = 0; i < 3; i++) if (x.core[i] !== y.core[i]) return x.core[i] - y.core[i];
+  return Number(y.pre) - Number(x.pre);
 }

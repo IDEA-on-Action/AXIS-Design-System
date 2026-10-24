@@ -1,4 +1,4 @@
-import type { ComponentProps, ReactNode } from "react";
+import { StrictMode, type ComponentProps, type ReactNode } from "react";
 import { render, screen, renderHook, act } from "@testing-library/react";
 import { ThemeProvider, useTheme } from "./index";
 
@@ -334,7 +334,7 @@ describe("brand", () => {
     expect(result.current.brand).toBe("ontology");
   });
 
-  it("setBrand(undefined) 호출 시 data-brand와 저장값을 지운다", () => {
+  it("setBrand(undefined) 호출 시 data-brand를 지우고 「끔」(빈 문자열)을 저장한다 (WI-0068)", () => {
     const { result } = renderHook(() => useTheme(), {
       wrapper: wrapper({ defaultBrand: "ontology" }),
     });
@@ -346,7 +346,7 @@ describe("brand", () => {
       result.current.setBrand(undefined);
     });
     expect(document.documentElement.hasAttribute("data-brand")).toBe(false);
-    expect(localStorage.getItem("axis-brand")).toBeNull();
+    expect(localStorage.getItem("axis-brand")).toBe("");
     expect(result.current.brand).toBeUndefined();
   });
 
@@ -382,5 +382,110 @@ describe("brand", () => {
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(document.documentElement.getAttribute("data-brand")).toBe("ontology");
     expect(localStorage.getItem("axis-brand")).toBeNull();
+  });
+});
+
+// ─── brand 해제 유지 · 마크업 존중 (WI-0068) ─────────────────────────
+// 「재마운트」는 같은 문서에서 unmount 뒤 다시 render 한 것으로, 새로고침의 대역이다(document · localStorage 유지).
+// 실제 새로고침에서는 서버 마크업이 다시 오므로, 마크업 시나리오는 재마운트 전에 속성을 다시 붙여 같은 조건을 만든다.
+
+describe("brand 해제 유지 · 마크업 존중 (WI-0068)", () => {
+  function BrandProbe() {
+    const { brand, setBrand } = useTheme();
+    return (
+      <button type="button" onClick={() => setBrand(undefined)}>
+        {`brand:${brand ?? "none"}`}
+      </button>
+    );
+  }
+  const html = () => document.documentElement;
+
+  it("S1 defaultBrand 로 켠 뒤 setBrand(undefined) 하고 재마운트해도 꺼진 채다", () => {
+    const first = render(<ThemeProvider defaultBrand="ontology"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("ontology");
+    act(() => { screen.getByRole("button").click(); });
+    expect(html().hasAttribute("data-brand")).toBe(false);
+    first.unmount();
+    render(<ThemeProvider defaultBrand="ontology"><BrandProbe /></ThemeProvider>);
+    expect(html().hasAttribute("data-brand")).toBe(false);
+    expect(screen.getByRole("button").textContent).toBe("brand:none");
+  });
+
+  it("S2 마크업 data-brand 만 있고 defaultBrand 가 없어도 마운트 때 지우지 않는다", () => {
+    html().setAttribute("data-brand", "ontology");
+    render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("ontology");
+    expect(screen.getByRole("button").textContent).toBe("brand:ontology");
+  });
+
+  it("S3 마크업과 같은 defaultBrand 는 그대로 유지한다", () => {
+    html().setAttribute("data-brand", "ontology");
+    render(<ThemeProvider defaultBrand="ontology"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("ontology");
+  });
+
+  it("S4 저장값이 마크업 · defaultBrand 보다 우선한다", () => {
+    localStorage.setItem("axis-brand", "saved");
+    html().setAttribute("data-brand", "ontology");
+    render(<ThemeProvider defaultBrand="other"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("saved");
+  });
+
+  it("S5 마크업과 defaultBrand 가 다르면 마크업이 이긴다(동작 변경: 1.6.2 까지는 defaultBrand)", () => {
+    html().setAttribute("data-brand", "x");
+    render(<ThemeProvider defaultBrand="ontology"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("x");
+    expect(screen.getByRole("button").textContent).toBe("brand:x");
+  });
+
+  it("S6 저장값 경로(defaultBrand 없음)에서 해제 뒤 재마운트해도 꺼진 채다", () => {
+    localStorage.setItem("axis-brand", "ontology");
+    const first = render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    act(() => { screen.getByRole("button").click(); });
+    first.unmount();
+    render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    expect(html().hasAttribute("data-brand")).toBe(false);
+  });
+
+  it("S7 마크업 브랜드를 끄고 새로고침(마크업이 다시 옴)해도 꺼진 채다", () => {
+    html().setAttribute("data-brand", "ontology");
+    const first = render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    act(() => { screen.getByRole("button").click(); });
+    expect(html().hasAttribute("data-brand")).toBe(false);
+    first.unmount();
+    html().setAttribute("data-brand", "ontology"); // 서버 마크업이 다시 온 상태
+    render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    expect(html().hasAttribute("data-brand")).toBe(false);
+    expect(localStorage.getItem("axis-brand")).toBe("");
+  });
+
+  it("S8 언마운트하면 마운트 전 마크업 값으로 되돌려, 다른 defaultBrand 로 재마운트한 Provider 가 앞 값을 마크업으로 읽지 않는다", () => {
+    const first = render(<ThemeProvider defaultBrand="a"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("a");
+    first.unmount();
+    expect(html().hasAttribute("data-brand")).toBe(false);
+    render(<ThemeProvider defaultBrand="b"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("b");
+  });
+
+  it("S8-2 마크업이 있던 문서에서는 언마운트 때 그 마크업 값으로 되돌린다", () => {
+    html().setAttribute("data-brand", "ontology");
+    const first = render(<ThemeProvider><BrandProbe /></ThemeProvider>);
+    act(() => { screen.getByRole("button").click(); });
+    first.unmount();
+    expect(html().getAttribute("data-brand")).toBe("ontology");
+  });
+
+  it("S9 StrictMode(이펙트 두 번 실행)에서도 마크업 · defaultBrand 결과가 같다", () => {
+    html().setAttribute("data-brand", "ontology");
+    render(<StrictMode><ThemeProvider defaultBrand="other"><BrandProbe /></ThemeProvider></StrictMode>);
+    expect(html().getAttribute("data-brand")).toBe("ontology");
+    expect(screen.getByRole("button").textContent).toBe("brand:ontology");
+  });
+
+  it("S10 구버전이 남긴 저장값 없음(null)은 마크업 · defaultBrand 로 넘어간다", () => {
+    expect(localStorage.getItem("axis-brand")).toBeNull();
+    render(<ThemeProvider defaultBrand="ontology"><BrandProbe /></ThemeProvider>);
+    expect(html().getAttribute("data-brand")).toBe("ontology");
   });
 });

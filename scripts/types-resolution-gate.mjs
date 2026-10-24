@@ -45,7 +45,17 @@ export function collectTargets(consumer, packageNames) {
       if (val && typeof val === 'object' && typeof val.types === 'string') { file = val.types; kind = 'ts'; }
       else if (typeof val === 'string' && val.endsWith('.json')) { file = val; kind = 'json'; }
       if (!file) continue;
-      targets.push({ name, spec, kind, root: key === '.', expected: posix.join('node_modules', name, file) });
+      // 조건별 타입(WI-0072 tokens ./tailwind: require → d.cts, import → d.mts)이 있으면 방식마다 그 파일을 기대한다.
+      // 최상위 types 는 exports 를 읽지 않는 node(node10)가 typesVersions 로 찾는 파일과 같다
+      const nested = (cond) => (val && typeof val === 'object' && val[cond] && typeof val[cond] === 'object'
+        && typeof val[cond].types === 'string' ? posix.join('node_modules', name, val[cond].types) : null);
+      const expected = posix.join('node_modules', name, file);
+      const expectedByMode = {
+        'node16-cjs': nested('require') ?? expected,
+        'node16-esm': nested('import') ?? expected,
+        bundler: nested('import') ?? expected,
+      };
+      targets.push({ name, spec, kind, root: key === '.', expected, expectedByMode });
     }
   }
   return targets;
@@ -130,10 +140,11 @@ export function runTypesResolutionGate({ consumer, tsc, packages }) {
       const errs = errLines.filter((l) => l.startsWith(`${f}(`));
       const got = resolved.get(`${f}\0${t.spec}`) ?? null;
       // 경로는 cwd(dir) 기준 상대 경로라 node_modules/... 꼬리로 비교한다
-      const ok = errs.length === 0 && got !== null && got.replace(/\\/g, '/').endsWith(t.expected.replace(/^\.\//, '').replace('/./', '/'));
+      const want = t.expectedByMode?.[mode] ?? t.expected;
+      const ok = errs.length === 0 && got !== null && got.replace(/\\/g, '/').endsWith(want.replace(/^\.\//, '').replace('/./', '/'));
       if (errs.length) probeErrs.add(f);
       rows.push({ mode, spec: t.spec, kind: t.kind, root: t.root, ok, got, errors: errs.map((e) => (e.match(/TS\d+/) || [''])[0]) });
-      if (!ok) failures.push(`${mode} ${t.spec}: ${errs.length ? errs.map((e) => e.replace(/^\S+\(\d+,\d+\): /, '')).join(' | ') : `해석 파일 ${got ?? '없음'} != ${t.expected}`}`);
+      if (!ok) failures.push(`${mode} ${t.spec}: ${errs.length ? errs.map((e) => e.replace(/^\S+\(\d+,\d+\): /, '')).join(' | ') : `해석 파일 ${got ?? '없음'} != ${want}`}`);
     });
     if (variantFile) {
       const verrs = errLines.filter((l) => l.startsWith(`${variantFile}(`));

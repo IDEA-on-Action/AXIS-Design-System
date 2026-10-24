@@ -597,6 +597,15 @@ describe("T3-9: 브랜드 켜기 안내 (WI-0065 D7: defaultBrand 대신 data-br
     expect(out).toContain("app/providers.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
   });
 
+  it("WI-0068: 마크업 data-brand + ThemeProvider 이면 theme 1.7.0 이상이 필요하다는 안내(axis check 가 설치본으로 판정)", async () => {
+    const dir = await project({ tokens: "none", layout: "theme-only" });
+    const layout = path.join(dir, "app", "layout.tsx");
+    await fs.writeFile(layout, '<html lang="ko" data-brand="sample"><body><ThemeProvider>{children}</ThemeProvider></body></html>\n');
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain("app/layout.tsx 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다");
+    expect(out).toContain("<html data-brand> 와 ThemeProvider 를 함께 쓰면 @axis-ds/theme 1.7.0 이상이어야 마운트 때 지워지지 않습니다");
+  });
+
   it("ThemeProvider 만 있고 켜는 코드가 없으면 찾지 못한 것으로 보고 예시를 출력(마운트 때 브랜드가 지워지는 구성)", async () => {
     const dir = await project({ tokens: "none", layout: "theme-only" });
     const layout = path.join(dir, "app", "layout.tsx");
@@ -704,6 +713,36 @@ describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치
     ]);
   });
 
+  // WI-0070: 출력 문구는 실제 위치 · 분류를 따른다(종전에는 모든 줄이 「기본 토큰 CSS, 브랜드 앞」)
+  it("WI-0070 재실행: 브랜드 뒤에 들어간 컴포넌트 tailwind.css 는 「컴포넌트 스캔 경로, 위치 무관」, 처음 실행은 「브랜드 앞」", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const pkgFile = path.join(dir, "package.json");
+    const pkg = await readJson(pkgFile);
+    await fs.writeJSON(pkgFile, { ...pkg, devDependencies: { tailwindcss: "^4.1.0" } }, { spaces: 2 });
+    const file = path.join(dir, "app", "globals.css");
+    await fs.writeFile(file, '@import "tailwindcss";\n\nbody { margin: 0; }\n');
+    const first = await runAdd(["sample", "-d", dir]);
+    expect(first.out).toContain('app/globals.css: @import "@axis-ds/tokens/css/tailwind4"; 추가(기본 토큰 CSS, 브랜드 앞)');
+    // ui-react 를 선언하고 다시 실행: 컴포넌트 tailwind.css 는 import 구간 끝(브랜드 뒤)에 들어간다
+    await fs.writeJSON(pkgFile, { ...(await readJson(pkgFile)), dependencies: { "@axis-ds/ui-react": "^1.6.3" } }, { spaces: 2 });
+    const again = await runAdd(["sample", "-d", dir]);
+    expect(again.out).toContain('app/globals.css: @import "@axis-ds/ui-react/tailwind.css"; 추가(컴포넌트 스캔 경로, 위치 무관)');
+    expect(again.out).not.toContain("tailwind.css\"; 추가(기본 토큰 CSS");
+    const lines = (await fs.readFile(file, "utf8")).split("\n");
+    expect(lines.indexOf('@import "@axis-ds/ui-react/tailwind.css";')).toBeGreaterThan(lines.indexOf(IMPORT_SAMPLE));
+  });
+
+  it("WI-0070: 기본 토큰 CSS 가 브랜드 import 뒤에 들어가면 「브랜드 앞」 대신 옮기라는 경고(종전 문구는 거짓)", async () => {
+    const dir = await project({ tokens: "1.3", layout: "app-init" });
+    const file = path.join(dir, "app", "globals.css");
+    // 브랜드 import 만 있고 기본 토큰 CSS 가 없는 상태(수동 편집 등)
+    await fs.writeFile(file, `${IMPORT_SAMPLE}\n@tailwind base;\n`);
+    const { out } = await runAdd(["sample", "-d", dir]);
+    expect(out).toContain('app/globals.css: @import "@axis-ds/tokens/css"; 추가(기본 토큰 CSS)');
+    expect(out).toContain("이 줄이 브랜드 import 뒤에 들어갔습니다");
+    expect(out).not.toContain("브랜드 앞)");
+  });
+
   it("규칙 뒤에 있는 기존 @import 는 경고하고, 새 줄은 맨 앞 import 구간에 넣음(quick-start 종전 예시 형태)", async () => {
     const dir = await project({ tokens: "1.3", layout: "app-init" });
     const file = path.join(dir, "app", "globals.css");
@@ -747,7 +786,10 @@ describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () 
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./src/components/ui", globalCss: "./app/globals.css" }, { spaces: 2 });
     const before = await fs.readFile(tw, "utf8");
     const { out } = await runAdd(["sample", "-d", dir]);
-    expect(out).toContain('AXIS preset 이 없습니다. presets 에 넣으세요: presets: [require("@axis-ds/tokens/tailwind")]');
+    // WI-0072: CommonJS 안내는 모든 tokens 버전에서 동작하는 .default 형태(1.6.2 이하의 bare require 는 preset 이 빠짐)
+    expect(out).toContain('AXIS preset 이 없습니다. presets 에 넣으세요: presets: [require("@axis-ds/tokens/tailwind").default]');
+    expect(out).toContain('ESM · TypeScript 이면 import axisPreset from "@axis-ds/tokens/tailwind" 뒤 presets: [axisPreset]');
+    expect(out).not.toContain('presets: [require("@axis-ds/tokens/tailwind")]');
     expect(out).toContain('content 가 componentsDir(./src/components/ui) 를 덮지 않습니다. 넣으세요: "./src/components/ui/**/*.{ts,tsx}"');
     expect(await fs.readFile(tw, "utf8")).toBe(before);
   });

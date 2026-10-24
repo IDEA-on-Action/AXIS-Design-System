@@ -49,10 +49,11 @@ describe("handleCheckProject (brand 검사 추가 전 기준선)", () => {
       "dependencies",
     ]);
     expect(results[0].severity).toBe("pass");
+    // WI-0070: 자체 --background · --primary 만 있으면 AXIS 근거가 없어 WARN(종전 pass 는 거짓 초록). CLI 와 같은 문구
     expect(results[2]).toEqual({
       name: "globals.css",
-      severity: "pass",
-      message: "globals.css에 AXIS CSS 변수가 정의되어 있습니다",
+      severity: "warn",
+      message: "globals.css에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요",
     });
   });
 });
@@ -60,7 +61,12 @@ describe("handleCheckProject (brand 검사 추가 전 기준선)", () => {
 // WI-0028 P4 (T4-4): brand 검사. CLI `axis check` 의 T4-3 과 같은 severity · 문구를 냅니다
 // (packages/axis-cli/src/template/template-check.test.ts 의 기대 문구와 같은 문자열).
 
-/** 기존 5항목이 모두 pass 인 프로젝트 */
+/** node_modules/<name>/package.json 설치본 stub(WI-0051: dependencies 항목이 설치본을 봄) */
+async function writeInstalledStub(dir: string, name: string, version = "1.0.0") {
+  await fs.outputJSON(path.join(dir, "node_modules", ...name.split("/"), "package.json"), { name, version });
+}
+
+/** 기존 5항목이 모두 pass 이던 프로젝트(WI-0051 부터 설치본 stub 도 씀) */
 async function writeAllPassProject(dir: string, config: Record<string, unknown>, css: string) {
   await fs.writeJSON(path.join(dir, "axis.config.json"), config);
   await fs.writeFile(path.join(dir, "tailwind.config.ts"), "hsl(var(--x))");
@@ -71,9 +77,13 @@ async function writeAllPassProject(dir: string, config: Record<string, unknown>,
   await fs.writeJSON(path.join(dir, "package.json"), {
     dependencies: { tailwindcss: "1", clsx: "1", "tailwind-merge": "1" },
   });
+  for (const name of ["tailwindcss", "clsx", "tailwind-merge"]) await writeInstalledStub(dir, name);
 }
 
+/** 자체 변수만(WI-0070 부터 globals.css WARN) */
 const BASE_CSS = ":root{--background:0;--primary:0;}\n";
+/** AXIS 근거(tokens CSS import)가 있는 CSS */
+const AXIS_CSS = `@import "@axis-ds/tokens/css";\n${BASE_CSS}`;
 
 describe("handleCheckProject brand 검사 (T4-4)", () => {
   it("brand 없는 config · config 없음 · config 파손에서 결과 5항목 그대로", async () => {
@@ -91,7 +101,7 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
     await writeAllPassProject(
       tmp,
       { globalCss: "./app/globals.css", brand: "sample" },
-      `@import "@axis-ds/tokens/css/brands/sample";\n${BASE_CSS}`
+      `@import "@axis-ds/tokens/css/brands/sample";\n${AXIS_CSS}`
     );
     // WI-0065 D8: preset 과 브랜드를 켜는 코드가 있어야 warn 0(brand 가 있으면 brand.activation 항목이 더해져 7항목)
     await fs.writeFile(path.join(tmp, "tailwind.config.ts"), 'import axis from "@axis-ds/tokens/tailwind";\nhsl(var(--x))');
@@ -119,9 +129,9 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
       severity: "warn",
       message: "brand \"sample\" import 가 app/globals.css에 없습니다 → 'axis theme add sample'",
     });
-    // tailwind.config(자체 hsl 매핑만, preset 없음) · brand · brand.activation(레이아웃 없음) 3개(WI-0065 D8)
-    expect(results.filter((r) => r.severity === "warn").map((r) => r.name)).toEqual(["tailwind.config", "brand", "brand.activation"]);
-    expect(summary.warn).toBe(3);
+    // tailwind.config(자체 hsl 매핑만, preset 없음) · brand · brand.activation(레이아웃 없음) 3개(WI-0065 D8) + globals.css(자체 변수만, WI-0070)
+    expect(results.filter((r) => r.severity === "warn").map((r) => r.name)).toEqual(["tailwind.config", "globals.css", "brand", "brand.activation"]);
+    expect(summary.warn).toBe(4);
   });
 
   it("다른 브랜드만 import → warn", async () => {
@@ -257,7 +267,7 @@ describe("handleCheckProject globals.css · 버전 안내 (WI-0044 보정)", () 
     });
   });
 
-  it("주석 안에만 있으면 종전 warn, 변수 직접 정의는 종전 pass 문구", async () => {
+  it("주석 안에만 있으면 종전 warn, 변수 직접 정의만은 WARN(WI-0070), --axis-* 정의는 pass", async () => {
     await write('/* @import "@axis-ds/tokens/css"; */', { tailwindcss: "^4" });
     expect(await find("globals.css")).toEqual({
       name: "globals.css",
@@ -266,9 +276,11 @@ describe("handleCheckProject globals.css · 버전 안내 (WI-0044 보정)", () 
     });
     await write(":root{--background:0 0% 100%;--primary:0 0% 0%;}", { tailwindcss: "^3.4.0" });
     expect(await find("globals.css")).toMatchObject({
-      severity: "pass",
-      message: "src/app/globals.css에 AXIS CSS 변수가 정의되어 있습니다",
+      severity: "warn",
+      message: "src/app/globals.css에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요",
     });
+    await write(":root{--axis-color-primary:#000;}", { tailwindcss: "^3.4.0" });
+    expect(await find("globals.css")).toMatchObject({ severity: "pass", message: "src/app/globals.css에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다" });
   });
 
   it("진입점 WARN: tokens ^1.3.0 이면 1.4.0 이상 필요, ^1.4.0 이면 없음", async () => {
@@ -392,5 +404,69 @@ describe("handleCheckProject 보정 3차: B2 라벨 · 설치본 우선 · 컴�
     expect(await item()).toEqual({ name: "tailwind.config", severity: "pass", message: PASS4 });
     await write({ "globals.css": `${TW}\n${ENTRY}\n/* @source "../node_modules/@axis-ds/ui-react"; */` }, { tailwindcss: "^4", "@axis-ds/ui-react": "^1.4.0" });
     expect((await item())?.message).toBe(`Tailwind 4: globals.css에 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${UI}`);
+  });
+});
+
+// 배치 3 묶음 ①: CLI template-check.test.ts 「배치 3 ①」 과 같은 판정 · 문구(공유 코어 · brand-core 사본)
+describe("handleCheckProject 배치 3 ①: WI-0051 · WI-0068 · WI-0072 · WI-0070 (CLI 와 같은 문구)", () => {
+  async function project(files: Record<string, string>, pkg: Record<string, unknown> | null, config: Record<string, unknown> | null = {}) {
+    if (pkg) await fs.writeJSON(path.join(tmp, "package.json"), pkg);
+    if (config) await fs.writeJSON(path.join(tmp, "axis.config.json"), config);
+    for (const [rel, content] of Object.entries(files)) await fs.outputFile(path.join(tmp, rel), content);
+  }
+  const item = async (name: string) => (await handleCheckProject({ targetDir: tmp })).results.find((r) => r.name === name);
+  const TW3 = { tailwindcss: "^3.4.17", clsx: "^2.1.1", "tailwind-merge": "^2.6.0" };
+
+  it("WI-0051: 선언만 있고 설치본이 없으면 WARN, 설치되면 PASS", async () => {
+    await project({}, { dependencies: TW3 });
+    expect(await item("dependencies")).toEqual({
+      name: "dependencies",
+      severity: "warn",
+      message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → pnpm install",
+    });
+    for (const name of Object.keys(TW3)) await writeInstalledStub(tmp, name);
+    expect(await item("dependencies")).toEqual({ name: "dependencies", severity: "pass", message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인)" });
+  });
+
+  it("WI-0072: .cjs bare require + 설치본 tokens 1.6.2 → WARN, .ts export default + require → PASS", async () => {
+    await project({ "tailwind.config.cjs": 'module.exports = { presets: [require("@axis-ds/tokens/tailwind")] };' }, { devDependencies: { tailwindcss: "^3.4.17" } });
+    await writeInstalledStub(tmp, "@axis-ds/tokens", "1.6.2");
+    expect(await item("tailwind.config")).toMatchObject({
+      severity: "warn",
+      message: expect.stringContaining('@axis-ds/tokens 설치본 1.6.2 에서는 CommonJS 의 require("@axis-ds/tokens/tailwind") 가 preset 이 아니라'),
+    });
+    await fs.remove(path.join(tmp, "tailwind.config.cjs"));
+    await fs.writeFile(path.join(tmp, "tailwind.config.ts"), 'export default { presets: [require("@axis-ds/tokens/tailwind")] };');
+    expect(await item("tailwind.config")).toMatchObject({ severity: "pass" });
+  });
+
+  it("WI-0068: 마크업 data-brand + ThemeProvider 는 theme 설치본 1.6.2 → WARN, 1.7.0 → PASS", async () => {
+    await project({ "app/layout.tsx": '<html data-brand="ontology"><ThemeProvider>{children}</ThemeProvider></html>' }, { dependencies: {} }, { brand: "ontology" });
+    await writeInstalledStub(tmp, "@axis-ds/theme", "1.6.2");
+    expect(await item("brand.activation")).toEqual({
+      name: "brand.activation",
+      severity: "warn",
+      message: 'app/layout.tsx의 <html data-brand> 를 @axis-ds/theme 설치본 1.6.2 의 ThemeProvider 가 마운트 때 지웁니다 → @axis-ds/theme 1.7.0 이상으로 올리거나 setBrand("ontology")',
+    });
+    await writeInstalledStub(tmp, "@axis-ds/theme", "1.7.0");
+    expect(await item("brand.activation")).toMatchObject({ severity: "pass" });
+  });
+
+  it("WI-0070: animation 은 plugins 배열 판독(import 만이면 WARN), 레이아웃 JS import 는 globals.css 근거", async () => {
+    await project(
+      {
+        "tailwind.config.ts": 'import animate from "tailwindcss-animate";\nexport default { plugins: [] };',
+        "app/globals.css": ":root{--background:0;--primary:0;}",
+        "app/layout.tsx": 'import "@axis-ds/tokens/css";',
+      },
+      { dependencies: { "@axis-ds/ui-react": "^1.6.3" }, devDependencies: { tailwindcss: "^3.4.17", "tailwindcss-animate": "^1.0.7" } }
+    );
+    await writeInstalledStub(tmp, "tailwindcss-animate", "1.0.7");
+    expect(await item("animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("plugins 에 없음") });
+    expect(await item("globals.css")).toEqual({
+      name: "globals.css",
+      severity: "pass",
+      message: "app/globals.css에 AXIS CSS 변수가 있습니다 (app/layout.tsx의 @axis-ds/tokens/css import)",
+    });
   });
 });

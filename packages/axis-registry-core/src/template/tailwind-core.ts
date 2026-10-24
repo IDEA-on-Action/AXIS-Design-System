@@ -20,10 +20,15 @@
  *   `tailwind.css` 의 패키지도 A4 와 같은 버전 조건을 봅니다.
  * - `checkGlobalsCss`: globals.css 항목(WI-0044 보정). 변수를 직접 정의하지 않아도 tokens CSS import 가 있으면 pass 입니다.
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
+ * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
+ *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
+ *   설치본은 `findInstalledPackage`(상위 디렉터리 탐색, project.ts) 하나로 읽습니다. 종전 `installedVersion` 호출지
+ *   (`detectTailwind` · `axisPackagesBelowTailwind4`)는 이번에 바꾸지 않았습니다(WI-0051 PRD 결정 D4).
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
+import { extname, join, resolve } from "node:path";
+import { ROOT_LAYOUT_FILES, compareExactVersions, findInstalledPackage, isPnpProject } from "../project.js";
 
 /** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
 function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
@@ -285,13 +290,44 @@ export interface GlobalsCssCheckResult {
   message: string;
 }
 
+/** 루트 레이아웃 JS 의 tokens CSS import(`import "@axis-ds/tokens/css"` · `require(...)`, WI-0070). 주석은 미리 지웁니다. */
+const TOKENS_CSS_JS_IMPORT = /(?:\bimport\s+|\bfrom\s+|\brequire\s*\(\s*)(["'])(@axis-ds\/tokens\/css(?:\/shadcn|\/tailwind4)?)\1/;
+
+/** `--axis-*` 사용자 정의 속성 정의(`--axis-color-primary: ...`, WI-0070). 쓰기만(`var(--axis-...)`)은 정의가 아닙니다. */
+const AXIS_VARIABLE_DEFINITION = /(?<![\w-])--axis-[\w-]+\s*:/;
+
 /**
- * globals.css 항목을 판정합니다(`axis check` · MCP `axis.check_project` 공용, WI-0044 보정).
- * 후보(`TAILWIND_CSS_CANDIDATES`)에서 처음 찾은 파일 하나를 봅니다.
- * 1. 변수를 직접 정의(`--background` 와 `--primary` 문자열이 모두 있음) → 종전 pass 문구.
- * 2. 그렇지 않고 tokens CSS import(`findTokensCssImport`)가 있으면 pass. import 로 인정했다는 것을 문구에 남깁니다.
- *    tokens CSS 가 변수를 정의하므로 import 만 있는 Tailwind 4 진입점 구성이 warn 으로 오탐되던 것을 막습니다.
- * 3. 둘 다 없으면 warn, 후보가 하나도 없으면 fail(종전과 같음).
+ * 루트 레이아웃 후보(`ROOT_LAYOUT_FILES`)에서 tokens CSS 를 JS 로 import 하는 첫 파일과 경로(WI-0070).
+ * 가이드(theme-customization 4절 import 순서)가 안내하는 `app/layout.tsx` 의 `import "@axis-ds/tokens/css"` 구성입니다.
+ */
+export function findLayoutTokensCssImport(baseDirInput: string): { file: string; spec: string } | undefined {
+  const baseDir = resolve(baseDirInput);
+  for (const candidate of ROOT_LAYOUT_FILES) {
+    const file = join(baseDir, candidate);
+    if (!existsSync(file)) continue;
+    let text: string;
+    try {
+      text = readFileSync(file, "utf8");
+    } catch {
+      continue;
+    }
+    const m = TOKENS_CSS_JS_IMPORT.exec(stripJsComments(text));
+    if (m) return { file: candidate, spec: m[2] };
+  }
+  return undefined;
+}
+
+/**
+ * globals.css 항목을 판정합니다(`axis check` · MCP `axis.check_project` 공용, WI-0044 보정 · WI-0070).
+ * 후보(`TAILWIND_CSS_CANDIDATES`)에서 처음 찾은 파일 하나를 봅니다. pass 는 AXIS 근거가 있을 때만입니다.
+ * 1. tokens CSS import(`findTokensCssImport`) → pass(import 로 인정했다는 것을 문구에 남김)
+ * 2. `--axis-*` 변수 정의 → pass
+ * 3. 루트 레이아웃 JS 의 tokens CSS import(`findLayoutTokensCssImport`) → pass(CSS 에는 근거가 없어도 같은 변수가 들어옴)
+ * 4. 자체 `--background` · `--primary` 만 있음 → warn「AXIS 토큰 미사용」. 종전에는 pass 였습니다(거짓 초록, WI-0070).
+ *    템플릿 4종(자체 HSL)은 WI-0067 전까지 이 warn 입니다(2026-10-25 사용자 결정, 종료 코드는 그대로).
+ * 5. 아무것도 없으면 warn, 후보가 하나도 없으면 fail(종전과 같음).
+ * Tailwind 3 이하에서 pass 조건을 채워도 create-next-app 기본 body `font-family: Arial` 이 남아 있으면 warn 입니다
+ * (Tailwind 4 는 같은 판정을 tailwind.config 항목 B2 에서 냅니다).
  */
 export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
   const baseDir = resolve(baseDirInput);
@@ -299,12 +335,33 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
     const file = join(baseDir, candidate);
     if (!existsSync(file)) continue;
     const content = readFileSync(file, "utf8");
-    if (content.includes("--background") && content.includes("--primary")) {
-      return { name: "globals.css", severity: "pass", message: `${candidate}에 AXIS CSS 변수가 정의되어 있습니다` };
-    }
+    const css = stripCssComments(content);
     const imported = findTokensCssImport(content);
-    if (imported !== undefined) {
-      return { name: "globals.css", severity: "pass", message: `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)` };
+    let pass: string | undefined;
+    if (imported !== undefined) pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
+    else if (AXIS_VARIABLE_DEFINITION.test(css)) pass = `${candidate}에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다`;
+    else {
+      const layout = findLayoutTokensCssImport(baseDir);
+      if (layout) pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${layout.file}의 ${layout.spec} import)`;
+    }
+    if (pass !== undefined) {
+      const tailwind = detectTailwind(baseDir, readPackageJson(baseDir));
+      const tailwind4 = tailwind.major !== undefined && tailwind.major >= 4;
+      if (!tailwind4 && findCreateNextAppDefaults(content).some((d) => d.includes("font-family: Arial"))) {
+        return {
+          name: "globals.css",
+          severity: "warn",
+          message: `${pass}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)`,
+        };
+      }
+      return { name: "globals.css", severity: "pass", message: pass };
+    }
+    if (css.includes("--background") && css.includes("--primary")) {
+      return {
+        name: "globals.css",
+        severity: "warn",
+        message: `${candidate}에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요`,
+      };
     }
     return { name: "globals.css", severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다` };
   }
@@ -543,8 +600,10 @@ const CREATE_NEXT_APP_DEFAULTS: { prefix: string; pattern: RegExp; item: (m: Reg
   },
   {
     prefix: "body",
-    pattern: /(?<![\w-])(background|background-color|color)\s*:\s*var\(\s*(--(?:background|foreground))\s*\)/g,
-    item: (m) => `${m[1]}: var(${m[2]})`,
+    // WI-0070: create-next-app 의 body `font-family: Arial, Helvetica, sans-serif` 도 같은 특징으로 봅니다. 레이어 밖 규칙이라
+    // AXIS 글꼴(Pretendard, html 에 적용)을 이기고 Button 등이 `font-family: inherit` 로 Arial 을 물려받습니다.
+    pattern: /(?<![\w-])(?:(background|background-color|color)\s*:\s*var\(\s*(--(?:background|foreground))\s*\)|font-family\s*:\s*Arial\b)/g,
+    item: (m) => (m[1] !== undefined ? `${m[1]}: var(${m[2]})` : "font-family: Arial"),
   },
 ];
 
@@ -618,6 +677,72 @@ export function hasTokensPresetReference(source: string): boolean {
 
 /** preset 참조로 인정한 pass 의 문구 뒷부분(B3). 앞에 설정 파일 이름이 붙습니다. */
 const PRESET_PASS_SUFFIX = `에 AXIS 토큰이 설정되어 있습니다 (${TOKENS_TAILWIND3_PRESET} preset)`;
+
+/**
+ * CommonJS 의 `require("@axis-ds/tokens/tailwind")` 가 preset 자체를 돌려주는 첫 `@axis-ds/tokens` 버전(WI-0072).
+ * 근거는 버전 예측이 아니라 이번 변경의 bump 종류입니다: theme changeset 이 minor 라 linked 4패키지(tokens 포함)가
+ * 현재 최고 버전 1.6.x 에서 1.7.0 으로 함께 오릅니다(changesets linked 규칙). Release PR 의 version-packages 결과와 대조합니다.
+ */
+export const TOKENS_CJS_PRESET_FIXED_VERSION = "1.7.0";
+
+/** CommonJS 로 preset 을 받는 안내 형태(모든 버전에서 동작, WI-0072). ESM · TS 는 `import axisPreset from` 입니다. */
+export const TOKENS_TAILWIND3_CJS_REQUIRE = `require("${TOKENS_TAILWIND3_PRESET}").default`;
+
+/** `.default` 없이 받는 bare require(WI-0072). 뒤에 `.default` · `["default"]` 가 붙으면 걸리지 않습니다. */
+const BARE_PRESET_REQUIRE = /\brequire\s*\(\s*(["'])@axis-ds\/tokens\/tailwind\1\s*\)(?!\s*(?:\.\s*default\b|\[\s*["']default["']\s*\]))/;
+
+/**
+ * 설정 파일이 CommonJS 형태인지(WI-0072). `.cjs` 이거나 소스에 `module.exports` 가 있으면 CommonJS 입니다.
+ * `.ts` · `.mjs` 의 `export default { presets: [require(...)] }` 는 Tailwind 의 jiti interop 이 `.default` 를 꺼내 줘서
+ * 1.6.2 이하에서도 preset 이 들어옵니다(실측). 그래서 이 형태는 넣지 않습니다.
+ */
+function isCommonJsConfig(file: string, source: string): boolean {
+  return extname(file) === ".cjs" || /\bmodule\.exports\b/.test(source);
+}
+
+/** 패키지 버전 조건 판정 결과(설치본 우선, 다음 선언 하한, 다음 판정 불가) */
+export interface PackageVersionGate {
+  status: "ok" | "below" | "unknown";
+  /** 판정 근거 */
+  source: "installed" | "declared" | "none";
+  /** 설치본 version 또는 선언 범위 */
+  value?: string;
+}
+
+/**
+ * 프로젝트의 `<name>` 이 `min` 이상인지 봅니다(WI-0068 · WI-0072 공용). 설치본은 `findInstalledPackage`(상위 탐색)로 읽습니다.
+ * 1. 설치본 version 이 있으면 그것으로 판정 2. 없으면 package.json 선언 하한(`rangeLowerAtLeast`) 3. 둘 다 없으면 `unknown`.
+ * Plug'n'Play 는 설치본을 읽지 않고 선언으로 갑니다.
+ */
+export function packageVersionGate(
+  baseDirInput: string,
+  pkg: Record<string, unknown> | undefined,
+  name: string,
+  min: string
+): PackageVersionGate {
+  const baseDir = resolve(baseDirInput);
+  if (!isPnpProject(baseDir)) {
+    const installed = findInstalledPackage(baseDir, name)?.version;
+    if (installed !== undefined) {
+      const cmp = compareExactVersions(installed, min);
+      if (cmp !== undefined) return { status: cmp >= 0 ? "ok" : "below", source: "installed", value: installed };
+    }
+  }
+  const declared = pkg ? hasDependency(pkg, name) : undefined;
+  if (declared !== undefined) {
+    const atLeast = rangeLowerAtLeast(declared, min);
+    if (atLeast !== undefined) return { status: atLeast ? "ok" : "below", source: "declared", value: declared };
+    return { status: "unknown", source: "declared", value: declared };
+  }
+  return { status: "unknown", source: "none" };
+}
+
+/** 판정 근거 표시(`설치본 1.6.2` · `선언 ^1.6.0` · `설치본 · 선언 없음`) */
+export function versionGateLabel(gate: PackageVersionGate): string {
+  if (gate.source === "installed") return `설치본 ${gate.value}`;
+  if (gate.source === "declared") return `선언 ${gate.value}`;
+  return "설치본 · 선언 없음";
+}
 
 function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
   try {
@@ -726,6 +851,22 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     if (!existsSync(path)) continue;
     const content = readFileSync(path, "utf8");
     if (hasTokensPresetReference(content)) {
+      // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
+      const code = stripJsComments(content);
+      if (isCommonJsConfig(file, code) && BARE_PRESET_REQUIRE.test(code)) {
+        const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION);
+        if (gate.status !== "ok") {
+          const why =
+            gate.status === "below"
+              ? `@axis-ds/tokens ${versionGateLabel(gate)} 에서는 CommonJS 의 require("${TOKENS_TAILWIND3_PRESET}") 가 preset 이 아니라 { default } 를 돌려줘 색 · keyframes 가 적용되지 않습니다`
+              : `@axis-ds/tokens 버전을 확인하지 못했습니다(${versionGateLabel(gate)}). ${TOKENS_CJS_PRESET_FIXED_VERSION} 미만이면 CommonJS 의 require("${TOKENS_TAILWIND3_PRESET}") 로는 preset 이 적용되지 않습니다`;
+          return {
+            name: "tailwind.config",
+            severity: "warn",
+            message: `${file}에 AXIS preset 참조가 있지만 ${why} → ${TOKENS_TAILWIND3_CJS_REQUIRE} 로 바꾸거나 @axis-ds/tokens ${TOKENS_CJS_PRESET_FIXED_VERSION} 이상`,
+          };
+        }
+      }
       return { name: "tailwind.config", severity: "pass", message: `${file}${PRESET_PASS_SUFFIX}` };
     }
     const ownMapping = content.includes("--background") || content.includes("hsl(var(");
@@ -1034,15 +1175,96 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
   }
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
   const source = configFile !== undefined ? stripJsComments(readFileSync(join(baseDir, configFile), "utf8")) : "";
-  const pluginRef = new RegExp(`["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(source);
+  const plugins = configFile !== undefined ? readAnimationPluginUse(source) : "absent";
   const pluginDeclared = pkg !== undefined && hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined;
-  if (pluginRef && pluginDeclared) {
-    return { name: "animation", severity: "pass", message: `${configFile}에 ${ANIMATION_PLUGIN_TAILWIND3} 플러그인이 있습니다` };
+  // WI-0070: 「미설치」는 선언이 아니라 설치본으로 봅니다(Plug'n'Play 는 선언 기준)
+  const pluginInstalled =
+    pluginDeclared && (isPnpProject(baseDir) || findInstalledPackage(baseDir, ANIMATION_PLUGIN_TAILWIND3) !== undefined);
+  if (plugins === "found" && pluginDeclared && pluginInstalled) {
+    return { name: "animation", severity: "pass", message: `${configFile}의 plugins 에 ${ANIMATION_PLUGIN_TAILWIND3} 가 있습니다` };
   }
-  const why = !pluginDeclared ? `${ANIMATION_PLUGIN_TAILWIND3} 미설치` : `${configFile ?? "tailwind.config"} plugins 에 없음`;
+  const cfg = configFile ?? "tailwind.config";
+  const reasons: string[] = [];
+  if (!pluginDeclared) reasons.push(`${ANIMATION_PLUGIN_TAILWIND3} 선언 없음`);
+  else if (!pluginInstalled) reasons.push(`${ANIMATION_PLUGIN_TAILWIND3} 미설치(선언만 있음)`);
+  if (plugins === "dynamic") reasons.push(`${cfg} plugins 를 정적으로 다 읽지 못해 확인하지 못함`);
+  else if (plugins !== "found") reasons.push(`${cfg} plugins 에 없음`);
   return {
     name: "animation",
     severity: "warn",
-    message: `애니메이션 플러그인이 없습니다(${by}, ${why}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND3} 설치 뒤 plugins 에 require("${ANIMATION_PLUGIN_TAILWIND3}")`,
+    message: `애니메이션 플러그인이 없습니다(${by}, ${reasons.join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND3} 설치 뒤 plugins 에 require("${ANIMATION_PLUGIN_TAILWIND3}")`,
   };
+}
+
+/**
+ * Tailwind 3 설정의 `plugins` 배열에 tailwindcss-animate 가 들어 있는지 정적으로 읽습니다(WI-0070). 주석은 미리 지운 소스를 받습니다.
+ * - `found`: 배열 요소에 `require("tailwindcss-animate")` 가 있거나, 그 패키지를 받은 식별자
+ *   (`import animate from "tailwindcss-animate"` · `const animate = require("tailwindcss-animate")`)가 있음
+ * - `dynamic`: 배열에 판독할 수 없는 요소(다른 식별자 · 펼침 · 함수 호출)가 있거나 `plugins` 를 단축 속성 · 변수로 넘김
+ * - `absent`: `plugins` 가 없거나, 배열을 다 읽었는데 없음
+ * 설정 파일 어딘가의 같은 문자열(`const x = { a: "tailwindcss-animate" }`)이나 import 만으로는 `found` 가 아닙니다(종전 거짓 PASS).
+ */
+export function readAnimationPluginUse(source: string): "found" | "dynamic" | "absent" {
+  const name = escapeRegExp(ANIMATION_PLUGIN_TAILWIND3);
+  const idents = new Set<string>();
+  for (const m of source.matchAll(new RegExp(`\\bimport\\s+([A-Za-z_$][\\w$]*)\\s+from\\s*(["'])${name}\\2`, "g"))) idents.add(m[1]);
+  for (const m of source.matchAll(
+    new RegExp(`\\b(?:const|let|var)\\s+([A-Za-z_$][\\w$]*)\\s*=\\s*require\\s*\\(\\s*(["'])${name}\\2\\s*\\)`, "g")
+  )) {
+    idents.add(m[1]);
+  }
+  const requireCall = new RegExp(`^require\\s*\\(\\s*(["'])${name}\\1\\s*\\)(?:\\s*\\.\\s*default)?$`);
+  let sawDynamic = false;
+  for (const m of source.matchAll(/\bplugins\b\s*(:)?\s*/g)) {
+    if (m[1] === undefined) {
+      // `{ content, plugins }` 처럼 단축 속성이면 값이 변수라 읽을 수 없습니다. `plugins.push(...)` 류도 같습니다
+      const before = source.slice(Math.max(0, (m.index ?? 0) - 1), m.index ?? 0);
+      if (/[{,\s]/.test(before) || before === "") sawDynamic = true;
+      continue;
+    }
+    const at = (m.index ?? 0) + m[0].length;
+    if (source[at] !== "[") {
+      sawDynamic = true;
+      continue;
+    }
+    const block = balancedSlice(source, at);
+    if (block === undefined) {
+      sawDynamic = true;
+      continue;
+    }
+    const elements = splitTopLevel(block.slice(1, -1));
+    for (const el of elements) {
+      const e = el.trim();
+      if (e === "") continue;
+      if (requireCall.test(e) || idents.has(e) || idents.has(e.replace(/\(\s*\)$/, ""))) return "found";
+      // 문자열 리터럴 요소는 Tailwind 가 플러그인으로 받지 않으므로 판독 가능한 「없음」입니다. 그 밖은 판독할 수 없는 요소입니다
+      if (/^require\s*\(\s*(["'])[^"']+\1\s*\)(?:\s*\.\s*default)?$/.test(e)) continue;
+      sawDynamic = true;
+    }
+  }
+  return sawDynamic ? "dynamic" : "absent";
+}
+
+/** 배열 · 객체 본문을 최상위 쉼표로 나눕니다(괄호 · 문자열 안 쉼표는 나누지 않음). */
+function splitTopLevel(body: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let start = 0;
+  for (let i = 0; i < body.length; i++) {
+    const c = body[i];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      while (j < body.length && body[j] !== c) j += body[j] === "\\" ? 2 : 1;
+      i = j;
+      continue;
+    }
+    if (c === "(" || c === "[" || c === "{") depth++;
+    else if (c === ")" || c === "]" || c === "}") depth--;
+    else if (c === "," && depth === 0) {
+      out.push(body.slice(start, i));
+      start = i + 1;
+    }
+  }
+  out.push(body.slice(start));
+  return out;
 }

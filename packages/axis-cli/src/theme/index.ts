@@ -25,7 +25,36 @@ import {
   type ThemeAddPlan,
 } from "./theme-add.js";
 import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
-import { TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
+import { TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
+import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
+
+/** CSS 에서 `@import "<spec>"` 줄이 시작하는 위치(작은따옴표 · `url()` 포함). 없으면 -1 */
+function importOffset(css: string, spec: string): number {
+  const escaped = spec.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const m = new RegExp(`@import\\s+(?:url\\(\\s*)?["']${escaped}["']`).exec(css);
+  return m ? m.index : -1;
+}
+
+/**
+ * theme add 가 넣은 기본 import 한 줄의 출력 문구(WI-0070). 종전에는 모든 줄을 「기본 토큰 CSS, 브랜드 앞」으로 적어,
+ * 재실행 때 브랜드 줄 뒤에 들어간 컴포넌트 `tailwind.css` 도 그렇게 나왔습니다.
+ * - 컴포넌트 `<pkg>/tailwind.css`: `@source` 스캔 진입점이라 위치와 상관없습니다(ui-react 1.6.2 의 파일은 `@source "./dist";` 한 줄).
+ * - 기본 토큰 CSS: 실제로 브랜드 줄보다 앞에 들어갔을 때만 「브랜드 앞」. 뒤에 들어갔으면 옮기라는 경고를 따로 냅니다.
+ */
+function baseImportLines(after: string, spec: string, brandImportPath: string, file: string): string[] {
+  if (spec.endsWith("/tailwind.css")) {
+    return [`  ${chalk.green("✓")} ${file}: @import "${spec}"; 추가(컴포넌트 스캔 경로, 위치 무관)`];
+  }
+  const at = importOffset(after, spec);
+  const brandAt = importOffset(after, brandImportPath);
+  if (brandAt === -1 || (at !== -1 && at < brandAt)) {
+    return [`  ${chalk.green("✓")} ${file}: @import "${spec}"; 추가(기본 토큰 CSS, 브랜드 앞)`];
+  }
+  return [
+    `  ${chalk.green("✓")} ${file}: @import "${spec}"; 추가(기본 토큰 CSS)`,
+    chalk.yellow(`  ! 이 줄이 브랜드 import 뒤에 들어갔습니다. 브랜드 값이 기본 토큰에 덮이므로 @import "${brandImportPath}"; 앞으로 옮기세요`),
+  ];
+}
 
 /** 명령 출력: 줄 목록과 종료 코드 */
 export interface ThemeOutput {
@@ -255,8 +284,9 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   }
   const brandLine = `@import "${plan.importPath}";`;
   if (css?.action === "add" && css.file) {
+    const after = plan.writes.find((w) => w.file === css.file)?.after ?? "";
     for (const spec of css.baseImports) {
-      lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: @import "${spec}"; 추가(기본 토큰 CSS, 브랜드 앞)`);
+      lines.push(...baseImportLines(after, spec, plan.importPath, rel(plan, css.file)));
     }
     if (css.brandAdded) lines.push(`  ${chalk.green("✓")} ${rel(plan, css.file)}: ${brandLine} 추가`);
     else lines.push(`  ${chalk.gray("-")} ${rel(plan, css.file)}: 브랜드 import 가 이미 있어 건너뜀`);
@@ -322,8 +352,9 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     lines.push("", chalk.bold(`Tailwind 설정 (${tw.configFile ?? "tailwind.config"}, 파일은 고치지 않았습니다)`));
     if (tw.presetMissing) {
       lines.push(
-        chalk.yellow(`  ! AXIS preset 이 없습니다. presets 에 넣으세요: presets: [require("${TOKENS_TAILWIND3_PRESET}")]`) +
-          chalk.gray(` (ESM 이면 import axisPreset from "${TOKENS_TAILWIND3_PRESET}")`)
+        // WI-0072: CommonJS 는 모든 tokens 버전에서 동작하는 `.default` 형태로 안내합니다(1.6.2 이하의 bare require 는 preset 이 빠짐)
+        chalk.yellow(`  ! AXIS preset 이 없습니다. presets 에 넣으세요: presets: [${TOKENS_TAILWIND3_CJS_REQUIRE}]`) +
+          chalk.gray(` (ESM · TypeScript 이면 import axisPreset from "${TOKENS_TAILWIND3_PRESET}" 뒤 presets: [axisPreset])`)
       );
     }
     for (const t of tw.contentMissing) {
@@ -340,6 +371,14 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   lines.push("", chalk.bold(`브랜드 켜기 (ThemeProvider 는 ${THEME_PACKAGE} ${THEME_MIN_VERSION} 이상)`));
   if (act?.found) {
     lines.push(`  ${chalk.gray("-")} ${act.found} 에 브랜드를 켜는 코드(data-brand · setBrand 등)가 있습니다. "${plan.brand}" 로 켜는지 확인하세요.`);
+    if (act.markupWithProvider) {
+      // WI-0068: 마크업 data-brand + ThemeProvider 는 theme 1.6.2 이하에서 마운트 때 지워집니다(axis check 가 설치본으로 판정)
+      lines.push(
+        chalk.yellow(
+          `  ! <html data-brand> 와 ThemeProvider 를 함께 쓰면 ${THEME_PACKAGE} ${THEME_MARKUP_BRAND_MIN_VERSION} 이상이어야 마운트 때 지워지지 않습니다. 설치본 확인: axis check`
+        )
+      );
+    }
   } else {
     lines.push(
       ...providerExample(plan.brand).split("\n").map((l) => (l ? `  ${l}` : "")),

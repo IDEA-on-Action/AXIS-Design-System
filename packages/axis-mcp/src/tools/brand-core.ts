@@ -10,7 +10,8 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { GLOBAL_CSS_CANDIDATES } from "@axis-ds/registry-core/project";
+import { GLOBAL_CSS_CANDIDATES, ROOT_LAYOUT_FILES } from "@axis-ds/registry-core/project";
+import { packageVersionGate, type PackageVersionGate } from "@axis-ds/registry-core/tailwind-core";
 
 /** 브랜드를 담는 패키지 이름 */
 export const TOKENS_PACKAGE = "@axis-ds/tokens";
@@ -417,41 +418,36 @@ function pickKeyTokens(decls: Record<string, string>): Record<string, string> {
 }
 
 /**
- * 브랜드를 켜는 예시(FR-3 · FR-4, WI-0065 D7). `defaultBrand` 는 쓰지 않습니다: 저장값이 없으면 매번 다시 적용돼
- * `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 유지되지 않기 때문입니다(WI-0068). 대신 두 방법을 함께 안내합니다.
- * 1. 서버 마크업: 루트 레이아웃의 `<html>` 에 `data-brand` 를 붙입니다(첫 화면부터 적용, Provider 불필요).
- * 2. ThemeProvider(`@axis-ds/theme` 1.3.0 이상): 브랜드 상태가 비어 있으면 마운트 때 `data-brand` 를 지우므로
- *    `useTheme().setBrand` 로 켭니다(저장값으로 유지, `setBrand(undefined)` 로 끔).
+ * ThemeProvider 가 서버 마크업 `<html data-brand>` 를 초기값으로 읽고, `setBrand(undefined)` 로 끈 상태를 새로고침 뒤에도
+ * 유지하는 첫 `@axis-ds/theme` 버전(WI-0068). 1.6.2 이하는 브랜드 상태가 비면 마운트 때 마크업 속성을 지웠습니다.
+ * 근거는 bump 종류입니다: theme changeset 이 minor 라 linked 4패키지가 1.6.x 에서 1.7.0 으로 오릅니다.
+ */
+export const THEME_MARKUP_BRAND_MIN_VERSION = "1.7.0";
+
+/**
+ * 브랜드를 켜는 예시(FR-3 · FR-4, WI-0065 D7 · WI-0068). 버전과 상관없이 같은 문구이고, 버전 조건을 문구 안에 적습니다.
+ * 1. 서버 마크업: 루트 레이아웃의 `<html>` 에 `data-brand` 를 붙입니다(첫 화면부터 적용). ThemeProvider 를 함께 쓰면
+ *    `@axis-ds/theme` 1.7.0 이상이어야 마운트 때 지워지지 않습니다(1.6.2 이하는 지움).
+ * 2. 사용자가 고르게 하려면 `useTheme().setBrand` 로 켜고 끕니다(저장값으로 유지). 끈 상태가 새로고침 뒤에도 유지되는 것은 1.7.0 부터입니다.
  */
 export function providerExample(name: string): string {
   return [
-    "// 1) Provider 없이: 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)",
+    "// 1) 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)",
+    `//    ThemeProvider 를 함께 쓰면 @axis-ds/theme ${THEME_MARKUP_BRAND_MIN_VERSION} 이상이 필요합니다(그 아래는 마운트 때 속성을 지움)`,
     `<html lang="ko" data-brand="${name}">`,
     "",
-    "// 2) ThemeProvider 를 쓰면 마운트 때 브랜드가 없으면 속성을 지우므로 setBrand 로 켭니다(저장돼 유지, setBrand(undefined) 로 끔)",
+    `// 2) 사용자가 고르게 하려면 setBrand 로 켜고 끕니다(저장돼 유지, setBrand(undefined) 로 끈 상태 유지는 ${THEME_MARKUP_BRAND_MIN_VERSION} 이상)`,
     'import { useTheme } from "@axis-ds/theme";',
     "const { setBrand } = useTheme();",
     `setBrand("${name}");`,
   ].join("\n");
 }
 
-/** 브랜드를 켜는 코드(`data-brand` · `setBrand` · `defaultBrand`)를 찾는 파일(앞에서부터, WI-0065 D8) */
-export const BRAND_ACTIVATION_FILES = [
-  "app/layout.tsx",
-  "app/layout.jsx",
-  "app/layout.js",
-  "src/app/layout.tsx",
-  "src/app/layout.jsx",
-  "src/app/layout.js",
-  "pages/_app.tsx",
-  "pages/_app.jsx",
-  "pages/_document.tsx",
-  "pages/_document.jsx",
-  "src/pages/_app.tsx",
-  "src/pages/_app.jsx",
-  "src/pages/_document.tsx",
-  "src/pages/_document.jsx",
-] as const;
+/**
+ * 브랜드를 켜는 코드(`data-brand` · `setBrand` · `defaultBrand`)를 찾는 파일(앞에서부터, WI-0065 D8).
+ * 목록은 globals.css 항목과 같이 쓰려고 공유 코어(`ROOT_LAYOUT_FILES`)로 옮겼습니다(WI-0070).
+ */
+export const BRAND_ACTIVATION_FILES = ROOT_LAYOUT_FILES;
 
 /** 브랜드를 켜는 코드를 찾은 결과(WI-0065 D8) */
 export interface BrandActivationLocation {
@@ -459,10 +455,17 @@ export interface BrandActivationLocation {
   found?: string;
   /** 읽은 루트 레이아웃 후보. 비어 있으면 레이아웃을 찾지 못한 것입니다 */
   layoutFiles: string[];
+  /**
+   * 켜는 코드가 마크업 `data-brand` 뿐이고(`setBrand(` · `defaultBrand=` 없음) 같은 레이아웃 · providers 파일에 `ThemeProvider` 가
+   * 있는지(WI-0068). 이 구성은 `@axis-ds/theme` 1.6.2 이하에서 마운트 때 브랜드가 지워집니다.
+   */
+  markupWithProvider?: boolean;
 }
 
 export interface BrandActivationCheck extends BrandActivationLocation {
   brand: string;
+  /** `markupWithProvider` 일 때만: 설치본(없으면 선언) `@axis-ds/theme` 가 1.7.0 이상인지(WI-0068) */
+  theme?: PackageVersionGate;
 }
 
 /**
@@ -470,6 +473,12 @@ export interface BrandActivationCheck extends BrandActivationLocation {
  * `data-brand` 를 지우므로, Provider 만 있는 레이아웃은 브랜드가 꺼진 상태입니다(2026-10-25 WI-0064 검토 실측).
  */
 const BRAND_ACTIVATION_PATTERN = /data-brand|setBrand\s*\(|defaultBrand\s*=/;
+
+/** Provider 쪽에서 켜는 코드(`setBrand(` · `defaultBrand=`). 마크업만 있는 구성과 가르려고 따로 봅니다(WI-0068) */
+const PROVIDER_ACTIVATION_PATTERN = /setBrand\s*\(|defaultBrand\s*=/;
+
+/** `<ThemeProvider` JSX 사용 */
+const THEME_PROVIDER_PATTERN = /<ThemeProvider\b/;
 
 /** JS · TS 의 블록 주석과 줄 주석을 지웁니다(`https://` 같은 문자열 안의 `//` 는 앞 글자로 구분해 남김). */
 function stripJsLikeComments(src: string): string {
@@ -489,14 +498,25 @@ export function findBrandActivation(baseDir: string): BrandActivationLocation {
     if (!isFile(file)) continue;
     layoutFiles.push(candidate);
     const text = stripJsLikeComments(readFileSync(file, "utf8"));
-    if (BRAND_ACTIVATION_PATTERN.test(text)) return { found: candidate, layoutFiles };
+    // 레이아웃이 import 하는 같은 디렉터리의 ./providers · ./provider 파일(한 단계)
+    const providerTexts: Array<{ rel: string; text: string }> = [];
     for (const m of text.matchAll(/from\s+["']\.\/(providers?)["']/g)) {
       for (const ext of [".tsx", ".jsx", ".ts", ".js"]) {
         const rel = `${dirname(candidate)}/${m[1]}${ext}`;
         const p = join(root, rel);
-        if (isFile(p) && BRAND_ACTIVATION_PATTERN.test(stripJsLikeComments(readFileSync(p, "utf8")))) {
-          return { found: rel, layoutFiles };
-        }
+        if (isFile(p)) providerTexts.push({ rel, text: stripJsLikeComments(readFileSync(p, "utf8")) });
+      }
+    }
+    const all = [text, ...providerTexts.map((x) => x.text)];
+    // WI-0068: 마크업 data-brand 만 있고 Provider 쪽 켜는 코드가 없으며 ThemeProvider 를 쓰는 구성인지
+    const markupWithProvider =
+      !all.some((t) => PROVIDER_ACTIVATION_PATTERN.test(t)) && all.some((t) => THEME_PROVIDER_PATTERN.test(t));
+    if (BRAND_ACTIVATION_PATTERN.test(text)) {
+      return markupWithProvider ? { found: candidate, layoutFiles, markupWithProvider } : { found: candidate, layoutFiles };
+    }
+    for (const x of providerTexts) {
+      if (BRAND_ACTIVATION_PATTERN.test(x.text)) {
+        return markupWithProvider ? { found: x.rel, layoutFiles, markupWithProvider } : { found: x.rel, layoutFiles };
       }
     }
   }
@@ -508,7 +528,23 @@ export function inspectBrandActivation(baseDir: string): BrandActivationCheck | 
   const config = readBrandConfig(baseDir);
   const brand = config?.brand;
   if (typeof brand !== "string" || brand.trim() === "") return null;
-  return { brand, ...findBrandActivation(baseDir) };
+  const location = findBrandActivation(baseDir);
+  if (!location.markupWithProvider) return { brand, ...location };
+  // WI-0068: 마크업 + ThemeProvider 구성은 설치본(없으면 선언) theme 버전으로 가릅니다
+  return { brand, ...location, theme: packageVersionGate(baseDir, readProjectPackageJson(baseDir), THEME_PACKAGE, THEME_MARKUP_BRAND_MIN_VERSION) };
+}
+
+/** ThemeProvider 를 담는 패키지 */
+export const THEME_PACKAGE = "@axis-ds/theme";
+
+/** 프로젝트 package.json(읽지 못하면 `undefined`) */
+function readProjectPackageJson(baseDir: string): Record<string, unknown> | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(resolve(baseDir), "package.json"), "utf8"));
+    return typeof parsed === "object" && parsed !== null && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 /**

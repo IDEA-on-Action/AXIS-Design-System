@@ -14,6 +14,7 @@
     "./registry/schema": "./src/registry/schema.ts",
     "./site": "./src/site.ts",
     "./tailwind-core": "./src/template/tailwind-core.ts",
+    "./dependencies-core": "./src/template/dependencies-core.ts",
     "./project": "./src/project.ts",
     "./utils-deps": "./src/utils-deps.ts"
   },
