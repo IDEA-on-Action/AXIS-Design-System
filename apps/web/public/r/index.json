@@ -197,7 +197,7 @@
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "sha256": "a702e9a023276fd63188eb38a86149f3e222f5224d938208fb0ae8fdb8e3a038"
+      "sha256": "f0b0a597831bfa01c5d0cf18e5d36e804d431b0fe1313ef5577ab45b7d9adff7"
     },
     {
       "name": "agentic-attachment-card",

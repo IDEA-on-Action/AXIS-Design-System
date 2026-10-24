@@ -213,8 +213,9 @@ describe('ontology 접기 값 (U15 · D4 · D2)', () => {
     }
   });
 
-  test('PlanCard 거절 hover 글자는 bad-dark(status-error-strong), 기본값은 status.error 참조 (리뷰 f1)', () => {
-    assert.equal(base.refs.get('plan-card.reject-hover-text'), '{status.error}');
+  test('PlanCard 거절 hover 글자는 bad-dark(status-error-strong), 기본값은 red.700 참조 (리뷰 f1 · WI-0029)', () => {
+    // WI-0029(PRD 2.1): 기본값은 status.error(대비 3.01) 대신 라이트 red.700 · 다크 red.400
+    assert.equal(base.refs.get('plan-card.reject-hover-text'), '{color.red.700}');
     for (const theme of ['light', 'dark']) {
       assert.equal(effective(theme, '--axis-plan-card-reject-hover-text'), P('bad-dark')[theme]);
       assert.equal(effective(theme, '--axis-plan-card-reject-hover-text'), effective(theme, '--axis-status-error-strong'));

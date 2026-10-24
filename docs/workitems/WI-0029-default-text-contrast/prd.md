@@ -36,6 +36,7 @@
 | D3 | 범위는 1.1 의 기준선 쌍(P1~P6)과 PlanCard 거절 hover 쌍이에요. CI 밖에서 찾은 쌍은 후속 WI 로 나눠요(5절) |
 | D4 | WI-0025 AC3 게이트(`baseline-1.2.1.test.mjs`)에는 WI-0029 예외 목록을 명시해요. 목록 밖의 1.2.1 변수는 계속 불변이어야 해요 |
 | D5 | 새 공개 CSS 변수가 생기므로 minor 로 올려요. linked 규칙상 tokens · theme · ui-react · agentic-ui 가 1.6.0 이 돼요 |
+| D6 | (구현 중 추가, 2026-10-24) shadcn `--muted-foreground` 는 종전처럼 `text.secondary` 에서 파생해요. 그래서 D2 로 다크 값이 gray.300 으로 바뀌고, `shadcn-compat.css` 다크 한 줄(`--muted-foreground`)을 WI-0029 예외로 등록해요 |
 
 ### 1.3 검토했지만 고르지 않은 안
 
@@ -64,7 +65,7 @@
 | `agent.message-user-bg` | 라이트 · 다크 | blue.500 | blue.600 | 흰 3.67 → 5.16 |
 | `text.tertiary` | 다크 | gray.500 | gray.400 #9CA3AF | /#030712 4.16 → 7.93, /#09090B 4.11 → 7.83 |
 | `text.secondary` | 다크 | gray.400 | gray.300 #D1D5DB | 계층 유지(D2) |
-| `input.text.placeholder` | 다크 | {text.secondary} | gray.400 고정 | 입력 글자 gray.100 과 구분 유지(D2) |
+| `input.text.placeholder` | 다크 | {text.secondary} | gray.400 고정(themeIndependent, 출력 값은 1.2.1 과 같음) | 입력 글자 gray.100 과 구분 유지(D2) |
 | `plan-card.reject-hover-text` | 라이트 / 다크 | {status.error}(themeIndependent) | 라이트 red.700 · 다크 red.400 #F87171 | 3.01 → 5.17 / 4.34 → 5.90 |
 
 - 단계 구분(휘도 비): blue 600/700 1.29, red 600/700 1.34, green 700/800 1.42 로 hover 구분이 남아요
@@ -83,7 +84,8 @@
 
 ### 2.3 바꾸지 않는 것
 
-- primitive(`colors.json`)와 `shadcn-compat.css`(바이트 불변), 전역 `status.*`, `surface-brand`, `interactive.primary`
+- primitive(`colors.json`), 전역 `status.*`, `surface-brand`, `interactive.primary`
+- `shadcn-compat.css` 는 다크 `--muted-foreground` 한 줄만 바뀌고(D6) 나머지는 바이트 불변이에요
 
 ---
 
@@ -93,8 +95,8 @@
 - **AC2** `a11y.spec.ts` 의 `WI0029_KNOWN_PAIRS` · `DEFAULT_BASELINE_CAP` · `DEMO_KNOWN_PAIRS` · `DEMO_BASELINE_CAP` 을 지우고, 기본 브랜드 기준선 0 을 단언해요. `DEFAULT_BUTTON_BG` 양성 대조(a11y.spec · brand-demo.spec)는 새 값 #2563EB 로 고쳐요
 - **AC3** 2.1 · 2.2 의 계산 대비가 모두 4.5 이상이에요(라이트 · 다크, hover · active 포함). 이를 단위 테스트로 고정해요(`scripts/check-contrast-pairs.mjs` 의 CONTRAST_PAIRS 갱신 포함)
 - **AC4** ontology 출력이 바이트 불변이에요(`dist/css/brands/ontology.css` 를 변경 전후로 비교, 새 변수 3개 추가분만 차이로 허용). `brands.test.mjs` 통과
-- **AC5** `baseline-1.2.1.test.mjs` 는 WI-0029 예외 목록(2.1 의 변수와 새 값)만 허용하고, 목록 밖 1.2.1 변수 · shadcn 바이트는 계속 불변을 단언해요. 변이 확인: 예외 목록 밖 변수 하나를 바꾸면 실패해야 해요
-- **AC6** `dark-tokens.spec` 의 EXPECTED_DARK 와 fixture 를 갱신해요(`button-text-disabled`, `input-text-placeholder`, `plan-card-*` 다크 값 증가분)
+- **AC5** `baseline-1.2.1.test.mjs` 는 WI-0029 예외 목록(2.1 의 변수와 새 값)만 허용하고, 목록 밖 1.2.1 변수와 shadcn 출력(D6 의 다크 `--muted-foreground` 한 줄 제외)은 계속 불변을 단언해요. 변이 확인: 예외 목록 밖 변수 하나를 바꾸면 실패해야 해요
+- **AC6** `dark-tokens.spec` 의 EXPECTED_DARK 와 fixture 를 갱신해요(다크 값이 라이트와 달라지는 `button-text-disabled` · `plan-card-reject-hover-text` · `plan-card-reject-text`). `input-text-placeholder` 는 gray.400 을 테마 무관으로 고정해 라이트 · 다크 값이 같으므로 증가분이 아니에요
 - **AC7** 품질 게이트: `pnpm type-check` · `pnpm lint` · `pnpm test` · `pnpm build` 통과, E2E(a11y · nontext · demo · tokens) 통과
 - **AC8** changeset 은 linked 4패키지 minor(1.6.0), 릴리스 노트에 기본 화면 색 변경과 마이그레이션 안내(값을 직접 참조하던 사용자용)를 적어요
 

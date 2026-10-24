@@ -26,8 +26,8 @@ import { collectErrors, openDemo, radio } from './helpers/demo'
 
 const THEMES = ['light', 'dark'] as const satisfies readonly ThemeName[]
 
-/** 기본 브랜드 버튼 바탕 (variables.css :root · .dark 동일) */
-const DEFAULT_BUTTON_BG = '#3B82F6'
+/** 기본 브랜드 버튼 바탕 (variables.css :root · .dark 동일, WI-0029 에서 blue.500 → blue.600) */
+const DEFAULT_BUTTON_BG = '#2563EB'
 
 const OPPOSITE: Record<ThemeName, ThemeName> = { light: 'dark', dark: 'light' }
 const THEME_RADIO: Record<ThemeName, string> = { light: '라이트', dark: '다크' }

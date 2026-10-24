@@ -12,8 +12,8 @@
   },
   "text": {
     "primary": { "value": "{color.gray.100}" },
-    "secondary": { "value": "{color.gray.400}" },
-    "tertiary": { "value": "{color.gray.500}" },
+    "secondary": { "value": "{color.gray.300}" },
+    "tertiary": { "value": "{color.gray.400}" },
     "inverse": { "value": "{color.gray.900}" },
     "brand": { "value": "{color.blue.400}" },
     "success": { "value": "{color.green.400}" },
@@ -73,7 +73,7 @@
     "avatar-assistant": { "value": "{color.purple.500}" },
     "avatar-tool": { "value": "{color.blue.500}" },
     "avatar-system": { "value": "{color.gray.600}" },
-    "message-user-bg": { "value": "{color.blue.500}" },
+    "message-user-bg": { "value": "{color.blue.600}" },
     "message-user-text": { "value": "{color.white}" },
     "avatar-text": { "value": "{color.white}" }
   }

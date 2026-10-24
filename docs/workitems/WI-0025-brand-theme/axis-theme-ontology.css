@@ -31,6 +31,9 @@
   --axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10);
   --axis-plan-card-accent-width: 1px; /* FR-7 토큰(기본 4px). 온톨로지는 색 선 대신 다른 변과 같은 1px 테두리(부록 B ⑤, 2026-10-16 대리 승인) */
   --axis-plan-card-reject-hover-text: #A8281F; /* bad-dark · PlanCard 거절 hover 글자(기본은 status-error). panel 위 bad 10% 바탕에서 bad 4.17 미달이라 5.53 */
+  --axis-plan-card-reject-text: #C8332E; /* bad · PlanCard 거절 글자(WI-0029, status-error 와 같은 값) */
+  --axis-plan-card-approve-bg: #2A2F36; /* ink-2 · PlanCard 승인 바탕(WI-0029, status-success 와 같은 값) */
+  --axis-plan-card-approve-hover-bg: #111418; /* ink · PlanCard 승인 hover 바탕(WI-0029, status-success-strong 와 같은 값) */
   /* surface */
   --axis-surface-default: #FFFFFF; /* card */
   --axis-surface-secondary: #F3F4F6; /* panel */
@@ -176,6 +179,9 @@
   --axis-shadow-sm: 0 1px 2px rgba(0,0,0,.30);
   --axis-shadow-lg: 0 8px 24px rgba(0,0,0,.50);
   --axis-plan-card-reject-hover-text: #F49890; /* bad-dark · PlanCard 거절 hover 글자, panel 위 bad 10% 바탕 6.36 */
+  --axis-plan-card-reject-text: #F07A72; /* bad · PlanCard 거절 글자(WI-0029, status-error 와 같은 값) */
+  --axis-plan-card-approve-bg: #D0D4D9; /* ink-2 · PlanCard 승인 바탕(WI-0029, status-success 와 같은 값) */
+  --axis-plan-card-approve-hover-bg: #F1F3F5; /* ink · PlanCard 승인 hover 바탕(WI-0029, status-success-strong 와 같은 값) */
   /* surface */
   --axis-surface-default: #17191D; /* card */
   --axis-surface-secondary: #1F2227; /* panel */

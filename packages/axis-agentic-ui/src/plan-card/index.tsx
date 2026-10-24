@@ -176,7 +176,7 @@ export function PlanCard({
           {onApprove && (
             <button
               onClick={onApprove}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)] hover:bg-[var(--axis-status-success-strong)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-plan-card-approve-bg)] text-[var(--axis-status-success-contrast)] hover:bg-[var(--axis-plan-card-approve-hover-bg)] transition-colors"
             >
               승인
             </button>
@@ -192,7 +192,7 @@ export function PlanCard({
           {onReject && (
             <button
               onClick={onReject}
-              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-status-error)] hover:text-[var(--axis-plan-card-reject-hover-text)] hover:bg-[color:color-mix(in_srgb,var(--axis-status-error)_10%,transparent)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md text-[var(--axis-plan-card-reject-text)] hover:text-[var(--axis-plan-card-reject-hover-text)] hover:bg-[color:color-mix(in_srgb,var(--axis-status-error)_10%,transparent)] transition-colors"
             >
               거절
             </button>
