@@ -38,7 +38,7 @@ const REUSABLE_PATTERNS = {
  */
 const PROJECT_SPECIFIC_PATTERNS = [
   // 파일 경로
-  /(?:src|packages|apps|lib|components)\/[\w\-\/]+\.(?:ts|tsx|js|jsx|md)/gi,
+  /(?:src|packages|apps|lib|components)\/[\w\-/]+\.(?:ts|tsx|js|jsx|md)/gi,
   // 컴포넌트명 (PascalCase)
   /\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b/g,
   // 버전
@@ -63,7 +63,7 @@ function segmentText(text: string): string[] {
 /**
  * 반복성 점수 계산 (25점 만점)
  */
-function calculateRepeatability(text: string, _context: string): number {
+function calculateRepeatability(text: string): number {
   let score = 0;
 
   // 구조화된 패턴 (목표, 단계, 출력 등) 존재 여부
@@ -81,7 +81,7 @@ function calculateRepeatability(text: string, _context: string): number {
 
   // 마크다운 구조 (헤더, 리스트) 존재
   if (/^#{1,3}\s/m.test(text)) score += 5;
-  if (/^[\-\*]\s/m.test(text)) score += 3;
+  if (/^[-*]\s/m.test(text)) score += 3;
   if (/^\d+\.\s/m.test(text)) score += 2;
 
   return Math.min(25, score);
@@ -169,8 +169,8 @@ function calculateClarity(text: string): number {
 /**
  * 점수 계산
  */
-function calculateScores(text: string, context: string): PromptScores {
-  const repeatability = calculateRepeatability(text, context);
+function calculateScores(text: string): PromptScores {
+  const repeatability = calculateRepeatability(text);
   const generality = calculateGenerality(text);
   const independence = calculateIndependence(text);
   const clarity = calculateClarity(text);
@@ -311,7 +311,7 @@ export function handleDetect(params: DetectParams): DetectResult {
 
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i];
-    const scores = calculateScores(segment, context);
+    const scores = calculateScores(segment);
 
     // 최소 점수 이상만 후보로 선정
     if (scores.total >= minScore) {

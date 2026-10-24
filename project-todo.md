@@ -40,7 +40,7 @@
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
 | 46 | 라이브러리 패키지(tokens · ui-react · agentic-ui) lint · type-check 스크립트 공백 해소 | WI-0034 (#100) | P18 | P2 | ✅ |
 | 49 | 템플릿 원형 빌드 실패(`app/` 디렉터리 · postcss 설정 없음, theme-only 실측, 나머지 3개 확인 필요) | WI-0037 (#119) | P18 | P2 | ⏳ |
-| 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ⏳ |
+| 51 | cli · mcp `type-check` · `lint` 스크립트 도입과 기존 오류 정리(cli tsc 20건 · eslint 2건) | WI-0039 (#125) | P18 | P3 | ✅ 완료(2026-10-24, 브랜치 `chore/wi-0039-cli-mcp-quality-gate` 머지 대기, changeset · 배포 없음). cli lint · type-check, mcp · registry-core lint 를 turbo 에 등록(lint 태스크 4 → 7). 재측정 cli tsc 19 · cli eslint 25 · mcp eslint 11 · registry-core eslint 1 → 0, 양성 대조 4/4 rc 비0, `--force` 게이트 rc 0(cli 661 · mcp 138 유지). theme 은 범위 밖 |
 | 52 | 라이브러리 수집 데이터(`apps/web/public/library/**` 8개)의 `npx axis-cli` 실행 안내 정리(typosquat 위험, WI-0038 에서 분리) | WI-0040 (#127) | P18 | P2 | ⏳ |
 | 53 | `axis init` 재실행 시 `axis.config.json` 덮어쓰기로 brand 등 설정 소실 | WI-0041 (#128) | P18 | P3 | ⏳ |
 | 57 | `axis add` 가 레지스트리를 조회하지 않고 하드코딩된 button 하나만 설치(그 button 도 preset 의존 shadcn 원형), WI-0044 실측에서 발견 | WI-0045 (#136) | P18 | P1 | ✅ 완료(2026-10-22). cli 1.5.0 배포(#152 · #153, run 39795328665, provenance), pages.dev /r version 1.5.0 반영. 배포본 실측: init · list(원격) · add · next build rc 0, 28/28 설치 후 빌드 |

@@ -71,9 +71,9 @@ export class MonetCollector extends BaseCollector {
   private baseUrl = "https://www.monet.design";
   private registryUrl = "https://registry.monet.design";
 
-  constructor(options: { apiKey?: string } = {}) {
+  // 예전 판은 쓰지 않는 `options: { apiKey?: string }` 인자를 받았어요. 호출부는 인자 없이 만들고 있어 뺐습니다(WI-0039)
+  constructor() {
     super();
-    // API 키가 있으면 향후 직접 API 호출에 사용
   }
 
   /**
@@ -122,7 +122,7 @@ export class MonetCollector extends BaseCollector {
 
     // 예시 컴포넌트 찾기
     let example: { id: string; name: string; desc: string } | undefined;
-    for (const [catId, examples] of Object.entries(MONET_EXAMPLES)) {
+    for (const [, examples] of Object.entries(MONET_EXAMPLES)) {
       const found = examples.find((e) => e.id === name);
       if (found) {
         example = found;

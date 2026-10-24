@@ -130,7 +130,7 @@ export class ShadcnCollector extends BaseCollector {
       }
 
       return meta;
-    } catch (error) {
+    } catch {
       // 레지스트리 조회 실패 시 기본 메타데이터 반환
       return this.createBaseMeta(name, `shadcn/ui ${name} component`, [], {
         registry: "@shadcn",

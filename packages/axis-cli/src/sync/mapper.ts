@@ -10,9 +10,7 @@ import type {
   WorkItem,
   ProjectItem,
   LocalStatus,
-  STATUS_MAP,
 } from './types.js';
-import { GitHubClient } from './github-client.js';
 
 /**
  * 매핑 파일 기본값

@@ -505,7 +505,7 @@ export function missingDependencies(root: string, items: RegistryItem[]): { spec
   const installCommand = detectInstallCommand(root);
   let pkg: Record<string, unknown> | undefined;
   try {
-    const text = readFileSync(path.join(root, "package.json"), "utf8").replace(/^﻿/, "");
+    const text = readFileSync(path.join(root, "package.json"), "utf8").replace(/^\uFEFF/, "");
     const parsed: unknown = JSON.parse(text);
     pkg = isPlainObject(parsed) ? parsed : undefined;
   } catch {

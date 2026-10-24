@@ -21,7 +21,7 @@ const VARIABLE_PATTERNS: Array<{
   type: string;
 }> = [
   {
-    pattern: /(?:src|packages|apps|lib|components)\/[\w\-\/]+\.(?:ts|tsx|js|jsx|md)/gi,
+    pattern: /(?:src|packages|apps|lib|components)\/[\w\-/]+\.(?:ts|tsx|js|jsx|md)/gi,
     variable: "{{FILE_PATH}}",
     description: "파일 경로",
     type: "path",

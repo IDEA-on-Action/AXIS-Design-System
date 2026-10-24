@@ -91,7 +91,9 @@ async function readJson<T>(file: string): Promise<T> {
 }
 
 function withoutUpdatedAt(c: PublicComponent): Omit<PublicComponent, "updatedAt"> {
-  const { updatedAt: _ignored, ...rest } = c;
+  // 구조 분해로 버리면 미사용 변수가 남아 복사본에서 지웁니다. 남은 키의 순서는 같아요
+  const rest: Partial<PublicComponent> = { ...c };
+  delete rest.updatedAt;
   return JSON.parse(serialize(rest));
 }
 

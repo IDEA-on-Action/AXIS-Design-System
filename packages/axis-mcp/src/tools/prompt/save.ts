@@ -134,8 +134,7 @@ function savePromptFile(
  */
 function updateIndex(
   index: PromptIndex,
-  entry: Omit<PromptIndexEntry, "createdAt" | "updatedAt" | "usageCount">,
-  isNew: boolean
+  entry: Omit<PromptIndexEntry, "createdAt" | "updatedAt" | "usageCount">
 ): void {
   const now = new Date().toISOString();
 
@@ -238,8 +237,7 @@ export function handleSave(params: SaveParams): SaveResult {
         description,
         path: relativePath,
         variables,
-      },
-      !isDuplicate
+      }
     );
 
     // 인덱스 저장

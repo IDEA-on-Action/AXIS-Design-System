@@ -18,6 +18,11 @@ vi.mock("fs-extra", () => ({
   },
 }));
 
+// fs-extra 의 pathExists 는 콜백 오버로드가 마지막이라 vi.mocked 가 반환 타입을 void 로 잡아요.
+// 프로미스 오버로드로 좁혀 mockResolvedValue(boolean) 를 실제 타입대로 씁니다(같은 모의 함수 참조).
+const pathExistsMock = vi.mocked(fs.pathExists as (path: string) => Promise<boolean>);
+
+
 // ora 모킹
 vi.mock("ora", () => ({
   default: () => ({
@@ -163,14 +168,14 @@ describe("LibraryCurator", () => {
       await curator.saveIndex(index);
 
       // 전체 인덱스 + 카테고리별 파일
-      const writeJSONCalls = (fs.writeJSON as any).mock.calls;
+      const writeJSONCalls = vi.mocked(fs.writeJSON).mock.calls;
       expect(writeJSONCalls.length).toBeGreaterThan(1);
     });
   });
 
   describe("loadIndex", () => {
     it("should return null when index does not exist", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(false);
+      pathExistsMock.mockResolvedValue(false);
       const index = await curator.loadIndex();
       expect(index).toBeNull();
     });
@@ -182,7 +187,7 @@ describe("LibraryCurator", () => {
         stats: { total: 0 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const index = await curator.loadIndex();
@@ -192,7 +197,7 @@ describe("LibraryCurator", () => {
 
   describe("searchComponents", () => {
     it("should return empty array when index does not exist", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(false);
+      pathExistsMock.mockResolvedValue(false);
       const results = await curator.searchComponents("button");
       expect(results).toEqual([]);
     });
@@ -207,7 +212,7 @@ describe("LibraryCurator", () => {
         stats: { total: 2 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const results = await curator.searchComponents("button");
@@ -225,7 +230,7 @@ describe("LibraryCurator", () => {
         stats: { total: 2 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const results = await curator.searchComponents("streaming");
@@ -243,7 +248,7 @@ describe("LibraryCurator", () => {
         stats: { total: 2 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const results = await curator.searchComponents("interactive");
@@ -261,7 +266,7 @@ describe("LibraryCurator", () => {
         stats: { total: 2 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const results = await curator.searchComponents("", { category: "agentic" });
@@ -279,7 +284,7 @@ describe("LibraryCurator", () => {
         stats: { total: 2 },
       };
 
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJSON).mockResolvedValue(mockIndex);
 
       const results = await curator.searchComponents("", { source: "axis" });

@@ -34,34 +34,6 @@ const V0_CONVERSION_RULES = [
   { from: /from ['"]lucide-react['"]/g, to: 'from "lucide-react"' },
 ];
 
-// V0 → AXIS 컴포넌트 매핑
-const V0_TO_AXIS_MAPPING: Record<string, string> = {
-  Button: "Button",
-  Card: "Card",
-  CardHeader: "CardHeader",
-  CardTitle: "CardTitle",
-  CardDescription: "CardDescription",
-  CardContent: "CardContent",
-  CardFooter: "CardFooter",
-  Input: "Input",
-  Label: "Label",
-  Badge: "Badge",
-  Dialog: "Dialog",
-  DialogTrigger: "DialogTrigger",
-  DialogContent: "DialogContent",
-  DialogHeader: "DialogHeader",
-  DialogTitle: "DialogTitle",
-  DialogDescription: "DialogDescription",
-  Select: "Select",
-  SelectTrigger: "SelectTrigger",
-  SelectContent: "SelectContent",
-  SelectItem: "SelectItem",
-  Tabs: "Tabs",
-  TabsList: "TabsList",
-  TabsTrigger: "TabsTrigger",
-  TabsContent: "TabsContent",
-};
-
 export class V0Client {
   // V0 코드 변환
   async convertCode(code: string, options: { preserveImports?: boolean } = {}): Promise<string> {

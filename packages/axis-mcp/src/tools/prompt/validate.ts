@@ -132,7 +132,7 @@ function checkHardcodedPaths(text: string): {
 } {
   const hardcodedPatterns = [
     // 절대 경로 (변수화되지 않은)
-    /(?<!{{)(?:src|packages|apps|lib|components)\/[\w\-\/]+\.(?:ts|tsx|js|jsx|md)(?!}})/gi,
+    /(?<!{{)(?:src|packages|apps|lib|components)\/[\w\-/]+\.(?:ts|tsx|js|jsx|md)(?!}})/gi,
     // 특정 프로젝트 경로
     /D:\\|C:\\|\/Users\/|\/home\//gi,
   ];
@@ -185,8 +185,7 @@ function checkVariablesDocumented(text: string): {
  * 중복 검사
  */
 function checkDuplicate(
-  text: string,
-  _basePath?: string
+  text: string
 ): { noDuplicate: boolean; similar: ValidateResult["similarPrompts"] } {
   const similar: ValidateResult["similarPrompts"] = [];
 
