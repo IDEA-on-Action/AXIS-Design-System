@@ -266,11 +266,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node scripts/postbuild.mjs && node scripts/sync-exports.mjs && node ../../scripts/sync-types-versions.mjs --only .",
+    "build": "tsup && node scripts/fix-cva-dts.mjs && node scripts/postbuild.mjs && node scripts/sync-exports.mjs && node ../../scripts/sync-types-versions.mjs --only .",
     "dev": "tsup --watch --onSuccess \"node scripts/postbuild.mjs\"",
     "clean": "rm -rf dist",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run && node --test scripts/fix-cva-dts.test.mjs",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit",
