@@ -30,6 +30,7 @@
 - [x] ③ theme add 의 Provider 예시는 `<html data-brand>` · `setBrand` 이고 `defaultBrand` 를 쓰지 않음. 「`defaultBrand` 와 해제」와 모순 없음, 가이드 · quick-start 에 이유를 적음
 - [x] ③ check 의 판정 항목(`tailwind.config` preset WARN · `brand.activation` · `tailwind.content` · `animation`)을 체크리스트 번호에 연결한 표
 - [x] HTML 주석 TODO 삭제, cli 테스트 재실행(guidance · init, testplan 5절)
+- [x] 검토 지적: ThemeProvider 만 있는 레이아웃도 check `brand.activation` PASS · theme add 예시 없음(testplan 6절). 가이드 · quick-start 에 「PASS 는 켜졌다는 뜻이 아님」을 적고 ③ 쪽에 보고
 - [ ] ③ 머지 · 발행 뒤 재대조: cli 버전이 1.6.0 으로 나가는지, 「cli 로 적용하기」에 옮긴 출력 문구(브랜드 켜기 예시 · preset 안내)가 발행본과 같은지
 
 ## 검증 · 릴리스

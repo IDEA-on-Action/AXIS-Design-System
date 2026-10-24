@@ -295,7 +295,7 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
 **사람이 해야 하는 것** (cli 는 안내만 함)
 
-- [ ] 브랜드 켜기(위 2번). cli 는 루트 레이아웃(`app/layout.tsx` 등)에서 `ThemeProvider` · `data-brand` 를 찾지 못하면 아래 예시를 그대로 출력합니다. 예시의 `lang="ko"` 는 예시 값이니 앱의 `lang` 을 유지합니다.
+- [ ] 브랜드 켜기(위 2번). cli 는 루트 레이아웃(`app/layout.tsx` 등)에서 `ThemeProvider` · `data-brand` 를 찾지 못하면 아래 예시를 그대로 출력합니다. 예시의 `lang="ko"` 는 예시 값이니 앱의 `lang` 을 유지합니다. `ThemeProvider` · `data-brand` · `setBrand(` 중 하나라도 글자로 있으면 찾은 것으로 보고 예시 없이 「`ThemeProvider` · `data-brand` · `setBrand` 가 있습니다. "ontology" 로 켜는지 확인하세요」 한 줄만 냅니다. 그래서 `<ThemeProvider defaultTheme="system">` 만 있고 `defaultBrand` · `setBrand` 가 없는 레이아웃([빠른 시작](./quick-start.md) 「3. ThemeProvider 설정」 예시 그대로)에서도 예시가 안 나오는데, 이 구성은 마운트 때 브랜드가 지워집니다. `ThemeProvider` 를 쓰는 앱은 이 한 줄이 나와도 `defaultBrand` 나 `setBrand("ontology")` 를 직접 확인합니다.
 
   ```text
   브랜드 켜기 (ThemeProvider 는 @axis-ds/theme 1.3.0 이상)
@@ -326,6 +326,8 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 | `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 `ThemeProvider` · `data-brand` 가 없음. 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내 | 2번 |
 | `tailwind.content` | FAIL(종료 코드 1) | Tailwind 3 `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로(`./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 등)를 덮지 않음 | 1번 content |
 | `animation` | WARN | `@axis-ds/ui-react` 를 선언했는데 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate`, Tailwind 4 `tw-animate-css`)이 없음 | - |
+
+`brand.activation` 의 PASS 는 브랜드가 켜졌다는 뜻이 아닙니다. 루트 레이아웃(과 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` · `./provider`)에 `ThemeProvider` · `data-brand` · `setBrand(` 글자가 있는지만 보므로, `defaultBrand` · `setBrand` 없이 `ThemeProvider` 만 둔 레이아웃도 PASS 입니다. 이 구성은 마운트 때 브랜드가 지워지니, `ThemeProvider` 를 쓰는 앱은 PASS 가 나와도 `defaultBrand` 나 `setBrand("ontology")` 를 직접 확인합니다.
 
 위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)이고, `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
 

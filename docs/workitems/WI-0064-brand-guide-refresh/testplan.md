@@ -92,3 +92,14 @@ docs/guides 만 바꾸면 frontend CI 가 돌지 않을 수 있어(paths 필터�
 | guidance · init | `pnpm exec vitest run src/guidance.test.ts src/init/init.test.ts` (packages/axis-cli) | 2파일 134/134, rc 0 |
 | 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 한 줄 주입 뒤 guidance.test | rc 1. 백업본으로 되돌리고 `sha256sum -c` OK, 재실행 4/4 |
 | U+2014 · TODO 주석 | 변경 파일에서 문자 계수, `TODO(WI-0064)` grep | 0건 · 0건(grep rc 1) |
+
+## 6. 검토 지적 반영: ThemeProvider 만 있는 레이아웃의 PASS (2026-10-25)
+
+| 항목 | 방법 | 결과 |
+|---|---|---|
+| 지적 재현 | 스크래치 T3 프로젝트의 `app/layout.tsx` 를 `<ThemeProvider defaultTheme="system">` 만 두고(`defaultBrand` · `setBrand` · `data-brand` 없음) ③ dist 로 `check` · `theme add ontology`(복사본) | check: `brand.activation` PASS(「ThemeProvider · data-brand 가 있습니다」), 8 pass / 1 warn. theme add: 예시 없이 「ThemeProvider · data-brand · setBrand 가 있습니다. "ontology" 로 켜는지 확인하세요」만 출력 |
+| 판정 근거 | ③ `packages/axis-cli/src/theme/brand-core.ts` `BRAND_ACTIVATION_PATTERN`(`ThemeProvider` · `data-brand` · `setBrand(` 글자 매칭), `theme/index.ts` 브랜드 켜기 안내 분기 읽기 | 글자 하나만 있어도 찾은 것으로 봄. 원인은 ③ 의 휴리스틱이라 ③ 쪽에 보고 |
+| 가이드 반영 | theme-customization 체크리스트 2번 항목 · check 표 아래, quick-start 「브랜드 적용(선택)」 cli 단락 | 「PASS · 확인 한 줄은 브랜드가 켜졌다는 뜻이 아님, ThemeProvider 앱은 `defaultBrand` 나 `setBrand` 를 직접 확인」을 적음 |
+| 자동 테스트 | guidance · init, cli 전체 | 134/134 rc 0, 662/662 rc 0 |
+| 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 주입 뒤 guidance.test | rc 1, 백업본 복원 뒤 `sha256sum -c` OK, 재실행 4/4 |
+| U+2014 | 변경 2파일에서 문자 계수 | 0건 |

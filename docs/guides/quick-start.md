@@ -157,7 +157,7 @@ export default function App({ children }: { children: React.ReactNode }) {
 1. 브랜드 CSS 를 토큰 CSS 뒤에 import 합니다. Tailwind 4 는 위 4줄 다음에 `@import "@axis-ds/tokens/css/brands/ontology";`, Tailwind 3 은 `@import "@axis-ds/tokens/css/shadcn";` 다음 줄에 같은 줄을 둡니다.
 2. 브랜드를 켭니다. 위처럼 `ThemeProvider` 를 쓰는 앱에서 늘 쓰는 브랜드면 `<ThemeProvider defaultTheme="system" defaultBrand="ontology">` 처럼 `defaultBrand` 를 지정합니다(첫 화면까지 맞추려면 마크업 `<html data-brand="ontology">` 도 함께 넣습니다). 마크업 속성만 넣고 `defaultBrand` 를 빼면 `ThemeProvider` 가 마운트 때 속성을 지워 브랜드가 사라집니다. 마크업 속성 단독은 `ThemeProvider` 없이 쓸 때만 성립합니다. 사용자가 끌 수 있게 하려면 `defaultBrand` 없이 `useTheme()` 의 `setBrand("ontology")` · `setBrand(undefined)` 로 켜고 끕니다(`defaultBrand` 를 쓰면 끈 상태가 새로고침 뒤 풀립니다).
 
-`@axis-ds/cli` 1.6.0부터는 `npx @axis-ds/cli theme add ontology` 가 1번(기본 토큰 CSS 와 브랜드 import, `package.json` 의 `@axis-ds/tokens`, `axis.config.json` 의 `brand`)을 대신하고, 2번은 예시를 출력만 합니다. cli 예시는 `defaultBrand` 대신 `<html data-brand="ontology">`(Provider 없이) 와 `setBrand("ontology")`(`ThemeProvider` 를 쓸 때)입니다. 위의 끈 상태가 풀리는 한계 때문입니다.
+`@axis-ds/cli` 1.6.0부터는 `npx @axis-ds/cli theme add ontology` 가 1번(기본 토큰 CSS 와 브랜드 import, `package.json` 의 `@axis-ds/tokens`, `axis.config.json` 의 `brand`)을 대신하고, 2번은 예시를 출력만 합니다. cli 예시는 `defaultBrand` 대신 `<html data-brand="ontology">`(Provider 없이) 와 `setBrand("ontology")`(`ThemeProvider` 를 쓸 때)입니다. 위의 끈 상태가 풀리는 한계 때문입니다. 레이아웃에 `ThemeProvider` 가 이미 있으면 cli 는 예시 없이 「켜는지 확인하세요」 한 줄만 내고 `axis check` 의 `brand.activation` 도 PASS 지만, 위 「3. ThemeProvider 설정」 예시 그대로(`defaultBrand` · `setBrand` 없음)면 브랜드는 꺼진 상태입니다. 이 경우 2번을 직접 합니다.
 
 글꼴은 패키지가 스택만 지정하므로 Pretendard 웹폰트를 앱에서 로드합니다. 체크리스트 · 함정 · 첫 화면 처리는 [테마 커스터마이징 가이드](./theme-customization.md) 「4. 브랜드 테마」의 「브랜드 적용 빠른 시작」에 있습니다.
 
