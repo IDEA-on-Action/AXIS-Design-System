@@ -1,67 +1,10 @@
 'use client'
 
+import { AgentAvatar } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Image from 'next/image'
-
-// Mock AgentAvatar 컴포넌트
-const sizeStyles: Record<string, string> = {
-  sm: 'w-6 h-6 text-xs',
-  md: 'w-8 h-8 text-sm',
-  lg: 'w-10 h-10 text-base',
-  xl: 'w-12 h-12 text-lg',
-}
-
-const statusStyles: Record<string, string> = {
-  online: 'bg-green-500',
-  busy: 'bg-yellow-500',
-  offline: 'bg-gray-400',
-}
-
-const typeColors: Record<string, string> = {
-  assistant: 'bg-purple-500',
-  tool: 'bg-blue-500',
-  system: 'bg-gray-600',
-}
-
-const sizePx: Record<string, number> = { sm: 24, md: 32, lg: 40, xl: 48 }
-
-const AgentAvatar = ({ name, src, size = 'md', status, type = 'assistant' }: any) => {
-  const initials = name
-    .split(' ')
-    .map((n: string) => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase()
-
-  return (
-    <div className="relative inline-flex">
-      {src ? (
-        <Image
-          src={src}
-          alt={name}
-          width={sizePx[size]}
-          height={sizePx[size]}
-          className={`rounded-full object-cover ${sizeStyles[size]}`}
-          unoptimized
-        />
-      ) : (
-        <div
-          className={`rounded-full flex items-center justify-center font-medium text-white ${sizeStyles[size]} ${typeColors[type]}`}
-        >
-          {initials}
-        </div>
-      )}
-      {status && (
-        <span
-          className={`absolute bottom-0 right-0 rounded-full border-2 border-background ${size === 'sm' ? 'w-2 h-2' : 'w-3 h-3'} ${statusStyles[status]}`}
-        />
-      )}
-    </div>
-  )
-}
 
 const agentAvatarProps = [
   { name: 'name', type: 'string', required: true, description: '에이전트 이름' },

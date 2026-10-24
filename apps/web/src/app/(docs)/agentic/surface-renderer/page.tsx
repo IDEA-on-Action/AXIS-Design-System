@@ -1,5 +1,6 @@
 'use client'
 
+import { SurfaceRenderer, type Surface } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
@@ -8,81 +9,130 @@ import { PropsTable } from '@/components/props-table'
 const surfaceRendererProps = [
   {
     name: 'surface',
-    type: 'A2UISurface',
+    type: 'Surface',
     default: '-',
-    description: 'A2UI Surface 데이터',
+    description: '렌더링할 Surface 데이터',
     required: true,
   },
   {
-    name: 'context',
-    type: 'SurfaceRendererContext',
+    name: 'renderCustom',
+    type: '(surface: Surface) => React.ReactNode',
     default: '-',
-    description: '액션 콜백 컨텍스트',
+    description: 'type 이 "custom" 일 때 내용을 그리는 함수',
   },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
-const surfaceTypesList = [
-  { name: 'form', description: '입력 폼 Surface' },
-  { name: 'card', description: '일반 카드 Surface' },
-  { name: 'table', description: '테이블 Surface' },
-  { name: 'summary', description: '요약 Surface' },
-  { name: 'action_buttons', description: '액션 버튼 그룹' },
-  { name: 'progress', description: '진행률 표시' },
-  { name: 'message', description: '메시지 (info/success/warning/error)' },
-  { name: 'activity_preview', description: 'Activity 미리보기' },
-  { name: 'aar_template', description: 'AAR 템플릿' },
-  { name: 'approval_request', description: '승인 요청' },
+const surfaceFields = [
+  { name: 'id', type: 'string', required: true, description: 'Surface 고유 식별자' },
+  { name: 'type', type: 'SurfaceType', required: true, description: 'Surface 종류' },
+  {
+    name: 'title',
+    type: 'string',
+    default: '-',
+    description: '머리 제목 (table 은 caption 으로도 쓰임)',
+  },
+  { name: 'content', type: 'unknown', required: true, description: 'type 에 맞는 내용' },
+  { name: 'metadata', type: 'Record<string, unknown>', default: '-', description: '추가 정보' },
 ]
 
-const basicExample = `import { SurfaceRenderer } from '@axis-ds/ui-react'
+const surfaceTypesList = [
+  { name: 'text', description: '문자열 내용을 그대로 표시' },
+  { name: 'code', description: '문자열 내용을 고정폭 코드 블록으로 표시' },
+  { name: 'table', description: '{ headers: string[]; rows: string[][] } 를 표로 표시' },
+  { name: 'chart', description: '자리 표시자만 표시 (차트는 직접 그려야 함)' },
+  { name: 'form', description: '자리 표시자만 표시 (폼은 직접 그려야 함)' },
+  { name: 'custom', description: 'renderCustom 이 돌려준 내용을 표시' },
+]
 
-const messageSurface = {
-  id: 'msg-001',
-  type: 'message',
-  variant: 'info',
-  content: '데이터 수집이 완료되었습니다.',
+const textSurface: Surface = {
+  id: 'surface-text',
+  type: 'text',
+  title: '요약',
+  content: '데이터 수집이 완료되었습니다. 총 42개의 세미나가 발견되었습니다.',
 }
 
-const cardSurface = {
-  id: 'card-001',
-  type: 'card',
-  title: '분석 결과',
-  description: 'AI 분석 결과입니다.',
-  content: '총 42개의 세미나가 발견되었습니다.',
-  badges: [{ label: 'AI', variant: 'secondary' }],
-  actions: [
-    { id: 'view', label: '상세 보기', type: 'primary' },
-    { id: 'export', label: '내보내기', type: 'secondary' },
-  ],
+const codeSurface: Surface = {
+  id: 'surface-code',
+  type: 'code',
+  title: '생성된 쿼리',
+  content: "SELECT title, date FROM seminars WHERE status = 'open'",
+}
+
+const tableSurface: Surface = {
+  id: 'surface-table',
+  type: 'table',
+  title: '세미나 목록',
+  content: {
+    headers: ['제목', '날짜', '참석자'],
+    rows: [
+      ['AI 에이전트 설계', '2026-11-03', '120'],
+      ['디자인 시스템 운영', '2026-11-10', '85'],
+    ],
+  },
+}
+
+const customSurface: Surface = {
+  id: 'surface-custom',
+  type: 'custom',
+  title: '사용자 정의',
+  content: { total: 42, open: 30 },
+}
+
+const basicExample = `import { SurfaceRenderer, type Surface } from '@axis-ds/agentic-ui'
+
+const textSurface: Surface = {
+  id: 'surface-text',
+  type: 'text',
+  title: '요약',
+  content: '데이터 수집이 완료되었습니다. 총 42개의 세미나가 발견되었습니다.',
+}
+
+const tableSurface: Surface = {
+  id: 'surface-table',
+  type: 'table',
+  title: '세미나 목록',
+  content: {
+    headers: ['제목', '날짜', '참석자'],
+    rows: [
+      ['AI 에이전트 설계', '2026-11-03', '120'],
+      ['디자인 시스템 운영', '2026-11-10', '85'],
+    ],
+  },
 }
 
 export function Example() {
   return (
     <div className="space-y-4">
-      <SurfaceRenderer surface={messageSurface} />
-      <SurfaceRenderer
-        surface={cardSurface}
-        context={{
-          onAction: (surfaceId, actionId) => {
-            console.log(\`Action: \${actionId} on surface: \${surfaceId}\`)
-          }
-        }}
-      />
+      <SurfaceRenderer surface={textSurface} />
+      <SurfaceRenderer surface={tableSurface} />
     </div>
   )
 }`
 
-const progressExample = `const progressSurface = {
-  id: 'progress-001',
-  type: 'progress',
-  title: '데이터 수집 진행',
-  current: 35,
-  total: 100,
-  percentage: 35,
-  status: 'active',
-  message: '35개 완료, 65개 남음',
-}`
+const customExample = `const customSurface: Surface = {
+  id: 'surface-custom',
+  type: 'custom',
+  title: '사용자 정의',
+  content: { total: 42, open: 30 },
+}
+
+<SurfaceRenderer
+  surface={customSurface}
+  renderCustom={(surface) => {
+    const { total, open } = surface.content as { total: number; open: number }
+    return <p className="text-sm">전체 {total}개 중 {open}개 모집 중</p>
+  }}
+/>`
+
+function renderCustomSummary(surface: Surface) {
+  const { total, open } = surface.content as { total: number; open: number }
+  return (
+    <p className="text-sm">
+      전체 {total}개 중 {open}개 모집 중
+    </p>
+  )
+}
 
 export default function SurfaceRendererPage() {
   return (
@@ -90,7 +140,7 @@ export default function SurfaceRendererPage() {
       category="Agentic UI"
       categoryHref="/agentic"
       title="SurfaceRenderer"
-      description="A2UI Surface를 React 컴포넌트로 렌더링하는 컴포넌트입니다. 허용된 카탈로그 컴포넌트만 렌더링하여 보안을 보장합니다."
+      description="에이전트가 돌려준 Surface 데이터를 type 에 맞는 화면으로 렌더링하는 컴포넌트입니다. text · code · table 은 바로 그리고, custom 은 renderCustom 으로 그립니다."
     >
       <DocSection title="Installation">
         <CodeBlock code="npx @axis-ds/cli add surface-renderer" language="bash" />
@@ -98,77 +148,28 @@ export default function SurfaceRendererPage() {
 
       <DocSection title="Usage">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
-          {/* Message Surface Demo */}
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
-            데이터 수집이 완료되었습니다.
-          </div>
-
-          {/* Card Surface Demo */}
-          <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
-            <div className="p-6 pb-4">
-              <h3 className="text-lg font-semibold">분석 결과</h3>
-              <p className="text-sm text-muted-foreground">AI 분석 결과입니다.</p>
-            </div>
-            <div className="px-6 pb-2">
-              <p>총 42개의 세미나가 발견되었습니다.</p>
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold bg-secondary text-secondary-foreground">
-                  AI
-                </span>
-              </div>
-            </div>
-            <div className="flex items-center p-6 pt-2 gap-2">
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 h-9 px-3">
-                상세 보기
-              </button>
-              <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors border border-input bg-background hover:bg-accent h-9 px-3">
-                내보내기
-              </button>
-            </div>
-          </div>
+          <SurfaceRenderer surface={textSurface} />
+          <SurfaceRenderer surface={tableSurface} />
         </div>
         <CodeBlock code={basicExample} />
       </DocSection>
 
-      <DocSection title="Message Variants">
-        <div className="space-y-3 mb-4 p-6 rounded-lg border">
-          <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-200">
-            Info: 정보 메시지입니다.
-          </div>
-          <div className="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-800 dark:bg-green-950 dark:border-green-800 dark:text-green-200">
-            Success: 작업이 성공적으로 완료되었습니다.
-          </div>
-          <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-sm text-yellow-800 dark:bg-yellow-950 dark:border-yellow-800 dark:text-yellow-200">
-            Warning: 주의가 필요한 상황입니다.
-          </div>
-          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950 dark:border-red-800 dark:text-red-200">
-            Error: 오류가 발생했습니다.
-          </div>
-        </div>
-      </DocSection>
-
-      <DocSection title="Progress Surface">
+      <DocSection title="Code Surface">
         <div className="mb-4 p-6 rounded-lg border">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">데이터 수집 진행</span>
-              <span className="text-muted-foreground">35 / 100</span>
-            </div>
-            <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full bg-blue-500 transition-all duration-300"
-                style={{ width: '35%' }}
-              />
-            </div>
-            <p className="text-xs text-muted-foreground">35개 완료, 65개 남음</p>
-          </div>
+          <SurfaceRenderer surface={codeSurface} />
         </div>
-        <CodeBlock code={progressExample} />
       </DocSection>
 
-      <DocSection title="Allowed Surface Types">
+      <DocSection title="Custom Surface">
+        <div className="mb-4 p-6 rounded-lg border">
+          <SurfaceRenderer surface={customSurface} renderCustom={renderCustomSummary} />
+        </div>
+        <CodeBlock code={customExample} />
+      </DocSection>
+
+      <DocSection title="Surface Types">
         <p className="text-muted-foreground mb-4">
-          보안을 위해 허용된 Surface 타입만 렌더링됩니다.
+          아래 6가지 type 만 렌더링합니다. 그 밖의 값은 아무것도 그리지 않습니다.
         </p>
         <div className="grid gap-2">
           {surfaceTypesList.map(type => (
@@ -184,36 +185,21 @@ export default function SurfaceRendererPage() {
         <PropsTable props={surfaceRendererProps} />
       </DocSection>
 
-      <DocSection title="SurfaceRendererContext">
+      <DocSection title="Surface Type">
+        <PropsTable props={surfaceFields} />
         <CodeBlock
-          code={`interface SurfaceRendererContext {
-  onAction?: (surfaceId: string, actionId: string) => void
-}`}
-        />
-      </DocSection>
-
-      <DocSection title="SurfaceType Type">
-        <CodeBlock
-          code={`type SurfaceType =
-  | 'form'
-  | 'card'
-  | 'table'
-  | 'summary'
-  | 'action_buttons'
-  | 'progress'
-  | 'message'
-  | 'activity_preview'
-  | 'aar_template'
-  | 'approval_request'`}
+          code={`type SurfaceType = 'text' | 'code' | 'table' | 'chart' | 'form' | 'custom'`}
         />
       </DocSection>
 
       <DocSection title="Accessibility">
         <p className="mb-4 text-muted-foreground">
-          {'렌더링되는 surface 타입에 맞는 시맨틱을 적용합니다 (예: 표 surface는 role="table").'}
+          {
+            'table surface 는 role="table" 과 scope="col" 머리글로 마크업되고, title 이 있으면 화면에 보이지 않는 caption 으로도 전달됩니다.'
+          }
         </p>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-          <li key={0}>{'인터랙티브 surface는 해당 컴포넌트의 접근성 동작을 따릅니다.'}</li>
+          <li key={0}>{'custom surface 의 접근성은 renderCustom 이 그린 내용이 책임집니다.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

@@ -2,84 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { MessageBubble, type MessageRole, type MessageStatus } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-type MessageRole = 'user' | 'assistant' | 'system'
-type MessageStatus = 'sending' | 'sent' | 'error'
-
-const MessageBubble = ({
-  role,
-  content,
-  timestamp,
-  avatar,
-  status,
-  metadata,
-}: {
-  role: MessageRole
-  content: React.ReactNode
-  timestamp?: Date
-  avatar?: React.ReactNode | string
-  status?: MessageStatus
-  metadata?: string
-}) => {
-  const isUser = role === 'user'
-  const isSystem = role === 'system'
-
-  const bubbleStyles: Record<MessageRole, string> = {
-    user: 'bg-primary text-primary-foreground ml-auto',
-    assistant: 'bg-muted',
-    system: 'bg-yellow-50 border border-yellow-200 text-yellow-900 mx-auto',
-  }
-
-  const statusIcons: Record<MessageStatus, string> = {
-    sending: '⏳',
-    sent: '✓',
-    error: '✕',
-  }
-
-  const renderAvatar = () => {
-    if (!avatar) {
-      const defaults: Record<MessageRole, string> = { user: '👤', assistant: '🤖', system: '⚙️' }
-      return <span className="text-lg">{defaults[role]}</span>
-    }
-    if (typeof avatar === 'string') {
-      // eslint-disable-next-line @next/next/no-img-element
-      return <img src={avatar} alt={role} className="w-8 h-8 rounded-full" />
-    }
-    return avatar
-  }
-
-  return (
-    <div
-      className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''} ${isSystem ? 'justify-center' : ''}`}
-    >
-      {!isSystem && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-          {renderAvatar()}
-        </div>
-      )}
-      <div className={`max-w-[75%] rounded-xl px-4 py-2.5 ${bubbleStyles[role]}`}>
-        <div className="text-sm whitespace-pre-wrap">{content}</div>
-        <div className={`flex items-center gap-2 mt-1 ${isUser ? 'justify-start' : 'justify-end'}`}>
-          {metadata && <span className="text-[10px] opacity-60">{metadata}</span>}
-          {timestamp && (
-            <span className="text-[10px] opacity-60">
-              {timestamp.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
-            </span>
-          )}
-          {status && (
-            <span className={`text-[10px] ${status === 'error' ? 'text-red-400' : 'opacity-60'}`}>
-              {statusIcons[status]}
-            </span>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
+import { useClientNow } from '@/lib/use-client-now'
 
 const messageBubbleProps = [
   {
@@ -128,26 +56,30 @@ export function Example() {
   )
 }`
 
+interface DemoMessage {
+  role: MessageRole
+  content: string
+  /** 클릭으로 추가한 메시지의 시각(클라이언트에서만 만들어진다) */
+  timestamp?: Date
+  /** 첫 메시지의 시각은 마운트 뒤 시각에서 이만큼 뺀 값으로 그린다(하이드레이션 불일치 방지) */
+  offsetMs?: number
+  status?: MessageStatus
+  metadata?: string
+}
+
 export default function MessageBubblePage() {
-  const [messages, setMessages] = useState<
-    {
-      role: MessageRole
-      content: string
-      timestamp: Date
-      status?: MessageStatus
-      metadata?: string
-    }[]
-  >([
+  const now = useClientNow()
+  const [messages, setMessages] = useState<DemoMessage[]>([
     {
       role: 'user',
       content: '안녕하세요! 오늘 날씨가 어때요?',
-      timestamp: new Date(Date.now() - 60000),
+      offsetMs: 60000,
       status: 'sent',
     },
     {
       role: 'assistant',
       content: '안녕하세요! 오늘 서울은 맑고 기온은 15°C 정도입니다. 야외 활동하기 좋은 날씨네요.',
-      timestamp: new Date(Date.now() - 30000),
+      offsetMs: 30000,
       metadata: 'GPT-4o',
     },
   ])
@@ -198,8 +130,15 @@ export default function MessageBubblePage() {
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <Button onClick={addMessage}>메시지 추가</Button>
           <div className="space-y-4">
-            {messages.map((msg, i) => (
-              <MessageBubble key={i} {...msg} />
+            {messages.map(({ offsetMs, timestamp, ...msg }, i) => (
+              <MessageBubble
+                key={i}
+                {...msg}
+                timestamp={
+                  timestamp ??
+                  (now !== null && offsetMs !== undefined ? new Date(now - offsetMs) : undefined)
+                }
+              />
             ))}
           </div>
         </div>

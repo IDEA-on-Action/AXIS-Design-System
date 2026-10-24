@@ -2,128 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { PlanCard, type PlanStatus, type PlanStepStatus, type PlanStep } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-type PlanStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'executing' | 'completed'
-type PlanStepStatus = 'pending' | 'running' | 'complete' | 'error' | 'skipped'
-
-interface PlanStep {
-  id: string
-  label: string
-  status: PlanStepStatus
-  description?: string
-}
-
-const PlanCard = ({
-  title,
-  steps,
-  status = 'pending',
-  onApprove,
-  onReject,
-}: {
-  title: string
-  steps: PlanStep[]
-  status?: PlanStatus
-  onApprove?: () => void
-  onReject?: () => void
-}) => {
-  const statusColors: Record<PlanStatus, string> = {
-    draft: 'text-gray-500 bg-gray-100',
-    pending: 'text-yellow-700 bg-yellow-100',
-    approved: 'text-green-700 bg-green-100',
-    rejected: 'text-red-700 bg-red-100',
-    executing: 'text-blue-700 bg-blue-100',
-    completed: 'text-green-700 bg-green-100',
-  }
-
-  const statusLabels: Record<PlanStatus, string> = {
-    draft: '초안',
-    pending: '승인 대기',
-    approved: '승인됨',
-    rejected: '거절됨',
-    executing: '실행 중',
-    completed: '완료',
-  }
-
-  const stepIcons: Record<PlanStepStatus, string> = {
-    pending: '○',
-    running: '⟳',
-    complete: '✓',
-    error: '✕',
-    skipped: '—',
-  }
-
-  const stepColors: Record<PlanStepStatus, string> = {
-    pending: 'text-gray-400',
-    running: 'text-blue-500',
-    complete: 'text-green-500',
-    error: 'text-red-500',
-    skipped: 'text-gray-300',
-  }
-
-  const completedCount = steps.filter(s => s.status === 'complete').length
-
-  return (
-    <div className="rounded-lg border overflow-hidden">
-      <div className="p-4 border-b">
-        <div className="flex items-center justify-between mb-1">
-          <h4 className="font-medium">{title}</h4>
-          <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[status]}`}>
-            {statusLabels[status]}
-          </span>
-        </div>
-        <p className="text-xs text-muted-foreground">
-          {completedCount}/{steps.length} 단계 완료
-        </p>
-      </div>
-      <div className="p-4 space-y-2">
-        {steps.map((step, i) => (
-          <div key={step.id} className="flex items-start gap-2">
-            <span
-              className={`mt-0.5 text-sm ${stepColors[step.status]} ${step.status === 'running' ? 'animate-spin' : ''}`}
-            >
-              {stepIcons[step.status]}
-            </span>
-            <div className="flex-1 min-w-0">
-              <p
-                className={`text-sm ${step.status === 'skipped' ? 'line-through text-muted-foreground' : ''}`}
-              >
-                {step.label}
-              </p>
-              {step.description && (
-                <p className="text-xs text-muted-foreground mt-0.5">{step.description}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      {(status === 'pending' || status === 'draft') && (onApprove || onReject) && (
-        <div className="border-t p-3 flex items-center gap-2 justify-end">
-          {onReject && (
-            <button
-              onClick={onReject}
-              className="text-sm px-3 py-1.5 rounded-md border hover:bg-muted transition-colors"
-            >
-              거절
-            </button>
-          )}
-          {onApprove && (
-            <button
-              onClick={onApprove}
-              className="text-sm px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              승인
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
 
 const planCardProps = [
   { name: 'title', type: 'string', required: true, description: '계획 제목' },

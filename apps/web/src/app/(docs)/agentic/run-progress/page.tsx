@@ -2,85 +2,11 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { RunProgress } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock RunProgress 컴포넌트
-const statusColors: Record<string, string> = {
-  pending: 'bg-gray-300',
-  running: 'bg-blue-500 animate-pulse',
-  complete: 'bg-green-500',
-  error: 'bg-red-500',
-}
-
-const RunProgress = ({ status, steps, currentStep, onCancel, onRetry }: any) => {
-  const progressPercent = Math.round(
-    (steps.filter((s: any) => s.status === 'complete').length / steps.length) * 100
-  )
-
-  return (
-    <div className="rounded-lg border p-4 bg-background">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          {status === 'running' && (
-            <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-          )}
-          <span className="text-sm font-medium">
-            {status === 'idle' && '대기 중'}
-            {status === 'running' && '실행 중'}
-            {status === 'complete' && '완료'}
-            {status === 'error' && '오류 발생'}
-          </span>
-        </div>
-        <span className="text-xs text-muted-foreground">{progressPercent}%</span>
-      </div>
-      <div className="w-full h-1.5 rounded-full bg-muted mb-4">
-        <div
-          className="h-full rounded-full bg-blue-500 transition-all duration-300"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
-      <div className="space-y-2">
-        {steps.map((step: any, index: number) => (
-          <div
-            key={step.id}
-            className={`flex items-center gap-3 p-2 rounded-md ${
-              currentStep === index ? 'bg-muted' : ''
-            }`}
-          >
-            <div
-              className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs ${statusColors[step.status]}`}
-            >
-              {step.status === 'complete' ? '✓' : index + 1}
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium">{step.label}</p>
-              {step.description && (
-                <p className="text-xs text-muted-foreground">{step.description}</p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-      {(onCancel || onRetry) && (
-        <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
-          {status === 'running' && onCancel && (
-            <Button variant="secondary" size="sm" onClick={onCancel}>
-              취소
-            </Button>
-          )}
-          {status === 'error' && onRetry && (
-            <Button size="sm" onClick={onRetry}>
-              재시도
-            </Button>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
 
 const runProgressProps = [
   {
