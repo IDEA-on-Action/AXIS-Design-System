@@ -201,9 +201,79 @@ function ThemeToggle() {
 
 ## 4. 브랜드 테마 (1.3.0부터)
 
+### 브랜드 적용 빠른 시작
+
+브랜드가 화면에 나타나려면 아래 항목을 모두 갖춰야 합니다. 하나라도 빠지면 CSS 변수는 바뀌어도 컴포넌트가 기본 모양이나 투명한 바탕으로 남습니다. 괄호 안의 값은 tokens · theme · ui-react · agentic-ui 1.6.0 배포본으로 만든 새 프로젝트에서 브라우저 계산 스타일로 잰 것입니다(2026-10-24).
+
+**1. 전역 CSS (Tailwind CSS 4)** - `@import "tailwindcss";` 가 있는 같은 파일에 이 순서로 둡니다.
+
+```css
+/* app/globals.css (Tailwind CSS 4) */
+@import "tailwindcss";
+@import "@axis-ds/tokens/css/tailwind4";
+@import "@axis-ds/ui-react/tailwind.css";
+@import "@axis-ds/agentic-ui/tailwind.css";        /* @axis-ds/agentic-ui 를 쓸 때만 */
+@import "@axis-ds/tokens/css/brands/ontology";     /* 브랜드: 마지막 */
+```
+
+- [ ] 쓰는 컴포넌트 패키지의 `tailwind.css` 를 넣었다. 빠지면 변수는 ontology 값(`--axis-button-bg-default` #326ADA)으로 바뀌지만 Button 바탕이 투명(`rgba(0, 0, 0, 0)`)하고 둥글기 0px, PlanCard 왼쪽 색 선 0px 입니다. 넣으면 rgb(50, 106, 218) · 10px · 1px 입니다.
+- [ ] create-next-app 기본 `globals.css` 의 `:root` · `@theme inline` · `body` 블록을 지웠다([Quick Start](./quick-start.md) 「Tailwind CSS 4」).
+
+**1. 전역 CSS (Tailwind CSS 3)** - preset 과 CSS 를 함께 씁니다. 전체 설정은 [Quick Start](./quick-start.md) 「Tailwind CSS 3」에 있습니다.
+
+```ts
+// tailwind.config.ts (요점만)
+import axisPreset from "@axis-ds/tokens/tailwind"
+
+export default {
+  presets: [axisPreset],
+  content: ["./src/**/*.{ts,tsx}", "./node_modules/@axis-ds/ui-react/**/*.{js,jsx}"],
+}
+```
+
+```css
+/* globals.css (Tailwind CSS 3): @import 를 @tailwind 앞에 둡니다 */
+@import "@axis-ds/tokens/css";
+@import "@axis-ds/tokens/css/shadcn";
+@import "@axis-ds/tokens/css/brands/ontology";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+- [ ] `presets: [axisPreset]` 를 넣었다. 빠지면 브랜드를 켜도 Button 둥글기가 6px(Tailwind 기본 `rounded-md`)이고 글꼴이 Tailwind 기본(`ui-sans-serif`)입니다. 넣으면 10px · Pretendard 스택입니다.
+- [ ] `@axis-ds/tokens/css/shadcn` 을 넣었다. preset 의 `rounded-*` 는 shadcn 변수 `--radius` 를 읽으므로, 빠지면 브랜드를 켰을 때는 ontology 가 `--radius` 를 정의해 드러나지 않다가 **브랜드를 끄면 둥글기가 0px** 이 됩니다. 넣으면 켬 10px · 끔 6px 입니다.
+
+**2. 브랜드 켜기** - 둘 중 하나가 있어야 합니다. 브랜드 CSS 를 import 하는 것만으로는 화면이 바뀌지 않습니다.
+
+- [ ] `ThemeProvider` 의 `defaultBrand` 또는 `setBrand`(아래 「브랜드 적용」). 사용자가 브랜드를 끌 수 있게 하려면 `defaultBrand` 를 쓰지 않습니다(같은 절의 「`defaultBrand` 와 해제」)
+- [ ] 마크업 속성 `<html data-brand="ontology">`(아래 「Provider 없이 적용 · 첫 화면」)
+
+**3. 글꼴**
+
+- [ ] Pretendard 웹폰트를 앱에서 로드했다. 토큰 패키지는 글꼴 스택(`"Pretendard Variable"` 로 시작)만 지정하고 `@font-face` 는 담지 않습니다(1.6.0 `dist/css` 4개 파일에서 0건). 로드하지 않으면 스택의 다음 글꼴(Apple SD Gothic Neo · Malgun Gothic 등 시스템 글꼴)로 그려집니다.
+
+```bash
+pnpm add pretendard
+```
+
+```tsx
+// 앱 진입점(예: app/layout.tsx). 문서 사이트(apps/web)와 같은 방식입니다
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
+```
+
+**알아 둘 함정** (자세한 내용은 각 절)
+
+- `defaultBrand` 를 쓰면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 풀립니다(「브랜드 적용」, [WI-0068 #182](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182))
+- 브랜드 컨테이너 안쪽 요소에 `.dark` 를 붙이면 그 아래는 브랜드가 꺼진 기본 다크가 됩니다(「선택자와 다크 모드」)
+- SPA 첫 화면에서 기본 색에서 브랜드 색으로 넘어가는 전환이 보일 수 있습니다(「Provider 없이 적용 · 첫 화면」)
+
+<!-- TODO(WI-0064): 묶음 ③(WI-0037 · 0041 · 0049 · 0065, cli theme add · check) 머지 뒤 rebase 해서 여기에 `npx @axis-ds/cli theme add ontology` 가 해 주는 일 단락을 확정한다. 확인 항목: ① theme add 의 import 삽입 순서(Tailwind 3 에서 tokens/css · css/shadcn · 브랜드 순서와 @tailwind 대비 위치)가 위 체크리스트와 같은지 ② theme add 가 출력하는 Provider 예시가 defaultBrand 를 쓰는지, 쓰면 「defaultBrand 와 해제」 한계를 함께 안내하는지 ③ check 의 새 판정 항목 이름. -->
+
 ### 개념
 
-브랜드는 테마(라이트 · 다크)와 독립된 축이며, 선택자는 `data-brand` 속성입니다. 같은 브랜드 안에서 라이트 · 다크를 그대로 전환할 수 있습니다. 브랜드를 지정하지 않으면 기존 CSS 변수(`variables.css` 249개)의 값은 1.2.1과 같습니다. 다만 화면 전체가 1.2.1과 같지는 않습니다. agentic-ui의 옅은 바탕 · 테두리 복원(PlanCard 상태 배지 · 거절 버튼 hover, DiffViewer, FeedbackButtons, AttachmentCard error 테두리)으로 기본 화면 일부가 바뀌고, Card · Dialog에 그림자 색 수식어만 붙인 경우의 동작도 달라집니다. 자세한 내용은 1.3.0 릴리스 노트(`docs/workitems/WI-0025-brand-theme/release-notes.md`)의 「agentic-ui: 흰 글자 · 색 선 토큰과 옅은 바탕 복원」 · 「동작이 달라지는 사용 방식」 항목에 있습니다.
+브랜드는 테마(라이트 · 다크)와 독립된 축이며, 선택자는 `data-brand` 속성입니다. 같은 브랜드 안에서 라이트 · 다크를 그대로 전환할 수 있습니다. 브랜드를 지정하지 않으면 기본 토큰(`variables.css`, 1.6.0 기준 `:root` · `.dark` 각 263개)이 그대로 쓰입니다. 기본 토큰 값도 버전에 따라 바뀝니다. 1.6.0(WI-0029)에서는 기본 화면의 대비를 맞추려고 변수 11개 값(Button 기본 · destructive 바탕 6개, MessageBubble 사용자 바탕, 다크 보조 · 흐린 글자와 비활성 버튼 글자, PlanCard 거절 hover 글자)이 바뀌고 PlanCard 변수 3개(`--axis-plan-card-approve-bg` · `--axis-plan-card-approve-hover-bg` · `--axis-plan-card-reject-text`)가 새로 생겼습니다(`@axis-ds/tokens` CHANGELOG 1.6.0). 브랜드를 도입한 1.3.0 에서도 agentic-ui의 옅은 바탕 · 테두리 복원(PlanCard 상태 배지 · 거절 버튼 hover, DiffViewer, FeedbackButtons, AttachmentCard error 테두리)으로 기본 화면 일부가 바뀌었고, Card · Dialog에 그림자 색 수식어만 붙인 경우의 동작도 달라졌습니다. 자세한 내용은 1.3.0 릴리스 노트(`docs/workitems/WI-0025-brand-theme/release-notes.md`)의 「agentic-ui: 흰 글자 · 색 선 토큰과 옅은 바탕 복원」 · 「동작이 달라지는 사용 방식」 항목에 있습니다.
 
 - 제공 브랜드: `ontology` 하나
 - 브랜드 목록: `@axis-ds/tokens/brands` (`dist/brands/index.json`, 형식 `{ "brands": [{ "name", "css", "meta" }] }`)
@@ -240,10 +310,16 @@ Tailwind CSS 4 에서는 토큰 CSS 대신 토큰 진입점을 쓰고, 브랜드
 /* app/globals.css (Tailwind CSS 4) */
 @import "tailwindcss";
 @import "@axis-ds/tokens/css/tailwind4";             /* 토큰 변수 + preset 매핑 */
+@import "@axis-ds/ui-react/tailwind.css";            /* 컴포넌트 클래스 스캔 경로 */
+@import "@axis-ds/agentic-ui/tailwind.css";          /* @axis-ds/agentic-ui 를 쓸 때만 */
 @import "@axis-ds/tokens/css/brands/ontology";       /* 브랜드: 진입점 뒤 */
 ```
 
+컴포넌트 패키지의 `tailwind.css` 는 브랜드와 상관없이 필요합니다. Tailwind 4 는 `node_modules` 를 스캔하지 않아서, 이 줄이 없으면 컴포넌트가 쓰는 `bg-[var(--axis-button-bg-default)]` 같은 클래스가 생성되지 않습니다. 그러면 브랜드 변수는 바뀌어도 Button · PlanCard 바탕이 투명합니다(위 「브랜드 적용 빠른 시작」).
+
 진입점이 `rounded-sm|md|lg` 를 `--radius` 로, `font-mono` · `font-sans` 를 `--axis-font-family-*` 로 매핑하므로 ontology 를 적용한 요소에서는 `rounded-lg` 12px · `rounded-md` 10px 이고 `font-mono` 가 JetBrains Mono 로 시작합니다. 진입점은 토큰 변수를 base 레이어로 불러오고 브랜드 CSS 는 레이어가 없어서, 브랜드 값이 토큰 기본값을 이깁니다.
+
+Tailwind CSS 3 에서 같은 CSS 파일에 import 할 때는 `@import` 를 `@tailwind` 지시문보다 앞에 둡니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다). 위 「브랜드 적용 빠른 시작」의 값은 이 순서(`tokens/css` · `css/shadcn` · 브랜드 다음 `@tailwind` 3줄)로 잰 것입니다. 이 순서에서는 `@tailwind base` 의 preflight(`*, ::before, ::after { border: 0 solid #e5e7eb }`)가 `css/shadcn` 의 `* { border-color: hsl(var(--border)) }` 보다 뒤에 오므로, 색을 지정하지 않은 `border` 는 다크 · 브랜드에서도 gray-200(#e5e7eb)입니다(Next.js 15.5 빌드 산출 CSS 의 규칙 순서로 확인, 브라우저 계산값은 재지 않음). AXIS `--border` 색이 필요한 곳은 `border-border` 처럼 색을 지정합니다.
 
 ### 브랜드 적용
 
@@ -281,6 +357,15 @@ function BrandToggle() {
 
 `brandStorageKey`(기본 `"axis-brand"`)에 저장값이 있으면 `defaultBrand`보다 저장값이 먼저 적용됩니다. `setBrand(undefined)`는 `data-brand` 속성과 저장값을 함께 지웁니다.
 
+**`defaultBrand` 와 해제**: `defaultBrand` 를 지정하면 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤에 유지되지 않습니다. `setBrand(undefined)` 가 저장값을 지우므로 다음 마운트에서는 저장값이 없고, 그러면 `defaultBrand` 가 다시 적용되기 때문입니다(`packages/axis-theme/src/index.ts` 의 `readBrand(brandStorageKey) ?? (defaultBrand || undefined)`). 실측(1.6.0, Vite 앱): `defaultBrand="ontology"` 에서 끈 뒤 새로고침하면 다시 ontology 이고, `defaultBrand` 없이 `setBrand` 로 켜고 끄면 새로고침을 거듭해도 마지막 선택이 유지됩니다. 끈 상태를 저장할 값이 없어서, 지금은 「기본은 ontology 이면서 사용자가 끌 수 있음」을 만들 수 없습니다. 해제 상태 저장은 [WI-0068 (#182)](https://github.com/IDEA-on-Action/AXIS-Design-System/issues/182)에서 다룹니다.
+
+| 용도 | 설정 | 새로고침 뒤 |
+|---|---|---|
+| 브랜드 고정(끄지 않음) | `defaultBrand="ontology"`, 첫 화면까지 맞추려면 `<html data-brand="ontology">` 도 함께 | 늘 ontology |
+| 사용자가 켜고 끔 | `defaultBrand` 없이 `setBrand("ontology")` · `setBrand(undefined)` | 마지막 선택 유지(켠 상태는 저장값, 끈 상태는 저장값 없음). 첫 방문은 브랜드 없음 |
+
+위 `BrandToggle` 예시의 「기본」 버튼을 `defaultBrand` 와 함께 쓰면 누른 그 화면에서만 꺼지고, 새로고침하면 다시 켜집니다.
+
 ### 선택자와 다크 모드
 
 | 테마 | 선택자 |
@@ -298,7 +383,12 @@ function BrandToggle() {
 
 Tailwind 의 `dark:` 변형도 같은 `.dark` 클래스를 봅니다. Tailwind 3 preset(`darkMode: ["class"]`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라갑니다. Tailwind 4 진입점(`@axis-ds/tokens/css/tailwind4`)은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 라서 `.dark` 를 붙인 요소 자신에도 적용되고(`<div class="dark dark:bg-primary">`) 명시도를 올리지 않습니다.
 
-`[data-brand]` 조상 아래에 `.dark` 하위 요소를 두는 구성(`<div data-brand="ontology"><div class="dark">`)은 브랜드 다크 선택자에 걸리지 않습니다. 이 구성은 CSS 선택자 기준으로 판단한 것이며 E2E로 측정하지 않았습니다.
+`[data-brand]` 조상 아래에 `.dark` 하위 요소를 두는 구성(`<div data-brand="ontology"><div class="dark">`)은 **지원하지 않습니다.** 그 요소 아래에서는 브랜드가 통째로 꺼지고 기본 다크 값이 됩니다. 실측(1.6.0, Tailwind 3 · `@axis-ds/tokens/css` 구성의 Vite 앱): 그 안의 Button 바탕이 브랜드 다크(#6B98F0)가 아니라 `.dark` 만 둔 대조 요소와 같은 기본 다크 값(#2563EB)이었습니다. 하위 요소에 직접 걸리는 기본 `.dark` 규칙이 조상에서 상속된 브랜드 값을 덮기 때문입니다. Tailwind 4 진입점 구성은 재지 않았지만 같은 구조라 같을 것으로 봅니다(추정).
+
+우회는 둘 중 하나입니다.
+
+- `.dark` 를 브랜드 컨테이너 바깥(조상)에 둡니다: `<div class="dark"><div data-brand="ontology">`(실측 #6B98F0, 위 지원 구성 「`.dark` 조상 아래의 브랜드 컨테이너」)
+- `.dark` 를 붙인 요소에 `data-brand` 를 함께 붙입니다: `<div class="dark" data-brand="ontology">`(지원 구성 「같은 요소」)
 
 같은 요소에 `data-brand`와 `.dark`를 함께 붙이면, ontology 라이트 블록에만 있고 다크 블록에 없는 변수 11개 가운데 기본 `.dark`와 값이 달라지는 9개(`--axis-radius-sm|md|lg`, 글꼴 2개, PlanCard 색 선, Card 그림자 2개, shadcn `--radius` 12px)는 다크에서도 브랜드 라이트 값이 유지됩니다. 브랜드 라이트 (0,2,0)가 기본 `.dark` (0,1,0)를 이기므로 import 순서와 상관없습니다. 나머지 2개(`--axis-button-border-default` · `--axis-button-ghost-bg-default`)는 양쪽 모두 `transparent`라 화면 차이가 없습니다.
 
@@ -313,9 +403,37 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 
 서버 마크업에 `<html data-brand="ontology">`를 넣을 수도 있습니다. 문서 사이트는 next-themes(`attribute="class"`)를 쓰므로 브랜드 전환 데모(`/docs/brand-demo/`)가 이 방식으로 속성을 다룹니다.
 
-- `ThemeProvider`는 마운트 뒤 effect에서 속성을 붙이므로 첫 페인트는 기본 브랜드입니다. 첫 화면부터 브랜드를 보이려면 서버 마크업에 속성을 넣습니다.
-- 서버 마크업에 속성을 넣고 `ThemeProvider`를 함께 쓰면 같은 브랜드를 `defaultBrand`로 지정합니다. 브랜드가 `undefined`이면 `ThemeProvider`가 마운트 때 속성을 지웁니다.
+- 서버 마크업에 속성을 넣고 `ThemeProvider`를 함께 쓰면 같은 브랜드를 `defaultBrand`로 지정합니다(브랜드 고정용 조합). 브랜드가 `undefined`이면 `ThemeProvider`가 마운트 때 속성을 지웁니다.
 - 브랜드 이름은 검증하지 않습니다. 해당 브랜드 CSS를 import하지 않으면 속성이 있어도 기본 화면입니다.
+
+**첫 화면의 색 전환**: `ThemeProvider` 만 쓰는 SPA 에서는 첫 화면에서 Button 같은 요소가 기본 색에서 브랜드 색으로 넘어가는 전환이 보일 수 있습니다. 원인은 「첫 페인트가 기본 브랜드」가 아닙니다. 다시 잰 결과(Vite SPA, 10회) `data-brand` 는 첫 콘텐츠 페인트(FCP) 전에 붙었지만(10/10), 그보다 먼저 요소 스타일이 기본값으로 계산되고 나서 속성이 붙어, Button 의 `transition-colors` 가 기본 색(rgb(37, 99, 235))에서 브랜드 색(rgb(50, 106, 218))으로 약 150ms 동안 넘어갔습니다. 빈도는 조건에 따라 다릅니다(FCP 시점에 전환이 진행 중이던 비율: 처음 측정 3/10, 다른 Chromium 빌드 · 정적 서버로 다시 잰 값 6/10, CPU 1배 · 4배 모두).
+
+처방은 React 보다 먼저 속성을 붙이는 것입니다.
+
+- 서버에서 그리는 앱이고 브랜드를 고정한다면 서버 마크업에 `<html data-brand="ontology">` 를 넣습니다.
+- SPA 는 `<head>` 의 인라인 스크립트로 저장값을 붙입니다. 이 스크립트를 넣은 측정에서는 FCP 시점의 전환이 없었습니다(CPU 1배 0/9, FCP 를 수집하지 못한 1회 제외 · 4배 0/10).
+
+```html
+<!-- index.html 의 <head>, 앱 스크립트보다 앞 -->
+<script>
+  try {
+    var root = document.documentElement;
+    var brand = localStorage.getItem("axis-brand"); // ThemeProvider 의 brandStorageKey
+    if (brand) root.setAttribute("data-brand", brand);
+    var theme = localStorage.getItem("axis-theme") || "system"; // storageKey · defaultTheme
+    if (theme === "system") {
+      theme = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    root.classList.add(theme);
+    root.setAttribute("data-theme", theme);
+  } catch (e) {}
+</script>
+```
+
+- 저장값이 없으면 브랜드를 붙이지 않습니다. `defaultBrand` 없는 `ThemeProvider` 와 같은 규칙이라, 끈 상태가 새로고침 뒤에도 유지됩니다(위 「`defaultBrand` 와 해제」의 「사용자가 켜고 끔」). 여기에 `|| "ontology"` 를 더하면 `defaultBrand` 와 같은 한계(끈 상태가 새로고침 뒤 풀림)를 그대로 되풀이합니다. 브랜드를 고정하는 앱은 스크립트 대신 마크업 속성을 씁니다.
+- 키 이름과 기본값은 `ThemeProvider` 의 `brandStorageKey` · `storageKey` · `defaultTheme` 과 맞춥니다.
+- 측정에 쓴 스크립트는 저장값이 없을 때 ontology 를 붙이는 형태였습니다. 위 예시는 해제를 유지하려고 그 대체값만 뺀 것이고, 속성을 붙이는 시점은 같습니다.
+- Next.js App Router 에서 이 스크립트를 쓰는 방법(`<html>` 의 `suppressHydrationWarning` 필요 여부 등)은 재지 않았습니다.
 
 ### ontology 프리셋: 값의 출처와 접근성 보정
 
@@ -345,6 +463,7 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 - PlanCard 색 선 두께 1px, 에이전트 아바타 3색과 아바타 글자(`on-key`), Dialog overlay 기본값 유지
 - 승인 범위에 맞추려고 바꾼 값: destructive 버튼 hover · active 바탕(`bad-light`), Alert warning 테두리 · `status.error-border`(`bad`), 비활성 버튼 글자(`sub-aa`)
 - PlanCard 거절 버튼 hover 글자 `--axis-plan-card-reject-hover-text`: `status-error-strong`과 같은 값(라이트 #A8281F · 다크 #F49890)
+- PlanCard 새 변수 3개(1.6.0부터): 거절 버튼 글자 `--axis-plan-card-reject-text` 라이트 #C8332E · 다크 #F07A72, 승인 버튼 바탕 `--axis-plan-card-approve-bg` #2A2F36 · #D0D4D9, 승인 버튼 hover 바탕 `--axis-plan-card-approve-hover-bg` #111418 · #F1F3F5. 1.5.x 의 PlanCard 가 읽던 ontology `status-error` · `status-success` · `status-success-strong` 과 같은 값이라 ontology 화면은 바뀌지 않았습니다
 - 대기 · 건너뜀 상태 점 `status-neutral-muted`는 비텍스트 대비 3:1에 못 미치는 바탕이 있습니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1 · 페이지 바탕(`--background` #F7F7F7) 위 1.31:1, 다크 #5F6874는 3.12:1 · 2.83:1 · 3.37:1(#0E1013)입니다
 
 v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로 구분되지 않습니다. 상태는 글자 · 아이콘과 함께 표시합니다.
