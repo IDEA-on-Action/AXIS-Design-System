@@ -1,6 +1,6 @@
 # WI-0028: CLI · MCP 브랜드 명령 TODO
 
-> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | Testplan: [testplan.md](./testplan.md) | GitHub: #87 | 상태: 🔄 구현 · 검증 진행 (2026-10-19, P1 ~ P6 완료, AC2(b) 결정 대기 · PR 전)
+> PRD: [prd.md](./prd.md) | Plan: [plan.md](./plan.md) | Testplan: [testplan.md](./testplan.md) | GitHub: #87 | 상태: ✅ 완료 (2026-10-24, AC1 ~ AC4 · T7-2 · T7-4 npm 배포본 재측정 통과, 이슈 #87 닫기는 머지 뒤)
 
 ## 진행 순서
 
@@ -105,14 +105,24 @@
 - [x] tokens tarball `file:` 설치 프로젝트에서 `axis theme list` 가 `ontology` 출력 (**AC1**) → T6-3 (2026-10-19. 1.3.0 이 배포돼 `file:` tarball 대신 npm 레지스트리 설치본으로 판정)
 - [x] 같은 프로젝트에서 `theme info ontology` · MCP 두 도구 응답 (AC3 실데이터) → T6-4 (2026-10-19)
 - [x] 주요 토큰 목록이 ontology 산출물에 있는지, 긴 `a11y.status` 출력 폭 (plan 6.2-4 · 5) → T6-5 (2026-10-19. 라이트 12/12 · 다크 10/12, 표 한 줄 최대 141자)
-- [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제) → 2026-10-19 사용자 결정: 템플릿 파일이 같아 판정은 유효하므로 `AXIS_TEMPLATE_URL` 주입 전제로 통과로 둔다. `axis.minu.best` Cloudflare 403 이 풀리면 기본 레지스트리로 한 번 더 잰다
+- [x] 실제 `axis template init theme-only` 산출물에 `axis theme add ontology` 2회 (**AC2(a)**, plan 6.2-7) → T6-6 (2026-10-19. 기본 레지스트리 403 이라 `AXIS_TEMPLATE_URL` 로컬 서버 주입 전제) → 2026-10-19 사용자 결정: 템플릿 파일이 같아 판정은 유효하므로 `AXIS_TEMPLATE_URL` 주입 전제로 통과로 둔다. `axis.minu.best` Cloudflare 403 이 풀리면 기본 레지스트리로 한 번 더 잰다 → 2026-10-24 사용자 결정(PRD D-AC2a-2): 재확인 조건을 「pages.dev 기본 레지스트리 배포본 재측정」으로 바꿈 → 같은 날 `@axis-ds/cli@1.5.4` 로 주입 없이 재측정 통과(testplan T8-2)
 - [x] S0 은 P0 에서 fixture `sample` 로 실측함(plan 8.1). 여기서는 U2 결정(대안 2)대로 ontology 산출물로 같은 측정을 한 번 더 하고, **FR-2 위치에서 라이트 · 다크 모두 브랜드 값이 이기는지**를 확인 항목으로 둠(M3 선택자 변경 의존 확인, 음성 · 양성 대조군 포함). 라이트가 지면 진행하지 않고 보고 (plan 6.2-6) → T6-7 (2026-10-19. 라이트 · 다크 모두 이김)
 
 ## P7. 1.3.0 배포 뒤
 
 - [x] `npm view @axis-ds/tokens@1.3.0 exports --json` 에 `./brands` (plan 6.3-1) → T7-1 (2026-10-19)
-- [ ] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다 → 2026-10-19 WI-0038 브랜치(6ec4219) CLI 로 재측정 **통과**: `pnpm build` rc 0 · import 1줄 · `axis check` brand PASS · 산출 CSS `data-brand=ontology` 5건, 음성 대조군(theme add 없음) 0건 · rc 1 (WI-0038 testplan T15 · T16). cli 수정본이 npm 에 없어 CLI 만 브랜치 tarball 이므로 `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 재확인이 남음
+- [x] App Router 프로젝트 `axis theme add ontology` → `pnpm install` → `pnpm build` rc 0 + import 1줄 · check brand pass · 산출 CSS 의 `data-brand` 선택자(음성 대조군 포함) (**AC2(b)**, plan 6.3-2) → T7-2 (2026-10-19 **미통과**. 이 절차의 `pnpm build` rc 1, 원인은 기존 `axis init -y` 의 `utils.ts`(`clsx` · `tailwind-merge` 미설치). 처리 결정 대기) → 2026-10-19 사용자 결정: 원인(`axis init -y` 의 utils.ts 의존성 누락)은 이 WI 밖이라 WI-0038(#124)로 분리하고, 이 WI 는 「선행 결함으로 보류」로 기록한 채 머지한다. WI-0038 완료 뒤 같은 절차로 다시 잰다 → 2026-10-19 WI-0038 브랜치(6ec4219) CLI 로 재측정 **통과**: `pnpm build` rc 0 · import 1줄 · `axis check` brand PASS · 산출 CSS `data-brand=ontology` 5건, 음성 대조군(theme add 없음) 0건 · rc 1 (WI-0038 testplan T15 · T16). cli 수정본이 npm 에 없어 CLI 만 브랜치 tarball 이므로 `@axis-ds/cli` 1.2.1 배포 뒤 배포본으로 재확인이 남음 → 2026-10-24 npm 배포본 `@axis-ds/cli@1.5.4` 로 재측정 통과: build rc 0 · import 1줄 · check brand PASS · `data-brand=ontology` 5건, 음성 대조군 0건 · rc 1 (testplan T8-3)
 - [x] changeset: `@axis-ds/cli` · `@axis-ds/mcp` minor (plan 7장) (2026-10-19. `.changeset/wi-0028-cli-mcp-brand.md` 1개, `pnpm changeset status --verbose` 에서 둘 다 1.2.0)
 - [x] `release-notes.md` 작성 (2026-10-19)
 - [x] 품질 게이트: `turbo run build test --force` rc 0, cached 0 → T7-3 (2026-10-19)
-- [ ] PR ready → 리뷰 → 머지, 배포 뒤 npm 실측(T7-4)
+- [x] PR ready → 리뷰 → 머지, 배포 뒤 npm 실측(T7-4) (2026-10-19 cli · mcp 1.2.0 배포 #123 · run 39257199603, 기록. 2026-10-24 지금 배포본으로 재측정: cli `--version` 1.5.4, mcp `serverInfo.version` 1.3.2 · 도구 18개, testplan T8-5)
+
+## P8. 종결 (2026-10-24)
+
+- [x] PRD 에 AC2(a) 재확인 조건 변경을 결정 행으로 기록(D-AC2a-2 · D-close)
+- [x] AC1 배포본 재측정: `axis theme list` → `ontology` (T8-1)
+- [x] AC2(a) 배포본 재측정: pages.dev 기본 레지스트리, 주입 없음 (T8-2)
+- [x] AC2(b) · T7-2 배포본 재측정 (T8-3)
+- [x] **AC4 brand 어긋남 WARN 경로 배포본 직접 측정**: CLI `axis check` · MCP `axis.check_project` 에서 import 없음 · 다른 브랜드 WARN, 일치 PASS (T8-4)
+- [x] AC3 · T7-4 배포본 재측정: CLI `theme info` 와 MCP `axis.get_brand` 토큰 표 12/12 같음, 버전 · 도구 수 (T8-5)
+- [x] release-notes 현행화
