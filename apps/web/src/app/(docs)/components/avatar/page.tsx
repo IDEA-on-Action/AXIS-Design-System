@@ -1,53 +1,10 @@
 'use client'
 
+import { Avatar } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-import Image from 'next/image'
-
-// Mock Avatar 컴포넌트 (실제는 @axis-ds/ui-react에서 import)
-const sizeClasses: Record<string, string> = {
-  sm: 'h-8 w-8 text-xs',
-  default: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base',
-  xl: 'h-16 w-16 text-lg',
-}
-const sizePx: Record<string, number> = { sm: 32, default: 40, lg: 48, xl: 64 }
-
-const Avatar = ({ src, alt, fallback, size = 'default', className = '' }: any) => {
-  const initials =
-    fallback ||
-    (alt
-      ? alt
-          .split(' ')
-          .map((w: string) => w[0])
-          .join('')
-          .toUpperCase()
-          .slice(0, 2)
-      : '?')
-
-  return (
-    <div
-      className={`relative flex shrink-0 overflow-hidden rounded-full bg-muted ${sizeClasses[size]} ${className}`}
-    >
-      {src ? (
-        <Image
-          src={src}
-          alt={alt || 'Avatar'}
-          width={sizePx[size]}
-          height={sizePx[size]}
-          className="aspect-square h-full w-full object-cover"
-          unoptimized
-        />
-      ) : (
-        <span className="flex h-full w-full items-center justify-center bg-muted text-muted-foreground font-medium">
-          {initials}
-        </span>
-      )}
-    </div>
-  )
-}
 
 const avatarProps = [
   { name: 'src', type: 'string', default: '-', description: '이미지 소스 URL' },

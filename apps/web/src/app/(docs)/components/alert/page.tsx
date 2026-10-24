@@ -1,39 +1,11 @@
 'use client'
 
+import { Alert, AlertDescription, AlertTitle } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
 import { AlertCircle, CheckCircle, Info, AlertTriangle } from 'lucide-react'
-
-// Mock Alert 컴포넌트
-const variantStyles: Record<string, string> = {
-  default: 'bg-background text-foreground border-border',
-  info: 'bg-blue-50 text-blue-900 border-blue-200 dark:bg-blue-950/20 dark:text-blue-400 dark:border-blue-800',
-  success:
-    'bg-green-50 text-green-900 border-green-200 dark:bg-green-950/20 dark:text-green-400 dark:border-green-800',
-  warning:
-    'bg-yellow-50 text-yellow-900 border-yellow-200 dark:bg-yellow-950/20 dark:text-yellow-400 dark:border-yellow-800',
-  destructive:
-    'bg-red-50 text-red-900 border-red-200 dark:bg-red-950/20 dark:text-red-400 dark:border-red-800',
-}
-
-const Alert = ({ variant = 'default', className = '', children }: any) => (
-  <div
-    className={`relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 ${variantStyles[variant]} ${className}`}
-    role="alert"
-  >
-    {children}
-  </div>
-)
-
-const AlertTitle = ({ children }: any) => (
-  <h5 className="mb-1 font-medium leading-none tracking-tight">{children}</h5>
-)
-
-const AlertDescription = ({ children }: any) => (
-  <div className="text-sm [&_p]:leading-relaxed">{children}</div>
-)
 
 const alertProps = [
   {

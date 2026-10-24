@@ -1,31 +1,11 @@
 'use client'
 
-import { Button } from '@axis-ds/ui-react'
+import { Button, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-// Mock Tooltip 컴포넌트
-const TooltipProvider = ({ children }: any) => children
-const Tooltip = ({ children }: any) => <div className="relative inline-block group">{children}</div>
-const TooltipTrigger = ({ children, asChild }: any) => children
-const TooltipContent = ({ children, side = 'top' }: any) => (
-  <div
-    className={`
-    absolute z-50 hidden group-hover:block
-    px-3 py-1.5 text-xs rounded-md
-    bg-foreground text-background
-    ${side === 'top' ? 'bottom-full left-1/2 -translate-x-1/2 mb-2' : ''}
-    ${side === 'bottom' ? 'top-full left-1/2 -translate-x-1/2 mt-2' : ''}
-    ${side === 'left' ? 'right-full top-1/2 -translate-y-1/2 mr-2' : ''}
-    ${side === 'right' ? 'left-full top-1/2 -translate-y-1/2 ml-2' : ''}
-  `}
-  >
-    {children}
-  </div>
-)
 
 const tooltipContentProps = [
   {
