@@ -412,6 +412,38 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDM6ks",
       "lastSyncedAt": "2026-10-24T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0066",
+      "slug": "components-mock-pages",
+      "issueNumber": 180,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm5E",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0067",
+      "slug": "templates-axis-adoption",
+      "issueNumber": 181,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm60",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0068",
+      "slug": "theme-brand-unset-persist",
+      "issueNumber": 182,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm9o",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0069",
+      "slug": "agentic-ui-nontext-a11y",
+      "issueNumber": 183,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm_U",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-24T00:00:00.000Z"

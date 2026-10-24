@@ -63,6 +63,10 @@
 | 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
 | 76 | 브랜드 테마 가이드 현행화: 1.6.0 사실 반영(249 → 263개), Tailwind 4 컴포넌트 tailwind.css 누락, Tailwind 3 preset · shadcn CSS, defaultBrand · 다크 하위 요소 · 첫 화면 깜빡임 실측 함정(2026-10-24 브랜드 적용 점검에서 발견) | WI-0064 (#174) | P18 | P2 | ⏳ |
 | 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | ⏳ |
+| 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | ⏳ |
+| 79 | 템플릿 4종을 AXIS 토큰 · 컴포넌트 기반으로 전환(원본 `@axis-ds` 참조 0건 실측, WI-0037 에서 분리) | WI-0067 (#181) | P18 | P3 | ⏳ |
+| 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ⏳ |
+| 81 | agentic-ui 비대비 a11y 결함(aria-prohibited-attr · scrollable-region-focusable · 시각 포맷 하이드레이션, WI-0058 브리프에서 분리) | WI-0069 (#183) | P18 | P2 | ⏳ |
 
 ### 완료
 
@@ -350,6 +354,7 @@
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0037 · 0046 · 0051 · 0026 · 0062 |
 
+- 배치 2 결정(2026-10-24, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① 17페이지 교체 · approval 경로 유지 · 페이지 결함만 ② optional peer + tokens keyframes + Progress 부분 폭 + prose text-sm + reduced-motion, progress 페이지 실컴포넌트화 ③ 템플릿 app/ 구조 · Tailwind 3 유지 · init 기존 키 병합 · 실재 파일 탐색 · theme add CSS 자동 · check FAIL/WARN, cli minor · mcp patch ④ 4절 체크리스트 · quick-start Tailwind 3 블록 소유 · cli 서술은 ③ 뒤. 분리: WI-0066 · 0067 · 0068 · 0069
 - 결정 대기 부수 결함(범위 밖, 새 WI 후보): WI-0049 componentsDir 기본값이 src 없는 프로젝트에 src/ 를 만듦 · ~~WI-0054 src 변경 시 hasError 미초기화~~(2026-10-24 결정으로 WI-0054 에 포함해 수정) · 템플릿이 AXIS 토큰 대신 자체 hsl 변수를 써 WI-0029 수정이 반영 안 됐을 가능성(미측정) · theme type-check 오류 12건(WI-0034 D3 제외분)
 - 공통 허브 파일(project-todo.md · .github/wi-mapping.json)은 나중에 머지하는 쪽이 rebase 해요. 생성물(public/r · public/library · public/templates)은 손으로 병합하지 않고 생성 명령을 다시 돌려요
 
