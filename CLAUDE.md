@@ -2,7 +2,7 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: 1.5.0 | **상태**: ✅ Active Development
+**현재 버전**: ui-react · agentic-ui 1.5.2, tokens · theme 1.5.1, cli 1.5.3, mcp 1.3.1 | **상태**: ✅ Active Development
 **npm 배포**: ui-react · agentic-ui 1.5.2 · tokens · theme 1.5.1 · cli 1.5.3 · mcp 1.3.1 (2026-10-24, 병렬 배치 1 · WI-0059 · WI-0061), cli 1.5.0 (2026-10-22, axis add 레지스트리 기반 설치)
 
 ---
