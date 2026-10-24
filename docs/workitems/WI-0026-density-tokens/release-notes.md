@@ -15,7 +15,7 @@
 | `--axis-table-font-size` · `--axis-table-head-font-size` | 14 · 14px | 13.5 · 13px | Table · TableHead |
 | `--axis-radius-control` · `-field` · `-surface` | 6 · 6 · 8px(`--radius` 계산식) | 8 · 6 · 12px | Button · Toggle / Input · Select 트리거 / Card · Dialog |
 
-- 브랜드를 지정하지 않은 화면은 바뀌지 않아요(1.6.3 배포본과 Chromium 계산값 150개 대조, 차이 0).
+- 브랜드를 지정하지 않은 화면은 바뀌지 않아요(1.6.3 배포본과 Chromium 계산값 186개 대조, 줄 높이 · 표 셀 높이 포함, 차이 0). 글자 크기를 변수로 바꾸면서 빠지는 줄 높이는 크기별 `leading-4` · `leading-5` · `leading-6` 으로 1.6.x 와 같게 둬요.
 - `ontology` 를 쓰는 화면은 디자인 시스템 v1 밀도로 바뀌어요. Button 높이 40 → 34px · 둥글기 10 → 8px, Input · Select 트리거 높이 40 → 36px · 둥글기 10 → 6px, Toggle 둥글기 10 → 8px, Table 본문 14 → 13.5px · 머리 14 → 13px, 큰 버튼 48 → 42px · 16 → 15px, 작은 버튼 32 → 27px · 12 → 13px. Card · Dialog 12px, Toggle 높이, Sheet 0px, Select 팝업 · Popover 등 나머지 컴포넌트(10px)는 그대로예요.
 
 ## 업그레이드
@@ -27,6 +27,6 @@
 
 ## 검증 요약
 
-- 브랜드 미지정 계산값: 1.6.3 대비 차이 0(1280px · 375px). ontology 기대값 33항목 일치. Tailwind 4.1 과 3.4 결과가 같음(232값).
+- 브랜드 미지정 계산값: 1.6.3 대비 차이 0(1280px · 375px). ontology 기대값 33항목 일치. Tailwind 4.1 과 3.4 결과가 같음(308값).
 - 정적 검사: 대상 4개 소스에 고정 높이 클래스 0, fallback 15종이 tokens 기본값과 같은 길이.
 - 상세는 [testplan.md](./testplan.md).

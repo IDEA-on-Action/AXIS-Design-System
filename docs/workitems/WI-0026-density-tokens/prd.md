@@ -47,6 +47,7 @@
 | Q1 | 아이콘 버튼은 `--axis-control-h-md` 로 높이 · 너비를 함께 | 프로토타입 `.o-iconbtn` 34x34 |
 | lg | ontology lg 42px · 15px | 프로토타입 `.o-btn.lg` |
 | select-h | Select 트리거는 `--axis-field-h`(ontology 36px) | 입력과 같은 높이. 프로토타입 select 38px 는 UA 상자 차이로 봐요(추정) |
+| line-height | `text-sm` 같은 크기 클래스를 `text-[length:var(...)]` 로 바꾸면 줄 높이가 빠지므로 크기별 `leading-4` · `leading-5` · `leading-6` 을 명시해요(Button sm · default · lg, Input, Table). 줄 높이 토큰은 만들지 않아요 | 1.6.3 의 줄 높이 16 · 20 · 24px 를 그대로 유지(review 지적, 측정). 토큰은 범위 밖이라 ontology 도 같은 줄 높이예요 |
 | Q4 | ontology 는 Toggle 높이를 덮어쓰지 않아요(기본값 36 · 40 · 44px 를 같은 값으로 명시, D4 결정 36 의 완전성 규칙) | 프로토타입에 대응 요소 없음 |
 | Q5 | field 둥글기는 control 과 따로(입력 6px · 버튼 8px) | 프로토타입 `.o-input` 6px · `.o-btn` 8px |
 | Q6 | 표 머리 전용 토큰 `--axis-table-head-font-size`(기본 14px, ontology 13px) | 프로토타입 th 13px · td 13.5px |
@@ -74,7 +75,7 @@
 
 ## 4. 수용 기준 (Acceptance Criteria)
 
-- AC1: 브랜드 미지정에서 대상 7개(와 Sheet · Select 팝업)의 계산 높이 · 너비 · 최소 너비 · 글자 · 둥글기가 1.6.3 배포본과 같아요(Chromium 1280x720 · 375x720, 표 · 카드 · 팝업 높이처럼 글꼴에 따라 달라지는 값은 제외).
+- AC1: 브랜드 미지정에서 대상 7개(와 Sheet · Select 팝업)의 계산 높이 · 너비 · 최소 너비 · 글자 · 줄 높이 · 둥글기가 1.6.3 배포본과 같아요(Chromium 1280x720 · 375x720, 같은 글꼴로 대조, 표 · 표 셀 높이 포함, 카드 · 팝업 · Dialog 높이는 내용에 따라 달라 제외).
 - AC2: `data-brand="ontology"` 에서 Button sm · default · lg 27 · 34 · 42px(글자 13 · 14 · 15px), icon 34x34, Input · Select 트리거 36px, Table 본문 13.5px · 머리 13px, 둥글기 Button · Toggle 8px · Input · Select 트리거 6px · Card · Dialog 12px, Toggle 36 · 40 · 44px, Sheet 0px(브라우저 계산값).
 - AC3: Button · Input · Select · Toggle 소스에 `h-(8|9|10|11|12)` · `min-w-(9|10|11)` 고정 크기 클래스가 없어요(경계 있는 정적 검사, `max-h-96` · `h-4` 는 잡지 않음). TableHead `h-12` 는 대상 밖이에요.
 - AC4: 컴포넌트 fallback 15종이 tokens 기본값과 같은 길이예요(`--radius` 0.5rem 으로 계산). 밀도 토큰을 참조하는 파일은 대상 7개뿐이에요.
@@ -104,3 +105,4 @@
 | v0.1~v0.3 | 2026-10-15 | 초안(세부는 git 이력) |
 | v0.4 | 2026-10-16 | 디자인 기준 v0.24 교체, field 높이 · 표 머리 Q6 추가 |
 | v1.0 | 2026-10-25 | 배치 3 결정(2절) 반영, 전제 정정(1.4), Sheet 제외 · lg · 이름 변경, AC1 기준 1.6.3, AC4 · AC5 추가 |
+| v1.1 | 2026-10-25 | review 지적: AC1 에 줄 높이 · 표 높이 포함, 결정 line-height 추가 |

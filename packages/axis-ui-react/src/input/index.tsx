@@ -18,7 +18,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <input
         type={type}
         className={cn(
-          "flex h-[var(--axis-field-h,2.5rem)] w-full rounded-[var(--axis-radius-field,0.375rem)] border px-3 py-2 text-[length:var(--axis-control-font-size-md,0.875rem)] transition-colors",
+          "flex h-[var(--axis-field-h,2.5rem)] w-full rounded-[var(--axis-radius-field,0.375rem)] border px-3 py-2 text-[length:var(--axis-control-font-size-md,0.875rem)] leading-5 transition-colors",
           "bg-[var(--axis-input-bg-default)] text-[var(--axis-input-text-default)]",
           "border-[var(--axis-input-border-default)]",
           "placeholder:text-[var(--axis-input-text-placeholder)]",

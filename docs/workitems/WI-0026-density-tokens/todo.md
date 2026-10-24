@@ -16,8 +16,9 @@
 - [x] 문서: `docs/guides/theme-customization.md` 밀도 토큰 절 + ontology 10px 서술 5곳 갱신
 
 ## 테스트
-- [x] AC1: 1.6.3 배포본 대비 브랜드 미지정 150값 차이 0(Chromium 1280 · 375)
-- [x] AC2: ontology 33항목 일치, Tailwind 4.1 · 3.4 232값 차이 0
+- [x] AC1: 1.6.3 배포본 대비 브랜드 미지정 186값(줄 높이 · 표 높이 포함) 차이 0(Chromium 1280 · 375)
+- [x] review 지적: 크기별 `leading-4|5|6` 명시(Button · Input · Table), 줄 높이 테스트 3건 · 단위 단언 추가, 생성물 재생성
+- [x] AC2: ontology 33항목 일치, Tailwind 4.1 · 3.4 308값 차이 0
 - [x] AC5: variables.css 단독 fallback 6 · 6 · 8px 실측
 - [x] 변이 3종 · 단위 테스트
 

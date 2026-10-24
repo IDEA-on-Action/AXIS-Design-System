@@ -16,14 +16,14 @@
       "type": "registry:ui",
       "title": "Button",
       "description": "AXIS 버튼 컴포넌트 - 다양한 variant와 size 지원",
-      "sha256": "f19bc1f2e6d6026232f0fad919533bff3a13d2688f811ea84ab0bdd3b71c4d93"
+      "sha256": "d91188d37506555c183238fe49ec938dd36244086b9ec6c21d3c92fafdfae510"
     },
     {
       "name": "input",
       "type": "registry:ui",
       "title": "Input",
       "description": "AXIS 입력 필드 컴포넌트",
-      "sha256": "4b393471c0d5cbc3577a42087c97e0dd1dbb593e1d5465e8fea7d955e28b1bbb"
+      "sha256": "d11f23e2c4b4bafb51368d910cc0f796357162172ef644fa17e04909df2de46f"
     },
     {
       "name": "label",

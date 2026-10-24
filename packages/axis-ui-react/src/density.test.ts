@@ -8,6 +8,8 @@
  *   기본값이 tokens(JSON → CSS)와 컴포넌트 두 곳에 있으므로, 한쪽만 바뀌면 여기서 빨개진다.
  *   둥글기 기본값은 `--radius`(shadcn-compat.css 0.5rem) 계산식이라 0.5rem 을 넣어 계산한다.
  * - 대상 범위: 밀도 토큰을 참조하는 파일은 정확히 7개(Sheet 제외 결정)이고, 토큰 15개를 빠짐없이 쓴다.
+ * - 줄 높이: `text-sm` 같은 크기 클래스는 font-size 와 line-height 를 함께 주지만 `text-[length:...]` 는 font-size 만 준다.
+ *   그래서 글자 크기 임의값 바로 뒤에 `leading-*` 를 둔다(1.6.3 의 줄 높이 유지). TableHead 는 Table 의 줄 높이를 물려받아 뺀다.
  * - 변수 이름은 `var(...)` 형태로만 적는다. scripts/check-token-refs.mjs 가 테스트 파일도 읽어, 그 밖의 형태는 「판정 불가」다.
  */
 import { readdirSync, readFileSync } from "node:fs";
@@ -81,6 +83,40 @@ describe("AC3 고정 크기 클래스 정적 검사", () => {
     const src = read(file);
     expect(src.length).toBeGreaterThan(0);
     expect([...src.matchAll(FIXED_SIZE)].map((m) => m[0])).toEqual([]);
+  });
+});
+
+describe("글자 크기 임의값의 줄 높이", () => {
+  const FONT_ARB = /text-\[length:[^\]]+\]( leading-[\w.]+)?/g;
+  const found = DENSITY_FILES.flatMap((file) =>
+    [...read(file).matchAll(FONT_ARB)].map((m) => ({ file, cls: m[0], leading: m[1]?.trim() })),
+  );
+
+  it("검사 패턴 대조: 줄 높이가 붙은 것과 없는 것을 가른다", () => {
+    const t = (s: string) => [...s.matchAll(FONT_ARB)].map((m) => m[1]?.trim() ?? null);
+    expect(t('"text-[length:var(--a,1rem)] leading-6 x" "text-[length:var(--b,1rem)] font-medium"')).toEqual(["leading-6", null]);
+  });
+
+  it("글자 크기 임의값이 읽힌다 (양성 대조: 0 이면 측정 실패)", () => {
+    expect(found.length).toBeGreaterThanOrEqual(6);
+  });
+
+  it("TableHead 를 뺀 모든 글자 크기 임의값 뒤에 1.6.3 과 같은 줄 높이가 있다", () => {
+    // text-xs · text-sm · text-base 의 줄 높이 1rem · 1.25rem · 1.5rem
+    const want: Record<string, string> = {
+      [nameOf("var(--axis-control-font-size-sm)")]: "leading-4",
+      [nameOf("var(--axis-control-font-size-md)")]: "leading-5",
+      [nameOf("var(--axis-control-font-size-lg)")]: "leading-6",
+      [nameOf("var(--axis-table-font-size)")]: "leading-5",
+    };
+    const head = nameOf("var(--axis-table-head-font-size)");
+    const named = found.map((f) => ({ ...f, name: /var\((--[a-z][a-z-]*)/.exec(f.cls)?.[1] }));
+    expect(named.filter((f) => !f.name).map((f) => f.cls)).toEqual([]);
+    expect(named.filter((f) => f.name === head).length).toBe(1);
+    const bad = named
+      .filter((f) => f.name !== head && f.leading !== want[f.name!])
+      .map((f) => `${f.file} ${f.cls}`);
+    expect(bad).toEqual([]);
   });
 });
 
