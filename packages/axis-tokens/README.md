@@ -49,7 +49,7 @@ Tailwind CSS 4(`@import "tailwindcss"`, create-next-app 15.5 기본)에서는 �
 **Tailwind 3 preset 과 다르게 동작하는 것**
 
 - `dark:` 변형은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 입니다. Tailwind 3 preset(`darkMode: ['class']`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라가지만, 이 진입점은 `.dark` 를 붙인 요소 자신에도 적용되고 명시도를 올리지 않습니다.
-- 색을 지정하지 않은 `border` · `border-t` 는 이 진입점이 base 레이어로 불러오는 `* { border-color: hsl(var(--border)) }` 때문에 AXIS `--border` 색입니다. Tailwind 3 preset 은 preflight 의 gray-200(`#e5e7eb`)입니다(`@axis-ds/tokens/css/shadcn` 을 따로 import 하지 않을 때). 기본 라이트에서는 둘 다 rgb(229,231,235) 로 같지만, 다크(`--border` rgb(31,41,55))와 ontology 브랜드(라이트 rgb(230,232,235) · 다크 rgb(43,47,53))에서는 Tailwind 3 과 다른 색이 됩니다.
+- 색을 지정하지 않은 `border` · `border-t` 는 이 진입점이 base 레이어로 불러오는 `* { border-color: hsl(var(--border)) }` 때문에 AXIS `--border` 색입니다. Tailwind 3 preset 은 preflight 의 gray-200(`#e5e7eb`)입니다(`@axis-ds/tokens/css/shadcn` 을 `@tailwind` 앞에 import 해도 preflight 가 뒤에 와서 같습니다). 기본 라이트에서는 둘 다 rgb(229,231,235) 로 같지만, 다크(`--border` rgb(31,41,55))와 ontology 브랜드(라이트 rgb(230,232,235) · 다크 rgb(43,47,53))에서는 Tailwind 3 과 다른 색이 됩니다.
 
 ### Tailwind CSS 3 Preset
 
@@ -62,6 +62,23 @@ export default {
   content: ['./src/**/*.{ts,tsx}'],
 }
 ```
+
+preset 은 색 · `rounded-*` 를 shadcn 호환 변수(`--primary` · `--radius` 등)로 매핑하므로, 전역 CSS 에 토큰 CSS 와 `@axis-ds/tokens/css/shadcn` 을 함께 import 합니다. `@import` 는 `@tailwind` 지시문보다 앞에 둡니다.
+
+```css
+/* globals.css */
+@import '@axis-ds/tokens/css';
+@import '@axis-ds/tokens/css/shadcn';
+@import '@axis-ds/tokens/css/brands/ontology'; /* 브랜드를 쓸 때만 */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+```
+
+- `@axis-ds/tokens/css/shadcn` 이 빠지면 `--radius` 가 정의되지 않아 `rounded-*` 가 0px 입니다. 브랜드를 켠 화면에서는 브랜드 CSS 가 `--radius` 를 정의해 드러나지 않다가 브랜드를 끄면 나타납니다.
+- 브랜드는 CSS import 만으로 켜지지 않습니다. `ThemeProvider` 없이 쓰면 `<html data-brand="ontology">`, `@axis-ds/theme` 의 `ThemeProvider` 를 쓰면 `defaultBrand="ontology"` 나 `setBrand("ontology")` 로 켭니다. `ThemeProvider` 만 두면 마운트 때 `data-brand` 를 지워 꺼집니다.
+- 글꼴은 스택(`"Pretendard Variable"` 로 시작)만 지정하고 웹폰트(`@font-face`)는 담지 않습니다. Pretendard 는 앱에서 로드합니다(예: `pretendard` npm 패키지).
 
 preset 은 `@axis-ds/ui-react` Accordion · Progress 가 쓰는 keyframes(`animate-accordion-down` · `animate-accordion-up` · `animate-progress-indeterminate`)도 정의합니다. preset 을 쓰지 않는 앱은 같은 정의만 가져올 수 있습니다.
 
