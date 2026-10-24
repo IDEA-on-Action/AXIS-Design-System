@@ -7,13 +7,21 @@
 import fetch from "node-fetch";
 import fs from "fs-extra";
 import path from "path";
-import { inspectBrandActivation, inspectBrandImport, type BrandActivationCheck, type BrandImportCheck } from "./brand-core.js";
+import {
+  THEME_MARKUP_BRAND_MIN_VERSION,
+  inspectBrandActivation,
+  inspectBrandImport,
+  type BrandActivationCheck,
+  type BrandImportCheck,
+} from "./brand-core.js";
 import {
   checkAnimationPlugin,
   checkGlobalsCss,
   checkTailwindContent,
   checkTailwindSetup,
+  versionGateLabel,
 } from "@axis-ds/registry-core/tailwind-core";
+import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
@@ -336,6 +344,19 @@ function brandCheckResult(check: BrandImportCheck): CheckResult {
  * (packages/axis-cli/src/template/template-check.ts)와 같은 문구입니다.
  */
 function brandActivationResult(check: BrandActivationCheck): CheckResult {
+  if (check.found && check.theme && check.theme.status !== "ok") {
+    // WI-0068: 마크업 data-brand + ThemeProvider(켜는 코드 없음)는 theme 1.6.2 이하에서 마운트 때 브랜드를 지웁니다
+    const label = versionGateLabel(check.theme);
+    const why =
+      check.theme.status === "below"
+        ? `@axis-ds/theme ${label} 의 ThemeProvider 가 마운트 때 지웁니다`
+        : `@axis-ds/theme 버전을 확인하지 못했습니다(${label}). ${THEME_MARKUP_BRAND_MIN_VERSION} 미만이면 ThemeProvider 가 마운트 때 지웁니다`;
+    return {
+      name: "brand.activation",
+      severity: "warn",
+      message: `${check.found}의 <html data-brand> 를 ${why} → @axis-ds/theme ${THEME_MARKUP_BRAND_MIN_VERSION} 이상으로 올리거나 setBrand("${check.brand}")`,
+    };
+  }
   if (check.found) {
     return {
       name: "brand.activation",
@@ -406,42 +427,8 @@ export async function handleCheckProject(
     });
   }
 
-  // 5. package.json 의존성
-  const pkgPath = path.join(baseDir, "package.json");
-  if (await fs.pathExists(pkgPath)) {
-    const pkg = await fs.readJSON(pkgPath);
-    const allDeps = { ...pkg.dependencies, ...pkg.devDependencies };
-    const required = ["tailwindcss"];
-    const recommended = ["clsx", "tailwind-merge"];
-    const missingRequired = required.filter((d) => !allDeps[d]);
-    const missingRecommended = recommended.filter((d) => !allDeps[d]);
-
-    if (missingRequired.length > 0) {
-      results.push({
-        name: "dependencies",
-        severity: "fail",
-        message: `필수 의존성 누락: ${missingRequired.join(", ")}`,
-      });
-    } else if (missingRecommended.length > 0) {
-      results.push({
-        name: "dependencies",
-        severity: "warn",
-        message: `권장 의존성 누락: ${missingRecommended.join(", ")}`,
-      });
-    } else {
-      results.push({
-        name: "dependencies",
-        severity: "pass",
-        message: "필수 및 권장 의존성이 모두 설치되어 있습니다",
-      });
-    }
-  } else {
-    results.push({
-      name: "dependencies",
-      severity: "fail",
-      message: "package.json 파일이 없습니다",
-    });
-  }
+  // 5. package.json 의존성: 선언 + 설치본(CLI 와 같은 코어, WI-0051)
+  results.push(checkDependencies(baseDir));
 
   // 6. brand 와 CSS import 대조 (WI-0028 FR-5, brand 가 없으면 추가하지 않음)
   const brandCheck = inspectBrandImport(baseDir);

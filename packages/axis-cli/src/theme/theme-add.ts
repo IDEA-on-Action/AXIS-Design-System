@@ -22,6 +22,7 @@ import {
   BRAND_NAME_PATTERN,
   MIN_BRAND_TOKENS_VERSION,
   TOKENS_DEPENDENCY_MIN_VERSION,
+  THEME_PACKAGE,
   TOKENS_PACKAGE,
   brandImportPath,
   findBrandActivation,
@@ -38,8 +39,8 @@ export const TOKENS_DEPENDENCY_RANGE = `^${TOKENS_DEPENDENCY_MIN_VERSION}`;
 /** Tailwind 3 이하에서 브랜드 import 앞에 넣는 기본 토큰 CSS(WI-0065 D7, 순서: variables → shadcn → 브랜드) */
 export const TAILWIND3_BASE_IMPORTS = [`${TOKENS_PACKAGE}/css`, `${TOKENS_PACKAGE}/css/shadcn`] as const;
 
-/** Provider 안내에 쓰는 패키지 */
-export const THEME_PACKAGE = "@axis-ds/theme";
+/** Provider 안내에 쓰는 패키지(WI-0068 부터 brand-core 가 원본, 종전 이름 그대로 내보냄) */
+export { THEME_PACKAGE };
 
 /** `ThemeProvider` 의 브랜드 기능(`brand` · `setBrand`)이 처음 들어간 `@axis-ds/theme` 버전 */
 export const THEME_MIN_VERSION = "1.3.0";

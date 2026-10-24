@@ -63,6 +63,16 @@ export default {
 }
 ```
 
+CommonJS 설정(`module.exports` · `.cjs`)에서는 1.7.0 부터 `require('@axis-ds/tokens/tailwind')` 가 preset 자체를 돌려줍니다. 1.6.2 이하는 `{ default }` 를 돌려줘 `.default` 없이 넣으면 preset 이 통째로 빠지므로(1.1.0 부터의 결함), 여러 버전에서 같은 설정을 쓰려면 `.default` 를 붙입니다. `require(...).default` 는 1.7.0 에서도 같은 preset 입니다.
+
+```js
+// tailwind.config.js (CommonJS)
+module.exports = {
+  presets: [require('@axis-ds/tokens/tailwind').default],
+  content: ['./src/**/*.{js,jsx}'],
+}
+```
+
 preset 은 색 · `rounded-*` 를 shadcn 호환 변수(`--primary` · `--radius` 등)로 매핑하므로, 전역 CSS 에 토큰 CSS 와 `@axis-ds/tokens/css/shadcn` 을 함께 import 합니다. `@import` 는 `@tailwind` 지시문보다 앞에 둡니다.
 
 ```css
@@ -77,7 +87,7 @@ preset 은 색 · `rounded-*` 를 shadcn 호환 변수(`--primary` · `--radius`
 ```
 
 - `@axis-ds/tokens/css/shadcn` 이 빠지면 `--radius` 가 정의되지 않아 `rounded-*` 가 0px 입니다. 브랜드를 켠 화면에서는 브랜드 CSS 가 `--radius` 를 정의해 드러나지 않다가 브랜드를 끄면 나타납니다.
-- 브랜드는 CSS import 만으로 켜지지 않습니다. `ThemeProvider` 없이 쓰면 `<html data-brand="ontology">`, `@axis-ds/theme` 의 `ThemeProvider` 를 쓰면 `defaultBrand="ontology"` 나 `setBrand("ontology")` 로 켭니다. `ThemeProvider` 만 두면 마운트 때 `data-brand` 를 지워 꺼집니다.
+- 브랜드는 CSS import 만으로 켜지지 않습니다. `<html data-brand="ontology">` 나 `@axis-ds/theme` 의 `ThemeProvider` 에 `defaultBrand="ontology"` · `setBrand("ontology")` 로 켭니다. `ThemeProvider` 1.6.2 이하는 브랜드 상태가 비면 마운트 때 마크업 `data-brand` 를 지우므로 그 버전에서는 `defaultBrand` 나 `setBrand` 가 필요합니다(1.7.0 부터 마크업을 초기값으로 읽음).
 - 글꼴은 스택(`"Pretendard Variable"` 로 시작)만 지정하고 웹폰트(`@font-face`)는 담지 않습니다. Pretendard 는 앱에서 로드합니다(예: `pretendard` npm 패키지).
 
 preset 은 `@axis-ds/ui-react` Accordion · Progress 가 쓰는 keyframes(`animate-accordion-down` · `animate-accordion-up` · `animate-progress-indeterminate`)도 정의합니다. preset 을 쓰지 않는 앱은 같은 정의만 가져올 수 있습니다.
