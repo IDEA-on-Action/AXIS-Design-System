@@ -21,7 +21,7 @@
 | cli `dist/index.js` (`withoutUpdatedAt`) | 구조 분해 나머지 → 얕은 복사 뒤 `delete updatedAt` | 남는 키와 그 순서가 같아 `serialize` 결과가 같아요 |
 | cli `dist/index.js` (`generateIndex`) | `for (const [source, collector] ...)` → `[, collector]` | 같은 Map 순회 |
 | cli 청크(`registerSyncCommand`) | `printItemResult(itemResult, options.verbose)` → `printItemResult(itemResult)`, 인자 `verbose` 삭제 | 함수 안에서 `verbose` 를 쓰지 않았어요(`--verbose` 옵션 자체는 그대로) |
-| cli · mcp `dist/index.js` (registry-core 번들) | BOM 제거 정규식 `/^<U+FEFF 문자>/` → `/^﻿/` | 같은 한 글자 |
+| cli · mcp `dist/index.js` (registry-core 번들) | BOM 제거 정규식 `/^<U+FEFF 문자>/` → `/^\uFEFF/` | 같은 한 글자 |
 | mcp `dist/index.js` (prompt 도구 4곳) | `[\w\-\/]` → `[\w\-/]` | 문자 클래스 안 `/` 는 이스케이프가 필요 없어요(코드포인트 전수 대조 차이 0) |
 | mcp `dist/index.js` (prompt 도구 2곳) | `[\-\*]` → `[-*]` | 맨 앞 `-` 와 클래스 안 `*` 는 글자 그대로(전수 대조 차이 0) |
 | mcp `dist/index.js` (detect) | `calculateRepeatability(text, _context)` · `calculateScores(text, context)` 의 미사용 인자 삭제 | 안에서 쓰지 않았어요. 바깥 `handleDetect` 의 `context` 검사 · 분할은 그대로예요 |
