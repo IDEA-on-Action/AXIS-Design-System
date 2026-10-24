@@ -70,6 +70,7 @@
 | 82 | cli `check` · `theme add` 판정 정확도: animation(import 만 있고 plugins 비어도 PASS) · globals.css(자체 HSL 변수에도 PASS) 거짓 PASS, 재실행 「브랜드 앞」 문구, Tailwind 3 body 글꼴 안내(배치 2 배포 후 재측정에서 발견, 배치 3 WI-0051 과 합류) | WI-0070 (#189) | P18 | P2 | ⏳ |
 | 83 | 움직임 줄이기 설정에서 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · ThinkingIndicator 등 11곳)가 멈춰 앱이 멈춘 것처럼 보임 → 멈추지 않고 2~3배 느리게, 열고 닫기 · Accordion 11곳은 계속 정지(2026-10-25 사용자 결정, WI-0046 후속) | WI-0071 (#190) | P18 | P2 | ✅ 완료(2026-10-25). ui-react · agentic-ui 1.6.3(#192 · #193, run 40127935334, provenance), npm 배포본에 reduce 느린 주기(2.5 · 3 · 4 · 5초) 클래스 확인 |
 | 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ⏳ |
+| 85 | Tooltip 이 스크롤에 닫혀 화면 밖 트리거로 Tab 이동 시 바로 사라짐(WCAG 1.4.13 후보, WI-0066 브리프에서 발견) | WI-0073 (#194) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -355,6 +356,7 @@
 | 4 | ① WI-0060 library slug ② WI-0062 + 0063 + 0069 대비 · 비대비 ③ WI-0067 템플릿 AXIS 전환 | linked minor 또는 patch · cli patch | 전제: WI-0071 머지(그 PR 에 public/templates churn 이 없는지 확인). ③ → ① → ②. ② 는 ontology-pairs.mjs(줄 번호 대조 표)를 커밋마다 갱신 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿 | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0051 + 0070 + 0068 · 0026 · 0062 · 0063 · 0067. PRD 전제(defaultBrand · 고정 5항목 · AC5 게이트) 갱신 필요 |
 
+- 배치 3 결정(2026-10-25, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① WI-0072 tokens CJS 진입점이 preset 자체를 내보냄(이름 내보내기 non-enumerable · .d.cts) + cli 안내 CJS 는 `.default` + check 는 module.exports · .cjs 일 때만 WARN(결함은 1.1.0 부터). WI-0068 해제 센티널 "" · 초기값 저장값 > 마크업 data-brand > defaultBrand(사용자 결정: 마크업 우선) · check 는 theme 버전 분기. WI-0051 설치본 상위 탐색 + WARN, 판독 함수 registry-core 하나. WI-0070 plugins 배열 판독 · globals.css 는 AXIS 근거(--axis- · tokens CSS import · 레이아웃 JS import) 필요(템플릿 4종 WARN 은 WI-0067 까지 수용) ② WI-0026 Q3 (나) 대상 8개 직접 참조 · Sheet 제외 · component 최상위 토큰 · 리터럴 fallback · 아이콘 버튼 control-h-md · ontology lg 42/15 · Select field 36 · Toggle 미덮어씀 · field 둥글기 별도 · 표 머리 전용 토큰 · KEY_TOKENS 미추가 ③ WI-0066 mock 교체만 · PAGES 유지. 릴리스: theme minor 로 linked 1.7.0, cli · mcp patch. 새 WI-0073(#194) Tooltip 지속성은 배치 4 a11y 묶음
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

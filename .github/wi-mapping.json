@@ -468,6 +468,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDQnCk",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0073",
+      "slug": "tooltip-scroll-persistence",
+      "issueNumber": 194,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDQ7zs",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T00:00:00.000Z"

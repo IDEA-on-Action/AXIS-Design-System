@@ -23,4 +23,4 @@
 - [x] changeset `.changeset/wi-0071-reduced-motion-slow-loading.md`(ui-react · agentic-ui patch, tokens · theme 소스 변경 없음)
 - [x] 게이트: `turbo run type-check lint test build --force`(Cached 0) · frontend.yml run 단계
 - [x] PR 생성 · 머지 · 배포(#192 · #193, 2026-10-25, npm ui-react · agentic-ui 1.6.3 provenance, 배포본 클래스 확인)
-- [ ] 배포 뒤 발행본(ui-react · agentic-ui) 을 소비자에 설치해 testplan 2절 다시 재기
+- [x ] 배포 뒤 발행본(ui-react · agentic-ui) 을 소비자에 설치해 testplan 2절 다시 재기 (2026-10-25 완료: npm 1.6.3 · Tailwind 3.4 · 4.1 소비자, 28항목 testplan 과 일치 · 불일치 0, PlanCard · MessageBubble · StepTimeline 첫 실측)
