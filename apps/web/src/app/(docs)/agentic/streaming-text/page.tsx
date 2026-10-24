@@ -2,28 +2,11 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { StreamingText } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock StreamingText 컴포넌트
-const StreamingText = ({
-  text,
-  isComplete,
-  showCursor = true,
-}: {
-  text: string
-  isComplete?: boolean
-  showCursor?: boolean
-}) => (
-  <div className="relative">
-    <span className="text-foreground whitespace-pre-wrap">{text}</span>
-    {showCursor && !isComplete && (
-      <span className="inline-block w-0.5 h-4 ml-0.5 bg-foreground animate-pulse" />
-    )}
-  </div>
-)
 
 const streamingTextProps = [
   { name: 'text', type: 'string', required: true, description: '표시할 텍스트 내용' },
@@ -31,6 +14,7 @@ const streamingTextProps = [
   { name: 'isComplete', type: 'boolean', default: 'false', description: '스트리밍 완료 여부' },
   { name: 'showCursor', type: 'boolean', default: 'true', description: '커서 표시 여부' },
   { name: 'onComplete', type: '() => void', default: '-', description: '완료 콜백' },
+  { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
 ]
 
 const basicExample = `import { StreamingText } from '@axis-ds/agentic-ui'

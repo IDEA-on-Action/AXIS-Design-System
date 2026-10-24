@@ -2,75 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { CodeBlock as AgenticCodeBlock } from '@axis-ds/agentic-ui'
 import { CodeBlock as DocCodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-const AgenticCodeBlock = ({
-  code,
-  language,
-  filename,
-  showLineNumbers = false,
-  onCopy,
-  maxHeight,
-}: {
-  code: string
-  language?: string
-  filename?: string
-  showLineNumbers?: boolean
-  onCopy?: (code: string) => void
-  maxHeight?: string
-}) => {
-  const [copied, setCopied] = useState(false)
-  const lines = code.split('\n')
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(code)
-    setCopied(true)
-    onCopy?.(code)
-    setTimeout(() => setCopied(false), 2000)
-  }
-
-  return (
-    <div className="rounded-lg border overflow-hidden bg-[#1e1e1e] text-gray-100">
-      {(filename || language) && (
-        <div className="flex items-center justify-between px-3 py-1.5 bg-[#2d2d2d] border-b border-[#404040]">
-          <div className="flex items-center gap-2">
-            {filename && <span className="text-xs text-gray-400">{filename}</span>}
-            {language && !filename && <span className="text-xs text-gray-500">{language}</span>}
-          </div>
-          <button
-            onClick={handleCopy}
-            className="text-xs text-gray-400 hover:text-gray-200 transition-colors px-2 py-0.5 rounded hover:bg-white/10"
-          >
-            {copied ? '✓ 복사됨' : '복사'}
-          </button>
-        </div>
-      )}
-      <div
-        className={`overflow-auto ${maxHeight ? '' : ''}`}
-        style={maxHeight ? { maxHeight } : undefined}
-      >
-        <pre className="p-3 text-sm font-mono leading-relaxed">
-          <code>
-            {lines.map((line, i) => (
-              <div key={i} className="flex">
-                {showLineNumbers && (
-                  <span className="select-none text-gray-600 text-right w-8 mr-3 flex-shrink-0">
-                    {i + 1}
-                  </span>
-                )}
-                <span className="flex-1">{line || '\n'}</span>
-              </div>
-            ))}
-          </code>
-        </pre>
-      </div>
-    </div>
-  )
-}
 
 const codeBlockProps = [
   { name: 'code', type: 'string', required: true, description: '표시할 코드 문자열' },

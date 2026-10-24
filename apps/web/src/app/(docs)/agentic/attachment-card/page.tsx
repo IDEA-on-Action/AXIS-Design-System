@@ -2,85 +2,12 @@
 
 import { useState } from 'react'
 import { Button } from '@axis-ds/ui-react'
+import { AttachmentCard, type AttachmentType, type AttachmentStatus } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-type AttachmentType = 'image' | 'document' | 'code' | 'archive' | 'other'
-type AttachmentStatus = 'uploading' | 'complete' | 'error'
-
-const AttachmentCard = ({
-  type,
-  name,
-  size,
-  status = 'complete',
-  progress,
-  onRemove,
-}: {
-  type: AttachmentType
-  name: string
-  size?: number
-  status?: AttachmentStatus
-  progress?: number
-  onRemove?: () => void
-}) => {
-  const typeIcons: Record<AttachmentType, string> = {
-    image: '🖼️',
-    document: '📄',
-    code: '💻',
-    archive: '📦',
-    other: '📎',
-  }
-
-  const typeColors: Record<AttachmentType, string> = {
-    image: 'bg-purple-50 border-purple-200',
-    document: 'bg-blue-50 border-blue-200',
-    code: 'bg-green-50 border-green-200',
-    archive: 'bg-yellow-50 border-yellow-200',
-    other: 'bg-gray-50 border-gray-200',
-  }
-
-  const formatSize = (bytes: number) => {
-    if (bytes < 1024) return `${bytes} B`
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
-    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
-  }
-
-  return (
-    <div className={`rounded-lg border p-3 flex items-center gap-3 ${typeColors[type]}`}>
-      <div className="text-2xl flex-shrink-0">{typeIcons[type]}</div>
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium truncate">{name}</p>
-        <div className="flex items-center gap-2">
-          {size && <span className="text-xs text-muted-foreground">{formatSize(size)}</span>}
-          {status === 'uploading' && (
-            <span className="text-xs text-blue-600">{progress ?? 0}%</span>
-          )}
-          {status === 'error' && <span className="text-xs text-red-500">업로드 실패</span>}
-        </div>
-        {status === 'uploading' && (
-          <div className="w-full h-1 rounded-full bg-gray-200 mt-1.5 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-blue-500 transition-all"
-              style={{ width: `${progress ?? 0}%` }}
-            />
-          </div>
-        )}
-      </div>
-      {onRemove && status !== 'uploading' && (
-        <button
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-foreground text-sm flex-shrink-0"
-          aria-label="삭제"
-        >
-          ✕
-        </button>
-      )}
-    </div>
-  )
-}
 
 const attachmentCardProps = [
   {

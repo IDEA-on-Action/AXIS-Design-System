@@ -13,8 +13,8 @@ const agenticComponents = [
     href: '/agentic/tool-call-card'
   },
   {
-    name: 'ApprovalDialog',
-    description: '사용자 승인 요청 다이얼로그',
+    name: 'ApprovalCard',
+    description: '사용자 승인 요청 카드',
     href: '/agentic/approval-dialog'
   },
   {

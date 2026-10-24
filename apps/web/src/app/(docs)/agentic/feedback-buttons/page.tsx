@@ -1,62 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { FeedbackButtons, type FeedbackType } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-type FeedbackType = 'like' | 'dislike' | 'none'
-
-const FeedbackButtons = ({
-  messageId,
-  initialFeedback = 'none',
-  onFeedback,
-  size = 'sm',
-}: {
-  messageId: string
-  initialFeedback?: FeedbackType
-  onFeedback?: (messageId: string, feedback: FeedbackType) => void
-  size?: 'sm' | 'md'
-}) => {
-  const [feedback, setFeedback] = useState<FeedbackType>(initialFeedback)
-
-  const handleFeedback = (type: 'like' | 'dislike') => {
-    const next = feedback === type ? 'none' : type
-    setFeedback(next)
-    onFeedback?.(messageId, next)
-  }
-
-  const sizeStyles = size === 'md' ? 'h-9 w-9 text-lg' : 'h-7 w-7 text-sm'
-
-  return (
-    <div className="inline-flex items-center gap-1 rounded-lg border p-0.5">
-      <button
-        onClick={() => handleFeedback('like')}
-        className={`${sizeStyles} rounded-md flex items-center justify-center transition-colors ${
-          feedback === 'like'
-            ? 'bg-green-100 text-green-600'
-            : 'hover:bg-muted text-muted-foreground'
-        }`}
-        aria-label="좋아요"
-      >
-        👍
-      </button>
-      <button
-        onClick={() => handleFeedback('dislike')}
-        className={`${sizeStyles} rounded-md flex items-center justify-center transition-colors ${
-          feedback === 'dislike'
-            ? 'bg-red-100 text-red-600'
-            : 'hover:bg-muted text-muted-foreground'
-        }`}
-        aria-label="싫어요"
-      >
-        👎
-      </button>
-    </div>
-  )
-}
 
 const feedbackProps = [
   { name: 'messageId', type: 'string', required: true, description: '메시지 고유 식별자' },
