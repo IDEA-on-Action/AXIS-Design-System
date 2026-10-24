@@ -51,7 +51,7 @@
 | 63 | `axis check` · MCP 의 dependencies 항목이 선언만 보고 「설치되어 있습니다」로 표시(WI-0044 배포본 확인에서 발견) | WI-0051 (#144) | P18 | P3 | ⏳ |
 | 64 | agentic-ui `StreamingText` 가 첫 글자를 빼고 끝에 `undefined` 를 붙여 표시(WI-0050 검증에서 발견) | WI-0052 (#146) | P18 | P2 | ✅ 완료(2026-10-24). agentic-ui 1.5.1(#160 · #163), 배포본 React 19 StrictMode 켬 · 끔 모두 「스트리밍 완료 문장」(1.5.0 은 undefined 반복 · 빈 화면) |
 | 65 | 서브패스 타입 해석 실패: moduleResolution node 에서 `@axis-ds/ui-react/avatar` 등 타입 미해석(typesVersions 부재, WI-0050 검증에서 발견) | WI-0053 (#147) | P18 | P2 | ✅ 완료(2026-10-24). tokens · ui-react · agentic-ui 1.5.1(#161 · #163), 배포본으로 Next 가 만든 node tsconfig 앱 next build rc 0, 필수 prop 누락은 rc 1 |
-| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | 🔄 PR 대기(2026-10-24 구현 · 검증 완료, 배포 전). 마운트 시 `complete && naturalWidth 0` 후보를 `decode()` 거부로 확정 · src 변경 시 오류 상태 초기화. SSR 하이드레이션 실측 chromium · firefox · webkit 수정 전 img 유지 → 수정 후 fallback, 크기 0 SVG 오판 없음. ui-react patch changeset |
+| 66 | `Avatar` 가 하이드레이션 전에 난 이미지 로드 오류를 fallback 으로 바꾸지 못함(WI-0050 검증에서 발견) | WI-0054 (#148) | P18 | P3 | ✅ 완료(2026-10-24). ui-react · agentic-ui 1.6.1(#177 · #179, run 40100713780, provenance), npm 배포본 avatar.mjs 에 마운트 판정 포함 확인 |
 | 67 | MCP `axis.install_component` · `list_components` 가 레지스트리를 읽지 않고 하드코딩 5개만 설치(WI-0045 실측에서 분리) | WI-0055 (#150) | P18 | P2 | ✅ 완료(2026-10-24). mcp 1.3.0 · cli 1.5.2(#164 · #163), 배포본 list 28 · install 기본 배치, D13 config 사설 주소 요청 0건(env 양성 대조 3건) |
 | 68 | `axis.minu.best`(403) 참조가 레지스트리 밖 경로(템플릿 기본 주소 · `$schema` · add 안내 링크 · library 수집기 · 루트 components.json 별칭 · mcp template)에 남음(WI-0045 검증에서 분리) | WI-0056 (#151) | P18 | P2 | ✅ 완료(2026-10-23). cli 1.5.1 · mcp 1.2.3 배포(#154 · #156, run 39869322957, provenance), pages.dev schema.json 200 · ajv 검증 통과, 배포본 template list · mcp list_templates 42개. 정식 주소 pages.dev 유지(Pages 프로젝트 삭제 · 이름 변경 금지) |
 | 69 | library 데이터(`apps/web/public/library/**`)에 지금 없는 agentic 항목 6개가 남고 approval-card 문서 링크 경로가 틀려 404(WI-0056 검증에서 분리) | WI-0057 (#155) | P18 | P3 | ✅ 완료(2026-10-24). cli 1.5.2(#162 · #163), 프로덕션 library 링크 109개 모두 2xx, 오프라인 검사 위반 0 |
@@ -348,7 +348,7 @@
 
 | 배치 | 묶음(브랜치) | 릴리스 | 머지 순서 · 근거 |
 |------|------|------|------|
-| 1 | ① 종결 · 문서: WI-0028(AC2(a) 조건을 pages.dev 배포본 재측정으로 변경 + AC4 WARN 경로 재측정 뒤 종결) · WI-0040(guidance.test.ts 회귀 방지 + 양성 대조 픽스처 뒤 종결) · WI-0048 ② WI-0054 Avatar ③ WI-0039 cli · mcp 품질 게이트 | 문서 배포 없음 · ui-react · agentic-ui patch · cli · mcp patch(선택) | ① → ② → ③. ③ 이 뒤 cli WI 들의 lint · type-check 게이트가 돼요 |
+| 1 ✅ | ① 종결 · 문서: WI-0028(AC2(a) 조건을 pages.dev 배포본 재측정으로 변경 + AC4 WARN 경로 재측정 뒤 종결) · WI-0040(guidance.test.ts 회귀 방지 + 양성 대조 픽스처 뒤 종결) · WI-0048 ② WI-0054 Avatar ③ WI-0039 cli · mcp 품질 게이트 | 문서 배포 없음 · ui-react · agentic-ui patch · cli · mcp patch(선택) | ① → ② → ③. ③ 이 뒤 cli WI 들의 lint · type-check 게이트가 돼요 |
 | 2 | ① WI-0058 agentic 문서 실컴포넌트 ② WI-0046 애니메이션 · keyframes ③ WI-0037 + 0041 + 0049 + 0065 init · 템플릿 · theme add(2026-10-24 WI-0065 합류) ④ WI-0064 브랜드 가이드 현행화(문서, ③ 의 cli 동작 변경 뒤 서술을 맞춤) | linked patch · cli patch | ① → ② → ③. ① 은 WI-0062 사이트 측정의 선행(머지 전 a11y 게이트 1회), ③ 셋은 init 파일을 같이 고침, ② 는 init.test.ts 가 읽는 quick-start 를 고쳐 머지 전 cli 테스트 필수 |
 | 3 | ① WI-0051 check 의존성 판정 ② WI-0060 library slug 충돌 ③ WI-0026 밀도 토큰 | linked minor(1.7.0) · cli · mcp patch | ① → ② → ③. ③ 은 library 를 ② 의 새 구조 위에서 다시 만듦 |
 | 4 | WI-0062 + 0063 텍스트 · 비텍스트 대비 잔여(한 브랜치) | linked minor 또는 patch | WI-0026 과 같은 토큰 · 폼 컴포넌트를 고쳐 그 뒤 |
