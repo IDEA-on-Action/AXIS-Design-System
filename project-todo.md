@@ -63,7 +63,7 @@
 | 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
 | 76 | 브랜드 테마 가이드 현행화: 1.6.0 사실 반영(249 → 263개), Tailwind 4 컴포넌트 tailwind.css 누락, Tailwind 3 preset · shadcn CSS, defaultBrand · 다크 하위 요소 · 첫 화면 깜빡임 실측 함정(2026-10-24 브랜드 적용 점검에서 발견) | WI-0064 (#174) | P18 | P2 | ✅ 완료(2026-10-25). 문서(npm 없음)(#188 · #187, run 40110014386, provenance), 배포본 실측 통과(브랜드 적용 · 템플릿 4종 · 문서 사이트) |
 | 77 | cli `theme add` · `check` 가 브랜드 적용 전제(Provider · 기본 토큰 CSS · preset · content 경로 · 패키지 매니저)를 처리 · 판정하지 않아 cli 만으로는 Button 이 투명(2026-10-24 브랜드 적용 점검에서 발견) | WI-0065 (#175) | P18 | P2 | ✅ 완료(2026-10-25). cli 1.6.0 · mcp 1.3.3(#186 · #187, run 40110014386, provenance), 배포본 실측 통과(브랜드 적용 · 템플릿 4종 · 문서 사이트) |
-| 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | ⏳ |
+| 78 | 문서 사이트 `/components` mock 페이지(avatar · alert · skeleton · tooltip)를 실제 컴포넌트로(progress 는 WI-0046 에서, 배치 2 브리프에서 분리) | WI-0066 (#180) | P18 | P3 | 🔄 구현 · 검증 완료(2026-10-25), PR 대기 |
 | 79 | 템플릿 4종을 AXIS 토큰 · 컴포넌트 기반으로 전환(원본 `@axis-ds` 참조 0건 실측, WI-0037 에서 분리) | WI-0067 (#181) | P18 | P3 | ⏳ |
 | 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ⏳ |
 | 81 | agentic-ui 비대비 a11y 결함(aria-prohibited-attr · scrollable-region-focusable · 시각 포맷 하이드레이션, WI-0058 브리프에서 분리) | WI-0069 (#183) | P18 | P2 | ⏳ |

@@ -1,14 +1,10 @@
 'use client'
 
+import { Skeleton } from '@axis-ds/ui-react'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock Skeleton 컴포넌트
-const Skeleton = ({ className = '' }: any) => (
-  <div className={`animate-pulse rounded-md bg-muted ${className}`} />
-)
 
 const skeletonProps = [
   {
