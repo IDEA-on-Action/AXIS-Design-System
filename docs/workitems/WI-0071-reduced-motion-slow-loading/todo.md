@@ -22,5 +22,5 @@
 - [x] `build:registry`(version 1.5.0 유지, agentic 7항목 sha256) · `library:refresh-axis`(재실행 변경 0) · 템플릿 churn 되돌림
 - [x] changeset `.changeset/wi-0071-reduced-motion-slow-loading.md`(ui-react · agentic-ui patch, tokens · theme 소스 변경 없음)
 - [x] 게이트: `turbo run type-check lint test build --force`(Cached 0) · frontend.yml run 단계
-- [ ] PR 생성 · 머지 · 배포
+- [x] PR 생성 · 머지 · 배포(#192 · #193, 2026-10-25, npm ui-react · agentic-ui 1.6.3 provenance, 배포본 클래스 확인)
 - [ ] 배포 뒤 발행본(ui-react · agentic-ui) 을 소비자에 설치해 testplan 2절 다시 재기

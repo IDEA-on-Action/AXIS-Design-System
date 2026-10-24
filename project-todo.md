@@ -68,7 +68,7 @@
 | 80 | ThemeProvider `defaultBrand` 사용 시 `setBrand(undefined)` 해제가 새로고침 뒤 풀림(WI-0064 에서 분리) | WI-0068 (#182) | P18 | P3 | ⏳ |
 | 81 | agentic-ui 비대비 a11y 결함(aria-prohibited-attr · scrollable-region-focusable · 시각 포맷 하이드레이션, WI-0058 브리프에서 분리) | WI-0069 (#183) | P18 | P2 | ⏳ |
 | 82 | cli `check` · `theme add` 판정 정확도: animation(import 만 있고 plugins 비어도 PASS) · globals.css(자체 HSL 변수에도 PASS) 거짓 PASS, 재실행 「브랜드 앞」 문구, Tailwind 3 body 글꼴 안내(배치 2 배포 후 재측정에서 발견, 배치 3 WI-0051 과 합류) | WI-0070 (#189) | P18 | P2 | ⏳ |
-| 83 | 움직임 줄이기 설정에서 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · ThinkingIndicator 등 11곳)가 멈춰 앱이 멈춘 것처럼 보임 → 멈추지 않고 2~3배 느리게, 열고 닫기 · Accordion 11곳은 계속 정지(2026-10-25 사용자 결정, WI-0046 후속) | WI-0071 (#190) | P18 | P2 | 🔄 PR 대기 |
+| 83 | 움직임 줄이기 설정에서 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · ThinkingIndicator 등 11곳)가 멈춰 앱이 멈춘 것처럼 보임 → 멈추지 않고 2~3배 느리게, 열고 닫기 · Accordion 11곳은 계속 정지(2026-10-25 사용자 결정, WI-0046 후속) | WI-0071 (#190) | P18 | P2 | ✅ 완료(2026-10-25). ui-react · agentic-ui 1.6.3(#192 · #193, run 40127935334, provenance), npm 배포본에 reduce 느린 주기(2.5 · 3 · 4 · 5초) 클래스 확인 |
 | 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ⏳ |
 
 ### 완료
