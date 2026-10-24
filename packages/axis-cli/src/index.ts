@@ -3,7 +3,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import { createRequire } from "module";
-import { MonetClient, MONET_CATEGORIES } from "./monet.js";
+import { MonetClient } from "./monet.js";
 import { V0Client } from "./v0.js";
 import { LibraryCurator, Publisher, registerRefreshAxisCommand } from "./library/index.js";
 import { registerSyncCommand } from "./sync/index.js";

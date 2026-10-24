@@ -23,7 +23,8 @@
     "clean": "rm -rf dist",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
-    "prepublishOnly": "pnpm build"
+    "prepublishOnly": "pnpm build",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

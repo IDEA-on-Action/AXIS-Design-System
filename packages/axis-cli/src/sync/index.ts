@@ -20,7 +20,6 @@ import type {
   SyncItemResult,
   WorkItem,
   LocalStatus,
-  STATUS_MAP,
   ProjectV2Info,
 } from './types.js';
 
@@ -176,7 +175,7 @@ async function runSync(options: SyncOptions): Promise<void> {
           break;
       }
 
-      printItemResult(itemResult, options.verbose);
+      printItemResult(itemResult);
     }
 
     // 7. 매핑 파일 저장
@@ -328,7 +327,7 @@ async function syncWorkItem(
 /**
  * 항목별 결과 출력
  */
-function printItemResult(result: SyncItemResult, verbose?: boolean): void {
+function printItemResult(result: SyncItemResult): void {
   const statusIcons = {
     create: chalk.green('+'),
     update: chalk.yellow('~'),

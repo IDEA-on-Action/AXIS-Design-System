@@ -18,6 +18,8 @@ class TestCollector extends BaseCollector {
   }
 
   async collectComponent(id: string): Promise<ComponentMeta> {
+    // 목록에 없는 id 로 부르면 조용히 button 을 주지 않고 실패시킵니다(목록의 id 는 모두 같은 button 스텁)
+    if (!["test-button", "test-input"].includes(id)) throw new Error(`TestCollector 가 모르는 id: ${id}`);
     const codeFiles: CodeFile[] = [
       { path: "button.tsx", content: "export const Button = () => <button>Click</button>", type: "component" },
     ];

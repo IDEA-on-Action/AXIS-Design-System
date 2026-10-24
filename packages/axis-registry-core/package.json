@@ -18,7 +18,8 @@
     "./utils-deps": "./src/utils-deps.ts"
   },
   "scripts": {
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "dependencies": {
     "fs-extra": "^11.2.0"

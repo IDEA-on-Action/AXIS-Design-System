@@ -468,7 +468,7 @@ describe("add: 덮어쓰기(D3, AC3)", () => {
 
   it("대화형은 다른 파일마다 묻고 답대로 처리", async () => {
     const { dir, file, modified } = await withModifiedButton();
-    const no = vi.fn(async (_message: string) => false);
+    const no = vi.fn<(message: string) => Promise<boolean>>(async () => false);
     const r1 = await add(dir, ["button"], {}, { confirm: no });
     expect(no).toHaveBeenCalledTimes(1);
     expect(no.mock.calls[0][0]).toContain("src/components/ui/button.tsx");

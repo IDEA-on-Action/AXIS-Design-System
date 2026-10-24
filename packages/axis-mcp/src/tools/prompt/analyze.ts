@@ -70,7 +70,7 @@ const CATEGORY_KEYWORDS: Record<PromptCategory, string[]> = {
  * 프로젝트 종속 패턴
  */
 const PROJECT_PATTERNS = {
-  path: /(?:src|packages|apps|lib|components)\/[\w\-\/]+\.(?:ts|tsx|js|jsx|md)/gi,
+  path: /(?:src|packages|apps|lib|components)\/[\w\-/]+\.(?:ts|tsx|js|jsx|md)/gi,
   name: /\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b/g,
   version: /\b\d+\.\d+\.\d+(?:-[\w.]+)?\b/g,
   date: /\b\d{4}-\d{2}-\d{2}\b/g,
@@ -98,7 +98,7 @@ function calculateRepeatability(text: string): {
   }
 
   // 리스트 구조
-  const listCount = (text.match(/^[\-\*]\s/gm) || []).length;
+  const listCount = (text.match(/^[-*]\s/gm) || []).length;
   const numberedCount = (text.match(/^\d+\.\s/gm) || []).length;
   if (listCount + numberedCount >= 5) {
     score += 8;

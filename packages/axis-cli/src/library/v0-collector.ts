@@ -53,7 +53,6 @@ export class V0Collector extends BaseCollector {
       // V0 코드인지 확인
       if (this.isV0Code(content)) {
         const name = path.basename(file, path.extname(file));
-        const relativePath = path.relative(this.v0Directory, file);
 
         items.push({
           id: `v0-${this.generateSlug(name)}`,

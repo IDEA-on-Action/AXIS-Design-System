@@ -4,9 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs-extra";
-import path from "path";
 import { Publisher } from "./publisher.js";
-import type { LibraryIndex, ComponentMeta } from "./types.js";
+import type { LibraryIndex } from "./types.js";
 
 // fs-extra 모킹
 vi.mock("fs-extra", () => ({
@@ -19,6 +18,11 @@ vi.mock("fs-extra", () => ({
     remove: vi.fn().mockResolvedValue(undefined),
   },
 }));
+
+// fs-extra 의 pathExists 는 콜백 오버로드가 마지막이라 vi.mocked 가 반환 타입을 void 로 잡아요.
+// 프로미스 오버로드로 좁혀 mockResolvedValue(boolean) 를 실제 타입대로 씁니다(같은 모의 함수 참조).
+const pathExistsMock = vi.mocked(fs.pathExists as (path: string) => Promise<boolean>);
+
 
 // 테스트용 인덱스 데이터
 const mockIndex: LibraryIndex = {
@@ -38,11 +42,10 @@ const mockIndex: LibraryIndex = {
       source: { type: "shadcn", registry: "@shadcn", url: "https://ui.shadcn.com" },
       category: "ui",
       tags: ["ui", "interactive"],
-      code: [{ path: "button.tsx", content: "export const Button = () => {}", type: "component" }],
-      dependencies: [],
-      status: "stable",
+      code: { files: [{ path: "button.tsx", content: "export const Button = () => {}", type: "component" }], dependencies: [], devDependencies: [], registryDeps: [] },
+      status: "active",
       checksum: "abc123",
-      createdAt: "2026-01-01",
+      collectedAt: "2026-01-01",
       updatedAt: "2026-01-23",
     },
     {
@@ -53,11 +56,10 @@ const mockIndex: LibraryIndex = {
       source: { type: "shadcn", registry: "@shadcn", url: "https://ui.shadcn.com" },
       category: "ui",
       tags: ["ui", "container"],
-      code: [{ path: "card.tsx", content: "export const Card = () => {}", type: "component" }],
-      dependencies: [],
-      status: "stable",
+      code: { files: [{ path: "card.tsx", content: "export const Card = () => {}", type: "component" }], dependencies: [], devDependencies: [], registryDeps: [] },
+      status: "active",
       checksum: "def456",
-      createdAt: "2026-01-01",
+      collectedAt: "2026-01-01",
       updatedAt: "2026-01-23",
     },
     {
@@ -68,11 +70,10 @@ const mockIndex: LibraryIndex = {
       source: { type: "axis", registry: "@axis", url: "https://axis-design-system.pages.dev" },
       category: "agentic",
       tags: ["agentic", "streaming"],
-      code: [{ path: "streaming-text.tsx", content: "export const StreamingText = () => {}", type: "component" }],
-      dependencies: [],
-      status: "stable",
+      code: { files: [{ path: "streaming-text.tsx", content: "export const StreamingText = () => {}", type: "component" }], dependencies: [], devDependencies: [], registryDeps: [] },
+      status: "active",
       checksum: "ghi789",
-      createdAt: "2026-01-01",
+      collectedAt: "2026-01-01",
       updatedAt: "2026-01-23",
     },
   ],
@@ -116,32 +117,32 @@ describe("Publisher", () => {
     it("should write index.json", async () => {
       await publisher.publish(mockIndex);
 
-      const calls = (fs.writeFile as any).mock.calls;
-      const indexCall = calls.find((call: string[]) => call[0].includes("index.json"));
+      const calls = vi.mocked(fs.writeFile).mock.calls;
+      const indexCall = calls.find((call) => String(call[0]).includes("index.json"));
       expect(indexCall).toBeDefined();
     });
 
     it("should write category files", async () => {
       await publisher.publish(mockIndex);
 
-      const calls = (fs.writeFile as any).mock.calls;
-      const categoryFiles = calls.filter((call: string[]) => call[0].includes("categories"));
+      const calls = vi.mocked(fs.writeFile).mock.calls;
+      const categoryFiles = calls.filter((call) => String(call[0]).includes("categories"));
       expect(categoryFiles.length).toBeGreaterThan(0);
     });
 
     it("should write component files", async () => {
       await publisher.publish(mockIndex);
 
-      const calls = (fs.writeFile as any).mock.calls;
-      const componentFiles = calls.filter((call: string[]) => call[0].includes("components"));
+      const calls = vi.mocked(fs.writeFile).mock.calls;
+      const componentFiles = calls.filter((call) => String(call[0]).includes("components"));
       expect(componentFiles.length).toBe(3);
     });
 
     it("should generate search index", async () => {
       await publisher.publish(mockIndex, { generateSearchIndex: true });
 
-      const calls = (fs.writeFile as any).mock.calls;
-      const searchCall = calls.find((call: string[]) => call[0].includes("search-index.json"));
+      const calls = vi.mocked(fs.writeFile).mock.calls;
+      const searchCall = calls.find((call) => String(call[0]).includes("search-index.json"));
       expect(searchCall).toBeDefined();
     });
 
@@ -149,17 +150,17 @@ describe("Publisher", () => {
       const customDir = "custom/output/dir";
       await publisher.publish(mockIndex, { outputDir: customDir });
 
-      const ensureDirCalls = (fs.ensureDir as any).mock.calls;
-      const hasCustomDir = ensureDirCalls.some((call: string[]) => call[0].includes(customDir));
+      const ensureDirCalls = vi.mocked(fs.ensureDir).mock.calls;
+      const hasCustomDir = ensureDirCalls.some((call) => String(call[0]).includes(customDir));
       expect(hasCustomDir).toBe(true);
     });
 
     it("should minify output when option is set", async () => {
       await publisher.publish(mockIndex, { minify: true });
 
-      const calls = (fs.writeFile as any).mock.calls;
+      const calls = vi.mocked(fs.writeFile).mock.calls;
       // 압축된 JSON은 줄바꿈이 없음
-      const hasMinified = calls.some((call: string[]) => {
+      const hasMinified = calls.some((call) => {
         const content = call[1];
         return typeof content === "string" && !content.includes("\n");
       });
@@ -169,26 +170,26 @@ describe("Publisher", () => {
 
   describe("clean", () => {
     it("should remove output directory", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       await publisher.clean();
       expect(fs.remove).toHaveBeenCalled();
     });
 
     it("should not fail if directory does not exist", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(false);
+      pathExistsMock.mockResolvedValue(false);
       await expect(publisher.clean()).resolves.not.toThrow();
     });
   });
 
   describe("getStatus", () => {
     it("should return exists: false when no deployment", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(false);
+      pathExistsMock.mockResolvedValue(false);
       const status = await publisher.getStatus();
       expect(status.exists).toBe(false);
     });
 
     it("should return status when deployment exists", async () => {
-      vi.mocked(fs.pathExists).mockResolvedValue(true);
+      pathExistsMock.mockResolvedValue(true);
       vi.mocked(fs.readJson).mockResolvedValue({
         updatedAt: "2026-01-23T10:00:00Z",
         stats: { total: 10 },

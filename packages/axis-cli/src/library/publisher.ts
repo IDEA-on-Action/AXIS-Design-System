@@ -11,7 +11,7 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import type { LibraryIndex, ComponentMeta, CategoryDefinition } from "./types.js";
+import type { LibraryIndex, ComponentMeta } from "./types.js";
 
 // 배치 옵션
 export interface PublishOptions {

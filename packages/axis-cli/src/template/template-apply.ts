@@ -148,12 +148,13 @@ export async function initTemplate(
   // 디렉토리 결정
   let targetDir = options.dir;
   if (!targetDir) {
-    const { dir } = await prompts({
+    // prompts 응답은 any 라 대입해도 targetDir 이 string 으로 좁혀지지 않아요. 응답 타입을 명시합니다
+    const { dir } = (await prompts({
       type: "text",
       name: "dir",
       message: "프로젝트 디렉토리:",
       initial: selectedSlug,
-    });
+    })) as { dir?: string };
     if (!dir) {
       console.log(chalk.gray("취소되었습니다."));
       return;

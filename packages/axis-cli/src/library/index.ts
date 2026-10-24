@@ -130,7 +130,7 @@ export class LibraryCurator {
     const components: ComponentMeta[] = [];
 
     // 모든 소스에서 컴포넌트 수집
-    for (const [source, collector] of this.collectors) {
+    for (const [, collector] of this.collectors) {
       try {
         const list = await collector.listComponents();
         for (const item of list) {
