@@ -122,8 +122,8 @@
       "slug": "default-text-contrast",
       "issueNumber": 94,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhBKROs",
-      "lastSyncedAt": "2026-10-16T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "🔄"
     },
     {
       "wiId": "WI-0030",
@@ -380,6 +380,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDIPvE",
       "lastSyncedAt": "2026-10-24T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0062",
+      "slug": "text-contrast-remaining",
+      "issueNumber": 170,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDI2dk",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0063",
+      "slug": "nontext-contrast",
+      "issueNumber": 171,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDI2ek",
+      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-24T00:00:00.000Z"

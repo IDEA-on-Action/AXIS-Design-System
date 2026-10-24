@@ -34,7 +34,7 @@
 | 38 | 밀도 토큰(컨트롤 높이 · 글자 크기 · 단계별 둥글기) | WI-0026 (#85) | P17 | P2 | ⏳ |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` | WI-0027 (#86) | P17 | P2 | ⏳ |
 | 40 | CLI · MCP 브랜드 명령(`axis theme list\|add\|info`, `axis.list_brands` · `axis.get_brand`) | WI-0028 (#87) | P17 | P3 | 🔄 cli · mcp 1.2.0 배포(2026-10-19, #123 · run 39257199603). AC2(b) 는 cli 1.2.1 배포본으로 통과(2026-10-20, init -> theme add ontology -> install -> build rc 0, check brand PASS), AC2(a) 는 minu.best 403 해소 뒤 기본 레지스트리로 재확인 |
-| 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | ⏳ |
+| 41 | 기본 테마 흰 글자 대비 미달 해소 (기본 Button #3B82F6 위 3.68:1 등) | WI-0029 (#94) | P18 | P2 | 🔄 PRD 승인(2026-10-24, 컴포넌트 한정 재지정 · linked minor) |
 | 43 | NPM_TOKEN 만료 대응: npm Trusted Publishing(OIDC) 전환 (cli · mcp 등록은 다음 릴리스 직전) | WI-0031 (#96) | P18 | P2 | ✅ |
 | 44 | `.claude/worktrees/` 경로 gitignore | WI-0032 (#97) | P18 | P3 | ✅ |
 | 45 | 다크 모드 component 토큰 재정의 누락 해소 (Card 흰 바탕 등, WI-0025 M3 머지 전 선행) | WI-0033 (#99) | P18 | P1 | ✅ |
@@ -59,6 +59,8 @@
 | 71 | node10 해석에서 ui-react cva 변형 prop 타입이 any 로 떨어짐(`class-variance-authority/types`, WI-0053 에서 분리) | WI-0059 (#158) | P18 | P2 | ✅ 완료(2026-10-24). ui-react · agentic-ui 1.5.2(#165 · #166, run 40044378744, provenance), 배포본 Next(node) `variant="nope"` rc 1 · 올바른 값 rc 0. 업데이트 뒤 타입 오류 가능성은 CHANGELOG 에 안내 |
 | 72 | library 데이터 slug 충돌 10개로 shadcn 상세에 axis 코드 표시(WI-0057 에서 분리) | WI-0060 (#159) | P18 | P3 | ⏳ |
 | 73 | ui-react 만 릴리스하면 cli 가 「원격 · 포함본 version 다름」을 매번 안내(레지스트리 version 이 ui-react 를 따름, WI-0059 배포 확인에서 발견) | WI-0061 (#167) | P18 | P2 | ✅ 완료(2026-10-24). cli 1.5.3 · mcp 1.3.1(#168 · #169, run 40048194529, provenance), pages.dev 1.5.2 대상 배포본 list 안내 없음(cli 1.5.2 는 「version 이 다릅니다」) |
+| 74 | 텍스트 대비 잔여 쌍(Toast opacity · tertiary hover/focus · AgentAvatar · RunProgress pending · DiffViewer 등)과 a11y 측정 범위 확대(PAGES 밖 11페이지 · axe incomplete, WI-0029 조사에서 분리) | WI-0062 (#170) | P18 | P2 | ⏳ |
+| 75 | 비텍스트 대비(WCAG 1.4.11) 미달: 폼 컨트롤 경계 · 포커스 링 · Progress 막대 · 상태 아이콘(WI-0029 조사에서 분리) | WI-0063 (#171) | P18 | P3 | ⏳ |
 
 ### 완료
 
