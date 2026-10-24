@@ -118,6 +118,16 @@ describe("글자 크기 임의값의 줄 높이", () => {
       .map((f) => `${f.file} ${f.cls}`);
     expect(bad).toEqual([]);
   });
+
+  it("TableHead 는 줄 높이를 직접 정하지 않고 Table 의 leading-5 를 물려받는다(1.6.3 과 같은 20px)", () => {
+    const src = read("table/index.tsx");
+    const head = /const TableHead = [\s\S]*?className=\{cn\(([\s\S]*?)className\s*\)/.exec(src)?.[1];
+    const table = /const Table = [\s\S]*?className=\{cn\(([\s\S]*?)className\s*\)/.exec(src)?.[1];
+    expect(head, "TableHead className 을 읽지 못함(측정 실패)").toBeTruthy();
+    expect(table, "Table className 을 읽지 못함(측정 실패)").toBeTruthy();
+    expect(head).not.toMatch(/\bleading-/);
+    expect(table).toMatch(/\bleading-5\b/);
+  });
 });
 
 describe("밀도 토큰 fallback 정합", () => {

@@ -75,7 +75,7 @@
 
 ## 4. 수용 기준 (Acceptance Criteria)
 
-- AC1: 브랜드 미지정에서 대상 7개(와 Sheet · Select 팝업)의 계산 높이 · 너비 · 최소 너비 · 글자 · 줄 높이 · 둥글기가 1.6.3 배포본과 같아요(Chromium 1280x720 · 375x720, 같은 글꼴로 대조, 표 · 표 셀 높이 포함, 카드 · 팝업 · Dialog 높이는 내용에 따라 달라 제외).
+- AC1: 브랜드 미지정에서 대상 7개(와 Sheet · Select 팝업)의 계산 높이 · 너비 · 최소 너비 · 글자 · 줄 높이 · 둥글기가 1.6.3 배포본과 같아요(Chromium 1280x720 · 375x720, 같은 글꼴로 대조, 표 · 표 셀 · 카드 · 팝업 · Dialog 높이 포함. 2026-10-25 독립 재검토에서 Tailwind 3 · 4 x 라이트 · 다크 각 750값(padding 4방향 포함) 차이 0 실측).
 - AC2: `data-brand="ontology"` 에서 Button sm · default · lg 27 · 34 · 42px(글자 13 · 14 · 15px), icon 34x34, Input · Select 트리거 36px, Table 본문 13.5px · 머리 13px, 둥글기 Button · Toggle 8px · Input · Select 트리거 6px · Card · Dialog 12px, Toggle 36 · 40 · 44px, Sheet 0px(브라우저 계산값).
 - AC3: Button · Input · Select · Toggle 소스에 `h-(8|9|10|11|12)` · `min-w-(9|10|11)` 고정 크기 클래스가 없어요(경계 있는 정적 검사, `max-h-96` · `h-4` 는 잡지 않음). TableHead `h-12` 는 대상 밖이에요.
 - AC4: 컴포넌트 fallback 15종이 tokens 기본값과 같은 길이예요(`--radius` 0.5rem 으로 계산). 밀도 토큰을 참조하는 파일은 대상 7개뿐이에요.

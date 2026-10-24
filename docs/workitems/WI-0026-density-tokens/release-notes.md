@@ -27,6 +27,6 @@
 
 ## 검증 요약
 
-- 브랜드 미지정 계산값: 1.6.3 대비 차이 0(1280px · 375px). ontology 기대값 33항목 일치. Tailwind 4.1 과 3.4 결과가 같음(308값).
+- 브랜드 미지정 계산값: 1.6.3 대비 차이 0(1280px · 375px). ontology 기대값 33항목 일치. Tailwind 4.1 과 3.4 결과가 같음(308값, padding 미포함. TableHead 세로 padding 의 Tailwind 3 · 4 차이는 1.6.3 부터 있던 것).
 - 정적 검사: 대상 4개 소스에 고정 높이 클래스 0, fallback 15종이 tokens 기본값과 같은 길이.
 - 상세는 [testplan.md](./testplan.md).

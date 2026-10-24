@@ -14,7 +14,7 @@
 - 앱: `entry.jsx` 가 실제 패키지 컴포넌트를 클라이언트 렌더해요. Select 는 `defaultOpen`, Dialog · Sheet 는 `open` 으로 포털까지 실제로 렌더해요(브리프의 정적 클래스 근사를 대체).
 - 번들: esbuild 0.25.0, React 19.1.0. CSS: Tailwind 3.4.17 + tailwindcss-animate 1.0.7, 그 패키지 버전의 preset 과 `variables.css` · `shadcn-compat.css` · `brands/ontology.css`.
 - 픽스처: `default`(variables + shadcn), `ontology`(+ ontology.css, `<html data-brand="ontology">`), `varsonly`(variables.css 단독), `varsonly-ontology`, preset 없는 Tailwind 기본 설정, Tailwind 4.1.14(`@import "tailwindcss"` + `tokens/css/tailwind4` + `@source` 번들 + ontology).
-- 측정: Playwright 1.61.1 Chromium, 1280x720 · 375x720, `getComputedStyle` 의 height · width · min-width · font-size · line-height · border-top-left-radius. Pretendard 는 싣지 않았어요. 기준과 새 빌드를 같은 글꼴로 재므로 표 · 표 셀 높이도 비교해요. 카드 · 팝업 · Dialog 의 높이만 내용에 따라 달라 뺐어요(글자 · 줄 높이 · 둥글기는 비교).
+- 측정: Playwright 1.61.1 Chromium, 1280x720 · 375x720, `getComputedStyle` 의 height · width · min-width · font-size · line-height · border-top-left-radius. Pretendard 는 싣지 않았어요. 기준과 새 빌드를 같은 글꼴로 재므로 표 · 표 셀 높이도 비교해요. 처음에는 카드 · 팝업 · Dialog 높이를 뺐지만, 양쪽이 같은 내용 · 같은 글꼴이라 뺄 근거가 없어 독립 재검토(2026-10-25)에서 넣어 다시 쟀고 차이 0이었어요(Tailwind 3 · 4 x 라이트 · 다크 각 750값, padding 4방향 포함).
 - 하네스 정정(review 지적): 처음 측정은 line-height 를 재지 않고 표 · 표 셀 높이를 「글꼴 의존」으로 빼서, `text-sm` → `text-[length:var(...)]` 전환이 줄 높이를 잃은 것(Button default · Input · Table 20 → 21px, Button sm 16 → 18px, 표 셀 52.5 → 53.5px)을 「차이 0」으로 놓쳤어요. 두 측정은 같은 글꼴이라 이 차이는 클래스 때문이었어요. 크기별 `leading-4|5|6` 을 명시하고 하네스에 줄 높이와 표 높이를 다시 넣었어요(아래 3).
 - 파일: 스크래치 `wi26/harness/{entry.jsx,build.mjs,measure.cjs,compare.py,cmp_tw4.py}`, 원자료 `wi26/measure-base-1.6.3-lh.json` · `wi26/measure-new-lh.json` · `m-tw4-lh.json`(줄 높이 포함, 정정 뒤), 정정 전 `measure-base-1.6.3.json` · `measure-new.json` · `m-nopreset.json` · `m-noshadcn.json` · `m-tw4.json`.
 
@@ -43,7 +43,7 @@
 
 33항목 불일치 0(`compare.py`). 1.6.3 의 같은 픽스처는 Button 40px · 10px, Input 40px · 10px, Table 14px 였어요.
 
-- Tailwind 4.1 과 Tailwind 3.4 결과 대조: `default` · `ontology` 308값(줄 높이 · 표 높이 포함) 차이 0(`cmp_tw4.py`, 정정 전 232값).
+- Tailwind 4.1 과 Tailwind 3.4 결과 대조: `default` · `ontology` 308값(줄 높이 · 표 높이 포함, padding 미포함) 차이 0(`cmp_tw4.py`, 정정 전 232값). padding 까지 재면 TableHead 세로 padding 이 Tailwind 3 · 4 사이에서 달라요. 이 차이는 1.6.3 에도 있던 것이라 이번 변경과 무관해요.
 - ontology 줄 높이(측정): Button sm · default · lg 16 · 20 · 24px(글자 13 · 14 · 15px), Input · Table · TableHead 20px, TableCell 52.5px. 줄 높이는 토큰이 아니라 크기별 고정값이에요.
 - preset 없는 Tailwind 3 기본 설정: ontology Button 34px · 8px, Input 36px · 6px, Card 12px(토큰 직접 참조라 preset 과 무관), Select 팝업 6px(Tailwind 기본 `rounded-md`, preset 이 있으면 10px).
 
