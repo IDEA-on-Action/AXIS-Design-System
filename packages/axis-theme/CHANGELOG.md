@@ -1,5 +1,12 @@
 # @axis-ds/theme
 
+## 1.6.2
+
+### Patch Changes
+
+- Updated dependencies [bf629b9]
+  - @axis-ds/tokens@1.6.2
+
 ## 1.6.0
 
 ### Minor Changes
