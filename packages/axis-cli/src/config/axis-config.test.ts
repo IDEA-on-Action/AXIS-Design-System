@@ -32,6 +32,12 @@ const TEMPLATE_INIT_BEFORE = `{
 }
 `;
 
+/**
+ * WI-0037 D1: 템플릿이 create-next-app 구조(app/globals.css)로 바뀌어 globalCss 만 ./app/globals.css 입니다.
+ * 나머지 키 · 순서 · 값은 정정 전(TEMPLATE_INIT_BEFORE)과 같습니다.
+ */
+const TEMPLATE_INIT_AFTER = TEMPLATE_INIT_BEFORE.replace('"./globals.css"', '"./app/globals.css"');
+
 let tmp: string;
 
 beforeEach(async () => {
@@ -91,8 +97,10 @@ describe("createInitConfig (axis init)", () => {
 });
 
 describe("createTemplateConfig (axis template init)", () => {
-  it("파일 내용이 정정 전과 바이트 단위로 같다", async () => {
-    expect(await writeAndRead(createTemplateConfig("theme-only"))).toBe(TEMPLATE_INIT_BEFORE);
+  it("파일 내용이 정정 전과 globalCss 한 값만 다르다(WI-0037 D1: ./globals.css → ./app/globals.css)", async () => {
+    const text = await writeAndRead(createTemplateConfig("theme-only"));
+    expect(text).toBe(TEMPLATE_INIT_AFTER);
+    expect(text).not.toBe(TEMPLATE_INIT_BEFORE);
   });
 
   it("키 순서가 $schema · template · componentsDir · tailwindConfig · globalCss 이고 brand 를 쓰지 않는다", () => {

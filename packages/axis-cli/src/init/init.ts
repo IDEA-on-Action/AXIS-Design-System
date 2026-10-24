@@ -30,6 +30,8 @@ import {
   realPathInside,
 } from "../theme/theme-add.js";
 import {
+  ANIMATION_PLUGIN_TAILWIND3,
+  ANIMATION_PLUGIN_TAILWIND4,
   axisPackageVersionLabel,
   axisPackagesBelowTailwind4,
   componentTailwindImportLine,
@@ -41,6 +43,7 @@ import {
   type TailwindDetection,
 } from "../template/tailwind-core.js";
 import { CLSX_RANGE, TAILWIND_MERGE_RANGES, selectUtilsDependencies } from "@axis-ds/registry-core/utils-deps";
+import { addCommandFor, detectProjectPaths, projectFileExists } from "@axis-ds/registry-core/project";
 
 // Tailwind 4 진입점을 내는 컴포넌트 패키지 목록은 axis check(B1)와 같이 쓰려고 공유 코어에 둡니다.
 export { TAILWIND4_COMPONENT_PACKAGES };
@@ -125,12 +128,96 @@ export function cn(...inputs: ClassValue[]) {
 }
 `;
 
-/** `-y` 기본값 */
+/**
+ * `src/` 가 있는 프로젝트에서 실재 파일을 찾지 못했을 때의 기본값(종전 `-y` 기본값).
+ * WI-0049 D6 부터 `-y` · 대화형 초기값은 `resolveInitAnswers` 가 정합니다: 기존 config 값, 실재 파일, src 유무 순입니다.
+ * `src/` 가 없으면 `./components/ui` · `./app/globals.css` 입니다(`INIT_DEFAULTS_NO_SRC`).
+ */
 export const INIT_DEFAULTS = {
   componentsDir: "./src/components/ui",
   tailwindConfig: "./tailwind.config.ts",
   globalCss: "./src/app/globals.css",
 } as const;
+
+/** `src/` 가 없는 프로젝트에서 실재 파일을 찾지 못했을 때의 기본값(WI-0049 D6) */
+export const INIT_DEFAULTS_NO_SRC = {
+  componentsDir: "./components/ui",
+  tailwindConfig: "./tailwind.config.ts",
+  globalCss: "./app/globals.css",
+} as const;
+
+/** `resolveInitAnswers` 결과: 쓸 답과 그 값을 고른 근거 안내 줄 */
+export interface InitResolution {
+  answers: InitAnswers;
+  /** 사실대로 알리는 안내(`!` 로 시작하면 경고) */
+  notes: string[];
+}
+
+/**
+ * init 이 쓸 경로를 정합니다(WI-0041 D5 · WI-0049 D6). 파일을 쓰지 않습니다. `-y` 는 이 값을 그대로, 대화형은 초기값으로 씁니다.
+ * - componentsDir: 기존 config 값(디렉터리는 아직 없을 수 있어 실재와 관계없이 보존) → src/ 가 있으면 `./src/components/ui`,
+ *   없으면 `./components/ui`
+ * - globalCss · tailwindConfig(파일): 기존 config 값이 실재하면 보존, 실재하지 않으면 탐색값으로 바꾸고 알림.
+ *   탐색은 실재 파일(공유 코어 후보 목록) → 찾지 못하면 기본값과 함께 안내
+ * - Tailwind 4 이상은 tailwindConfig 를 정하지 않습니다(설정 파일이 없음, WI-0044 FR-3)
+ */
+export async function resolveInitAnswers(baseDirInput: string, tailwind4?: boolean): Promise<InitResolution> {
+  const baseDir = path.resolve(baseDirInput);
+  const tw4 = tailwind4 ?? isTailwind4(planUtilsDependencies(baseDir).tailwind);
+  const current = await existingConfig(baseDir);
+  const found = detectProjectPaths(baseDir);
+  const notes: string[] = [];
+
+  const currentComponents = nonEmptyString(current?.componentsDir);
+  const componentsDir = currentComponents ?? found.componentsDir;
+
+  /**
+   * 파일 경로 키: 기존 값이 실재하면 보존, 실재하지 않으면 찾은 파일로 바꾸고 알림. 기존 값도 없고 찾지도 못했으면 기본값을 알림.
+   * 기존 값이 실재하지 않는데 찾은 파일도 없으면 기존 값을 그대로 둡니다(없는 기본값으로 바꿔도 나아지지 않고, 다시 실행할 때
+   * src/ 생성 여부에 따라 기본값이 달라져 값이 오가지 않게 합니다).
+   */
+  const pickFile = (key: "globalCss" | "tailwindConfig", value: string, source: "found" | "default", label: string) => {
+    const existing = nonEmptyString(current?.[key]);
+    if (existing !== undefined && projectFileExists(baseDir, existing)) return existing;
+    if (existing !== undefined) {
+      if (source === "found") {
+        notes.push(`! 기존 ${key}(${existing})가 없어 찾은 파일 ${value} 로 바꿉니다.`);
+        return value;
+      }
+      notes.push(`! 기존 ${key}(${existing}) 파일이 없고 다른 ${label} 파일도 찾지 못해 그대로 둡니다. 파일 위치에 맞게 axis.config.json 을 고치세요.`);
+      return existing;
+    } else if (source === "default") {
+      notes.push(`! ${label} 파일을 찾지 못해 기본값 ${value} 를 기록합니다. 파일 위치에 맞게 axis.config.json 을 고치세요.`);
+    }
+    return value;
+  };
+
+  const globalCss = pickFile("globalCss", found.globalCss, found.globalCssSource, "전역 CSS");
+  const answers: InitAnswers = { componentsDir, globalCss };
+  if (!tw4) {
+    answers.tailwindConfig = pickFile("tailwindConfig", found.tailwindConfig, found.tailwindConfigSource, "Tailwind 설정");
+  }
+  return { answers, notes };
+}
+
+/**
+ * Dialog · Select 등의 열고 닫는 애니메이션(`animate-in` 류) 안내(WI-0065 D8). 이미 선언돼 있으면 `undefined`.
+ * Tailwind 3 은 `tailwindcss-animate` 를 plugins 에, Tailwind 4 는 `tw-animate-css` 를 전역 CSS 에 import 합니다.
+ */
+export function animationGuideLine(
+  pkg: Record<string, unknown> | undefined,
+  tailwind4: boolean,
+  installCommand: string
+): string | undefined {
+  const name = tailwind4 ? ANIMATION_PLUGIN_TAILWIND4 : ANIMATION_PLUGIN_TAILWIND3;
+  if (pkg !== undefined && (hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined || hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND4) !== undefined)) {
+    return undefined;
+  }
+  // 범위를 정하지 않고 이름만 안내합니다(플러그인 버전은 앱이 고름). 명령 앞부분(`npm install` 등)은 lockfile 로 고릅니다
+  const add = `${addCommandFor(installCommand, {}).trimEnd()} ${name}`;
+  const where = tailwind4 ? `전역 CSS 에 @import "${name}"; 를 넣으세요` : `tailwind.config 의 plugins 에 require("${name}") 를 넣으세요`;
+  return `애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. ${add} 뒤 ${where}.`;
+}
 
 /** 컴포넌트 추가 안내(D2: 우리 패키지 이름 `@axis-ds/cli`) */
 export const INIT_NEXT_STEP_COMMAND = "npx @axis-ds/cli add button";
@@ -272,15 +359,8 @@ export interface UtilsDependencyPlan {
 
 const BOM = "﻿";
 
-/** lockfile 로 고른 설치 명령에서 패키지 추가 명령을 만듭니다. 범위의 `^` 가 셸에서 사라지지 않게 따옴표로 감쌉니다. */
-export function addCommandFor(installCommand: string, deps: Readonly<Record<string, string>>): string {
-  const specs = Object.entries(deps)
-    .map(([name, range]) => `"${name}@${range}"`)
-    .join(" ");
-  if (installCommand.startsWith("yarn")) return `yarn add ${specs}`;
-  if (installCommand.startsWith("npm")) return `npm install ${specs}`;
-  return `pnpm add ${specs}`;
-}
+// lockfile 로 고른 설치 명령에서 패키지 추가 명령을 만드는 함수는 theme add 와 같이 쓰려고 공유 코어로 옮겼습니다(WI-0065). 종전 이름 그대로 내보냅니다
+export { addCommandFor };
 
 /** 바꿀 내용을 계산합니다. 파일을 쓰지 않습니다. */
 export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan {
@@ -447,10 +527,47 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
  */
 async function existingConfig(baseDir: string): Promise<AxisConfig | null> {
   try {
-    return await readAxisConfig(baseDir);
+    const parsed: unknown = await readAxisConfig(baseDir);
+    return isPlainObject(parsed) ? (parsed as AxisConfig) : null;
   } catch {
     return null;
   }
+}
+
+/** init 이 값을 정하는 키(WI-0041 D4). 이 밖의 키(brand · monetDir · template · agenticDir 등)는 값과 순서를 그대로 둡니다 */
+export const INIT_MANAGED_KEYS = ["$schema", "componentsDir", "tailwindConfig", "globalCss", "registry"] as const;
+
+/**
+ * 기존 config 에 init 값을 병합합니다(WI-0041 D4). 기존 키의 순서와 init 이 다루지 않는 키는 그대로 두고,
+ * init 이 다루는 키는 새 값으로 바꿉니다. 기존에 없던 init 키는 `next` 의 순서에서 바로 앞 키 다음에 넣습니다.
+ * init 이 다루는 키인데 `next` 에 없으면(Tailwind 4 의 tailwindConfig) 지우고 그 이름을 `removed` 에 담습니다.
+ */
+export function mergeInitConfig(
+  current: Record<string, unknown>,
+  next: Record<string, unknown>
+): { merged: Record<string, unknown>; removed: string[] } {
+  const removed: string[] = [];
+  const entries: [string, unknown][] = [];
+  for (const [k, v] of Object.entries(current)) {
+    if (k in next) entries.push([k, next[k]]);
+    else if ((INIT_MANAGED_KEYS as readonly string[]).includes(k)) removed.push(k);
+    else entries.push([k, v]);
+  }
+  const nextKeys = Object.keys(next);
+  nextKeys.forEach((k, i) => {
+    if (k in current) return;
+    // 바로 앞의 init 키(이미 entries 에 있는 것) 다음 자리, 없으면 맨 앞
+    let at = 0;
+    for (let j = i - 1; j >= 0; j--) {
+      const idx = entries.findIndex(([key]) => key === nextKeys[j]);
+      if (idx !== -1) {
+        at = idx + 1;
+        break;
+      }
+    }
+    entries.splice(at, 0, [k, next[k]]);
+  });
+  return { merged: Object.fromEntries(entries), removed };
 }
 
 /** 뒤 단계에서 실패했을 때 axis.config.json 을 실제로 썼는지 사실대로 알리는 문구 */
@@ -591,7 +708,6 @@ export async function runInit(
 
   // 이미 있던 파일이면 「생성」이 아니라 사실대로 알립니다(m5): 내용이 같으면 쓰지 않고 유지, 다르면 갱신
   const configPath = path.join(baseDir, "axis.config.json");
-  const nextText = `${JSON.stringify(axisConfig, null, 2)}\n`;
   // 쓰기 전 판정(D17 · D19 · p2). 하나라도 막히면 아무것도 쓰지 않습니다
   const rejects: string[] = [];
   let previousText: string | null = null;
@@ -602,6 +718,16 @@ export async function runInit(
     if ((e as NodeJS.ErrnoException).code !== "ENOENT") {
       rejects.push(`기존 axis.config.json 을 읽지 못해 비교할 수 없습니다(${errCode(e)})`);
     }
+  }
+  // 기존 config 를 읽었으면 init 이 다루는 키만 바꾸고 나머지 키 · 순서 · 들여쓰기는 그대로 둡니다(WI-0041 D4).
+  // 읽지 못한 JSON(깨짐 · 객체 아님)은 종전처럼 init 값으로 다시 씁니다
+  let removedKeys: string[] = [];
+  let nextText = `${JSON.stringify(axisConfig, null, 2)}\n`;
+  if (previousText !== null && current !== null) {
+    const { merged, removed } = mergeInitConfig(current as Record<string, unknown>, axisConfig as Record<string, unknown>);
+    removedKeys = removed;
+    const body = previousText.startsWith(BOM) ? previousText.slice(1) : previousText;
+    nextText = (previousText.startsWith(BOM) ? BOM : "") + formatJsonLike(body, merged);
   }
   if (previousText !== null && previousText !== nextText) {
     // config 는 종전처럼 링크를 따라가 쓰므로 하드링크 판정도 따라간 대상(stat)으로 합니다(D19)
@@ -661,7 +787,8 @@ export async function runInit(
         ? "registry 는 기존 값 유지"
         : "registry 는 기본값";
     const agenticNote = existingAgenticDir !== undefined ? ", agenticDir 는 기존 값 유지" : "";
-    log(chalk.green(`✓ axis.config.json 갱신(기존 파일을 init 값으로 다시 씀, ${registryNote}${agenticNote})`));
+    const mergeNote = current !== null ? "init 이 다루는 키만 바꾸고 나머지 키는 그대로 둠" : "읽지 못한 기존 파일을 init 값으로 다시 씀";
+    log(chalk.green(`✓ axis.config.json 갱신(${mergeNote}, ${registryNote}${agenticNote})`));
     if (migratedRegistry && existingRegistry !== undefined) {
       // D20: 종전 기본 주소는 Cloudflare 403 이라 새 기본 주소로 바꿨다는 사실을 알립니다(사용자가 지정한 다른 값은 그대로 둠)
       log(
@@ -670,12 +797,10 @@ export async function runInit(
         )
       );
     }
-    // init 이 쓰지 않는 다른 키(brand · monetDir · template 등)는 이번 갱신에서 빠집니다. 사실대로 알립니다
-    const dropped = current
-      ? Object.keys(current).filter((k) => !(k in axisConfig) && (current as Record<string, unknown>)[k] !== undefined)
-      : [];
-    if (dropped.length > 0) {
-      log(chalk.yellow(`  기존 설정에서 빠진 키: ${dropped.join(", ")} (필요하면 axis.config.json 에 다시 적어 주세요)`));
+    // init 이 쓰지 않는 다른 키(brand · monetDir · template 등)는 WI-0041 D4 부터 그대로 남습니다.
+    // init 이 다루는 키인데 이번 값에 없는 것(Tailwind 4 의 tailwindConfig)만 지우고 사실대로 알립니다
+    if (removedKeys.length > 0) {
+      log(chalk.yellow(`  지운 키: ${removedKeys.join(", ")} (Tailwind 4 이상은 설정 파일을 쓰지 않습니다)`));
     }
   }
 
@@ -730,6 +855,10 @@ export async function runInit(
     return;
   }
   reportDependencies(plan, log);
+
+  // 애니메이션 플러그인 안내 한 줄(WI-0065 D8). 이미 선언돼 있으면 내지 않습니다
+  const animation = animationGuideLine(readPackageJsonSafe(baseDir), tailwind4, plan.installCommand);
+  if (animation !== undefined) log(chalk.yellow(`  ${animation}`));
 
   // Tailwind 4 전역 CSS 연동 안내(WI-0044 FR-3). Tailwind 3 · 판정 불가는 출력이 종전과 같습니다.
   if (tailwind4) {

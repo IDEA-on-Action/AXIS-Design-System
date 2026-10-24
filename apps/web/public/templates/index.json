@@ -1,12 +1,12 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-02-01T13:39:15.989Z",
-  "total": 39,
+  "updatedAt": "2026-10-24T14:35:12.370Z",
+  "total": 42,
   "templates": [
     {
       "name": "Dashboard",
       "slug": "dashboard",
-      "description": "사이드바 네비게이션과 통계 카드가 포함된 대시보드 템플릿입니다. AXIS 디자인 토큰 기반 레이아웃을 제공합니다.",
+      "description": "사이드바 네비게이션과 통계 카드가 포함된 대시보드 템플릿입니다. CSS 변수(HSL) 기반 자체 테마로 레이아웃을 제공합니다.",
       "category": "dashboard",
       "version": "0.1.0",
       "author": "AXIS Design System",
@@ -20,7 +20,7 @@
         "사이드바 네비게이션",
         "통계 카드 컴포넌트",
         "반응형 레이아웃",
-        "AXIS 디자인 토큰 적용",
+        "CSS 변수(HSL) 기반 자체 테마 (AXIS 토큰 패키지 미사용)",
         "다크모드 지원",
         "Tailwind CSS 설정"
       ],
@@ -28,12 +28,13 @@
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "tailwind-merge": "^3.4.0",
+        "tailwind-merge": "^2.6.0",
         "clsx": "^2.1.1"
       },
       "devDependencies": {
         "tailwindcss": "^3.4.0",
         "typescript": "^5.7.0",
+        "@types/node": "^20",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "autoprefixer": "^10.4.0",
@@ -70,13 +71,14 @@
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "tailwind-merge": "^3.4.0",
+        "tailwind-merge": "^2.6.0",
         "clsx": "^2.1.1",
         "lucide-react": "^0.469.0"
       },
       "devDependencies": {
         "tailwindcss": "^3.4.0",
         "typescript": "^5.7.0",
+        "@types/node": "^20",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "autoprefixer": "^10.4.0",
@@ -86,7 +88,7 @@
     {
       "name": "Landing Page",
       "slug": "landing-page",
-      "description": "AXIS 컴포넌트를 활용한 반응형 랜딩 페이지 템플릿입니다. Hero 섹션, 기능 소개, CTA 버튼이 포함됩니다.",
+      "description": "Hero 섹션, 기능 소개, CTA 버튼이 포함된 반응형 랜딩 페이지 템플릿입니다. AXIS 컴포넌트 패키지 없이 CSS 변수(HSL) 기반 자체 테마를 씁니다.",
       "category": "landing-page",
       "version": "0.1.0",
       "author": "AXIS Design System",
@@ -100,7 +102,7 @@
         "반응형 Hero 섹션",
         "기능 카드 그리드",
         "CTA 버튼",
-        "AXIS 디자인 토큰 적용",
+        "CSS 변수(HSL) 기반 자체 테마 (AXIS 토큰 패키지 미사용)",
         "다크모드 지원",
         "Tailwind CSS 설정"
       ],
@@ -108,12 +110,13 @@
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "tailwind-merge": "^3.4.0",
+        "tailwind-merge": "^2.6.0",
         "clsx": "^2.1.1"
       },
       "devDependencies": {
         "tailwindcss": "^3.4.0",
         "typescript": "^5.7.0",
+        "@types/node": "^20",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "autoprefixer": "^10.4.0",
@@ -123,7 +126,7 @@
     {
       "name": "Theme Only",
       "slug": "theme-only",
-      "description": "AXIS 디자인 토큰과 테마 시스템만 적용된 최소 구성 템플릿입니다. 다크모드 토글, CSS 변수 기반 테마, Tailwind CSS 설정이 포함됩니다.",
+      "description": "CSS 변수(HSL) 기반 테마와 다크모드 토글만 담은 최소 구성 Next.js 템플릿입니다. 아직 AXIS 토큰 패키지(@axis-ds/tokens)를 쓰지 않고 자체 변수를 씁니다.",
       "category": "minimal",
       "version": "0.1.0",
       "author": "AXIS Design System",
@@ -134,7 +137,7 @@
         "starter"
       ],
       "features": [
-        "AXIS 디자인 토큰 적용",
+        "CSS 변수(HSL) 기반 자체 테마 (AXIS 토큰 패키지 미사용)",
         "다크모드 토글",
         "CSS 변수 기반 테마 시스템",
         "Tailwind CSS 설정",
@@ -144,17 +147,108 @@
         "next": "^15.1.0",
         "react": "^19.0.0",
         "react-dom": "^19.0.0",
-        "tailwind-merge": "^3.4.0",
+        "tailwind-merge": "^2.6.0",
         "clsx": "^2.1.1"
       },
       "devDependencies": {
         "tailwindcss": "^3.4.0",
         "typescript": "^5.7.0",
+        "@types/node": "^20",
         "@types/react": "^19.0.0",
         "@types/react-dom": "^19.0.0",
         "autoprefixer": "^10.4.0",
         "postcss": "^8.4.0"
       }
+    },
+    {
+      "name": "Spec Source Split View",
+      "slug": "decode-x-spec-source-split-view",
+      "description": "AI 역공학 파이프라인 결과물을 검토하는 엔지니어 워크벤치용 split view. 좌측 정책 목록(Spec Panel)과 우측 재구성 마크다운 패널이 동기화되며, Provenance Inspector와 연동됩니다.",
+      "category": "agentic",
+      "version": "0.1.0",
+      "author": "AXBD-Team",
+      "tags": [
+        "split-view",
+        "spec",
+        "provenance",
+        "ai-pipeline",
+        "engineer"
+      ],
+      "features": [
+        "Synchronized Spec/Source Panel",
+        "Policy Card List",
+        "Smooth Section Scroll",
+        "Confidence Badge",
+        "Provenance Inspector Trigger"
+      ],
+      "dependencies": {
+        "react": "^18",
+        "lucide-react": "^0.400.0"
+      },
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/engineer/SpecSourceSplitView.tsx",
+      "source": "decode-x-kit"
+    },
+    {
+      "name": "Provenance Inspector",
+      "slug": "decode-x-provenance-inspector",
+      "description": "AI 역공학 결과물의 출처(provenance)를 소스/파이프라인/용어 3-탭으로 시각화하는 사이드 다이얼로그. 정책 코드별 신뢰도·원본 문서·추출 스테이지를 추적합니다.",
+      "category": "agentic",
+      "version": "0.1.0",
+      "author": "AXBD-Team",
+      "tags": [
+        "provenance",
+        "inspector",
+        "dialog",
+        "tabs",
+        "ai-pipeline"
+      ],
+      "features": [
+        "3-Tab Panel (Sources / Pipeline / Terms)",
+        "Confidence Badge",
+        "Document Link List",
+        "Pipeline Stage Timeline",
+        "Ontology Term Browser"
+      ],
+      "dependencies": {
+        "react": "^18",
+        "lucide-react": "^0.400.0"
+      },
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/engineer/ProvenanceInspector.tsx",
+      "source": "decode-x-kit"
+    },
+    {
+      "name": "Stage Replayer",
+      "slug": "decode-x-stage-replayer",
+      "description": "AI 파이프라인의 N-stage 처리 결과를 가로 스크롤 타임라인으로 시각화. 각 스테이지별 상태(completed/pending/failed), AI-Ready Score, 컴플라이언스 항목을 카드로 표시합니다.",
+      "category": "agentic",
+      "version": "0.1.0",
+      "author": "AXBD-Team",
+      "tags": [
+        "timeline",
+        "pipeline",
+        "stages",
+        "ai-ready",
+        "compliance"
+      ],
+      "features": [
+        "Horizontal Scroll Timeline",
+        "Stage Status Cards",
+        "AI-Ready Score Badge",
+        "Compliance Checklist",
+        "Progress Bar"
+      ],
+      "dependencies": {
+        "react": "^18",
+        "lucide-react": "^0.400.0"
+      },
+      "devDependencies": {},
+      "type": "external",
+      "externalUrl": "https://github.com/KTDS-AXBD/Decode-X/blob/main/apps/app-web/src/components/executive/FoundryXTimeline.tsx",
+      "source": "decode-x-kit"
     },
     {
       "name": "Monet Hero Sections",

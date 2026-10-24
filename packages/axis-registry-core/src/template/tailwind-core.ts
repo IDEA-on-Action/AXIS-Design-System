@@ -22,7 +22,7 @@
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  */
 
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
 
 /** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
@@ -719,27 +719,323 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     };
   }
 
-  const [tsFile, ...otherFiles] = TAILWIND_CONFIG_FILES;
-  const tsPath = join(baseDir, tsFile);
-  if (existsSync(tsPath)) {
-    const content = readFileSync(tsPath, "utf8");
-    const hasTokens = content.includes("--background") || content.includes("hsl(var(");
-    if (hasTokens) {
-      return { name: "tailwind.config", severity: "pass", message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다" };
-    }
-    if (hasTokensPresetReference(content)) {
-      return { name: "tailwind.config", severity: "pass", message: `tailwind.config.ts${PRESET_PASS_SUFFIX}` };
-    }
-    return { name: "tailwind.config", severity: "warn", message: "tailwind.config.ts에 AXIS 토큰 설정이 없습니다" };
-  }
-  for (const file of otherFiles) {
+  // WI-0065 D8: Tailwind 3 은 AXIS preset 참조가 있을 때만 pass 입니다. 종전에는 `--background` · `hsl(var(` 문자열만 있어도
+  // pass 여서 AXIS 참조가 0 인 shadcn 류 · 템플릿 자체 매핑도 「AXIS 토큰이 설정」으로 나왔습니다(거짓 초록). 이제 WARN 입니다.
+  for (const file of TAILWIND_CONFIG_FILES) {
     const path = join(baseDir, file);
-    if (existsSync(path)) {
-      if (hasTokensPresetReference(readFileSync(path, "utf8"))) {
-        return { name: "tailwind.config", severity: "pass", message: `${file}${PRESET_PASS_SUFFIX}` };
-      }
-      return { name: "tailwind.config", severity: "warn", message: `${file} 존재 (TypeScript 권장)` };
+    if (!existsSync(path)) continue;
+    const content = readFileSync(path, "utf8");
+    if (hasTokensPresetReference(content)) {
+      return { name: "tailwind.config", severity: "pass", message: `${file}${PRESET_PASS_SUFFIX}` };
     }
+    const ownMapping = content.includes("--background") || content.includes("hsl(var(");
+    return {
+      name: "tailwind.config",
+      severity: "warn",
+      message: ownMapping
+        ? `${file}에 AXIS preset(${TOKENS_TAILWIND3_PRESET})이 없습니다 (자체 CSS 변수 매핑만 있음, presets 에 넣으세요)`
+        : `${file}에 AXIS preset(${TOKENS_TAILWIND3_PRESET})이 없습니다 (presets 에 넣으세요)`,
+    };
   }
   return { name: "tailwind.config", severity: "fail", message: "tailwind.config 파일이 없습니다" };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// WI-0065 D8: Tailwind 3 content 판독 · 애니메이션 플러그인
+
+/** `axis.config.json` 을 읽기만 합니다. 없거나 깨졌거나 객체가 아니면 `undefined`. */
+function readAxisConfigLike(baseDir: string): Record<string, unknown> | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(baseDir, "axis.config.json"), "utf8"));
+    return isPlainObject(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * content glob 하나를 정규식으로 바꿉니다(Tailwind 3 의 fast-glob 문법 가운데 `**` · `*` · `?` · `{a,b}` · `[...]`).
+ * 앞의 `./` 는 지우고, 경로는 설정 파일 디렉터리(프로젝트 루트) 기준 상대 경로로 맞춥니다.
+ */
+export function contentGlobToRegExp(glob: string): RegExp {
+  const g = glob.trim().replace(/^\.\//, "");
+  let re = "";
+  for (let i = 0; i < g.length; i++) {
+    const c = g[i];
+    if (c === "*") {
+      if (g[i + 1] === "*") {
+        const slash = g[i + 2] === "/";
+        re += slash ? "(?:.*/)?" : ".*";
+        i += slash ? 2 : 1;
+      } else re += "[^/]*";
+    } else if (c === "?") re += "[^/]";
+    else if (c === "{") {
+      const end = g.indexOf("}", i);
+      if (end === -1) {
+        re += "\\{";
+        continue;
+      }
+      re += `(?:${g
+        .slice(i + 1, end)
+        .split(",")
+        .map((part) => part.replace(/[.+^$()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*"))
+        .join("|")})`;
+      i = end;
+    } else if (c === "[") {
+      const end = g.indexOf("]", i);
+      if (end === -1) re += "\\[";
+      else {
+        re += g.slice(i, end + 1);
+        i = end;
+      }
+    } else re += c.replace(/[.+^$()|\\]/g, "\\$&");
+  }
+  return new RegExp(`^${re}$`);
+}
+
+/** 대괄호 · 중괄호 짝을 맞춰 `src[start]`(여는 괄호)부터 닫는 괄호까지 돌려줍니다. 문자열 안의 괄호는 세지 않습니다. */
+function balancedSlice(src: string, start: number): string | undefined {
+  const open = src[start];
+  const close = open === "[" ? "]" : "}";
+  let depth = 0;
+  for (let i = start; i < src.length; i++) {
+    const c = src[i];
+    if (c === '"' || c === "'" || c === "`") {
+      let j = i + 1;
+      while (j < src.length && src[j] !== c) j += src[j] === "\\" ? 2 : 1;
+      i = j;
+      continue;
+    }
+    if (c === open) depth++;
+    else if (c === close && --depth === 0) return src.slice(start, i + 1);
+  }
+  return undefined;
+}
+
+/** 문자열 리터럴(따옴표 · 템플릿 리터럴, `${}` 없는 것)을 순서대로 뽑습니다. */
+function stringLiterals(src: string): string[] {
+  return [...src.matchAll(/(["'`])((?:\\.|(?!\1)[^\\])*)\1/g)].map((m) => m[2]).filter((s) => !s.includes("${"));
+}
+
+/**
+ * Tailwind 3 설정의 `content` 를 정적으로 읽습니다. 배열 리터럴(`content: [...]`) 또는 `content: { files: [...] }` 만 읽고,
+ * 배열 안에 문자열이 아닌 요소(변수 · 펼침 · 함수 호출)가 있으면 `dynamic` 입니다(그 요소가 덮는 경로는 알 수 없음).
+ * `content` 키를 찾지 못하면 `undefined`.
+ */
+export function readTailwindContent(source: string): { globs: string[]; dynamic: boolean } | undefined {
+  const src = stripJsComments(source);
+  const key = /\bcontent\s*:\s*/g;
+  for (const m of src.matchAll(key)) {
+    let at = (m.index ?? 0) + m[0].length;
+    let block = src[at] === "[" || src[at] === "{" ? balancedSlice(src, at) : undefined;
+    if (block === undefined) continue;
+    if (block.startsWith("{")) {
+      const files = /\bfiles\s*:\s*\[/.exec(block);
+      if (!files) return { globs: [], dynamic: true };
+      at = files.index + files[0].length - 1;
+      block = balancedSlice(block, at);
+      if (block === undefined) return { globs: [], dynamic: true };
+    }
+    const inner = block.slice(1, -1);
+    const globs = stringLiterals(inner);
+    const rest = inner.replace(/(["'`])((?:\\.|(?!\1)[^\\])*)\1/g, "").replace(/[\s,]/g, "");
+    return { globs, dynamic: rest !== "" };
+  }
+  return undefined;
+}
+
+/** content 가 덮어야 하는 경로 하나. `sample` 은 그 경로 안의 대표 파일(상대 경로) */
+export interface ContentTarget {
+  label: string;
+  sample: string;
+  /** 넣을 glob(안내용) */
+  suggest: string;
+  covered: boolean;
+}
+
+export interface TailwindContentInspection {
+  /** 판독한 설정 파일 이름 */
+  configFile: string;
+  /** `content` 를 읽지 못함(키 없음) */
+  unreadable: boolean;
+  /** 문자열이 아닌 요소가 있어 덮이지 않은 대상도 실제로는 덮일 수 있음 */
+  dynamic: boolean;
+  targets: ContentTarget[];
+}
+
+/** 경로를 `a/b/c` 꼴(앞의 `./` · 뒤의 `/` 없음)로 맞춥니다. 프로젝트 밖(`../`) · 절대경로면 `undefined`. */
+function normalizeRel(p: string): string | undefined {
+  const s = p.trim().replace(/\\/g, "/").replace(/^\.\//, "").replace(/\/+$/, "");
+  if (s === "" || s.startsWith("../") || s.startsWith("/") || /^[A-Za-z]:/.test(s)) return undefined;
+  return s;
+}
+
+/**
+ * Tailwind 3 프로젝트에서 content 가 AXIS 컴포넌트 경로를 덮는지 봅니다(WI-0065 D8). Tailwind 4 이상 · 설정 파일 없음 ·
+ * 대상 없음이면 `null`(검사기는 항목을 더하지 않음).
+ * - 대상 1: `axis.config.json` 의 componentsDir(복사 설치 위치). 대표 파일 `<componentsDir>/button.tsx`
+ * - 대상 2: package.json 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui`(npm 설치). 대표 파일 `node_modules/<pkg>/dist/index.js`
+ * glob 은 설정 파일이 있는 디렉터리(프로젝트 루트) 기준으로 맞춥니다. 판정은 문자열 판독이라 실제 파일이 있는지는 보지 않습니다.
+ */
+export function inspectTailwindContent(baseDirInput: string): TailwindContentInspection | null {
+  const baseDir = resolve(baseDirInput);
+  const pkg = readPackageJson(baseDir);
+  const tailwind = detectTailwind(baseDir, pkg);
+  if (tailwind.major !== undefined && tailwind.major >= 4) return null;
+  const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
+  if (configFile === undefined) return null;
+
+  const targets: Omit<ContentTarget, "covered">[] = [];
+  const componentsDir = readAxisConfigLike(baseDir)?.componentsDir;
+  const rel = typeof componentsDir === "string" ? normalizeRel(componentsDir) : undefined;
+  if (rel !== undefined) {
+    targets.push({ label: `componentsDir(${componentsDir as string})`, sample: `${rel}/button.tsx`, suggest: `./${rel}/**/*.{ts,tsx}` });
+  }
+  for (const name of TAILWIND4_COMPONENT_PACKAGES) {
+    if (pkg !== undefined && hasDependency(pkg, name) !== undefined) {
+      targets.push({ label: name, sample: `node_modules/${name}/dist/index.js`, suggest: `./node_modules/${name}/dist/**/*.{js,mjs}` });
+    }
+  }
+  if (targets.length === 0) return null;
+
+  const read = readTailwindContent(readFileSync(join(baseDir, configFile), "utf8"));
+  const patterns = (read?.globs ?? []).filter((g) => !g.trim().startsWith("!")).map(contentGlobToRegExp);
+  return {
+    configFile,
+    unreadable: read === undefined,
+    dynamic: read?.dynamic ?? false,
+    targets: targets.map((t) => ({ ...t, covered: patterns.some((re) => re.test(t.sample)) })),
+  };
+}
+
+/** content 항목. CLI · MCP 의 `CheckResult` 와 같은 모양입니다. */
+export interface ContentCheckResult {
+  name: "tailwind.content";
+  severity: "pass" | "warn" | "fail";
+  message: string;
+}
+
+/**
+ * `axis check` · MCP `axis.check_project` 의 content 항목(WI-0065 D8). 대상이 없으면 `null`.
+ * 정적으로 읽은 문자열 glob 이 대상을 덮지 않으면 FAIL(그 경로의 클래스가 생성되지 않아 Button 이 투명 · 둥글기 0 이 됨),
+ * `content` 를 읽지 못했거나 문자열이 아닌 요소가 있어 판정할 수 없으면 WARN 입니다.
+ */
+export function checkTailwindContent(baseDir: string): ContentCheckResult | null {
+  const r = inspectTailwindContent(baseDir);
+  if (r === null) return null;
+  const missing = r.targets.filter((t) => !t.covered);
+  if (missing.length === 0) {
+    return {
+      name: "tailwind.content",
+      severity: "pass",
+      message: `${r.configFile}의 content 가 ${r.targets.map((t) => t.label).join(" · ")} 를 덮습니다`,
+    };
+  }
+  const list = missing.map((t) => `${t.label} → "${t.suggest}"`).join(" · ");
+  if (r.unreadable || r.dynamic) {
+    return {
+      name: "tailwind.content",
+      severity: "warn",
+      message: `${r.configFile}의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ${list}`,
+    };
+  }
+  return {
+    name: "tailwind.content",
+    severity: "fail",
+    message: `${r.configFile}의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ${list}`,
+  };
+}
+
+/** Tailwind 3 애니메이션 플러그인(WI-0046 과 같은 이름) */
+export const ANIMATION_PLUGIN_TAILWIND3 = "tailwindcss-animate";
+/** Tailwind 4 애니메이션 CSS(WI-0046 과 같은 이름) */
+export const ANIMATION_PLUGIN_TAILWIND4 = "tw-animate-css";
+
+/** 열고 닫는 애니메이션 유틸리티(`animate-in` · `animate-out`)를 쓰는지 볼 때 읽는 최대 파일 수 */
+const ANIMATION_SCAN_LIMIT = 200;
+
+/** componentsDir 아래 `.tsx` · `.ts` · `.jsx` · `.js` 에 `animate-in` · `animate-out` 클래스가 있는지(복사 설치 판정) */
+function componentsUseAnimation(baseDir: string, componentsDir: string): boolean {
+  const rel = normalizeRel(componentsDir);
+  if (rel === undefined) return false;
+  const root = join(baseDir, rel);
+  const stack = [root];
+  let seen = 0;
+  while (stack.length > 0 && seen < ANIMATION_SCAN_LIMIT) {
+    const dir = stack.pop()!;
+    let names: string[];
+    try {
+      names = readdirSync(dir);
+    } catch {
+      continue;
+    }
+    for (const name of names) {
+      const p = join(dir, name);
+      let st: ReturnType<typeof statSync>;
+      try {
+        st = statSync(p);
+      } catch {
+        continue;
+      }
+      if (st.isDirectory()) {
+        if (name !== "node_modules") stack.push(p);
+      } else if (/\.(tsx|ts|jsx|js)$/.test(name)) {
+        seen++;
+        if (/\banimate-(?:in|out)\b/.test(readFileSync(p, "utf8"))) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/** 애니메이션 항목. CLI · MCP 의 `CheckResult` 와 같은 모양입니다. */
+export interface AnimationCheckResult {
+  name: "animation";
+  severity: "pass" | "warn" | "fail";
+  message: string;
+}
+
+/**
+ * ui-react 를 쓰는데 애니메이션 플러그인이 없으면 WARN 입니다(WI-0065 D8, WI-0046 측정: 플러그인이 없으면 Dialog · Select 등의
+ * 열고 닫는 애니메이션 33개 클래스가 0개 생성). ui-react 를 쓰지 않으면 `null`(항목을 더하지 않음).
+ * - 사용 판정: package.json 에 `@axis-ds/ui-react` 선언, 또는 componentsDir 아래 파일에 `animate-in` · `animate-out` 클래스
+ * - 플러그인 판정(Tailwind 3): `tailwindcss-animate` 선언 + 설정 파일에서 그 이름 참조(`require` · `import`)
+ * - 플러그인 판정(Tailwind 4): CSS 후보 첫 파일에 `@import "tw-animate-css"` 또는 `@plugin "tailwindcss-animate"`
+ */
+export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult | null {
+  const baseDir = resolve(baseDirInput);
+  const pkg = readPackageJson(baseDir);
+  const config = readAxisConfigLike(baseDir);
+  const declared = pkg !== undefined && hasDependency(pkg, "@axis-ds/ui-react") !== undefined;
+  const copied = typeof config?.componentsDir === "string" && componentsUseAnimation(baseDir, config.componentsDir);
+  if (!declared && !copied) return null;
+  const by = declared ? "@axis-ds/ui-react 선언" : "componentsDir 의 animate-in 류 클래스";
+  const tailwind = detectTailwind(baseDir, pkg);
+  if (tailwind.major !== undefined && tailwind.major >= 4) {
+    const file = TAILWIND_CSS_CANDIDATES.find((c) => existsSync(join(baseDir, c)));
+    const css = file !== undefined ? stripCssComments(readFileSync(join(baseDir, file), "utf8")) : "";
+    const ok =
+      new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`).test(css) ||
+      new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(css);
+    return ok
+      ? { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다` }
+      : {
+          name: "animation",
+          severity: "warn",
+          message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";`,
+        };
+  }
+  const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
+  const source = configFile !== undefined ? stripJsComments(readFileSync(join(baseDir, configFile), "utf8")) : "";
+  const pluginRef = new RegExp(`["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(source);
+  const pluginDeclared = pkg !== undefined && hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined;
+  if (pluginRef && pluginDeclared) {
+    return { name: "animation", severity: "pass", message: `${configFile}에 ${ANIMATION_PLUGIN_TAILWIND3} 플러그인이 있습니다` };
+  }
+  const why = !pluginDeclared ? `${ANIMATION_PLUGIN_TAILWIND3} 미설치` : `${configFile ?? "tailwind.config"} plugins 에 없음`;
+  return {
+    name: "animation",
+    severity: "warn",
+    message: `애니메이션 플러그인이 없습니다(${by}, ${why}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND3} 설치 뒤 plugins 에 require("${ANIMATION_PLUGIN_TAILWIND3}")`,
+  };
 }

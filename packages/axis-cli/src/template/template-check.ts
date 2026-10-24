@@ -3,8 +3,8 @@
 import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
-import { inspectBrandImport, type BrandImportCheck } from "../theme/brand-core.js";
-import { checkGlobalsCss, checkTailwindSetup } from "./tailwind-core.js";
+import { inspectBrandActivation, inspectBrandImport, type BrandActivationCheck, type BrandImportCheck } from "../theme/brand-core.js";
+import { checkAnimationPlugin, checkGlobalsCss, checkTailwindContent, checkTailwindSetup } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
 const SEVERITY_ICON: Record<CheckSeverity, string> = {
@@ -15,7 +15,12 @@ const SEVERITY_ICON: Record<CheckSeverity, string> = {
 
 /**
  * 프로젝트 상태 검증 결과만 모읍니다(출력하지 않음, WI-0028 FR-5).
- * 기존 5항목의 순서 · 문구는 그대로이고, `axis.config.json` 에 `brand` 가 있을 때만 brand 항목을 마지막에 더합니다.
+ * 기존 5항목의 순서는 그대로이고, `axis.config.json` 에 `brand` 가 있을 때만 brand 항목을 더합니다.
+ * WI-0065 D8 에서 해당할 때만 더하는 항목 3개를 그 뒤에 둡니다(순서: brand · brand.activation · tailwind.content · animation).
+ * - brand.activation: brand 가 있을 때. 루트 레이아웃에 ThemeProvider · data-brand 가 없으면 WARN(휴리스틱)
+ * - tailwind.content: Tailwind 3 설정 파일이 있고 componentsDir · 선언된 컴포넌트 패키지가 있을 때. 덮지 않으면 FAIL(정적 판독)
+ * - animation: ui-react 를 쓸 때. 애니메이션 플러그인이 없으면 WARN
+ * MCP `axis.check_project` 도 같은 순서 · 문구입니다.
  */
 export async function collectCheckResults(dir?: string): Promise<CheckResult[]> {
   const baseDir = path.resolve(dir || ".");
@@ -39,6 +44,18 @@ export async function collectCheckResults(dir?: string): Promise<CheckResult[]> 
   // 6. brand 와 CSS import 대조 (brand 가 없으면 추가하지 않음)
   const brand = checkBrand(baseDir);
   if (brand) results.push(brand);
+
+  // 7. 브랜드를 켜는 코드(brand 가 없으면 추가하지 않음, WI-0065 D8)
+  const activation = inspectBrandActivation(baseDir);
+  if (activation) results.push(brandActivationResult(activation));
+
+  // 8. Tailwind 3 content 가 컴포넌트 경로를 덮는지(해당할 때만, WI-0065 D8)
+  const content = checkTailwindContent(baseDir);
+  if (content) results.push(content);
+
+  // 9. 애니메이션 플러그인(ui-react 를 쓸 때만, WI-0065 D8)
+  const animation = checkAnimationPlugin(baseDir);
+  if (animation) results.push(animation);
 
   return results;
 }
@@ -222,4 +239,24 @@ export function brandCheckResult(check: BrandImportCheck): CheckResult {
         message: `brand "${brand}" 와 import(${check.imports.join(", ")})가 다릅니다${suffix}`,
       };
   }
+}
+
+/**
+ * 브랜드를 켜는 코드 검사 결과를 check 항목으로 바꿉니다(WI-0065 D8). 다른 파일에서 감싸는 구성을 놓칠 수 있어 WARN 까지만 냅니다.
+ * MCP `axis.check_project` 도 같은 문구를 냅니다.
+ */
+export function brandActivationResult(check: BrandActivationCheck): CheckResult {
+  if (check.found) {
+    return {
+      name: "brand.activation",
+      severity: "pass",
+      message: `${check.found}에 ThemeProvider · data-brand 가 있습니다`,
+    };
+  }
+  const where = check.layoutFiles.length > 0 ? check.layoutFiles.join(" · ") : "루트 레이아웃(app/layout.tsx 등)";
+  return {
+    name: "brand.activation",
+    severity: "warn",
+    message: `brand "${check.brand}" 가 설정됐지만 ${where}에 ThemeProvider · data-brand 가 없습니다 → <html data-brand="${check.brand}"> 또는 setBrand("${check.brand}")`,
+  };
 }

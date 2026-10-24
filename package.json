@@ -27,6 +27,7 @@
     "registry-install-smoke:all": "node scripts/registry-install-smoke.mjs --items all --jobs 2",
     "cli-smoke": "node scripts/cli-bundled-smoke.mjs",
     "registry-shadcn-smoke": "node scripts/registry-shadcn-smoke.mjs",
+    "template-smoke": "node scripts/template-smoke.mjs",
     "release": "pnpm build && pnpm pack-smoke && changeset publish",
     "check-licenses": "node scripts/check-licenses.mjs",
     "check-token-refs": "node scripts/check-token-refs.mjs",

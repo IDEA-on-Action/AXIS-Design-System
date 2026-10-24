@@ -46,7 +46,9 @@ axis list
 - `axis.config.json` 과 `cn()` 을 담은 `utils.ts` 를 만들고, `clsx` · `tailwind-merge` 가 `package.json` 에 없으면 `dependencies` 에 더합니다. 설치는 실행하지 않고 명령만 안내합니다.
 - `axis.config.json` 의 `registry` 는 기본값(`https://axis-design-system.pages.dev/r`)이거나, 이미 있던 config 의 값입니다. 종전 기본값 `https://axis.minu.best/r` 는 Cloudflare 403 이라 바꿨습니다. add · list 는 그 값을 새 기본값으로 바꿔 읽으며 한 줄 알립니다(위 「컴포넌트 추가」, 파일은 고치지 않음). init 을 다시 실행하면 그 값을 새 기본값으로 바꿔 쓰고 「registry 를 새 기본 주소로 갱신」으로 알립니다. 사용자가 지정한 다른 값은 init 도 그대로 둡니다.
 - `utils.ts` 가 이미 있으면 같은 내용이면 「유지(이미 같은 내용)」(다시 쓰지 않음), 다르면 init 의 utils 로 덮어쓰고 「덮어씀」으로 알립니다. `utils.ts` 쓰기는 `axis add` 와 같은 규칙입니다: 심볼릭 링크면 같은 내용일 때 「유지(이미 같은 내용, 링크)」로 두고, 내용이 다른 링크(프로젝트 안 · 밖) · 깨진 링크 · 디렉터리 · 읽을 수 없는 파일 · 다른 경로와 하드링크로 이어진 파일은 쓰지 않고 그 사실을 알린 뒤 rc 1 입니다. 이 판정은 쓰기 전에 하므로 이때는 `axis.config.json` · `package.json` 도 쓰지 않습니다. 다른 경로와 하드링크로 이어진 `axis.config.json` 을 다시 써야 할 때도 같습니다.
-- config 가 이미 있으면 출력이 「생성 완료」가 아니라 사실대로 「유지(이미 같은 내용)」 또는 「갱신」입니다. 갱신은 경로 키를 init 답으로 다시 쓰고 `registry` · `agenticDir` 는 기존 값을 지킵니다(`registry` 가 종전 기본값이면 위처럼 새 기본값으로 바꿈). init 이 쓰지 않는 다른 키(`brand` · `monetDir` · `template` 등)는 갱신에서 빠지며, 빠진 키를 출력으로 알립니다. `AXIS_REGISTRY_URL` 은 config 에 기록하지 않고 add · list 를 실행할 때만 우선합니다.
+- 경로 기본값(`-y` 값 · 대화형 초기값)은 실제 프로젝트를 보고 정합니다(1.6.0 부터). `componentsDir` 는 `src/` 가 있으면 `./src/components/ui`, 없으면 `./components/ui` 이고 `src/` 를 새로 만들지 않습니다. `globalCss` 는 `app/globals.css` · `src/app/globals.css` · `styles/globals.css` · `src/styles/globals.css` · `globals.css` 가운데 실제로 있는 첫 파일, `tailwindConfig` 는 있는 `tailwind.config.{ts,js,mjs,cjs}` 가운데 첫 파일입니다. 찾지 못하면 기본값을 기록하고 그 사실을 한 줄 알립니다. Tailwind 4 안내 제목도 이 경로를 씁니다.
+- config 가 이미 있으면 출력이 「생성 완료」가 아니라 사실대로 「유지(이미 같은 내용)」 또는 「갱신」입니다. 갱신은 init 이 다루는 키(`$schema` · `componentsDir` · `tailwindConfig` · `globalCss` · `registry`)만 바꾸고, 그 밖의 키(`brand` · `monetDir` · `template` · `agenticDir` 등)는 값과 순서를 그대로 둡니다(1.6.0 부터, 이전에는 빠졌음). 들여쓰기도 기존 파일을 따릅니다. 기존 `componentsDir` 는 그대로 두고, `globalCss` · `tailwindConfig` 는 가리키는 파일이 있으면 그대로, 없으면 찾은 파일로 바꾸고 알립니다(찾지 못하면 그대로 두고 알림). Tailwind 4 이상이면 `tailwindConfig` 를 지우고 알립니다. `registry` 가 종전 기본값이면 위처럼 새 기본값으로 바꿉니다. `AXIS_REGISTRY_URL` 은 config 에 기록하지 않고 add · list 를 실행할 때만 우선합니다.
+- 애니메이션 플러그인(`tailwindcss-animate` · `tw-animate-css`)이 `package.json` 에 없으면, Dialog · Select 등의 열고 닫는 애니메이션에 필요하다는 안내 한 줄을 냅니다(Tailwind 3 은 plugins, Tailwind 4 는 `@import "tw-animate-css";`).
 - `tailwind-merge` 범위와 아래 안내는 프로젝트의 Tailwind 버전(설치본, 없으면 `package.json` 선언)으로 정합니다. 판정하지 못하면 Tailwind 3 으로 봅니다.
 - Tailwind 4 이상이면 전역 CSS 에 넣을 줄을 안내합니다. CSS 파일은 고치지 않습니다.
 
@@ -81,9 +83,9 @@ axis theme info ontology
 axis theme add ontology
 ```
 
-- `axis theme add` 는 `axis.config.json` 의 `globalCss` → `app/globals.css` → `src/app/globals.css` → 루트 `globals.css` 순으로 찾은 파일에 `@import "@axis-ds/tokens/css/brands/<brand>";` 를 한 줄 넣습니다. 여러 번 실행해도 같은 줄을 다시 넣지 않습니다.
-- `package.json` 에 `@axis-ds/tokens` 가 없으면 `dependencies` 에 `^1.3.0` 을 더하고 설치 명령만 안내합니다. 설치는 실행하지 않습니다.
-- 브랜드 CSS 는 `[data-brand="<brand>"]` 선택자로 적용되므로 `ThemeProvider defaultBrand` 나 `<html data-brand>` 가 있어야 화면이 바뀝니다. 코드는 고치지 않고 예시만 출력합니다.
+- `axis theme add` 는 `axis.config.json` 의 `globalCss` → `app/globals.css` → `src/app/globals.css` → `styles/globals.css` → `src/styles/globals.css` → 루트 `globals.css` 순으로 찾은 파일의 앞쪽 import 구간 끝(`@tailwind` 등 규칙보다 앞)에 줄을 넣습니다. 1.6.0 부터 브랜드 import 앞에 기본 토큰 CSS 도 넣습니다: Tailwind 3 은 `@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn`, Tailwind 4 는 `@axis-ds/tokens/css/tailwind4` 와 `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` 입니다. 이미 있는 줄은 다시 넣지 않으므로 여러 번 실행해도 같습니다. 규칙 뒤에 있는 기존 `@import` 는 CSS 규칙상 무시될 수 있어 맨 앞으로 옮기라고 알립니다(Next.js 15 는 위치와 관계없이 앞으로 끌어올려 적용함을 측정).
+- `package.json` 에 `@axis-ds/tokens` 가 없으면 `dependencies` 에 `^1.6.0`(1.6.0 부터, 이전에는 `^1.3.0`)을 더하고 설치 명령만 안내합니다. 설치는 실행하지 않습니다. 설치 · 업그레이드 안내 명령은 lockfile 로 고릅니다(`npm install` · `yarn add` · `pnpm add`).
+- 브랜드 CSS 는 `[data-brand="<brand>"]` 선택자로 적용되므로 루트 레이아웃의 `<html data-brand>` 나 `ThemeProvider` 의 `setBrand` 가 있어야 화면이 바뀝니다. 코드는 고치지 않고, 레이아웃에서 찾지 못하면 두 방법의 예시를 냅니다(`defaultBrand` 는 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 유지되지 않아 예시에 쓰지 않습니다). Tailwind 3 이면 preset · content 가 빠졌을 때 넣을 줄도 안내합니다(설정 파일은 고치지 않음).
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이면 목록 대신 설치 · 업그레이드 안내를 내고 종료 코드 1 로 끝납니다.
 - `axis check` 는 `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 가 맞는지도 봅니다.
 
@@ -98,8 +100,12 @@ axis theme add ontology
     5. `@axis-ds/ui-react/tailwind.css` · `@axis-ds/agentic-ui/tailwind.css` 를 import 하는데 그 패키지가 아래 버전 조건에 걸림(`tailwind.css` 는 1.4.0 부터 있음). 직접 `@source` 로 스캔하는 패키지는 `tailwind.css` 가 필요 없으므로 이 문제를 만들지 않습니다.
   - 문제가 여럿이면 위 순서대로 ` / ` 로 이어 한 항목에 냅니다. 끝에는 `package.json` 에 선언된 세 AXIS 패키지 가운데 1.4.0 미만인 것을 `(1.4.0 이상 필요: @axis-ds/tokens ^1.3.0)`, 판정할 수 없는 것을 `(설치된 버전이 1.4.0 이상인지 확인하세요: @axis-ds/agentic-ui catalog:)` 로 한 번 덧붙입니다. 버전은 `axis init` 과 같은 함수로 판정합니다: 설치본(`node_modules/<패키지>/package.json` 의 정확한 `version`)이 있으면 그것으로 보고(`(1.4.0 이상 필요: @axis-ds/ui-react 설치본 1.3.0)`, 1.4.0 이상이면 선언과 관계없이 넣지 않음), 없으면 선언 범위의 하한, 하한도 읽을 수 없으면(`catalog:` · `latest` · `||` 등) 판정 불가입니다. `workspace:` 는 넣지 않습니다.
   - 문구 예: `Tailwind 4: globals.css에 AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4"; / 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → @import "@axis-ds/ui-react/tailwind.css"; (1.4.0 이상 필요: @axis-ds/tokens ^1.3.0 · @axis-ds/ui-react ^1.3.0)`
-  - Tailwind 3: `tailwind.config.ts` 에 `--background` · `hsl(var(` 가 있으면 종전 문구로 PASS 입니다. 그렇지 않아도 설정 파일(`.ts` · `.js` · `.mjs` · `.cjs`)이 `@axis-ds/tokens/tailwind` preset 을 `require` · `import` 하면(주석 밖) `tailwind.config.mjs에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)` 처럼 PASS 입니다. 1.3.0 에서는 preset 만 쓰는 `.ts` 가 WARN(`AXIS 토큰 설정이 없습니다`), `.js` · `.mjs` · `.cjs` 가 WARN(`TypeScript 권장`)이었습니다.
+  - Tailwind 3: 설정 파일(`.ts` · `.js` · `.mjs` · `.cjs`)이 `@axis-ds/tokens/tailwind` preset 을 `require` · `import` 하면(주석 밖) `tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)` 처럼 PASS 이고, 없으면 WARN 입니다(1.6.0 부터. 이전에는 `--background` · `hsl(var(` 문자열만 있어도 PASS 여서 AXIS 참조가 없는 자체 매핑도 통과했습니다).
 - globals.css 항목: 같은 후보에서 처음 찾은 CSS 하나를 봅니다. `--background` 와 `--primary` 를 직접 정의하거나, `@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn` · `@axis-ds/tokens/css/tailwind4` 를 import 하면(블록 주석 밖, 작은따옴표 · `url()` · `layer()` 표기 포함) PASS 입니다. import 로 인정한 경우 문구 끝에 `(@axis-ds/tokens/css/tailwind4 import)` 처럼 경로가 붙습니다. 1.4.0 부터이고, 이전에는 import 만 있으면 WARN 이었습니다.
+- 해당할 때만 더하는 항목(1.6.0 부터, brand 항목 뒤 이 순서):
+  - `brand.activation`: `brand` 가 있을 때 루트 레이아웃(`app/layout.tsx` · `src/app/layout.tsx` · `pages/_app` 등, 그 레이아웃이 import 하는 같은 디렉터리의 `./providers` 한 단계 포함)에 `ThemeProvider` · `data-brand` · `setBrand(` 가 없으면 WARN 입니다(휴리스틱).
+  - `tailwind.content`: Tailwind 3 설정 파일이 있고 `componentsDir` 나 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 가 있을 때, `content` 의 문자열 glob 이 그 경로를 덮지 않으면 FAIL 입니다(그 경로의 클래스가 생성되지 않음). `content` 를 정적으로 다 읽지 못하면(변수 · 펼침) WARN 입니다.
+  - `animation`: `@axis-ds/ui-react` 선언이나 `componentsDir` 의 `animate-in` 류 클래스가 있을 때 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate` 선언 + plugins 참조, Tailwind 4 `@import "tw-animate-css"`)이 없으면 WARN 입니다.
 - FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다(1.3.0 부터, 이전에는 결과와 관계없이 0).
 - MCP `axis.check_project` 도 같은 항목 · 문구를 냅니다.
 

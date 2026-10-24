@@ -93,14 +93,22 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
       { globalCss: "./app/globals.css", brand: "sample" },
       `@import "@axis-ds/tokens/css/brands/sample";\n${BASE_CSS}`
     );
+    // WI-0065 D8: preset 과 브랜드를 켜는 코드가 있어야 warn 0(brand 가 있으면 brand.activation 항목이 더해져 7항목)
+    await fs.writeFile(path.join(tmp, "tailwind.config.ts"), 'import axis from "@axis-ds/tokens/tailwind";\nhsl(var(--x))');
+    await fs.writeFile(path.join(tmp, "app/layout.tsx"), '<html lang="ko" data-brand="sample">');
     const { results, summary } = await handleCheckProject({ targetDir: tmp });
-    expect(results).toHaveLength(6);
+    expect(results).toHaveLength(7);
     expect(results[5]).toEqual({
       name: "brand",
       severity: "pass",
       message: 'brand "sample" import 가 app/globals.css에 있습니다',
     });
-    expect(summary).toEqual({ pass: 6, warn: 0, fail: 0 });
+    expect(results[6]).toEqual({
+      name: "brand.activation",
+      severity: "pass",
+      message: "app/layout.tsx에 ThemeProvider · data-brand 가 있습니다",
+    });
+    expect(summary).toEqual({ pass: 7, warn: 0, fail: 0 });
   });
 
   it("import 없음 → warn", async () => {
@@ -111,7 +119,9 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
       severity: "warn",
       message: "brand \"sample\" import 가 app/globals.css에 없습니다 → 'axis theme add sample'",
     });
-    expect(summary.warn).toBe(1);
+    // tailwind.config(자체 hsl 매핑만, preset 없음) · brand · brand.activation(레이아웃 없음) 3개(WI-0065 D8)
+    expect(results.filter((r) => r.severity === "warn").map((r) => r.name)).toEqual(["tailwind.config", "brand", "brand.activation"]);
+    expect(summary.warn).toBe(3);
   });
 
   it("다른 브랜드만 import → warn", async () => {
@@ -130,12 +140,13 @@ describe("handleCheckProject brand 검사 (T4-4)", () => {
   it("CSS 없음 → warn, globalCss 없음 표기", async () => {
     await fs.writeJSON(path.join(tmp, "axis.config.json"), { globalCss: "./src/app/globals.css", brand: "sample" });
     const { results } = await handleCheckProject({ targetDir: tmp });
-    expect(results).toHaveLength(6);
+    expect(results).toHaveLength(7);
     expect(results[5]).toEqual({
       name: "brand",
       severity: "warn",
       message: 'brand "sample" 가 설정됐지만 CSS 파일을 찾지 못했습니다 (globalCss ./src/app/globals.css 없음)',
     });
+    expect(results[6]).toMatchObject({ name: "brand.activation", severity: "warn" });
   });
 
   it("globalCss 가 없는 파일을 가리키면 app/globals.css 를 검사 (axis init -y config, theme add 뒤 모양)", async () => {
@@ -194,10 +205,29 @@ describe("handleCheckProject Tailwind 구성 (WI-0042)", () => {
     expect(await item()).toMatchObject({ severity: "warn", message: expect.stringContaining("AXIS 토큰 진입점이 없습니다") });
   });
 
-  it("Tailwind 3 + tailwind.config.mjs → warn(TypeScript 권장)", async () => {
+  it("Tailwind 3 + tailwind.config.mjs(preset 없음) → warn (WI-0065 D8, CLI 와 같은 문구)", async () => {
     await fs.writeJSON(path.join(tmp, "package.json"), { dependencies: { tailwindcss: "^3.4.0" } });
     await fs.writeFile(path.join(tmp, "tailwind.config.mjs"), "export default {}");
-    expect(await item()).toEqual({ name: "tailwind.config", severity: "warn", message: "tailwind.config.mjs 존재 (TypeScript 권장)" });
+    expect(await item()).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message: "tailwind.config.mjs에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)",
+    });
+  });
+
+  it("WI-0065 D8: content FAIL · animation WARN 을 CLI 와 같은 코어 · 순서로 냄", async () => {
+    await fs.writeJSON(path.join(tmp, "package.json"), {
+      dependencies: { "@axis-ds/ui-react": "^1.6.0" },
+      devDependencies: { tailwindcss: "^3.4.17" },
+    });
+    await fs.writeJSON(path.join(tmp, "axis.config.json"), { componentsDir: "./src/components/ui" });
+    await fs.writeFile(path.join(tmp, "tailwind.config.ts"), 'export default { content: ["./app/**/*.{ts,tsx}"] };');
+    const { results, summary } = await handleCheckProject({ targetDir: tmp });
+    expect(results.slice(5).map((r) => [r.name, r.severity])).toEqual([
+      ["tailwind.content", "fail"],
+      ["animation", "warn"],
+    ]);
+    expect(summary.fail).toBeGreaterThanOrEqual(1);
   });
 });
 

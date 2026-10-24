@@ -1,12 +1,12 @@
 'use client'
 
 import { useState } from 'react'
-import { TabNavigation, type TabId } from './components/tab-navigation'
-import { KpiCardGrid } from './components/kpi-card-grid'
-import { ProjectStatusChart } from './components/project-status-chart'
-import { WorkforceFlowChart } from './components/workforce-flow-chart'
-import { SkillTreemap } from './components/skill-treemap'
-import { TalentTable } from './components/talent-table'
+import { TabNavigation, type TabId } from '../components/tab-navigation'
+import { KpiCardGrid } from '../components/kpi-card-grid'
+import { ProjectStatusChart } from '../components/project-status-chart'
+import { WorkforceFlowChart } from '../components/workforce-flow-chart'
+import { SkillTreemap } from '../components/skill-treemap'
+import { TalentTable } from '../components/talent-table'
 import {
   kpiResourceAllocation,
   kpiTalentInfo,
@@ -14,7 +14,7 @@ import {
   workforceFlowData,
   skillTreemapData,
   talentTableData,
-} from './lib/demo-data'
+} from '../lib/demo-data'
 
 export default function HRDashboard() {
   const [activeTab, setActiveTab] = useState<TabId>('resource')

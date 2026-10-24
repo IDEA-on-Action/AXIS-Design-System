@@ -1,13 +1,13 @@
 {
   "name": "Theme Only",
   "slug": "theme-only",
-  "description": "AXIS 디자인 토큰과 테마 시스템만 적용된 최소 구성 템플릿입니다. 다크모드 토글, CSS 변수 기반 테마, Tailwind CSS 설정이 포함됩니다.",
+  "description": "CSS 변수(HSL) 기반 테마와 다크모드 토글만 담은 최소 구성 Next.js 템플릿입니다. 아직 AXIS 토큰 패키지(@axis-ds/tokens)를 쓰지 않고 자체 변수를 씁니다.",
   "category": "minimal",
   "version": "0.1.0",
   "author": "AXIS Design System",
   "tags": ["theme", "dark-mode", "minimal", "starter"],
   "features": [
-    "AXIS 디자인 토큰 적용",
+    "CSS 변수(HSL) 기반 자체 테마 (AXIS 토큰 패키지 미사용)",
     "다크모드 토글",
     "CSS 변수 기반 테마 시스템",
     "Tailwind CSS 설정",
@@ -17,12 +17,13 @@
     "next": "^15.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwind-merge": "^3.4.0",
+    "tailwind-merge": "^2.6.0",
     "clsx": "^2.1.1"
   },
   "devDependencies": {
     "tailwindcss": "^3.4.0",
     "typescript": "^5.7.0",
+    "@types/node": "^20",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
     "autoprefixer": "^10.4.0",
