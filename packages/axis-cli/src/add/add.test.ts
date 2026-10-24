@@ -1478,7 +1478,10 @@ describe("add: 원격 레지스트리 경로", () => {
     expect(await fs.readFile(path.join(dir, "src/components/ui/card.tsx"), "utf8")).toBe(
       registryContent("card").replace(/@\/registry\/axis\/lib\/utils/g, "./utils")
     );
-    expect(notes.filter((n) => n.includes("CLI 에 포함된 레지스트리(version"))).toHaveLength(1);
+    // 폴백 안내는 한 번(내용 비교 알림 「…의 내용이 다른 항목이」 와 구분해 셉니다)
+    expect(notes.filter((n) => /CLI 에 포함된 레지스트리\(version [^)]*\)를 사용합니다/.test(n))).toHaveLength(1);
+    // 원격 card 내용이 동봉본과 달라 내용 비교 알림이 card 를 짚어야 합니다(WI-0061)
+    expect(notes.filter((n) => n.includes("내용이 다른 항목이 1개 있습니다(card)"))).toHaveLength(1);
   });
 });
 

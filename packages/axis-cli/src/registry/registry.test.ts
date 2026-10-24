@@ -62,10 +62,12 @@ function makeRegistry(version: string, tag: string) {
 }
 
 let tmpDirs: string[] = [];
-function writeBundled(version: string): string {
+function writeBundled(version: string, tag = "bundled", mutate?: (files: Record<string, unknown>) => void): string {
   const dir = mkdtempSync(path.join(tmpdir(), "axis-registry-bundled-"));
   tmpDirs.push(dir);
-  for (const [f, data] of Object.entries(makeRegistry(version, "bundled"))) {
+  const files = makeRegistry(version, tag);
+  mutate?.(files);
+  for (const [f, data] of Object.entries(files)) {
     writeFileSync(path.join(dir, f), JSON.stringify(data));
   }
   return dir;
@@ -124,9 +126,24 @@ async function refusedUrl(): Promise<string> {
   return s.url;
 }
 
+/**
+ * 알림 수집. 픽스처는 원격 · 동봉본을 'remote' · 'bundled' 내용으로 구분하므로 원격을 읽으면 내용 비교 알림(WI-0061)이
+ * 함께 나옵니다. 다른 동작을 보는 테스트가 그 알림에 흔들리지 않게 `messages` 에서는 빼고 `contentNotices` 에 따로
+ * 모읍니다. `all` 은 순서대로 모든 알림이에요(WI-0061 테스트가 씀)
+ */
 function collector() {
   const messages: string[] = [];
-  return { messages, notify: (m: string) => messages.push(m) };
+  const contentNotices: string[] = [];
+  const all: string[] = [];
+  return {
+    messages,
+    contentNotices,
+    all,
+    notify: (m: string) => {
+      all.push(m);
+      (m.includes("내용이 다른 항목이") ? contentNotices : messages).push(m);
+    },
+  };
 }
 
 beforeEach(() => {
@@ -468,7 +485,7 @@ describe("원격 정상", () => {
   it("원격 index · 항목을 쓰고, version 이 같으면 안내가 없다", async () => {
     const remote = await startServer(registryHandler(makeRegistry("1.0.0", "remote")));
     const c = collector();
-    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0"), notify: c.notify });
+    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0", "remote"), notify: c.notify });
 
     const index = await client.getIndex();
     const item = await client.getItem("button");
@@ -481,6 +498,59 @@ describe("원격 정상", () => {
     expect(c.messages).toEqual([]);
   });
 
+  it("version 만 다르고 항목 내용(sha256)이 같으면 알리지 않는다(WI-0061, ui-react 만 릴리스한 경우)", async () => {
+    const remote = await startServer(registryHandler(makeRegistry("1.5.2", "same")));
+    const c = collector();
+    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.5.1", "same"), notify: c.notify });
+    await client.getItem("button");
+    expect(client.origin).toBe("remote");
+    expect(c.all).toEqual([]);
+  });
+
+  it("version 이 같아도 항목 내용이 다르면 다른 항목 이름과 함께 알린다(WI-0061)", async () => {
+    const remote = await startServer(registryHandler(makeRegistry("1.0.0", "remote")));
+    const c = collector();
+    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0", "bundled"), notify: c.notify });
+    await client.getItem("button");
+    expect(c.all).toHaveLength(1);
+    expect(c.all[0]).toContain("내용이 다른 항목이 2개 있습니다(button, utils)");
+    expect(c.all[0]).toContain("원격 레지스트리를 우선 사용합니다");
+  });
+
+  it("한쪽에만 있는 항목도 다른 항목으로 센다(WI-0061)", async () => {
+    const files = makeRegistry("1.0.0", "same");
+    const idx = files["index.json"] as { items: { name: string; type: string; sha256?: string }[] };
+    idx.items.push({ name: "badge", type: "registry:ui", sha256: "0".repeat(64) });
+    files["badge.json"] = makeItem("badge", "// badge\n");
+    const remote = await startServer(registryHandler(files));
+    const c = collector();
+    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0", "same"), notify: c.notify });
+    await client.getIndex();
+    expect(c.all).toHaveLength(1);
+    expect(c.all[0]).toContain("내용이 다른 항목이 1개 있습니다(badge)");
+  });
+
+  it("sha256 이 없는 항목이 있어 비교할 수 없으면 종전처럼 version 으로 판정한다(WI-0061)", async () => {
+    const strip = (files: Record<string, unknown>) => {
+      const idx = files["index.json"] as { items: { sha256?: string }[] };
+      delete idx.items[0].sha256;
+    };
+    const files = makeRegistry("2.0.0", "same");
+    strip(files);
+    const remote = await startServer(registryHandler(files));
+    const c = collector();
+    const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0", "same", strip), notify: c.notify });
+    await client.getIndex();
+    expect(c.all).toHaveLength(1);
+    expect(c.all[0]).toContain("version 이 다릅니다");
+    // 같은 조건에서 version 도 같으면 알리지 않는다(종전 동작)
+    const remote2 = await startServer(registryHandler((() => { const f = makeRegistry("1.0.0", "same"); strip(f); return f; })()));
+    const c2 = collector();
+    const client2 = new RegistryClient({ url: remote2.url, bundledDir: writeBundled("1.0.0", "same", strip), notify: c2.notify });
+    await client2.getIndex();
+    expect(c2.all).toEqual([]);
+  });
+
   it("URL 끝 / 를 떼고 요청한다", async () => {
     const remote = await startServer(registryHandler(makeRegistry("1.0.0", "remote")));
     const client = new RegistryClient({ url: `${remote.url}/`, bundledDir: null, notify: () => undefined });
@@ -488,7 +558,7 @@ describe("원격 정상", () => {
     expect(remote.requests).toEqual(["/r/index.json", "/r/button.json"]);
   });
 
-  it("원격과 동봉본 version 이 다르면 한 번 알리고 원격을 쓴다", async () => {
+  it("원격과 동봉본 version · 내용이 다르면 한 번 알리고 원격을 쓴다", async () => {
     const remote = await startServer(registryHandler(makeRegistry("2.0.0", "remote")));
     const c = collector();
     const client = new RegistryClient({ url: remote.url, bundledDir: writeBundled("1.0.0"), notify: c.notify });
@@ -498,11 +568,11 @@ describe("원격 정상", () => {
 
     expect(client.origin).toBe("remote");
     expect(utils.files[0].content).toBe("// utils remote\n");
-    expect(c.messages).toHaveLength(1);
-    expect(c.messages[0]).toContain("version 2.0.0");
-    expect(c.messages[0]).toContain("version 1.0.0");
+    expect(c.all).toHaveLength(1);
+    expect(c.all[0]).toContain("version 2.0.0");
+    expect(c.all[0]).toContain("version 1.0.0");
     // 항목 조회가 뒤에 실패하면 동봉본으로 바뀔 수 있으므로 「원격을 사용합니다」로 단정하지 않습니다
-    expect(c.messages[0]).toContain("원격 레지스트리를 우선 사용합니다");
+    expect(c.all[0]).toContain("원격 레지스트리를 우선 사용합니다");
   });
 
   it("Content-Type 이 text/html 이어도 본문이 올바른 JSON 이면 원격을 쓴다(판정은 본문으로)", async () => {
