@@ -25,11 +25,12 @@
 
 ## FR-6 ③ 머지 뒤 확정 (D7)
 - [ ] 묶음 ②(WI-0046) 머지 뒤 rebase: quick-start Tailwind 3 블록 `plugins` 줄이 ② 의 결론(tailwindcss-animate)과 같은지 확인, ② 가 Tailwind 3 블록을 건드렸으면 이 WI 형태로 정리
-- [ ] 묶음 ③ 머지 뒤 rebase: 가이드의 HTML 주석 TODO 자리에 `npx @axis-ds/cli theme add ontology` 단락 작성
-- [ ] ③ theme add 의 import 삽입 순서(Tailwind 3: tokens/css · css/shadcn · 브랜드 순서와 `@tailwind` 대비 위치)가 체크리스트 · quick-start 와 같은지 대조, 다르면 문서를 ③ 에 맞추거나 ③ 쪽 결함으로 보고
-- [ ] ③ theme add 가 출력하는 Provider 예시의 `defaultBrand` 사용 여부와 「`defaultBrand` 와 해제」 서술 일치 확인
-- [ ] ③ check 의 새 판정 항목 이름을 체크리스트에 연결
-- [ ] HTML 주석 TODO 삭제, cli 테스트 재실행
+- [x] 가이드의 HTML 주석 TODO 자리에 `npx @axis-ds/cli theme add ontology` 단락(「cli 로 적용하기」, cli 1.6.0부터) 작성. ③ 이 머지 전이라 rebase 하지 않고 ③ 브랜치(PR #186) 빌드 산출물로 실측(2026-10-25, testplan 5절)
+- [x] ③ theme add 의 import 삽입 순서 대조: Tailwind 3 은 `@tailwind` 앞에 tokens/css · css/shadcn · 브랜드로 체크리스트와 같음, Tailwind 4 첫 실행도 같음. 재실행으로 더해진 컴포넌트 `tailwind.css` 는 브랜드 줄 뒤에 들어가고 출력은 「브랜드 앞」이라고 함(③ 쪽 결함으로 보고, 가이드에는 실측대로 서술)
+- [x] ③ theme add 의 Provider 예시는 `<html data-brand>` · `setBrand` 이고 `defaultBrand` 를 쓰지 않음. 「`defaultBrand` 와 해제」와 모순 없음, 가이드 · quick-start 에 이유를 적음
+- [x] ③ check 의 판정 항목(`tailwind.config` preset WARN · `brand.activation` · `tailwind.content` · `animation`)을 체크리스트 번호에 연결한 표
+- [x] HTML 주석 TODO 삭제, cli 테스트 재실행(guidance · init, testplan 5절)
+- [ ] ③ 머지 · 발행 뒤 재대조: cli 버전이 1.6.0 으로 나가는지, 「cli 로 적용하기」에 옮긴 출력 문구(브랜드 켜기 예시 · preset 안내)가 발행본과 같은지
 
 ## 검증 · 릴리스
 - [x] `guidance.test.ts` · `init.test.ts` 로컬 실행 · 양성 대조(testplan)

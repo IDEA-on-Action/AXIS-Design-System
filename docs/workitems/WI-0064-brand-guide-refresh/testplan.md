@@ -66,3 +66,29 @@ docs/guides 만 바꾸면 frontend CI 가 돌지 않을 수 있어(paths 필터�
 | 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 한 줄 주입 뒤 guidance.test | rc 1(이 문서를 실제로 읽음). 백업본으로 되돌리고 `sha256sum -c` OK |
 | cli 전체 | `pnpm test` (packages/axis-cli) | 662/662, rc 0 |
 | U+2014 | 변경 4파일에서 문자 계수 | 0건 |
+
+## 5. FR-6: cli theme add · check 실측 (2026-10-25)
+
+③(PR #186, 브랜치 `feat/wi-0037-0041-0049-0065-init-theme`)이 머지 전이라 rebase 하지 않고, ③ worktree 의 `packages/axis-cli/dist/index.js`(빌드 시각이 ③ 마지막 소스 변경보다 뒤, `--version` 1.5.4, changeset `@axis-ds/cli` minor 로 1.6.0 발행 예정)를 스크래치 프로젝트에서 실행했어요. 레포 파일은 바꾸지 않았고 모든 프로젝트는 npm(`package-lock.json`)이에요.
+
+| 프로젝트 | 구성 | 명령 | 결과 |
+|---|---|---|---|
+| T3 | src 없음, Next 15.5.28 + tailwindcss 3.4.19, create-next-app Tailwind 3 형태(`tailwind.config.ts` content 에 `./components/**` 포함, `app/globals.css` 는 `@tailwind` 3줄 + `:root` · `body`), `@axis-ds/*` 미설치 | `init -y` → `theme add ontology` | globals.css 맨 앞(`@tailwind` 앞)에 tokens/css · css/shadcn · brands/ontology 3줄, package.json 에 `"@axis-ds/tokens": "^1.6.0"`, axis.config.json 에 `"brand": "ontology"`. 출력: tokens 미설치라 이름 규칙만 확인 경고, preset 안내 1줄, 브랜드 켜기 예시(data-brand · setBrand, defaultBrand 없음), `npm install` · `npm install "@axis-ds/theme@^1.3.0"`. 「파일 3개를 바꿨습니다」 rc 0 |
+| T3 재실행 | 같음 | `theme add ontology` | 「바꾼 파일이 없습니다」 rc 0(안내는 다시 나옴) |
+| T3 check | 같음, `npm install` 전 · 뒤 | `check` | 둘 다 6 pass / 2 warn / 0 fail, rc 0. WARN 은 preset 없음 · brand.activation |
+| T3 변형 | content 에서 `./components/**` 줄 삭제, `@axis-ds/ui-react` 선언, layout 에 `data-brand` | `check` | 6 pass / 2 warn / **1 fail**, rc 1. tailwind.content FAIL(componentsDir · ui-react dist 경로 안내), animation WARN, brand.activation PASS |
+| T4 | create-next-app@15(15.5.28, Tailwind 4.3.3, src 없음, npm) + `npm install @axis-ds/ui-react`(1.6.1, tokens 1.6.0 이 함께 설치됨) | `init -y` → `theme add ontology` | init: Tailwind 4 import 3줄 · create-next-app 블록 지우기 안내(파일 안 고침). theme add: `@import "tailwindcss";` 다음에 tailwind4 · ui-react/tailwind.css · brands/ontology 3줄, package.json · axis.config.json 은 T3 과 같음. 브랜드 켜기 예시는 T3 과 같은 문구 |
+| T4 check | 같음 | `check` | 5 pass / 3 warn / 0 fail, rc 0. WARN 은 create-next-app 기본 정의 남음 · brand.activation · animation(tw-animate-css) |
+| T4 재실행 변형 | T4 결과에 `@axis-ds/agentic-ui` 선언 추가 | `theme add ontology` | agentic-ui/tailwind.css 1줄만 추가, 위치는 **브랜드 줄 뒤**(import 구간 끝). 출력은 「추가(기본 토큰 CSS, 브랜드 앞)」 |
+
+- 가이드 대조: Tailwind 3 순서 · 위치와 Tailwind 4 첫 실행 순서는 「브랜드 적용 빠른 시작」 체크리스트 블록과 같아요. Provider 예시는 `defaultBrand` 를 쓰지 않아 「`defaultBrand` 와 해제」와 모순이 없어요
+- ③ 쪽에 보고할 것: T4 재실행 변형에서 출력 문구(「브랜드 앞」)와 실제 위치(브랜드 뒤)가 달라요. `tailwind.css` 는 `@source` 한 줄이라 브랜드 값은 안 바뀐다고 봤어요(코드 근거, 계산 스타일은 재지 않음). 또 T4 의 `init` 은 `npm install "@axis-ds/tokens@^1.4.0"` 을, 이어진 `theme add` 는 `^1.6.0` 을 기록해 안내 범위가 달라요
+- 측정하지 않은 것: theme add 뒤 브라우저 계산 스타일(WI-0065 testplan 2절이 같은 구성으로 잼), Vite 프로젝트, pnpm · yarn lockfile 의 안내 문구, 첫 규칙 뒤에 `@import` 가 있는 경우의 경고 문구
+
+**자동 테스트 (가이드 · quick-start 수정 뒤, 이 worktree 에서 `pnpm install --frozen-lockfile` 후)**
+
+| 대상 | 명령 | 결과 |
+|---|---|---|
+| guidance · init | `pnpm exec vitest run src/guidance.test.ts src/init/init.test.ts` (packages/axis-cli) | 2파일 134/134, rc 0 |
+| 양성 대조 | theme-customization.md 끝에 `npx axis-cli theme add ontology` 한 줄 주입 뒤 guidance.test | rc 1. 백업본으로 되돌리고 `sha256sum -c` OK, 재실행 4/4 |
+| U+2014 · TODO 주석 | 변경 파일에서 문자 계수, `TODO(WI-0064)` grep | 0건 · 0건(grep rc 1) |

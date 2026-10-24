@@ -269,7 +269,65 @@ import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css"
 - 브랜드 컨테이너 안쪽 요소에 `.dark` 를 붙이면 그 아래는 브랜드가 꺼진 기본 다크가 됩니다(「선택자와 다크 모드」)
 - SPA 첫 화면에서 기본 색에서 브랜드 색으로 넘어가는 전환이 보일 수 있습니다(「Provider 없이 적용 · 첫 화면」)
 
-<!-- TODO(WI-0064): 묶음 ③(WI-0037 · 0041 · 0049 · 0065, cli theme add · check) 머지 뒤 rebase 해서 여기에 `npx @axis-ds/cli theme add ontology` 가 해 주는 일 단락을 확정한다. 확인 항목: ① theme add 의 import 삽입 순서(Tailwind 3 에서 tokens/css · css/shadcn · 브랜드 순서와 @tailwind 대비 위치)가 위 체크리스트와 같은지 ② theme add 가 출력하는 Provider 예시가 defaultBrand 를 쓰는지, 쓰면 「defaultBrand 와 해제」 한계를 함께 안내하는지 ③ check 의 새 판정 항목 이름. -->
+#### cli 로 적용하기 (`@axis-ds/cli` 1.6.0부터)
+
+`npx @axis-ds/cli init -y` 뒤 `npx @axis-ds/cli theme add ontology` 를 실행하면 위 1번의 전역 CSS 줄과 의존성 · 설정 기록을 cli 가 대신합니다. 2번 · 3번과 Tailwind 3 설정 파일은 cli 가 넣을 줄을 안내만 하고 고치지 않습니다. 아래 내용은 cli 1.6.0 발행 전 빌드로 src 없는 Next 15.5.28 프로젝트 2개(Tailwind 3.4.19 · Tailwind 4.3.3, 둘 다 npm)에서 확인했습니다(2026-10-25). 1.5.x 이하의 `theme add` 는 브랜드 줄만 넣고 Provider 예시가 `defaultBrand` 이므로 이 절과 다릅니다.
+
+**theme add 가 자동으로 하는 것**
+
+- 전역 CSS(`axis.config.json` 의 `globalCss`)에 기본 토큰 CSS 와 브랜드 import 를 넣습니다. 위치는 파일 앞쪽 import 구간의 끝, 첫 규칙보다 앞입니다. 이미 있는 줄은 넣지 않고, 같은 명령을 다시 실행하면 「바꾼 파일이 없습니다」로 끝납니다.
+  - Tailwind 3: 파일 맨 앞, `@tailwind` 3줄보다 앞에 `@import "@axis-ds/tokens/css";` · `@import "@axis-ds/tokens/css/shadcn";` · `@import "@axis-ds/tokens/css/brands/ontology";` 순서로 넣습니다. 위 체크리스트 블록과 같습니다
+  - Tailwind 4: `@import "tailwindcss";` 다음에 `@import "@axis-ds/tokens/css/tailwind4";` · `package.json` 에 선언된 컴포넌트 패키지의 `tailwind.css`(`@axis-ds/ui-react` · `@axis-ds/agentic-ui`) · 브랜드 순서로 넣습니다. 선언하지 않은 패키지의 줄은 넣지 않으므로, 나중에 `@axis-ds/agentic-ui` 를 더했으면 `theme add` 를 다시 실행합니다. 이때 새 줄은 import 구간의 끝, 곧 브랜드 줄 뒤에 들어갑니다. `tailwind.css` 는 `@source` 한 줄이라 위치가 브랜드 값에 영향을 주지 않지만, 위 순서대로 두려면 브랜드 줄을 맨 끝으로 옮깁니다
+  - 첫 규칙 뒤에 있는 기존 `@import` 는 옮기지 않고 맨 앞으로 옮기라고 알립니다
+- `package.json` 의 `dependencies` 에 `"@axis-ds/tokens": "^1.6.0"` 을 더합니다(이미 선언돼 있으면 범위를 바꾸지 않음). 설치는 실행하지 않고 lockfile 에 맞는 명령(npm 프로젝트면 `npm install`)을 안내합니다. `@axis-ds/tokens` 가 설치돼 있지 않으면 브랜드 이름 규칙만 확인했다고 알립니다
+- `axis.config.json` 에 `"brand": "ontology"` 를 기록합니다. 나머지 키와 순서는 그대로입니다
+
+Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-app Tailwind 3 형태의 `app/globals.css`, 아래쪽 `:root` · `body` 블록은 그대로).
+
+```diff
++@import "@axis-ds/tokens/css";
++@import "@axis-ds/tokens/css/shadcn";
++@import "@axis-ds/tokens/css/brands/ontology";
+ @tailwind base;
+ @tailwind components;
+ @tailwind utilities;
+```
+
+**사람이 해야 하는 것** (cli 는 안내만 함)
+
+- [ ] 브랜드 켜기(위 2번). cli 는 루트 레이아웃(`app/layout.tsx` 등)에서 `ThemeProvider` · `data-brand` 를 찾지 못하면 아래 예시를 그대로 출력합니다. 예시의 `lang="ko"` 는 예시 값이니 앱의 `lang` 을 유지합니다.
+
+  ```text
+  브랜드 켜기 (ThemeProvider 는 @axis-ds/theme 1.3.0 이상)
+    // 1) Provider 없이: 루트 레이아웃(app/layout.tsx)의 <html> 에 붙입니다(첫 화면부터 적용)
+    <html lang="ko" data-brand="ontology">
+
+    // 2) ThemeProvider 를 쓰면 마운트 때 브랜드가 없으면 속성을 지우므로 setBrand 로 켭니다(저장돼 유지, setBrand(undefined) 로 끔)
+    import { useTheme } from "@axis-ds/theme";
+    const { setBrand } = useTheme();
+    setBrand("ontology");
+    ! app/layout.tsx 에서 ThemeProvider · data-brand 를 찾지 못했습니다. 둘 다 없으면 import 만으로는 화면이 바뀌지 않습니다.
+    ThemeProvider 를 쓰면 @axis-ds/theme 설치: npm install "@axis-ds/theme@^1.3.0"
+  ```
+
+  cli 예시에 `defaultBrand` 가 없는 것은 끈 상태가 새로고침 뒤 풀리는 한계(아래 「`defaultBrand` 와 해제」, WI-0068) 때문입니다. 사용자가 끌 수 없게 늘 켜 두는 앱이면 `defaultBrand="ontology"` 를 써도 됩니다(「브랜드 적용」).
+- [ ] Tailwind 3: preset 을 넣습니다. cli 는 `tailwind.config.*` 에 preset 이 없으면 `presets: [require("@axis-ds/tokens/tailwind")] (ESM 이면 import axisPreset from "@axis-ds/tokens/tailwind")` 를 안내합니다. `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로를 덮지 않으면 넣을 경로도 함께 안내합니다
+- [ ] Tailwind 4: create-next-app 기본 `globals.css` 의 `:root` · `@theme inline` · `@media (prefers-color-scheme: dark)` · `body` 블록을 지웁니다. `theme add` 는 이 블록을 그대로 두고, `axis init` 의 안내와 `axis check` 의 WARN 이 남은 정의 이름을 알려 줍니다
+- [ ] 안내된 설치 명령(`npm install`, `ThemeProvider` 를 쓰면 `@axis-ds/theme`)을 실행합니다
+- [ ] Pretendard 웹폰트를 로드합니다(위 3번). cli 는 글꼴을 다루지 않습니다
+
+**axis check 가 새로 알려 주는 것** (1.6.0부터)
+
+`npx @axis-ds/cli check` 는 아래 항목으로 위 체크리스트의 빠진 단계를 짚습니다. 항목 이름은 MCP `axis.check_project` 결과에 쓰이는 이름이고, cli 화면에는 판정과 문구만 나옵니다. brand · 컴포넌트 패키지 선언 등 해당할 때만 나오는 항목이 있습니다.
+
+| 항목 이름 | 판정 | 언제 | 체크리스트 |
+|---|---|---|---|
+| `tailwind.config` | WARN | Tailwind 3 에서 `@axis-ds/tokens/tailwind` preset 이 없음. 1.5.x 이하는 자체 CSS 변수 매핑만 있어도 PASS 였습니다 | 1번 preset |
+| `brand.activation` | WARN | brand 가 있는데 루트 레이아웃에 `ThemeProvider` · `data-brand` 가 없음. 문구 끝에 `<html data-brand="ontology">` 또는 `setBrand("ontology")` 를 안내 | 2번 |
+| `tailwind.content` | FAIL(종료 코드 1) | Tailwind 3 `content` 가 `componentsDir` 나 선언된 컴포넌트 패키지 경로(`./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 등)를 덮지 않음 | 1번 content |
+| `animation` | WARN | `@axis-ds/ui-react` 를 선언했는데 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate`, Tailwind 4 `tw-animate-css`)이 없음 | - |
+
+위 Tailwind 3 프로젝트에서 `init -y` · `theme add ontology` 직후의 check 는 6 pass / 2 warn / 0 fail(WARN 은 preset 없음 · `brand.activation`)이고, `content` 에서 `./components/**` 를 빼고 `@axis-ds/ui-react` 를 선언한 변형은 `tailwind.content` FAIL · `animation` WARN 으로 종료 코드 1 입니다.
 
 ### 개념
 
