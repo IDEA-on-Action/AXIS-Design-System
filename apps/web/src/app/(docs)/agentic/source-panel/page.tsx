@@ -1,83 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import { Button } from '@axis-ds/ui-react'
+import { SourcePanel } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { KeyboardTable } from '@/components/keyboard-table'
 import { PropsTable } from '@/components/props-table'
-
-// Mock SourcePanel 컴포넌트
-const sourceIcons: Record<string, string> = {
-  web: '🌐',
-  file: '📄',
-  database: '🗄️',
-  api: '⚡',
-}
-
-const SourcePanel = ({
-  sources,
-  expandable = true,
-  defaultExpanded = false,
-  maxItems = 5,
-}: any) => {
-  const [isExpanded, setIsExpanded] = useState(defaultExpanded)
-  const displayedSources = isExpanded ? sources : sources.slice(0, maxItems)
-  const hasMore = sources.length > maxItems
-
-  if (sources.length === 0) return null
-
-  return (
-    <div className="rounded-lg border p-3 bg-muted/50">
-      <h4 className="text-xs font-medium text-muted-foreground mb-2">출처 ({sources.length}개)</h4>
-      <div className="space-y-2">
-        {displayedSources.map((source: any) => (
-          <div key={source.id} className="flex items-start gap-2 p-2 rounded-md bg-background">
-            <span className="mt-0.5">{sourceIcons[source.type]}</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {source.url ? (
-                  <a
-                    href={source.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:underline"
-                  >
-                    {source.title}
-                  </a>
-                ) : (
-                  source.title
-                )}
-              </p>
-              {source.snippet && (
-                <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                  {source.snippet}
-                </p>
-              )}
-              {source.path && (
-                <code className="text-xs text-muted-foreground/60">{source.path}</code>
-              )}
-            </div>
-            {source.relevance !== undefined && (
-              <span className="text-xs text-muted-foreground">
-                {Math.round(source.relevance * 100)}%
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
-      {expandable && hasMore && (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="mt-2 text-xs text-primary hover:underline"
-        >
-          {isExpanded ? '접기' : `${sources.length - maxItems}개 더 보기`}
-        </button>
-      )}
-    </div>
-  )
-}
 
 const sourcePanelProps = [
   { name: 'sources', type: 'Source[]', required: true, description: '출처 목록 배열' },

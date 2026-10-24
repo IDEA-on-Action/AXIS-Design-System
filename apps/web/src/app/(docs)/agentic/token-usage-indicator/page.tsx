@@ -1,75 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { TokenUsageIndicator } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-const TokenUsageIndicator = ({
-  current,
-  max,
-  cost,
-  warningThreshold = 0.8,
-  compact = false,
-}: {
-  current: number
-  max: number
-  cost?: number
-  warningThreshold?: number
-  compact?: boolean
-}) => {
-  const ratio = Math.min(current / max, 1)
-  const isWarning = ratio >= warningThreshold
-  const isCritical = ratio >= 0.95
-
-  const barColor = isCritical ? 'bg-red-500' : isWarning ? 'bg-yellow-500' : 'bg-primary'
-
-  const formatNumber = (n: number) => {
-    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`
-    return n.toString()
-  }
-
-  if (compact) {
-    return (
-      <div className="inline-flex items-center gap-2 text-xs">
-        <div className="w-16 h-1.5 rounded-full bg-muted overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all ${barColor}`}
-            style={{ width: `${ratio * 100}%` }}
-          />
-        </div>
-        <span className="text-muted-foreground">
-          {formatNumber(current)}/{formatNumber(max)}
-        </span>
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-lg border p-3 space-y-2">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium">토큰 사용량</span>
-        <span className="text-muted-foreground">
-          {formatNumber(current)} / {formatNumber(max)}
-        </span>
-      </div>
-      <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
-        <div
-          className={`h-full rounded-full transition-all ${barColor}`}
-          style={{ width: `${ratio * 100}%` }}
-        />
-      </div>
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>{(ratio * 100).toFixed(1)}% 사용</span>
-        {cost !== undefined && <span>${cost.toFixed(4)}</span>}
-      </div>
-      {isCritical && (
-        <p className="text-xs text-red-500 font-medium">⚠ 토큰 한도에 거의 도달했습니다.</p>
-      )}
-    </div>
-  )
-}
 
 const tokenUsageProps = [
   { name: 'current', type: 'number', required: true, description: '현재 사용된 토큰 수' },
@@ -115,8 +51,11 @@ export default function TokenUsageIndicatorPage() {
       <DocSection title="Interactive Demo">
         <div className="mb-4 p-6 rounded-lg border space-y-4">
           <div className="flex items-center gap-4">
-            <label className="text-sm font-medium">토큰: {current}</label>
+            <label htmlFor="token-usage-demo-range" className="text-sm font-medium">
+              토큰: {current}
+            </label>
             <input
+              id="token-usage-demo-range"
               type="range"
               min={0}
               max={max}

@@ -1,37 +1,10 @@
 'use client'
 
+import { ThinkingIndicator } from '@axis-ds/agentic-ui'
 import { CodeBlock } from '@/components/code-block'
 import { DocPageLayout } from '@/components/doc-page-layout'
 import { DocSection } from '@/components/doc-section'
 import { PropsTable } from '@/components/props-table'
-
-// Mock ThinkingIndicator 컴포넌트
-const sizeStyles: Record<string, string> = {
-  sm: 'text-xs gap-1',
-  md: 'text-sm gap-1.5',
-  lg: 'text-base gap-2',
-}
-
-const dotSizes: Record<string, string> = {
-  sm: 'w-1 h-1',
-  md: 'w-1.5 h-1.5',
-  lg: 'w-2 h-2',
-}
-
-const ThinkingIndicator = ({ text = '생각 중', size = 'md' }: any) => (
-  <div className={`flex items-center text-muted-foreground ${sizeStyles[size]}`}>
-    <span>{text}</span>
-    <div className="flex gap-0.5">
-      {[0, 1, 2].map(i => (
-        <div
-          key={i}
-          className={`rounded-full bg-current animate-bounce ${dotSizes[size]}`}
-          style={{ animationDelay: `${i * 150}ms` }}
-        />
-      ))}
-    </div>
-  </div>
-)
 
 const thinkingIndicatorProps = [
   { name: 'text', type: 'string', default: '"생각 중"', description: '표시할 텍스트' },
