@@ -31,8 +31,8 @@
  *   씁니다(호이스팅이면 `../../node_modules/<pkg>`). 덮음 판정은 `contentGlobCovers`(앞쪽 `../` 개수 비교 · 절대경로 비교)입니다.
  */
 
-import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
-import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { ROOT_LAYOUT_FILES, compareExactVersions, findInstalledPackage, isPnpProject } from "../project.js";
 
 /** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
@@ -966,20 +966,99 @@ function isAbsoluteGlob(glob: string): boolean {
   return t.startsWith("/") || /^[A-Za-z]:[\\/]/.test(t);
 }
 
+/** 중괄호 갈래를 펼칠 때의 상한. 넘으면 펼치지 않고 glob 하나로 봅니다(종전 판정) */
+const MAX_BRACE_EXPANSION = 256;
+
+/**
+ * glob 의 중괄호 `{a,b}` 를 갈래별 glob 들로 펼칩니다(중첩 포함, 짝이 없는 `{` 는 글자 그대로). 상한을 넘으면 `undefined`.
+ * 갈래마다 앞쪽 `../` 개수가 다를 수 있어서(`{./src,../../node_modules/x}/**`) 덮음 판정 전에 펼칩니다(WI-0080 검토 후속).
+ */
+function expandBraces(glob: string): string[] | undefined {
+  const open = glob.indexOf("{");
+  if (open === -1) return [glob];
+  let depth = 0;
+  let close = -1;
+  const commas: number[] = [];
+  for (let i = open; i < glob.length; i++) {
+    const c = glob[i];
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) {
+        close = i;
+        break;
+      }
+    } else if (c === "," && depth === 1) commas.push(i);
+  }
+  const head = glob.slice(0, open + 1);
+  if (close === -1 || commas.length === 0) {
+    // 짝이 없거나 갈래가 하나면 이 `{` 는 펼치지 않고 뒤쪽만 펼칩니다
+    return expandBraces(glob.slice(open + 1))?.map((r) => head + r);
+  }
+  const parts: string[] = [];
+  let from = open + 1;
+  for (const c of [...commas, close]) {
+    parts.push(glob.slice(from, c));
+    from = c + 1;
+  }
+  const prefix = glob.slice(0, open);
+  const suffix = glob.slice(close + 1);
+  const out: string[] = [];
+  for (const part of parts) {
+    const expanded = expandBraces(prefix + part + suffix);
+    if (expanded === undefined) return undefined;
+    out.push(...expanded);
+    if (out.length > MAX_BRACE_EXPANSION) return undefined;
+  }
+  return out;
+}
+
+/**
+ * 경로의 실경로(심링크를 푼 경로, posix). 끝쪽이 없으면 있는 조상까지만 풀고 나머지를 붙입니다. 실패하면 `undefined`.
+ * pnpm 기본 앱의 `node_modules/<pkg>` 는 `.pnpm` 스토어로 가는 심링크라 스토어 실경로 절대 glob 도 인정하려고 씁니다.
+ */
+function realpathPosix(p: string): string | undefined {
+  let cur = p;
+  const tail: string[] = [];
+  for (let i = 0; i < 64; i++) {
+    try {
+      return [realpathSync(cur), ...tail].join(sep).split(sep).join("/");
+    } catch {
+      const parent = dirname(cur);
+      if (parent === cur) return undefined;
+      tail.unshift(basename(cur));
+      cur = parent;
+    }
+  }
+  return undefined;
+}
+
+/** 중괄호를 펼친 glob 갈래 하나가 표본을 덮는지(설명은 contentGlobCovers) */
+function contentGlobBranchCovers(glob: string, sample: string, baseDir: string): boolean {
+  if (isAbsoluteGlob(glob)) {
+    const re = contentGlobToRegExp(glob.trim().replace(/\\/g, "/"));
+    const absSample = resolve(baseDir, sample);
+    if (re.test(absSample.split(sep).join("/"))) return true;
+    const real = realpathPosix(absSample);
+    return real !== undefined && re.test(real);
+  }
+  return leadingParentSegments(glob) === leadingParentSegments(sample) && contentGlobToRegExp(glob).test(sample);
+}
+
 /**
  * content glob 하나가 표본 경로(baseDir 기준 상대 경로, posix)를 덮는지 봅니다(WI-0080).
+ * - 먼저 중괄호 갈래를 펼쳐 갈래마다 판정합니다(검토 후속: `{./src,../../node_modules/x}/**` 처럼 깊이를 섞은 glob,
+ *   실측 372/372). 갈래가 상한(256)을 넘으면 펼치지 않고 glob 하나로 봅니다.
  * - 상대 glob: 앞쪽 `../` 개수가 표본과 같을 때만 `contentGlobToRegExp` 로 비교합니다. 정규식의 `**` 는 `..` 세그먼트도 먹지만
  *   fast-glob 의 `**` 는 `../` 를 넘지 않기 때문입니다(실측: 호이스팅 앱의 `./**` 는 ui-react 선택자 44/402).
- * - 절대경로 glob: `resolve(baseDir, sample)`(posix 로 맞춤)과 비교합니다(실측: 실제 설치 위치를 가리키면 402/402).
+ * - 절대경로 glob: `resolve(baseDir, sample)`(posix 로 맞춤)과, 그 실경로(심링크를 푼 경로)와 비교합니다(실측: 실제 설치 위치를
+ *   가리키면 402/402, pnpm 기본 앱에서 `.pnpm` 스토어 실경로를 가리켜도 372/372).
  * Tailwind 3 는 `relative: true` 가 없으면 content 를 빌드를 실행한 디렉터리(cwd) 기준으로 풀지만, 판정은 baseDir(앱 디렉터리)을
  * cwd 로 둡니다(D4: 판정에 반영하지 않고 상위 경로 제안에 `CONTENT_PARENT_PATH_NOTE` 를 붙임).
  */
 export function contentGlobCovers(glob: string, sample: string, baseDir: string): boolean {
-  if (isAbsoluteGlob(glob)) {
-    const absSample = resolve(baseDir, sample).split(sep).join("/");
-    return contentGlobToRegExp(glob.trim().replace(/\\/g, "/")).test(absSample);
-  }
-  return leadingParentSegments(glob) === leadingParentSegments(sample) && contentGlobToRegExp(glob).test(sample);
+  const branches = expandBraces(glob.trim()) ?? [glob];
+  return branches.some((b) => contentGlobBranchCovers(b, sample, baseDir));
 }
 
 /**

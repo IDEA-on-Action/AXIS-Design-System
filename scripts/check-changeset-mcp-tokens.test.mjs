@@ -19,10 +19,10 @@ const tmpDirs = [];
 after(() => { for (const d of tmpDirs) rmSync(d, { recursive: true, force: true }); });
 
 const cs = (bumps) => `---\n${Object.entries(bumps).map(([p, b]) => `"${p}": ${b}`).join('\n')}\n---\n\n본문\n`;
-/** GITHUB_* 를 지운 환경(CI 안에서 테스트가 돌아도 사례가 고른 이벤트만 보이게) */
+/** GITHUB_* · AXIS_PUSH_BEFORE 를 지운 환경(CI 안에서 테스트가 돌아도 사례가 고른 이벤트만 보이게) */
 function cleanEnv(extra = {}) {
   const env = {};
-  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith('GITHUB_')) env[k] = v;
+  for (const [k, v] of Object.entries(process.env)) if (!k.startsWith('GITHUB_') && k !== 'AXIS_PUSH_BEFORE') env[k] = v;
   return {
     ...env,
     GIT_AUTHOR_NAME: 't', GIT_AUTHOR_EMAIL: 't@example.com', GIT_COMMITTER_NAME: 't', GIT_COMMITTER_EMAIL: 't@example.com',
@@ -187,6 +187,40 @@ test('push 기준은 HEAD^: 마지막 커밋이 registry-core 를 바꾸면 검�
   assert.match(bad.stdout, /push: HEAD\^/);
   const ok = run(makeRepo({ base: { [CORE]: '1\n' }, head: { 'docs/a.md': 'x\n' }, originMain: false }), PUSH);
   assert.equal(ok.status, 0, ok.stdout + ok.stderr);
+});
+
+// 검토 후속: rebase 머지 · 직접 push 는 커밋 여러 개가 한 번에 들어와요(저장소 설정 allow_rebase_merge=true).
+// push 기준을 HEAD^ 하나로 두면 앞 커밋의 registry-core 변경을 놓치므로 github.event.before(AXIS_PUSH_BEFORE)와의 merge-base 를 씀
+test('push 기준은 github.event.before: 커밋 여러 개가 함께 들어오면 앞 커밋의 registry-core 변경도 셈', () => {
+  const repo = makeRepo({ base: { [CORE]: '1\n' }, head: { [CORE]: '2\n' }, originMain: false });
+  const before = git(repo, 'rev-parse', 'HEAD^');
+  write(repo, { 'scripts/a.mjs': 'x\n' });
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-q', '-m', 'second');
+  write(repo, { 'docs/a.md': 'y\n' });
+  git(repo, 'add', '-A');
+  git(repo, 'commit', '-q', '-m', 'third');
+  const r = run(repo, { ...PUSH, AXIS_PUSH_BEFORE: before });
+  assert.equal(r.status, 1, r.stdout + r.stderr);
+  assert.match(r.stdout, /push: merge-base\(github\.event\.before/);
+  assert.match(r.stdout, /registry-core\/ 1개/);
+  // 같은 이력에 cli · mcp changeset 이 있으면 통과
+  write(repo, { '.changeset/a.md': cs({ '@axis-ds/cli': 'patch', '@axis-ds/mcp': 'patch' }) });
+  assert.equal(run(repo, { ...PUSH, AXIS_PUSH_BEFORE: before }).status, 0);
+});
+
+test('push 의 before 가 0 으로만 된 sha(새 브랜치)거나 없으면 HEAD^, 받지 못한 커밋 · 형식 오류면 rc 2', () => {
+  const repo = makeRepo({ base: { [CORE]: '1\n' }, head: { [CORE]: '2\n' }, originMain: false });
+  for (const before of [undefined, '', '0'.repeat(40)]) {
+    const r = run(repo, { ...PUSH, ...(before === undefined ? {} : { AXIS_PUSH_BEFORE: before }) });
+    assert.equal(r.status, 1, `${before}: ${r.stdout}${r.stderr}`);
+    assert.match(r.stdout, /push: HEAD\^/);
+  }
+  for (const before of ['f'.repeat(40), 'not-a-sha']) {
+    const r = run(repo, { ...PUSH, AXIS_PUSH_BEFORE: before });
+    assert.equal(r.status, 2, `${before}: ${r.stdout}${r.stderr}`);
+    assert.match(r.stderr, /github\.event\.before/);
+  }
 });
 
 test('기준 없음은 통과가 아니라 rc 2: origin/main 없음 · PR 의 base 브랜치 없음 · GITHUB_BASE_REF 빈 값 · push 첫 커밋 · git 아님', () => {

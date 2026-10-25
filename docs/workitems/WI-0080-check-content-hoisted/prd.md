@@ -25,15 +25,17 @@
 |---|---|---|
 | D1 | 표본 · 제안 경로를 `findInstalledPackage(baseDir, name)` 로 찾은 설치본 dir 의 baseDir 기준 상대 경로(posix)로 써요. 제안은 상위 경로면 `./` 없이(`../../node_modules/...`), 아니면 종전처럼 `./`. 상위 어디에도 설치본이 없거나 Plug'n'Play 면 종전 `node_modules/<pkg>` | WI-0074 의 설치본 판독과 같은 함수 하나로 맞춰요. 브리프 시뮬레이션에서 pnpm 기본 · 단일 12행이 그대로였어요 |
 | D2 | `**` 가 `..` 세그먼트를 넘는 판독도 함께 고쳐요: glob 과 표본의 앞쪽 `../` 개수가 같을 때만 덮은 것으로 봐요(`contentGlobCovers`) | D1 만 넣으면 표본이 `../` 로 시작해 `./**/*.{js,mjs}` 거짓 PASS(44/402)가 그대로 남아요 |
-| D3 | 절대경로 glob 은 `resolve(baseDir, sample)`(posix) 와 비교해 인정해요. 동적 표현(`path.join(__dirname, ...)`)은 종전처럼 dynamic → WARN | 4픽스처 모두 빌드 402/402 인데 FAIL 이었어요. 비교는 한 분기예요 |
+| D3 | 절대경로 glob 은 `resolve(baseDir, sample)`(posix) 와, 그 실경로(심링크를 푼 경로)와 비교해 인정해요(실경로 비교는 검토 후속: pnpm 기본 앱에서 `.pnpm` 스토어 실경로 절대 glob 은 빌드 372/372 인데 FAIL 이었음). 동적 표현(`path.join(__dirname, ...)`)은 종전처럼 dynamic → WARN | 4픽스처 모두 빌드 402/402 인데 FAIL 이었어요. 비교는 한 분기예요 |
 | D4 | Tailwind 3 의 cwd 기준(relative 가 없으면 `process.cwd()`)은 판정에 반영하지 않고, 상위 경로 제안이 있을 때 문구 끝에 안내 한 줄(`CONTENT_PARENT_PATH_NOTE`, `relative: true` 권장)과 문서 한 줄을 둬요 | 측정: 호이스팅 up 은 앱 cwd 402, 루트 cwd 0, relobj 는 둘 다 402. next dev · npm -w · turbo 는 앱 cwd 로 실행해요. 판정을 낮추면 정상 사례가 WARN 소음이 돼요 |
 | D5 | 세 호출지(cli `check` · mcp `check_project` · cli `theme add` 안내 `theme/index.ts`)는 같은 `t.suggest` 와 같은 안내 문자열을 써요 | 반박 검토 minor(theme add 출력 위치는 `theme/index.ts`) |
-| D6 | `scripts/check-changeset-mcp-tokens.mjs` 를 넓혀 `packages/axis-registry-core/` 아래 파일을 바꾸면 미발행 changeset 에 cli · mcp 올림이 모두 있어야 통과하게 해요. 비교 기준은 PR 이면 `origin/<GITHUB_BASE_REF>` 와의 merge-base, push 면 `HEAD^`, 로컬(그 밖)은 `origin/main` 과의 merge-base. 기준을 못 구하면 exit 2. frontend.yml ci job checkout 에 `fetch-depth: 0` | 사용자 결정(배치 6b). 조용히 통과하면 「0건 = 위반 없음」과 「측정 실패」가 구별되지 않아요 |
+| D6 | `scripts/check-changeset-mcp-tokens.mjs` 를 넓혀 `packages/axis-registry-core/` 아래 파일을 바꾸면 미발행 changeset 에 cli · mcp 올림이 모두 있어야 통과하게 해요. 비교 기준은 PR 이면 `origin/<GITHUB_BASE_REF>` 와의 merge-base, push 면 push 이전 커밋(`github.event.before` → `AXIS_PUSH_BEFORE`)과의 merge-base(없거나 0 sha 면 `HEAD^`, 받지 못한 커밋이면 exit 2, 검토 후속), 로컬(그 밖)은 `origin/main` 과의 merge-base. 기준을 못 구하면 exit 2. frontend.yml ci job checkout 에 `fetch-depth: 0` | 사용자 결정(배치 6b). 조용히 통과하면 「0건 = 위반 없음」과 「측정 실패」가 구별되지 않아요. push 를 `HEAD^` 하나로 두면 rebase 머지(저장소 설정 허용) · 직접 push 의 앞 커밋 변경을 놓쳐요(검토 후속, 스크래치 클론 실측) |
+| D7 | 덮음 판정 전에 glob 의 중괄호 갈래를 펼쳐 갈래마다 앞쪽 `../` 개수를 비교해요(갈래 256개 초과면 펼치지 않음, 검토 후속) | 반박 검토 실측: `{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}` 는 npm · yarn workspaces 앱 cwd 빌드 372/372 인데 수정 전 · 후 모두 FAIL(앞쪽 `{` 때문에 `../` 를 0 으로 셈) |
 
 ### 1.3 범위 밖
 
 - 루트에만 ui-react 를 선언한 앱은 content 대상이 생기지 않아요(tailwind-core 의 지역 `hasDependency` 가 앱 package.json 만 봄). WI-0086(#218) 로 분리됐어요.
 - `findInstalledPackage` 는 워크스페이스 경계에서 멈추지 않아요(배치 6b 결정: 멈춤을 두지 않음). 그래서 앱 · 워크스페이스에 설치본이 없고 홈 같은 상위에만 있으면 표본 · 제안이 `../../../../node_modules/...` 처럼 프로젝트 밖을 가리켜요. Node 해석과 같아 의도로 두고, 폴백은 「상위 어디에도 없을 때만」이에요(반박 검토 minor).
+- 심링크를 거친 baseDir(`--dir` · MCP 인자)에서는 `findInstalledPackage` 가 `path.resolve` 만 써서 심링크 쪽 상위를 올라가요. 실경로 쪽 워크스페이스의 설치본을 못 찾으면 종전 표본 `node_modules/<pkg>` 로 돌아가요(종전과 같은 동작, 회귀 아님, 검토 minor 를 잔여 경계로 기록). cwd 로 실행할 때는 `process.cwd()` 가 실경로라 해당하지 않아요.
 - WI-0027 이 같은 `tailwind-core.ts` 를 고칠 예정이라 이 WI 를 먼저 머지해요(project-todo 388행).
 
 ## 2. 요구사항

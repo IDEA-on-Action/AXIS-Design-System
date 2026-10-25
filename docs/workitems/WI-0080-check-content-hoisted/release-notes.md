@@ -8,7 +8,8 @@
   - 실제 위치 `../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 를 넣었는데 FAIL(rc 1)이던 것이 PASS 예요.
   - 종전 안내대로 `./node_modules/...` 를 넣으면 PASS 였지만 실제 빌드에서 ui-react 클래스가 하나도 생기지 않았어요(실측 0/402). 이제 FAIL 이고 `../../node_modules/...` 를 안내해요.
 - `./**/*.{js,mjs}` 같은 glob 은 `../` 를 넘지 않는 것으로 봐요. 호이스팅 앱에서는 FAIL(실측 44/402), 단일 프로젝트에서는 종전처럼 PASS 예요.
-- 실제 설치 위치를 가리키는 절대경로 glob 을 덮은 것으로 봐요(모든 레이아웃, 실측 402/402). 종전에는 FAIL 이었어요.
+- 실제 설치 위치를 가리키는 절대경로 glob 을 덮은 것으로 봐요(모든 레이아웃, 실측 402/402). pnpm 기본 앱에서 `.pnpm` 스토어의 실경로를 가리키는 절대 glob 도 인정해요(실측 372/372). 종전에는 FAIL 이었어요.
+- `{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}` 처럼 중괄호 안에 깊이가 다른 경로를 섞은 glob 은 갈래마다 따로 판정해요(호이스팅 앱 실측 372/372, 종전 FAIL).
 - 제안이 상위 경로일 때 문구 끝에 안내가 붙어요: Tailwind 3 는 상대 경로를 빌드를 실행한 디렉터리 기준으로 풀어서, 모노레포 루트에서 빌드하면 `content: { relative: true, files: [...] }` 를 쓰라는 내용이에요. `axis theme add` 의 Tailwind 설정 안내도 같은 제안과 안내를 보여 줘요.
 - pnpm 기본(앱 `node_modules` 링크) · 단일 프로젝트 · 설치본 없음 · Plug'n'Play 는 판정과 문구가 그대로예요(절대경로 인정만 달라짐).
 
@@ -20,7 +21,7 @@
 
 ## 저장소 규칙
 
-- `packages/axis-registry-core/` 를 바꾸는 PR 은 changeset 에 `@axis-ds/cli` 와 `@axis-ds/mcp` 를 모두 올려야 CI(`pnpm check-changeset-mcp-tokens`)를 통과해요. 비교 기준을 구하지 못하면 exit 2 예요(CI checkout `fetch-depth: 0`).
+- `packages/axis-registry-core/` 를 바꾸는 PR 은 changeset 에 `@axis-ds/cli` 와 `@axis-ds/mcp` 를 모두 올려야 CI(`pnpm check-changeset-mcp-tokens`)를 통과해요. 비교 기준은 PR 이면 base 와의 merge-base, main push 면 push 이전 커밋(`github.event.before`)과의 merge-base 라서 rebase 머지처럼 커밋 여러 개가 한 번에 들어와도 앞 커밋의 변경을 셈해요. 비교 기준을 구하지 못하면 exit 2 예요(CI checkout `fetch-depth: 0`).
 
 ## 발행
 

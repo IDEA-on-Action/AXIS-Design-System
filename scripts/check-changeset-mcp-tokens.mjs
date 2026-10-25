@@ -13,7 +13,9 @@
  *    @axis-ds/mcp 올림이 모두 있어야 합니다(하나만 올리면 다른 쪽 판정이 낡은 코어로 남음).
  *    바뀐 파일은 git 으로 비교 기준을 정해 봅니다(워킹트리 기준, CI 에서는 HEAD 와 같음).
  *    - pull_request(GITHUB_ACTIONS · GITHUB_EVENT_NAME=pull_request · GITHUB_BASE_REF): origin/<base> 와의 merge-base
- *    - push(GITHUB_EVENT_NAME=push): HEAD^ (main 은 squash 머지라 커밋 하나가 PR 하나)
+ *    - push(GITHUB_EVENT_NAME=push): AXIS_PUSH_BEFORE(frontend.yml 이 github.event.before 를 넘김)와 HEAD 의 merge-base.
+ *      rebase 머지 · 직접 push 는 커밋 여러 개가 한 번에 들어오므로 HEAD^ 하나만 보면 앞 커밋의 변경을 놓칩니다(검토 후속).
+ *      before 가 비었거나 0 으로만 된 sha(새 브랜치)면 HEAD^, 형식이 틀렸거나 그 커밋을 받지 못했으면 종료 코드 2
  *    - 그 밖(로컬 · workflow_dispatch): origin/main 과의 merge-base
  *    기준을 구하지 못하면(얕은 clone · origin/main 없음 · git 아님) 통과로 넘기지 않고 종료 코드 2 로 알립니다.
  *    CI 는 checkout 의 fetch-depth: 0 으로 기준 커밋을 받습니다(frontend.yml).
@@ -100,7 +102,17 @@ export function resolveBase(env, git) {
     return mergeBaseWith(`origin/${baseRef}`, event);
   }
   if (event === 'push') {
-    // `HEAD^` 가 없으면(첫 커밋 · fetch-depth 1) 비교할 수 없음
+    const before = (env.AXIS_PUSH_BEFORE ?? '').trim();
+    if (before !== '' && !/^0+$/.test(before)) {
+      if (!/^[0-9a-f]{40,64}$/.test(before)) return { ok: false, reason: `AXIS_PUSH_BEFORE(github.event.before) 가 sha 형식이 아니에요: ${before}` };
+      const verified = sha(git(['rev-parse', '--verify', '--quiet', `${before}^{commit}`]));
+      if (!verified) return { ok: false, reason: `push 이전 커밋 ${before.slice(0, 12)}(github.event.before)을 받지 못했어요(force push 로 사라졌거나 얕은 clone, fetch-depth: 0 이 필요해요)` };
+      const mb = git(['merge-base', verified, 'HEAD']);
+      const base = sha(mb);
+      if (!base) return { ok: false, reason: `github.event.before 와 HEAD 의 merge-base 를 구하지 못했어요: ${mb.stderr.trim()}` };
+      return { ok: true, base, how: `push: merge-base(github.event.before ${before.slice(0, 12)}, HEAD)` };
+    }
+    // before 가 없으면(새 브랜치 · 환경 변수 미전달) 종전대로 HEAD^. `HEAD^` 가 없으면(첫 커밋 · fetch-depth 1) 비교할 수 없음
     const parent = sha(git(['rev-parse', '--verify', '--quiet', 'HEAD^']));
     if (!parent) return { ok: false, reason: 'HEAD^ 가 없어요(push, 얕은 clone 이면 fetch-depth: 0 이 필요해요)' };
     return { ok: true, base: parent, how: 'push: HEAD^' };

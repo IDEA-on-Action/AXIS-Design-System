@@ -132,3 +132,46 @@ CLI `packages/axis-cli/src/template/template-check.test.ts`: WI-0074 monorepo �
 ## 6. 발행 뒤 재측정 (AC8, 배포 뒤)
 
 - [ ] npm 에서 받은 cli 1.7.1 · mcp 1.4.1 로 `matrix2.mjs` 를 다시 돌려 after 24/24 · cliMcpMismatch 0 · negativeControl 10/10 확인
+
+## 7. 반박 검토 후속 (2026-10-26, 검토 2건 모두 approve · major 0 · minor 6)
+
+검토 지적을 실측으로 판정했어요. 두 검토가 같은 결함을 따로 짚은 것(중괄호 갈래)은 하나로 묶었어요.
+
+| # | 지적 | 판정 | 처리 |
+|---|---|---|---|
+| R1 | changeset 검사 push 모드가 `HEAD^` 하나만 봄(rebase 머지 · 직접 push 의 앞 커밋 누락) | 맞음. 새 테스트(커밋 3개, 첫 커밋만 registry-core)를 수정 전 스크립트에 돌리면 rc 0(기대 1)으로 빨강 | 고침: frontend.yml 이 `github.event.before` 를 `AXIS_PUSH_BEFORE` 로 넘기고, 스크립트는 그 커밋과 HEAD 의 merge-base 를 기준으로 씀. 비었거나 0 sha 면 `HEAD^`, sha 형식 오류 · 받지 못한 커밋이면 exit 2 |
+| R2 | `contentGlobCovers` 가 중괄호 안의 상위 경로 갈래를 못 셈(검토 두 건 공통) | 맞음. 단위 · 호이스팅 픽스처 테스트가 수정 전 소스에서 빨강 | 고침(D7): 중괄호 갈래를 펼쳐(중첩 포함, 256개 상한) 갈래마다 판정. 빌드 정답은 검토 실측 372/372(npm · yarn ws 앱 cwd) |
+| R3 | 절대경로 glob 이 심링크 경로와만 비교(pnpm `.pnpm` 스토어 실경로 거짓 FAIL) | 맞음. 심링크 스토어 픽스처 테스트가 수정 전 소스에서 빨강 | 고침(D3 확장): 표본의 실경로(있는 조상까지 realpath)와도 비교. 빌드 정답은 검토 실측 372/372 |
+| R4 | `findWorkspaceRoot` · `findInstalledPackage` 가 realpath 를 쓰지 않음(심링크 baseDir) | 맞음(검토 픽스처 실측). 종전 동작과 같아 회귀 아님 | 후속: WI-0080 · WI-0081 PRD 1.3 「범위 밖」에 잔여 경계로 기록 |
+| R5 | init 의 utils 의존성 추가가 루트 선언을 무시(check 와 판단 불일치) | 맞음(검토 rootonly 픽스처 실측) | 후속: WI-0081 PRD 1.3 에 기록, WI-0086 합류 · 새 WI 여부는 결정 필요로 넘김 |
+
+새 테스트 4건과 수정 전 확인:
+
+| 테스트 | 수정 전 | 수정 후 |
+|---|---|---|
+| template-check 「중괄호 갈래마다 ../ 개수를 셈」(단위 6 · hoisted PASS · isolated FAIL 음성 대조) | 빨강(`contentGlobCovers(MIXED)` false) | 초록 |
+| template-check 「절대경로 glob 은 표본의 실경로와도 비교」(스토어 실경로 PASS · 심링크 절대 · 상대 PASS · 다른 스토어 FAIL 음성 대조) | 빨강(FAIL) | 초록 |
+| changeset 「push 기준은 github.event.before」 | 빨강(rc 0) | 초록 |
+| changeset 「before 가 0 sha 거나 없으면 HEAD^, 받지 못한 커밋 · 형식 오류면 rc 2」 | 빨강 | 초록 |
+
+변이(각각 원복 뒤 `cmp` 로 같음 확인): 중괄호 펼침 끔(`branches = [glob]`) → template-check 1 빨강, 실경로 비교 끔 → 1 빨강.
+
+게이트(측정, 이 수정 뒤 다시, 하나씩):
+
+| 게이트 | 결과 |
+|---|---|
+| `turbo lint --force` | rc 0, 7/7, Cached 0 |
+| `turbo type-check --force` | rc 0, 11/11, Cached 0 |
+| `turbo build --force` | rc 0, 8/8, Cached 0. `public/templates/*.json` 5개는 updatedAt 한 줄만 바뀌어 되돌림 |
+| `turbo test --force` | rc 0, 7/7, Cached 0. cli 819 · mcp 169 · ui-react 194 · agentic-ui 148 · theme 47 |
+| `check-token-refs` · `check-contrast-pairs` | rc 0, 위반 0건(:root 284 · .dark 284 / 검사 파일 21) |
+| `check-types-versions` | rc 0, 8/8 |
+| `check-changeset-mcp-tokens` | rc 0, changeset 2개 · 기준 6d455f7 · registry-core 3개 · 통과, node --test 19/19 |
+| `check-library-links` | rc 0, 링크 48 · 항목 129 · 위반 0건 |
+| `build:registry` | rc 0, 30개 항목 · G1 통과. `r/index.json` · `registry.json` version 1.8.1 → 1.5.0 으로 되돌림(스모크 뒤) |
+| `test:registry` | rc 0, 45/45 |
+| `check-licenses` | rc 0, 통과 |
+| `pack-smoke` | rc 0, 퍼블리시 대상 6개 |
+| `cli-smoke` | rc 0, OK |
+| `registry-install-smoke` | rc 0, 5/5 |
+| E2E | 실행하지 않음: `apps/web` 변경 없음(바뀐 것은 registry-core · cli 테스트 · scripts · workflow · 문서) |

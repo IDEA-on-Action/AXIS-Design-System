@@ -2221,6 +2221,57 @@ describe("WI-0080: Tailwind 3 content 의 패키지 표본 · 제안을 설치�
     // 정규식 자체는 ** 가 ../ 를 먹음(그래서 ../ 개수 비교를 따로 둠)
     expect(contentGlobToRegExp("./**/*.{js,mjs}").test(sample)).toBe(true);
   });
+
+  // 검토 후속(배치 6b 반박 검토 finding): 중괄호 안에 깊이가 다른 경로를 섞은 glob 은 갈래마다 ../ 개수를 따로 셈.
+  // 빌드 실측(npm · yarn workspaces 앱 cwd, Tailwind 3.4.17): `{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}` 는
+  // ui-react 선택자 372/372 인데 수정 전에는 FAIL(갈래를 펼치지 않고 앞쪽 ../ 를 0 으로 셈)
+  it("중괄호 갈래마다 ../ 개수를 셈(깊이를 섞은 glob 이 실제 설치 위치를 덮으면 PASS)", async () => {
+    const MIXED = "{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}";
+    const base = path.resolve("/work/mono/apps/web");
+    const sample = "../../node_modules/@axis-ds/ui-react/dist/index.js";
+    expect(contentGlobCovers(MIXED, sample, base)).toBe(true);
+    expect(contentGlobCovers("./{src,../../node_modules/@axis-ds/ui-react/dist}/**/*.js", sample, base)).toBe(true);
+    // 갈래를 펼쳐도 ** 가 ../ 를 넘지 않는 규칙은 그대로(../ 하나짜리 갈래는 표본 ../../ 를 덮지 않음)
+    expect(contentGlobCovers("{./src,../node_modules}/**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("{./src,./lib}/**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("{./src,./node_modules/@axis-ds/ui-react/dist}/**/*.js", "node_modules/@axis-ds/ui-react/dist/index.js", base)).toBe(true);
+    // 절대경로 갈래도 펼친 뒤 절대 비교
+    expect(contentGlobCovers("{./src,/work/mono/node_modules/@axis-ds/ui-react/dist}/**/*.js", sample, base)).toBe(path.sep === "/");
+
+    const { dir: hoisted } = await app("hoisted");
+    await fs.outputFile(path.join(hoisted, "tailwind.config.ts"), `export default { content: [${BASE}, "${MIXED}"] };\n`);
+    expect((await collectCheckResults(hoisted)).find((r) => r.name === "tailwind.content")).toEqual(PASS);
+    // 음성 대조: 같은 glob 이 pnpm 기본(앱 node_modules 설치)에서는 실제 위치를 덮지 않아 FAIL
+    const { dir: isolated } = await app("isolated");
+    await fs.outputFile(path.join(isolated, "tailwind.config.ts"), `export default { content: [${BASE}, "${MIXED}"] };\n`);
+    expect((await collectCheckResults(isolated)).find((r) => r.name === "tailwind.content")).toEqual(FAIL(LOCAL));
+  });
+
+  // 검토 후속: pnpm 기본 앱의 node_modules/@axis-ds/ui-react 는 .pnpm 스토어로 가는 심링크예요. 스토어 실경로를 가리키는 절대 glob 도
+  // Tailwind 가 실제로 스캔하므로(빌드 실측 372/372) 실경로와도 비교. 수정 전에는 심링크 경로와만 비교해 FAIL
+  it("절대경로 glob 은 표본의 실경로(심링크를 푼 경로)와도 비교", async () => {
+    const root = await tempDir();
+    const dir = path.join(root, "apps", "web");
+    const store = path.join(root, "node_modules", ".pnpm", "@axis-ds+ui-react@1.8.1", "node_modules", "@axis-ds", "ui-react");
+    await fs.outputJSON(path.join(store, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.1" });
+    await fs.outputFile(path.join(store, "dist", "index.js"), "");
+    await fs.ensureDir(path.join(dir, "node_modules", "@axis-ds"));
+    await fs.symlink(store, path.join(dir, "node_modules", "@axis-ds", "ui-react"), "dir");
+    await fs.writeFile(path.join(root, "pnpm-workspace.yaml"), "packages:\n  - apps/*\n");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    const item = async (glob: string) => {
+      await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: [${BASE}, ${JSON.stringify(glob)}] };\n`);
+      return (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+    };
+    const real = (await fs.realpath(store)).split(path.sep).join("/");
+    expect(await item(`${real}/dist/**/*.{js,mjs}`)).toEqual(PASS);
+    // 종전대로 심링크 경로 · 상대 제안도 PASS, 다른 스토어 항목은 FAIL(음성 대조)
+    expect(await item(`${path.join(dir, "node_modules").split(path.sep).join("/")}${UI}`)).toEqual(PASS);
+    expect(await item(LOCAL)).toEqual(PASS);
+    expect((await item(`${real.replace("ui-react@1.8.1", "ui-react@9.9.9")}/dist/**/*.{js,mjs}`))?.severity).toBe("fail");
+  });
 });
 
 // WI-0081: dependencies 판정은 앱에 선언이 없으면 워크스페이스 루트(findWorkspaceRoot, .git 에서 중단) package.json 선언도 인정하고,
