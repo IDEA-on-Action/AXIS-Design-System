@@ -27,4 +27,4 @@
 - [x] changeset `.changeset/wi-0062-text-contrast-remaining.md`(tokens · ui-react · agentic-ui minor, cli · mcp patch)
 - [x] a11y E2E PAGES 확대(`e2e/a11y-routes.cjs` 경로 생성, 59경로 x 4 = 236) · incomplete 4.5 미만 실패 · CI 건수 가드 계산(`frontend.yml`)
 - [x] changeset `.changeset/batch4-a11y-upgrade.md`(linked minor · cli · mcp patch, 값 직접 참조 사용자 업그레이드 안내)
-- [ ] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 재측정
+- [x] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 재측정 (2026-10-25 #207 머지 f3dae65, Release #205 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5, run 40179615916. 발행본 재측정 불일치 0, testplan 「배포 뒤 재측정」)

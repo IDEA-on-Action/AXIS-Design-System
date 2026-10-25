@@ -370,8 +370,8 @@
       "slug": "library-slug-collision",
       "issueNumber": 159,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhC65ew",
-      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T09:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0061",
@@ -386,16 +386,16 @@
       "slug": "text-contrast-remaining",
       "issueNumber": 170,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDI2dk",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T09:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0063",
       "slug": "nontext-contrast",
       "issueNumber": 171,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDI2ek",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T09:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0064",
@@ -442,8 +442,8 @@
       "slug": "agentic-ui-nontext-a11y",
       "issueNumber": 183,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDNm_U",
-      "lastSyncedAt": "2026-10-24T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T09:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0070",
@@ -474,8 +474,8 @@
       "slug": "tooltip-scroll-persistence",
       "issueNumber": 194,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDQ7zs",
-      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-25T09:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0074",
@@ -518,5 +518,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-25T00:00:00.000Z"
+  "updatedAt": "2026-10-25T09:30:00.000Z"
 }

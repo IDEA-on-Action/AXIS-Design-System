@@ -1,6 +1,6 @@
 # WI-0063 릴리스 노트: 기본 테마 비텍스트 대비
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #171 | 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` minor, `@axis-ds/cli` · `@axis-ds/mcp` patch(배치 4 ② 묶음과 함께 linked 1.8.0 으로 발행 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #171 | 대상: `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/agentic-ui` minor, `@axis-ds/cli` · `@axis-ds/mcp` patch(배치 4 ② 묶음, linked 1.8.0 · cli 1.6.2 · mcp 1.3.5 로 2026-10-25 발행(PR #207 머지 f3dae65 · Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6))
 
 ## 바뀐 점
 
@@ -52,3 +52,8 @@
 - ontology 컨트롤 경계(라이트 1.15~1.31 · 다크 1.40~1.42)와 ontology Progress success · warning 채움(1.93 · 1.62)은 ontology 값을 바꾸지 않는 범위라 그대로예요. 값 결정이 필요해요.
 - 대기 · 건너뜀 점(`--axis-status-neutral-muted`, 1.47)은 사용자 결정으로 값을 유지해요.
 - MCP 서버(`@axis-ds/mcp`)가 동봉한 토큰 데이터(`src/registry/data/tokens.json`)는 이번에 바뀐 기본 테마 값과 새 변수를 반영하지 않아요. 이 데이터는 처음 만든 뒤(ea764b4) 갱신되지 않았고, mcp patch 는 동봉 레지스트리(`apps/web/public/r`) 갱신만 담아요. MCP 로 토큰을 물으면 처음 만든 때의 목록과 값이 나와요(실측: 새 변수 6개와 1.7.0 의 `--axis-control-h-*` 밀도 토큰도 0건). WI-0076(#202)에서 고칠 예정이에요.
+
+## 발행
+
+- `@axis-ds/tokens` · `theme` · `ui-react` · `agentic-ui` 1.8.0, `@axis-ds/cli` 1.6.2, `@axis-ds/mcp` 1.3.5 (2026-10-25, PR #207 머지 f3dae65, Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1)
+- 발행본 재측정 불일치 0(testplan 「배포 뒤 재측정」)

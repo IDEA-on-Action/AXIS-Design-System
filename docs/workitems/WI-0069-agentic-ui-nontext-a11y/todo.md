@@ -30,4 +30,4 @@
 ## 생성물 · 릴리스
 - [x] `build:registry`(6항목: dialog · agentic 5, version 1.5.0 유지) · `library:refresh-axis`(axis 10항목 + 색인) · 템플릿 updatedAt churn 되돌림 (AC8)
 - [x] changeset `.changeset/wi-0069-nontext-a11y.md`(ui-react · agentic-ui minor, cli · mcp patch)
-- [ ] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 axe 재측정
+- [x] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 axe 재측정 (2026-10-25 #207 머지 f3dae65, Release #205 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5, run 40179615916. #418 하이드레이션 · Dialog aria-controls · MCP 동봉본 재측정 통과. agentic 컴포넌트 페이지 axe 는 발행본으로 따로 재지 않고 PR #207 CI a11y E2E 236 통과로 갈음, testplan 「배포 뒤 재측정」)

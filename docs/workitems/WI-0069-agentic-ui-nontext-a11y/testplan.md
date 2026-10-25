@@ -54,3 +54,13 @@
 | E2E static a11y · nontext · demo · tooltip · tokens | 40 · 8 · 8 · 6 · 22 통과(CI 건수 가드 기대값과 같음) |
 
 로그: `scratchpad/wa11y/w69/gates/`.
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.8.0, cli 1.6.2, mcp 1.3.5(Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1). 레지스트리(registry.npmjs.org)에서 받아 lock resolved 로 출처를 확인했어요. 머지: PR #207(f3dae65, CI a11y E2E 236 passed), Release PR #205(e6d743c).
+- 결과: 불일치 0.
+- MessageBubble #418: `'use client'` 페이지, timestamp 2026-10-25T03:00Z, timeZone 미지정, 정적 prerender(서버 시스템 시간대 KST, env 주입 없음), 브라우저 Playwright timezoneId America/Los_Angeles. 1.8.0 은 #418 0건 · 콘솔 · pageerror 0건, 하이드레이션 뒤 「오후 08:00」. 양성 대조 1.7.0 은 pageerror 「Minified React error #418 (args text)」 1건. 같은 Asia/Seoul 조건은 두 버전 모두 0건이라 원인이 시간대 차이임을 확인했어요. 서버 HTML 에는 1.7.0 만 「오후 12:00」이 들어 있어요(같은 grep 이 1.7.0 에서 잡히므로 측정 유효).
+- axis add(cli 1.6.2, 원격 r/): 설치된 dialog.tsx 는 원격 r/dialog.json 과 import 경로 1줄만 다르고 닫힘 aria-controls 제거 코드가 있어요. message-bubble 에 timeZone · useHydrated 가 있어요.
+- mcp 1.3.5 stdio: serverInfo axis-design-system 1.3.5, tools 18개, get_component(dialog · agentic-message-bubble · toast) · list_components 4회 isError=false. 동봉 registry version 1.8.0, dialog.json 에 `open === false` 분기 1건(1.3.4 는 0건). 동봉 30항목 files.content 가 원격 pages.dev/r 과 차이 0, 양성 대조 1.3.4 는 16개 차이.
+- 범위 메모: agentic 컴포넌트 페이지 axe 는 발행본 소비자 앱으로 따로 재지 않았어요(PR #207 CI 의 문서 사이트 a11y E2E 236 통과로 갈음). 런타임 SSR(동적 라우트)도 따로 재지 않았어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub4`(measure.json, scripts/measure.cjs · scripts/mcp.cjs)

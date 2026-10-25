@@ -1,6 +1,6 @@
 # WI-0060 릴리스 노트: library 상세 데이터 slug 충돌
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #159 | 대상: `@axis-ds/cli` patch(배치 4 ② 와 함께 발행) · 문서 사이트(Pages)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #159 | 대상: `@axis-ds/cli` patch 1.6.2(2026-10-25 발행, PR #204 머지 f8a05be · Release PR #205 머지 e6d743c, publish run 40179615916, provenance) · 문서 사이트(Pages)
 
 ## 바뀐 점
 
@@ -22,3 +22,8 @@
 - `axis library publish` · `axis library refresh-axis`(cli patch): 위 파일 키를 쓰고, 같은 상세 주소를 쓰는 외부 항목의 slug 를 `<source>-<slug>` 로 바꿔요. `refresh-axis` 결과의 `shadowedAxis` 는 없어지고 `renamedSlugs` 가 생겼어요.
 - `pnpm check-library-links`: 같은 상세 주소(category, slug) 중복을 위반으로 봐요(항목마다 자기 파일 · 상세 주소 유일 · search url 일치). 카테고리가 달라 주소로 구분되는 같은 slug 는 허용해요.
 - 레지스트리(`/r`) · mcp 는 바뀌지 않아요.
+
+## 발행
+
+- `@axis-ds/cli` 1.6.2 · 문서 사이트 pages.dev (2026-10-25, PR #204 머지 f8a05be, Release PR #205 머지 e6d743c, Pages run 40178167789 · 40179615920, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1)
+- 발행본 재측정 불일치 0(testplan 「배포 뒤 재측정」)

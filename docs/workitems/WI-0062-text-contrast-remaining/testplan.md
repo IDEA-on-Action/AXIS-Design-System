@@ -79,3 +79,11 @@
 - `pnpm build` 뒤 `apps/web/public/templates` 5파일은 updatedAt 만 바뀌어(내용 diff 0, 측정) 되돌렸어요.
 - E2E tokens(`test:e2e:tokens`) 22 통과: dark-tokens 의 라이트 고정 기준값(placeholder · button-text-disabled)과 다크 기대 맵(button-bg-disabled, placeholder 추가)을 의도한 값으로 갱신했어요.
 - 전체 게이트(turbo · frontend.yml run 단계 · E2E static)는 WI-0063 커밋 뒤 한 번에 돌려 그 testplan 에 적어요.
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.8.0, cli 1.6.2, mcp 1.3.5(Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1). 레지스트리(registry.npmjs.org)에서 받아 lock resolved 로 출처를 확인했어요. 머지: PR #207(f3dae65, CI 15m35s, a11y E2E 236 passed 8.7m), Release PR #205(e6d743c, CI 17m3s).
+- 결과: 불일치 0.
+- tokens 1.8.0 dist CSS: 1.7.0 과 같은 방법(npm pack 두 버전을 풀어 비교)으로 대조했어요. 변수 이름 집합 diff 는 새 변수 6개 추가만(삭제 0, diff rc 1 로 비교가 실제로 수행됨). 값 diff 라이트 12 · 다크 10 이 tokens CHANGELOG 1.8.0 절 목록과 변수 · 값 모두 일치해요. shadcn-compat.css 는 라이트 `--destructive` 1줄, tailwind4.css 는 diff rc 0(같음), brands/ontology.css 는 추가 블록 2개뿐이에요.
+- 소비자 앱(Next 15.5.28 · React 19.2.0 · Tailwind 4.1.14, 새 HOME, 설치 출처 registry.npmjs.org): 1.8.0 앱 next build rc 0, axe color-contrast 위반 라이트 0 · 다크 0(같은 실행에서 passes 3노드 · incomplete 0 이라 규칙이 실제로 돌았어요). 단 1.7.0 앱도 0 이라 이 검사 페이지에서는 axe 가 두 버전을 가르지 않아요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub4`(measure.json, scripts/measure.cjs)

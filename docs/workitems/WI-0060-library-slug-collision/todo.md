@@ -25,6 +25,6 @@
 ## 생성물 · 릴리스
 - [x] `public/templates` 는 updatedAt 만 바뀐 것(내용 diff 0)을 되돌림, 레지스트리 version 1.5.0 유지(build:registry diff 는 version 2줄뿐이라 되돌림)
 - [x] changeset `@axis-ds/cli` patch
-- [ ] PR · 머지(Master)
-- [ ] Release PR 은 배치 4 ② 머지 뒤 한 번에(Master)
-- [ ] 배포 뒤 pages.dev 실측(AC8)
+- [x] PR · 머지(Master) (2026-10-25 #204 머지 f8a05be)
+- [x] Release PR 은 배치 4 ② 머지 뒤 한 번에(Master) (2026-10-25 #205 머지 e6d743c, cli 1.6.2, run 40179615916)
+- [x] 배포 뒤 pages.dev 실측(AC8) (2026-10-25: shadcn 5개 새 주소 · accordion · button 200, 없는 주소 404 음성 대조, 상세 json id · source 일치. testplan 7절의 badge · alert 주소는 따로 재지 않음, 옛 slug json 이 CDN 캐시에 남음은 testplan 8절)

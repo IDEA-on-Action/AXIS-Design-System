@@ -77,3 +77,13 @@
 - 기본 브랜드 axe(branch-new): 라이트 · 다크 모두 color-contrast 위반 0 · 대비 incomplete 0(남은 document-title · heading-order 는 검사 페이지 구성). 문서 사이트 기준 a11y E2E 236 통과(WI-0062 testplan 3.5).
 - 단위 테스트 `nontext-contrast.test.tsx` 기대값을 fallback 포함 클래스로 바꿨고, Progress warning fallback 을 빼는 변이에서 1건 실패(원복 sha256 일치)했어요.
 
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.8.0, cli 1.6.2, mcp 1.3.5(Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1). 레지스트리(registry.npmjs.org)에서 받아 lock resolved 로 출처를 확인했어요. 머지: PR #207(f3dae65), Release PR #205(e6d743c).
+- 결과: 불일치 0.
+- tokens 1.8.0: 새 변수 6개가 variables.css 에 각 2건(`:root` · `.dark`), 1.7.0 은 0건. 바뀐 기본값은 CHANGELOG 목록과 일치(예: input-border-default D1D5DB → 6B7280, 다크 374151 → 6B7280). ontology 추가 값은 1.7.0 ontology 의 border-default · surface-tertiary · surface-brand · color-*-500 과 같아요.
+- 계산값(Chromium chromium-1228): 1.8.0 앱(A) 라이트 Progress 채움 rgb(37,99,235) · (21,128,61) · (161,98,7) · (220,38,38), Checkbox 경계 · Switch 트랙 (107,114,128). 다크 (59,130,246) · (34,197,94) · (234,179,8) · (239,68,68), 경계 · 트랙 (107,114,128). 모두 tokens 1.8.0 값과 같아요.
+- 혼합 fallback: ui 1.8.0 + overrides tokens 1.7.0 앱(M)의 8개 값 x 2테마가 1.7.0 발행본 앱(B)과 모두 같아요. 투명 · currentColor 0건(16개 값을 실제로 읽은 결과).
+- 비텍스트 대비 직접 계산: 경계 6B7280 대 흰 바탕 4.83(1.7.0 E5E7EB 1.24), 다크 4.17(1.7.0 1F2937 1.37). axe color-contrast 는 1.4.11 범위 밖이라 A · M · B 모두 0 으로 두 버전을 가르지 못해요.
+- pages.dev CSS: `--axis-form-control-border:#6b7280`(라이트 · 다크), ontology `#e6e8eb` · `#2b2f35` 와 fallback `form-control-border,var(--axis-border-default)` 확인(같은 파일 border-default 10건으로 대상 파일이 맞음).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub4`(measure.json, scripts/measure.cjs)

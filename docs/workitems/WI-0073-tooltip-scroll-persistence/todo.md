@@ -22,4 +22,4 @@
 - [x] changeset `.changeset/wi-0073-tooltip-scroll-persistence.md`(ui-react patch, 배치 4 ② 묶음과 함께 linked 1.8.0)
 - [x] 게이트: turbo lint · type-check · build · test 각각 `--force` · frontend.yml run 단계 · E2E static
 - [x] Radix 업스트림 이슈 초안 (AC9, 게시 안 함)
-- [ ] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 E2E 재측정
+- [x] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 E2E 재측정 (2026-10-25 #207 머지 f3dae65, Release #205 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5, run 40179615916. 발행본 소비자 앱에서 화면 밖 트리거 Tab 뒤 800ms 열린 채, 1.7.0 은 닫힘, testplan 「배포 뒤 재측정」)

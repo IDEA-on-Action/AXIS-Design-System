@@ -26,4 +26,4 @@
 - [x] changeset `.changeset/wi-0063-nontext-contrast.md`(tokens · ui-react · agentic-ui minor, cli · mcp patch)
 - [x] 변수 덮어쓰기 사용자 안내(검토 지적): theme-customization 가이드 2절 · 5절 acme 예시, component-usage 가이드, release-notes 「업그레이드」 표, batch4 changeset. Chromium 실측: 예전 변수만 덮어쓰면 새 변수 소비처는 기본값(#2563EB · #6B7280) 유지, 새 변수까지 덮어쓰면 따라감
 - [ ] ontology 컨트롤 경계 · Progress success · warning 채움 값 결정(사용자 결정 대상, 이번 범위 밖)
-- [ ] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 재측정
+- [x] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 재측정 (2026-10-25 #207 머지 f3dae65, Release #205 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5, run 40179615916. 발행본 재측정 불일치 0, testplan 「배포 뒤 재측정」)

@@ -69,3 +69,12 @@
 
 - Firefox · Safari 실측은 하지 않았어요. 같은 대상 · 같은 단계 리스너의 등록 순서 호출은 DOM 표준 동작이라 같게 동작할 것으로 추정해요.
 - 발행본(1.8.0) 기준 재측정은 배포 뒤에 해요(todo 마지막 항목).
+
+## 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.8.0, cli 1.6.2, mcp 1.3.5(Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1). 레지스트리(registry.npmjs.org)에서 받아 lock resolved 로 출처를 확인했어요. 머지: PR #207(f3dae65, CI 15m35s), Release PR #205(e6d743c).
+- 결과: 불일치 0.
+- 발행본 소비자 앱 `/tip`(`'use client'`, delayDuration 0, 3000px 아래 트리거)에서 `#first` 포커스 뒤 Tab: 1.8.0 은 activeElement=trig, scrollY 0 → 2708, 800ms 뒤 `[role=tooltip]` 1개(data-state=instant-open), Esc 로 0개. 1.7.0 은 같은 조건(scrollY 0 → 2708, activeElement=trig)에서 800ms 뒤 0개(data-state=closed).
+- 양성 대조: MutationObserver 가 1.7.0 에서도 tooltip 출현을 1회 기록해, 1.7.0 의 0개는 「열렸다가 스크롤로 닫힘」을 잰 결과예요.
+- pages.dev `/components/tooltip/` 200.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub4`(measure.json, scripts/measure.cjs)

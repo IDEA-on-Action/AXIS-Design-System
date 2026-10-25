@@ -1,6 +1,6 @@
 # WI-0073 릴리스 노트: Tooltip 이 포커스 스크롤에 닫히지 않게
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #194 | 대상: `@axis-ds/ui-react` patch(배치 4 ② 묶음과 함께 linked 1.8.0 으로 발행 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #194 | 대상: `@axis-ds/ui-react` patch(배치 4 ② 묶음, linked 1.8.0 으로 2026-10-25 발행(PR #207 머지 f3dae65 · Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6))
 
 ## 바뀐 점
 
@@ -28,3 +28,8 @@
 - 닫힘 이유를 Radix 가 알려 주지 않아서, 래퍼가 자기 scroll 리스너를 Radix 보다 먼저 등록하는 순서에 기대요. Radix 가 리스너 등록 방식을 바꾸면 다시 확인해야 해요(E2E `tooltip-persistence.spec.ts` 가 CI 에서 잡아요).
 - Radix 업스트림에 끄는 prop 이나 닫힘 이유 전달을 제안하는 이슈 초안을 썼고, 게시는 하지 않았어요.
 - `Tooltip` 인스턴스마다 열림 여부와 상관없이 window `scroll`(capture) 리스너를 하나씩 달아 두고, 스크롤 이벤트마다 그 인스턴스의 `setTimeout(0)` 을 다시 걸어요(인스턴스당 대기 타이머는 하나). 툴팁이 많은 화면(표 · 아이콘 툴바)에서는 스크롤 이벤트 하나에 인스턴스 수만큼 리스너 호출과 타이머가 생겨요. 동작 결함은 아니고 비용이에요. 열려 있을 때만 리스너를 다는 방식으로 줄이려면 Radix 콘텐츠의 리스너보다 먼저 등록되는지(위 항목의 순서 전제)를 다시 확인해야 해요.
+
+## 발행
+
+- `@axis-ds/tokens` · `theme` · `ui-react` · `agentic-ui` 1.8.0, `@axis-ds/cli` 1.6.2, `@axis-ds/mcp` 1.3.5 (2026-10-25, PR #207 머지 f3dae65, Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1)
+- 발행본 재측정 불일치 0(testplan 「배포 뒤 재측정」)

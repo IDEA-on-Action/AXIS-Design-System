@@ -1,6 +1,6 @@
 # WI-0069 릴리스 노트: agentic-ui · ui-react 비대비 접근성 결함
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #183 | 대상: `@axis-ds/ui-react` · `@axis-ds/agentic-ui` minor, `@axis-ds/cli` · `@axis-ds/mcp` patch(배치 4 ② 묶음과 함께 linked 1.8.0 으로 발행 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #183 | 대상: `@axis-ds/ui-react` · `@axis-ds/agentic-ui` minor, `@axis-ds/cli` · `@axis-ds/mcp` patch(배치 4 ② 묶음, linked 1.8.0 · cli 1.6.2 · mcp 1.3.5 로 2026-10-25 발행(PR #207 머지 f3dae65 · Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6))
 
 ## 바뀐 점
 
@@ -36,3 +36,8 @@
 - **서버 컴포넌트에서 쓰면 동작이 바뀌어요**: 1.7.0 의 `MessageBubble` · `StepTimeline` 은 서버 컴포넌트로 쓰면 서버 렌더 HTML 에 시각(서버 시간대)이 들어 있었어요. 1.8.0 에서는 `timeZone` 이 없으면(StepTimeline 은 `locale` 과 `timeZone` 둘 중 하나라도 없으면) 서버 컴포넌트에서도 SSR HTML 의 `<time>` 이 비어 있고, JS 가 돈 뒤 브라우저 시간대로 채워져요. JS 가 꺼져 있거나 늦게 도는 화면 · 크롤러에서는 시각이 보이지 않아요. `timeZone`(StepTimeline 은 `locale` 도)을 넘기면 서버가 그 시간대로 만든 시각이 SSR HTML 에 그대로 들어가고, 브라우저에서도 같은 값이라 보는 사람의 시간대로 바뀌지 않아요. 1.7.0 에서 하이드레이션 오류(React #418)가 나던 것은 클라이언트 컴포넌트로 쓸 때였고, 이 변경으로 그쪽은 0건이 됐어요(검토 실측). 문서 Props 표의 `timeZone` 설명에도 같은 안내가 있어요.
 - CommandSeparator 는 cmdk 의 Separator 를 쓰지 않고 같은 동작(검색 중 숨김 · `alwaysRender`)을 따라 그려요. cmdk 가 Separator 동작을 바꾸면 다시 확인해야 해요.
 - DiffViewer 본문은 긴 줄로 가로 스크롤이 생겨도 포커스를 받지 않아요(문서 예제에서는 미검출, 관찰 대상).
+
+## 발행
+
+- `@axis-ds/tokens` · `theme` · `ui-react` · `agentic-ui` 1.8.0, `@axis-ds/cli` 1.6.2, `@axis-ds/mcp` 1.3.5 (2026-10-25, PR #207 머지 f3dae65, Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1)
+- 발행본 재측정 불일치 0(testplan 「배포 뒤 재측정」)

@@ -67,3 +67,12 @@ main 에서 옛 규칙은 rc 0(「slug 충돌 30개, 위반 아님」, 배치 4 
 ## 7. 배포 뒤 (AC8, 미실행)
 
 pages.dev 에서 `/library/data-display/badge/` · `/library/ui/badge/` · `/library/ui/alert/` · `/library/ui/shadcn-button/` 와 `/library/components/shadcn-badge.json` · `axis-alert.json` 을 실측해요(Master).
+
+## 8. 배포 뒤 재측정 (2026-10-25)
+
+- 대상: npm 발행본 `@axis-ds/cli` 1.6.2(PR #204 머지 f8a05be, Release PR #205 머지 e6d743c, publish run 40179615916, provenance 6/6 https://slsa.dev/provenance/v1)와 pages.dev 배포(frontend.yml f3dae65 run 40178167789 · e6d743c run 40179615920, CI · Deploy Production success, headSha 확인).
+- cli 1.6.2: `--version` 1.6.2, `library` 하위 명령 실재. WI-0060 직전 트리(`git archive f8a05be^`, 옛 slug 파일 99 · shadcn-* 0) 사본에 `library refresh-axis` rc 0, slug 바꿈 5개(shadcn-accordion · button · collapsible · command · toggle), 쓰기 132 · 삭제 99, 결과 components 129(shadcn-* 47). index 129항목 모두 `components/<id>.json` 존재(누락 0 · id/slug 불일치 0 · (category,slug) 중복 0, 129항목을 실제로 순회한 결과). 음성 대조: 같은 사본에 cli 1.6.1 은 E4 5개 · 쓰기 0 · components 99. origin/main(e6d743c) 트리에 1.6.2 `--dry-run` 쓰기 0 · 삭제 0(main 데이터와 일치).
+- axis add 원격 설치: `init -y` rc 0(registry https://axis-design-system.pages.dev/r), `add dialog toast -y` · `add message-bubble --agentic -y` rc 0, list 「28개 (원격 레지스트리, version 1.8.0)」.
+- pages.dev(AC8): `/library/ui/accordion/` · `/library/ui/button/` · shadcn-accordion · shadcn-button · shadcn-collapsible · shadcn-command · shadcn-toggle 모두 200, 음성 대조 `/library/ui/nonexistent-zz/` 404. `/library/components/shadcn-accordion.json` 의 id · source 는 shadcn, `axis-accordion.json` 은 axis. 7절에 적은 badge · alert 주소(`/library/data-display/badge/` · `/library/ui/badge/` · `/library/ui/alert/` · `shadcn-badge.json` · `axis-alert.json`)는 이번에 따로 재지 않았어요.
+- 남은 것: 옛 slug 상세 파일(예: `/library/components/accordion.json`)이 CDN 캐시에 남아 있어요. 그냥 요청하면 200(cf-cache-status HIT, age 약 39170초, s-maxage=604800)에 axis-accordion 내용, 쿼리로 캐시를 우회하면 404 예요. 원본에서는 지워졌고 새 사이트는 이 경로를 쓰지 않아요. 퍼지 여부는 결정 대상이에요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub4`(measure.json, r162-old.log · r161-old.log · r162-main.log)
