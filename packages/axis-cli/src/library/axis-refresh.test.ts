@@ -126,23 +126,42 @@ describe("refreshAxisLibrary", () => {
     if (root) await fs.remove(root);
   });
 
-  it("AXIS 항목만 다시 만들고 외부 항목은 그대로 둡니다", async () => {
+  it("AXIS 항목만 다시 만들고 외부 항목은 내용 그대로 components/<id>.json 으로 옮깁니다", async () => {
     const before = await snapshot();
     const result = await refreshAxisLibrary({ rootDir: root, updatedAt: T1 });
 
     expect(result.added).toEqual(["axis-button", "axis-approval-card"]);
     expect(result.changed).toEqual(["axis-card"]);
     expect(result.removed).toEqual(["axis-step-indicator"]);
-    expect(result.removedFiles).toEqual(["components/step-indicator.json"]);
-    // 새 AXIS button 은 shadcn button 파일과 slug 가 겹쳐 파일을 쓰지 않습니다(E4)
-    expect(result.shadowedAxis).toEqual(["axis-button"]);
+    // 옛 components/<slug>.json 은 모두 지우고 항목마다 components/<id>.json (WI-0060 D2)
+    expect(result.removedFiles.sort()).toEqual([
+      "components/button.json",
+      "components/card.json",
+      "components/hero.json",
+      "components/input.json",
+      "components/step-indicator.json",
+    ]);
+    // 새 AXIS button 과 상세 주소(/library/ui/button)가 겹치는 shadcn button 만 slug 를 바꿉니다(WI-0060)
+    expect(result.renamedSlugs).toEqual({ "shadcn-button": "shadcn-button" });
 
     const after = await snapshot();
-    // 외부 컴포넌트 파일: 바이트 그대로 (slug 가 겹치는 button 포함)
-    for (const rel of ["components/button.json", "components/hero.json", "components/input.json"]) {
-      expect(after[rel]).toBe(before[rel]);
-    }
-    expect(after["components/step-indicator.json"]).toBeUndefined();
+    expect(Object.keys(after).filter((k) => k.startsWith("components/")).sort()).toEqual([
+      "components/axis-approval-card.json",
+      "components/axis-button.json",
+      "components/axis-card.json",
+      "components/monet-hero.json",
+      "components/shadcn-button.json",
+      "components/shadcn-input.json",
+    ]);
+    // 외부 파일: 내용이 같으면 옛 파일 바이트 그대로 옮김(키 순서 · 들여쓰기 유지)
+    expect(after["components/monet-hero.json"]).toBe(before["components/hero.json"]);
+    expect(after["components/shadcn-input.json"]).toBe(before["components/input.json"]);
+    // slug 가 바뀐 shadcn button 은 자기 데이터(AXIS 코드 아님)를 새 slug 로
+    const shadcnButtonFile = JSON.parse(after["components/shadcn-button.json"]);
+    expect(shadcnButtonFile).toEqual({ ...shadcnButton, slug: "shadcn-button" });
+    const axisButtonFile = JSON.parse(after["components/axis-button.json"]);
+    expect(axisButtonFile.id).toBe("axis-button");
+    expect(axisButtonFile.slug).toBe("button");
 
     const index = JSON.parse(after["index.json"]);
     const search = JSON.parse(after["search-index.json"]);
@@ -158,12 +177,15 @@ describe("refreshAxisLibrary", () => {
     ]);
     // index.json 에서 빠져 있던 shadcn-input 은 같은 형태로 채워집니다
     expect(index.components[1]).toEqual(idx(shadcnInput));
-    expect(index.components[0]).toEqual(idx(shadcnButton));
-    expect(search.slice(0, 3)).toEqual([srch(shadcnButton), srch(shadcnInput), srch(monetHero)]);
+    const renamedButton = { ...shadcnButton, slug: "shadcn-button" };
+    expect(index.components[0]).toEqual(idx(renamedButton));
+    expect(search.slice(0, 3)).toEqual([srch(renamedButton), srch(shadcnInput), srch(monetHero)]);
+    expect(search[0].url).toBe("/library/ui/shadcn-button");
+    expect(search.find((s: { id: string }) => s.id === "axis-button").url).toBe("/library/ui/button");
     expect(search.map((s: { id: string }) => s.id)).toEqual(index.components.map((c: { id: string }) => c.id));
 
     const ui = JSON.parse(after["categories/ui.json"]);
-    expect(ui.components.slice(0, 2)).toEqual([shadcnButton, monetHero]);
+    expect(ui.components.slice(0, 2)).toEqual([renamedButton, monetHero]);
     expect(ui.components.map((c: { id: string }) => c.id)).toEqual(["shadcn-button", "monet-hero", "axis-button", "axis-card"]);
     expect(ui.count).toBe(4);
     expect(JSON.parse(after["categories/form.json"]).components).toEqual([shadcnInput]);
@@ -171,10 +193,10 @@ describe("refreshAxisLibrary", () => {
     expect(agentic.components.map((c: { id: string }) => c.id)).toEqual(["axis-approval-card"]);
 
     // AXIS 항목: 문서 별칭 · 테스트 파일 제외 · updatedAt
-    const approval = JSON.parse(after["components/approval-card.json"]);
+    const approval = JSON.parse(after["components/axis-approval-card.json"]);
     expect(approval.source.url).toBe("https://axis-design-system.pages.dev/agentic/approval-dialog");
     expect(approval.updatedAt).toBe(T1);
-    const card = JSON.parse(after["components/card.json"]);
+    const card = JSON.parse(after["components/axis-card.json"]);
     expect(card.code.files.map((f: { path: string }) => f.path)).toEqual(["index.tsx"]);
 
     // 통계 · updatedAt
@@ -195,6 +217,8 @@ describe("refreshAxisLibrary", () => {
     const second = await refreshAxisLibrary({ rootDir: root, updatedAt: T2 });
     expect(second.writtenFiles).toEqual([]);
     expect(second.removedFiles).toEqual([]);
+    // 이미 바꾼 slug(shadcn-button)는 다시 겹치지 않습니다
+    expect(second.renamedSlugs).toEqual({});
     expect(second.added).toEqual([]);
     expect(second.changed).toEqual([]);
     expect(second.unchanged.sort()).toEqual(["axis-approval-card", "axis-button", "axis-card"]);
@@ -207,8 +231,25 @@ describe("refreshAxisLibrary", () => {
     const r = await refreshAxisLibrary({ rootDir: root, updatedAt: T2 });
     expect(r.changed).toEqual(["axis-card"]);
     expect(r.unchanged).toEqual(["axis-button", "axis-approval-card"]);
-    expect(JSON.parse(await fs.readFile(path.join(lib, "components/card.json"), "utf-8")).updatedAt).toBe(T2);
-    expect(JSON.parse(await fs.readFile(path.join(lib, "components/approval-card.json"), "utf-8")).updatedAt).toBe(T1);
+    expect(JSON.parse(await fs.readFile(path.join(lib, "components/axis-card.json"), "utf-8")).updatedAt).toBe(T2);
+    expect(JSON.parse(await fs.readFile(path.join(lib, "components/axis-approval-card.json"), "utf-8")).updatedAt).toBe(T1);
+  });
+
+  it("카테고리가 다른 같은 slug 는 주소가 달라 바꾸지 않고, 각자 자기 파일을 가집니다", async () => {
+    // shadcn data-display/card 와 AXIS ui/card: 주소가 달라 slug 유지(배포 데이터의 25쌍과 같은 모양)
+    const shadcnCard = pub("shadcn-card", "card", "shadcn", "form");
+    const s = JSON.parse(await fs.readFile(path.join(lib, "search-index.json"), "utf-8"));
+    await writeJson("search-index.json", [...s, srch(shadcnCard)]);
+    const form = JSON.parse(await fs.readFile(path.join(lib, "categories/form.json"), "utf-8"));
+    await writeJson("categories/form.json", { ...form, count: 2, components: [...form.components, shadcnCard] });
+    const r = await refreshAxisLibrary({ rootDir: root, updatedAt: T1 });
+    expect(r.renamedSlugs).toEqual({ "shadcn-button": "shadcn-button" });
+    const after = await snapshot();
+    expect(JSON.parse(after["components/shadcn-card.json"])).toEqual(shadcnCard);
+    expect(JSON.parse(after["components/axis-card.json"]).source.type).toBe("axis");
+    const index = JSON.parse(after["index.json"]);
+    const routes = index.components.map((c: { category: string; slug: string }) => `${c.category}/${c.slug}`);
+    expect(new Set(routes).size).toBe(routes.length);
   });
 
   it("dryRun 은 파일을 바꾸지 않습니다", async () => {

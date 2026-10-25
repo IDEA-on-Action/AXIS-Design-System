@@ -7,7 +7,7 @@
   "components": [
     {
       "id": "shadcn-accordion",
-      "slug": "accordion",
+      "slug": "shadcn-accordion",
       "name": "accordion",
       "description": "shadcn/ui accordion component",
       "category": "ui",
@@ -28,7 +28,7 @@
     },
     {
       "id": "shadcn-button",
-      "slug": "button",
+      "slug": "shadcn-button",
       "name": "button",
       "description": "shadcn/ui button component",
       "category": "ui",
@@ -93,7 +93,7 @@
     },
     {
       "id": "shadcn-collapsible",
-      "slug": "collapsible",
+      "slug": "shadcn-collapsible",
       "name": "collapsible",
       "description": "shadcn/ui collapsible component",
       "category": "ui",
@@ -114,7 +114,7 @@
     },
     {
       "id": "shadcn-command",
-      "slug": "command",
+      "slug": "shadcn-command",
       "name": "command",
       "description": "shadcn/ui command component",
       "category": "ui",
@@ -177,7 +177,7 @@
     },
     {
       "id": "shadcn-toggle",
-      "slug": "toggle",
+      "slug": "shadcn-toggle",
       "name": "toggle",
       "description": "shadcn/ui toggle component",
       "category": "ui",

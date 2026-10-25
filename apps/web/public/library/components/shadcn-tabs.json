@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-tabs",
+  "slug": "tabs",
+  "name": "tabs",
+  "description": "shadcn/ui tabs component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/tabs"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.655Z"
+}

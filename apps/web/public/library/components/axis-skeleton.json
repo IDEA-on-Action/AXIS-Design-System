@@ -1,0 +1,30 @@
+{
+  "id": "axis-skeleton",
+  "slug": "skeleton",
+  "name": "Skeleton",
+  "description": "콘텐츠 로딩 상태를 시각적으로 나타내는 스켈레톤 컴포넌트. 펄스 애니메이션이 적용된다.",
+  "category": "ui",
+  "source": {
+    "type": "axis",
+    "registry": "@axis",
+    "url": "https://axis-design-system.pages.dev/components/skeleton"
+  },
+  "tags": [
+    "forwardRef",
+    "animated"
+  ],
+  "code": {
+    "files": [
+      {
+        "path": "index.tsx",
+        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\n/** Skeleton 컴포넌트의 Props 인터페이스. HTML div 요소의 모든 속성을 지원한다. */\nexport interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {}\n\n/**\n * 콘텐츠 로딩 상태를 시각적으로 나타내는 스켈레톤 컴포넌트. 펄스 애니메이션이 적용된다.\n * 움직임 줄이기 설정에서는 멈추지 않고 느리게(2s → 5s) 깜박여 로딩 중임을 계속 알린다(WI-0071).\n */\nconst Skeleton = React.forwardRef<HTMLDivElement, SkeletonProps>(\n  ({ className, ...props }, ref) => {\n    return (\n      <div\n        ref={ref}\n        className={cn(\n          \"animate-pulse rounded-md bg-[var(--axis-surface-tertiary)] motion-reduce:![animation-duration:5s]\",\n          className\n        )}\n        {...props}\n      />\n    );\n  }\n);\nSkeleton.displayName = \"Skeleton\";\n\nexport { Skeleton };\n",
+        "type": "component"
+      }
+    ],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-10-25T00:00:00.000Z"
+}

@@ -1,27 +1,21 @@
+import { notFound } from 'next/navigation'
 import { ComponentDetailContent } from './_components/component-detail-content'
 import fs from 'fs'
 import path from 'path'
+import type { LibraryIndex } from '@/lib/library-types'
 
-// 빌드 시 index.json에서 컴포넌트 경로 생성
+// 빌드 시 index.json 을 읽습니다. 없으면 상세 주소를 정할 수 없어 빌드를 멈춥니다(예전처럼 기본 경로로 넘어가지 않음)
+function readLibraryIndex(): LibraryIndex {
+  const indexPath = path.join(process.cwd(), 'public', 'library', 'index.json')
+  return JSON.parse(fs.readFileSync(indexPath, 'utf-8')) as LibraryIndex
+}
+
+// 상세 주소는 항목마다 하나입니다(WI-0060): 같은 주소를 쓰던 외부 항목은 slug 가 `<source>-<slug>`
 export async function generateStaticParams() {
-  try {
-    const indexPath = path.join(process.cwd(), 'public', 'library', 'index.json')
-    const indexContent = fs.readFileSync(indexPath, 'utf-8')
-    const index = JSON.parse(indexContent)
-
-    return index.components.map((comp: { category: string; slug: string }) => ({
-      category: comp.category,
-      slug: comp.slug,
-    }))
-  } catch {
-    // Fallback: 파일이 없으면 기본 경로 사용
-    console.warn('index.json을 찾을 수 없어 기본 경로를 사용합니다.')
-    return [
-      { category: 'ui', slug: 'button' },
-      { category: 'ui', slug: 'card' },
-      { category: 'agentic', slug: 'streaming-text' },
-    ]
-  }
+  return readLibraryIndex().components.map((comp) => ({
+    category: comp.category,
+    slug: comp.slug,
+  }))
 }
 
 interface ComponentDetailPageProps {
@@ -30,5 +24,8 @@ interface ComponentDetailPageProps {
 
 export default async function ComponentDetailPage({ params }: ComponentDetailPageProps) {
   const { category, slug } = await params
-  return <ComponentDetailContent category={category} slug={slug} />
+  // (category, slug) 로 항목을 골라 그 항목 id 의 상세 파일(components/<id>.json)을 읽게 합니다
+  const entry = readLibraryIndex().components.find((c) => c.category === category && c.slug === slug)
+  if (!entry) notFound()
+  return <ComponentDetailContent category={category} id={entry.id} />
 }

@@ -26,10 +26,17 @@ const categoryMap: Record<string, { name: string; description: string }> = {
 
 interface ComponentDetailContentProps {
   category: string
-  slug: string
+  /** 항목 id. 상세 데이터는 components/<id>.json 입니다(WI-0060 D2) */
+  id: string
 }
 
-export function ComponentDetailContent({ category, slug }: ComponentDetailContentProps) {
+// 설치 명령에 쓰는 원본 이름. id 는 `<source>-<원본 이름>` 이라 상세 주소 slug 가 바뀐 항목(shadcn-button)도 원본(button)을 씁니다
+function installNameOf(component: ComponentDetail): string {
+  const prefix = `${component.source.type}-`
+  return component.id.startsWith(prefix) ? component.id.slice(prefix.length) : component.slug
+}
+
+export function ComponentDetailContent({ category, id }: ComponentDetailContentProps) {
   const [copied, setCopied] = useState(false)
   const [component, setComponent] = useState<ComponentDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -39,7 +46,7 @@ export function ComponentDetailContent({ category, slug }: ComponentDetailConten
   useEffect(() => {
     async function loadComponent() {
       try {
-        const response = await fetch(`/library/components/${slug}.json`)
+        const response = await fetch(`/library/components/${id}.json`)
         if (!response.ok) {
           throw new Error('컴포넌트를 찾을 수 없습니다')
         }
@@ -52,13 +59,14 @@ export function ComponentDetailContent({ category, slug }: ComponentDetailConten
       }
     }
     loadComponent()
-  }, [slug])
+  }, [id])
 
   const categoryInfo = categoryMap[category]
   const sourceInfo = component ? sourceTypes[component.source.type] : null
-  const installCommand = sourceInfo && component
-    ? `${sourceInfo.installPrefix} ${slug}`
-    : `npx @axis-ds/cli add ${slug}`
+  const installName = component ? installNameOf(component) : ''
+  const installCommand = sourceInfo
+    ? `${sourceInfo.installPrefix} ${installName}`
+    : `npx @axis-ds/cli add ${installName}`
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)

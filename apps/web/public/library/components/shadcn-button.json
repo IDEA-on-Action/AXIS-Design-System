@@ -1,0 +1,23 @@
+{
+  "id": "shadcn-button",
+  "slug": "shadcn-button",
+  "name": "button",
+  "description": "shadcn/ui button component",
+  "category": "ui",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/button"
+  },
+  "tags": [
+    "interactive"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.175Z"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-slider",
+  "slug": "slider",
+  "name": "slider",
+  "description": "shadcn/ui slider component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/slider"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.596Z"
+}
