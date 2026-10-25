@@ -203,7 +203,10 @@ for (const file of categoryFiles) {
     }
   }
 }
-const crossCategorySlugs = [...slugToIds.values()].filter((ids) => ids.length > 1).length;
+// 카테고리가 실제로 갈리는 slug 만 센다(같은 카테고리 안의 중복은 위반 쪽에서 따로 잡힌다)
+const crossCategorySlugs = [...slugToIds.values()].filter(
+  (ids) => ids.length > 1 && new Set(ids.map((id) => entryById.get(id)?.category)).size > 1,
+).length;
 
 const expected = { total: index.components.length, bySource: {}, byCategory: {} };
 for (const c of index.components) {

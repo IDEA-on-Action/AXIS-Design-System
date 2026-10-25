@@ -61,6 +61,8 @@ export interface RefreshAxisResult {
   removed: string[];
   /** 상세 주소가 겹쳐 slug 를 `<source>-<slug>` 로 바꾼(또는 dryRun 이면 바꿀) 항목 id → 새 slug (WI-0060) */
   renamedSlugs: Record<string, string>;
+  /** renamedSlugs 의 각 id 가 바뀌기 전에 쓰던 slug (알림 문구용) */
+  renamedFrom: Record<string, string>;
   /** 내용이 바뀌어 쓴(또는 dryRun 이면 쓸) 파일, libraryDir 기준 */
   writtenFiles: string[];
   /** 지운(또는 지울) 파일, libraryDir 기준 */
@@ -256,11 +258,13 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
   // AXIS 가 기존 slug 를 쓰고, 같은 주소의 외부 항목은 `<source>-<slug>`. 바뀐 외부 항목은 세 집계 파일 모두에 같은 값을 씁니다
   const routeSlugs = resolveRouteSlugs([...extOrder.map((id) => extCategory.get(id)!), ...axisComponents]);
   const renamedSlugs: Record<string, string> = {};
+  const renamedFrom: Record<string, string> = {};
   for (const id of extOrder) {
     const slug = routeSlugs.get(id)!;
     const full = extCategory.get(id)!;
     if (slug === full.slug) continue;
     renamedSlugs[id] = slug;
+    renamedFrom[id] = full.slug;
     extCategory.set(id, { ...full, slug });
     extIndex.set(id, { ...extIndex.get(id)!, slug });
     const s = extSearch.get(id)!;
@@ -367,7 +371,7 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
     if (!options.dryRun) await fs.remove(path.join(libraryDir, rel));
   }
 
-  return { added, changed, unchanged, removed, renamedSlugs, writtenFiles, removedFiles, stats };
+  return { added, changed, unchanged, removed, renamedSlugs, renamedFrom, writtenFiles, removedFiles, stats };
 }
 
 /**
@@ -401,7 +405,7 @@ export function registerRefreshAxisCommand(libraryCmd: Command): void {
       if (renamed.length > 0) {
         console.log(
           chalk.yellow(
-            `  상세 주소가 겹쳐 slug 를 바꿈(WI-0060): ${renamed.map(([id, slug]) => `${id} → ${slug}`).join(", ")}`
+            `  상세 주소가 겹쳐 slug 를 바꿈(WI-0060): ${renamed.map(([id, slug]) => `${id}: ${result.renamedFrom[id] ?? id} → ${slug}`).join(", ")}`
           )
         );
       }

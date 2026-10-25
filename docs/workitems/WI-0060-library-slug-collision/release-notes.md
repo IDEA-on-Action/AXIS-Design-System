@@ -20,5 +20,5 @@
 
 - 상세 데이터 파일: `/library/components/<slug>.json`(99개) → `/library/components/<id>.json`(129개, 예: `axis-button.json` · `shadcn-button.json`). 옛 파일 URL 은 404 가 돼요. 직접 읽던 곳은 `index.json` 에서 항목 id 를 찾아 새 경로를 읽어요.
 - `axis library publish` · `axis library refresh-axis`(cli patch): 위 파일 키를 쓰고, 같은 상세 주소를 쓰는 외부 항목의 slug 를 `<source>-<slug>` 로 바꿔요. `refresh-axis` 결과의 `shadowedAxis` 는 없어지고 `renamedSlugs` 가 생겼어요.
-- `pnpm check-library-links`: slug 충돌을 위반으로 봐요(항목마다 자기 파일 · 상세 주소 유일 · search url 일치).
+- `pnpm check-library-links`: 같은 상세 주소(category, slug) 중복을 위반으로 봐요(항목마다 자기 파일 · 상세 주소 유일 · search url 일치). 카테고리가 달라 주소로 구분되는 같은 slug 는 허용해요.
 - 레지스트리(`/r`) · mcp 는 바뀌지 않아요.
