@@ -78,7 +78,7 @@
 | `turbo run lint --force` | rc 0, 7 tasks, Cached 0 (@axis-ds/cli 포함) |
 | `turbo run type-check --force` | rc 0, 11 tasks, Cached 0 |
 | `turbo run build --force` | rc 0, 8 tasks, Cached 0. 템플릿 JSON 5개는 updatedAt 만 바뀌어 되돌림 |
-| `turbo run test --force` | rc 0, 7 tasks, Cached 0. cli 19 files · 778 tests(이 WI 신규 31) · mcp 166 · ui-react 194 · agentic-ui 148 · theme 47 |
+| `turbo run test --force` | rc 0, 7 tasks, Cached 0. cli 19 files · 778 tests(이 WI 신규 31, 반박 검토 뒤 재실행 781 = +3, turbo 4종 모두 Cached 0) · mcp 166 · ui-react 194 · agentic-ui 148 · theme 47 |
 | check-token-refs · check-contrast-pairs · check-types-versions · check-library-links | rc 0 |
 | build:registry · test:registry | rc 0. r/index.json · registry.json version 1.8.0 → 1.5.0 되돌림 |
 | check-licenses · pack-smoke(퍼블리시 대상 6개 · G2 RSC 통과) · cli-smoke(비TTY 12건, 반박 검토 뒤 재실행) · registry-install-smoke(5/5) | rc 0 |
