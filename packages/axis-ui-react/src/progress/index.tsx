@@ -23,10 +23,10 @@ const progressIndicatorVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[var(--axis-progress-fill-default)]",
-        success: "bg-[var(--axis-progress-fill-success)]",
-        warning: "bg-[var(--axis-progress-fill-warning)]",
-        destructive: "bg-[var(--axis-progress-fill-destructive)]",
+        default: "bg-[var(--axis-progress-fill-default,var(--axis-surface-brand))]",
+        success: "bg-[var(--axis-progress-fill-success,var(--axis-color-green-500))]",
+        warning: "bg-[var(--axis-progress-fill-warning,var(--axis-color-yellow-500))]",
+        destructive: "bg-[var(--axis-progress-fill-destructive,var(--axis-color-red-500))]",
       },
     },
     defaultVariants: {

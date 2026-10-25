@@ -8,7 +8,7 @@ const Textarea = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <textarea
     className={cn(
-      "flex min-h-[80px] w-full rounded-md border border-[var(--axis-form-control-border)] bg-[var(--axis-surface-default)] px-3 py-2 text-sm",
+      "flex min-h-[80px] w-full rounded-md border border-[var(--axis-form-control-border,var(--axis-border-default))] bg-[var(--axis-surface-default)] px-3 py-2 text-sm",
       "text-[var(--axis-text-primary)]",
       "ring-offset-[var(--axis-surface-default)]",
       "placeholder:text-[var(--axis-text-tertiary)]",
