@@ -72,6 +72,9 @@
 | 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ✅ 2026-10-25 (#196, tokens 1.7.0) |
 | 85 | Tooltip 이 스크롤에 닫혀 화면 밖 트리거로 Tab 이동 시 바로 사라짐(WCAG 1.4.13 후보, WI-0066 브리프에서 발견) | WI-0073 (#194) | P18 | P3 | ⏳ |
 | 86 | `check` 의 기존 설치본 판독(Tailwind 판정 · TW4 안내)을 상위 디렉터리 탐색으로(WI-0051 에서 분리, 기준선 재측정 필요) | WI-0074 (#199) | P18 | P3 | ⏳ |
+| 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | ⏳ |
+| 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | ⏳ |
+| 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -359,6 +362,7 @@
 
 - 배치 3 결정(2026-10-25, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① WI-0072 tokens CJS 진입점이 preset 자체를 내보냄(이름 내보내기 non-enumerable · .d.cts) + cli 안내 CJS 는 `.default` + check 는 module.exports · .cjs 일 때만 WARN(결함은 1.1.0 부터). WI-0068 해제 센티널 "" · 초기값 저장값 > 마크업 data-brand > defaultBrand(사용자 결정: 마크업 우선) · check 는 theme 버전 분기. WI-0051 설치본 상위 탐색 + WARN, 판독 함수 registry-core 하나. WI-0070 plugins 배열 판독 · globals.css 는 AXIS 근거(--axis- · tokens CSS import · 레이아웃 JS import) 필요(템플릿 4종 WARN 은 WI-0067 까지 수용) ② WI-0026 Q3 (나) 대상 8개 직접 참조 · Sheet 제외 · component 최상위 토큰 · 리터럴 fallback · 아이콘 버튼 control-h-md · ontology lg 42/15 · Select field 36 · Toggle 미덮어씀 · field 둥글기 별도 · 표 머리 전용 토큰 · KEY_TOKENS 미추가 ③ WI-0066 mock 교체만 · PAGES 유지. 릴리스: theme minor 로 linked 1.7.0, cli · mcp patch. 새 WI-0073(#194) Tooltip 지속성은 배치 4 a11y 묶음
 - 배치 4 결정(2026-10-25, 브리프 · 반박 검토 뒤): ③ WI-0067 ✅(#200, Pages, 글꼴 pretendard 추가). ① WI-0060 은 충돌 5개(accordion · button · collapsible · command · toggle)의 shadcn 항목만 새 slug(`shadcn-<slug>`), 나머지 124 URL 유지, 데이터 파일 `components/<id>.json`, 코드 없는 외부 항목 화면은 범위 밖. ② a11y 는 권장안 일괄(D1 혼합 · D3 기본 브랜드만 컨트롤 경계 3:1 · D4 새 ui-react 비대비 결함도 WI-0069 · D5 locale · timeZone prop · D6 Tooltip 래퍼 제어, Radix 업스트림 이슈는 초안만), a11y 게이트는 문서 정적 전 경로 + 동적 라우트 대표 1개씩 · CI 건수 가드는 경로 목록에서 계산. 릴리스는 ② 머지 뒤 한 번에(linked 1.8.0 · cli 1.6.2 · mcp 1.3.5). 순서 ① → ②
+- 재계획(2026-10-25, `/ax:todo plan` 3차): 배치 4 = ① WI-0060(진행 중) → ② WI-0062 · 0063 · 0069 · 0073 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5 한 번에 발행. 배치 5 = WI-0027 온톨로지 콘솔 템플릿(선행 WI-0062 · 0063 · 0067 충족 뒤, 착수 전 PRD FR-2 「기존 템플릿은 @axis-ds 에 의존하지 않음」 전제 갱신). 배치 6 = cli · mcp 정확도 묶음 WI-0074 · 0075 · 0076 + 문서 WI-0077(배치 5 의 FR-4 가 check 를 건드리면 그 뒤에 rebase). 새 WI 3건(WI-0075 #201 · WI-0076 #202 · WI-0077 #203) 등록
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

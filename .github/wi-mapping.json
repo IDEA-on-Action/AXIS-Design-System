@@ -484,6 +484,30 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDR-o4",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0075",
+      "slug": "template-init-noninteractive",
+      "issueNumber": 201,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDTNcU",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0076",
+      "slug": "mcp-token-data-refresh",
+      "issueNumber": 202,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDTNd8",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0077",
+      "slug": "quickstart-tw3-border",
+      "issueNumber": 203,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDTNgA",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T00:00:00.000Z"
