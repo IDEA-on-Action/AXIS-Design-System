@@ -8,7 +8,7 @@ import { sourceTypes } from '../src/lib/library-types'
  * 받기에 실패하면 같은 HTTP 200 페이지 안에 h1 「컴포넌트를 찾을 수 없습니다」를 그린다.
  * 문서 200 이나 h1 존재만 보면 이 오류 화면도 통과하므로, 여기서는 요청 · 응답과 화면 내용을 상세 JSON 과 맞대 본다.
  *
- * - 양성 3건: 대표 항목(e2e/library-reps.cjs, index.json 에서 규칙으로 고름)마다 문서 200, 기대 주소 데이터 응답 200,
+ * - 양성 3건: 대표 항목(e2e/library-reps.cjs, index.json 속성으로 후보를 고르고 대표 3개의 상세 JSON 만 읽음)마다 문서 200, 기대 주소 데이터 응답 200,
  *   h1 이 JSON name 과 같고 오류 h1 0건, 설치 명령이 JSON 에서 계산한 값과 같고, 코드 파일 수만큼 코드 블록(또는 「코드가 없습니다.」)이 있는지.
  * - 감지기 자기 검사 1건: page.route 로 데이터 요청을 404 로 바꿔 오류 화면을 관측하고, 같은 판정 함수가 실패를 내는지 단언한다.
  *   판정 함수가 퇴화해 늘 통과하게 되면 이 건이 실패한다(측정이 살아 있음을 매 실행 증명하는 양성 대조).
@@ -16,7 +16,7 @@ import { sourceTypes } from '../src/lib/library-types'
  */
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const { pickLibraryReps } = require('./library-reps.cjs') as {
-  pickLibraryReps: () => Record<'code' | 'renamed' | 'existing', LibraryRep>
+  pickLibraryReps: (publicDir?: string) => Record<'code' | 'renamed' | 'existing', LibraryRep>
 }
 
 interface LibraryRep {
