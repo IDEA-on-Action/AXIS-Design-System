@@ -13,6 +13,7 @@
 - [x] list · get 출력(다크 · CSS 열, 출처 줄, `hsl(var(--x))`), index enum · 미발견 isError
 - [x] `scripts/mcp-smoke.mjs` 값 기대(tokens dist 에서 읽음) · 밀도 · isError
 - [x] `docs/guides/claude-workflow.md` 3.2
+- [x] mcp README 「토큰 도구」 절 신설(종전에는 절이 없었음), changeset 에 radius.md cssVariable · 표 열 변경 추가(반박 검토 minor)
 
 ## 테스트
 - [x] `src/registry/tokens-sync.test.ts` 20건 + 변이 M0~M6 빨개짐 확인

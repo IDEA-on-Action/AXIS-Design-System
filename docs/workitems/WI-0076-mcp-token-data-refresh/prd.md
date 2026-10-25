@@ -73,4 +73,4 @@
 - `packages/axis-mcp/package.json`(build 에 `gen-tokens`, devDependency `@axis-ds/tokens`) · `turbo.json`(test dependsOn) · `pnpm-lock.yaml`
 - `packages/axis-mcp/src/registry/data/tokens.json` 삭제, `packages/axis-mcp/test/fixtures/tokens-1.3.5.json`(회귀 픽스처)
 - `packages/axis-mcp/src/registry/tokens-sync.test.ts`(새 파일)
-- `scripts/mcp-smoke.mjs`(값 기대 · 밀도 · isError), `docs/guides/claude-workflow.md` 3.2
+- `scripts/mcp-smoke.mjs`(값 기대 · 밀도 · isError), `docs/guides/claude-workflow.md` 3.2, `packages/axis-mcp/README.md` 「토큰 도구」

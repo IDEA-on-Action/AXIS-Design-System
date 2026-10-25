@@ -43,6 +43,18 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 - 내용이 다른 기존 파일은 덮어쓰지 않고 건너뛰며 응답 첫머리에 건너뛴 수를 적습니다. `overwrite: true` 일 때만 덮어씁니다.
 - 의존성은 설치하지 않고 lockfile 에 맞는 명령(`pnpm add` · `npm install` · `yarn add`)만 안내합니다.
 
+## 토큰 도구
+
+| 도구 | 인자 | 응답 |
+|------|------|------|
+| `axis.list_tokens` | `category?`(color · typography · spacing · radius · shadow · density · component) | 표 `경로 \| 값 \| 다크 \| CSS \| 설명` |
+| `axis.get_token` | `path` | 값 · 다크 값 · 실제로 정의된 CSS 변수 이름. 없는 경로는 `isError` |
+
+- 토큰 값은 MCP 빌드 때 `@axis-ds/tokens` 빌드 산출물에서 생성합니다(1.4.0, WI-0076). 응답 첫머리의 출처 줄이 생성에 쓴 tokens 버전입니다.
+- `path` 는 기존 경로(예: `colors.primary`), tokens 이름 기반 경로(예: `space.5` · `control.h.md`), CSS 변수 이름(예: `--axis-control-h-md`)을 받습니다.
+- 1.4.0 응답 계약 변경: `shadow.md` · `animation.*` 4개 경로와 `animation` 카테고리를 뺐고(tokens 에 원천 없음), 없는 경로는 `isError` 로 답하며, `radius.*` 의 `cssVariable` 은 `--axis-radius-*` 입니다.
+- 브랜드(ontology 등) 값은 아래 브랜드 도구로 조회합니다.
+
 ## 브랜드 도구
 
 대상 프로젝트에 설치된 `@axis-ds/tokens`(1.3.0 이상)의 브랜드를 읽습니다. 패키지에 데이터를 번들하지 않으며, CLI `axis theme list` · `axis theme info` 와 같은 내용을 돌려줍니다.
