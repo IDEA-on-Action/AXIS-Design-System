@@ -171,7 +171,8 @@ jobs:
       # 확인 기록은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
       # nontext · demo · tokens 는 앞 E2E step 이 실패해도 돌도록 if 를 둔다(모든 결과를 한 run 에서 보고, 건수 가드가 JSON 없음으로 오판하지 않게).
       # --output 을 나누는 이유: Playwright 는 실행마다 출력 디렉터리를 비우므로 같은 test-results 를 쓰면 앞 실행의 실패 산출물이 지워진다.
-      - name: E2E a11y (브랜드 2 x 테마 2 x 10페이지, AC8)
+      # 경로는 apps/web/e2e/a11y-routes.cjs 가 앱 라우트 · library · templates index 에서 만든다(문서 정적 경로 전부 + 동적 라우트 대표 1개씩, WI-0062 D2).
+      - name: E2E a11y (브랜드 2 x 테마 2 x 문서 경로 전부, AC8 · WI-0062 D2)
         id: e2e-a11y
         env:
           E2E_SERVER: static
@@ -212,11 +213,12 @@ jobs:
         run: pnpm --filter @ax/web test:e2e:tokens --reporter=list,json --output=test-results/tokens
 
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
-      # 기대 건수는 spec 을 바꾸면 함께 고친다. 실측(playwright --list): a11y 40 · demo 8 (2026-10-18),
+      # 기대 건수는 spec 을 바꾸면 함께 고친다. a11y 는 손으로 적지 않고 apps/web/e2e/a11y-routes.cjs(spec 과 같은 경로 목록)에서
+      # 경로 수 x 조합 수로 계산한다(WI-0062 D2, 2026-10-25 실측 59경로 x 4 = 236). 실측(playwright --list): demo 8 (2026-10-18),
       # nontext 8 (2026-10-19, 포커스 링 ontology 2조합 x 2 + 상태 표식 실요소 4조합 x 1, D1 「주 표식만 판정」),
       # tokens 22 (2026-10-19, 라이트 선택자 (0,2,0) 상향과 「프로젝트 :root 가 브랜드 뒤」 갈래 5건 추가).
       # tooltip 6 (2026-10-25, 1280x720 지속성 · Esc · 포커스 이동 · 포인터 이탈과 hover 스크롤 4 + 1280x3000 음성 대조 2, WI-0073).
-      # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 10건인지도 본다(M4 에서 브랜드 전환 데모 페이지를 더함).
+      # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 경로 수만큼인지도 본다.
       # nontext 는 상태 표식 4조합마다 1건, 포커스 링 ontology 라이트 · 다크마다 2건인지 본다.
       - name: E2E 실행 건수 가드
         id: e2e-count
@@ -224,13 +226,23 @@ jobs:
         working-directory: apps/web/playwright-report
         run: |
           fail=0
+          # a11y 기대 건수: spec 이 읽는 경로 목록과 같은 파일에서 계산한다. 계산에 실패하면 0 을 기대값으로 쓰지 않고 멈춘다.
+          routes=$(node ../e2e/a11y-routes.cjs --count 2>&1); rc=$?
+          combos=$(node ../e2e/a11y-routes.cjs --combos 2>&1); rc2=$?
+          ncombo=$(wc -w <<< "$combos")
+          if [ "$rc" -ne 0 ] || [ "$rc2" -ne 0 ] || ! [[ "$routes" =~ ^[0-9]+$ ]] || [ "$routes" -eq 0 ] || [ "$ncombo" -eq 0 ]; then
+            echo "::error::a11y 경로 목록을 계산하지 못했어요 (rc=$rc/$rc2, routes='$routes', combos='$combos')"
+            exit 1
+          fi
+          a11y_want=$((routes * ncombo))
           {
             echo '### E2E 실행 건수 (WI-0025)'
             echo ''
             echo '| suite | 기대 | 실행 | 통과 | 실패 | flaky | skipped |'
             echo '|---|---|---|---|---|---|---|'
           } >> "$GITHUB_STEP_SUMMARY"
-          for spec in a11y:40 nontext:8 tokens:22 demo:8 tooltip:6; do
+          echo "a11y 경로 ${routes}개 x 조합 ${ncombo}개 = ${a11y_want}건" >> "$GITHUB_STEP_SUMMARY"
+          for spec in "a11y:${a11y_want}" nontext:8 tokens:22 demo:8 tooltip:6; do
             name=${spec%%:*}; want=${spec##*:}; f="$name.json"
             if [ ! -s "$f" ]; then
               echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"
@@ -249,10 +261,10 @@ jobs:
             fi
           done
           if [ -s a11y.json ]; then
-            for combo in default/light default/dark ontology/light ontology/dark; do
+            for combo in $combos; do
               n=$(jq --arg t "a11y ($combo)" '[.. | objects | select(.title? == $t) | .specs[]?] | length' a11y.json)
-              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne 10 ]; then
-                echo "::error::a11y ($combo): ${n}건 (기대 10건)"
+              if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne "$routes" ]; then
+                echo "::error::a11y ($combo): ${n}건 (기대 ${routes}건)"
                 fail=1
               fi
             done

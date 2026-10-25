@@ -41,6 +41,19 @@
 - ontology 계산값 불변(측정): `/docs/brand-demo/` 에서 html 의 `--axis-*` 289개 계산값을 수정 전 · 후 빌드에서 읽어 비교했어요(`scratchpad/wa11y/w62/ont-probe.mjs`). ontology 라이트 · 다크 차이 0, 기본 라이트 7 · 기본 다크 5(2.1 표의 변수와 정확히 같음 = 양성 대조).
 - ontology CSS 바이트: `dist/css/brands/ontology.css` 가 수정 전 백업과 `cmp` 동일.
 
+### 3.1 a11y E2E 게이트 확대 (D2, 측정)
+
+- 경로: `apps/web/e2e/a11y-routes.cjs` 가 `src/app` 의 page.tsx 59개에서 만들어요. 정적 56 + 동적 대표 3(`/library/ui/` · `/library/ui/accordion/` = index 의 첫 AXIS 항목, `/templates/dashboard/` = 상세 JSON 이 있는 첫 템플릿). 정적 56 은 3절 스크립트 측정의 경로와 같고, 동적 대표는 규칙으로 골라 3절(`agentic` · `code-block`)과 달라요.
+- spec 단언 추가: HTTP 200, 준비 선택자(기본 `h1`, 데이터를 받기 전 Skeleton 만 그리는 library · templates 를 거르기 위함), incomplete color-contrast 중 수치가 있고 4.5 미만인 노드 0.
+- 결과(2026-10-25, 현재 HEAD 빌드, `CI=1 E2E_SERVER=static`, 워커 1 = CI 와 같은 조건): 236 통과 · 실패 0 · flaky 0 · skipped 0. 조합마다 59건. axe passes 최소 19(측정 0 아님), 위반 0, incomplete 중 4.5 미만 0.
+- 소요 시간(로컬 측정, 워커 1): a11y 993초(16.5분) · 최종 게이트 때 1666초(27.8분, 같은 236건이라 기계 부하 차이로 봄, 원인은 재지 않음). 건수는 종전 40의 5.9배이고 종전 소요 시간은 이번에 재지 않았어요. nontext 34~36초 · demo 34~38초 · tooltip 35~47초 · tokens 6~12초. CI 러너 시간은 재지 않았어요(추정: 같은 자릿수, PR 에서 실측해 붙일 것).
+- 양성 대조(측정): WI-0062 수정 전 정적 빌드(`scratchpad/wa11y/w62/out-before`)에 새 spec 을 기본 라이트 4경로로 돌리면 3 실패 · 1 통과. `/docs/brand-demo/` 는 위반 0 인데 incomplete `#ffffff/#d1d5db 1.47`(RunProgress 대기 숫자)로 실패해요. 이 경로는 종전 PAGES 에 있었고 종전 spec 은 통과시켰어요(incomplete 미검사). `/agentic/agent-avatar/` 는 incomplete 3.95 · 3.67 9노드, `/agentic/diff-viewer/` 는 위반으로 실패, `/components/button/` 은 통과(음성 대조).
+- CI 건수 가드(측정, `frontend.yml` 의 `e2e-count` run 블록을 그대로 뽑아 fixture 에서 실행): 실제 리포트 rc 0(a11y 기대 236 = 59 x 4). 변이 5종 모두 rc 1: a11y 1건 축소 · 조합 쏠림(총합 236 유지, 58 · 60) · 규칙 없는 동적 라우트 추가(경로 계산 실패로 멈춤) · 정적 페이지 추가(기대 240 대 실행 236) · a11y.json 없음.
+
+### 3.2 최종 전체 게이트 (측정, 2026-10-25, 이 단계 변경 반영 뒤)
+
+하나씩 `--force`(Cached 0): turbo lint 7 · type-check 11 · build 8 · test 6 태스크 rc 0(tokens 512 · ui-react 194 · agentic-ui 148 · cli 738 · mcp 143 · theme 47 통과, `ontology-values` 포함). frontend.yml run 단계 10종(check-token-refs · check-contrast-pairs · check-types-versions · check-library-links · build:registry · test:registry · check-licenses · pack-smoke · cli-smoke · registry-install-smoke) rc 0. E2E static a11y 236 · nontext 8 · demo 8 · tooltip 6, tokens 22 통과, 그 리포트로 돌린 CI 건수 가드 rc 0. 생성물: `build:registry` 는 `r/index.json` · `registry.json` 의 version(1.7.0) 외 차이 0 이라 1.5.0 으로 되돌렸고, `public/templates` 5파일은 updatedAt 만 바뀌어(그 외 줄 0, 측정) 되돌렸어요.
+
 ## 4. 정적 검사 · 생성물 (측정)
 
 - `check-contrast-pairs` rc 0(검사 파일 21 · 소스 짝 15 · 표 짝 15 · 부모 바탕 근거 17행 중 위반 0). 새 부모 근거 행 5개(context-panel · tool-call-card hover · code-block · diff-viewer 탭)가 근거 대조에 들어갔어요.

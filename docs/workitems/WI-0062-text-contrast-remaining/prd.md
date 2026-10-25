@@ -49,7 +49,7 @@ WI-0029 가 흰 글자 짝 15개를 고친 뒤에도 기본 테마(브랜드 미
 
 - ontology 라이트 Input placeholder `#9AA1AB`(흰 바탕 2.60)는 토큰 값 변경이라 「ontology 값 불변」 범위 밖이에요. 공용 표에 넣지 않고 기본 전용 짝(`DEFAULT_ONLY`)으로만 고정했어요. 해소하려면 ontology 값 결정이 필요해요(사용자 결정 대상).
 - 비텍스트(아이콘 · 점 · 테두리 · 폼 컨트롤 경계 · 포커스 링 · Progress)는 WI-0063 이에요.
-- a11y E2E PAGES 확대와 CI 건수 가드 계산(D2 의 게이트 부분)은 이 브랜치 다음 단계예요. 이 WI 는 같은 측정을 스크립트(`scratchpad/wa11y/w62/axe-run.mjs`)로 돌려요.
+- a11y E2E 게이트(D2 의 게이트 부분): `apps/web/e2e/a11y.spec.ts` 의 경로를 `apps/web/e2e/a11y-routes.cjs` 가 앱 라우트(page.tsx) · library · templates index 에서 만들어요(정적 경로 전부 + 동적 라우트 대표 1개씩, 규칙 없는 동적 라우트가 생기면 멈춤). `frontend.yml` 건수 가드는 같은 파일에서 기대 건수(경로 수 x 조합 수)를 계산해요. axe incomplete color-contrast 중 대비 수치가 4.5 미만인 노드도 실패로 봐요. 결과는 testplan 3.1 절이에요.
 - shadcn 호환 `--input`(입력 경계 = border.default 1.23)은 shadcn 컴포넌트 소비자 쪽 비텍스트라 이번에 바꾸지 않았어요.
 
 ## 2. 변경

@@ -20,10 +20,11 @@
 - [x] 단위 agentic · ui-react `text-contrast.test.tsx`(수정 전 소스 10 · 5 실패)
 - [x] 브라우저 axe 59경로 x 4환경, ontology 계산값 289개 불변
 - [x] E2E tokens(dark-tokens 기대값 갱신)
-- [ ] 최종 빌드 axe · 전체 게이트(WI-0063 커밋 뒤)
+- [x] 최종 빌드 axe · 전체 게이트(WI-0063 커밋 뒤, testplan 3.2)
 
 ## 생성물 · 릴리스
 - [x] `build:registry`(version 1.5.0 유지) · `library:refresh-axis` · 템플릿 updatedAt churn 되돌림
 - [x] changeset `.changeset/wi-0062-text-contrast-remaining.md`(tokens · ui-react · agentic-ui minor, cli · mcp patch)
-- [ ] a11y E2E PAGES 확대 · CI 건수 가드 계산(D2 게이트, 이 브랜치 다음 단계)
+- [x] a11y E2E PAGES 확대(`e2e/a11y-routes.cjs` 경로 생성, 59경로 x 4 = 236) · incomplete 4.5 미만 실패 · CI 건수 가드 계산(`frontend.yml`)
+- [x] changeset `.changeset/batch4-a11y-upgrade.md`(linked minor · cli · mcp patch, 값 직접 참조 사용자 업그레이드 안내)
 - [ ] 배치 4 ② 묶음 PR · 머지 · 배포 뒤 발행본으로 재측정
