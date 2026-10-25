@@ -1,0 +1,23 @@
+{
+  "id": "shadcn-input",
+  "slug": "input",
+  "name": "input",
+  "description": "shadcn/ui input component",
+  "category": "form",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/input"
+  },
+  "tags": [
+    "input"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.367Z"
+}

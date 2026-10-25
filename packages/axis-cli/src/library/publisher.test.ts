@@ -4,8 +4,8 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs-extra";
-import { Publisher } from "./publisher.js";
-import type { LibraryIndex } from "./types.js";
+import { Publisher, resolveRouteSlugs, withRouteSlugs } from "./publisher.js";
+import type { ComponentMeta, LibraryIndex } from "./types.js";
 
 // fs-extra 모킹
 vi.mock("fs-extra", () => ({
@@ -138,6 +138,39 @@ describe("Publisher", () => {
       expect(componentFiles.length).toBe(3);
     });
 
+    it("상세 데이터 파일을 components/<id>.json 으로 씁니다 (WI-0060 D2)", async () => {
+      await publisher.publish(mockIndex);
+
+      const written = vi
+        .mocked(fs.writeFile)
+        .mock.calls.map((call) => String(call[0]).replace(/\\/g, "/"))
+        .filter((p) => p.includes("/components/"));
+      expect(written.sort()).toEqual([
+        "apps/web/public/library/components/axis-streaming-text.json",
+        "apps/web/public/library/components/shadcn-button.json",
+        "apps/web/public/library/components/shadcn-card.json",
+      ]);
+    });
+
+    it("같은 상세 주소를 쓰는 외부 항목은 slug 를 <source>-<slug> 로 바꿔 씁니다 (WI-0060)", async () => {
+      const axisButton: ComponentMeta = { ...mockIndex.components[2], id: "axis-button", slug: "button", name: "Button", category: "ui" };
+      const result = await publisher.publish({ ...mockIndex, components: [...mockIndex.components, axisButton] });
+      expect(result.success).toBe(true);
+
+      const calls = vi.mocked(fs.writeFile).mock.calls;
+      const contentOf = (suffix: string) =>
+        JSON.parse(String(calls.find((call) => String(call[0]).replace(/\\/g, "/").endsWith(suffix))![1]));
+      expect(contentOf("components/shadcn-button.json").slug).toBe("shadcn-button");
+      expect(contentOf("components/axis-button.json").slug).toBe("button");
+      const search = contentOf("search-index.json") as Array<{ id: string; url: string }>;
+      expect(search.find((s) => s.id === "shadcn-button")!.url).toBe("/library/ui/shadcn-button");
+      expect(search.find((s) => s.id === "axis-button")!.url).toBe("/library/ui/button");
+      const index = contentOf("library/index.json") as { components: Array<{ id: string; slug: string }> };
+      expect(index.components.find((c) => c.id === "shadcn-button")!.slug).toBe("shadcn-button");
+      // 원본 입력은 바꾸지 않습니다
+      expect(mockIndex.components[0].slug).toBe("button");
+    });
+
     it("should generate search index", async () => {
       await publisher.publish(mockIndex, { generateSearchIndex: true });
 
@@ -200,5 +233,48 @@ describe("Publisher", () => {
       expect(status.lastUpdated).toBe("2026-01-23T10:00:00Z");
       expect(status.componentCount).toBe(10);
     });
+  });
+});
+
+describe("resolveRouteSlugs (WI-0060)", () => {
+  const item = (id: string, slug: string, category: string, source: string) => ({ id, slug, category, source });
+
+  it("같은 (category, slug) 면 AXIS 가 slug 를 지키고 외부 항목은 <source>-<slug>", () => {
+    const r = resolveRouteSlugs([
+      item("shadcn-button", "button", "ui", "shadcn"),
+      item("axis-button", "button", "ui", "axis"),
+      item("monet-button", "button", "ui", "monet"),
+    ]);
+    expect(Object.fromEntries(r)).toEqual({ "shadcn-button": "shadcn-button", "axis-button": "button", "monet-button": "monet-button" });
+  });
+
+  it("카테고리가 다르면 주소가 달라 바꾸지 않습니다", () => {
+    const r = resolveRouteSlugs([item("shadcn-badge", "badge", "data-display", "shadcn"), item("axis-badge", "badge", "ui", "axis")]);
+    expect(Object.fromEntries(r)).toEqual({ "shadcn-badge": "badge", "axis-badge": "badge" });
+  });
+
+  it("AXIS 가 없으면 순서상 첫 항목이 slug 를 지킵니다", () => {
+    const r = resolveRouteSlugs([item("monet-hero", "hero", "ui", "monet"), item("shadcn-hero", "hero", "ui", "shadcn")]);
+    expect(Object.fromEntries(r)).toEqual({ "monet-hero": "hero", "shadcn-hero": "shadcn-hero" });
+  });
+
+  it("source 가 { type } 형태여도 같게 판정하고, 결과에 다시 돌려도 바뀌지 않습니다", () => {
+    const once = withRouteSlugs([
+      { id: "shadcn-toggle", slug: "toggle", category: "ui", source: { type: "shadcn" } },
+      { id: "axis-toggle", slug: "toggle", category: "ui", source: { type: "axis" } },
+    ]);
+    expect(once.map((c) => c.slug)).toEqual(["shadcn-toggle", "toggle"]);
+    expect(withRouteSlugs(once)).toEqual(once);
+  });
+
+  it("한 주소에 AXIS 가 둘이거나 바꾼 뒤에도 겹치면 멈춥니다", () => {
+    expect(() => resolveRouteSlugs([item("axis-a", "a", "ui", "axis"), item("axis-a2", "a", "ui", "axis")])).toThrow(/AXIS 항목/);
+    expect(() =>
+      resolveRouteSlugs([
+        item("shadcn-x", "x", "ui", "shadcn"),
+        item("axis-x", "x", "ui", "axis"),
+        item("other", "shadcn-x", "ui", "monet"),
+      ])
+    ).toThrow(/겹칩니다/);
   });
 });

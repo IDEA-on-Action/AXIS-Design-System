@@ -1,0 +1,21 @@
+{
+  "id": "shadcn-dropdown-menu",
+  "slug": "dropdown-menu",
+  "name": "dropdown-menu",
+  "description": "shadcn/ui dropdown-menu component",
+  "category": "navigation",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/dropdown-menu"
+  },
+  "tags": [],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.319Z"
+}

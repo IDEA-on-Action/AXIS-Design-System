@@ -10,10 +10,15 @@
  *   그래서 같은 소스로 다시 돌리면 아무 파일도 바뀌지 않습니다.
  * - index.json · meta.json 의 updatedAt 은 모든 항목 updatedAt 의 최댓값입니다.
  *
+ 상세 데이터 파일 · 상세 주소 (WI-0060)
+ * - 파일 키는 항목 id 입니다: components/<id>.json. 항목마다 자기 파일을 가지므로 slug 가 같아도 서로 덮어쓰지 않습니다.
+ *   항목이 가리키지 않는 파일(옛 components/<slug>.json 포함)은 지웁니다.
+ * - 같은 상세 주소(/library/<category>/<slug>)를 쓰는 외부 항목은 slug 를 `<source>-<slug>` 로 바꿉니다(resolveRouteSlugs).
+ *   index.json · search-index.json(slug · url) · categories/*.json · components 파일에 같은 값을 씁니다.
+ *
  * 외부 소스 항목
- * - components/<slug>.json 은 쓰지 않습니다(바이트 그대로). slug 가 겹치면 그 파일의 지금 소유자를 유지합니다:
- *   이미 AXIS 파일이면 AXIS 가 다시 쓰고, 외부 파일이면 손대지 않고 그 AXIS 항목을 `shadowedAxis` 로 알립니다
- *   (slug 충돌 자체는 WI-0057 범위 밖 E4).
+ * - components/<id>.json 은 기존 파일 내용이 categories 항목과 같으면 바이트 그대로 둡니다(다른 이름의 옛 파일이면 그 바이트로 옮김).
+ *   다르거나 없으면 categories 항목으로 씁니다.
  * - index.json · search-index.json · categories/*.json 의 외부 항목은 객체를 그대로 옮깁니다. 세 파일 중 일부에만 있는 외부 항목은
  *   다른 파일의 같은 항목에서 같은 형태로 만들어 채웁니다(2026-02-01 손수정으로 index.json 에서 빠진 shadcn 15개 등).
  */
@@ -25,6 +30,8 @@ import type { Command } from "commander";
 import { isDeepStrictEqual } from "node:util";
 import { AxisCollector } from "./axis-collector.js";
 import {
+  componentFileOf,
+  resolveRouteSlugs,
   toIndexEntry,
   toPublicComponent,
   toSearchItem,
@@ -52,8 +59,10 @@ export interface RefreshAxisResult {
   changed: string[];
   unchanged: string[];
   removed: string[];
-  /** slug 가 외부 항목 파일과 겹쳐 components/<slug>.json 을 갖지 못한 AXIS 항목(외부 파일을 덮어쓰지 않음, E4) */
-  shadowedAxis: string[];
+  /** 상세 주소가 겹쳐 slug 를 `<source>-<slug>` 로 바꾼(또는 dryRun 이면 바꿀) 항목 id → 새 slug (WI-0060) */
+  renamedSlugs: Record<string, string>;
+  /** renamedSlugs 의 각 id 가 바뀌기 전에 쓰던 slug (알림 문구용) */
+  renamedFrom: Record<string, string>;
   /** 내용이 바뀌어 쓴(또는 dryRun 이면 쓸) 파일, libraryDir 기준 */
   writtenFiles: string[];
   /** 지운(또는 지울) 파일, libraryDir 기준 */
@@ -210,7 +219,7 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
   const changed: string[] = [];
   const unchanged: string[] = [];
   // 기존 AXIS 항목(전체 형태): categories 항목, 같은 id 의 컴포넌트 파일이 있으면 그것으로 덮어씀.
-  // slug 가 외부 파일과 겹쳐 파일이 없는 항목(shadowedAxis)도 categories 에서 찾으므로 다시 돌려도 updatedAt 이 유지됩니다.
+  // 파일이 없는 항목도 categories 에서 찾으므로 다시 돌려도 updatedAt 이 유지됩니다.
   const oldAxis = new Map<string, PublicComponent>();
   for (const file of categoryFiles.values()) {
     for (const c of file.components) if (c.source.type === AXIS) oldAxis.set(c.id, c);
@@ -245,7 +254,30 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
   for (const f of existingFiles.values()) if (f.data.source?.type === AXIS) oldAxisIds.add(f.data.id);
   const removed = [...oldAxisIds].filter((id) => !axisIds.has(id)).sort();
 
-  // ---- 4. 집계 파일 조립 ----
+  // ---- 4. 상세 주소 slug (WI-0060) ----
+  // AXIS 가 기존 slug 를 쓰고, 같은 주소의 외부 항목은 `<source>-<slug>`. 바뀐 외부 항목은 세 집계 파일 모두에 같은 값을 씁니다
+  const routeSlugs = resolveRouteSlugs([...extOrder.map((id) => extCategory.get(id)!), ...axisComponents]);
+  const renamedSlugs: Record<string, string> = {};
+  const renamedFrom: Record<string, string> = {};
+  for (const id of extOrder) {
+    const slug = routeSlugs.get(id)!;
+    const full = extCategory.get(id)!;
+    if (slug === full.slug) continue;
+    renamedSlugs[id] = slug;
+    renamedFrom[id] = full.slug;
+    extCategory.set(id, { ...full, slug });
+    extIndex.set(id, { ...extIndex.get(id)!, slug });
+    const s = extSearch.get(id)!;
+    extSearch.set(id, { ...s, slug, url: `/library/${s.category}/${slug}` });
+  }
+  for (const c of axisComponents) {
+    const slug = routeSlugs.get(c.id)!;
+    if (slug === c.slug) continue;
+    // AXIS 는 같은 주소에서 slug 를 지키므로 여기에 오지 않습니다(두 AXIS 가 겹치면 resolveRouteSlugs 가 멈춤)
+    throw new Error(`AXIS 항목 ${c.id} 의 slug 가 ${slug} 로 바뀌어야 합니다. 수집 결과를 확인하세요`);
+  }
+
+  // ---- 5. 집계 파일 조립 ----
   const indexEntries: PublicIndexEntry[] = [
     ...extOrder.map((id) => extIndex.get(id)!),
     ...axisComponents.map((c) => toIndexEntry(c)),
@@ -306,29 +338,23 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
     );
   }
 
-  // components/<slug>.json: AXIS 가 있으면 AXIS, 없으면 기존 외부 파일 유지, 기존 파일이 그 slug 의 외부 항목이 아니면 categories 에서 복원
-  const finalSlugs = new Set<string>();
-  const axisBySlug = new Map(axisComponents.map((c) => [c.slug, c]));
-  for (const c of allPublic) finalSlugs.add(c.slug);
-  const shadowedAxis: string[] = [];
-  for (const slug of [...finalSlugs].sort()) {
-    const axis = axisBySlug.get(slug);
-    const existing = existingFiles.get(slug);
-    const extForSlug = extOrder.map((id) => extCategory.get(id)!).filter((c) => c.slug === slug);
-    const existingIsExternal = !!existing && extForSlug.some((c) => c.id === existing.data.id);
-    if (existingIsExternal) {
-      // 외부 파일은 손대지 않습니다. slug 가 겹치는 새 AXIS 항목은 파일을 갖지 못합니다(E4, 범위 밖)
-      if (axis) shadowedAxis.push(axis.id);
+  // components/<id>.json: 항목마다 자기 파일 (WI-0060 D2)
+  const finalFiles = new Set<string>();
+  for (const c of allPublic) {
+    const rel = componentFileOf(c);
+    finalFiles.add(rel);
+    if (c.source.type === AXIS) {
+      outputs.set(rel, serialize(c));
       continue;
     }
-    if (axis) {
-      outputs.set(`components/${slug}.json`, serialize(axis));
-      continue;
-    }
-    outputs.set(`components/${slug}.json`, serialize(extForSlug[0]));
+    // 외부: 내용이 같은 기존 파일이 있으면 그 바이트(같은 이름 우선, 없으면 옛 이름에서 옮김)
+    const same = (f: { data: PublicComponent }) => f.data?.id === c.id && isDeepStrictEqual(f.data, c);
+    const atKey = existingFiles.get(c.id);
+    const kept = atKey && same(atKey) ? atKey : [...existingFiles.values()].find(same);
+    outputs.set(rel, kept ? kept.raw : serialize(c));
   }
 
-  // ---- 5. 쓰기 ----
+  // ---- 6. 쓰기 ----
   const writtenFiles: string[] = [];
   for (const [rel, content] of outputs) {
     const file = path.join(libraryDir, rel);
@@ -338,14 +364,14 @@ export async function refreshAxisLibrary(options: RefreshAxisOptions): Promise<R
     if (!options.dryRun) await fs.writeFile(file, content, "utf-8");
   }
   const removedFiles: string[] = [];
-  for (const slug of existingFiles.keys()) {
-    if (finalSlugs.has(slug)) continue;
-    const rel = `components/${slug}.json`;
+  for (const key of existingFiles.keys()) {
+    const rel = `components/${key}.json`;
+    if (finalFiles.has(rel)) continue;
     removedFiles.push(rel);
     if (!options.dryRun) await fs.remove(path.join(libraryDir, rel));
   }
 
-  return { added, changed, unchanged, removed, shadowedAxis, writtenFiles, removedFiles, stats };
+  return { added, changed, unchanged, removed, renamedSlugs, renamedFrom, writtenFiles, removedFiles, stats };
 }
 
 /**
@@ -375,9 +401,12 @@ export function registerRefreshAxisCommand(libraryCmd: Command): void {
       for (const id of result.added) console.log(chalk.green(`  + ${id}`));
       for (const id of result.changed) console.log(chalk.yellow(`  ~ ${id}`));
       for (const id of result.removed) console.log(chalk.red(`  - ${id}`));
-      if (result.shadowedAxis.length > 0) {
+      const renamed = Object.entries(result.renamedSlugs);
+      if (renamed.length > 0) {
         console.log(
-          chalk.yellow(`  slug 가 외부 항목 파일과 겹쳐 파일을 쓰지 않음(E4): ${result.shadowedAxis.join(", ")}`)
+          chalk.yellow(
+            `  상세 주소가 겹쳐 slug 를 바꿈(WI-0060): ${renamed.map(([id, slug]) => `${id}: ${result.renamedFrom[id] ?? id} → ${slug}`).join(", ")}`
+          )
         );
       }
       console.log(`  파일 쓰기 ${result.writtenFiles.length}개 · 삭제 ${result.removedFiles.length}개`);

@@ -11,9 +11,11 @@
  *   2. 집합 정합: index.json · search-index.json · categories/*.json 의 항목 id 집합이 같아야 합니다.
  *   3. 카테고리: categories/<id>.json 의 항목 category 가 파일과 같고 count 가 항목 수와 같아야 합니다.
  *      index.json 의 categories 와 categories/*.json 파일 집합이 같아야 합니다.
- *   4. 컴포넌트 파일: index.json 의 slug 마다 components/<slug>.json 이 있고, 각 파일의 id 는 index.json 에서
- *      같은 slug 를 가진 항목 중 하나여야 합니다(slug 충돌 E4 는 WI-0057 범위 밖이라 허용하고 개수만 알립니다).
- *      어느 항목도 가리키지 않는 파일은 위반입니다.
+ *   4. 컴포넌트 파일 (WI-0060): index.json 항목마다 components/<id>.json 이 있고, 그 파일의 id · slug · category ·
+ *      source.type 이 항목과 같아야 합니다. 어느 항목도 가리키지 않는 파일은 위반입니다.
+ *   6. 상세 주소 (WI-0060): 상세 화면 주소 /library/<category>/<slug> 가 항목마다 하나여야 합니다((category, slug) 중복은 위반).
+ *      search-index.json 의 url 은 그 주소와 같고, search-index · categories 항목의 slug · category 는 index.json 과 같아야 합니다.
+ *      카테고리가 다른 같은 slug(예: shadcn data-display/badge 와 axis ui/badge)는 주소가 달라 위반이 아니고 개수만 알립니다.
  *   5. 통계: index.json · meta.json 의 stats 가 index.json 항목에서 센 값과 같아야 합니다.
  *
  * 옵션
@@ -75,7 +77,7 @@ const appDir = path.resolve(opts.app);
 if (!fs.existsSync(appDir)) fail(`문서 앱 디렉터리가 없습니다: ${appDir}`);
 const site = opts.site.replace(/\/+$/, "");
 
-const violations = { route: [], set: [], category: [], file: [], stats: [] };
+const violations = { route: [], set: [], category: [], file: [], route_key: [], stats: [] };
 
 // ---- 1. 문서 라우트 ----
 const allFiles = [
@@ -150,26 +152,61 @@ for (const [label, a, b] of [
 const dupIds = index.components.length - indexIds.size;
 if (dupIds) violations.set.push(`index.json 에 같은 id 가 ${dupIds}번 더 나옵니다`);
 
+// ---- 4. 컴포넌트 파일: components/<id>.json (WI-0060) ----
+const entryById = new Map(index.components.map((c) => [c.id, c]));
+const componentFiles = listJson(path.join(libraryDir, "components"));
+const fileIds = new Set();
+for (const file of componentFiles) {
+  const key = path.basename(file, ".json");
+  fileIds.add(key);
+  const data = readJson(file);
+  const entry = entryById.get(key);
+  if (!entry) {
+    violations.file.push(`components/${key}.json: index.json 에 id ${key} 항목이 없습니다`);
+    continue;
+  }
+  if (data.id !== key) violations.file.push(`components/${key}.json: 파일 id 가 ${data.id}`);
+  if (data.slug !== entry.slug) violations.file.push(`components/${key}.json: slug ${data.slug} ≠ index.json ${entry.slug}`);
+  if (data.category !== entry.category) violations.file.push(`components/${key}.json: category ${data.category} ≠ index.json ${entry.category}`);
+  if (data.source?.type !== entry.source) violations.file.push(`components/${key}.json: source ${data.source?.type} ≠ index.json ${entry.source}`);
+}
+for (const id of entryById.keys()) {
+  if (!fileIds.has(id)) violations.file.push(`components/${id}.json 이 없습니다`);
+}
+
+// ---- 6. 상세 주소: /library/<category>/<slug> 가 항목마다 하나 (WI-0060) ----
+const routeOf = (c) => `/library/${c.category}/${c.slug}`;
+const routeToIds = new Map();
 const slugToIds = new Map();
 for (const c of index.components) {
+  if (!routeToIds.has(routeOf(c))) routeToIds.set(routeOf(c), []);
+  routeToIds.get(routeOf(c)).push(c.id);
   if (!slugToIds.has(c.slug)) slugToIds.set(c.slug, []);
   slugToIds.get(c.slug).push(c.id);
 }
-const componentFiles = listJson(path.join(libraryDir, "components"));
-const fileSlugs = new Set();
-for (const file of componentFiles) {
-  const slug = path.basename(file, ".json");
-  fileSlugs.add(slug);
-  const data = readJson(file);
-  const ids = slugToIds.get(slug);
-  if (!ids) violations.file.push(`components/${slug}.json: index.json 에 slug ${slug} 항목이 없습니다`);
-  else if (!ids.includes(data.id)) violations.file.push(`components/${slug}.json: id ${data.id} 가 index.json 의 ${ids.join(", ")} 와 다릅니다`);
-  if (data.slug !== slug) violations.file.push(`components/${slug}.json: slug 가 ${data.slug}`);
+for (const [route, ids] of [...routeToIds.entries()].sort()) {
+  if (ids.length > 1) violations.route_key.push(`${route} 를 ${ids.length}개 항목이 씁니다: ${ids.join(", ")}`);
 }
-for (const slug of slugToIds.keys()) {
-  if (!fileSlugs.has(slug)) violations.file.push(`components/${slug}.json 이 없습니다`);
+for (const s of search) {
+  const entry = entryById.get(s.id);
+  if (!entry) continue; // 집합 불일치(2)에서 셉니다
+  if (s.slug !== entry.slug || s.category !== entry.category) {
+    violations.route_key.push(`search-index.json ${s.id}: ${s.category}/${s.slug} ≠ index.json ${entry.category}/${entry.slug}`);
+  }
+  if (s.url !== routeOf(entry)) violations.route_key.push(`search-index.json ${s.id}: url ${s.url} ≠ ${routeOf(entry)}`);
 }
-const collisions = [...slugToIds.entries()].filter(([, ids]) => ids.length > 1).length;
+for (const file of categoryFiles) {
+  for (const c of readJson(file).components) {
+    const entry = entryById.get(c.id);
+    if (entry && (c.slug !== entry.slug || c.category !== entry.category)) {
+      violations.route_key.push(`${path.basename(file)} ${c.id}: ${c.category}/${c.slug} ≠ index.json ${entry.category}/${entry.slug}`);
+    }
+  }
+}
+// 카테고리가 실제로 갈리는 slug 만 센다(같은 카테고리 안의 중복은 위반 쪽에서 따로 잡힌다)
+const crossCategorySlugs = [...slugToIds.values()].filter(
+  (ids) => ids.length > 1 && new Set(ids.map((id) => entryById.get(id)?.category)).size > 1,
+).length;
 
 const expected = { total: index.components.length, bySource: {}, byCategory: {} };
 for (const c of index.components) {
@@ -192,6 +229,7 @@ const labels = {
   set: "집합 불일치",
   category: "카테고리 불일치",
   file: "컴포넌트 파일 불일치",
+  route_key: "상세 주소 중복 · 불일치",
   stats: "통계 불일치",
 };
 let total = 0;
@@ -204,7 +242,9 @@ for (const [key, list] of Object.entries(violations)) {
 console.log(
   `\n검사: 사이트 링크 ${links.size}개 · 항목 ${index.components.length}개 · 컴포넌트 파일 ${componentFiles.length}개 · 카테고리 ${categoryFiles.length}개`
 );
-console.log(`참고: slug 충돌 ${collisions}개 (WI-0057 범위 밖, 위반 아님)`);
+console.log(
+  `상세 주소 ${routeToIds.size}개 (항목 ${index.components.length}개) · 카테고리가 달라 주소로 구분되는 같은 slug ${crossCategorySlugs}개 (위반 아님)`
+);
 if (total > 0) {
   console.log(`위반 ${total}건 (라우트 ${violations.route.length})`);
   process.exit(1);

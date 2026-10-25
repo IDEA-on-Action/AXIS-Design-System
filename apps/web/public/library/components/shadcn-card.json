@@ -1,0 +1,23 @@
+{
+  "id": "shadcn-card",
+  "slug": "card",
+  "name": "card",
+  "description": "shadcn/ui card component",
+  "category": "data-display",
+  "source": {
+    "type": "shadcn",
+    "registry": "@shadcn",
+    "url": "https://ui.shadcn.com/docs/components/card"
+  },
+  "tags": [
+    "container"
+  ],
+  "code": {
+    "files": [],
+    "dependencies": [],
+    "devDependencies": [],
+    "registryDeps": []
+  },
+  "status": "active",
+  "updatedAt": "2026-01-23T12:59:43.200Z"
+}

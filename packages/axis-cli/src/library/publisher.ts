@@ -63,7 +63,7 @@ export interface PublicIndexEntry {
 }
 
 /**
- * components/<slug>.json · categories/<id>.json 의 항목.
+ * components/<id>.json · categories/<id>.json 의 항목.
  * 예전 판은 `dependencies: component.dependencies` 도 넣었지만 ComponentMeta 에 없는 필드라(TS2339) 늘 undefined 였고
  * JSON 에서 빠졌습니다. 출력 바이트는 같습니다.
  */
@@ -147,6 +147,75 @@ export function toSearchItem(c: {
   };
 }
 
+// ============================================================================
+// 상세 주소 slug 정하기 (WI-0060)
+// ============================================================================
+
+/** 상세 주소를 정하는 데 쓰는 항목 필드. source 는 문자열(index 항목) 또는 { type }(공개 컴포넌트) */
+export interface RouteSlugItem {
+  id: string;
+  slug: string;
+  category: string;
+  source: string | { type: string };
+}
+
+const sourceTypeOf = (item: RouteSlugItem): string =>
+  typeof item.source === "string" ? item.source : item.source.type;
+
+/**
+ * 상세 주소 `/library/<category>/<slug>` 가 항목마다 하나가 되도록 항목별 slug 를 정합니다(id → slug).
+ *
+ * - 같은 (category, slug) 를 쓰는 항목이 둘 이상이면 AXIS 항목이 slug 를 그대로 쓰고(AXIS 가 없으면 순서상 첫 항목),
+ *   나머지는 `<source>-<slug>` 를 씁니다(예: shadcn/ui 의 button → shadcn-button). 기존 URL 은 AXIS 화면을 그대로 보입니다.
+ * - 카테고리가 다르면 주소가 달라 바꾸지 않습니다.
+ * - 이미 바뀐 slug(shadcn-button)는 다시 겹치지 않으므로 같은 입력에 다시 돌려도 결과가 같습니다.
+ * - 한 주소에 AXIS 항목이 둘이거나, 바꾼 뒤에도 주소가 겹치면 멈춥니다(조용히 덮어쓰지 않음).
+ */
+export function resolveRouteSlugs(items: RouteSlugItem[]): Map<string, string> {
+  const groups = new Map<string, RouteSlugItem[]>();
+  for (const item of items) {
+    const key = `${item.category}/${item.slug}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(item);
+  }
+  const result = new Map<string, string>();
+  for (const [key, group] of groups) {
+    if (group.length === 1) {
+      result.set(group[0].id, group[0].slug);
+      continue;
+    }
+    const axis = group.filter((i) => sourceTypeOf(i) === "axis");
+    if (axis.length > 1) {
+      throw new Error(`상세 주소 /library/${key} 를 AXIS 항목 ${axis.map((i) => i.id).join(", ")} 가 함께 씁니다`);
+    }
+    const keeper = axis[0] || group[0];
+    for (const item of group) {
+      result.set(item.id, item === keeper ? item.slug : `${sourceTypeOf(item)}-${item.slug}`);
+    }
+  }
+  const seen = new Map<string, string>();
+  for (const item of items) {
+    const key = `${item.category}/${result.get(item.id)}`;
+    const other = seen.get(key);
+    if (other !== undefined && other !== item.id) {
+      throw new Error(`slug 를 바꾼 뒤에도 상세 주소 /library/${key} 가 ${other}, ${item.id} 에서 겹칩니다`);
+    }
+    seen.set(key, item.id);
+  }
+  return result;
+}
+
+/** resolveRouteSlugs 결과를 적용한 복사본. slug 가 바뀐 항목만 새 객체이고 키 순서는 같습니다 */
+export function withRouteSlugs<T extends RouteSlugItem>(items: T[]): T[] {
+  const slugs = resolveRouteSlugs(items);
+  return items.map((item) => (slugs.get(item.id) === item.slug ? item : { ...item, slug: slugs.get(item.id)! }));
+}
+
+/** 상세 데이터 파일 경로 (libraryDir 기준). 파일 키는 항목 id 입니다(WI-0060 D2) */
+export function componentFileOf(item: { id: string }): string {
+  return `components/${item.id}.json`;
+}
+
 /**
  * Publisher 클래스
  */
@@ -156,7 +225,7 @@ export class Publisher {
   /**
    * 라이브러리 인덱스를 사이트에 배치
    */
-  async publish(index: LibraryIndex, options: PublishOptions = {}): Promise<PublishResult> {
+  async publish(input: LibraryIndex, options: PublishOptions = {}): Promise<PublishResult> {
     const outputDir = options.outputDir || this.defaultOutputDir;
     const files: string[] = [];
     const errors: string[] = [];
@@ -164,6 +233,9 @@ export class Publisher {
     const spinner = ora("라이브러리 배치 중...").start();
 
     try {
+      // 같은 상세 주소를 쓰는 외부 항목은 `<source>-<slug>` 로 (WI-0060). 겹침을 풀 수 없으면 catch 로 갑니다
+      const index: LibraryIndex = { ...input, components: withRouteSlugs(input.components) };
+
       // 출력 디렉토리 생성
       await fs.ensureDir(outputDir);
 
@@ -200,7 +272,7 @@ export class Publisher {
       await fs.ensureDir(componentsDir);
 
       for (const component of index.components) {
-        const componentPath = path.join(componentsDir, `${component.slug}.json`);
+        const componentPath = path.join(outputDir, componentFileOf(component));
         await this.writeJson(componentPath, this.createPublicComponent(component), options.minify);
         files.push(componentPath);
       }

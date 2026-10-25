@@ -206,9 +206,9 @@ describe("WI-0038 D2: axis-cli 실행 안내 금지", () => {
     // 계측 대조(WI-0040): library 데이터 JSON 이 전부 들어오고, 이스케이프를 풀어 읽힘
     const libraryFiles = files.filter(isLibraryData);
     expect(libraryFiles.length).toBeGreaterThan(100);
-    expect(libraryFiles).toContain(path.join(ROOT, "apps/web/public/library/components/step-timeline.json"));
+    expect(libraryFiles).toContain(path.join(ROOT, "apps/web/public/library/components/axis-step-timeline.json"));
     expect(libraryFiles).toContain(path.join(ROOT, "apps/web/public/library/categories/agentic.json"));
-    const decoded = await linesOf(path.join(ROOT, "apps/web/public/library/components/step-timeline.json"));
+    const decoded = await linesOf(path.join(ROOT, "apps/web/public/library/components/axis-step-timeline.json"));
     expect(decoded.length).toBeGreaterThan(50);
     // 제외 확인: 결함을 설명하는 WI 문서는 스캔하지 않음
     expect(files.some((f) => f.startsWith(path.join(ROOT, "docs/workitems") + path.sep))).toBe(false);
