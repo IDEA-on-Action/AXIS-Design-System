@@ -33,6 +33,8 @@
 - `tailwind-core.ts` 의 지역 `hasDependency`(detectTailwind 선언 폴백 · packageVersionGate · content 대상 · animation)는 앱 package.json 만 봐요. 그래서 루트에만 ui-react 를 선언한 Tailwind 3 앱은 content 대상이 생기지 않아요. WI-0086(#218) 로 분리했어요(WI-0027 과의 tailwind-core 충돌을 키우지 않기 위해서).
 - `@axis-ds/*` 설치 확인 대상(dependencies 3단계)은 종전대로 앱 선언만 봐요.
 - 워크스페이스 글롭이 앱을 포함하는지는 보지 않아요. 글롭에서 빠진 앱이 루트 아래 있으면 루트 lockfile · 선언을 채택해요(D1 잔여 오차, release-notes 에 기록).
+- 심링크를 거친 baseDir(`--dir` · MCP 인자)에서는 `findWorkspaceRoot` · `findInstalledPackage` 가 `path.resolve` 만 써서(realpath 아님) 심링크 쪽 상위를 올라가요. 그래서 워크스페이스 루트를 못 찾고 종전 판정(pnpm install · 앱 선언만)으로 돌아가요. 종전과 같은 동작이라 회귀가 아니고 잔여 경계로 둬요(반박 검토 minor, 스크래치 픽스처 실측). cwd 로 실행할 때는 `process.cwd()` 가 실경로라 해당하지 않아요.
+- `axis init` 의 utils 의존성 추가(`planUtilsDependencies`)는 앱 package.json 만 봐요. 그래서 워크스페이스 루트에 `clsx` · `tailwind-merge` 를 선언한 앱에도 둘을 앱 package.json 에 다시 넣어요. check 는 루트 선언을 인정하므로 두 명령의 판단이 달라요(반박 검토 minor, rootonly 픽스처 실측). 이번 WI 에서는 고치지 않고 후속 판단을 결정 필요로 넘겨요(WI-0086 에 합칠지 새 WI 로 뺄지).
 - 서브모듈 · 중첩 저장소 안의 앱은 `.git` 에서 먼저 멈춰 바깥 루트 lockfile 에 닿지 않아요(의도, 테스트로 고정).
 
 ## 2. 요구사항
