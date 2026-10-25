@@ -128,6 +128,7 @@ stdin 이 터미널이 아니면 질문을 띄우지 않습니다(1.7.0 부터).
 
 - `axis template init -y` 는 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행합니다(`template apply -y` 와 같은 뜻). 터미널에서도 같습니다.
 - 판정은 stdin 이 터미널인지 하나로 합니다. 그래서 `printf '\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트도 이제는 묻지 않고 위 표대로 동작합니다. 값은 `--dir` · `-y` 같은 옵션으로 주세요.
+- Windows Git Bash(mintty)처럼 사람이 앞에 있어도 stdin 이 터미널로 잡히지 않는 환경에서는 질문 없이 위 표대로 동작할 수 있습니다(실측 전). 질문이 뜨지 않으면 `winpty npx axis ...` 로 실행하거나, PowerShell · Windows Terminal 에서 실행하거나, `--dir` · `-y` 같은 옵션으로 값을 주세요.
 
 ## 문서
 
