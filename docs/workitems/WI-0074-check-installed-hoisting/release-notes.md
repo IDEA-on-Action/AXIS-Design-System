@@ -19,3 +19,4 @@
 
 - 루트에만 `tailwindcss` 를 선언한 앱은 `dependencies` 항목이 여전히 「필수 의존성 누락: tailwindcss」 FAIL 이에요. 워크스페이스 루트 선언 인정은 후속(WI-0081 축)에서 다뤄요.
 - 호이스팅 Tailwind 3 의 `tailwind.content` 가 `../../node_modules/...` 경로를 인정하지 않는 문제는 WI-0080 에서 다뤄요.
+- 상위 탐색은 Node 의 패키지 탐색과 같이 파일시스템 루트까지 올라가고 프로젝트 · 워크스페이스 루트에서 멈추지 않아요. 그래서 아직 install 하지 않은 앱이나 워크스페이스 밖에 놓인 앱에서는 관계없는 상위 디렉터리(예: 홈의 `node_modules`)의 `tailwindcss` · `@axis-ds/*` 설치본이 선언보다 앞서 판정에 쓰여요. 그 앱을 Node 로 실행해도 같은 설치본을 읽으므로 실행 결과와는 맞는 판정이에요(반박 검토 minor, 설계 경계로 기록). 저장소 안 템플릿 디렉터리(`apps/web/templates/*/files`)에서 init 테스트가 저장소 루트 `node_modules/tailwindcss` 를 읽게 된 것이 이 경계의 실측 예예요.
