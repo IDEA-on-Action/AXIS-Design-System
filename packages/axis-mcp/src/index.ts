@@ -52,7 +52,7 @@ import {
   formatGetBrandResult,
 } from "./tools/index.js";
 
-import type { TokenCategory } from "./types.js";
+import { TOKEN_CATEGORIES, type TokenCategory } from "./types.js";
 import type { ComponentFilter } from "./tools/registry-source.js";
 import type { PromptCategory } from "./tools/prompt/index.js";
 
@@ -75,10 +75,11 @@ const ComponentCategorySchema = z
   .optional()
   .describe("컴포넌트 카테고리 필터 (ui = Core UI 전체, agentic = Agentic UI)");
 
+// WI-0076: 토큰은 @axis-ds/tokens 에서 생성합니다. 원천이 없던 animation 은 빼고 density(밀도) · component 를 더했습니다
 const TokenCategorySchema = z
-  .enum(["color", "typography", "spacing", "radius", "shadow", "animation"])
+  .enum(TOKEN_CATEGORIES)
   .optional()
-  .describe("토큰 카테고리 필터");
+  .describe("토큰 카테고리 필터 (density = 컨트롤 높이 · 글자 크기 등 밀도 토큰, component = 컴포넌트 토큰)");
 
 // 도구 등록: axis.search_components
 server.tool(
@@ -194,7 +195,7 @@ server.tool(
 // 도구 등록: axis.list_tokens
 server.tool(
   "axis.list_tokens",
-  "AXIS 디자인 시스템의 디자인 토큰 목록을 조회합니다.",
+  "AXIS 디자인 시스템의 디자인 토큰 목록(라이트 · 다크 값, CSS 변수)을 조회합니다. 값은 @axis-ds/tokens 빌드 산출물에서 생성합니다.",
   {
     category: TokenCategorySchema,
   },
@@ -231,14 +232,16 @@ server.tool(
 // 도구 등록: axis.get_token
 server.tool(
   "axis.get_token",
-  "AXIS 디자인 시스템 토큰의 상세 정보를 조회합니다.",
+  "AXIS 디자인 시스템 토큰의 상세 정보(라이트 · 다크 값, CSS 변수)를 조회합니다. 없는 경로는 isError 로 답합니다.",
   {
-    path: z.string().describe("토큰 경로 (예: colors.primary, spacing.4)"),
+    path: z
+      .string()
+      .describe("토큰 경로 (예: colors.primary, spacing.4, control.h.md) 또는 CSS 변수 이름 (예: --axis-control-h-md)"),
   },
   async ({ path }) => {
     try {
       const token = handleGetToken({ path });
-      const formatted = formatTokenDetail(token);
+      const formatted = formatTokenDetail(token, path);
 
       return {
         content: [
@@ -247,6 +250,8 @@ server.tool(
             text: formatted,
           },
         ],
+        // WI-0076: 없는 토큰은 일반 텍스트가 아니라 오류로 답합니다(응답 계약 변경)
+        ...(token ? {} : { isError: true }),
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "알 수 없는 오류";

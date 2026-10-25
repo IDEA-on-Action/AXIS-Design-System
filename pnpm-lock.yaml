@@ -314,6 +314,9 @@ importers:
       '@axis-ds/registry-core':
         specifier: workspace:*
         version: link:../axis-registry-core
+      '@axis-ds/tokens':
+        specifier: workspace:*
+        version: link:../axis-tokens
       '@types/fs-extra':
         specifier: ^11.0.0
         version: 11.0.4
