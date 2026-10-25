@@ -516,6 +516,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDUJO0",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0079",
+      "slug": "ontology-contrast-residual",
+      "issueNumber": 208,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDWM_E",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T09:30:00.000Z"

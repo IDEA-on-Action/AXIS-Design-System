@@ -76,6 +76,7 @@
 | 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | ⏳ |
 | 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ⏳ |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | ⏳ |
+| 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ⏳ |
 
 ### 완료
 
@@ -370,6 +371,7 @@
 - 배치 4 결정(2026-10-25, 브리프 · 반박 검토 뒤): ③ WI-0067 ✅(#200, Pages, 글꼴 pretendard 추가). ① WI-0060 은 충돌 5개(accordion · button · collapsible · command · toggle)의 shadcn 항목만 새 slug(`shadcn-<slug>`), 나머지 124 URL 유지, 데이터 파일 `components/<id>.json`, 코드 없는 외부 항목 화면은 범위 밖. ② a11y 는 권장안 일괄(D1 혼합 · D3 기본 브랜드만 컨트롤 경계 3:1 · D4 새 ui-react 비대비 결함도 WI-0069 · D5 locale · timeZone prop · D6 Tooltip 래퍼 제어, Radix 업스트림 이슈는 초안만), a11y 게이트는 문서 정적 전 경로 + 동적 라우트 대표 1개씩 · CI 건수 가드는 경로 목록에서 계산. 릴리스는 ② 머지 뒤 한 번에(linked 1.8.0 · cli 1.6.2 · mcp 1.3.5). 순서 ① → ②
 - 재계획(2026-10-25, `/ax:todo plan` 3차): 배치 4 = ① WI-0060(진행 중) → ② WI-0062 · 0063 · 0069 · 0073 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5 한 번에 발행. 배치 5 = WI-0027 온톨로지 콘솔 템플릿(선행 WI-0062 · 0063 · 0067 충족 뒤, 착수 전 PRD FR-2 「기존 템플릿은 @axis-ds 에 의존하지 않음」 전제 갱신). 배치 6 = cli · mcp 정확도 묶음 WI-0074 · 0075 · 0076 + 문서 WI-0077(배치 5 의 FR-4 가 check 를 건드리면 그 뒤에 rebase). 새 WI 3건(WI-0075 #201 · WI-0076 #202 · WI-0077 #203) 등록
 - 재계획(2026-10-25, `/ax:todo plan` 4차, 사용자 결정): 배치 5 · 6 순서를 바꿔 ② 머지 · 발행 뒤 **배치 6 을 먼저** 해요(작은 결함을 cli · mcp patch 로 먼저 내고, WI-0027 은 PRD 갱신 뒤 그 위에서 `runCheck` 를 확장해 rebase 부담을 큰 작업 쪽에 두지 않음). WI-0076 은 ② 가 tokens 값을 바꾸므로 ② 뒤가 전제. 새 WI-0078(#206) library 상세 E2E 스모크를 배치 6 에 추가. 배치 6 = WI-0074 · 0075 · 0076 · 0077 · 0078, 배치 7 = WI-0027(종전 배치 5)
+- 배치 4 뒤 결정(2026-10-25, 사용자): ① ontology 남은 대비 미달은 새 WI-0079(#208)로 등록하고 디자인 오너 확인을 받아 배치 7(WI-0027) 앞에서 반영 ② Radix 업스트림 이슈는 보류(초안은 `docs/workitems/WI-0073-tooltip-scroll-persistence/radix-issue-draft.md`, 게시 전 중복 검색 필요) ③ pages.dev CDN 에 남은 옛 slug 상세 JSON(예: `/library/components/accordion.json`, s-maxage 7일)은 자연 만료를 기다리고 2026-11-01 뒤 404 를 한 번 확인 ④ a11y E2E 236건으로 PR CI 15~17분(a11y 8.7분)은 지금대로 유지
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보
