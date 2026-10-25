@@ -31,7 +31,8 @@
 - **Tab 순서**: CodeBlock 코드 영역과 ScrollArea 뷰포트가 Tab 순서에 하나씩 들어가요. 안에 이미 포커스할 요소만 있는 ScrollArea 에서 빼고 싶으면 ScrollArea 대신 직접 Radix ScrollArea 를 쓰세요(이번 버전에는 끄는 prop 이 없어요).
 - **복사 설치(`axis add`)**: 레지스트리 dialog 와 agentic code-block · diff-viewer · message-bubble · recovery-banner · step-timeline 항목이 새 코드예요. 이미 복사한 파일은 바뀌지 않아요. 새 코드를 받으려면 `axis add <이름> --overwrite`(내용이 다른 기존 파일을 덮어씀)를 쓰세요. 직접 고친 부분이 있으면 먼저 백업하세요. popover · sheet · command · scroll-area 는 레지스트리에 없어요.
 
-## 알려진 한계
+## 알려진 제약
 
+- **서버 컴포넌트에서 쓰면 동작이 바뀌어요**: 1.7.0 의 `MessageBubble` · `StepTimeline` 은 서버 컴포넌트로 쓰면 서버 렌더 HTML 에 시각(서버 시간대)이 들어 있었어요. 1.8.0 에서는 `timeZone` 이 없으면(StepTimeline 은 `locale` 과 `timeZone` 둘 중 하나라도 없으면) 서버 컴포넌트에서도 SSR HTML 의 `<time>` 이 비어 있고, JS 가 돈 뒤 브라우저 시간대로 채워져요. JS 가 꺼져 있거나 늦게 도는 화면 · 크롤러에서는 시각이 보이지 않아요. `timeZone`(StepTimeline 은 `locale` 도)을 넘기면 서버가 그 시간대로 만든 시각이 SSR HTML 에 그대로 들어가고, 브라우저에서도 같은 값이라 보는 사람의 시간대로 바뀌지 않아요. 1.7.0 에서 하이드레이션 오류(React #418)가 나던 것은 클라이언트 컴포넌트로 쓸 때였고, 이 변경으로 그쪽은 0건이 됐어요(검토 실측). 문서 Props 표의 `timeZone` 설명에도 같은 안내가 있어요.
 - CommandSeparator 는 cmdk 의 Separator 를 쓰지 않고 같은 동작(검색 중 숨김 · `alwaysRender`)을 따라 그려요. cmdk 가 Separator 동작을 바꾸면 다시 확인해야 해요.
 - DiffViewer 본문은 긴 줄로 가로 스크롤이 생겨도 포커스를 받지 않아요(문서 예제에서는 미검출, 관찰 대상).

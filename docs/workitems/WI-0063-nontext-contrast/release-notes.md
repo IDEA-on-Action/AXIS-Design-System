@@ -44,9 +44,11 @@
   | Switch 꺼짐 바탕 · Slider 트랙 | `--axis-surface-tertiary` | `--axis-form-control-track` |
 
   primitive 색 오버라이드는 1.8.0 부터 ui-react 컴포넌트에 닿지 않아요(테마 커스터마이징 가이드 「2. CSS 변수 오버라이드」 갱신).
-- library 사본(Checkbox · RadioGroup · Textarea · Switch · Slider · Progress)과 레지스트리 agentic 항목은 새 변수를 참조해요. `@axis-ds/tokens` 1.8.0 이상과 함께 쓰세요. 1.7.0 tokens 와 섞으면 새 변수가 정의되지 않아, 경계는 글자색(currentColor)으로 그려지고 트랙 · 채움 바탕은 투명해져요(추정: CSS 의 정의되지 않은 var() 규칙).
+- 새 변수는 ui-react 와 library 사본(Checkbox · RadioGroup · Textarea · Switch · Slider · Progress)만 참조해요. 레지스트리 `r/` 항목(32파일)에는 새 변수 참조가 없어요. agentic 항목이 새로 참조하는 `--axis-text-success` · `-warning` · `-error` · `-tertiary` · `--axis-border-error` · `--axis-button-text-default` 는 1.7.0 tokens 에도 있는 변수예요(실측: r/ 의 `--axis-*` 99개가 모두 1.7.0 `variables.css` 에 있음).
+- 새 변수 참조에는 1.7.0 이 읽던 변수를 fallback 으로 두었어요(`var(--axis-progress-fill-default,var(--axis-surface-brand))`, success · warning · destructive 는 `--axis-color-{green,yellow,red}-500`, 경계는 `--axis-border-default`, 트랙은 `--axis-surface-tertiary`). 그래서 `@axis-ds/tokens` 1.7.0 CSS 와 섞여도 경계 · 트랙 · 채움은 1.7.0 색으로 물러나요. 실측(Next 15.5.4 · Tailwind 4 소비자, tokens 1.7.0 + 이 브랜치 ui-react, Chromium 계산값): 기본 라이트 Progress 채움 3.68 · 2.28 · 1.92 · 3.76, 트랙 · 체크박스 경계 1.24 로 1.7.0 단독 앱과 같고, fallback 이 없던 빌드에서는 채움 · 트랙이 투명(1)이고 체크박스 경계가 글자색(17.74)이었어요. 3:1 대비는 tokens 1.8.0 과 함께 쓸 때만 나와요(같은 앱에 tokens 1.8.0 을 넣으면 4.83 · 5.17 등).
 
 ## 알려진 제약
 
 - ontology 컨트롤 경계(라이트 1.15~1.31 · 다크 1.40~1.42)와 ontology Progress success · warning 채움(1.93 · 1.62)은 ontology 값을 바꾸지 않는 범위라 그대로예요. 값 결정이 필요해요.
 - 대기 · 건너뜀 점(`--axis-status-neutral-muted`, 1.47)은 사용자 결정으로 값을 유지해요.
+- MCP 서버(`@axis-ds/mcp`)가 동봉한 토큰 데이터(`src/registry/data/tokens.json`)는 이번에 바뀐 기본 테마 값과 새 변수를 반영하지 않아요. 이 데이터는 처음 만든 뒤(ea764b4) 갱신되지 않았고, mcp patch 는 동봉 레지스트리(`apps/web/public/r`) 갱신만 담아요. MCP 로 토큰을 물으면 처음 만든 때의 목록과 값이 나와요(실측: 새 변수 6개와 1.7.0 의 `--axis-control-h-*` 밀도 토큰도 0건). WI-0076(#202)에서 고칠 예정이에요.

@@ -38,3 +38,4 @@
 ## 알려진 제약
 
 - ontology 라이트 Input placeholder `#9AA1AB` 는 흰 바탕 2.60 으로 남아요. ontology 토큰 값을 바꾸지 않는 범위라 이번에 고치지 않았고, 값 결정이 필요해요.
+- MCP 서버(`@axis-ds/mcp`)가 동봉한 토큰 데이터(`src/registry/data/tokens.json`)는 이번에 바뀐 기본 테마 값과 새 변수를 반영하지 않아요. 이 데이터는 처음 만든 뒤(ea764b4) 갱신되지 않았고, mcp patch 는 동봉 레지스트리(`apps/web/public/r`) 갱신만 담아요. MCP 로 토큰을 물으면 처음 만든 때의 목록과 값이 나와요(실측: 새 변수 6개와 1.7.0 의 `--axis-control-h-*` 밀도 토큰도 0건). WI-0076(#202)에서 고칠 예정이에요.

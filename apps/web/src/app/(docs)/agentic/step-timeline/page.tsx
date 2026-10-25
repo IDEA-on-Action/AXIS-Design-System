@@ -29,7 +29,7 @@ const stepTimelineProps = [
     type: 'string',
     default: '-',
     description:
-      '시각 표시 시간대(예: "Asia/Seoul"). locale 과 함께 주면 서버 렌더부터 시각을 표시하고, 아니면 하이드레이션 뒤에 표시해요',
+      '시각 표시 시간대(예: "Asia/Seoul"). locale 과 함께 주면 서버가 그 시간대로 만든 시각이 서버 렌더 HTML 에 그대로 들어가고 보는 사람의 시간대로 바뀌지 않아요. 아니면 서버 컴포넌트에서도 HTML 의 시각이 비고, JS 가 돈 뒤 브라우저 시간대로 채워요',
   },
   {
     name: 'formatTime',

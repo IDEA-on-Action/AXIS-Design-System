@@ -61,3 +61,19 @@
 | build:registry · test:registry · check-licenses · pack-smoke · cli-smoke · registry-install-smoke | rc 0 |
 
 - `build:registry` 가 version 을 1.7.0 으로 쓰는 것을 1.5.0 으로 되돌렸고(WI-0052 선례), `pnpm build` 뒤 public/templates 5파일은 updatedAt 만 바뀌어(내용 diff 0) 되돌렸어요.
+
+## 6. tokens 1.7.0 혼합 소비자 fallback (측정, 2026-10-25, 검토 minor 반영)
+
+새 변수 참조에 1.7.0 이 읽던 변수를 fallback 으로 넣은 뒤(Progress 4종 · Checkbox · RadioGroupItem · Textarea · Switch · Slider), 검토자의 혼합 소비자(`scratchpad/rv/m-tw4-mix.txt`)와 같은 방식으로 다시 쟀어요. Next 15.5.4 · React 19.2.3 · Tailwind 4 소비자, `scratchpad/rv/scripts/measure.mjs`(Chromium 계산값), 산출물 `scratchpad/wa11y/fix2/m-*.txt` · `mix-compare.txt`.
+
+| 앱 | tokens CSS | ui-react | 기본 라이트 Progress 채움 4종 | 트랙 · 체크박스 경계(기본 라이트) |
+|---|---|---|---|---|
+| mix-old(음성 대조) | 발행본 1.7.0 | fallback 없는 브랜치 빌드 | 투명 1 x 4 | 트랙 투명 1, 경계 글자색 17.74 |
+| mix-new | 발행본 1.7.0 | 이 수정 빌드 | 3.68 · 2.28 · 1.92 · 3.76 | 1.24 · 1.24 |
+| branch-new(양성) | 이 브랜치(새 변수 정의 2건) | 이 수정 빌드 | 5.17 · 5.02 · 4.92 · 4.83 | 4.83 · 4.83 |
+
+- 설치본 출처는 마커로 확인했어요: tokens `variables.css` 의 form-control-border 개수(1.7.0 0 · 브랜치 2), ui-react `dist/progress/index.mjs` 의 fallback 문자열(구 0 · 신 1), 빌드 CSS 의 fallback 클래스(구 0 · 신 1).
+- mix-new 는 4환경(기본 · ontology x 라이트 · 다크) 44개 값 중 40개가 발행본 1.7.0 단독 앱(`scratchpad/rv/m-tw4-npm.json`)과 같은 계산 색이었어요. 다른 4개는 다크 Progress default 채움의 채널 1~2 차이로, 테마를 바꾼 직후 transition 중간값으로 봐요(추정: Progress 채움의 `transition-all duration-300` 과 측정 스크립트의 전환 뒤 대기 300ms 가 겹침, 같은 스크립트로 잰 branch-new 대 검토 브랜치도 같은 종류의 차이 16개). 투명 · currentColor 는 4환경 모두 0건이에요.
+- 기본 브랜드 axe(branch-new): 라이트 · 다크 모두 color-contrast 위반 0 · 대비 incomplete 0(남은 document-title · heading-order 는 검사 페이지 구성). 문서 사이트 기준 a11y E2E 236 통과(WI-0062 testplan 3.5).
+- 단위 테스트 `nontext-contrast.test.tsx` 기대값을 fallback 포함 클래스로 바꿨고, Progress warning fallback 을 빼는 변이에서 1건 실패(원복 sha256 일치)했어요.
+

@@ -54,6 +54,24 @@
 
 하나씩 `--force`(Cached 0): turbo lint 7 · type-check 11 · build 8 · test 6 태스크 rc 0(tokens 512 · ui-react 194 · agentic-ui 148 · cli 738 · mcp 143 · theme 47 통과, `ontology-values` 포함). frontend.yml run 단계 10종(check-token-refs · check-contrast-pairs · check-types-versions · check-library-links · build:registry · test:registry · check-licenses · pack-smoke · cli-smoke · registry-install-smoke) rc 0. E2E static a11y 236 · nontext 8 · demo 8 · tooltip 6, tokens 22 통과, 그 리포트로 돌린 CI 건수 가드 rc 0. 생성물: `build:registry` 는 `r/index.json` · `registry.json` 의 version(1.7.0) 외 차이 0 이라 1.5.0 으로 되돌렸고, `public/templates` 5파일은 updatedAt 만 바뀌어(그 외 줄 0, 측정) 되돌렸어요.
 
+### 3.3 템플릿 4종 init 뒤 build 회귀 (측정, 2026-10-25, 검토 minor 반영)
+
+- 실행: `node scripts/template-smoke.mjs`(HEAD 52b7d33 + 이 수정 작업 트리, rc 0). 4종(theme-only · dashboard · landing-page · hr-dashboard) 모두 init rc 0 · npm install rc 0 · next build rc 0, 생성 CSS 에 `@tailwind` 잔존 0 · `.bg-background` 1 · `--axis-*` 정의 544 · 전환 전 `--primary` 0 으로 PASS. 로그 `scratchpad/wa11y/fix2/template-smoke.log`.
+- 스크립트가 하는 일(판정 범위): 이 브랜치의 cli 빌드(`packages/axis-cli/dist`)로 `axis template init` 을 하고, 템플릿 JSON 은 저장소의 `apps/web/public/templates` 를 127.0.0.1 서버로 줘요(`AXIS_TEMPLATE_URL` 주입 전제). `@axis-ds/*` 는 npm 레지스트리에서 받아서 템플릿의 `^1.7.0` 이 발행본 1.7.0 으로 풀려요. 즉 **이 브랜치 템플릿 JSON · cli 의 회귀 없음**까지 판정하고, 이 브랜치 tokens(1.8.0 예정) 를 넣은 build 와 `axis check` 는 이 스크립트 범위 밖이에요.
+- 범위 밖 항목은 반박 검토가 따로 쟀어요(검토 기록, 이 작업에서 다시 재지 않음): `--keep` 결과물에 브랜치 tokens tarball 을 넣고 `.next` 를 옮긴 뒤 다시 build 하면 4종 build 0, CSS 에 `--axis-input-border-default` #6B7280 과 form-control-border 2건, 브랜치 cli 의 `axis check` 4종 rc 0 이고 출력이 발행본 설치 때와 같았어요.
+
+### 3.4 incomplete 대비 하한 · CI 건수 가드 보정 (측정, 2026-10-25, 검토 minor 반영)
+
+- `a11y.spec.ts` 의 incomplete 하한을 고정 4.5 에서 큰 글씨 3 · 그 밖 4.5 로 바꿨어요. 판정은 `e2e/helpers/contrast-threshold.cjs` 이고 axe-core 4.12.1 color-contrast 와 같은 식(`Math.ceil(px * 72) / 96` pt, 굵게 14pt · 보통 18pt 이상이 큰 글씨, 글자 크기를 못 읽으면 4.5)을 써요.
+- 단위 확인: 가짜 axe 노드 data 14건(`selfTest`)을 spec 설정 단계와 `node e2e/helpers/contrast-threshold.cjs` 에서 돌려 14건 통과. 변이 4종(큰 글씨 하한 4.5 · 굵기 무시 · 올림 제거 · bold 판정 끔) 모두 rc 1 로 잡혔어요(처음 12건일 때는 올림 제거 변이가 살아남아 18.66px · 23.99px 경계 2건을 더했어요). 스펙 목록은 `--list` 로 236건(설정 단계 throw 없음).
+- CI 건수 가드: `routes=$(...); rc=$?` 는 Actions 기본 셸(`bash -e`)에서 실패한 줄에서 멈춰 `::error` 에 닿지 않았어요. `rc=0; routes=$(...) || rc=$?` 로 바꿨어요. `frontend.yml` 의 `e2e-count` run 블록을 그대로 뽑아 `bash --noprofile --norc -eo pipefail` 로 재현: 경로 계산이 rc 3 으로 실패하는 fixture 에서 구판은 출력 없이 rc 3, 신판은 `::error::a11y 경로 목록을 계산하지 못했어요 (rc=3/3, ...)` 를 내고 rc 1. 실제 리포트(아래 3.5)에서는 신판 rc 0, a11y 기대 236(59 x 4) = 실행 236.
+
+### 3.5 검토 minor 반영 뒤 전체 게이트 (측정, 2026-10-25)
+
+- 하나씩 `--force`(Cached 0): turbo lint 7 · type-check 11 · build 8 · test 6 rc 0(tokens 512 · ui-react 194 · agentic-ui 148 · cli 738 · mcp 143 · theme 47). 하한 확인 케이스를 더한 뒤 web lint · type-check 를 다시 `--force` 로 돌려 rc 0.
+- frontend.yml run 단계: check-token-refs · check-contrast-pairs(위반 0) · check-types-versions · check-library-links(위반 0) · build:registry · test:registry(45, version 1.5.0 으로 되돌린 뒤 다시 45) · check-licenses · pack-smoke(퍼블리시 대상 6개) · cli-smoke · registry-install-smoke(5/5) 모두 rc 0.
+- E2E(`CI=1 E2E_SERVER=static`, 워커 1, retries 1, flaky 0): a11y 236 · nontext 8 · demo 8 · tooltip 6 · tokens 22 통과. 정적 빌드 `out/` 에 이번 변경(Progress fallback CSS, MessageBubble · StepTimeline Props 문구)이 들어 있는지 grep 으로 확인한 뒤 돌렸어요. 로그 `scratchpad/wa11y/fix2/gates/`.
+
 ## 4. 정적 검사 · 생성물 (측정)
 
 - `check-contrast-pairs` rc 0(검사 파일 21 · 소스 짝 15 · 표 짝 15 · 부모 바탕 근거 17행 중 위반 0). 새 부모 근거 행 5개(context-panel · tool-call-card hover · code-block · diff-viewer 탭)가 근거 대조에 들어갔어요.
