@@ -79,7 +79,7 @@
       "type": "registry:ui",
       "title": "Toast",
       "description": "AXIS 토스트 컴포넌트 - 알림 메시지",
-      "sha256": "0d5168f10be4223f9d31bf815045c88abbd57a96ab932b05388d43a26e82546c"
+      "sha256": "c56513bb2338c57ffee093d7c610ce2ec493857621607ad735b1c4bb4806a21a"
     },
     {
       "name": "agentic-a11y-labels",
@@ -156,7 +156,7 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "22f55b62257075be3e5bb393aea8077eb26cf913ae0595802213769025492b1f"
+      "sha256": "d8ae7866ae417e004aa9b7b8d315a177ac2132b81929d6ff2c75a5414135f8f8"
     },
     {
       "name": "agentic-message-bubble",
@@ -177,21 +177,21 @@
       "type": "registry:ui",
       "title": "Token Usage Indicator",
       "description": "토큰 사용량 및 비용 표시 컴포넌트",
-      "sha256": "5c8c5ea1762f6cf0a2432745e296b7d3e5d244d4a33669858a9d1558be2274d5"
+      "sha256": "b64329101d9a9badf43b05245fbde3235ce0fc9ae5e98747fad874fc786d18b1"
     },
     {
       "name": "agentic-context-panel",
       "type": "registry:ui",
       "title": "Context Panel",
       "description": "모델/설정 메타 정보 패널 컴포넌트",
-      "sha256": "a9a618b1d657aed7c59a1a7753d2e0cdb1446b6d53f2ff6fa03763a1146da538"
+      "sha256": "930ef920ebd5bef9d68b38b03e4e5b4d77429a898db323512443c9847621c2eb"
     },
     {
       "name": "agentic-code-block",
       "type": "registry:ui",
       "title": "Code Block",
       "description": "코드 표시 + 복사 버튼 컴포넌트",
-      "sha256": "117afbae6f969419ef3693d90cd22afc55cbb9ee3693d838a6cd15fb2b80fddf"
+      "sha256": "e42e0c7c18b2d7c270ad55208c33941f944d525888f4d5d765aa50578e025cc3"
     },
     {
       "name": "agentic-plan-card",
@@ -212,7 +212,7 @@
       "type": "registry:ui",
       "title": "Diff Viewer",
       "description": "코드 변경사항 비교 표시 컴포넌트",
-      "sha256": "7bc93e51a119357882bf695ea52d98810e8a5076f1ec81402dd65e805ea6dfb5"
+      "sha256": "953104e633bce2adb4d6c2a11024e70ffae7cfa6fcd75b2f618e41b5982e81d9"
     }
   ]
 }

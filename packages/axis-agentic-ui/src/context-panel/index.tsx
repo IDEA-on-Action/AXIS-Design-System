@@ -63,10 +63,10 @@ export function ContextPanel({
           <div className="flex items-center gap-2">
             <code className="text-sm font-mono text-[var(--axis-text-primary)]">{modelInfo.name}</code>
             {modelInfo.provider && (
-              <span className="text-xs text-[var(--axis-text-tertiary)]">{modelInfo.provider}</span>
+              <span className="text-xs text-[var(--axis-text-secondary)]">{modelInfo.provider}</span>
             )}
             {modelInfo.version && (
-              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-tertiary)]">
+              <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-secondary)]">
                 {modelInfo.version}
               </span>
             )}

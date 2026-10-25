@@ -62,7 +62,7 @@ export function CodeBlock({
             </code>
           )}
           {language && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-tertiary)]">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-secondary)]">
               {language}
             </span>
           )}

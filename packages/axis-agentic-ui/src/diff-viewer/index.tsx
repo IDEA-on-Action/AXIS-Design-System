@@ -122,11 +122,11 @@ export function DiffViewer({
           )}
           {/* 역할 없는 span 의 aria-label 은 보조기술이 읽지 않는다(axe aria-prohibited-attr, WI-0069).
               보이는 기호는 숨기고 읽을 문장은 sr-only 로 둔다 */}
-          <span className="text-xs text-[var(--axis-diff-added)]">
+          <span className="text-xs text-[var(--axis-text-secondary)]">
             <span aria-hidden="true">+{addedCount}</span>
             <span className="sr-only">{`${addedCount}줄 ${DIFF_LABELS.added}`}</span>
           </span>
-          <span className="text-xs text-[var(--axis-diff-removed)]">
+          <span className="text-xs text-[var(--axis-text-error)]">
             <span aria-hidden="true">-{removedCount}</span>
             <span className="sr-only">{`${removedCount}줄 ${DIFF_LABELS.removed}`}</span>
           </span>
@@ -139,7 +139,7 @@ export function DiffViewer({
               "px-2 py-0.5 text-xs rounded transition-colors",
               mode === "unified"
                 ? "bg-[var(--axis-surface-default)] text-[var(--axis-text-primary)] shadow-sm"
-                : "text-[var(--axis-text-tertiary)] hover:text-[var(--axis-text-secondary)]"
+                : "text-[var(--axis-text-secondary)] hover:text-[var(--axis-text-primary)]"
             )}
           >
             통합
@@ -151,7 +151,7 @@ export function DiffViewer({
               "px-2 py-0.5 text-xs rounded transition-colors",
               mode === "split"
                 ? "bg-[var(--axis-surface-default)] text-[var(--axis-text-primary)] shadow-sm"
-                : "text-[var(--axis-text-tertiary)] hover:text-[var(--axis-text-secondary)]"
+                : "text-[var(--axis-text-secondary)] hover:text-[var(--axis-text-primary)]"
             )}
           >
             분할
@@ -177,10 +177,10 @@ function UnifiedView({ lines }: { lines: DiffLine[] }) {
       <tbody>
         {lines.map((line, i) => (
           <tr key={i} className={lineTypeStyles[line.type]}>
-            <td className="select-none text-right px-2 py-0.5 text-[var(--axis-text-tertiary)] w-10 border-r border-[var(--axis-border-default)]">
+            <td className="select-none text-right px-2 py-0.5 text-[var(--axis-text-secondary)] w-10 border-r border-[var(--axis-border-default)]">
               {line.oldLineNumber ?? ""}
             </td>
-            <td className="select-none text-right px-2 py-0.5 text-[var(--axis-text-tertiary)] w-10 border-r border-[var(--axis-border-default)]">
+            <td className="select-none text-right px-2 py-0.5 text-[var(--axis-text-secondary)] w-10 border-r border-[var(--axis-border-default)]">
               {line.newLineNumber ?? ""}
             </td>
             <td className={cn("select-none w-4 text-center py-0.5", lineTypeTextStyles[line.type])}>
@@ -222,7 +222,7 @@ function SplitView({ lines }: { lines: DiffLine[] }) {
           return (
             <tr key={i}>
               {/* 왼쪽 (before) */}
-              <td className={cn("select-none text-right px-2 py-0.5 text-[var(--axis-text-tertiary)] w-10 border-r border-[var(--axis-border-default)]", leftLine ? lineTypeStyles[leftLine.type] : "")}>
+              <td className={cn("select-none text-right px-2 py-0.5 text-[var(--axis-text-secondary)] w-10 border-r border-[var(--axis-border-default)]", leftLine ? lineTypeStyles[leftLine.type] : "")}>
                 {leftLine?.oldLineNumber ?? ""}
               </td>
               <td className={cn("select-none w-4 text-center py-0.5", leftLine ? lineTypeTextStyles[leftLine.type] : "")}>
@@ -232,7 +232,7 @@ function SplitView({ lines }: { lines: DiffLine[] }) {
                 {leftLine?.content ?? ""}
               </td>
               {/* 오른쪽 (after) */}
-              <td className={cn("select-none text-right px-2 py-0.5 text-[var(--axis-text-tertiary)] w-10 border-r border-[var(--axis-border-default)]", rightLine ? lineTypeStyles[rightLine.type] : "")}>
+              <td className={cn("select-none text-right px-2 py-0.5 text-[var(--axis-text-secondary)] w-10 border-r border-[var(--axis-border-default)]", rightLine ? lineTypeStyles[rightLine.type] : "")}>
                 {rightLine?.newLineNumber ?? ""}
               </td>
               <td className={cn("select-none w-4 text-center py-0.5", rightLine ? lineTypeTextStyles[rightLine.type] : "")}>

@@ -115,6 +115,42 @@ export const WI0029_SHADCN = [
 ];
 
 /**
+ * WI-0062 예외 목록(기본 테마 텍스트 대비 잔여, PRD 3.1 · 3.2): 바뀐 1.2.1 변수와 새 값.
+ * 흰 글자 짝 · 글자 전용 토큰의 기본값만 바꾸고 status.* 는 그대로 둔다(D1 (가)). ontology 는 이 변수를 모두
+ * 브랜드 값으로 덮어써 출력이 바뀌지 않는다(ontology-values.test · dist/css/brands/ontology.css 바이트 비교).
+ */
+export const WI0062_CHANGED = {
+  ':root': {
+    '--axis-diff-added-text': '#15803D',
+    '--axis-diff-removed-text': '#B91C1C',
+    '--axis-agent-avatar-assistant': '#9333EA',
+    '--axis-agent-avatar-tool': '#2563EB',
+    '--axis-button-text-disabled': '#4B5563',
+    '--axis-input-text-placeholder': '#6B7280',
+  },
+  '.dark': {
+    '--axis-diff-removed-text': '#F87171',
+    '--axis-agent-avatar-assistant': '#9333EA',
+    '--axis-agent-avatar-tool': '#2563EB',
+    '--axis-button-bg-disabled': '#1F2937',
+  },
+};
+/** WI-0062 가 기본값을 바꾼 1.2.1 이후 신규 변수(흰 글자 짝 토큰, WI-0025 M3 G1) */
+const WI0062_NEW = {
+  ':root': { '--axis-status-neutral-muted-contrast': '#374151' },
+  '.dark': { '--axis-status-neutral-muted-contrast': '#374151' },
+};
+/** WI-0062 shadcn-compat.css 예외: 라이트 destructive 를 red.600 으로(흰 글자 3.76 → 4.83, PRD 3.2) */
+export const WI0062_SHADCN = [
+  { sel: ':root', name: '--destructive', base: '0 84% 60%', next: '0 72% 51%' },
+];
+
+/** 실제 출력 대조에 쓰는 합친 예외(WI-0029 · WI-0062). 같은 변수를 두 WI 가 함께 바꾸면 뒤 WI 값이 이긴다 */
+const mergeBlocks = (...tables) => Object.fromEntries(BLOCKS.map(sel => [sel, Object.assign({}, ...tables.map(t => t[sel] ?? {}))]));
+export const CHANGED_ALL = mergeBlocks(WI0029_CHANGED, WI0062_CHANGED);
+export const SHADCN_ALL = [...WI0029_SHADCN, ...WI0062_SHADCN];
+
+/**
  * 1.2.1 shadcn-compat.css 원문에 예외 줄만 새 값으로 바꾼 기대 출력을 만든다.
  * 예외 줄은 해당 블록 안에서 정확히 1번 나와야 하고, 아니면 throw 한다(목록이 낡으면 바로 드러나게).
  */
@@ -146,7 +182,7 @@ export function diffLines(aText, bText) {
 }
 
 const EXPECTED_NEW = Object.fromEntries(
-  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel], ...WI0026_NEW[sel] }]),
+  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel], ...WI0026_NEW[sel], ...WI0062_NEW[sel] }]),
 );
 
 /**
@@ -482,26 +518,26 @@ describe('실제 기본 출력 대조 (dist/css)', () => {
 
   test('variables.css: 1.2.1 변수 불변 + 신규 변수는 기본값만', t => {
     const cur = readFileSync(join(cssDir, 'variables.css'), 'utf8');
-    const r = compareBaseline(baseVariables, cur, EXPECTED_NEW, WI0029_CHANGED, WI0026_VAR_NAMES);
+    const r = compareBaseline(baseVariables, cur, EXPECTED_NEW, CHANGED_ALL, WI0026_VAR_NAMES);
     t.diagnostic(`AC3 variables.css: ${summary(r)}`);
     assert.equal(violationCount(r), 0, JSON.stringify(r, null, 1));
     for (const sel of BLOCKS) {
-      const allowed = Object.keys(WI0029_CHANGED[sel]).length;
+      const allowed = Object.keys(CHANGED_ALL[sel]).length;
       assert.equal(r.blocks[sel].allowed, allowed, sel);
       assert.equal(r.blocks[sel].matched, 249 - allowed, sel);
       assert.equal(r.blocks[sel].newCount, Object.keys(EXPECTED_NEW[sel]).length, sel);
     }
   });
 
-  test('shadcn-compat.css: 1.2.1 과 바이트 일치(WI-0029 D6 다크 --muted-foreground 한 줄 제외)', t => {
+  test('shadcn-compat.css: 1.2.1 과 바이트 일치(WI-0029 D6 다크 --muted-foreground · WI-0062 라이트 --destructive 제외)', t => {
     const cur = readFileSync(join(cssDir, 'shadcn-compat.css'));
     const baseText = readFileSync(join(fixtureDir, 'shadcn-compat.css'), 'utf8');
-    const expected = Buffer.from(expectedShadcn(baseText, WI0029_SHADCN), 'utf8');
+    const expected = Buffer.from(expectedShadcn(baseText, SHADCN_ALL), 'utf8');
     const d = diffLines(baseText, cur.toString('utf8'));
     t.diagnostic(`AC5 shadcn-compat.css: ${cur.length}/${expected.length} bytes · 1.2.1 대비 바뀐 줄 ${d.length}`);
     assert.ok(cur.equals(expected), `shadcn-compat.css 가 기대 출력과 다르다: ${JSON.stringify(diffLines(expected.toString('utf8'), cur.toString('utf8')))}`);
     // 예외 줄 새 값 단언(바이트 일치와 별도로 명시)
-    assert.equal(d.length, WI0029_SHADCN.length);
-    assert.equal(d[0].cur, '    --muted-foreground: 216 12% 84%;');
+    assert.equal(d.length, SHADCN_ALL.length);
+    for (const ex of SHADCN_ALL) assert.ok(d.some(x => x.cur === `    ${ex.name}: ${ex.next};`), `${ex.sel} ${ex.name} 새 값 줄 없음`);
   });
 });

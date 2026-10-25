@@ -154,7 +154,7 @@ export default function LibraryPage() {
               >
                 <Icon className="h-3.5 w-3.5" />
                 {cat.name}
-                <span className="ml-1 text-xs opacity-70">({count})</span>
+                <span className="ml-1 text-xs">({count})</span>
               </button>
             )
           })}

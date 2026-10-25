@@ -61,17 +61,17 @@
     "success-contrast": { "value": "{color.white}" },
     "running-contrast": { "value": "{color.white}" },
     "error-contrast": { "value": "{color.white}" },
-    "neutral-muted-contrast": { "value": "{color.white}" }
+    "neutral-muted-contrast": { "value": "{color.gray.700}" }
   },
   "diff": {
     "added": { "value": "{color.green.500}" },
     "removed": { "value": "{color.red.500}" },
     "added-text": { "value": "{color.green.600}" },
-    "removed-text": { "value": "{color.red.600}" }
+    "removed-text": { "value": "{color.red.400}" }
   },
   "agent": {
-    "avatar-assistant": { "value": "{color.purple.500}" },
-    "avatar-tool": { "value": "{color.blue.500}" },
+    "avatar-assistant": { "value": "{color.purple.600}" },
+    "avatar-tool": { "value": "{color.blue.600}" },
     "avatar-system": { "value": "{color.gray.600}" },
     "message-user-bg": { "value": "{color.blue.600}" },
     "message-user-text": { "value": "{color.white}" },

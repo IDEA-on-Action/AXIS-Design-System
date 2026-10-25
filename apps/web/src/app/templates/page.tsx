@@ -153,7 +153,7 @@ export default function TemplatesPage() {
                 )}
               >
                 {src.label}
-                <span className="opacity-70">({src.count})</span>
+                <span>({src.count})</span>
               </button>
             ))}
           </div>
@@ -172,7 +172,7 @@ export default function TemplatesPage() {
           >
             <Layers className="h-3.5 w-3.5" />
             전체
-            <span className="ml-1 text-xs opacity-70">({data?.total || 0})</span>
+            <span className="ml-1 text-xs">({data?.total || 0})</span>
           </button>
           {categories.map((cat) => {
             const Icon = cat.icon
@@ -189,7 +189,7 @@ export default function TemplatesPage() {
               >
                 <Icon className="h-3.5 w-3.5" />
                 {cat.name}
-                <span className="ml-1 text-xs opacity-70">({cat.count})</span>
+                <span className="ml-1 text-xs">({cat.count})</span>
               </button>
             )
           })}

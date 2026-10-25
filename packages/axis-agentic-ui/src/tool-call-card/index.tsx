@@ -112,7 +112,7 @@ export function ToolCallCard({
         </div>
         <div className="flex items-center gap-2">
           {duration !== undefined && (
-            <span className="text-xs text-[var(--axis-text-tertiary)]">
+            <span className="text-xs text-[var(--axis-text-secondary)]">
               {duration}ms
             </span>
           )}

@@ -99,7 +99,7 @@ export default function ContributePage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-green-600 dark:text-green-400">호환 라이선스</CardTitle>
+              <CardTitle className="text-base text-green-700 dark:text-green-400">호환 라이선스</CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="flex flex-wrap gap-2">

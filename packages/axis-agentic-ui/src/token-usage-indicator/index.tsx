@@ -37,8 +37,8 @@ export function TokenUsageIndicator({
   };
 
   const getTextColor = () => {
-    if (ratio >= 1) return "text-[var(--axis-status-error)]";
-    if (ratio >= warningThreshold) return "text-[var(--axis-status-warning)]";
+    if (ratio >= 1) return "text-[var(--axis-text-error)]";
+    if (ratio >= warningThreshold) return "text-[var(--axis-text-warning)]";
     return "text-[var(--axis-text-secondary)]";
   };
 

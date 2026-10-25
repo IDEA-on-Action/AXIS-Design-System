@@ -286,7 +286,11 @@ function getColor(colorName, shade) {
   return colorsJson?.color?.[colorName]?.[shade]?.value || '#000000';
 }
 
-function buildShadcnVars(resolved) {
+/**
+ * shadcn 호환 변수. destructive 는 라이트에서 흰 글자(text.inverse)와 짝이라 red.600(4.83:1)을 쓴다
+ * (red.500 은 3.76:1, WI-0062). 다크는 글자가 text.inverse(gray.900)라 red.500(4.69:1)을 그대로 둔다.
+ */
+function buildShadcnVars(resolved, theme) {
   return [
     `    --background: ${toHslFromHex(resolved.surface?.default)};`,
     `    --foreground: ${toHslFromHex(resolved.text?.primary)};`,
@@ -302,7 +306,7 @@ function buildShadcnVars(resolved) {
     `    --muted-foreground: ${toHslFromHex(resolved.text?.secondary)};`,
     `    --accent: ${toHslFromHex(resolved.surface?.secondary)};`,
     `    --accent-foreground: ${toHslFromHex(resolved.text?.primary)};`,
-    `    --destructive: ${toHslFromHex(getColor('red', '500'))};`,
+    `    --destructive: ${toHslFromHex(getColor('red', theme === 'light' ? '600' : '500'))};`,
     `    --destructive-foreground: ${toHslFromHex(resolved.text?.inverse)};`,
     `    --border: ${toHslFromHex(resolved.border?.default)};`,
     `    --input: ${toHslFromHex(resolved.border?.default)};`,
@@ -326,11 +330,11 @@ const shadcnCss = `/**
  */
 
 :root {
-${buildShadcnVars(lightResolved)}
+${buildShadcnVars(lightResolved, 'light')}
 }
 
 .dark {
-${buildShadcnVars(darkResolved)}
+${buildShadcnVars(darkResolved, 'dark')}
 }
 
 * {
