@@ -30,12 +30,19 @@ Tailwind CSS 4(`@import "tailwindcss"`, create-next-app 15.5 기본)에서는 `@
 
 ### Tailwind CSS 3
 
-CSS Variables 설정:
+CSS Variables 설정(두 줄 모두, 이 순서로 `@tailwind` 지시문보다 앞에):
 
 ```css
 /* globals.css */
+@import '@axis-ds/tokens/css';
 @import '@axis-ds/tokens/css/shadcn';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 ```
+
+- `@axis-ds/tokens/css` 는 컴포넌트가 읽는 `--axis-*` 변수를 정의합니다. 빠지면 Input · Checkbox 경계가 글자색이 되고 Progress 채움이 투명해집니다. `@axis-ds/tokens/css/shadcn` 은 preset 이 읽는 `--primary` · `--radius` 등을 정의합니다.
 
 `tailwind.config` 에는 `@axis-ds/tokens/tailwind` preset 과 함께 컴포넌트 파일을 `content` 에 넣습니다.
 

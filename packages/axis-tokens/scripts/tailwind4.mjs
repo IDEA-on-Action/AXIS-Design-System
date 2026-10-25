@@ -8,6 +8,7 @@
  * - preset 에 이 변환기가 모르는 키(theme.extend 의 새 항목, darkMode 의 다른 전략 등)가 생기면
  *   조용히 빠뜨리지 않고 throw 한다. 빠진 매핑은 Tailwind 4 에서 클래스가 생성되지 않을 뿐 오류가 없어서
  *   눈에 띄지 않기 때문이다.
+ * - theme.extend.borderColor 는 Tailwind 3 전용이라 옮기지 않는다(TAILWIND3_ONLY_KEYS, WI-0077). 건너뛰는 키는 이름으로만 정한다.
  * - theme.extend.keyframes 는 테마 변수가 아니라 `@keyframes` 블록으로, theme.extend.animation 은 `--animate-*` 로 옮긴다
  *   (WI-0046). animation 이 preset 에 없는 keyframes 를 가리키면 throw 한다(Tailwind 4 에서 이름만 있고 동작하지 않음).
  * - 맨 위에서 같은 디렉터리의 variables.css · shadcn-compat.css 를 `layer(base)` 로 불러온다.
@@ -34,6 +35,15 @@ export const NAMESPACES = /** @type {const} */ ({
 
 /** theme.extend 에서 테마 변수가 아니라 `@keyframes` 블록으로 옮기는 키 */
 export const KEYFRAMES_KEY = 'keyframes'
+
+/**
+ * theme.extend 에서 Tailwind 4 진입점으로 옮기지 않는 Tailwind 3 전용 키 (WI-0077)
+ *
+ * - borderColor: Tailwind 3 preflight 의 기본 테두리색(`borderColor.DEFAULT`)만 정한다. Tailwind 4 진입점은
+ *   shadcn-compat.css 의 `* { border-color: hsl(var(--border)) }` 를 base 레이어로 불러와 같은 일을 하므로
+ *   테마 변수가 필요 없다. 여기 적은 키만 건너뛰고, 그 밖의 모르는 키는 여전히 throw 한다.
+ */
+export const TAILWIND3_ONLY_KEYS = /** @type {const} */ (['borderColor'])
 
 /** keyframes 단계 선택자: from · to · 0% · 12.5% 와 그 쉼표 목록 */
 const STEP_RE = /^(?:from|to|\d+(?:\.\d+)?%)(?:, (?:from|to|\d+(?:\.\d+)?%))*$/
@@ -170,6 +180,7 @@ export function presetToTheme(preset) {
       keyframes = keyframesBlocks(value)
       continue
     }
+    if (/** @type {readonly string[]} */ (TAILWIND3_ONLY_KEYS).includes(key)) continue
     const namespace = /** @type {Record<string, string>} */ (NAMESPACES)[key]
     if (!namespace) throw new Error(`preset.theme.extend.${key}: Tailwind 4 진입점 변환을 모르는 키입니다`)
     if (!value || typeof value !== 'object') throw new Error(`preset.theme.extend.${key}: 객체가 아닙니다`)

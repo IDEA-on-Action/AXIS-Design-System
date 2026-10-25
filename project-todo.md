@@ -74,7 +74,7 @@
 | 86 | `check` 의 기존 설치본 판독(Tailwind 판정 · TW4 안내)을 상위 디렉터리 탐색으로(WI-0051 에서 분리, 기준선 재측정 필요) | WI-0074 (#199) | P18 | P3 | 🔄 |
 | 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | 🔄 |
 | 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | 🔄 |
-| 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ⏳ |
+| 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | 🔄 |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | 🔄 |
 | 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ⏳ |
 | 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ⏳ |

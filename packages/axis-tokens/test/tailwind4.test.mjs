@@ -19,7 +19,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { buildTailwind4Css, loadPresetFromSource } from '../scripts/tailwind4.mjs';
+import { TAILWIND3_ONLY_KEYS, buildTailwind4Css, loadPresetFromSource } from '../scripts/tailwind4.mjs';
 
 const pkgDir = join(dirname(fileURLToPath(import.meta.url)), '..');
 const presetPath = join(pkgDir, 'src', 'tailwind-preset.ts');
@@ -29,6 +29,9 @@ const EXPECTED_NAMESPACES = { colors: 'color', borderRadius: 'radius', fontFamil
 
 /** theme.extend 에서 테마 변수가 아니라 @keyframes 블록으로 옮기는 키 (WI-0046) */
 const KEYFRAMES_KEY = 'keyframes';
+
+/** theme.extend 에서 Tailwind 4 진입점으로 옮기지 않는 Tailwind 3 전용 키 (WI-0077: preflight 기본 테두리색) */
+const EXPECTED_TAILWIND3_ONLY = ['borderColor'];
 
 /** 정의에서 정한 개수 (WI-0044 PRD FR-1: 색 24 · radius 3 · 글꼴 3, WI-0046: animate 3) */
 const EXPECTED_COUNTS = { color: 24, radius: 3, font: 3, animate: 3 };
@@ -106,11 +109,22 @@ describe('tailwind4.css 매핑이 Tailwind 3 preset 과 같다', () => {
     css = buildTailwind4Css(preset);
   });
 
-  test('preset 의 theme.extend 키가 변환 대상 5종(테마 변수 4 + keyframes)뿐이다', () => {
+  test('preset 의 theme.extend 키가 변환 대상 5종(테마 변수 4 + keyframes)과 Tailwind 3 전용 1종(borderColor)뿐이다', () => {
     assert.deepEqual(
       Object.keys(preset.theme.extend).sort(),
-      [...Object.keys(EXPECTED_NAMESPACES), KEYFRAMES_KEY].sort(),
+      [...Object.keys(EXPECTED_NAMESPACES), KEYFRAMES_KEY, ...EXPECTED_TAILWIND3_ONLY].sort(),
     );
+  });
+
+  test('건너뛰는 Tailwind 3 전용 키가 borderColor 하나뿐이다 (WI-0077)', () => {
+    assert.deepEqual([...TAILWIND3_ONLY_KEYS], EXPECTED_TAILWIND3_ONLY);
+  });
+
+  test('borderColor 는 @theme inline 에 옮기지 않는다 (진입점의 base 레이어 * 규칙이 맡음)', () => {
+    const actual = parseThemeInline(css);
+    assert.ok(preset.theme.extend.borderColor, 'preset 에 borderColor 가 없습니다(양성 대조 전제)');
+    for (const name of actual.keys()) assert.doesNotMatch(name, /^--(border-color|color-border-default)/i, name);
+    assert.doesNotMatch(css, /220 13% 91%/);
   });
 
   test('preset 의 테마 변수 키가 같은 값으로 @theme inline 에 있고, 그 밖의 선언은 없다(keyframes 는 @theme 밖)', () => {
@@ -189,6 +203,16 @@ describe('변환기가 모르는 preset 항목은 조용히 빠뜨리지 않고 
   test('theme.extend 에 새 키(spacing)', async () => {
     const p = await mutated(p => { p.theme.extend.spacing = { 18: '4.5rem' }; });
     assert.throws(() => buildTailwind4Css(p), /theme\.extend\.spacing/);
+  });
+
+  test('theme.extend 에 새 키(foo): Tailwind 3 전용 건너뛰기가 모르는 키까지 넓어지지 않는다 (WI-0077)', async () => {
+    const p = await mutated(p => { p.theme.extend.foo = { bar: 'baz' }; });
+    assert.throws(() => buildTailwind4Css(p), /theme\.extend\.foo/);
+  });
+
+  test('theme.extend 에 borderWidth: borderColor 와 이름이 비슷한 키도 throw 한다', async () => {
+    const p = await mutated(p => { p.theme.extend.borderWidth = { 3: '3px' }; });
+    assert.throws(() => buildTailwind4Css(p), /theme\.extend\.borderWidth/);
   });
 
   test("darkMode 가 'media'", async () => {
