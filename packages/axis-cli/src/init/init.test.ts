@@ -374,7 +374,9 @@ describe("axis init: package.json 의존성(D1)", () => {
     for (const n of names) {
       const filesDir = path.join(templatesDir, n, "files");
       const pkg = await fs.readJSON(path.join(filesDir, "package.json"));
-      const tailwind = detectTailwind(filesDir, pkg);
+      // 선언만 보려고 저장소 밖(tmpdir)에서 판정합니다. WI-0074 부터 설치본을 상위로 찾으므로 템플릿 디렉터리에서 판정하면
+      // 저장소 루트 node_modules 의 tailwindcss(개발 의존성)를 읽습니다.
+      const tailwind = detectTailwind(await tmpDir(), pkg);
       expect({
         template: n,
         tailwind,

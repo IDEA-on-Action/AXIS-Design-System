@@ -264,7 +264,7 @@ function readPackageJsonSafe(baseDir: string): Record<string, unknown> | undefin
  *   지우라는 주의(`TAILWIND4_CONFLICT_LINE`, quick-start 와 같은 내용).
  * - `@axis-ds/tokens` 가 package.json 에 없으면 설치 명령(theme add 와 같은 lockfile 판정).
  * - tokens · ui-react · agentic-ui 의 1.4.0 조건(A1, `axisPackagesBelowTailwind4(pkg, baseDir)`, axis check 와 같은 함수 ·
- *   같은 판정): 보정 3차부터 `baseDir` 의 설치본(node_modules) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
+ *   같은 판정): 보정 3차부터 설치본(node_modules, WI-0074 부터 `baseDir` 부터 상위 탐색) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
  *   `^1.3.0` · `catalog:` 여도 안내하지 않고, 미만이면 설치본 버전을 보여 주며 `^1.4.0` 으로 올리는 명령을 냅니다.
  *   다만 설치본 미만이어도 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) 명령 대신 선언이 가리키는
  *   버전을 올리고 다시 설치하라는 줄을 냅니다(선언을 덮어쓰지 않음).
