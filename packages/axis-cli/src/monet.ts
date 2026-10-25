@@ -12,7 +12,7 @@
 import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
-import prompts from "prompts";
+import { ask, failNonInteractive, isInteractive } from "./interactive.js";
 
 // Monet 카테고리 목록
 export const MONET_CATEGORIES = [
@@ -149,7 +149,8 @@ export class MonetClient {
   }
 
   // 클립보드에서 Monet 코드 가져오기
-  async importFromClipboard(): Promise<void> {
+  /** opts.interactive: 질문을 띄울 수 있는지(WI-0075). 없으면 stdin 이 TTY 인지로 정합니다 */
+  async importFromClipboard(opts: { interactive?: boolean } = {}): Promise<void> {
     console.log(chalk.blue("\n📋 클립보드에서 Monet 컴포넌트 가져오기\n"));
 
     console.log(chalk.yellow("준비 단계:"));
@@ -157,20 +158,34 @@ export class MonetClient {
     console.log(chalk.gray("  2. 'Copy Code' 버튼으로 코드 복사"));
     console.log(chalk.gray("  3. 이 명령어 실행\n"));
 
-    const { componentName } = await prompts({
-      type: "text",
-      name: "componentName",
-      message: "컴포넌트 이름 (예: hero-section):",
-      validate: (v) => (v.length > 0 ? true : "이름을 입력하세요"),
-    });
+    // 이름 · 붙여 넣을 코드에 기본값이 없어 비대화형이면 rc 1(WI-0075 D4)
+    const interactive = opts.interactive ?? isInteractive();
+    if (!interactive) {
+      failNonInteractive("컴포넌트 이름과 붙여 넣을 코드를 물을 수 없습니다. 아무것도 쓰지 않았습니다.", [
+        "대화형 터미널에서 다시 실행하세요: axis monet import",
+      ]);
+      return;
+    }
+    const { componentName } = await ask(
+      {
+        type: "text",
+        name: "componentName",
+        message: "컴포넌트 이름 (예: hero-section):",
+        validate: (v) => (v.length > 0 ? true : "이름을 입력하세요"),
+      },
+      interactive
+    );
 
     if (!componentName) return;
 
-    const { componentCode } = await prompts({
-      type: "text",
-      name: "componentCode",
-      message: "복사한 코드를 붙여넣으세요 (한 줄로):",
-    });
+    const { componentCode } = await ask(
+      {
+        type: "text",
+        name: "componentCode",
+        message: "복사한 코드를 붙여넣으세요 (한 줄로):",
+      },
+      interactive
+    );
 
     if (!componentCode) {
       console.log(chalk.yellow("\n코드가 입력되지 않았습니다."));

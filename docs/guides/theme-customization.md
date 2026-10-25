@@ -375,6 +375,8 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
    pnpm install                                             # npm install 도 됩니다
    ```
 
+   CI · 스크립트처럼 입력이 없는 곳에서 돌릴 때(cli 1.7.0 부터): `--dir` 을 빼면 템플릿 이름 디렉터리로 진행하고 그 값을 한 줄 알립니다. 비어 있지 않은 디렉터리는 rc 1 로 멈추니, 덮어써도 되면 `-y` 를 붙입니다(템플릿과 같은 경로의 파일은 덮어씀).
+
 2. 브랜드 CSS 를 켭니다. `app/globals.css` 의 아래 줄에서 주석을 풉니다.
 
    ```css
@@ -417,7 +419,7 @@ Tailwind 3 프로젝트에서 바뀐 전역 CSS 는 이렇습니다(create-next-
 
 - `data-brand` 를 지우면 같은 페이지에서 기본 · 라이트와 기본 · 다크 값으로 돌아왔습니다(두 템플릿 모두).
 - 글꼴: `body` 의 계산 `font-family` 는 기본에서 `--axis-font-family-sans`(`"Pretendard Variable", Pretendard, -apple-system, ...`), ontology 에서 브랜드 스택(`"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", ...`)이었고 `Pretendard Variable` 이 실제로 로드됐습니다(FontFace status loaded 로 확인).
-- 템플릿 `globals.css` 는 tokens CSS 뒤에 `@layer base { * { @apply border-border; } }` 를 둡니다. 빼면 Tailwind 3 preflight 의 `border-color`(gray-200)가 shadcn 호환 CSS 의 `*` 규칙보다 뒤에 와서 이겨, `border` 클래스 테두리가 다크 · 브랜드에서도 rgb(229, 231, 235) 로 남습니다(이 줄을 넣기 전 같은 측정에서 템플릿마다 6개 상태 중 기본 · 라이트 2개를 뺀 4개가 테두리 불일치). 직접 만든 Tailwind 3 프로젝트에도 같은 줄이 필요할 수 있습니다(템플릿 밖은 재지 않음).
+- 템플릿 `globals.css` 는 tokens CSS 뒤에 `@layer base { * { @apply border-border; } }` 를 둡니다. 빼면 Tailwind 3 preflight 의 `border-color`(gray-200)가 shadcn 호환 CSS 의 `*` 규칙보다 뒤에 와서 이겨, `border` 클래스 테두리가 다크 · 브랜드에서도 rgb(229, 231, 235) 로 남습니다(이 줄을 넣기 전 같은 측정에서 템플릿마다 6개 상태 중 기본 · 라이트 2개를 뺀 4개가 테두리 불일치). 템플릿 밖의 Tailwind 3 프로젝트도 `@axis-ds/tokens` 1.8.0 이하에서는 같은 결함이 있습니다(quick-start 「Tailwind CSS 3」 예시 그대로 만든 Next 15 소비자에서 4개 상태 x 탐침 3개(`border` · `border-t` · `hr`) 12칸 중 기본 · 라이트를 뺀 9칸 불일치, 브라우저 계산값 실측). 1.8.1 부터는 preset 이 preflight 의 기본 테두리색을 `hsl(var(--border, 220 13% 91%))` 로 정해 이 줄 없이도 같고(같은 소비자 0/12), 템플릿의 이 줄은 1.8.0 이하 호환을 위해 그대로 둡니다(WI-0077).
 
 이미 받은 템플릿은 자동으로 바뀌지 않습니다(파일 복사 방식). `npx @axis-ds/cli template diff <slug>` 로 차이를 볼 수 있습니다.
 
@@ -469,7 +471,7 @@ Tailwind CSS 4 에서는 토큰 CSS 대신 토큰 진입점을 쓰고, 브랜드
 
 진입점이 `rounded-sm|md|lg` 를 `--radius` 로, `font-mono` · `font-sans` 를 `--axis-font-family-*` 로 매핑하므로 ontology 를 적용한 요소에서는 `rounded-lg` 12px · `rounded-md` 10px 이고 `font-mono` 가 JetBrains Mono 로 시작합니다. 이 매핑은 유틸리티 클래스 자체의 값입니다. 1.7.0 부터 Button · Input 등 밀도 토큰 대상 컴포넌트는 `rounded-md` 대신 `--axis-radius-control|field|surface` 를 직접 읽어 ontology 에서 8 · 6 · 12px 입니다(위 「밀도 토큰」). 진입점은 토큰 변수를 base 레이어로 불러오고 브랜드 CSS 는 레이어가 없어서, 브랜드 값이 토큰 기본값을 이깁니다.
 
-Tailwind CSS 3 에서 같은 CSS 파일에 import 할 때는 `@import` 를 `@tailwind` 지시문보다 앞에 둡니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다). 위 「브랜드 적용 빠른 시작」의 값은 이 순서(`tokens/css` · `css/shadcn` · 브랜드 다음 `@tailwind` 3줄)로 잰 것입니다. 이 순서에서는 `@tailwind base` 의 preflight(`*, ::before, ::after { border: 0 solid #e5e7eb }`)가 `css/shadcn` 의 `* { border-color: hsl(var(--border)) }` 보다 뒤에 오므로, 색을 지정하지 않은 `border` 는 다크 · 브랜드에서도 gray-200(#e5e7eb)입니다(Next.js 15.5 빌드 산출 CSS 의 규칙 순서로 확인, 브라우저 계산값은 재지 않음). AXIS `--border` 색이 필요한 곳은 `border-border` 처럼 색을 지정합니다.
+Tailwind CSS 3 에서 같은 CSS 파일에 import 할 때는 `@import` 를 `@tailwind` 지시문보다 앞에 둡니다(CSS 규칙상 `@import` 는 다른 규칙보다 앞에 와야 합니다). 위 「브랜드 적용 빠른 시작」의 값은 이 순서(`tokens/css` · `css/shadcn` · 브랜드 다음 `@tailwind` 3줄)로 잰 것입니다. 이 순서에서는 `@tailwind base` 의 preflight(`*, ::before, ::after { border: 0 solid theme('borderColor.DEFAULT') }`)가 `css/shadcn` 의 `* { border-color: hsl(var(--border)) }` 보다 뒤에 와서 이깁니다. `@axis-ds/tokens` 1.8.1 부터는 preset 이 그 기본값을 `hsl(var(--border, 220 13% 91%))` 로 정해, 색을 지정하지 않은 `border` · `border-t` · `hr` 가 다크 · 브랜드에서도 AXIS `--border` 색입니다(Next 15.5 · Tailwind 3.4.19 소비자, Chromium 계산값 4개 상태 실측). 1.8.0 이하는 gray-200(#e5e7eb)이 이겨 다크 · 브랜드에서도 회색이므로 `@tailwind utilities;` 뒤에 `@layer base { * { @apply border-border; } }` 블록을 두거나 `border-border` 처럼 색을 지정합니다(WI-0077).
 
 ### 브랜드 적용
 

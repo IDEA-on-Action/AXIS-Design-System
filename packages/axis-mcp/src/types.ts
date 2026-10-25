@@ -44,22 +44,40 @@ export interface ComponentExample {
   description?: string;
 }
 
-// 토큰 카테고리
-export type TokenCategory = "color" | "typography" | "spacing" | "radius" | "shadow" | "animation";
+// 토큰 카테고리(WI-0076: @axis-ds/tokens 에서 생성. 원천이 없던 animation 은 빼고 density · component 를 더했습니다)
+export const TOKEN_CATEGORIES = [
+  "color",
+  "typography",
+  "spacing",
+  "radius",
+  "shadow",
+  "density",
+  "component",
+] as const;
+export type TokenCategory = (typeof TOKEN_CATEGORIES)[number];
 
-// 토큰 메타데이터
+// 토큰 메타데이터(dist/data/tokens.json, 빌드 때 tokens 산출물에서 생성)
 export interface TokenMeta {
+  /** 조회 경로(1.3.5 까지의 경로는 그대로 유지) */
   path: string;
+  /** 라이트(:root) 값 */
   value: string;
+  /** 다크(.dark) 값 */
+  dark?: string;
   category: TokenCategory;
   description?: string;
-  cssVariable?: string;
+  /** tokens 산출물에 실제로 정의된 CSS 변수 이름 */
+  cssVariable: string;
+  /** path 밖에 함께 받는 경로(tokens 이름 기반) */
+  aliases?: string[];
 }
 
 // 레지스트리 데이터
 export interface Registry {
   components: ComponentMeta[];
   tokens: TokenMeta[];
+  /** 토큰 데이터를 생성한 @axis-ds/tokens 버전 */
+  tokenSource?: { package: string; version: string };
 }
 
 // MCP 도구 입력 타입

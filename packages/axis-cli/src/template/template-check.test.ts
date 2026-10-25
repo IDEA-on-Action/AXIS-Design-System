@@ -7,13 +7,14 @@ import { collectCheckResults, runCheck } from "./template-check.js";
 import {
   axisPackagesBelowTailwind4,
   contentGlobToRegExp,
+  detectTailwind,
   findCreateNextAppDefaults,
   hasComponentSource,
   rangeLowerAtLeast,
   readTailwindContent,
 } from "./tailwind-core.js";
 import { templateApplyWarnings } from "./template-apply.js";
-import { tailwind4GuideLines } from "../init/init.js";
+import { planUtilsDependencies, tailwind4GuideLines } from "../init/init.js";
 import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
 import { makeProject } from "../theme/test-helpers.js";
 import type { CheckResult } from "./types.js";
@@ -1863,5 +1864,193 @@ describe("배치 3 ①: 설치본 기반 판정", () => {
         expect(await item(dir, "brand.activation")).toMatchObject({ severity: "pass" });
       }
     });
+  });
+});
+
+// WI-0074: detectTailwind · axisPackagesBelowTailwind4 의 설치본 판독을 findInstalledPackage(상위 디렉터리 탐색)로.
+// 브리프 측정(발행본 cli 1.6.2 · mcp 1.3.5, 실제 설치 픽스처 20개 앱 · 항목 70개)의 전이 표를 stub 설치본으로 고정합니다.
+// - hoisted: npm workspaces · pnpm node-linker=hoisted 형태(앱 node_modules 에 tailwindcss · tokens 가 없고 루트에만 있음)
+// - isolated: pnpm 기본 형태(앱 node_modules 에 선언한 패키지가 있음, 루트에만 선언한 tailwindcss 는 앱에 없음)
+describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리에서 찾음", () => {
+  const TW4_CSS = '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n';
+  const TW3_CSS = '@import "@axis-ds/tokens/css";\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n';
+  const TW3_CONFIG = 'import axis from "@axis-ds/tokens/tailwind";\nexport default { presets: [axis], content: ["./app/**/*.{ts,tsx}"] };\n';
+  const H_CSS = `${TW4_CSS}@import "@axis-ds/ui-react/tailwind.css";\n@import "tw-animate-css";\nbody { font-family: Arial, Helvetica, sans-serif; }\n`;
+  type AppName = "a-twlatest" | "b-tokold" | "c-toklatest" | "d-rootonly" | "e-tw3" | "h-rootonly-ui";
+  const APPS: Record<AppName, { deps: Record<string, string>; css: string; tw3?: boolean }> = {
+    "a-twlatest": { deps: { "@axis-ds/tokens": "^1.8.0", tailwindcss: "latest" }, css: TW4_CSS },
+    "b-tokold": { deps: { "@axis-ds/tokens": "^1.3.0", tailwindcss: "^4.1.0" }, css: TW4_CSS },
+    "c-toklatest": { deps: { "@axis-ds/tokens": "latest", tailwindcss: "^4.1.0" }, css: TW4_CSS },
+    "d-rootonly": { deps: { "@axis-ds/tokens": "^1.8.0" }, css: TW4_CSS },
+    "e-tw3": { deps: { "@axis-ds/tokens": "^1.8.0", tailwindcss: "^3.4.0" }, css: TW3_CSS, tw3: true },
+    "h-rootonly-ui": { deps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0" }, css: H_CSS },
+  };
+  /** 루트 설치본(4.3.3 · 1.8.0 은 브리프 측정 때의 npm 최신) */
+  const ROOT_INSTALLED = { tailwindcss: "4.3.3", "@axis-ds/tokens": "1.8.0", "@axis-ds/ui-react": "1.8.0" };
+
+  /**
+   * 모노레포 루트(tmpdir) 와 apps/<이름> 을 만듭니다. Tailwind 3 앱(e)은 실측대로 앱 node_modules 에 tailwindcss 3.4.19 가 있습니다.
+   * isolated 는 앱이 선언한 패키지를 앱 node_modules 에도 둡니다(루트 설치본과 같은 version, tailwindcss 는 선언했을 때만).
+   */
+  async function monorepo(layout: "hoisted" | "isolated", rootInstalled: Record<string, string> = ROOT_INSTALLED, extra: Record<string, string> = {}) {
+    const root = await tempDir();
+    await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], devDependencies: { tailwindcss: "^4.1.0" } });
+    for (const [rel, content] of Object.entries(extra)) await fs.outputFile(path.join(root, rel), content);
+    for (const [name, version] of Object.entries(rootInstalled)) await writeInstalledStub(root, name, version);
+    const apps = {} as Record<AppName, string>;
+    for (const [name, spec] of Object.entries(APPS) as [AppName, (typeof APPS)[AppName]][]) {
+      const dir = path.join(root, "apps", name);
+      apps[name] = dir;
+      await fs.outputJSON(path.join(dir, "package.json"), { name, private: true, dependencies: spec.deps });
+      await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+      await fs.outputFile(path.join(dir, "lib/utils.ts"), "export function cn() {}\n");
+      await fs.outputFile(path.join(dir, "app/globals.css"), spec.css);
+      if (spec.tw3) {
+        await fs.outputFile(path.join(dir, "tailwind.config.ts"), TW3_CONFIG);
+        await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+      }
+      if (layout === "isolated") {
+        for (const dep of Object.keys(spec.deps)) {
+          if (dep === "tailwindcss" && spec.tw3) continue;
+          const version = rootInstalled[dep];
+          if (version !== undefined) await writeInstalledStub(dir, dep, version);
+        }
+      }
+    }
+    return { root, apps };
+  }
+  const NAMES = ["tailwind.config", "globals.css", "dependencies", "tailwind.content", "animation"];
+  const items = async (dir: string) => (await collectCheckResults(dir)).filter((r) => NAMES.includes(r.name));
+  const pkgOf = async (dir: string) => (await fs.readJSON(path.join(dir, "package.json"))) as Record<string, unknown>;
+
+  const PASS4 = { name: "tailwind.config", severity: "pass", message: 'Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다' };
+  const GLOBALS4 = { name: "globals.css", severity: "pass", message: "app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)" };
+  const DEPS_WARN = { name: "dependencies", severity: "warn", message: "권장 의존성 누락: clsx, tailwind-merge" };
+  const DEPS_FAIL = { name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" };
+  /** 전이 뒤(hoisted · isolated 공통) 기대값. 수정 전 hoisted 는 a · b · c · d 의 tailwind.config 와 h 의 세 항목이 다릅니다. */
+  const AFTER: Record<AppName, unknown[]> = {
+    "a-twlatest": [PASS4, GLOBALS4, DEPS_WARN],
+    "b-tokold": [PASS4, GLOBALS4, DEPS_WARN],
+    "c-toklatest": [PASS4, GLOBALS4, DEPS_WARN],
+    // 인접 결함(WI-0074 범위 밖): 루트에만 선언한 tailwindcss 를 dependencies 는 여전히 「필수 의존성 누락」으로 봄
+    "d-rootonly": [PASS4, GLOBALS4, DEPS_FAIL],
+    "e-tw3": [
+      { name: "tailwind.config", severity: "pass", message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)" },
+      { name: "globals.css", severity: "pass", message: "app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css import)" },
+      DEPS_WARN,
+      {
+        name: "tailwind.content",
+        severity: "fail",
+        message: 'tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): componentsDir(components/ui) → "./components/ui/**/*.{ts,tsx}"',
+      },
+    ],
+    "h-rootonly-ui": [
+      { name: "tailwind.config", severity: "warn", message: "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(body font-family: Arial) → 지우세요" },
+      GLOBALS4,
+      DEPS_FAIL,
+      { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" },
+    ],
+  };
+
+  it("hoisted: 전이 표대로(a · d FAIL → PASS, b · c WARN → PASS, h 세 항목) 판정하고 detectTailwind 는 루트 설치본", async () => {
+    const { apps } = await monorepo("hoisted");
+    for (const name of Object.keys(APPS) as AppName[]) {
+      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: AFTER[name] });
+    }
+    expect(detectTailwind(apps["a-twlatest"], await pkgOf(apps["a-twlatest"]))).toEqual({ major: 4, source: "installed", value: "4.3.3" });
+    expect(detectTailwind(apps["d-rootonly"], await pkgOf(apps["d-rootonly"]))).toEqual({ major: 4, source: "installed", value: "4.3.3" });
+    for (const name of ["b-tokold", "c-toklatest"] as const) {
+      expect({ name, below: axisPackagesBelowTailwind4(await pkgOf(apps[name]), apps[name]) }).toEqual({ name, below: [] });
+    }
+  });
+
+  it("isolated(음성 대조): 앱 node_modules 에서 찾는 앱은 종전과 같은 판정, 루트에만 선언한 d · h 도 hoisted 와 같은 결과", async () => {
+    const { apps } = await monorepo("isolated");
+    for (const name of Object.keys(APPS) as AppName[]) {
+      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: AFTER[name] });
+    }
+  });
+
+  it("단일 프로젝트(음성 대조): 설치본이 baseDir 에 있으면 종전과 같음", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "package.json"), { dependencies: { "@axis-ds/tokens": "^1.3.0", tailwindcss: "^4.1.0" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    await fs.outputFile(path.join(dir, "app/globals.css"), TW4_CSS);
+    await writeInstalledStub(dir, "tailwindcss", "4.3.3");
+    await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.0");
+    expect(await items(dir)).toEqual([PASS4, GLOBALS4, DEPS_WARN]);
+  });
+
+  it("양성 대조: 루트 tokens 설치본이 1.3.0 이면 상위에서 읽은 설치본으로 안내(below 1건, 판정 0 이 측정 실패가 아님)", async () => {
+    const { apps } = await monorepo("hoisted", { ...ROOT_INSTALLED, "@axis-ds/tokens": "1.3.0" });
+    const b = apps["b-tokold"];
+    expect(axisPackagesBelowTailwind4(await pkgOf(b), b)).toEqual([
+      { name: "@axis-ds/tokens", range: "^1.3.0", status: "below", source: "installed", installed: "1.3.0" },
+    ]);
+    expect((await items(b))[0]).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message: "Tailwind 4: app/globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens 설치본 1.3.0)",
+    });
+  });
+
+  it("가까운 설치본 우선: 앱 node_modules 의 tailwindcss 3.4.19 가 루트 4.3.3 보다 앞섬(e-tw3 실측 구조)", async () => {
+    const { apps } = await monorepo("hoisted");
+    const e = apps["e-tw3"];
+    expect(detectTailwind(e, await pkgOf(e))).toEqual({ major: 3, source: "installed", value: "3.4.19" });
+  });
+
+  it("환경 가드: tmpdir 조상에 tailwindcss · AXIS 설치본이 없음(있으면 tmpdir 픽스처의 「설치본 없음」 기대가 머신마다 달라짐)", async () => {
+    const dir = await tempDir();
+    expect(detectTailwind(dir)).toEqual({ source: "none" });
+    const declared = { dependencies: { "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.3.0", "@axis-ds/agentic-ui": "^1.3.0" } };
+    expect(axisPackagesBelowTailwind4(declared, dir).map((i) => i.source)).toEqual(["declared", "declared", "declared"]);
+  });
+
+  it("Plug'n'Play(.pnp.cjs): 상위에 남은 node_modules 를 읽지 않고 선언으로 감(packageVersionGate 와 같은 규칙)", async () => {
+    const { apps } = await monorepo("hoisted", ROOT_INSTALLED, { ".pnp.cjs": "" });
+    expect(detectTailwind(apps["a-twlatest"], await pkgOf(apps["a-twlatest"]))).toEqual({ source: "none", value: "latest" });
+    expect(detectTailwind(apps["b-tokold"], await pkgOf(apps["b-tokold"]))).toEqual({ major: 4, source: "declared", value: "^4.1.0" });
+    expect(axisPackagesBelowTailwind4(await pkgOf(apps["b-tokold"]), apps["b-tokold"])).toEqual([
+      { name: "@axis-ds/tokens", range: "^1.3.0", status: "below", source: "declared" },
+    ]);
+  });
+
+  it("check 밖 호출지: init 의 tailwind-merge 범위 · theme add 의 기본 CSS · template apply 경고가 루트 설치본 Tailwind 4 를 따름", async () => {
+    const { apps } = await monorepo("hoisted");
+    const d = apps["d-rootonly"];
+    const plan = planUtilsDependencies(d);
+    expect(plan.tailwind).toEqual({ major: 4, source: "installed", value: "4.3.3" });
+    expect(plan.ranges["tailwind-merge"]).toBe("^3.4.0");
+    expect(planUtilsDependencies(apps["a-twlatest"]).ranges["tailwind-merge"]).toBe("^3.4.0");
+    const detail = {
+      name: "t",
+      slug: "t",
+      description: "",
+      category: "minimal",
+      version: "0.1.0",
+      files: [{ path: "components/x.tsx", content: "", type: "text" }],
+      dependencies: {},
+      devDependencies: { tailwindcss: "^3.4.0" },
+    } as unknown as Parameters<typeof templateApplyWarnings>[1];
+    const warnings = await templateApplyWarnings(d, detail);
+    expect(warnings).toHaveLength(1);
+    expect(warnings[0]).toContain("템플릿은 Tailwind 3 기준인데 이 프로젝트는 Tailwind 4(4.3.3) 입니다");
+  });
+
+  it("check 밖 호출지: theme add 는 루트 설치본 Tailwind 4 에서 tailwind4 진입점을 기본 CSS 로 고름", async () => {
+    // tokens 1.3 fixture(브랜드 sample)를 루트 node_modules 에 둔 모노레포. 앱은 tailwindcss 를 선언하지 않음
+    const root = await makeProject({ tokens: "1.3", layout: "empty" });
+    created.push(root);
+    await writeInstalledStub(root, "tailwindcss", "4.3.3");
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/tokens": "^1.3.0" } });
+    await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "components/ui" });
+    await fs.outputFile(path.join(app, "app/globals.css"), '@import "tailwindcss";\n');
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.errors).toEqual([]);
+    expect(plan.css?.tailwind4).toBe(true);
+    expect(plan.css?.requiredBaseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
+    expect(plan.tailwindConfig).toBeUndefined();
   });
 });

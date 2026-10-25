@@ -20,7 +20,7 @@
 | D1 | 선언된 대상이 설치되지 않았으면 WARN + lockfile 에 맞는 설치 명령(`detectInstallCommand`). FAIL 로 올리지 않는다 | 권장안. install 전에 check 를 돌리는 CI 를 깨지 않음, 종료 코드 불변 |
 | D2 | 대상: 필수 · 권장(`tailwindcss` · `clsx` · `tailwind-merge`) 가운데 선언된 것 + 선언된 `@axis-ds/*`. 전이 의존(cva · @radix-ui/*)은 보지 않는다 | 권장안 |
 | D3 | 설치본 판독은 registry-core `project.ts` 의 `findInstalledPackage`(상위 디렉터리로 거슬러 올라가며 `node_modules/<name>/package.json`) 하나로, WI-0068(theme 버전) · WI-0072(tokens 버전) · WI-0070(animate 설치)이 함께 쓴다. Plug'n'Play(`.pnp.cjs`)는 선언 기준으로 되돌리고 문구에 남긴다 | 권장안 + 검토 minor(같은 보고서 안의 판정 일치) |
-| D4 | 기존 `installedVersion`(한 층만 봄) 호출지(`detectTailwind` · `axisPackagesBelowTailwind4`)는 이번에 바꾸지 않는다 | 검토 minor 가 결정 항목으로 분리를 요구. 바꾸면 호이스팅 모노레포의 Tailwind major 판정과 TW4 버전 안내 결과가 바뀌어 기준선 테스트 · 문서 수치를 다시 재야 함. 이 묶음은 새 판정 셋만 공용 함수로 맞추고, 기존 호출지 이관은 사용자 확인 항목으로 남김 |
+| D4 | 기존 `installedVersion`(한 층만 봄) 호출지(`detectTailwind` · `axisPackagesBelowTailwind4`)는 이번에 바꾸지 않는다 | 검토 minor 가 결정 항목으로 분리를 요구. 바꾸면 호이스팅 모노레포의 Tailwind major 판정과 TW4 버전 안내 결과가 바뀌어 기준선 테스트 · 문서 수치를 다시 재야 함. 이 묶음은 새 판정 셋만 공용 함수로 맞추고, 기존 호출지 이관은 사용자 확인 항목으로 남김. **해소(2026-10-25, WI-0074 #199)**: 두 호출지도 `findInstalledPackage` + `isPnpProject` 가드로 옮겼고 `installedVersion` 은 지웠어요 |
 | D5 | cli · mcp 중복 구현을 registry-core `template/dependencies-core.ts` 로 옮기고 항목 이름을 둘 다 `dependencies` 로 맞춘다(종전 cli 는 package.json 이 없을 때 이름이 `package.json`) | 권장안. JSON 파손은 종전 cli 가 예외로 멈췄던 것을 FAIL 항목으로 바꿈 |
 
 ## 2. 요구사항

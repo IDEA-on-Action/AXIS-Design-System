@@ -374,7 +374,9 @@ describe("axis init: package.json 의존성(D1)", () => {
     for (const n of names) {
       const filesDir = path.join(templatesDir, n, "files");
       const pkg = await fs.readJSON(path.join(filesDir, "package.json"));
-      const tailwind = detectTailwind(filesDir, pkg);
+      // 선언만 보려고 저장소 밖(tmpdir)에서 판정합니다. WI-0074 부터 설치본을 상위로 찾으므로 템플릿 디렉터리에서 판정하면
+      // 저장소 루트 node_modules 의 tailwindcss(개발 의존성)를 읽습니다.
+      const tailwind = detectTailwind(await tmpDir(), pkg);
       expect({
         template: n,
         tailwind,
@@ -1060,7 +1062,8 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
     prompts.inject(["./components/ui", "./app/globals.css"]);
     const program = new Command();
     program.exitOverride();
-    registerInitCommand(program, REGISTRY);
+    // 대화형 경로를 보려면 판정을 주입합니다(테스트 stdin 은 TTY 가 아니라 기본은 비대화형, WI-0075)
+    registerInitCommand(program, REGISTRY, { isInteractive: () => true });
     process.chdir(dir);
     try {
       await program.parseAsync(["init"], { from: "user" });
@@ -1083,7 +1086,7 @@ describe("axis init: Tailwind 4 연동 안내 (WI-0044 FR-3)", () => {
     prompts.inject(["./components/ui", "./tailwind.config.js", "./app/globals.css"]);
     const program = new Command();
     program.exitOverride();
-    registerInitCommand(program, REGISTRY);
+    registerInitCommand(program, REGISTRY, { isInteractive: () => true });
     process.chdir(dir);
     try {
       await program.parseAsync(["init"], { from: "user" });
@@ -2038,5 +2041,102 @@ describe("WI-0065 D8: init 애니메이션 플러그인 안내", () => {
     );
     const r = await runInitCli(dir);
     expect(r.logs.some((l) => l.includes("애니메이션:"))).toBe(false);
+  });
+});
+
+describe("WI-0075 D1: -y 없는 init 을 비대화형으로 부르면 기본값으로 진행", () => {
+  /** `axis init`(-y 없음)을 판정을 주입해 실행합니다 */
+  async function runInitNoYes(dir: string, interactive: boolean): Promise<number> {
+    const program = new Command();
+    program.exitOverride();
+    registerInitCommand(program, REGISTRY, { isInteractive: () => interactive });
+    process.chdir(dir);
+    try {
+      await program.parseAsync(["init"], { from: "user" });
+    } finally {
+      process.chdir(cwd0);
+    }
+    const exitCode = typeof process.exitCode === "number" ? process.exitCode : 0;
+    process.exitCode = undefined;
+    return exitCode;
+  }
+  const NOTE = "비대화형 실행이라 기본값으로 진행합니다(-y 와 같음): ";
+
+  it("Tailwind 3: init -y 와 같은 파일을 만들고 쓴 값 3개를 1줄로 알림, rc 0", async () => {
+    const pkg = JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } });
+    const a = await tmpDir();
+    const b = await tmpDir();
+    await fs.writeFile(path.join(a, "package.json"), pkg);
+    await fs.writeFile(path.join(b, "package.json"), pkg);
+    expect(await runInitNoYes(a, false)).toBe(0);
+    const noteLines = logs.filter((l) => l.startsWith(NOTE));
+    expect(noteLines).toEqual([
+      `${NOTE}componentsDir=./components/ui, tailwindConfig=./tailwind.config.ts, globalCss=./app/globals.css`,
+    ]);
+    await runInitCli(b);
+    // 계측 대조: 비교 대상이 실제로 만들어졌는지(파일 3개)
+    expect(Object.keys(await snapshot(a)).sort()).toEqual(["axis.config.json", path.join("components", "ui", "utils.ts"), "package.json"]);
+    expect(await snapshot(a)).toEqual(await snapshot(b));
+  });
+
+  it("Tailwind 4: tailwindConfig 는 알리지 않음(묻지도 기록하지도 않는 값)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^4" } }));
+    expect(await runInitNoYes(dir, false)).toBe(0);
+    expect(logs.filter((l) => l.startsWith(NOTE))).toEqual([`${NOTE}componentsDir=./components/ui, globalCss=./app/globals.css`]);
+    expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(true);
+  });
+
+  it("-y 는 알림 없이 종전과 같음", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x" }));
+    await runInitCli(dir);
+    expect(logs.some((l) => l.startsWith(NOTE))).toBe(false);
+  });
+
+  it("내용이 다른 기존 utils.ts 는 덮어쓰지 않고 rc 1 과 -y 안내, 아무것도 쓰지 않음(덮어쓰기 확인 갈래)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), "export const mine = 2\n");
+    const before = await snapshot(dir);
+    expect(await runInitNoYes(dir, false)).toBe(1);
+    // 계측 대조: 비교 대상이 실제로 있는지(파일 2개)
+    expect(Object.keys(before).sort()).toEqual([path.join("components", "ui", "utils.ts"), "package.json"]);
+    expect(await snapshot(dir)).toEqual(before);
+    const all = logs.join("\n");
+    expect(all).toContain("비대화형 실행이라 내용이 다른 기존 components/ui/utils.ts 를 덮어쓰지 않습니다");
+    expect(all).toContain("-y");
+    expect(all).not.toContain("덮어씀");
+  });
+
+  it("양성 대조: 같은 경우 -y 를 주면 종전처럼 덮어씀(rc 0)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), "export const mine = 2\n");
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain("✓ utils.ts 덮어씀(기존 내용과 달라 init 의 utils 로 다시 씀)");
+    expect(await fs.readFile(path.join(dir, "components", "ui", "utils.ts"), "utf8")).toBe(UTILS_TS_CONTENT);
+  });
+
+  it("음성 대조: 기존 utils.ts 가 같은 내용이면 비대화형도 그대로 진행(rc 0)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), UTILS_TS_CONTENT);
+    expect(await runInitNoYes(dir, false)).toBe(0);
+    expect(logs).toContain("✓ utils.ts 유지(이미 같은 내용)");
+    expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(true);
+  });
+
+  it("양성 대조: 대화형으로 주입하면 묻고 받은 값으로 기록(기본값과 다른 값)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    prompts.inject(["./src/ui", "./tailwind.config.js", "./styles/globals.css"]);
+    expect(await runInitNoYes(dir, true)).toBe(0);
+    expect(logs.some((l) => l.startsWith(NOTE))).toBe(false);
+    const config = await fs.readJSON(path.join(dir, "axis.config.json"));
+    expect([config.componentsDir, config.tailwindConfig, config.globalCss]).toEqual(["./src/ui", "./tailwind.config.js", "./styles/globals.css"]);
   });
 });

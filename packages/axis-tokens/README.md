@@ -49,7 +49,7 @@ Tailwind CSS 4(`@import "tailwindcss"`, create-next-app 15.5 기본)에서는 �
 **Tailwind 3 preset 과 다르게 동작하는 것**
 
 - `dark:` 변형은 Tailwind 4 공식 형태 `@custom-variant dark (&:where(.dark, .dark *))` 입니다. Tailwind 3 preset(`darkMode: ['class']`)은 `.dark` 의 자손에만 적용되고 명시도가 클래스 하나만큼 올라가지만, 이 진입점은 `.dark` 를 붙인 요소 자신에도 적용되고 명시도를 올리지 않습니다.
-- 색을 지정하지 않은 `border` · `border-t` 는 이 진입점이 base 레이어로 불러오는 `* { border-color: hsl(var(--border)) }` 때문에 AXIS `--border` 색입니다. Tailwind 3 preset 은 preflight 의 gray-200(`#e5e7eb`)입니다(`@axis-ds/tokens/css/shadcn` 을 `@tailwind` 앞에 import 해도 preflight 가 뒤에 와서 같습니다). 기본 라이트에서는 둘 다 rgb(229,231,235) 로 같지만, 다크(`--border` rgb(31,41,55))와 ontology 브랜드(라이트 rgb(230,232,235) · 다크 rgb(43,47,53))에서는 Tailwind 3 과 다른 색이 됩니다.
+- 색을 지정하지 않은 `border` · `border-t` 는 이 진입점이 base 레이어로 불러오는 `* { border-color: hsl(var(--border)) }` 때문에 AXIS `--border` 색입니다. Tailwind 3 preset 은 1.8.1 부터 preflight 의 기본 테두리색을 `hsl(var(--border, 220 13% 91%))` 로 정해 같은 색입니다(아래 「Tailwind CSS 3 Preset」).
 
 ### Tailwind CSS 3 Preset
 
@@ -86,6 +86,7 @@ preset 은 색 · `rounded-*` 를 shadcn 호환 변수(`--primary` · `--radius`
 @tailwind utilities;
 ```
 
+- 색을 지정하지 않은 `border` · `border-t` · `hr` 는 1.8.1 부터 preset 이 preflight 의 기본 테두리색을 `hsl(var(--border, 220 13% 91%))` 로 정해 다크 · 브랜드에서도 AXIS `--border` 색입니다. `--border` 를 정의하지 않은 앱(`css/shadcn` 을 넣지 않은 앱)은 fallback 인 종전 gray-200(rgb(229,231,235))입니다. 1.8.0 이하는 preflight 의 gray-200 이 `css/shadcn` 의 `* { border-color }` 를 이겨 다크 · 브랜드에서도 회색이므로 `@tailwind utilities;` 뒤에 `@layer base { * { @apply border-border; } }` 블록을 둡니다.
 - `@axis-ds/tokens/css/shadcn` 이 빠지면 `--radius` 가 정의되지 않아 `rounded-*` 가 0px 입니다. 브랜드를 켠 화면에서는 브랜드 CSS 가 `--radius` 를 정의해 드러나지 않다가 브랜드를 끄면 나타납니다.
 - 브랜드는 CSS import 만으로 켜지지 않습니다. `<html data-brand="ontology">` 나 `@axis-ds/theme` 의 `ThemeProvider` 에 `defaultBrand="ontology"` · `setBrand("ontology")` 로 켭니다. `ThemeProvider` 1.6.2 이하는 브랜드 상태가 비면 마운트 때 마크업 `data-brand` 를 지우므로 그 버전에서는 `defaultBrand` 나 `setBrand` 가 필요합니다(1.7.0 부터 마크업을 초기값으로 읽음).
 - 글꼴은 스택(`"Pretendard Variable"` 로 시작)만 지정하고 웹폰트(`@font-face`)는 담지 않습니다. Pretendard 는 앱에서 로드합니다(예: `pretendard` npm 패키지).

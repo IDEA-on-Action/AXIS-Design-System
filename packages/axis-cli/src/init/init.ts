@@ -264,7 +264,7 @@ function readPackageJsonSafe(baseDir: string): Record<string, unknown> | undefin
  *   지우라는 주의(`TAILWIND4_CONFLICT_LINE`, quick-start 와 같은 내용).
  * - `@axis-ds/tokens` 가 package.json 에 없으면 설치 명령(theme add 와 같은 lockfile 판정).
  * - tokens · ui-react · agentic-ui 의 1.4.0 조건(A1, `axisPackagesBelowTailwind4(pkg, baseDir)`, axis check 와 같은 함수 ·
- *   같은 판정): 보정 3차부터 `baseDir` 의 설치본(node_modules) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
+ *   같은 판정): 보정 3차부터 설치본(node_modules, WI-0074 부터 `baseDir` 부터 상위 탐색) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
  *   `^1.3.0` · `catalog:` 여도 안내하지 않고, 미만이면 설치본 버전을 보여 주며 `^1.4.0` 으로 올리는 명령을 냅니다.
  *   다만 설치본 미만이어도 선언 하한을 읽을 수 없으면(`catalog:` · `npm:` · `latest` · `||` 등) 명령 대신 선언이 가리키는
  *   버전을 올리고 다시 설치하라는 줄을 냅니다(선언을 덮어쓰지 않음).
@@ -675,11 +675,20 @@ export function planUtilsWrite(baseDirInput: string, utilsPath: string): UtilsWr
  * 쓰기 전에 axis.config.json · utils.ts 의 판정을 모두 마치고, 하나라도 쓸 수 없으면(D17 링크 · D19 하드링크 · p2 읽기 불가)
  * 아무것도 쓰지 않고 rc 1 로 끝냅니다(add 와 같은 원칙).
  */
+export interface RunInitOptions {
+  /**
+   * 내용이 다른 기존 utils.ts 를 덮어써도 되는지. 기본은 true(-y · 대화형의 종전 동작)입니다.
+   * -y 없는 비대화형은 false 로 불러, 덮어쓰기 갈래를 확인 질문 대신 rc 1 과 -y 안내로 막습니다(WI-0075 D1)
+   */
+  allowOverwrite?: boolean;
+}
+
 export async function runInit(
   baseDirInput: string,
   answers: InitAnswers,
   registryUrl: string,
-  log: Log = console.log
+  log: Log = console.log,
+  options: RunInitOptions = {}
 ): Promise<void> {
   const baseDir = path.resolve(baseDirInput);
   // 이미 axis.config.json 에 registry 가 있으면 그 값을 지킵니다(WI-0045 D7). 없으면 받은 값(기본값)을 씁니다.
@@ -741,6 +750,13 @@ export async function runInit(
   const utilsPath = path.resolve(baseDir, answers.componentsDir, "utils.ts");
   const utilsPlan = planUtilsWrite(baseDir, utilsPath);
   if (utilsPlan.action === "reject") rejects.push(utilsPlan.reason);
+  if (utilsPlan.action === "overwrite" && options.allowOverwrite === false) {
+    const shown = path.relative(baseDir, utilsPath).split(path.sep).join("/") || utilsPath;
+    rejects.push(
+      `비대화형 실행이라 내용이 다른 기존 ${shown} 를 덮어쓰지 않습니다. ` +
+        "덮어써도 되면 axis init -y 로 다시 실행하거나 대화형 터미널에서 실행하세요"
+    );
+  }
   if (rejects.length > 0) {
     log(chalk.red("✗ 쓸 수 없는 파일이 있어 아무것도 쓰지 않았습니다(axis.config.json · utils.ts · package.json 그대로)."));
     for (const r of rejects) log(chalk.red(`  - ${r}`));

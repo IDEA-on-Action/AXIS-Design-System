@@ -45,7 +45,7 @@ axis list
 
 - `axis.config.json` 과 `cn()` 을 담은 `utils.ts` 를 만들고, `clsx` · `tailwind-merge` 가 `package.json` 에 없으면 `dependencies` 에 더합니다. 설치는 실행하지 않고 명령만 안내합니다.
 - `axis.config.json` 의 `registry` 는 기본값(`https://axis-design-system.pages.dev/r`)이거나, 이미 있던 config 의 값입니다. 종전 기본값 `https://axis.minu.best/r` 는 Cloudflare 403 이라 바꿨습니다. add · list 는 그 값을 새 기본값으로 바꿔 읽으며 한 줄 알립니다(위 「컴포넌트 추가」, 파일은 고치지 않음). init 을 다시 실행하면 그 값을 새 기본값으로 바꿔 쓰고 「registry 를 새 기본 주소로 갱신」으로 알립니다. 사용자가 지정한 다른 값은 init 도 그대로 둡니다.
-- `utils.ts` 가 이미 있으면 같은 내용이면 「유지(이미 같은 내용)」(다시 쓰지 않음), 다르면 init 의 utils 로 덮어쓰고 「덮어씀」으로 알립니다. `utils.ts` 쓰기는 `axis add` 와 같은 규칙입니다: 심볼릭 링크면 같은 내용일 때 「유지(이미 같은 내용, 링크)」로 두고, 내용이 다른 링크(프로젝트 안 · 밖) · 깨진 링크 · 디렉터리 · 읽을 수 없는 파일 · 다른 경로와 하드링크로 이어진 파일은 쓰지 않고 그 사실을 알린 뒤 rc 1 입니다. 이 판정은 쓰기 전에 하므로 이때는 `axis.config.json` · `package.json` 도 쓰지 않습니다. 다른 경로와 하드링크로 이어진 `axis.config.json` 을 다시 써야 할 때도 같습니다.
+- `utils.ts` 가 이미 있으면 같은 내용이면 「유지(이미 같은 내용)」(다시 쓰지 않음), 다르면 init 의 utils 로 덮어쓰고 「덮어씀」으로 알립니다(터미널이 아닌 곳에서 `-y` 없이 실행하면 덮어쓰지 않고 rc 1, 아래 「터미널이 아닌 곳에서 실행」). `utils.ts` 쓰기는 `axis add` 와 같은 규칙입니다: 심볼릭 링크면 같은 내용일 때 「유지(이미 같은 내용, 링크)」로 두고, 내용이 다른 링크(프로젝트 안 · 밖) · 깨진 링크 · 디렉터리 · 읽을 수 없는 파일 · 다른 경로와 하드링크로 이어진 파일은 쓰지 않고 그 사실을 알린 뒤 rc 1 입니다. 이 판정은 쓰기 전에 하므로 이때는 `axis.config.json` · `package.json` 도 쓰지 않습니다. 다른 경로와 하드링크로 이어진 `axis.config.json` 을 다시 써야 할 때도 같습니다.
 - 경로 기본값(`-y` 값 · 대화형 초기값)은 실제 프로젝트를 보고 정합니다(1.6.0 부터). `componentsDir` 는 `src/` 가 있으면 `./src/components/ui`, 없으면 `./components/ui` 이고 `src/` 를 새로 만들지 않습니다. `globalCss` 는 `app/globals.css` · `src/app/globals.css` · `styles/globals.css` · `src/styles/globals.css` · `globals.css` 가운데 실제로 있는 첫 파일, `tailwindConfig` 는 있는 `tailwind.config.{ts,js,mjs,cjs}` 가운데 첫 파일입니다. 찾지 못하면 기본값을 기록하고 그 사실을 한 줄 알립니다. Tailwind 4 안내 제목도 이 경로를 씁니다.
 - config 가 이미 있으면 출력이 「생성 완료」가 아니라 사실대로 「유지(이미 같은 내용)」 또는 「갱신」입니다. 갱신은 init 이 다루는 키(`$schema` · `componentsDir` · `tailwindConfig` · `globalCss` · `registry`)만 바꾸고, 그 밖의 키(`brand` · `monetDir` · `template` · `agenticDir` 등)는 값과 순서를 그대로 둡니다(1.6.0 부터, 이전에는 빠졌음). 들여쓰기도 기존 파일을 따릅니다. 기존 `componentsDir` 는 그대로 두고, `globalCss` · `tailwindConfig` 는 가리키는 파일이 있으면 그대로, 없으면 찾은 파일로 바꾸고 알립니다(찾지 못하면 그대로 두고 알림). Tailwind 4 이상이면 `tailwindConfig` 를 지우고 알립니다. `registry` 가 종전 기본값이면 위처럼 새 기본값으로 바꿉니다. `AXIS_REGISTRY_URL` 은 config 에 기록하지 않고 add · list 를 실행할 때만 우선합니다.
 - 애니메이션 플러그인(`tailwindcss-animate` · `tw-animate-css`)이 `package.json` 에 없으면, Dialog · Select 등의 열고 닫는 애니메이션에 필요하다는 안내 한 줄을 냅니다(Tailwind 3 은 plugins, Tailwind 4 는 `@import "tw-animate-css";`).
@@ -111,6 +111,24 @@ axis theme add ontology
   - `animation`: `@axis-ds/ui-react` 선언이나 `componentsDir` 의 `animate-in` 류 클래스가 있을 때 애니메이션 플러그인(Tailwind 3 `tailwindcss-animate` 선언 + 설치본 + `plugins` 배열 참조, Tailwind 4 `@import "tw-animate-css"`)이 없으면 WARN 입니다. 1.6.1 부터 Tailwind 3 은 `plugins` 배열 안의 `require("tailwindcss-animate")` 나 그 패키지를 받은 식별자(`import animate from` · `const animate = require(...)`)만 인정합니다(import 만 있거나 다른 곳의 같은 문자열은 아님). 배열을 정적으로 다 읽지 못하면(펼침 · 단축 속성) 「확인하지 못함」 WARN 입니다.
 - FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다(1.3.0 부터, 이전에는 결과와 관계없이 0).
 - MCP `axis.check_project` 도 같은 항목 · 문구를 냅니다.
+
+## 터미널이 아닌 곳에서 실행 (CI · 파이프 · `</dev/null`)
+
+stdin 이 터미널이 아니면 질문을 띄우지 않습니다(1.7.0 부터). 이전에는 `axis add` 말고는 입력이 닫힌 곳(`</dev/null` · 빈 파이프)에서 질문 한 줄만 찍고 아무것도 하지 않은 채 rc 0 으로 끝났고, 파이프로 응답을 넣으면 그 값으로 동작했습니다. 질문의 성격에 따라 이렇게 합니다.
+
+| 명령 | 터미널이 아닐 때 |
+|---|---|
+| `axis init`(`-y` 없음) | `-y` 와 같은 기본값으로 진행하고 쓴 값을 한 줄 알림. 단 내용이 다른 기존 `utils.ts` 가 있으면 덮어쓰지 않고 rc 1, 아무것도 쓰지 않음(`-y` 면 덮어씀) |
+| `axis template init <name>`(`--dir` 없음) | 템플릿 이름 디렉터리(`./<name>`)로 진행하고 한 줄 알림 |
+| `axis template init`(이름 없음) | rc 1, 템플릿 이름 안내(템플릿 선택에는 기본값이 없음) |
+| `axis template init` 대상이 비어 있지 않음 | rc 1, 아무것도 쓰지 않음. `-y` 면 진행(템플릿과 같은 경로의 파일은 덮어씀) |
+| `axis template apply` 충돌 파일 있음 | rc 1, 아무것도 쓰지 않음. `-y` 면 덮어씀, `--dry-run` 으로 미리보기 |
+| `axis add` 내용이 다른 기존 파일 | `-y` 와 같이 건너뛰고 목록을 알림(종전과 같음) |
+| `axis v0 import` · `axis monet import` | rc 1, 대화형 터미널에서 실행하라는 안내(`v0` 는 `axis v0 convert <file>` 도 안내) |
+
+- `axis template init -y` 는 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행합니다(`template apply -y` 와 같은 뜻). 터미널에서도 같습니다.
+- 판정은 stdin 이 터미널인지 하나로 합니다. 그래서 `printf '\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트도 이제는 묻지 않고 위 표대로 동작합니다. 값은 `--dir` · `-y` 같은 옵션으로 주세요.
+- Windows Git Bash(mintty)처럼 사람이 앞에 있어도 stdin 이 터미널로 잡히지 않는 환경에서는 질문 없이 위 표대로 동작할 수 있습니다(실측 전). 질문이 뜨지 않으면 `winpty npx axis ...` 로 실행하거나, PowerShell · Windows Terminal 에서 실행하거나, `--dir` · `-y` 같은 옵션으로 값을 주세요.
 
 ## 문서
 

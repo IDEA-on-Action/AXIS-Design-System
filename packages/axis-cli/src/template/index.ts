@@ -7,12 +7,20 @@ import { fetchTemplateIndex, fetchTemplateDetail } from "./registry-client.js";
 import { applyTemplate, initTemplate } from "./template-apply.js";
 import { diffTemplate } from "./template-diff.js";
 import { runCheck } from "./template-check.js";
-import type { ListOptions } from "./types.js";
+import type { ApplyOptions, InitOptions, ListOptions } from "./types.js";
+import { isInteractive as stdinIsInteractive, type InteractiveCheck } from "../interactive.js";
+
+/** 테스트에서 대화형 판정을 바꿀 때만 씁니다(WI-0075) */
+export interface TemplateCommandDeps {
+  /** 질문을 띄울 수 있는지. 기본은 stdin 이 TTY 인지입니다 */
+  isInteractive?: InteractiveCheck;
+}
 
 /**
  * `axis template` 하위 명령어를 등록합니다.
  */
-export function registerTemplateCommand(program: Command): void {
+export function registerTemplateCommand(program: Command, deps: TemplateCommandDeps = {}): void {
+  const interactive = () => (deps.isInteractive ?? stdinIsInteractive)();
   const tplCmd = program
     .command("template")
     .alias("tpl")
@@ -128,17 +136,18 @@ export function registerTemplateCommand(program: Command): void {
     .option("--dry-run", "실제 파일 생성 없이 미리보기")
     .option("--skip-deps", "의존성 안내 생략")
     .option("-d, --dir <path>", "대상 디렉토리")
-    .action(async (name: string, options) => {
-      await applyTemplate(name, options);
+    .action(async (name: string, options: ApplyOptions) => {
+      await applyTemplate(name, { ...options, interactive: interactive() });
     });
 
   // --- init ---
   tplCmd
     .command("init [name]")
     .description("새 프로젝트를 템플릿으로 초기화")
-    .option("-d, --dir <path>", "프로젝트 디렉토리")
-    .action(async (name: string | undefined, options) => {
-      await initTemplate(name, options);
+    .option("-d, --dir <path>", "프로젝트 디렉토리(없으면 템플릿 이름)")
+    .option("-y, --yes", "질문을 기본값으로 답하고, 비어 있지 않은 디렉토리도 진행(같은 경로의 파일은 덮어씀)")
+    .action(async (name: string | undefined, options: InitOptions) => {
+      await initTemplate(name, { ...options, interactive: interactive() });
     });
 
   // --- diff ---

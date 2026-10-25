@@ -2,7 +2,7 @@
  * AXIS Design System MCP - 조회 도구
  *
  * 컴포넌트 상세는 레지스트리 항목(설명 · 의존성 · 레지스트리 의존 · 파일)을 기본으로 하고, 보조 메타(components.json)에
- * 같은 이름이 있으면 props · examples 를 덧붙입니다(WI-0055 D2). 토큰은 번들 tokens.json 을 읽습니다.
+ * 같은 이름이 있으면 props · examples 를 덧붙입니다(WI-0055 D2). 토큰은 번들 tokens.json(빌드 때 @axis-ds/tokens 에서 생성, WI-0076)을 읽습니다.
  */
 
 import { describeMissingName } from "@axis-ds/registry-core/add";
@@ -210,11 +210,29 @@ export function formatComponentDetail(result: GetComponentResult): string {
 }
 
 /**
+ * CSS 에서 쓰는 형태. shadcn 색 변수는 HSL 삼중값이라 `hsl(var(--x))` 로 감싸야 합니다.
+ */
+export function cssUsage(token: TokenMeta): string {
+  const shadcnColor = !token.cssVariable.startsWith("--axis-") && token.value.startsWith("hsl(");
+  return shadcnColor ? `hsl(var(${token.cssVariable}))` : `var(${token.cssVariable})`;
+}
+
+/** 없는 토큰 안내(axis.get_token 은 이 문구와 함께 isError: true 로 답합니다) */
+export function formatTokenNotFound(path: string): string {
+  return [
+    `토큰을 찾을 수 없습니다: \`${path}\``,
+    "",
+    "- 경로는 `axis.list_tokens` 로 확인하세요. 경로 · tokens 이름 기반 경로(예: `control.h.md`) · CSS 변수 이름(예: `--axis-control-h-md`)을 받습니다.",
+    "- 브랜드 값은 `axis.list_brands` · `axis.get_brand` 로 조회하세요.",
+  ].join("\n");
+}
+
+/**
  * 토큰 상세 정보를 Markdown 형식으로 포맷팅
  */
-export function formatTokenDetail(token: TokenMeta | null): string {
+export function formatTokenDetail(token: TokenMeta | null, query = ""): string {
   if (!token) {
-    return "토큰을 찾을 수 없습니다.";
+    return formatTokenNotFound(query);
   }
 
   const lines: string[] = [];
@@ -222,12 +240,16 @@ export function formatTokenDetail(token: TokenMeta | null): string {
   lines.push(`# 토큰: ${token.path}`);
   lines.push("");
   lines.push(`- **값**: \`${token.value}\``);
+  if (token.dark !== undefined) {
+    lines.push(`- **다크 값**: \`${token.dark}\`${token.dark === token.value ? " (라이트와 같음)" : ""}`);
+  }
   lines.push(`- **카테고리**: ${token.category}`);
   if (token.description) {
     lines.push(`- **설명**: ${token.description}`);
   }
-  if (token.cssVariable) {
-    lines.push(`- **CSS 변수**: \`var(${token.cssVariable})\``);
+  lines.push(`- **CSS 변수**: \`${token.cssVariable}\` (사용: \`${cssUsage(token)}\`)`);
+  if (token.aliases && token.aliases.length > 0) {
+    lines.push(`- **함께 받는 경로**: ${token.aliases.map((a) => `\`${a}\``).join(", ")}`);
   }
 
   return lines.join("\n");

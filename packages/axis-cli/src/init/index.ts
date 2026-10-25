@@ -4,15 +4,25 @@
 
 import type { Command } from "commander";
 import chalk from "chalk";
-import prompts from "prompts";
 import { DEFAULT_REGISTRY_URL } from "../registry/remote.js";
+import { ask, isInteractive as stdinIsInteractive, noteDefault, type InteractiveCheck } from "../interactive.js";
 import { isTailwind4, planUtilsDependencies, resolveInitAnswers, runInit, type InitAnswers } from "./init.js";
+
+/** 테스트에서 대화형 판정을 바꿀 때만 씁니다(WI-0075) */
+export interface InitCommandDeps {
+  /** 질문을 띄울 수 있는지. 기본은 stdin 이 TTY 인지입니다 */
+  isInteractive?: InteractiveCheck;
+}
 
 /**
  * registryUrl: 새 axis.config.json 에 적을 registry. 기본값은 DEFAULT_REGISTRY_URL 이고, 환경변수 AXIS_REGISTRY_URL 은
  * 여기서 읽지 않습니다(WI-0045 D7: 환경변수는 add · list 실행 때만 우선, config 에는 기본값 또는 기존 값만 기록).
  */
-export function registerInitCommand(program: Command, registryUrl: string = DEFAULT_REGISTRY_URL) {
+export function registerInitCommand(
+  program: Command,
+  registryUrl: string = DEFAULT_REGISTRY_URL,
+  deps: InitCommandDeps = {}
+) {
   program
     .command("init")
     .description("프로젝트에 AXIS Design System 초기화")
@@ -26,9 +36,17 @@ export function registerInitCommand(program: Command, registryUrl: string = DEFA
       const resolved = await resolveInitAnswers(baseDir, tailwind4);
       for (const note of resolved.notes) console.log(note.startsWith("!") ? chalk.yellow(note) : chalk.gray(note));
 
-      const config: InitAnswers = options.yes
+      // 비대화형(CI · 파이프)은 묻지 않고 -y 와 같은 기본값으로 진행하고 쓴 값을 알립니다(WI-0075 D1).
+      // 기본값은 기존 config · 실재 파일로 정한 값입니다. 내용이 다른 utils.ts 덮어쓰기만은 진행하지 않고 rc 1 입니다
+      const interactive = (deps.isInteractive ?? stdinIsInteractive)();
+      if (!options.yes && !interactive) {
+        const a = resolved.answers;
+        const values = [`componentsDir=${a.componentsDir}`, ...(tailwind4 ? [] : [`tailwindConfig=${a.tailwindConfig}`]), `globalCss=${a.globalCss}`];
+        noteDefault(`기본값으로 진행합니다(-y 와 같음): ${values.join(", ")}`);
+      }
+      const config: InitAnswers = options.yes || !interactive
         ? { ...resolved.answers }
-        : await prompts([
+        : await ask([
             {
               type: "text",
               name: "componentsDir",
@@ -47,8 +65,9 @@ export function registerInitCommand(program: Command, registryUrl: string = DEFA
               message: "글로벌 CSS 파일:",
               initial: resolved.answers.globalCss,
             },
-          ]);
+          ], interactive);
 
-      await runInit(baseDir, config, registryUrl);
+      // 덮어쓰기 확인은 기본값으로 대신하지 않습니다: -y 없는 비대화형은 내용이 다른 utils.ts 를 rc 1 로 막습니다(WI-0075 D1)
+      await runInit(baseDir, config, registryUrl, console.log, { allowOverwrite: options.yes === true || interactive });
     });
 }

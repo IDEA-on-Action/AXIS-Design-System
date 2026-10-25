@@ -2,10 +2,17 @@
  * AXIS Design System MCP - 목록 도구
  *
  * 컴포넌트 목록은 레지스트리 index(lib 제외 28개, WI-0055 D2)를, 토큰 목록은 번들 tokens.json 을 읽습니다.
+ * 번들 tokens.json 은 빌드 때 @axis-ds/tokens 산출물에서 생성합니다(WI-0076).
  */
 
-import { listTokens, getTokenStats } from "../registry/loader.js";
-import type { ComponentCategory, TokenCategory, TokenMeta } from "../types.js";
+import { listTokens, getTokenStats, getTokenSource } from "../registry/loader.js";
+import {
+  TOKEN_CATEGORIES,
+  type ComponentCategory,
+  type TokenCategory,
+  type TokenMeta,
+} from "../types.js";
+import { cssUsage } from "./get.js";
 import {
   componentsOf,
   describeOrigin,
@@ -41,8 +48,11 @@ export interface ListComponentsResult {
 export interface ListTokensResult {
   tokens: TokenMeta[];
   totalCount: number;
+  /** 전체(필터 전) 카테고리별 개수 */
   stats: Record<TokenCategory, number>;
   category?: TokenCategory;
+  /** 생성에 쓴 @axis-ds/tokens 버전(없으면 표시하지 않음) */
+  sourceVersion?: string;
 }
 
 /**
@@ -91,6 +101,7 @@ export function handleListTokens(params: ListTokensParams): ListTokensResult {
     totalCount: tokens.length,
     stats,
     category,
+    sourceVersion: getTokenSource()?.version,
   };
 }
 
@@ -149,51 +160,64 @@ export function formatComponentList(result: ListComponentsResult): string {
   return lines.join("\n");
 }
 
+/** 카테고리 표시 이름 */
+const TOKEN_CATEGORY_LABELS: Record<TokenCategory, string> = {
+  color: "Color",
+  typography: "Typography",
+  spacing: "Spacing",
+  radius: "Radius",
+  shadow: "Shadow",
+  density: "Density (밀도)",
+  component: "Component",
+};
+
+/** 표 칸 안의 | 를 이스케이프합니다 */
+const cell = (v: string) => v.replace(/\|/g, "\\|");
+
 /**
  * 토큰 목록을 Markdown 형식으로 포맷팅
  */
 export function formatTokenList(result: ListTokensResult): string {
   const lines: string[] = [];
+  const total = TOKEN_CATEGORIES.reduce((n, c) => n + result.stats[c], 0);
 
   lines.push("# AXIS Design System 토큰 목록");
   lines.push("");
+  if (result.sourceVersion) {
+    lines.push(`- **출처**: @axis-ds/tokens ${result.sourceVersion} 빌드 산출물에서 생성(라이트 :root · 다크 .dark)`);
+  }
+  lines.push("- **브랜드 값**: `axis.list_brands` · `axis.get_brand` 로 조회하세요(대상 프로젝트에 설치된 tokens 를 읽음)");
+  lines.push("");
 
-  // 통계
+  // 통계(전체 기준)
   lines.push("## 카테고리별 통계");
   lines.push("| 카테고리 | 개수 |");
   lines.push("|----------|------|");
-  lines.push(`| Color | ${result.stats.color} |`);
-  lines.push(`| Typography | ${result.stats.typography} |`);
-  lines.push(`| Spacing | ${result.stats.spacing} |`);
-  lines.push(`| Radius | ${result.stats.radius} |`);
-  lines.push(`| Shadow | ${result.stats.shadow} |`);
-  lines.push(`| Animation | ${result.stats.animation} |`);
-  lines.push(`| **합계** | **${result.totalCount}** |`);
+  for (const c of TOKEN_CATEGORIES) {
+    lines.push(`| ${TOKEN_CATEGORY_LABELS[c]} | ${result.stats[c]} |`);
+  }
+  lines.push(`| **합계** | **${total}** |`);
   lines.push("");
 
   if (result.category) {
-    lines.push(`## ${result.category} 토큰`);
+    lines.push(`## ${result.category} 토큰 (${result.totalCount}개)`);
   } else {
     lines.push("## 전체 토큰");
   }
   lines.push("");
 
-  // 카테고리별 그룹핑
-  const grouped: Record<string, TokenMeta[]> = {};
-  for (const token of result.tokens) {
-    if (!grouped[token.category]) {
-      grouped[token.category] = [];
-    }
-    grouped[token.category].push(token);
-  }
-
-  for (const [category, tokens] of Object.entries(grouped)) {
-    lines.push(`### ${category.charAt(0).toUpperCase() + category.slice(1)}`);
-    lines.push("| 경로 | 값 | 설명 |");
-    lines.push("|------|-----|------|");
+  // 카테고리별 그룹핑(카테고리 순서 고정)
+  for (const c of TOKEN_CATEGORIES) {
+    const tokens = result.tokens.filter((t) => t.category === c);
+    if (tokens.length === 0) continue;
+    lines.push(`### ${TOKEN_CATEGORY_LABELS[c]}`);
+    lines.push("| 경로 | 값 | 다크 | CSS | 설명 |");
+    lines.push("|------|-----|------|-----|------|");
     for (const t of tokens) {
-      const desc = t.description || "-";
-      lines.push(`| \`${t.path}\` | \`${t.value}\` | ${desc} |`);
+      const dark = t.dark === undefined ? "-" : t.dark === t.value ? "(같음)" : `\`${cell(t.dark)}\``;
+      lines.push(
+        `| \`${t.path}\` | \`${cell(t.value)}\` | ${dark} | \`${cssUsage(t)}\` | ${t.description ? cell(t.description) : "-"} |`
+      );
     }
     lines.push("");
   }
