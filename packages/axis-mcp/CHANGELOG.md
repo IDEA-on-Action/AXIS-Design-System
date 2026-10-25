@@ -1,5 +1,21 @@
 # @axis-ds/mcp
 
+## 1.4.0
+
+### Minor Changes
+
+- 4a5e185: 토큰 도구(`axis.list_tokens` · `axis.get_token`)의 데이터를 빌드 때 `@axis-ds/tokens` 빌드 산출물에서 생성합니다(WI-0076). 1.3.5 까지 동봉한 손 사본은 처음 만든 뒤 갱신되지 않아 41개 가운데 16개 값이 tokens 1.8.0 과 달랐어요(예: `colors.primary` 가 `hsl(222.2 47.4% 11.2%)`, 실제 `hsl(221 39% 11%)`).
+  - 토큰 309개(tokens 1.8.0 기준): 기존 경로 36개는 그대로 두고 tokens 의 모든 변수를 더했어요. 밀도 토큰(`control.h.md` · `radius.control` 등 15개)과 shadcn 변수 `card` · `popover` · `input` · `chart-1~5` · `radius` 가 새로 나와요.
+  - 항목마다 다크 값(`dark`)과 실제로 정의된 CSS 변수 이름을 함께 돌려줘요. `path` 는 기존 경로, tokens 이름 기반 경로(예: `space.5`), CSS 변수 이름(예: `--axis-control-h-md`)을 받아요.
+  - 응답 계약 변경: tokens 에 원천이 없던 `shadow.md` · `animation.duration.fast` · `animation.duration.normal` · `animation.duration.slow` · `animation.easing.default` 5개 경로를 뺐고, `category` 의 `animation` 을 빼고 `density` · `component` 를 더했어요. 없는 경로의 `axis.get_token` 은 `isError: true` 로 답해요. `cssVariable` 을 바로잡았어요: `radius.none` · `sm` · `lg` · `full` 은 존재하지 않는 `--radius-*` 에서 `--axis-radius-*` 로, `radius.md` 는 shadcn 변수 `--radius`(0.5rem, 값 0.375rem 과 다름)에서 `--axis-radius-md` 로 바뀌어요(값은 그대로). `axis.list_tokens` 표 열은 `경로 | 값 | 다크 | CSS | 설명` 으로 바뀌어요.
+  - 브랜드 값은 계속 `axis.list_brands` · `axis.get_brand` 가 맡아요.
+
+### Patch Changes
+
+- 4a5e185: `axis check` · `axis.check_project` 의 Tailwind 판정과 Tailwind 4 버전 안내가 설치본을 프로젝트 디렉터리부터 상위로 찾아요(WI-0074). 종전에는 `node_modules` 한 층만 읽어 npm workspaces · pnpm hoisted 모노레포에서 설치본을 못 찾고 선언(`latest` · `^1.3.0` · 선언 없음)으로 판정해 거짓 FAIL · WARN 이 났어요(예: 앱 선언 `tailwindcss: "latest"` 이면 「tailwind.config 파일이 없습니다」 FAIL).
+  - 같은 판정을 쓰는 `axis init`(tailwind-merge 범위 · Tailwind 4 버전 안내), `axis theme add`(Tailwind 4 기본 CSS), `axis template apply`(major 경고), `axis add`(tailwind-merge 범위)도 상위 설치본을 따라요.
+  - 가장 가까운 설치본이 앞서고, Plug'n'Play(`.pnp.cjs`)면 종전처럼 선언으로 판정해요. 설치본이 프로젝트 디렉터리에 있는 구조는 판정이 바뀌지 않아요.
+
 ## 1.3.5
 
 ### Patch Changes
