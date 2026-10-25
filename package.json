@@ -36,6 +36,7 @@
     "check-library-links:remote": "node scripts/check-library-remote-links.mjs",
     "library:refresh-axis": "pnpm --filter @axis-ds/cli build && node packages/axis-cli/dist/index.js library refresh-axis",
     "sync-types-versions": "node scripts/sync-types-versions.mjs",
+    "check-changeset-mcp-tokens": "node scripts/check-changeset-mcp-tokens.mjs && node --test scripts/check-changeset-mcp-tokens.test.mjs",
     "check-types-versions": "node scripts/sync-types-versions.mjs --check && node --test scripts/sync-types-versions.test.mjs"
   },
   "devDependencies": {

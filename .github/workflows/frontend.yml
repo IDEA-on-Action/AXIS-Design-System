@@ -88,6 +88,12 @@ jobs:
       - name: typesVersions 드리프트 검사 (WI-0053)
         run: pnpm check-types-versions
 
+      # WI-0076 후속 규칙: mcp 는 빌드할 때 tokens dist 값을 동봉하고 tokens 를 devDependency 로만 가진다.
+      # 그래서 @axis-ds/tokens 를 올리는 changeset 이 있으면 @axis-ds/mcp 도 올려야 MCP 토큰 응답이 따라간다.
+      # 위반이면 exit 1, changeset 을 읽지 못하면 exit 2. 판정 단위 테스트도 함께 돈다
+      - name: tokens 발행 시 mcp 동반 changeset 검사 (WI-0076)
+        run: pnpm check-changeset-mcp-tokens
+
       # WI-0057 D4: library 데이터의 사이트 링크마다 문서 라우트(page.tsx)가 실재하는지와 index · search-index ·
       # categories · components · stats 정합을 네트워크 없이 본다. 외부 링크 GET 은 `pnpm check-library-links:remote`(수동)
       - name: Library link check (offline)
