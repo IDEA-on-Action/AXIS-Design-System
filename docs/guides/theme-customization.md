@@ -118,7 +118,9 @@ CSS 변수 예시:
 }
 ```
 
-> primitive 색(`--axis-color-*`)을 덮어써서 브랜드 색을 바꾸는 방식은 컴포넌트 대부분에 닿지 않습니다. semantic · component 토큰은 빌드 때 hex 값으로 풀려 나가므로(`variables.css`에 `var(` 참조 없음) primitive 값을 바꿔도 따라 바뀌지 않습니다. 1.2.1부터 primitive 색 오버라이드가 닿는 곳은 ui-react Progress의 `success` · `warning` · `destructive` 채움과 앱 코드에서 `var(--axis-color-*)`를 직접 쓰는 곳뿐입니다(agentic-ui에는 닿지 않음). 브랜드 색은 시맨틱 · component 토큰을 덮어쓰거나 「4. 브랜드 테마」를 사용합니다.
+> primitive 색(`--axis-color-*`)을 덮어써서 브랜드 색을 바꾸는 방식은 컴포넌트 대부분에 닿지 않습니다. semantic · component 토큰은 빌드 때 hex 값으로 풀려 나가므로(`variables.css`에 `var(` 참조 없음) primitive 값을 바꿔도 따라 바뀌지 않습니다. 1.8.0부터 primitive 색 오버라이드가 닿는 곳은 앱 코드에서 `var(--axis-color-*)`를 직접 쓰는 곳뿐입니다(ui-react · agentic-ui 컴포넌트에는 닿지 않음). 1.2.1 ~ 1.7.x 에서는 ui-react Progress의 `success` · `warning` · `destructive` 채움에도 닿았지만, 1.8.0 에서 Progress 채움이 `--axis-progress-fill-*` component 토큰(빌드 때 hex 로 풀림)으로 옮겨 가 더는 닿지 않습니다. 브랜드 색은 시맨틱 · component 토큰을 덮어쓰거나 「4. 브랜드 테마」를 사용합니다.
+>
+> 1.8.0부터 ui-react Progress `default` 채움은 `--axis-surface-brand` 가 아니라 `--axis-progress-fill-default` 를 씁니다. 위처럼 `--axis-surface-brand` 만 덮어쓰면 Progress 는 기본 파랑으로 남으니, Progress 도 브랜드 색을 따르게 하려면 `--axis-progress-fill-default` 를 함께 덮어씁니다(`success` · `warning` · `destructive` 는 `--axis-progress-fill-success|warning|destructive`).
 >
 > `:root`에서 덮어쓴 값은 기본 `.dark` 블록과 명시도가 같고 뒤에 오므로 다크 모드에서도 그대로 유지됩니다. 라이트 · 다크에 다른 값을 쓰려면 아래 「테마별 오버라이드」를 사용합니다.
 
@@ -135,6 +137,8 @@ CSS 변수 예시:
   --axis-border-default: #2A2A2A;
 }
 ```
+
+> 1.8.0부터 폼 컨트롤 일부는 `--axis-border-default` · `--axis-surface-tertiary` 대신 전용 component 토큰을 씁니다. `Checkbox` · `RadioGroupItem` · `Textarea` 경계는 `--axis-form-control-border`, `Switch` 꺼짐 바탕 · `Slider` 트랙은 `--axis-form-control-track` 입니다(`Input` · `Select` 트리거 경계는 전과 같이 `--axis-input-border-default`). 위 예시처럼 `--axis-border-default` · `--axis-surface-tertiary` 만 덮어쓰면 이 컨트롤에는 닿지 않으니, 같은 색을 원하면 두 변수를 함께 덮어씁니다. 경계 · 트랙은 비텍스트 대비 3:1(WCAG 1.4.11) 대상이라 기본값은 흰 바탕 4.83:1 인 gray.500 입니다. 옅은 색으로 바꾸면 그 대비가 깨질 수 있습니다.
 
 ### 컴포넌트 토큰 오버라이드
 
@@ -651,6 +655,9 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
   /* 배지 */
   --axis-badge-info-bg: #EDE9FE;
   --axis-badge-info-text: #6D28D9;
+
+  /* Progress 채움 (1.8.0부터 surface-brand 를 따르지 않음) */
+  --axis-progress-fill-default: #7C3AED;
 }
 
 /* 다크 모드 */
@@ -669,6 +676,8 @@ v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로
 
   --axis-badge-info-bg: #2E1065;
   --axis-badge-info-text: #C4B5FD;
+
+  --axis-progress-fill-default: #8B5CF6;
 }
 ```
 

@@ -34,6 +34,16 @@
 | 새 `--axis-progress-fill-{default,success,warning,destructive}` | #2563EB · #15803D · #A16207 · #DC2626 / #3B82F6 · #22C55E · #EAB308 · #EF4444 | Progress 채움 |
 
 - 상태 점 · 아이콘을 직접 그린다면 흰 바탕 3:1 에 못 미치는 `--axis-status-success` · `--axis-status-warning` · `--axis-status-neutral` 대신 `--axis-text-success` · `--axis-text-warning` · `--axis-text-tertiary` 를 쓰세요. 전역 `status.*` 값은 이번에도 바꾸지 않았어요(진행 막대 · 왼쪽 선 등은 그대로).
+- **변수를 덮어써서 테마 · 브랜드를 만들었다면** 새 변수도 함께 덮어쓰세요. 아래 컴포넌트는 1.8.0 에서 읽는 변수가 바뀌어, 예전 변수만 덮어쓰면 기본값으로 남아요.
+
+  | 컴포넌트 | 1.7.0 까지 읽던 변수 | 1.8.0 에서 읽는 변수 |
+  |---|---|---|
+  | Progress `default` 채움 | `--axis-surface-brand` | `--axis-progress-fill-default` |
+  | Progress `success` · `warning` · `destructive` 채움 | `--axis-color-green-500` · `-yellow-500` · `-red-500`(primitive) | `--axis-progress-fill-success` · `-warning` · `-destructive` |
+  | Checkbox · RadioGroupItem · Textarea 경계 | `--axis-border-default` | `--axis-form-control-border` |
+  | Switch 꺼짐 바탕 · Slider 트랙 | `--axis-surface-tertiary` | `--axis-form-control-track` |
+
+  primitive 색 오버라이드는 1.8.0 부터 ui-react 컴포넌트에 닿지 않아요(테마 커스터마이징 가이드 「2. CSS 변수 오버라이드」 갱신).
 - library 사본(Checkbox · RadioGroup · Textarea · Switch · Slider · Progress)과 레지스트리 agentic 항목은 새 변수를 참조해요. `@axis-ds/tokens` 1.8.0 이상과 함께 쓰세요. 1.7.0 tokens 와 섞으면 새 변수가 정의되지 않아, 경계는 글자색(currentColor)으로 그려지고 트랙 · 채움 바탕은 투명해져요(추정: CSS 의 정의되지 않은 var() 규칙).
 
 ## 알려진 제약
