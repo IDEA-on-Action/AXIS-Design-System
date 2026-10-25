@@ -1,5 +1,14 @@
 # @axis-ds/theme
 
+## 1.8.0
+
+### Patch Changes
+
+- Updated dependencies [f3dae65]
+- Updated dependencies [f3dae65]
+- Updated dependencies [f3dae65]
+  - @axis-ds/tokens@1.8.0
+
 ## 1.7.0
 
 ### Minor Changes
