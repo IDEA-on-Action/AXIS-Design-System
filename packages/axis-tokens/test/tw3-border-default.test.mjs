@@ -10,6 +10,8 @@
  * 여기서는 설치된 Tailwind 3(tokens 의 peer, cjs-preset 테스트와 같은 설치본)으로 preset 을 실제로 컴파일해 preflight 의
  * border-color 를 본다. 같은 컴파일을 borderColor 를 뺀 preset 으로도 돌려 음성 대조군을 둔다.
  * fallback 값이 Tailwind 의 gray-200 과 같은 색인지도 Tailwind 가 가진 값으로 계산해 대조한다(--border 를 정의하지 않은 앱의 종전 색).
+ * 여기는 src 를 바로 읽는다. 소비자가 받는 dist 세 진입점(.mjs · .js · .js 의 default)의 같은 값과 border-red-500 · 소비자
+ * theme.extend 우선은 cjs-preset.test.mjs 가 패키지 사본 빌드로 본다(WI-0083). 이 파일만으로는 한쪽 진입점 회귀를 못 잡는다.
  *
  * 실행: node --test test/tw3-border-default.test.mjs
  */

@@ -45,9 +45,14 @@ function readJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, rel), 'utf-8'))
 }
 
-/** 코드 파일이 있는 첫 항목(지금은 AXIS). library-detail.spec.ts 의 code 대표와 같은 항목이다(e2e/library-reps.cjs) */
+/**
+ * source 가 axis 인 첫 항목(코드 파일이 있어야 함). library-detail.spec.ts 의 code 대표와 같은 항목이다(e2e/library-reps.cjs).
+ * DYNAMIC 의 library 두 라우트가 함께 쓰므로 한 번만 고른다(WI-0083: 상세 JSON 읽기는 대표 3개뿐).
+ */
+let codeRepCache
 function libraryCodeRep() {
-  return pickLibraryReps().code
+  if (!codeRepCache) codeRepCache = pickLibraryReps().code
+  return codeRepCache
 }
 
 /** 동적 라우트(세그먼트 패턴) -> 대표 경로 1개. 문자열 또는 { path, ready } 를 돌려준다 */

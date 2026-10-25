@@ -17,6 +17,10 @@
  *      search-index.json 의 url 은 그 주소와 같고, search-index · categories 항목의 slug · category 는 index.json 과 같아야 합니다.
  *      카테고리가 다른 같은 slug(예: shadcn data-display/badge 와 axis ui/badge)는 주소가 달라 위반이 아니고 개수만 알립니다.
  *   5. 통계: index.json · meta.json 의 stats 가 index.json 항목에서 센 값과 같아야 합니다.
+ *   7. code 모양 (WI-0083): components/<id>.json 의 code 가 상세 화면(component-detail-content.tsx)이 바로 읽는 모양이어야 합니다.
+ *      code 는 객체, code.files 는 배열이고 원소마다 path · content 가 문자열, code.dependencies · code.registryDeps 는
+ *      문자열 배열. 화면은 이 값을 검사 없이 읽어서 빠지면 그 항목 상세 화면이 깨집니다. e2e/library-reps.cjs 는 대표 3개만
+ *      읽으므로 나머지 항목의 모양은 여기서만 봅니다.
  *
  * 옵션
  *   --library <dir>   library 디렉터리 (기본: apps/web/public/library)
@@ -77,7 +81,28 @@ const appDir = path.resolve(opts.app);
 if (!fs.existsSync(appDir)) fail(`문서 앱 디렉터리가 없습니다: ${appDir}`);
 const site = opts.site.replace(/\/+$/, "");
 
-const violations = { route: [], set: [], category: [], file: [], route_key: [], stats: [] };
+const violations = { route: [], set: [], category: [], file: [], route_key: [], stats: [], code: [] };
+
+/**
+ * 상세 화면이 읽는 code 모양 판정 (7). 위반 문구 배열을 돌려준다
+ * @param {unknown} code
+ */
+function codeShapeProblems(code) {
+  if (!code || typeof code !== "object" || Array.isArray(code)) return ["code 가 객체가 아닙니다"];
+  const out = [];
+  if (!Array.isArray(code.files)) out.push("code.files 가 배열이 아닙니다");
+  else {
+    code.files.forEach((f, i) => {
+      if (!f || typeof f !== "object") out.push(`code.files[${i}] 가 객체가 아닙니다`);
+      else for (const k of ["path", "content"]) if (typeof f[k] !== "string") out.push(`code.files[${i}].${k} 가 문자열이 아닙니다`);
+    });
+  }
+  for (const k of ["dependencies", "registryDeps"]) {
+    if (!Array.isArray(code[k])) out.push(`code.${k} 가 배열이 아닙니다`);
+    else if (code[k].some((d) => typeof d !== "string")) out.push(`code.${k} 에 문자열이 아닌 값이 있습니다`);
+  }
+  return out;
+}
 
 // ---- 1. 문서 라우트 ----
 const allFiles = [
@@ -160,6 +185,7 @@ for (const file of componentFiles) {
   const key = path.basename(file, ".json");
   fileIds.add(key);
   const data = readJson(file);
+  for (const problem of codeShapeProblems(data?.code)) violations.code.push(`components/${key}.json: ${problem}`);
   const entry = entryById.get(key);
   if (!entry) {
     violations.file.push(`components/${key}.json: index.json 에 id ${key} 항목이 없습니다`);
@@ -231,6 +257,7 @@ const labels = {
   file: "컴포넌트 파일 불일치",
   route_key: "상세 주소 중복 · 불일치",
   stats: "통계 불일치",
+  code: "code 모양 불일치",
 };
 let total = 0;
 for (const [key, list] of Object.entries(violations)) {
