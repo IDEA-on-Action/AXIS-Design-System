@@ -27,10 +27,12 @@
  *   한 층만 읽어 호이스팅 모노레포에서 설치본을 못 찾고 선언으로 떨어졌습니다. WI-0051 PRD D4 에서 남겼던 것을 해소).
  *   Plug'n'Play(`isPnpProject`)면 설치본을 읽지 않고 선언으로 갑니다(`packageVersionGate` · dependencies 와 같은 규칙).
  *   init · theme add · template apply · axis add 도 같은 함수를 쓰므로 함께 바뀝니다(전이 표는 WI-0074 testplan).
+ * - WI-0080: Tailwind 3 content 판정의 패키지 표본 · 제안도 `findInstalledPackage` 로 찾은 설치본 위치(baseDir 기준 상대 경로)를
+ *   씁니다(호이스팅이면 `../../node_modules/<pkg>`). 덮음 판정은 `contentGlobCovers`(앞쪽 `../` 개수 비교 · 절대경로 비교)입니다.
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
-import { extname, join, resolve } from "node:path";
+import { extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { ROOT_LAYOUT_FILES, compareExactVersions, findInstalledPackage, isPnpProject } from "../project.js";
 
 /** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
@@ -952,6 +954,53 @@ export function contentGlobToRegExp(glob: string): RegExp {
   return new RegExp(`^${re}$`);
 }
 
+/** 경로 · glob 의 앞쪽 `../` 개수(앞의 `./` 는 지우고 셉니다, 백슬래시는 `/` 로 봄) */
+function leadingParentSegments(p: string): number {
+  const s = p.trim().replace(/\\/g, "/").replace(/^\.\//, "");
+  return (/^(?:\.\.\/)*/.exec(s)?.[0].length ?? 0) / 3;
+}
+
+/** 절대경로 glob 인지(POSIX `/...` · Windows `C:/...` · `C:\...`) */
+function isAbsoluteGlob(glob: string): boolean {
+  const t = glob.trim();
+  return t.startsWith("/") || /^[A-Za-z]:[\\/]/.test(t);
+}
+
+/**
+ * content glob 하나가 표본 경로(baseDir 기준 상대 경로, posix)를 덮는지 봅니다(WI-0080).
+ * - 상대 glob: 앞쪽 `../` 개수가 표본과 같을 때만 `contentGlobToRegExp` 로 비교합니다. 정규식의 `**` 는 `..` 세그먼트도 먹지만
+ *   fast-glob 의 `**` 는 `../` 를 넘지 않기 때문입니다(실측: 호이스팅 앱의 `./**` 는 ui-react 선택자 44/402).
+ * - 절대경로 glob: `resolve(baseDir, sample)`(posix 로 맞춤)과 비교합니다(실측: 실제 설치 위치를 가리키면 402/402).
+ * Tailwind 3 는 `relative: true` 가 없으면 content 를 빌드를 실행한 디렉터리(cwd) 기준으로 풀지만, 판정은 baseDir(앱 디렉터리)을
+ * cwd 로 둡니다(D4: 판정에 반영하지 않고 상위 경로 제안에 `CONTENT_PARENT_PATH_NOTE` 를 붙임).
+ */
+export function contentGlobCovers(glob: string, sample: string, baseDir: string): boolean {
+  if (isAbsoluteGlob(glob)) {
+    const absSample = resolve(baseDir, sample).split(sep).join("/");
+    return contentGlobToRegExp(glob.trim().replace(/\\/g, "/")).test(absSample);
+  }
+  return leadingParentSegments(glob) === leadingParentSegments(sample) && contentGlobToRegExp(glob).test(sample);
+}
+
+/**
+ * 상위 경로(`../`) content 제안에 붙이는 안내(WI-0080 D4). cli check · MCP check_project · theme add 가 같은 문자열을 씁니다.
+ * 실측: 호이스팅 앱의 `../../node_modules/...` 는 앱 cwd 빌드에서 402/402, 모노레포 루트 cwd 빌드에서 0, `relative: true` 면 둘 다 402.
+ */
+export const CONTENT_PARENT_PATH_NOTE =
+  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+
+/** 패키지 content 대상의 표본 · 제안(WI-0080). 설치본을 못 찾거나 PnP 면 종전 `node_modules/<pkg>` 입니다. */
+function packageContentTarget(baseDir: string, name: string): { sample: string; suggest: string } {
+  const found = isPnpProject(baseDir) ? undefined : findInstalledPackage(baseDir, name);
+  const rel = found === undefined ? undefined : relative(baseDir, found.dir);
+  // 다른 드라이브(Windows)처럼 상대 경로로 못 바꾸면 종전 경로로 둡니다
+  const relDir = rel === undefined || rel === "" || isAbsolute(rel) ? `node_modules/${name}` : rel.split(sep).join("/");
+  return {
+    sample: `${relDir}/dist/index.js`,
+    suggest: `${relDir.startsWith("../") ? "" : "./"}${relDir}/dist/**/*.{js,mjs}`,
+  };
+}
+
 /** 대괄호 · 중괄호 짝을 맞춰 `src[start]`(여는 괄호)부터 닫는 괄호까지 돌려줍니다. 문자열 안의 괄호는 세지 않습니다. */
 function balancedSlice(src: string, start: number): string | undefined {
   const open = src[start];
@@ -1033,8 +1082,10 @@ function normalizeRel(p: string): string | undefined {
  * Tailwind 3 프로젝트에서 content 가 AXIS 컴포넌트 경로를 덮는지 봅니다(WI-0065 D8). Tailwind 4 이상 · 설정 파일 없음 ·
  * 대상 없음이면 `null`(검사기는 항목을 더하지 않음).
  * - 대상 1: `axis.config.json` 의 componentsDir(복사 설치 위치). 대표 파일 `<componentsDir>/button.tsx`
- * - 대상 2: package.json 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui`(npm 설치). 대표 파일 `node_modules/<pkg>/dist/index.js`
- * glob 은 설정 파일이 있는 디렉터리(프로젝트 루트) 기준으로 맞춥니다. 판정은 문자열 판독이라 실제 파일이 있는지는 보지 않습니다.
+ * - 대상 2: package.json 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui`(npm 설치). 대표 파일은 `findInstalledPackage` 로 찾은
+ *   설치본의 `dist/index.js`(baseDir 기준 상대 경로, 호이스팅이면 `../../node_modules/<pkg>/dist/index.js`, WI-0080). 설치본을
+ *   찾지 못하거나(상위 어디에도 없음) Plug'n'Play 면 종전 `node_modules/<pkg>/dist/index.js` 입니다.
+ * glob 은 설정 파일이 있는 디렉터리(프로젝트 루트) 기준으로 맞춥니다(`contentGlobCovers`). 판정은 문자열 판독이라 실제 파일이 있는지는 보지 않습니다.
  */
 export function inspectTailwindContent(baseDirInput: string): TailwindContentInspection | null {
   const baseDir = resolve(baseDirInput);
@@ -1052,18 +1103,18 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
   }
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (pkg !== undefined && hasDependency(pkg, name) !== undefined) {
-      targets.push({ label: name, sample: `node_modules/${name}/dist/index.js`, suggest: `./node_modules/${name}/dist/**/*.{js,mjs}` });
+      targets.push({ label: name, ...packageContentTarget(baseDir, name) });
     }
   }
   if (targets.length === 0) return null;
 
   const read = readTailwindContent(readFileSync(join(baseDir, configFile), "utf8"));
-  const patterns = (read?.globs ?? []).filter((g) => !g.trim().startsWith("!")).map(contentGlobToRegExp);
+  const globs = (read?.globs ?? []).filter((g) => !g.trim().startsWith("!"));
   return {
     configFile,
     unreadable: read === undefined,
     dynamic: read?.dynamic ?? false,
-    targets: targets.map((t) => ({ ...t, covered: patterns.some((re) => re.test(t.sample)) })),
+    targets: targets.map((t) => ({ ...t, covered: globs.some((g) => contentGlobCovers(g, t.sample, baseDir)) })),
   };
 }
 
@@ -1091,17 +1142,19 @@ export function checkTailwindContent(baseDir: string): ContentCheckResult | null
     };
   }
   const list = missing.map((t) => `${t.label} → "${t.suggest}"`).join(" · ");
+  // WI-0080 D4: 상위 경로 제안이 있을 때만 cwd 기준 안내를 붙입니다(종전 문구는 바이트 그대로)
+  const note = missing.some((t) => t.suggest.startsWith("../")) ? ` (${CONTENT_PARENT_PATH_NOTE})` : "";
   if (r.unreadable || r.dynamic) {
     return {
       name: "tailwind.content",
       severity: "warn",
-      message: `${r.configFile}의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ${list}`,
+      message: `${r.configFile}의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ${list}${note}`,
     };
   }
   return {
     name: "tailwind.content",
     severity: "fail",
-    message: `${r.configFile}의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ${list}`,
+    message: `${r.configFile}의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ${list}${note}`,
   };
 }
 

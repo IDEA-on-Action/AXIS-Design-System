@@ -519,3 +519,40 @@ describe("handleCheckProject WI-0074: 호이스팅 모노레포의 설치본을 
     });
   });
 });
+
+// WI-0080: CLI template-check.test.ts 「WI-0080」 과 같은 tailwind.content 판정 · 문구(공유 코어 번들)
+describe("handleCheckProject WI-0080: 호이스팅 Tailwind 3 앱의 content 표본 · 제안 (CLI 와 같은 문구)", () => {
+  const UP = "../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const LOCAL = "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const PARENT_NOTE =
+    "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+  /** tmp 를 모노레포 루트로 두고 ui-react 설치본은 루트에만(hoisted), isolated 면 앱 node_modules 에도 둡니다 */
+  async function app(layout: "hoisted" | "isolated", content: string[]) {
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, workspaces: ["apps/*"] });
+    await writeInstalledStub(tmp, "@axis-ds/ui-react", "1.8.1");
+    const dir = path.join(tmp, "apps", "web");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    if (layout === "isolated") await writeInstalledStub(dir, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: ${JSON.stringify(content)} };\n`);
+    return dir;
+  }
+  const contentItem = async (dir: string) => (await handleCheckProject({ targetDir: dir })).results.find((r) => r.name === "tailwind.content");
+  const FAIL = (suggest: string, note: boolean) => ({
+    name: "tailwind.content",
+    severity: "fail",
+    message: `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${suggest}"${note ? ` (${PARENT_NOTE})` : ""}`,
+  });
+  const PASS = { name: "tailwind.content", severity: "pass", message: "tailwind.config.ts의 content 가 @axis-ds/ui-react 를 덮습니다" };
+
+  it("hoisted: 실제 위치 ../../node_modules 는 PASS, ./node_modules 만이면 FAIL 이고 제안은 ../../node_modules + cwd 안내", async () => {
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", UP]))).toEqual(PASS);
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", LOCAL]))).toEqual(FAIL(UP, true));
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", "./**/*.{js,mjs}"]))).toEqual(FAIL(UP, true));
+  });
+
+  it("isolated(음성 대조): 앱 node_modules 설치본이면 종전 판정 · 문구(./node_modules, 안내 없음)", async () => {
+    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", LOCAL]))).toEqual(PASS);
+    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", UP]))).toEqual(FAIL(LOCAL, false));
+  });
+});

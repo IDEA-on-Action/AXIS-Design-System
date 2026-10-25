@@ -77,7 +77,7 @@
 | 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ✅ 2026-10-26 (#214, linked 1.8.1) |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | ✅ 2026-10-26 (#214, Pages · npm 발행 없음) |
 | 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ⏳ |
-| 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ⏳ |
+| 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | 🔄 |
 | 93 | `detectInstallCommand` 가 lockfile 을 한 층만 봐서 npm 워크스페이스에서 pnpm 명령을 안내함(WI-0074 브리프에서 분리) | WI-0081 (#210) | P18 | P3 | ⏳ |
 | 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | ⏳ |
 | 95 | library 대표 선택이 상세 JSON 129개를 모두 읽음 · TW3 preset 테스트가 dist 진입점을 검사하지 않음(배치 6 검토 후속, 배치 6b) | WI-0083 (#212) | P18 | P3 | ⏳ |
