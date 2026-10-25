@@ -1,6 +1,6 @@
 # WI-0078: library 상세 화면 E2E 스모크 릴리스 노트
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #206 | 날짜: 2026-10-25
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #206 | 날짜: 2026-10-25 | 배포: 2026-10-26 Pages(PR #214 머지 4a5e185, Release PR #216 머지 61ae674 뒤 frontend.yml run 40205738309 Deploy Production), npm 발행 없음
 
 ## 요약
 
@@ -18,3 +18,8 @@ library 상세 화면이 런타임에 받는 데이터(`/library/components/<id>
 
 - npm 발행 없음(changeset 없음). `@ax/web` 은 private 이고 제품 코드는 바뀌지 않아요. Pages 배포만 있어요.
 - CI 시간: library step 이 4건 약 10초(로컬 측정) 늘어요.
+
+## 배포
+
+- npm 발행 없음. 문서 사이트 pages.dev 배포(4a5e185 run 40202830516 · 8aaa9aa run 40204172471 · 61ae674 run 40205738309, 모두 success)
+- PR #214 CI 에서 a11y 236 · library 4 통과, main run 에서도 library 상세 스모크 4 passed. pages.dev 대표 3경로 · 데이터 JSON 200, 없는 경로 404(testplan 8절)

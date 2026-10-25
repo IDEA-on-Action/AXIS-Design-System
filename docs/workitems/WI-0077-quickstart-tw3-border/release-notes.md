@@ -1,6 +1,6 @@
 # WI-0077 릴리스 노트: Tailwind 3 의 색 없는 border 가 AXIS 테두리색을 따라요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #203 | 대상: `@axis-ds/tokens` patch(linked 로 tokens · theme · ui-react · agentic-ui 1.8.1 예정). cli · mcp 는 이 WI 로 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #203 | 대상: `@axis-ds/tokens` patch(linked 로 tokens · theme · ui-react · agentic-ui 1.8.1, 2026-10-26 발행, PR #214 머지 4a5e185 · Release PR #216 머지 61ae674, publish run 40205738223, provenance). cli · mcp 는 이 WI 로 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -19,3 +19,8 @@
 - 1.8.0 이하를 쓰는 동안에는 전역 CSS 의 `@tailwind utilities;` 뒤에 `@layer base { * { @apply border-border; } }` 블록을 두면 같은 결과예요. AXIS 템플릿 4종은 이미 이 블록을 갖고 있고 1.8.1 에서도 그대로 둬요(결과 같음).
 - preset 을 쓰면서 앱 `tailwind.config` 에서 `borderColor.DEFAULT` 를 직접 정한 경우는 앱 값이 이겨요(Tailwind 의 extend 병합 순서).
 - 앱이 `--border` 를 HSL 삼중값(`220 13% 91%`)이 아닌 형식(`#e5e7eb` · `hsl(...)` 함수 · `oklch(...)`)으로 따로 정의했다면 `hsl(var(--border))` 가 계산 시점에 무효가 되어 기본 테두리가 글자색(currentColor)으로 바뀌어요(1.8.0 에서는 gray-200). 그런 앱은 `--border` 를 삼중값으로 바꾸거나 `tailwind.config` 에서 `borderColor.DEFAULT` 를 직접 정하세요(Chromium 측정: 정의 없음 · 삼중값은 정상, hex · `hsl()` · `oklch()` 는 글자색).
+
+## 발행
+
+- tokens · theme · ui-react · agentic-ui 1.8.1 (2026-10-26, PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6)
+- 발행본 재측정: TW3 V0 0/12(1.8.0 은 9/12), shadcn 없는 소비자 gray 유지, TW4 출력 · CSS sha256 신구 같음(testplan 7절)

@@ -1,6 +1,6 @@
 # WI-0074 릴리스 노트: 호이스팅 모노레포에서도 설치된 Tailwind · AXIS 버전으로 판정해요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #199 | 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(배치 6 묶음에서는 cli 1.7.0 · mcp 1.4.0 예정). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #199 | 대상: `@axis-ds/cli` 1.7.0 · `@axis-ds/mcp` 1.4.0(2026-10-26 발행, 배치 6 묶음에서 다른 WI 의 minor 와 합쳐짐, PR #214 머지 4a5e185 · Release PR #216 머지 61ae674, publish run 40205738223, provenance). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -20,3 +20,8 @@
 - 루트에만 `tailwindcss` 를 선언한 앱은 `dependencies` 항목이 여전히 「필수 의존성 누락: tailwindcss」 FAIL 이에요. 워크스페이스 루트 선언 인정은 후속(WI-0081 축)에서 다뤄요.
 - 호이스팅 Tailwind 3 의 `tailwind.content` 가 `../../node_modules/...` 경로를 인정하지 않는 문제는 WI-0080 에서 다뤄요.
 - 상위 탐색은 Node 의 패키지 탐색과 같이 파일시스템 루트까지 올라가고 프로젝트 · 워크스페이스 루트에서 멈추지 않아요. 그래서 아직 install 하지 않은 앱이나 워크스페이스 밖에 놓인 앱에서는 관계없는 상위 디렉터리(예: 홈의 `node_modules`)의 `tailwindcss` · `@axis-ds/*` 설치본이 선언보다 앞서 판정에 쓰여요. 그 앱을 Node 로 실행해도 같은 설치본을 읽으므로 실행 결과와는 맞는 판정이에요(반박 검토 minor, 설계 경계로 기록). 저장소 안 템플릿 디렉터리(`apps/web/templates/*/files`)에서 init 테스트가 저장소 루트 `node_modules/tailwindcss` 를 읽게 된 것이 이 경계의 실측 예예요.
+
+## 발행
+
+- `@axis-ds/cli` 1.7.0 · `@axis-ds/mcp` 1.4.0 (2026-10-26, PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6)
+- 발행본 재측정: 항목 70/70 수집, 12 전이 · 98 불변 줄, 음성 대조 전이 0(testplan 6절)

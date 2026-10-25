@@ -1,6 +1,6 @@
 # WI-0078: library 상세 화면 E2E 스모크 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #206 | 상태: 구현 · 로컬 검증 완료(2026-10-25), 배치 6 PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #206 | 상태: ✅ 완료(2026-10-26, Pages 배포만 · npm 발행 없음, #214)
 
 ## 결정 · 조사
 - [x] 사용자 결정 D1-C · D2-B(READY 는 C) · D3-A · D4-A 기록 (PRD 1.3)
@@ -19,7 +19,7 @@
 - [x] READY 변경 뒤 파일 누락 사본에서 a11y library 상세 4 실패, 정상 out/ 에서 a11y 236 (AC6)
 - [x] 건수 가드 로컬 재현(정상 rc 0 · 기대 건수 변이 · skip 변이 rc 1) (AC5)
 - [x] 게이트: turbo lint · type-check · build · test 각각 `--force`, frontend.yml run 단계 (AC7)
-- [ ] PR CI run 에서 library 4 · a11y 236 확인 (PR 은 배치 6 묶음에서)
+- [x] PR CI run 에서 library 4 · a11y 236 확인 (PR 은 배치 6 묶음에서) (2026-10-25 #214 CI 11m56s 에서 a11y 236 · library 4 통과, main run 40204172471 · 40205738309 에서도 library 4 passed. testplan 8절)
 
 ## 생성물 · 릴리스
 - [x] build:registry 뒤 r/ version 되돌림, templates updatedAt churn 되돌림

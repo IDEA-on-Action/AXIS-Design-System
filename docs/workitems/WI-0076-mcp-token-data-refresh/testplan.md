@@ -61,6 +61,14 @@
 
 - 빌드가 바꾼 `apps/web/public/templates/*.json` 5개는 updatedAt 한 줄씩만 바뀌어 되돌렸어요(템플릿 소스 변경 없음).
 
-## 6. 발행 뒤 재측정 (예정)
+## 6. 발행 뒤 재측정 (2026-10-26)
 
-- npm `@axis-ds/mcp@1.4.0` 을 격리 HOME 에 같은 버전대 tokens 발행본과 설치해 3절을 다시 재요. 출처 줄의 tokens 버전이 발행 시점 tokens 와 같은지도 봐요(WI-0077 이 linked 1.8.1 을 함께 내면 1.8.1 이어야 함).
+- 대상: npm 발행본 `@axis-ds/mcp` 1.4.0 · `@axis-ds/tokens` 1.8.1(PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6), 대조 mcp 1.3.5. 격리 HOME, stdio 서버 버전 1.4.0, stderr 비어 있음.
+- `axis.list_tokens` 309행을 tokens 1.8.1 dist(variables.css · shadcn-compat.css)와 비교: 불일치 0(라이트 · 다크), dist 변수 309개 중 표에 없는 것 0.
+- `axis.get_token` 309경로 전부 호출: isError 0, 값 · 다크 값 불일치 0.
+- 양성 대조: dist 사본에서 `--primary`(:root · .dark)와 `--axis-control-h-md` 를 바꾸면 list 비교 불일치 2(값), get 비교 불일치 3(값 2 · 다크 1)이 잡혀요. 위의 0 은 비교가 수행된 결과예요.
+- 값 예: `colors.primary` 값 hsl(221 39% 11%) · 다크 hsl(220 14% 96%), `colors.background` 다크 hsl(224 71% 4%). 밀도 `control.h.md` 2.5rem(카테고리 density), `--axis-control-h-md` · `space.5` 별칭으로도 조회.
+- 계약: 미발견 `no.such.token` · `brand.ontology` 는 isError true. 제거한 5경로(shadow.md · animation.duration.fast · normal · slow · animation.easing.default)는 모두 isError true(1.3.5 는 150ms 등 값 · isError 없음). category `animation` 은 -32602 입력 검증 오류, density 37줄 · component 79줄.
+- 출처 줄: 「@axis-ds/tokens 1.8.1 빌드 산출물에서 생성」. tokens 1.8.0 과 1.8.1 의 variables.css · shadcn-compat.css 는 `cmp` 결과 같아서 값 비교로는 버전이 갈리지 않아요. mcp 가 발행 시점 tokens 와 함께 다시 빌드됐다는 것(릴리스 규칙 PR #215 의 취지)은 이 출처 줄 하나로만 확인했어요.
+- 대조(1.3.5): 출처 줄 없음, `control.h.md` · `spacing.5` · `typography.fontSize.3xl` 은 「찾을 수 없습니다」인데 isError 없음, `colors.primary` 는 hsl(222.2 47.4% 11.2%).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6/WI-0076/`

@@ -1,6 +1,6 @@
 # WI-0076: MCP 토큰 데이터 생성 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #202 | 상태: 구현 · 로컬 검증 완료(2026-10-25), PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #202 | 상태: ✅ 완료(2026-10-26, mcp 1.4.0, #214 · Release #216)
 
 ## 결정
 - [x] 원천 tokens dist · 기존 경로 유지 + tokens 이름 경로 · 원천 없는 5개 제거 · 생성본 dist 전용 · 다크 필드 · isError · 브랜드는 get_brand (PRD D1~D7, 배치 6 결정)
@@ -22,5 +22,5 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0076-mcp-token-data.md`(@axis-ds/mcp minor)
-- [ ] PR · 머지(배치 6 순서 WI-0078 → 0076), Release PR 에서 mcp 1.4.0 대조
-- [ ] 발행본 1.4.0 으로 testplan 3 다시 재기(격리 HOME, 같은 버전 tokens 발행본과 불일치 0)
+- [x] PR · 머지(배치 6 순서 WI-0078 → 0076), Release PR 에서 mcp 1.4.0 대조 (2026-10-25 #214 머지 4a5e185, Release #216 머지 61ae674 에서 mcp 1.4.0, run 40205738223)
+- [x] 발행본 1.4.0 으로 testplan 3 다시 재기(격리 HOME, 같은 버전 tokens 발행본과 불일치 0) (2026-10-26: tokens 1.8.1 dist 대비 list 309행 · get 309경로 불일치 0, 양성 대조 잡힘. testplan 6절)

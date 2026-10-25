@@ -87,4 +87,28 @@
 ## 6. 남은 확인
 
 - [ ] 실제 터미널에서 대화형 1회(사람): `axis template init dashboard`(디렉터리 질문 → Enter → 끝까지 생성), `axis template apply dashboard`(충돌 확인 → n → 그대로). 샌드박스 pty 는 ora 스피너에서 멈춰 판정 수단이 못 돼요(브리프 측정).
-- [ ] 발행 뒤 npm 발행본 · 새 HOME · XDG 로 `scripts/matrix.sh` 재측정(AC7).
+- [x] 발행 뒤 npm 발행본 · 새 HOME · XDG 로 `scripts/matrix.sh` 재측정(AC7). 결과는 7절.
+
+## 7. 발행 뒤 재측정 (AC7, 2026-10-26)
+
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.0(PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6), 대조 1.6.2. env 는 PATH · HOME · XDG 만(CI 미주입).
+- 판정 기준표: 발행본 cli 1.7.0 README 115행 「터미널이 아닌 곳에서 실행」 표(레포 README 와 같음).
+- 매트릭스: 15케이스 x 신구 x stdin(`</dev/null` · 빈 파이프) = 60행, stderr 0줄. 1.7.0 은 두 stdin 조건 결과가 같아요.
+
+| 케이스 (1.7.0) | rc | 파일 수 | 출력 |
+|------|------|------|------|
+| template init dashboard(`--dir` 없음) | 0 | 0→10 | ./dashboard 에 템플릿 9개 + axis.config.json, 「기본값 'dashboard' 로 정했습니다」 한 줄 |
+| template init(이름 없음) | 1 | 0→0 | 사용법 안내 |
+| template init, 비어 있지 않은 대상(`--dir app` · ./dashboard) | 1 | 1→1 | 트리 sha 같음 |
+| 같은 대상에 `-y` | 0 | 1→11 | |
+| init(`-y` 없음), 빈 상태 | 0 | 1→3 | 「비대화형 실행이라 기본값으로 진행합니다(-y 와 같음): componentsDir=...」 |
+| init, 같은 utils.ts | 0 | | 「유지(이미 같은 내용)」 |
+| init, 다른 utils.ts | 1 | 2→2 | 트리 같음, 「아무것도 쓰지 않았습니다(axis.config.json · utils.ts · package.json 그대로)」. `-y` 면 rc 0 · 덮어씀 |
+| template apply 충돌 | 1 | 9→9 | 트리 같음, `-y` · `--dry-run` 안내. `-y` 면 rc 0 · 덮어씀 |
+| add 충돌 | 0 | | 내용이 다른 button.tsx 를 건너뛰고 목록 안내(1.6.2 출력과 바이트 같음) |
+| v0 import · monet import | 1 | 0→0 | v0 는 `axis v0 convert <file>` 도 안내 |
+
+- 음성 대조(1.6.2): template init(이름 있음 · 없음 · 비어 있지 않음), init(`-y` 없음, 3종), template apply 충돌, v0 · monet import 가 모두 rc 0 · 파일 변화 0 · 질문 한 줄만 찍음(무생성 재현). `template init -y` 는 1.6.2 에서 「unknown option '-y'」 rc 1.
+- 측정 정정: 처음에는 「다른 utils.ts」 픽스처를 lib/utils.ts 에 두었어요(init 이 쓰는 경로는 components/ui/utils.ts). 출력을 보고 경로를 고쳐 그 2케이스만 다시 쟀고(runs2-* · matrix-diffutils.tsv), 표의 값은 다시 잰 값이에요.
+- 남은 것: 실제 터미널 대화형 1회(사람, 6절)는 이번에도 수행하지 않았어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6/WI-0075/`(matrix.tsv · matrix-diffutils.tsv)

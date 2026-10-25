@@ -72,4 +72,12 @@ frontend.yml 「E2E 실행 건수 가드」 run 본문을 yaml 에서 그대로 
 
 ## 7. 남은 확인
 
-- PR CI run 에서 library step 4건 · 건수 가드 통과 확인(배치 6 묶음 PR 에서)
+- [x] PR CI run 에서 library step 4건 · 건수 가드 통과 확인(배치 6 묶음 PR 에서). 결과는 8절.
+
+## 8. 머지 · 배포 뒤 확인 (2026-10-26)
+
+- PR #214(머지 4a5e185) CI 11m56s: a11y 236 · library 4 통과.
+- frontend.yml main run(`gh run list` 기준): 4a5e185 run 40202830516 success. 8aaa9aa run 40204172471 CI success(14:51:13→15:02:51Z) · Deploy Production success · Preview skipped, library 상세 스모크 「4 passed (2.4s)」. 61ae674 run 40205738309 CI success(15:11:13→15:22:35Z), 단계 「E2E library 상세 스모크 (WI-0078)」 success · 「4 passed (1.9s)」, 실행 건수 가드 success, Deploy to Cloudflare Pages (Production) success.
+- pages.dev: `/library/ui/accordion/` · `/library/ui/shadcn-accordion/` · `/library/ui/hero-with-image/` 모두 200 text/html, `/library/components/axis-accordion.json` · `shadcn-accordion.json` · `monet-hero-with-image.json` 모두 200 application/json 이고 파싱한 객체의 id 가 경로와 같음.
+- 음성 대조: 없는 경로 `/library/components/no-such-item-zz.json` 과 `/library/ui/no-such-zz/` 는 404 라서, 위 200 이 SPA fallback 결과가 아님을 확인했어요.
+- 한계: 응답이 61ae674 빌드라는 것은 커밋 해시로 직접 확인하지 않았고, Deploy Production 성공 시각(15:23Z) 뒤에 조회했다는 것만 근거예요.

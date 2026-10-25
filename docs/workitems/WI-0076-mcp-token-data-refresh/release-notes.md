@@ -1,6 +1,6 @@
 # WI-0076 릴리스 노트: MCP 토큰 도구가 tokens 실제 값을 돌려줘요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #202 | 대상: `@axis-ds/mcp` minor(1.4.0 예정). tokens · theme · ui-react · agentic-ui · cli 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #202 | 대상: `@axis-ds/mcp` minor 1.4.0(2026-10-26 발행, tokens 1.8.1 과 함께, PR #214 머지 4a5e185 · Release PR #216 머지 61ae674, publish run 40205738223, provenance). tokens · theme · ui-react · agentic-ui · cli 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -27,3 +27,8 @@
 
 - Release PR 에서 mcp 가 1.4.0 인지 봐요(배치 6 의 WI-0074 mcp patch 와 합쳐도 minor).
 - 발행 뒤 testplan 6절대로 격리 HOME 에서 다시 재요.
+
+## 발행
+
+- `@axis-ds/mcp` 1.4.0 (2026-10-26, PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6). 출처 줄은 tokens 1.8.1
+- 발행본 재측정: tokens 1.8.1 dist 대비 list 309행 · get 309경로 불일치 0, 양성 대조 불일치 2 · 3 검출(testplan 6절)

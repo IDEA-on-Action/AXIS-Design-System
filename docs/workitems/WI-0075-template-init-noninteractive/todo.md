@@ -1,6 +1,6 @@
 # WI-0075: 비대화형 질문 처리 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #201 | 상태: 구현 · 로컬 검증 완료(2026-10-25), PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #201 | 상태: ✅ 완료(2026-10-26, cli 1.7.0, #214 · Release #216). 실제 터미널 대화형 1회(사람)는 남음
 
 ## 결정
 - [x] 성격별 처리 · `template init -y` · 공통 헬퍼 + parseAsync 안전망 · v0 · monet 포함 (PRD D1~D4, 배치 6 결정)
@@ -27,5 +27,5 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0075-template-init-noninteractive.md`(@axis-ds/cli minor)
-- [ ] PR · 머지(배치 6 순서 WI-0074 다음), Release PR 에서 cli 1.7.0 대조
-- [ ] 발행본으로 매트릭스 재측정(AC7)
+- [x] PR · 머지(배치 6 순서 WI-0074 다음), Release PR 에서 cli 1.7.0 대조 (2026-10-25 #214 머지 4a5e185, Release #216 머지 61ae674 에서 cli 1.7.0, run 40205738223)
+- [x] 발행본으로 매트릭스 재측정(AC7) (2026-10-26: 15케이스 x 신구 x stdin 2조건 60행, README 표와 일치, 1.6.2 음성 대조 무생성 재현. testplan 7절)

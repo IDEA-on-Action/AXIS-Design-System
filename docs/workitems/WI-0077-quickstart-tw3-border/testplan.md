@@ -60,6 +60,13 @@
 | frontend.yml run 단계 | check-token-refs · check-contrast-pairs · check-types-versions · check-library-links · build:registry(r/ version 1.8.0 → 1.5.0 되돌림) · test:registry · check-licenses · pack-smoke(퍼블리시 대상 6개) · cli-smoke(비TTY 갈래 10건) · registry-install-smoke(5/5) 모두 rc 0 |
 | E2E tokens(`E2E_SERVER=static`, workers 1) | 22 통과. 문서 사이트는 preset 을 쓰지 않고(`apps/web/tailwind.config.ts` 는 keyframes · animation 만 import) apps/web 변경이 없어 다른 E2E 는 해당 없음 |
 
-## 7. 발행 뒤 재측정 (예정)
+## 7. 발행 뒤 재측정 (2026-10-26)
 
-- 발행본 1.8.1 을 같은 소비자(격리 HOME)에 설치해 V0 0/12 · N0 gray 유지 · R1 을 다시 재요.
+- 대상: npm 발행본 tokens · theme · ui-react · agentic-ui 1.8.1(PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6), 대조 1.8.0.
+- 환경: 새 HOME · XDG 로 npm 설치한 소비자 4벌(tw3-old · tw3-new · tw4-old · tw4-new), 소비자마다 tokens 사본 하나. Next 15.5.28 · tailwindcss 3.4.19 · 4.3.3. config 는 quick-start 「Tailwind CSS 3」 예시 + content `./app/**`(V0 와 같음), globals.css 는 예시 3줄 그대로. `next build` rc 0 → `next start` → Playwright 로 4상태 측정(도구는 w6impl tools 복사). 소비자 env 에 `NEXT_TELEMETRY_DISABLED=1` 하나가 들어감(브리프 스크립트와 같고 동작과 무관).
+- V0 1.8.1: 색 없는 `border` · `border-t` · `hr` 불일치 0/12(다크 rgb(31,41,55), ontology 라이트 (230,232,235) · 다크 (43,47,53)), `border-red-500` 4/4, `border-border` 4/4, axe 대비 0.
+- V0 1.8.0(음성 대조): 9/12, 세 탐침 모두 rgb(229,231,235).
+- N0(tokens/css 만, shadcn 없음): 1.8.0 · 1.8.1 모두 세 탐침 4상태 rgb(229,231,235), 검정 붕괴 없음. 기대 probe 는 `--border` 미정의라 rgb(0,0,0)이어서 SUMMARY mismatch 12/12 는 이 구성의 정상값이에요. axe 다크 2상태 1건은 신구 같음.
+- TW4 T0: 1.8.0 · 1.8.1 모두 0/12, label 을 뺀 측정 JSON 전 필드 바이트 같음, tailwind4.css · variables.css · shadcn-compat.css · brands/ontology.css sha256 신구 같음.
+- R1(ui-react README 예시)은 이번 발행 뒤 재측정에서 따로 재지 않았어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6/WI-0077/`

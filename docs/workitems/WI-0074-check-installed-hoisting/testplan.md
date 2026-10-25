@@ -89,6 +89,13 @@ CLI `packages/axis-cli/src/template/template-check.test.ts` 「WI-0074」 9건, 
 | registry-install-smoke | rc 0, 5/5 |
 | E2E | 해당 없음(apps/web 소스 · 정적 산출물 변경 없음) |
 
-## 6. 발행 후 재측정 (AC8, 미수행)
+## 6. 발행 후 재측정 (AC8, 2026-10-26)
 
-- 배치 6 Release PR 머지 · 발행 뒤 새 HOME 에 발행본 cli · mcp 를 설치해 브리프 `scripts/run-all.mjs` 와 이 WI 의 `compare.mjs` 를 다시 돌려요. 수집 항목 70 을 먼저 확인하고, 12 전이 · 58 불변을 봐요.
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.0 · `@axis-ds/mcp` 1.4.0 · tokens 1.8.1(PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6), 대조 cli 1.6.2 · mcp 1.3.5 · tokens 1.8.0. 버전은 설치본 package.json 에서 읽었어요.
+- 환경: 격리 HOME · XDG · npm 캐시로 npm 레지스트리에서 설치, 자식 프로세스 env 는 PATH · HOME · XDG_CONFIG_HOME 셋뿐. 브리프 픽스처 4종(fx-npm · fx-pnpm · fx-pnpmhoisted · fx-single, 절대경로 심링크 0)을 `cp -a` 하고 `diff -rq` rc 0 확인.
+- 수집 확인 먼저: 앱 20개, 기대 항목 70. 구판 출력에 2절 before 항목 70/70, 신판 출력에 after 항목 70/70 이 cli(`SEV  msg`) · mcp(`[SEV] msg`) 양쪽에 문구까지 있음(불일치 0, mcp isError 0).
+- 발행본끼리 줄 비교: cli 110줄(항목 70 + axis.config 20 + utils 20) 중 바뀐 12 · 그대로 98, mcp 도 12 · 98. 바뀐 12줄은 2절 표와 같음(tailwind.config 9건: npm · hoisted 의 a · b · c · d, pnpm 기본 d. h-rootonly-ui 3건: tailwind.config FAIL→WARN, globals.css WARN→PASS, animation WARN→PASS).
+- 음성 대조: pnpm 기본 a · b · c · e · f, 모든 e-tw3 · f-tw3content, fx-single 은 전이 0. cli rc 는 a-twlatest(npm · hoisted) 1→0, d-rootonly 는 1 유지(아래 인접 결함), 나머지는 그대로.
+- 3절 전이: `init -y`(루트 전용 TW4 앱 d · a 사본) 구판 tailwind-merge ^2.6.0(「tailwindcss 를 찾지 못해 기본값」), 신판 ^3.4.0(「설치된 tailwindcss 4.3.3」, 애니메이션 안내 tw-animate-css), rc 모두 0. `theme add ontology`(d 사본) 구판은 globals.css 에 tokens/css · css/shadcn · ontology 3줄 + preset 안내, 신판은 ontology 1줄(tailwind4 진입점 유지) · preset 안내 0줄. 0줄 판정은 같은 grep 이 구판 파일에서 걸리는 것으로 측정이 수행된 것을 확인.
+- 남은 것: d-rootonly(npm · pnpm · pnpm hoisted)와 h-rootonly-ui 는 1.7.0 에서도 cli rc 1 이에요(dependencies FAIL, 인접 결함 WI-0081 축). npm workspaces 픽스처의 init 출력이 설치 명령을 「pnpm install」로 안내하는 것은 신구 같고 WI-0081(#210) 범위예요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6/WI-0074/`

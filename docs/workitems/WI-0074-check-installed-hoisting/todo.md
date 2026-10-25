@@ -1,6 +1,6 @@
 # WI-0074: check 설치본 상위 탐색 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #199 | 상태: 구현 · 로컬 검증 완료(2026-10-25), PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #199 | 상태: ✅ 완료(2026-10-26, cli 1.7.0 · mcp 1.4.0, #214 · Release #216)
 
 ## 결정
 - [x] 범위 A(두 판독만) · isPnpProject 가드 · 공유 함수 그대로 + check 밖 전이 기록 · brand-core 통합 미룸 (PRD D1~D5, 배치 6 결정)
@@ -21,5 +21,5 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0074-check-installed-hoisting.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
-- [ ] PR · 머지(배치 6 순서 WI-0078 → 0076 → 0074), Release PR 에서 cli · mcp 버전 대조
-- [ ] 발행본으로 testplan 6절 다시 재기(격리 HOME, 70 수집 확인 뒤 12 전이 · 58 불변)
+- [x] PR · 머지(배치 6 순서 WI-0078 → 0076 → 0074), Release PR 에서 cli · mcp 버전 대조 (2026-10-25 #214 머지 4a5e185, Release #216 머지 61ae674 에서 cli 1.7.0 · mcp 1.4.0, run 40205738223)
+- [x] 발행본으로 testplan 6절 다시 재기(격리 HOME, 70 수집 확인 뒤 12 전이 · 58 불변) (2026-10-26: 항목 70/70 수집, 12 전이 · 98 불변 줄(cli · mcp 각 110줄), 음성 대조 전이 0. testplan 6절)

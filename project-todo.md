@@ -71,11 +71,11 @@
 | 83 | 움직임 줄이기 설정에서 로딩 · 진행 표시(스피너 · Progress 불확정 · Skeleton · ThinkingIndicator 등 11곳)가 멈춰 앱이 멈춘 것처럼 보임 → 멈추지 않고 2~3배 느리게, 열고 닫기 · Accordion 11곳은 계속 정지(2026-10-25 사용자 결정, WI-0046 후속) | WI-0071 (#190) | P18 | P2 | ✅ 완료(2026-10-25). ui-react · agentic-ui 1.6.3(#192 · #193, run 40127935334, provenance), npm 배포본에 reduce 느린 주기(2.5 · 3 · 4 · 5초) 클래스 확인 |
 | 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ✅ 2026-10-25 (#196, tokens 1.7.0) |
 | 85 | Tooltip 이 스크롤에 닫혀 화면 밖 트리거로 Tab 이동 시 바로 사라짐(WCAG 1.4.13 후보, WI-0066 브리프에서 발견) | WI-0073 (#194) | P18 | P3 | ✅ 2026-10-25 (#207, ui-react 1.8.0) |
-| 86 | `check` 의 기존 설치본 판독(Tailwind 판정 · TW4 안내)을 상위 디렉터리 탐색으로(WI-0051 에서 분리, 기준선 재측정 필요) | WI-0074 (#199) | P18 | P3 | 🔄 |
-| 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | 🔄 |
-| 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | 🔄 |
-| 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | 🔄 |
-| 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | 🔄 |
+| 86 | `check` 의 기존 설치본 판독(Tailwind 판정 · TW4 안내)을 상위 디렉터리 탐색으로(WI-0051 에서 분리, 기준선 재측정 필요) | WI-0074 (#199) | P18 | P3 | ✅ 2026-10-26 (#214, cli 1.7.0 · mcp 1.4.0) |
+| 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | ✅ 2026-10-26 (#214, cli 1.7.0, 실제 터미널 대화형 1회(사람) 남음) |
+| 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | ✅ 2026-10-26 (#214, mcp 1.4.0) |
+| 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ✅ 2026-10-26 (#214, linked 1.8.1) |
+| 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | ✅ 2026-10-26 (#214, Pages · npm 발행 없음) |
 | 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ⏳ |
 | 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ⏳ |
 | 93 | `detectInstallCommand` 가 lockfile 을 한 층만 봐서 npm 워크스페이스에서 pnpm 명령을 안내함(WI-0074 브리프에서 분리) | WI-0081 (#210) | P18 | P3 | ⏳ |
@@ -87,6 +87,11 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 90 | library 상세 화면 데이터 fetch 경로를 지키는 E2E 스모크(대표 3 + 404 자기 검사) · CI 건수 가드 library:4 · a11y READY 좁힘, Pages 배포만 (#214) | WI-0078 (#206) | P18 | 2026-10-26 |
+| 89 | Tailwind 3 preset 기본 테두리색이 AXIS `--border` 를 따름 · README 예시 정정, npm linked 4패키지 v1.8.1 릴리스 (#214 · #216, publish run 40205738223, provenance 6/6) | WI-0077 (#203) | P18 | 2026-10-26 |
+| 88 | MCP 토큰 데이터를 tokens dist 에서 빌드 때 생성(309개 · 다크 값 · 미발견 isError), npm mcp v1.4.0 릴리스 (#214 · #216, publish run 40205738223, provenance 6/6) | WI-0076 (#202) | P18 | 2026-10-26 |
+| 87 | 비대화형 실행에서 질문을 띄우지 않고 기본값 진행 또는 rc 1 안내, `template init -y`, npm cli v1.7.0 릴리스 (#214 · #216, publish run 40205738223, provenance 6/6) | WI-0075 (#201) | P18 | 2026-10-26 |
+| 86 | check 의 Tailwind · AXIS 설치본 판독을 상위 디렉터리 탐색으로(호이스팅 모노레포), npm cli v1.7.0 · mcp v1.4.0 릴리스 (#214 · #216, publish run 40205738223, provenance 6/6) | WI-0074 (#199) | P18 | 2026-10-26 |
 | 85 | Tooltip 이 포커스 스크롤에 닫히지 않게(ui-react 래퍼), npm linked 4패키지 v1.8.0 릴리스 (#207 · #205, publish run 40179615916, provenance 6/6) | WI-0073 (#194) | P18 | 2026-10-25 |
 | 81 | agentic-ui · ui-react 비대비 a11y 결함(role · region · aria-controls · 시각 하이드레이션 #418), npm linked 4패키지 v1.8.0 · cli v1.6.2 · mcp v1.3.5 릴리스 (#207 · #205, publish run 40179615916, provenance 6/6) | WI-0069 (#183) | P18 | 2026-10-25 |
 | 75 | 기본 테마 비텍스트 대비(폼 컨트롤 경계 · 트랙 · 포커스 링 · Progress · 상태 점, 새 토큰 6개), npm linked 4패키지 v1.8.0 릴리스 (#207 · #205, publish run 40179615916, provenance 6/6) | WI-0063 (#171) | P18 | 2026-10-25 |
@@ -371,6 +376,7 @@
 | 3 | ✅ 2026-10-25 완료(#195 · #196 · #198, Release #197 → linked 1.7.0 · cli 1.6.1 · mcp 1.3.4, 발행본 재측정 불일치 0) ① WI-0051 + 0070 + 0068 + 0072 check · 브랜드 판정 · CJS preset(template-check.ts · mcp template.ts · brand-core 사본 · 가이드 4절 · tokens tailwind 진입점) ② WI-0026 밀도 토큰 ③ WI-0066 문서 mock 4페이지 | linked minor(1.7.0) · cli · mcp patch | ③ → ① → ②. brand-core.ts(cli · mcp 바이트 사본)는 ① 소유, ② 는 KEY_TOKENS 를 고를 때만 ① 머지 뒤 rebase · cp. ② 는 착수 직전 WI-0071 브랜치가 packages/axis-tokens 를 건드리지 않는지 재측정. quick-start 는 WI-0071 과 ① 이 다른 hunk 를 고침(나중 머지가 rebase) |
 | 4 | ✅ 2026-10-25 완료(#200 · #204 · #207, Release #205 → linked 1.8.0 · cli 1.6.2 · mcp 1.3.5, 발행본 재측정 불일치 0) ① WI-0060 library slug ② WI-0062 + 0063 + 0069 + 0073 대비 · 비대비 · Tooltip ③ WI-0067 템플릿 AXIS 전환 | linked minor 또는 patch · cli patch | 전제: WI-0071 머지(그 PR 에 public/templates churn 이 없는지 확인). ③ → ① → ②. ② 는 ontology-pairs.mjs(줄 번호 대조 표)를 커밋마다 갱신 |
 | 5 | WI-0027 온톨로지 콘솔 템플릿(4차 재계획에서 배치 6 뒤 배치 7 로 이동) | Pages · (FR-4 시) cli · mcp minor | 선행 WI-0051 + 0070 + 0068 · 0026 · 0062 · 0063 · 0067. PRD 전제(defaultBrand · 고정 5항목 · AC5 게이트) 갱신 필요 |
+| 6 | ✅ 2026-10-26 완료(#214 · 규칙 #215, Release #216 → linked 1.8.1 · cli 1.7.0 · mcp 1.4.0, publish run 40205738223, provenance 6/6, 발행본 재측정 불일치 0) WI-0074 check 상위 탐색 · WI-0075 비대화형 · WI-0076 MCP 토큰 생성 · WI-0077 TW3 기본 테두리 · WI-0078 library 상세 스모크 | linked patch(1.8.1) · cli minor(1.7.0) · mcp minor(1.4.0) | WI-0078 → 0076 → 0074 → 0075 → 0077 을 한 PR(#214)로. 다음은 배치 6b WI-0080 · 0081 · 0083 |
 
 - 배치 3 결정(2026-10-25, 브리프 · 반박 검토 뒤 권장안 일괄 채택): ① WI-0072 tokens CJS 진입점이 preset 자체를 내보냄(이름 내보내기 non-enumerable · .d.cts) + cli 안내 CJS 는 `.default` + check 는 module.exports · .cjs 일 때만 WARN(결함은 1.1.0 부터). WI-0068 해제 센티널 "" · 초기값 저장값 > 마크업 data-brand > defaultBrand(사용자 결정: 마크업 우선) · check 는 theme 버전 분기. WI-0051 설치본 상위 탐색 + WARN, 판독 함수 registry-core 하나. WI-0070 plugins 배열 판독 · globals.css 는 AXIS 근거(--axis- · tokens CSS import · 레이아웃 JS import) 필요(템플릿 4종 WARN 은 WI-0067 까지 수용) ② WI-0026 Q3 (나) 대상 8개 직접 참조 · Sheet 제외 · component 최상위 토큰 · 리터럴 fallback · 아이콘 버튼 control-h-md · ontology lg 42/15 · Select field 36 · Toggle 미덮어씀 · field 둥글기 별도 · 표 머리 전용 토큰 · KEY_TOKENS 미추가 ③ WI-0066 mock 교체만 · PAGES 유지. 릴리스: theme minor 로 linked 1.7.0, cli · mcp patch. 새 WI-0073(#194) Tooltip 지속성은 배치 4 a11y 묶음
 - 배치 4 결정(2026-10-25, 브리프 · 반박 검토 뒤): ③ WI-0067 ✅(#200, Pages, 글꼴 pretendard 추가). ① WI-0060 은 충돌 5개(accordion · button · collapsible · command · toggle)의 shadcn 항목만 새 slug(`shadcn-<slug>`), 나머지 124 URL 유지, 데이터 파일 `components/<id>.json`, 코드 없는 외부 항목 화면은 범위 밖. ② a11y 는 권장안 일괄(D1 혼합 · D3 기본 브랜드만 컨트롤 경계 3:1 · D4 새 ui-react 비대비 결함도 WI-0069 · D5 locale · timeZone prop · D6 Tooltip 래퍼 제어, Radix 업스트림 이슈는 초안만), a11y 게이트는 문서 정적 전 경로 + 동적 라우트 대표 1개씩 · CI 건수 가드는 경로 목록에서 계산. 릴리스는 ② 머지 뒤 한 번에(linked 1.8.0 · cli 1.6.2 · mcp 1.3.5). 순서 ① → ②
@@ -382,6 +388,7 @@
 - 재계획(2026-10-25, `/ax:todo plan` 6차, 사용자 결정): 순서 배치 6(진행 중, linked 1.8.1 · cli 1.7.0 · mcp 1.4.0) → 배치 6b WI-0080 · 0081(registry-core, WI-0074 상위 탐색 위, cli · mcp patch, 배치 6 발행 직후) → WI-0079 · 0082(디자인 오너 답 뒤, ontology 토큰 · ui-react Select, linked patch) → 배치 7 WI-0027. WI-0080 은 WI-0027 과 같은 tailwind-core.ts 를 고치므로 먼저 끝내 rebase 부담을 줄임. 디자인 오너 확인 문서: https://claude.ai/artifact/Vp7EKAQMwffXXoM4MZQmjx (레포 사본 docs/workitems/WI-0079-ontology-contrast-residual/)
 - 배치 6 검토 뒤 결정(2026-10-25, 사용자): cli 1.7.0 · mcp 1.4.0 은 minor 유지(동작 변경은 changeset · README 업그레이드 안내), WI-0078 은 빈 changeset 을 두지 않음(@ax/web 미발행), Windows Git Bash 판정은 README 안내 + 후속 WI-0084 실측, 테스트 보강 2건은 WI-0083 으로 배치 6b 에 포함
 - 릴리스 규칙(2026-10-25, 사용자 지시): `@axis-ds/tokens` 를 올리는 changeset 이 있으면 같은 발행에 `@axis-ds/mcp` patch 이상을 넣어요(mcp 가 빌드 때 tokens 값을 동봉하고 devDependency 라 tokens 만으로는 재발행되지 않음, WI-0076 구현 중 실측). CLAUDE.md 「npm 배포 참고」와 CI `pnpm check-changeset-mcp-tokens`(scripts/check-changeset-mcp-tokens.mjs)로 강제
+- 배치 6 완료(2026-10-26): PR #214 머지 4a5e185 · 규칙 PR #215 머지 8aaa9aa(tokens 를 올리는 changeset 에 mcp 동반 강제) · Release PR #216 머지 61ae674, publish run 40205738223 success, npm tokens · theme · ui-react · agentic-ui 1.8.1 · cli 1.7.0 · mcp 1.4.0, provenance 6/6. 발행본 재측정 5건 통과(불일치 0, 각 WI testplan). 남은 것: WI-0075 실제 터미널 대화형 1회(사람), WI-0074 d-rootonly 계열 rc 1 · npm 워크스페이스 init 의 pnpm 안내는 WI-0081 축, WI-0076 tokens 1.8.0 · 1.8.1 CSS dist 가 같아 버전 동반은 출처 줄로만 확인, WI-0078 pages.dev 응답의 커밋 해시는 따로 확인하지 않음
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

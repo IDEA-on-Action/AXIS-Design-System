@@ -1,6 +1,6 @@
 # WI-0075 릴리스 노트: 터미널이 아닌 곳에서 질문이 남아도 조용히 끝나지 않아요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #201 | 대상: `@axis-ds/cli` minor(배치 6 묶음에서 cli 1.7.0 예정). mcp · tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #201 | 대상: `@axis-ds/cli` minor 1.7.0(2026-10-26 발행, PR #214 머지 4a5e185 · Release PR #216 머지 61ae674, publish run 40205738223, provenance). mcp · tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -15,3 +15,8 @@
 
 - 판정은 stdin 이 터미널인지 하나예요. `printf 'x\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트는 이제 묻지 않고 `./dashboard` 로 진행해요. 값은 `--dir` · `-y` 로 주세요.
 - 다른 명령의 종료 코드는 바뀌지 않아요(14종 대조). 진입점이 명령을 끝까지 기다리도록 바뀌어, 앞으로 가드를 빠뜨린 질문이 생기면 rc 0 대신 rc 1(또는 Node 의 rc 13)로 드러나요.
+
+## 발행
+
+- `@axis-ds/cli` 1.7.0 (2026-10-26, PR #214 머지 4a5e185, Release PR #216 머지 61ae674, publish run 40205738223, provenance 6/6)
+- 발행본 재측정: 비TTY 매트릭스 60행이 README 「터미널이 아닌 곳에서 실행」 표와 일치, 1.6.2 음성 대조 무생성 재현(testplan 7절)
