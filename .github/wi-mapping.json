@@ -564,6 +564,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDYEgg",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0085",
+      "slug": "pinned-pnpm-guidance",
+      "issueNumber": 217,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDbTxI",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0086",
+      "slug": "has-dependency-unify",
+      "issueNumber": 218,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDbTyQ",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-26T00:30:00.000Z"

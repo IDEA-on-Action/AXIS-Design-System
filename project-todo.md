@@ -82,6 +82,8 @@
 | 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | ⏳ |
 | 95 | library 대표 선택이 상세 JSON 129개를 모두 읽음 · TW3 preset 테스트가 dist 진입점을 검사하지 않음(배치 6 검토 후속, 배치 6b) | WI-0083 (#212) | P18 | P3 | ⏳ |
 | 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
+| 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ⏳ |
+| 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -388,6 +390,7 @@
 - 재계획(2026-10-25, `/ax:todo plan` 6차, 사용자 결정): 순서 배치 6(진행 중, linked 1.8.1 · cli 1.7.0 · mcp 1.4.0) → 배치 6b WI-0080 · 0081(registry-core, WI-0074 상위 탐색 위, cli · mcp patch, 배치 6 발행 직후) → WI-0079 · 0082(디자인 오너 답 뒤, ontology 토큰 · ui-react Select, linked patch) → 배치 7 WI-0027. WI-0080 은 WI-0027 과 같은 tailwind-core.ts 를 고치므로 먼저 끝내 rebase 부담을 줄임. 디자인 오너 확인 문서: https://claude.ai/artifact/Vp7EKAQMwffXXoM4MZQmjx (레포 사본 docs/workitems/WI-0079-ontology-contrast-residual/)
 - 배치 6 검토 뒤 결정(2026-10-25, 사용자): cli 1.7.0 · mcp 1.4.0 은 minor 유지(동작 변경은 changeset · README 업그레이드 안내), WI-0078 은 빈 changeset 을 두지 않음(@ax/web 미발행), Windows Git Bash 판정은 README 안내 + 후속 WI-0084 실측, 테스트 보강 2건은 WI-0083 으로 배치 6b 에 포함
 - 릴리스 규칙(2026-10-25, 사용자 지시): `@axis-ds/tokens` 를 올리는 changeset 이 있으면 같은 발행에 `@axis-ds/mcp` patch 이상을 넣어요(mcp 가 빌드 때 tokens 값을 동봉하고 devDependency 라 tokens 만으로는 재발행되지 않음, WI-0076 구현 중 실측). CLAUDE.md 「npm 배포 참고」와 CI `pnpm check-changeset-mcp-tokens`(scripts/check-changeset-mcp-tokens.mjs)로 강제
+- 배치 6b 결정(2026-10-26, 브리프 · 반박 검토 뒤): WI-0080 은 findInstalledPackage 기준 상대 표본 · 제안(PnP · 미설치는 종전), `**` 가 `../` 를 넘는 판독과 절대경로 판독도 함께 고침, cwd 기준은 문서 한 줄. WI-0081 은 lockfile 을 앱 층 → 워크스페이스 루트까지(.git 에서 중단) 탐색, 루트에만 선언한 의존성은 인정하고 출처 표시(사용자 결정, 그런 앱의 check rc 1→0), packageManager 필드는 쓰지 않음, pnpm 고정 안내는 WI-0085(#217)로, tailwind-core hasDependency 일관화는 WI-0086(#218)로 분리, findInstalledPackage 에는 멈춤을 두지 않음, 단위 테스트는 cli 아래. 버전은 patch(cli 1.7.1 · mcp 1.4.1, 사용자 결정). registry-core 를 바꾸는 PR 은 changeset 에 cli · mcp 를 모두 두도록 CI 검사를 넓힘(사용자 결정). WI-0083 은 대표 후보만 읽기 · check-library-links 에 code 모양 판정 · 루트 스크립트에 테스트 연결 · makeConsumer 재사용(변이는 빌드 파이프라인 쪽) · TW4 는 testplan 기록, changeset 없음, 별도 PR. 순서 WI-0080 → 0081 → Release, WI-0083 독립
 - 배치 6 완료(2026-10-26): PR #214 머지 4a5e185 · 규칙 PR #215 머지 8aaa9aa(tokens 를 올리는 changeset 에 mcp 동반 강제) · Release PR #216 머지 61ae674, publish run 40205738223 success, npm tokens · theme · ui-react · agentic-ui 1.8.1 · cli 1.7.0 · mcp 1.4.0, provenance 6/6. 발행본 재측정 5건 통과(불일치 0, 각 WI testplan). 남은 것: WI-0075 실제 터미널 대화형 1회(사람), WI-0074 d-rootonly 계열 rc 1 · npm 워크스페이스 init 의 pnpm 안내는 WI-0081 축, WI-0076 tokens 1.8.0 · 1.8.1 CSS dist 가 같아 버전 동반은 출처 줄로만 확인, WI-0078 pages.dev 응답의 커밋 해시는 따로 확인하지 않음
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
