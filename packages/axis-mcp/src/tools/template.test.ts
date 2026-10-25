@@ -505,9 +505,27 @@ describe("handleCheckProject WI-0074: 호이스팅 모노레포의 설치본을 
     expect(await items(h)).toEqual([
       { name: "tailwind.config", severity: "warn", message: "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(body font-family: Arial) → 지우세요" },
       GLOBALS4,
-      { name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" },
+      // WI-0081: 루트에만 선언한 tailwindcss 를 워크스페이스 루트 선언으로 인정(종전 「필수 의존성 누락」 FAIL)
+      { name: "dependencies", severity: "warn", message: "권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)" },
       { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" },
     ]);
+  });
+
+  it("WI-0081: 루트에만 tailwindcss 를 선언한 d-rootonly 는 FAIL 이 없고, 워크스페이스가 아닌 상위의 선언은 FAIL 그대로(음성 대조)", async () => {
+    const d = await app("d", { "@axis-ds/tokens": "^1.8.0" }, TW4_CSS, ROOT);
+    const all = (await handleCheckProject({ targetDir: d })).results;
+    expect(all.filter((r) => r.severity === "fail")).toEqual([]);
+    expect(all.find((r) => r.name === "dependencies")).toEqual({
+      name: "dependencies",
+      severity: "warn",
+      message: "권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)",
+    });
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "unrelated", private: true, devDependencies: { tailwindcss: "^4.1.0" } });
+    expect((await handleCheckProject({ targetDir: d })).results.find((r) => r.name === "dependencies")).toEqual({
+      name: "dependencies",
+      severity: "fail",
+      message: "필수 의존성 누락: tailwindcss",
+    });
   });
 
   it("양성 대조: 루트 tokens 설치본 1.3.0 이면 상위에서 읽은 설치본으로 WARN", async () => {

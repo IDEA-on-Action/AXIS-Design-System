@@ -821,6 +821,43 @@ describe("axis init: lockfile 별 안내(AC5)", () => {
   });
 });
 
+// WI-0081: 앱 층에 lockfile 이 없으면 워크스페이스 루트(pnpm-workspace.yaml · package.json workspaces, .git 에서 중단)의 lockfile 을 따름
+describe("WI-0081: 워크스페이스 앱의 설치 · 애니메이션 안내", () => {
+  /** 루트(workspaces 여부 · lockfile) 아래 apps/web 을 만들고 그 경로를 돌려줍니다 */
+  async function wsApp(lock: string, workspaces = true): Promise<string> {
+    const root = await tmpDir();
+    await fs.writeJSON(path.join(root, "package.json"), workspaces ? { name: "root", private: true, workspaces: ["apps/*"] } : { name: "unrelated", private: true });
+    await fs.writeFile(path.join(root, lock), "");
+    const app = path.join(root, "apps", "web");
+    await fs.ensureDir(app);
+    return app;
+  }
+  const cases = [
+    { lock: "package-lock.json", install: "npm install", add: 'npm install "clsx@^2.1.1" "tailwind-merge@^2.6.0"', animate: "npm install tw-animate-css" },
+    { lock: "yarn.lock", install: "yarn install", add: 'yarn add "clsx@^2.1.1" "tailwind-merge@^2.6.0"', animate: "yarn add tw-animate-css" },
+  ];
+  for (const c of cases) {
+    it(`루트 ${c.lock}: 「설치:」 · package.json 없을 때 추가 명령 · 애니메이션 안내가 모두 ${c.install} 계열(종전 pnpm)`, async () => {
+      const withPkg = await wsApp(c.lock);
+      await fs.writeFile(path.join(withPkg, "package.json"), '{"name":"web"}\n');
+      expect((await runInitCli(withPkg)).logs).toContain(NO_INSTALL(c.install));
+
+      const noPkg = await wsApp(c.lock);
+      expect((await runInitCli(noPkg)).logs).toContain(`  설치: ${c.add}`);
+
+      const tw4 = await wsApp(c.lock);
+      await fs.writeFile(path.join(tw4, "package.json"), JSON.stringify({ name: "web", devDependencies: { tailwindcss: "^4" } }));
+      expect((await runInitCli(tw4)).logs.find((l) => l.includes("애니메이션:"))).toContain(`${c.animate} 뒤 전역 CSS`);
+    });
+  }
+
+  it("음성 대조: 워크스페이스가 아닌 상위의 package-lock.json 은 쓰지 않음 → pnpm 그대로", async () => {
+    const app = await wsApp("package-lock.json", false);
+    await fs.writeFile(path.join(app, "package.json"), '{"name":"web"}\n');
+    expect((await runInitCli(app)).logs).toContain(NO_INSTALL("pnpm install"));
+  });
+});
+
 describe("axis init: 쓸 수 없는 package.json(FR-3 · FR-4)", () => {
   const bad: { name: string; text: string; reason: RegExp }[] = [
     { name: "JSON 이 아님", text: "{ name: x }\n", reason: /JSON 을 읽을 수 없습니다/ },

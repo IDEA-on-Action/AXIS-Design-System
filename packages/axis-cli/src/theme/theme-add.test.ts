@@ -776,6 +776,25 @@ describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치
       expect(out).not.toContain("pnpm add");
     }
   });
+
+  it("WI-0081: 앱에 lockfile 이 없으면 워크스페이스 루트 lockfile(npm · yarn)을 따름, 워크스페이스가 아닌 상위는 pnpm 그대로(음성 대조)", async () => {
+    for (const [lock, verb, workspaces] of [
+      ["package-lock.json", "npm install", true],
+      ["yarn.lock", "yarn add", true],
+      ["package-lock.json", "pnpm add", false],
+    ] as const) {
+      const app0 = await project({ tokens: "1.2", layout: "src-app" });
+      const root = await fs.mkdtemp(path.join(path.dirname(app0), "axis-ws-"));
+      created.push(root);
+      await fs.writeJSON(path.join(root, "package.json"), workspaces ? { name: "root", private: true, workspaces: ["apps/*"] } : { name: "unrelated", private: true });
+      await fs.writeFile(path.join(root, lock), "");
+      const dir = path.join(root, "apps", "web");
+      await fs.move(app0, dir);
+      const { out } = await runAdd(["sample", "-d", dir]);
+      expect({ lock, workspaces, upgrade: out.includes(`업그레이드: ${verb} "@axis-ds/tokens@^1.6.0"`) }).toEqual({ lock, workspaces, upgrade: true });
+      expect({ lock, workspaces, theme: out.includes(`@axis-ds/theme 설치: ${verb} "@axis-ds/theme@^1.3.0"`) }).toEqual({ lock, workspaces, theme: true });
+    }
+  });
 });
 
 describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () => {

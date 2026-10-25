@@ -1306,6 +1306,28 @@ describe("add: 의존성 안내", () => {
     expect(text).not.toContain("class-variance-authority");
   });
 
+  it("WI-0081: 앱에 lockfile 이 없으면 워크스페이스 루트 lockfile 을 따름(npm · yarn), 워크스페이스가 아닌 상위는 pnpm(음성 대조)", async () => {
+    for (const [lock, verb, workspaces] of [
+      ["package-lock.json", "npm install", true],
+      ["yarn.lock", "yarn add", true],
+      ["package-lock.json", "pnpm add", false],
+    ] as const) {
+      const root = await tmpDir();
+      await fs.writeJSON(path.join(root, "package.json"), workspaces ? { name: "root", private: true, workspaces: ["apps/*"] } : { name: "unrelated", private: true });
+      await fs.writeFile(path.join(root, lock), "{}");
+      const dir = path.join(root, "apps", "web");
+      await fs.move(await project(), dir);
+      await fs.writeJSON(path.join(dir, "package.json"), { dependencies: { "class-variance-authority": "^0.7.0", tailwindcss: "^4.1.0" } });
+      const r = await add(dir, ["button", "toast"]);
+      expect({ lock, workspaces, code: r.code, cmd: r.out.join("\n").includes(`${verb} @radix-ui/react-slot @radix-ui/react-toast "clsx@^2.1.1" "tailwind-merge@^3.4.0"`) }).toEqual({
+        lock,
+        workspaces,
+        code: 0,
+        cmd: true,
+      });
+    }
+  });
+
   it("Tailwind 3(판정 불가 포함)이면 tailwind-merge ^2.6.0, lockfile 없으면 pnpm", async () => {
     const dir = await project();
     await fs.writeJSON(path.join(dir, "package.json"), { dependencies: {} });
