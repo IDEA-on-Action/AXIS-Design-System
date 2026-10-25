@@ -548,6 +548,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDWzlk",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0083",
+      "slug": "batch6-test-hardening",
+      "issueNumber": 212,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDYEe0",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0084",
+      "slug": "windows-gitbash-tty",
+      "issueNumber": 213,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDYEgg",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T09:30:00.000Z"

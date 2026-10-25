@@ -80,6 +80,8 @@
 | 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ⏳ |
 | 93 | `detectInstallCommand` 가 lockfile 을 한 층만 봐서 npm 워크스페이스에서 pnpm 명령을 안내함(WI-0074 브리프에서 분리) | WI-0081 (#210) | P18 | P3 | ⏳ |
 | 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | ⏳ |
+| 95 | library 대표 선택이 상세 JSON 129개를 모두 읽음 · TW3 preset 테스트가 dist 진입점을 검사하지 않음(배치 6 검토 후속, 배치 6b) | WI-0083 (#212) | P18 | P3 | ⏳ |
+| 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -378,6 +380,7 @@
 - 재계획(2026-10-25, `/ax:todo plan` 5차, 사용자 결정): 배치 6(WI-0074 · 0075 · 0076 · 0077 · 0078, 브리프 진행 중)과 WI-0079 후보 값 정리(읽기 전용, 디자인 오너 확인용)를 병렬로 진행. 두 작업은 고치는 파일이 겹치지 않고, WI-0076 이 MCP 토큰 데이터를 빌드 때 생성하게 되면 WI-0079 의 ontology 값 변경을 자동으로 따라가요. WI-0079 반영은 승인 뒤 배치 7(WI-0027) 앞. 2026-11-01 뒤 CDN 옛 slug 404 확인
 - 배치 6 결정(2026-10-25, 브리프 · 반박 검토 뒤 권장안 일괄 채택): WI-0075 비대화형은 성격별(기본값 있고 파괴적이지 않으면 기본값 진행 + 1줄 안내, 덮어쓰기 확인 · 기본값 없는 입력은 rc 1 + 플래그 안내), `template init -y` 추가(질문 기본값 + 비어 있지 않은 디렉터리 진행, apply -y 와 같은 뜻), 가드는 공통 헬퍼 + parseAsync 안전망, v0 · monet 도 rc 1 안내. WI-0076 은 tokens dist 에서 빌드 때 생성 · 일치 테스트, 기존 41경로 유지 + tokens 토큰 추가, 다크 값 필드, 출처 없는 5건 제거, 미발견 isError, 브랜드는 axis.get_brand 에 맡김, 생성본은 dist 에만. WI-0077 은 TW3 preset 에 기본 테두리색(fallback 포함) 추가, tailwind4 생성기는 borderColor 건너뛰기 명시, 문서는 낡은 서술과 ui-react README 정정. WI-0074 는 detectTailwind · installedVersion 만 상위 탐색(isPnpProject 가드), check 밖 호출지 전이 기록, brand-core 통합은 미룸. 인접 결함은 WI-0080(#209) · WI-0081(#210)로 분리. WI-0078 은 새 spec(양성 3 + 감지기 자기 검사) + 건수 가드 + a11y READY 를 로드 뒤 요소로. 순서 WI-0078 → 0076 → 0074 → 0075 → 0077, 한 Release PR 로 linked 1.8.1 · cli 1.7.0 · mcp 1.4.0
 - 재계획(2026-10-25, `/ax:todo plan` 6차, 사용자 결정): 순서 배치 6(진행 중, linked 1.8.1 · cli 1.7.0 · mcp 1.4.0) → 배치 6b WI-0080 · 0081(registry-core, WI-0074 상위 탐색 위, cli · mcp patch, 배치 6 발행 직후) → WI-0079 · 0082(디자인 오너 답 뒤, ontology 토큰 · ui-react Select, linked patch) → 배치 7 WI-0027. WI-0080 은 WI-0027 과 같은 tailwind-core.ts 를 고치므로 먼저 끝내 rebase 부담을 줄임. 디자인 오너 확인 문서: https://claude.ai/artifact/Vp7EKAQMwffXXoM4MZQmjx (레포 사본 docs/workitems/WI-0079-ontology-contrast-residual/)
+- 배치 6 검토 뒤 결정(2026-10-25, 사용자): cli 1.7.0 · mcp 1.4.0 은 minor 유지(동작 변경은 changeset · README 업그레이드 안내), WI-0078 은 빈 changeset 을 두지 않음(@ax/web 미발행), Windows Git Bash 판정은 README 안내 + 후속 WI-0084 실측, 테스트 보강 2건은 WI-0083 으로 배치 6b 에 포함
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보
