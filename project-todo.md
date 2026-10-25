@@ -77,6 +77,8 @@
 | 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ⏳ |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | ⏳ |
 | 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ⏳ |
+| 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ⏳ |
+| 93 | `detectInstallCommand` 가 lockfile 을 한 층만 봐서 npm 워크스페이스에서 pnpm 명령을 안내함(WI-0074 브리프에서 분리) | WI-0081 (#210) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -373,6 +375,7 @@
 - 재계획(2026-10-25, `/ax:todo plan` 4차, 사용자 결정): 배치 5 · 6 순서를 바꿔 ② 머지 · 발행 뒤 **배치 6 을 먼저** 해요(작은 결함을 cli · mcp patch 로 먼저 내고, WI-0027 은 PRD 갱신 뒤 그 위에서 `runCheck` 를 확장해 rebase 부담을 큰 작업 쪽에 두지 않음). WI-0076 은 ② 가 tokens 값을 바꾸므로 ② 뒤가 전제. 새 WI-0078(#206) library 상세 E2E 스모크를 배치 6 에 추가. 배치 6 = WI-0074 · 0075 · 0076 · 0077 · 0078, 배치 7 = WI-0027(종전 배치 5)
 - 배치 4 뒤 결정(2026-10-25, 사용자): ① ontology 남은 대비 미달은 새 WI-0079(#208)로 등록하고 디자인 오너 확인을 받아 배치 7(WI-0027) 앞에서 반영 ② Radix 업스트림 이슈는 보류(초안은 `docs/workitems/WI-0073-tooltip-scroll-persistence/radix-issue-draft.md`, 게시 전 중복 검색 필요) ③ pages.dev CDN 에 남은 옛 slug 상세 JSON(예: `/library/components/accordion.json`, s-maxage 7일)은 자연 만료를 기다리고 2026-11-01 뒤 404 를 한 번 확인 ④ a11y E2E 236건으로 PR CI 15~17분(a11y 8.7분)은 지금대로 유지
 - 재계획(2026-10-25, `/ax:todo plan` 5차, 사용자 결정): 배치 6(WI-0074 · 0075 · 0076 · 0077 · 0078, 브리프 진행 중)과 WI-0079 후보 값 정리(읽기 전용, 디자인 오너 확인용)를 병렬로 진행. 두 작업은 고치는 파일이 겹치지 않고, WI-0076 이 MCP 토큰 데이터를 빌드 때 생성하게 되면 WI-0079 의 ontology 값 변경을 자동으로 따라가요. WI-0079 반영은 승인 뒤 배치 7(WI-0027) 앞. 2026-11-01 뒤 CDN 옛 slug 404 확인
+- 배치 6 결정(2026-10-25, 브리프 · 반박 검토 뒤 권장안 일괄 채택): WI-0075 비대화형은 성격별(기본값 있고 파괴적이지 않으면 기본값 진행 + 1줄 안내, 덮어쓰기 확인 · 기본값 없는 입력은 rc 1 + 플래그 안내), `template init -y` 추가(질문 기본값 + 비어 있지 않은 디렉터리 진행, apply -y 와 같은 뜻), 가드는 공통 헬퍼 + parseAsync 안전망, v0 · monet 도 rc 1 안내. WI-0076 은 tokens dist 에서 빌드 때 생성 · 일치 테스트, 기존 41경로 유지 + tokens 토큰 추가, 다크 값 필드, 출처 없는 5건 제거, 미발견 isError, 브랜드는 axis.get_brand 에 맡김, 생성본은 dist 에만. WI-0077 은 TW3 preset 에 기본 테두리색(fallback 포함) 추가, tailwind4 생성기는 borderColor 건너뛰기 명시, 문서는 낡은 서술과 ui-react README 정정. WI-0074 는 detectTailwind · installedVersion 만 상위 탐색(isPnpProject 가드), check 밖 호출지 전이 기록, brand-core 통합은 미룸. 인접 결함은 WI-0080(#209) · WI-0081(#210)로 분리. WI-0078 은 새 spec(양성 3 + 감지기 자기 검사) + 건수 가드 + a11y READY 를 로드 뒤 요소로. 순서 WI-0078 → 0076 → 0074 → 0075 → 0077, 한 Release PR 로 linked 1.8.1 · cli 1.7.0 · mcp 1.4.0
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

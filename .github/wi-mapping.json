@@ -524,6 +524,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDWM_E",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0080",
+      "slug": "check-content-hoisted",
+      "issueNumber": 209,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDWo2k",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0081",
+      "slug": "install-command-lockfile-upward",
+      "issueNumber": 210,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDWo5A",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T09:30:00.000Z"
