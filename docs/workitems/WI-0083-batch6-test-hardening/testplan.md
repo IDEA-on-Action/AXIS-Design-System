@@ -80,3 +80,13 @@
 ## 6. 발행 영향
 
 changeset 없음. tokens `files` 는 `["dist"]` 이고 dist 바이트가 같아요(5절). 나머지 바뀐 파일(apps/web/e2e · scripts · 루트 package.json · frontend.yml · docs)은 발행 패키지 밖이에요. check-changeset-mcp-tokens 통과.
+
+## 7. 검토 반영 (2026-10-26, minor 3건)
+
+| 지적 | 판정 | 조치 · 측정 |
+|------|------|-------------|
+| check-library-links.test 의 `symlinkSync` 에 type 이 없어 Windows 로컬에서 EPERM 가능 | 맞음 | 디렉터리는 `'junction'`, 파일(_headers · favicon.svg · manifest.json · schema.json)은 복사로 바꿈. WSL 에서 28/28. Windows 실행은 미검증 |
+| VICTIM 을 `axis-tool-call-card` 로 박음 | 맞음 | index 에서 「대표가 아니면서 code.files 가 1개 이상인 마지막 항목」을 고르고 없으면 원인 문구로 멈춤. 지금 데이터에서 고른 값은 axis-tool-call-card(종전과 같음). 변이 V1(조건을 `> 99999` 로) 에서 「코드 파일이 있는 항목이 없어요」 1건으로 실패(ENOENT 아님) |
+| cjs-preset.test 의 tsup 인자 공백 분할 · 후처리 단계 재현 범위 | 맞음(현재 동작은 정상) | makeConsumer 가 빌드 전에 따옴표 · 이스케이프를 막고, build 스크립트 테스트가 단계 목록 전체(build-tokens · tsup · cjs-preset)를 단언. 변이 V2(build 끝에 `node scripts/extra.mjs` 추가)는 「build 단계가 바뀌었어요」 1건 실패(22 pass), V3(tsup 인자에 작은따옴표)는 빌드 전에 「따옴표 · 이스케이프」 문구로 멈춤. 기준 23/23. 「사본 dist」라는 점은 파일 머리말 14행에 이미 적혀 있어 문구는 그대로 둠 |
+
+재게이트: turbo lint 7 · type-check 11 · build 8 · test 7(tokens 530 pass) 모두 `--force` Cached 0 rc 0. frontend.yml 단계 11개 rc 0(check-library-links 28/28). 생성물 r/ 2개(version) · templates 5개(updatedAt) 되돌림. 바뀐 파일이 테스트 2개뿐이고 E2E 가 읽는 코드(apps/web/e2e)는 그대로라 E2E 는 다시 돌리지 않았어요.

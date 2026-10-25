@@ -25,6 +25,8 @@
 - [x] E2E library 4 · a11y 236 `E2E_SERVER=static` workers 1 (AC5)
 - [x] dist/css sha256 불변 · tailwind4.test 통과 · 브라우저 1회 기록 (AC8)
 
+- [x] 검토 minor 3건 반영(symlink 종류 · 변이 대상 선택 · tsup 단계 가드), 변이 V1 · V2 · V3 실패 확인, 재게이트 (testplan 7절)
+
 ## 마무리
 - [ ] PR 생성 · CI 통과 · 머지 (push · PR 은 이 작업 범위 밖)
 - [ ] 머지 뒤 project-todo ✅ · wi-mapping lastStatus ✅ · `gh issue close 212`

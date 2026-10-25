@@ -190,6 +190,8 @@ function makeConsumer(work, label, patch) {
   writeFileSync(join(copy, 'tsconfig.json'), JSON.stringify(tsconfig));
   symlinkSync(join(pkgDir, 'node_modules'), join(copy, 'node_modules'), 'junction');
   assert.ok(TSUP_STEP >= 0, `build 스크립트에 tsup 단계가 없어요: ${BUILD_STEPS.join(' && ')}`);
+  // 아래 공백 분할은 따옴표 · 이스케이프가 없는 인자에서만 맞다(빌드 실패 전에 원인을 밝혀 멈춤)
+  assert.doesNotMatch(BUILD_STEPS[TSUP_STEP], /["'`\\]/, `tsup 인자에 따옴표 · 이스케이프가 있어 공백 분할이 깨져요: ${BUILD_STEPS[TSUP_STEP]}`);
   const build = spawnSync(process.execPath, [tsupCli, ...BUILD_STEPS[TSUP_STEP].split(/\s+/).slice(1)], {
     cwd: copy, encoding: 'utf-8',
   });
@@ -284,6 +286,10 @@ describe('CommonJS preset 진입점 (패키지 사본에서 빌드 · Tailwind 3
   test('build 스크립트: tsup 다음에 CommonJS 후처리가 돈다 (사본 빌드가 이 순서를 따름)', () => {
     assert.ok(TSUP_STEP >= 0, BUILD_STEPS.join(' && '));
     assert.ok(CJS_STEP > TSUP_STEP, `node scripts/cjs-preset.mjs 가 tsup 뒤에 없어요: ${BUILD_STEPS.join(' && ')}`);
+    // 사본 빌드(makeConsumer)는 tsup · cjs-preset 두 단계만 재현한다(tsup 인자의 따옴표는 makeConsumer 가 막음).
+    // 단계가 늘거나 바뀌면 사본 dist 가 실제 build 와 달라질 수 있으므로 여기서 멈춘다
+    const KNOWN = ['node build-tokens.mjs', BUILD_STEPS[TSUP_STEP], 'node scripts/cjs-preset.mjs'];
+    assert.deepEqual(BUILD_STEPS, KNOWN, `build 단계가 바뀌었어요. 사본 빌드(makeConsumer)가 새 단계를 재현하는지 확인하세요: ${BUILD_STEPS.join(' && ')}`);
   });
 
   for (const e of DIST_ENTRIES) {

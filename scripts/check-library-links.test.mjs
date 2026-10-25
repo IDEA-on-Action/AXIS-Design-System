@@ -12,11 +12,13 @@ import fs from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SCRIPT = join(ROOT, 'scripts', 'check-library-links.mjs');
 const LIBRARY = join(ROOT, 'apps', 'web', 'public', 'library');
 const APP = join(ROOT, 'apps', 'web', 'src', 'app');
+const { pickLibraryReps } = createRequire(import.meta.url)(join(ROOT, 'apps', 'web', 'e2e', 'library-reps.cjs'));
 
 const tmpDirs = [];
 after(() => { for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true }); });
@@ -27,8 +29,12 @@ function copyLibrary() {
   // routeExists 는 <library>/.. 아래 정적 파일도 실재로 보므로 public 구조(public/library)를 유지한다
   const lib = join(dir, 'public', 'library');
   fs.cpSync(LIBRARY, lib, { recursive: true });
-  for (const f of fs.readdirSync(join(LIBRARY, '..'))) {
-    if (f !== 'library') fs.symlinkSync(join(LIBRARY, '..', f), join(dir, 'public', f));
+  // 디렉터리는 junction(Windows 에서 권한 없이 만들 수 있음), 파일은 복사한다(파일 symlink 는 Windows 에서 권한이 필요)
+  for (const e of fs.readdirSync(join(LIBRARY, '..'), { withFileTypes: true })) {
+    if (e.name === 'library') continue;
+    const src = join(LIBRARY, '..', e.name);
+    if (e.isDirectory()) fs.symlinkSync(src, join(dir, 'public', e.name), 'junction');
+    else fs.copyFileSync(src, join(dir, 'public', e.name));
   }
   return lib;
 }
@@ -45,8 +51,22 @@ function edit(lib, id, fn) {
   fs.writeFileSync(f, JSON.stringify(j));
 }
 
-/** 대표(e2e/library-reps.cjs)가 아닌 마지막 항목 */
-const VICTIM = 'axis-tool-call-card';
+/**
+ * 변이 대상: 대표(e2e/library-reps.cjs)가 아니면서 코드 파일이 1개 이상 있는 마지막 항목.
+ * id 를 박지 않고 index 에서 고른다(데이터가 바뀌어도 ENOENT 가 아니라 이 규칙으로 다시 고름). 없으면 멈춘다
+ */
+function pickVictim() {
+  const repIds = new Set(Object.values(pickLibraryReps(join(LIBRARY, '..'))).map((r) => r.id));
+  const index = JSON.parse(fs.readFileSync(join(LIBRARY, 'index.json'), 'utf-8'));
+  const victim = index.components.findLast((e) => {
+    if (repIds.has(e.id)) return false;
+    const j = JSON.parse(fs.readFileSync(join(LIBRARY, 'components', `${e.id}.json`), 'utf-8'));
+    return Array.isArray(j.code?.files) && j.code.files.length > 0;
+  });
+  assert.ok(victim, '대표가 아니면서 코드 파일이 있는 항목이 없어요 (code 모양 변이가 성립하지 않음)');
+  return victim.id;
+}
+const VICTIM = pickVictim();
 
 test('양성 대조: 원본 사본은 위반 0건이고 컴포넌트 파일을 검사한다', () => {
   const { status, out } = run(copyLibrary());
