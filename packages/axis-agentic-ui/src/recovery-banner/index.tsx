@@ -65,7 +65,7 @@ export function RecoveryBanner({
           {onRetry && (
             <button
               onClick={onRetry}
-              aria-describedby={descId}
+              aria-describedby={description ? descId : undefined}
               className="px-3 py-1.5 text-sm font-medium rounded-md bg-[var(--axis-button-destructive-bg-default)] text-[var(--axis-button-destructive-text-default)] hover:bg-[var(--axis-button-destructive-bg-hover)] transition-colors"
             >
               재시도

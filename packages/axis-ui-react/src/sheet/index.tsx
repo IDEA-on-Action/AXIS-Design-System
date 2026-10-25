@@ -3,11 +3,49 @@ import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "../utils";
 
-/** 화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소 */
-const Sheet = SheetPrimitive.Root;
+/**
+ * 화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소. 열림/닫힘 상태를 관리한다.
+ *
+ * Radix 는 닫힌 동안에도 트리거에 aria-controls 를 두는데, 콘텐츠는 열릴 때만 DOM 에 있어
+ * 없는 id 를 가리킨다(axe aria-valid-attr-value, WI-0069). 열림 상태를 이 래퍼가 알고 있다가
+ * 닫힌 동안에는 트리거의 aria-controls 를 뺀다. open · defaultOpen · onOpenChange 는 그대로 통과한다.
+ */
+const SheetOpenContext = React.createContext<boolean | null>(null);
 
-/** 시트를 열기 위한 트리거 버튼 컴포넌트 */
-const SheetTrigger = SheetPrimitive.Trigger;
+function Sheet({
+  open: openProp,
+  defaultOpen,
+  onOpenChange,
+  ...props
+}: React.ComponentProps<typeof SheetPrimitive.Root>) {
+  const [uncontrolledOpen, setUncontrolledOpen] = React.useState(defaultOpen ?? false);
+  const isControlled = openProp !== undefined;
+  const open = isControlled ? openProp : uncontrolledOpen;
+  const handleOpenChange = React.useCallback(
+    (next: boolean) => {
+      if (!isControlled) setUncontrolledOpen(next);
+      onOpenChange?.(next);
+    },
+    [isControlled, onOpenChange]
+  );
+  return (
+    <SheetOpenContext.Provider value={open}>
+      <SheetPrimitive.Root open={open} onOpenChange={handleOpenChange} {...props} />
+    </SheetOpenContext.Provider>
+  );
+}
+Sheet.displayName = "Sheet";
+
+/** 시트를 열기 위한 트리거 버튼 컴포넌트. 닫힌 동안에는 aria-controls 를 두지 않는다. */
+const SheetTrigger = React.forwardRef<
+  React.ElementRef<typeof SheetPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof SheetPrimitive.Trigger>
+>((props, ref) => {
+  const open = React.useContext(SheetOpenContext);
+  // Sheet 밖에서 쓰면(null) Radix 동작 그대로. 사용자가 넘긴 aria-controls 는 뒤에서 덮어쓴다
+  return <SheetPrimitive.Trigger ref={ref} {...(open === false ? { "aria-controls": undefined } : {})} {...props} />;
+});
+SheetTrigger.displayName = "SheetTrigger";
 
 /** 시트를 닫기 위한 닫기 버튼 컴포넌트 */
 const SheetClose = SheetPrimitive.Close;

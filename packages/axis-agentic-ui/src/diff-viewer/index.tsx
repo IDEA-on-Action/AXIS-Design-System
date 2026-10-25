@@ -120,11 +120,15 @@ export function DiffViewer({
           {filename && (
             <code className="text-xs font-mono text-[var(--axis-text-primary)] truncate">{filename}</code>
           )}
-          <span className="text-xs text-[var(--axis-diff-added)]" aria-label={`${addedCount}줄 ${DIFF_LABELS.added}`}>
-            +{addedCount}
+          {/* 역할 없는 span 의 aria-label 은 보조기술이 읽지 않는다(axe aria-prohibited-attr, WI-0069).
+              보이는 기호는 숨기고 읽을 문장은 sr-only 로 둔다 */}
+          <span className="text-xs text-[var(--axis-diff-added)]">
+            <span aria-hidden="true">+{addedCount}</span>
+            <span className="sr-only">{`${addedCount}줄 ${DIFF_LABELS.added}`}</span>
           </span>
-          <span className="text-xs text-[var(--axis-diff-removed)]" aria-label={`${removedCount}줄 ${DIFF_LABELS.removed}`}>
-            -{removedCount}
+          <span className="text-xs text-[var(--axis-diff-removed)]">
+            <span aria-hidden="true">-{removedCount}</span>
+            <span className="sr-only">{`${removedCount}줄 ${DIFF_LABELS.removed}`}</span>
           </span>
         </div>
         <div className="flex items-center gap-1 bg-[var(--axis-surface-tertiary)] rounded-md p-0.5">

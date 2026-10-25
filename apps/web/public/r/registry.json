@@ -58,7 +58,7 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "AXIS 다이얼로그 컴포넌트 - 모달 UI",
-      "sha256": "17453188103044027ccb4379bc0f8163a73b4edb7f119e1144831c60a1c5eb16"
+      "sha256": "a6c0c65bae56587e78f9b53b92f6949472b51c81722c3d31ee1c76645ec7d94b"
     },
     {
       "name": "select",
@@ -114,7 +114,7 @@
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "sha256": "cd6719280a88c471f6d1e20493f07b5d1055d37bf899129462ac89df6dfe883c"
+      "sha256": "739536d14d7a68452553c5455af1750beaeff9defcc3d97e00148d06f5bd40fc"
     },
     {
       "name": "agentic-thinking-indicator",
@@ -135,7 +135,7 @@
       "type": "registry:ui",
       "title": "Recovery Banner",
       "description": "에러 복구 배너 컴포넌트",
-      "sha256": "b4f6fe103ee7eab0b4e6684192a40e58e55dcc86d6dec6b285cb5a6d72b57560"
+      "sha256": "8c5db2ca862c68c160a269a0375617b5ceac0c134494de785d34fea9d8cafed8"
     },
     {
       "name": "agentic-agent-avatar",
@@ -163,7 +163,7 @@
       "type": "registry:ui",
       "title": "Message Bubble",
       "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)",
-      "sha256": "9833745acfd486a8375e4ede01f51e9e440dd3f7f06a52850c82f951d14b3fec"
+      "sha256": "10137195374ecc5db3aba5809eb1229b8fe3c4b3e64a00e1427ed0a5d52f6408"
     },
     {
       "name": "agentic-feedback-buttons",
@@ -191,7 +191,7 @@
       "type": "registry:ui",
       "title": "Code Block",
       "description": "코드 표시 + 복사 버튼 컴포넌트",
-      "sha256": "12f888378fac091cc2568b454eb275f0ed8ddb69d3533a85cc70bc960bbb2d4b"
+      "sha256": "117afbae6f969419ef3693d90cd22afc55cbb9ee3693d838a6cd15fb2b80fddf"
     },
     {
       "name": "agentic-plan-card",
@@ -212,7 +212,7 @@
       "type": "registry:ui",
       "title": "Diff Viewer",
       "description": "코드 변경사항 비교 표시 컴포넌트",
-      "sha256": "1c3d2b81011f6522b0d37e039c0b1ccf597c0eca0aa1a4749331142ae0625ca2"
+      "sha256": "7bc93e51a119357882bf695ea52d98810e8a5076f1ec81402dd65e805ea6dfb5"
     }
   ]
 }

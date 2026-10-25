@@ -53,11 +53,11 @@ export const CONTRAST_PAIRS = [
   // PlanCard 승인 버튼: WI-0029 에서 status-success 대신 전용 component 토큰(기본 green.700 · green.800)
   { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-bg', min: TEXT, sameString: true, where: 'plan-card:179' },
   { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-hover-bg', min: TEXT, sameString: true, where: 'plan-card:179 hover' },
-  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: NON_TEXT, where: 'step-timeline:68 · 76 (점 위 아이콘)' },
+  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: NON_TEXT, where: 'step-timeline:107 · 115 (점 위 아이콘)' },
   { fg: '--axis-status-running-contrast', bg: '--axis-status-running', min: TEXT, sameString: true, where: 'run-progress:31' },
   { fg: '--axis-status-error-contrast', bg: '--axis-status-error', min: TEXT, sameString: true, where: 'run-progress:33' },
   { fg: '--axis-status-neutral-muted-contrast', bg: '--axis-status-neutral-muted', min: TEXT, sameString: true, where: 'run-progress:30' },
-  { fg: '--axis-agent-message-user-text', bg: '--axis-agent-message-user-bg', min: TEXT, sameString: true, where: 'message-bubble:30' },
+  { fg: '--axis-agent-message-user-text', bg: '--axis-agent-message-user-bg', min: TEXT, sameString: true, where: 'message-bubble:58' },
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-tool', min: TEXT, where: 'agent-avatar:35 · 80' },
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-assistant', min: TEXT, where: 'agent-avatar:34 · 80' },
   { fg: '--axis-agent-avatar-text', bg: '--axis-agent-avatar-system', min: TEXT, where: 'agent-avatar:36 · 80' },
@@ -76,8 +76,8 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-status-neutral', bg: '--axis-surface-default', min: TEXT, where: 'plan-card:61 · tool-call-card:32' },
   // 부모 바탕이 surface-default 가 아닌 곳 (리뷰 f2: 이전에는 surface-default 로 가정해 여유를 크게 셌다)
   // DiffViewer 헤더 +N / -N: 헤더 div 가 surface-secondary
-  { fg: '--axis-diff-added', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:123 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:123' } },
-  { fg: '--axis-diff-removed', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:126 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:126' } },
+  { fg: '--axis-diff-added', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:125 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:125' } },
+  { fg: '--axis-diff-removed', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:129 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:129' } },
   // RecoveryBanner 아이콘: 배너 루트가 surface-error. 아이콘이지만 이전 행과 같이 글자 기준(4.5)으로 둔다
   { fg: '--axis-status-error', bg: '--axis-surface-error', min: TEXT, where: 'recovery-banner:42 (루트 :34)', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:42' } },
   // CodeBlock 복사 완료 아이콘: 헤더(surface-secondary) 안 버튼, hover 때는 버튼이 surface-tertiary

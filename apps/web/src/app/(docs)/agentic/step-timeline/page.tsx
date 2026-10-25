@@ -23,6 +23,20 @@ const stepTimelineProps = [
     description: '타임라인 방향',
   },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
+  { name: 'locale', type: 'string', default: '-', description: '시각 표시 로케일(없으면 실행 환경 기본값)' },
+  {
+    name: 'timeZone',
+    type: 'string',
+    default: '-',
+    description:
+      '시각 표시 시간대(예: "Asia/Seoul"). locale 과 함께 주면 서버 렌더부터 시각을 표시하고, 아니면 하이드레이션 뒤에 표시해요',
+  },
+  {
+    name: 'formatTime',
+    type: '(date: Date) => string',
+    default: '-',
+    description: '시각 문자열을 직접 만드는 함수. 서버와 브라우저에서 같은 값을 돌려줘야 해요(서버 컴포넌트에서는 못 넘김)',
+  },
 ]
 
 const timelineStepProps = [
@@ -133,6 +147,9 @@ export default function StepTimelinePage() {
         </p>
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li key={0}>{'단계 상태가 aria-label / 텍스트로 전달됩니다.'}</li>
+          <li key={1}>
+            {'시각은 <time dateTime> 으로 표시하고, locale · timeZone 을 함께 주지 않으면 하이드레이션 뒤에 채워요(하이드레이션 오류 방지).'}
+          </li>
         </ul>
       </DocSection>
     </DocPageLayout>

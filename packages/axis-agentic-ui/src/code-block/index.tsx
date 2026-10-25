@@ -90,9 +90,12 @@ export function CodeBlock({
         </button>
       </div>
 
-      {/* 코드 본문 */}
+      {/* 코드 본문: 스크롤 영역이라 키보드로 포커스해 스크롤할 수 있게 한다(WCAG 2.1.1, axe scrollable-region-focusable, WI-0069) */}
       <div
-        className="overflow-auto"
+        role="region"
+        tabIndex={0}
+        aria-label={filename ? `${filename} 코드` : language ? `${language} 코드` : "코드"}
+        className="overflow-auto rounded-b-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--axis-border-focus)]"
         style={maxHeight ? { maxHeight } : undefined}
       >
         <pre className="p-3 text-sm leading-relaxed">

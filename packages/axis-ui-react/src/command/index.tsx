@@ -1,5 +1,6 @@
 import * as React from "react";
-import { Command as CommandPrimitive } from "cmdk";
+import { Command as CommandPrimitive, useCommandState } from "cmdk";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "../utils";
 
 /**
@@ -102,17 +103,30 @@ const CommandGroup = React.forwardRef<
 ));
 CommandGroup.displayName = "CommandGroup";
 
-/** 명령어 그룹 사이의 시각적 구분선 */
+/**
+ * 명령어 그룹 사이의 시각적 구분선.
+ *
+ * cmdk 의 Separator 는 role="separator" 를 props 뒤에 고정해 listbox(CommandList) 안에 두면
+ * 허용되지 않는 자식이 된다(axe aria-required-children, WI-0069). 구분선은 시각 장식이라
+ * 역할 없이 보조기술에서 숨기고, 검색 중에는 숨기는 cmdk 동작(alwaysRender 로 끔)은 그대로 따른다.
+ */
 const CommandSeparator = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Separator>
->(({ className, ...props }, ref) => (
-  <CommandPrimitive.Separator
-    ref={ref}
-    className={cn("-mx-1 h-px bg-[var(--axis-border-default)]", className)}
-    {...props}
-  />
-));
+>(({ className, alwaysRender, asChild, ...props }, ref) => {
+  const searching = useCommandState((state) => state.search !== "");
+  if (searching && !alwaysRender) return null;
+  const Comp = asChild ? Slot : "div";
+  return (
+    <Comp
+      ref={ref}
+      aria-hidden="true"
+      cmdk-separator=""
+      className={cn("-mx-1 h-px bg-[var(--axis-border-default)]", className)}
+      {...props}
+    />
+  );
+});
 CommandSeparator.displayName = "CommandSeparator";
 
 /** 명령어 팔레트의 개별 선택 가능한 항목 */

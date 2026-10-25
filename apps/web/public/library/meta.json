@@ -106,12 +106,12 @@
     {
       "id": "accessible",
       "name": "accessible",
-      "count": 22
+      "count": 24
     },
     {
       "id": "stateful",
       "name": "stateful",
-      "count": 9
+      "count": 12
     },
     {
       "id": "container",

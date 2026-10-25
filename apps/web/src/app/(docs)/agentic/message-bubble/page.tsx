@@ -33,6 +33,20 @@ const messageBubbleProps = [
   { name: 'actions', type: 'React.ReactNode', default: '-', description: '메시지 액션 버튼' },
   { name: 'metadata', type: 'string', default: '-', description: '메타데이터 (모델명 등)' },
   { name: 'className', type: 'string', default: '-', description: '추가 CSS 클래스' },
+  { name: 'locale', type: 'string', default: '"ko-KR"', description: '시각 표시 로케일' },
+  {
+    name: 'timeZone',
+    type: 'string',
+    default: '-',
+    description:
+      '시각 표시 시간대(예: "Asia/Seoul"). 지정하면 서버 렌더부터 시각을 표시하고, 없으면 브라우저 시간대로 하이드레이션 뒤에 표시해요',
+  },
+  {
+    name: 'formatTime',
+    type: '(date: Date) => string',
+    default: '-',
+    description: '시각 문자열을 직접 만드는 함수. 서버와 브라우저에서 같은 값을 돌려줘야 해요(서버 컴포넌트에서는 못 넘김)',
+  },
 ]
 
 const basicExample = `import { MessageBubble } from '@axis-ds/agentic-ui'
@@ -178,6 +192,10 @@ export default function MessageBubblePage() {
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li key={0}>{'작성자가 접근 가능한 이름으로 노출됩니다.'}</li>
           <li key={1}>{'장식 요소는 aria-hidden으로 처리됩니다.'}</li>
+          <li key={2}>{'전송 상태 아이콘은 role="img" 와 aria-label(전송 중 · 전송됨 · 전송 실패)로 읽혀요.'}</li>
+          <li key={3}>
+            {'시각은 timeZone 을 주지 않으면 하이드레이션 뒤에 브라우저 시간대로 채워요(서버와 브라우저 시간대가 달라 생기는 하이드레이션 오류 방지).'}
+          </li>
         </ul>
       </DocSection>
     </DocPageLayout>

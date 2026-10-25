@@ -14,7 +14,7 @@
  *
  * 넣지 않는 것:
  *   - 루트 배럴(index) · constants: 서버 컴포넌트가 루트에서 import 해도 서버 렌더 가능 컴포넌트
- *     11개가 서버에서 그대로 렌더되어야 합니다. 배럴에 지시문을 두면 전부 클라이언트 참조가 됩니다.
+ *     9개가 서버에서 그대로 렌더되어야 합니다. 배럴에 지시문을 두면 전부 클라이언트 참조가 됩니다.
  *   - 사용자가 넘긴 핸들러를 DOM 에 그대로 전달만 하는 파일(onClick={onRetry} 등):
  *     서버 컴포넌트에서 핸들러를 넘기는 것 자체가 RSC 계약상 불가하고, 핸들러 없이 쓰면 서버에서 렌더됩니다.
  *
@@ -43,8 +43,16 @@ export const CLIENT_MODULES = [
     reason: "useState(선택한 피드백) + like · dislike onClick 인라인 핸들러",
   },
   {
+    path: "message-bubble/index",
+    reason: "useSyncExternalStore(하이드레이션 뒤에 시각 표시, 서버와 브라우저 시간대 차이로 생기는 불일치 방지, WI-0069)",
+  },
+  {
     path: "source-panel/index",
     reason: "useState(펼침 상태) + 토글 onClick 인라인 핸들러",
+  },
+  {
+    path: "step-timeline/index",
+    reason: "useSyncExternalStore(하이드레이션 뒤에 시각 표시, 서버와 브라우저 시간대 차이로 생기는 불일치 방지, WI-0069)",
   },
   {
     path: "streaming-text/index",

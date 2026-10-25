@@ -16,6 +16,32 @@ export interface StepTimelineProps {
   steps: TimelineStep[];
   orientation?: "vertical" | "horizontal";
   className?: string;
+  /**
+   * 시각 표시 로케일. 없으면 실행 환경의 기본 로케일입니다(이전과 같음). formatTime 이 있으면 쓰지 않습니다.
+   */
+  locale?: string;
+  /**
+   * 시각 표시 시간대(IANA 이름, 예: "Asia/Seoul"). locale 과 함께 지정하면 서버 렌더와 브라우저 결과가 같아
+   * 첫 렌더부터 시각을 표시합니다. 둘 중 하나라도 없으면 실행 환경 값에 따라 달라지므로, 서버 렌더 ·
+   * 하이드레이션 첫 렌더에서는 비워 두었다가 하이드레이션 뒤에 채웁니다(하이드레이션 불일치 방지, WI-0069).
+   */
+  timeZone?: string;
+  /**
+   * 시각 문자열을 직접 만드는 함수. 지정하면 locale · timeZone 대신 이 결과를 첫 렌더부터 씁니다.
+   * 서버 렌더와 브라우저에서 같은 값을 돌려줘야 합니다. 함수라서 서버 컴포넌트에서는 넘길 수 없습니다.
+   */
+  formatTime?: (date: Date) => string;
+}
+
+const noopSubscribe = () => () => {};
+
+/** 하이드레이션이 끝났는지. 서버 렌더와 하이드레이션 첫 렌더는 false, 그 뒤와 클라이언트 전용 렌더는 true */
+function useHydrated(): boolean {
+  return React.useSyncExternalStore(
+    noopSubscribe,
+    () => true,
+    () => false
+  );
 }
 
 /**
@@ -25,8 +51,21 @@ export function StepTimeline({
   steps,
   orientation = "vertical",
   className,
+  locale,
+  timeZone,
+  formatTime,
 }: StepTimelineProps) {
   const isVertical = orientation === "vertical";
+  const hydrated = useHydrated();
+  // 서버와 브라우저에서 같은 결과가 보장될 때만 첫 렌더부터 시각을 쓴다
+  const deterministic = formatTime !== undefined || (locale !== undefined && timeZone !== undefined);
+  const formatStepTime = (date: Date): string => {
+    if (!deterministic && !hydrated) return "";
+    if (formatTime) return formatTime(date);
+    return timeZone !== undefined
+      ? date.toLocaleTimeString(locale, { timeZone })
+      : date.toLocaleTimeString(locale);
+  };
 
   return (
     <div
@@ -92,7 +131,7 @@ export function StepTimeline({
             )}
             {step.timestamp && (
               <p className="text-xs text-[var(--axis-text-tertiary)]">
-                {step.timestamp.toLocaleTimeString()}
+                <time dateTime={step.timestamp.toISOString()}>{formatStepTime(step.timestamp)}</time>
               </p>
             )}
           </div>

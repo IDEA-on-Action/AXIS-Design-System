@@ -39,6 +39,18 @@ export const CLIENT_MODULES = [
     reason: "cmdk(\"use client\" 모듈)의 Command.Input · List · Empty · Group · Item · Separator 점 접근",
   },
   {
+    path: "dialog/index",
+    reason: "useState · createContext · useContext(열림 상태를 알아 닫힌 동안 트리거 aria-controls 를 뺌, WI-0069)",
+  },
+  {
+    path: "popover/index",
+    reason: "useState · createContext · useContext(열림 상태를 알아 닫힌 동안 트리거 aria-controls 를 뺌, WI-0069)",
+  },
+  {
+    path: "sheet/index",
+    reason: "useState · createContext · useContext(열림 상태를 알아 닫힌 동안 트리거 aria-controls 를 뺌, WI-0069)",
+  },
+  {
     path: "tooltip/index",
     reason: "useState · useRef · useLayoutEffect · createContext(스크롤 닫힘 판정과 open 제어, WI-0073) + Content 의 onEscapeKeyDown · onPointerDownOutside 인라인 핸들러",
   },
