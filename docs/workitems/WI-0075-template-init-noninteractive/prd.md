@@ -21,7 +21,7 @@
 
 | # | 결정 | 근거 |
 |---|---|---|
-| D1 | 질문 성격으로 나눠요. 기본값이 있고 파괴적이지 않은 질문(template init 디렉터리 = 템플릿 이름, init 3문항)은 기본값으로 진행하고 쓴 값을 1줄로 알려요. 덮어쓰기 확인(비어 있지 않은 디렉터리, apply 충돌)과 기본값이 없는 입력(이름 없는 template init, v0 · monet)은 rc 1 + 필요한 플래그 안내예요 | 이슈의 기대 동작이 「slug 이름 디렉터리 기본값」이고, init `-y` 가 이미 같은 기본값(`resolveInitAnswers`)을 써요. 파괴적 확인을 rc 1 로 두는 것은 add D3 와 같은 방향이에요 |
+| D1 | 질문 성격으로 나눠요. 기본값이 있고 파괴적이지 않은 질문(template init 디렉터리 = 템플릿 이름, init 3문항)은 기본값으로 진행하고 쓴 값을 1줄로 알려요. 덮어쓰기 확인(비어 있지 않은 디렉터리, apply 충돌, init 의 내용이 다른 기존 `utils.ts`)과 기본값이 없는 입력(이름 없는 template init, v0 · monet)은 rc 1 + 필요한 플래그 안내예요 | 이슈의 기대 동작이 「slug 이름 디렉터리 기본값」이고, init `-y` 가 이미 같은 기본값(`resolveInitAnswers`)을 써요. 파괴적 확인을 rc 1 로 두는 것은 add D3 와 같은 방향이에요. init 의 utils.ts 덮어쓰기는 대화형에서도 묻지 않는 단계지만 비대화형에서 사용자 파일이 바뀌므로 같은 갈래로 둬요(반박 검토 major, 2026-10-25) |
 | D2 | `template init -y` 를 추가해요. 질문을 기본값으로 답하고 비어 있지 않은 디렉터리도 진행해요(= init 이 apply 를 `yes: true` 로 부르는 덮어쓰기, `template apply -y` 와 같은 뜻) | 같은 명령군에서 `-y` 뜻이 맞아요. 새 옵션이라 cli minor |
 | D3 | 공통 헬퍼(`src/interactive.ts`: `isInteractive` · `ask` · `noteDefault` · `failNonInteractive`)로 모든 질문을 감싸고, 진입점을 `await program.parseAsync()` 로 바꾸는 안전망을 둬요 | 원인 두 층을 둘 다 막아요. 가드를 빠뜨린 질문은 `ask` 가 `NonInteractiveError`(→ rc 1)로, 그마저 우회한 prompts 는 Node rc 13(unsettled top-level await)으로 드러나요 |
 | D4 | v0 import · monet import 도 같은 헬퍼로 rc 1 + 안내만 넣어요 | 원래 붙여 넣기 대화형 기능이라 비TTY 에서는 안내와 rc 1 이면 돼요. 빼면 「rc 0 무출력 경로 0개」를 증명할 수 없어요 |
@@ -38,7 +38,7 @@
 |---|---|---|
 | FR-1 | `template init <name>` 을 `--dir` 없이 비대화형으로 부르면 `./<name>` 에 템플릿 파일과 `axis.config.json` 을 만들고 rc 0, 쓴 디렉터리를 1줄로 알려요 | AC1 |
 | FR-2 | 비대화형에서 「질문만 찍고 rc 0」인 경로가 0개예요(대상 7경로). rc 0 이면 산출물 1개 이상, rc 비0 이면 안내 문구 | AC2 |
-| FR-3 | 비어 있지 않은 디렉터리의 `template init` · 충돌이 있는 `template apply` 를 비대화형으로 `-y` 없이 부르면 기존 파일이 바이트 그대로이고 rc 1. `-y` 면 진행해 덮어쓰고 rc 0 | AC3 |
+| FR-3 | 비어 있지 않은 디렉터리의 `template init` · 충돌이 있는 `template apply` · 내용이 다른 기존 `utils.ts` 가 있는 `init` 을 비대화형으로 `-y` 없이 부르면 기존 파일이 바이트 그대로이고 rc 1. `-y` 면 진행해 덮어쓰고 rc 0 | AC3 |
 | FR-4 | 대화형(TTY) 경로는 바뀌지 않아요(같은 질문 · 같은 응답 처리) | AC4 |
 | FR-5 | `template init` 에 `-y` 가 있어요(D2 뜻) | AC3 · AC4 |
 | FR-6 | cli-smoke(빌드한 dist 실행, CI)에 비TTY 갈래(stdin `/dev/null` · 빈 파이프)를 넣고 실행 건수를 단언해요 | AC5 |
@@ -51,6 +51,6 @@
 - **AC2** 명령별 비TTY 표(testplan 2절) 전부를 단위 테스트(`template-apply.test.ts` · `interactive.test.ts` · `init.test.ts`)와 매트릭스로 고정. 변이(판정을 항상 대화형으로, 가드 제거, parse 로 되돌림, prompts 직접 import)를 넣으면 테스트가 빨개져요.
 - **AC3** 비대화형 `-y` 없는 덮어쓰기 경로는 바이트 그대로 · rc 1, `-y` 는 덮어씀 · rc 0(두 결과가 갈림).
 - **AC4** 판정을 대화형으로 주입하면 prompts 가 불리고(호출 수 1 이상) inject 응답대로 동작해요. 실 TTY 는 사람이 1회 확인(미검증 축).
-- **AC5** cli-smoke 의 비TTY 갈래 10건이 신판에서 통과하고, 수정 전 dist 를 `--cli` 로 주면 그 갈래가 FAIL 이에요(양성 대조). 건수가 기대와 다르면 rc 2.
+- **AC5** cli-smoke 의 비TTY 갈래 12건이 신판에서 통과하고, 수정 전 dist 를 `--cli` 로 주면 그 갈래가 FAIL 이에요(양성 대조). 건수가 기대와 다르면 rc 2.
 - **AC6** 수정 전후 dist 의 종료 코드 A/B(오류 · 정상 명령 14종)가 같고, 안전망 실측에서 가드를 지운 dist 가 rc 13(parseAsync)과 rc 0(parse)으로 갈려요.
 - **AC7** 발행 뒤 npm 발행본만 설치하고 HOME · XDG 를 새로 둔 상태에서 매트릭스를 다시 돌려 결함 7행이 기대값으로 바뀌고 정상 행이 그대로예요(발행 뒤).

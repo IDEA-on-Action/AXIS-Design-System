@@ -15,7 +15,7 @@
  *   N    비TTY(WI-0075): stdin 을 /dev/null(stdio ignore)과 빈 파이프 두 조건으로 주고, 질문이 뜨는 경로가
  *        「질문 한 줄 · 파일 0 · rc 0」으로 끝나지 않는지 봅니다. 템플릿은 127.0.0.1 서버의 2파일 픽스처(AXIS_TEMPLATE_URL).
  *        template init(--dir 없음 → ./<이름>, 이름 없음 → rc 1) · template apply 충돌(rc 1, 바이트 그대로) ·
- *        init(-y 없음 → 기본값) · v0 import(rc 1). 갈래 실행 건수가 기대와 다르면 측정 실패(rc 2).
+ *        init(-y 없음 → 기본값, 내용이 다른 utils.ts 가 있으면 rc 1 · 바이트 그대로) · v0 import(rc 1). 갈래 실행 건수가 기대와 다르면 측정 실패(rc 2).
  *        이 갈래는 진입점의 `await program.parseAsync()` 안전망도 빌드 산출물로 지납니다(단위 테스트는 못 봄).
  *
  * 네트워크는 127.0.0.1 만 씁니다(npm 설치 없음). 사용: node scripts/cli-bundled-smoke.mjs [--cli <dist/index.js>]
@@ -220,7 +220,7 @@ console.log('\nN 비TTY 질문 처리(WI-0075: stdin /dev/null · 빈 파이프)
     walk(dir);
     return res;
   };
-  const EXPECTED_RUNS = 10;
+  const EXPECTED_RUNS = 12;
   let runs = 0;
   for (const stdin of ['ignore', 'empty-pipe']) {
     const tag = stdin === 'ignore' ? '/dev/null' : '빈 파이프';
@@ -264,6 +264,19 @@ console.log('\nN 비TTY 질문 처리(WI-0075: stdin /dev/null · 빈 파이프)
       check(
         r.rc === 0 && existsSync(join(dir, 'axis.config.json')) && r.out.includes('기본값으로 진행합니다(-y 와 같음)'),
         `${tag} init(-y 없음): 기본값으로 axis.config.json 생성 · 1줄 알림 · rc 0 (받은 값 rc ${r.rc})`,
+        r.out
+      );
+    }
+    {
+      // 덮어쓰기 확인은 기본값으로 대신하지 않음: 내용이 다른 utils.ts 가 있으면 rc 1 · 바이트 그대로(WI-0075 D1)
+      const dir = newProject(`n-init-noy-overwrite-${stdin}`);
+      mkdirSync(join(dir, 'components', 'ui'), { recursive: true });
+      writeFileSync(join(dir, 'components', 'ui', 'utils.ts'), 'export const mine = 2\n');
+      const before = JSON.stringify(filesUnder(dir));
+      const r = await run(['init'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      check(
+        r.rc === 1 && JSON.stringify(filesUnder(dir)) === before && r.out.includes('axis init -y'),
+        `${tag} init(-y 없음) 내용이 다른 utils.ts: rc 1 · 바이트 그대로 · -y 안내 (받은 값 rc ${r.rc})`,
         r.out
       );
     }

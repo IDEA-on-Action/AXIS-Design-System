@@ -20,6 +20,7 @@
 | template apply dashboard (충돌, `-y` 없음) | rc 0 · 9→9 · 확인 질문 | rc 1 · 9→9 · 바이트 그대로 · `-y` · `--dry-run` 안내 | 고침 |
 | template apply dashboard -y (충돌) | rc 0 · 덮어씀 | rc 0 · 덮어씀 | 불변(대조) |
 | init (`-y` 없음) | rc 0 · 1→1 · 질문 한 줄 | rc 0 · 1→3 · 「기본값으로 진행합니다(-y 와 같음): componentsDir=…」 | 고침 |
+| init (`-y` 없음, 내용이 다른 기존 utils.ts) | 반박 검토 전 수정본: rc 0 · utils.ts sha d28ab0f1 → ec301bef(덮어씀) | rc 1 · 3파일 sha 그대로 · `axis init -y` 안내. `-y` 를 주면 rc 0 · 덮어씀 | 고침(반박 검토 major) |
 | v0 import | rc 0 · 0→0 · select | rc 1 · 0→0 · `axis v0 convert <file>` 안내 | 고침 |
 | monet import | rc 0 · 0→0 · 이름 질문 | rc 1 · 0→0 · 대화형 안내 | 고침 |
 | template init --dir app (빈 디렉터리) · template apply (빈 디렉터리) · init -y | 정상 | 같음 | 불변 |
@@ -34,7 +35,7 @@
 |---|---|---|
 | `src/template/template-apply.test.ts`(신규) | 18 | 비대화형 init 6(`--dir` 없음 · 이름 없음 · `-y`+이름 없음 · 비어 있지 않음 · 그 음성 대조 `-y` · 기본 디렉터리가 비어 있지 않음), apply 4(충돌 · `-y` 대조 · `--dry-run` · 충돌 없음), 대화형 5(디렉터리 질문 · 템플릿 선택 · 비어 있지 않음 거절 · `-y` · apply 덮어쓰기), 명령 등록 3(`-y` 옵션 · 판정 전달 · 대화형 양성 대조). 레지스트리는 2파일 픽스처 mock, prompts 는 호출 수를 세는 래퍼 |
 | `src/interactive.test.ts`(신규) | 9 | `isInteractive`(isTTY true/false/undefined), `ask` 비대화형 거부 · 대화형 양성 대조, v0 import · ZIP · 클립보드 · monet import 비대화형 rc 1, 대화형 양성 대조, 가드 2(prompts import 는 `interactive.ts` 하나뿐: 계측 대조 파일 수 > 20 · 양성 대조 자기 자신, 진입점 `await program.parseAsync()` · 코드의 `program.parse(` 0건) |
-| `src/init/init.test.ts` | +4, 갱신 2 | 비대화형 `init` 이 `init -y` 와 파일 바이트 같음 + 1줄 알림(Tailwind 3 · 4), `-y` 는 알림 없음, 대화형 주입 양성 대조. 기존 대화형 테스트 2건은 판정을 주입하도록(테스트 stdin 은 TTY 가 아님) |
+| `src/init/init.test.ts` | +7, 갱신 2 | 비대화형 `init` 이 `init -y` 와 파일 바이트 같음 + 1줄 알림(Tailwind 3 · 4), `-y` 는 알림 없음, 대화형 주입 양성 대조. 반박 검토 뒤 +3: 내용이 다른 utils.ts 는 rc 1 · 바이트 그대로(수정 전 소스에서 rc 0 으로 실패), `-y` 양성 대조, 같은 내용 음성 대조. 기존 대화형 테스트 2건은 판정을 주입하도록(테스트 stdin 은 TTY 가 아님) |
 
 - 수정 전 소스(대상 9파일을 HEAD 로 되돌리고 `interactive.ts` 제거)로 새 테스트 실행: `3 failed` 파일, `12 failed | 153 passed`(interactive.test.ts 는 모듈이 없어 수집 실패). 통과한 것은 종전과 같아야 하는 불변 단언(대화형 경로 · `-y` · dry-run · 충돌 없음)이에요. 원복 뒤 9파일 sha256 대조 OK.
 - 변이(`scripts/mutate.sh`, 각 변이 뒤 tar 원복 + sha 대조): 10/10 빨강.
@@ -51,12 +52,13 @@
 | M8 | monet import 판정을 항상 대화형 | 1 failed |
 | M9 | 진입점을 `program.parse()` 로 | 1 failed |
 | M10 | 다른 소스(`site.ts`)에 prompts 직접 import | 1 failed |
+| M11 | init 명령이 `allowOverwrite: true` 로 부름(덮어쓰기 가드 제거) | init.test 1 failed, cli-smoke N 2건 ✗ · rc 1. 원복 sha 261a4900 대조 |
 
 ## 4. 빌드 산출물 · CI 스모크
 
-- **cli-smoke 비TTY 갈래(판단: 넣음)**: 단위 테스트는 판정을 주입하므로 「실제 stdin 이 닫힌 dist」와 진입점 안전망을 지나지 않아요. cli-smoke 는 이미 빌드한 dist 를 stdio ignore 로 실행하는 유일한 CI 게이트라(frontend.yml:137), 템플릿 서버(2파일 픽스처) 하나만 더해 넣었어요. 비용은 실행 10건 추가(로컬 수 초). template-smoke 의 CI 연결은 범위 밖(지시).
-  - 갈래: stdin `/dev/null` · 빈 파이프 × (template init `--dir` 없음 · 이름 없음 · apply 충돌 · init `-y` 없음 · v0 import) = 10건, 실행 건수가 10이 아니면 측정 실패 rc 2.
-  - 신판: 12 단언 통과, 「비TTY 갈래 10건 실행」, `[cli-smoke] OK` rc 0.
+- **cli-smoke 비TTY 갈래(판단: 넣음)**: 단위 테스트는 판정을 주입하므로 「실제 stdin 이 닫힌 dist」와 진입점 안전망을 지나지 않아요. cli-smoke 는 이미 빌드한 dist 를 stdio ignore 로 실행하는 유일한 CI 게이트라(frontend.yml:137), 템플릿 서버(2파일 픽스처) 하나만 더해 넣었어요. 비용은 실행 12건 추가(로컬 수 초). template-smoke 의 CI 연결은 범위 밖(지시).
+  - 갈래: stdin `/dev/null` · 빈 파이프 × (template init `--dir` 없음 · 이름 없음 · apply 충돌 · init `-y` 없음 · init `-y` 없음 + 내용이 다른 utils.ts · v0 import) = 12건, 실행 건수가 12가 아니면 측정 실패 rc 2(반박 검토 뒤 10 → 12).
+  - 신판: 14 단언 통과(반박 검토 전 12), 「비TTY 갈래 12건 실행」, `[cli-smoke] OK` rc 0. 반박 검토 뒤 추가한 2건은 덮어쓰기 가드를 뺀 변이 dist(M11)에서 ✗ 2건 · rc 1.
   - 양성 대조: `--cli <수정 전 dist>` 로 rc 1, ✗ 12건이 모두 N 갈래(G3 · G4 · D7 은 통과).
 - **안전망 실측(`scripts/safety-net.sh`, 빌드한 dist 로 `template init dashboard </dev/null`)**:
 
@@ -79,7 +81,7 @@
 | `turbo run test --force` | rc 0, 7 tasks, Cached 0. cli 19 files · 778 tests(이 WI 신규 31) · mcp 166 · ui-react 194 · agentic-ui 148 · theme 47 |
 | check-token-refs · check-contrast-pairs · check-types-versions · check-library-links | rc 0 |
 | build:registry · test:registry | rc 0. r/index.json · registry.json version 1.8.0 → 1.5.0 되돌림 |
-| check-licenses · pack-smoke(퍼블리시 대상 6개 · G2 RSC 통과) · cli-smoke(비TTY 10건) · registry-install-smoke(5/5) | rc 0 |
+| check-licenses · pack-smoke(퍼블리시 대상 6개 · G2 RSC 통과) · cli-smoke(비TTY 12건, 반박 검토 뒤 재실행) · registry-install-smoke(5/5) | rc 0 |
 | E2E | 해당 없음: apps/web 소스를 바꾸지 않았고 바꾼 가이드 문서(quick-start · theme-customization)는 웹앱이 읽지 않음(`apps/web/src` grep 0건) |
 
 ## 6. 남은 확인

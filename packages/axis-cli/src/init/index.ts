@@ -37,7 +37,7 @@ export function registerInitCommand(
       for (const note of resolved.notes) console.log(note.startsWith("!") ? chalk.yellow(note) : chalk.gray(note));
 
       // 비대화형(CI · 파이프)은 묻지 않고 -y 와 같은 기본값으로 진행하고 쓴 값을 알립니다(WI-0075 D1).
-      // 기본값은 기존 config · 실재 파일로 정한 값이고, 파일 덮어쓰기 판정은 runInit 이 -y 와 똑같이 합니다
+      // 기본값은 기존 config · 실재 파일로 정한 값입니다. 내용이 다른 utils.ts 덮어쓰기만은 진행하지 않고 rc 1 입니다
       const interactive = (deps.isInteractive ?? stdinIsInteractive)();
       if (!options.yes && !interactive) {
         const a = resolved.answers;
@@ -67,6 +67,7 @@ export function registerInitCommand(
             },
           ], interactive);
 
-      await runInit(baseDir, config, registryUrl);
+      // 덮어쓰기 확인은 기본값으로 대신하지 않습니다: -y 없는 비대화형은 내용이 다른 utils.ts 를 rc 1 로 막습니다(WI-0075 D1)
+      await runInit(baseDir, config, registryUrl, console.log, { allowOverwrite: options.yes === true || interactive });
     });
 }

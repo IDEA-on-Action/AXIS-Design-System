@@ -2094,6 +2094,42 @@ describe("WI-0075 D1: -y 없는 init 을 비대화형으로 부르면 기본값�
     expect(logs.some((l) => l.startsWith(NOTE))).toBe(false);
   });
 
+  it("내용이 다른 기존 utils.ts 는 덮어쓰지 않고 rc 1 과 -y 안내, 아무것도 쓰지 않음(덮어쓰기 확인 갈래)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), "export const mine = 2\n");
+    const before = await snapshot(dir);
+    expect(await runInitNoYes(dir, false)).toBe(1);
+    // 계측 대조: 비교 대상이 실제로 있는지(파일 2개)
+    expect(Object.keys(before).sort()).toEqual([path.join("components", "ui", "utils.ts"), "package.json"]);
+    expect(await snapshot(dir)).toEqual(before);
+    const all = logs.join("\n");
+    expect(all).toContain("비대화형 실행이라 내용이 다른 기존 components/ui/utils.ts 를 덮어쓰지 않습니다");
+    expect(all).toContain("-y");
+    expect(all).not.toContain("덮어씀");
+  });
+
+  it("양성 대조: 같은 경우 -y 를 주면 종전처럼 덮어씀(rc 0)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), "export const mine = 2\n");
+    const r = await runInitCli(dir);
+    expect(r.logs).toContain("✓ utils.ts 덮어씀(기존 내용과 달라 init 의 utils 로 다시 씀)");
+    expect(await fs.readFile(path.join(dir, "components", "ui", "utils.ts"), "utf8")).toBe(UTILS_TS_CONTENT);
+  });
+
+  it("음성 대조: 기존 utils.ts 가 같은 내용이면 비대화형도 그대로 진행(rc 0)", async () => {
+    const dir = await tmpDir();
+    await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
+    await fs.ensureDir(path.join(dir, "components", "ui"));
+    await fs.writeFile(path.join(dir, "components", "ui", "utils.ts"), UTILS_TS_CONTENT);
+    expect(await runInitNoYes(dir, false)).toBe(0);
+    expect(logs).toContain("✓ utils.ts 유지(이미 같은 내용)");
+    expect(await fs.pathExists(path.join(dir, "axis.config.json"))).toBe(true);
+  });
+
   it("양성 대조: 대화형으로 주입하면 묻고 받은 값으로 기록(기본값과 다른 값)", async () => {
     const dir = await tmpDir();
     await fs.writeFile(path.join(dir, "package.json"), JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0" } }));
