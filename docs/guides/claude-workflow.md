@@ -86,8 +86,13 @@ AXIS MCP 외에 다음 서버도 연동 가능합니다:
 
 | 도구 | 파라미터 | 설명 |
 |------|----------|------|
-| `axis.list_tokens` | `category?`: color·typography·spacing·radius·shadow·animation | 디자인 토큰 목록 조회 |
-| `axis.get_token` | `path` | 토큰 상세 정보 (값, CSS 변수명) |
+| `axis.list_tokens` | `category?`: color·typography·spacing·radius·shadow·density·component | 디자인 토큰 목록 조회 (라이트 · 다크 값, CSS 변수) |
+| `axis.get_token` | `path` | 토큰 상세 정보 (라이트 · 다크 값, CSS 변수명). 없는 경로는 `isError` |
+
+- 토큰 값은 MCP 빌드 때 `@axis-ds/tokens` 빌드 산출물(`json/tokens.json` · `css/variables.css` · `css/shadcn-compat.css`)에서 생성합니다(@axis-ds/mcp 1.4.0, WI-0076). 응답 첫머리의 출처 줄이 생성에 쓴 tokens 버전이에요.
+- `path` 는 기존 경로(예: `colors.primary` · `spacing.4` · `typography.fontSize.sm`), tokens 이름 기반 경로(예: `control.h.md` · `radius.control`), CSS 변수 이름(예: `--axis-control-h-md`)을 모두 받습니다.
+- shadcn 색 변수(`--primary` 등)는 HSL 삼중값이라 `hsl(var(--primary))` 로 씁니다. 브랜드(ontology 등) 값은 `axis.list_brands` · `axis.get_brand` 로 조회합니다.
+- 1.3.5 까지 있던 `shadow.md` · `animation.*` 4개 경로와 `animation` 카테고리는 tokens 에 원천이 없어 1.4.0 에서 뺐습니다.
 
 ### 3.3 템플릿 도구
 

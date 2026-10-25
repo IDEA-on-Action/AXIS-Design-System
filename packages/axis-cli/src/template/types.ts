@@ -62,10 +62,16 @@ export interface ApplyOptions {
   dryRun?: boolean;
   skipDeps?: boolean;
   dir?: string;
+  /** 질문을 띄울 수 있는지(WI-0075). 없으면 stdin 이 TTY 인지로 정합니다 */
+  interactive?: boolean;
 }
 
 export interface InitOptions {
   dir?: string;
+  /** 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행(덮어씀). apply 의 -y 와 같은 뜻(WI-0075 D2) */
+  yes?: boolean;
+  /** 질문을 띄울 수 있는지(WI-0075). 없으면 stdin 이 TTY 인지로 정합니다 */
+  interactive?: boolean;
 }
 
 export interface DiffOptions {

@@ -73,6 +73,28 @@ const DEFAULT_LAYOUT_FILES = [
 ];
 const USER_EDIT = '// mcp-smoke 사용자 수정';
 
+// WI-0076: 토큰 도구의 기대값은 경로 문자열이 아니라 이 레포 tokens 빌드 산출물의 실제 값이다(빌드 선행 필요).
+// 1.3.5 까지는 'colors.primary' 경로만 봐서 동봉 값이 낡아도 초록이었다.
+const TOKENS_DIST = fileURLToPath(new URL('../packages/axis-tokens/dist/', import.meta.url));
+function tokensDistVar(file, selector, name) {
+  const css = readFileSync(join(TOKENS_DIST, 'css', file), 'utf8');
+  const start = css.indexOf(`${selector} {`);
+  if (start < 0) throw new Error(`tokens dist ${file} 에 ${selector} 블록이 없음(tokens 빌드 선행 필요)`);
+  const block = css.slice(start, css.indexOf('}', start));
+  const m = new RegExp(`\\s${name}:\\s*([^;]+);`).exec(block);
+  if (!m) throw new Error(`tokens dist ${file} ${selector} 에 ${name} 없음`);
+  return m[1].trim();
+}
+function tokenExpectations() {
+  const version = JSON.parse(readFileSync(join(TOKENS_DIST, '..', 'package.json'), 'utf8')).version;
+  return {
+    version,
+    primary: `hsl(${tokensDistVar('shadcn-compat.css', ':root', '--primary')})`,
+    primaryDark: `hsl(${tokensDistVar('shadcn-compat.css', '.dark', '--primary')})`,
+    controlHMd: tokensDistVar('variables.css', ':root', '--axis-control-h-md'),
+  };
+}
+
 // 번들 데이터(동봉 레지스트리 · tokens.json · components.json)를 읽는 도구 호출과 기대
 // expect 는 질의 인자를 되풀이하는 머리글이 아니라 레지스트리에서 읽은 결과에서만 나오는 문자열로 고른다.
 // before 는 호출 전 준비, check 는 응답 밖의 부수효과(파일)를 확인한다. isError 는 기대값(기본 false).
@@ -80,15 +102,20 @@ function registryCalls(work) {
   const project = join(work, 'install-target');
   const escape = join(work, 'escape-target');
   const sep = join(project, 'components', 'ui', 'separator.tsx');
+  const tk = tokenExpectations();
   return [
     // lib 2개(utils · agentic-a11y-labels)를 뺀 28개(1.2.3 은 10개)
     { name: 'axis.list_components', args: {}, expect: ['| **합계** | **28** |', '`agentic-run-progress`', FALLBACK_NOTICE] },
-    { name: 'axis.list_tokens', args: {}, expect: ['colors.primary'] },
+    // 값 · 출처 버전 · 밀도 경로(1.3.5 는 colors.primary 가 hsl(222.2 47.4% 11.2%), 밀도 0건)
+    { name: 'axis.list_tokens', args: {}, expect: [`| \`colors.primary\` | \`${tk.primary}\` | \`${tk.primaryDark}\``, `@axis-ds/tokens ${tk.version}`, '`control.h.md`'] },
     // 머리글 '## 검색 결과: "progress"' 는 결과 0건이어도 나오므로 결과 행을 본다(1.2.3 은 0건)
     { name: 'axis.search_components', args: { query: 'progress' }, expect: ['(`agentic-run-progress`)'] },
     // 레지스트리 설명 + components.json props
     { name: 'axis.get_component', args: { name: 'separator' }, expect: ['AXIS 구분선 컴포넌트', '`orientation`'] },
-    { name: 'axis.get_token', args: { path: 'colors.primary' }, expect: ['colors.primary'] },
+    { name: 'axis.get_token', args: { path: 'colors.primary' }, expect: [`- **값**: \`${tk.primary}\``, `- **다크 값**: \`${tk.primaryDark}\``] },
+    { name: 'axis.get_token', args: { path: 'control.h.md' }, expect: [`- **값**: \`${tk.controlHMd}\``, '- **카테고리**: density'] },
+    // 없는 경로는 isError(1.3.5 는 isError 없는 일반 텍스트). 1.3.5 에 있던 출처 없는 경로로 확인
+    { name: 'axis.get_token', args: { path: 'animation.duration.fast' }, isError: true, expect: ['토큰을 찾을 수 없습니다'] },
     {
       name: 'axis.install_component',
       before: () => {

@@ -1,9 +1,9 @@
 /**
  * Tailwind 공유 코어 (WI-0042)
  *
- * 원본은 `packages/axis-cli/src/template/tailwind-core.ts` 이고, `packages/axis-mcp/src/tools/tailwind-core.ts` 에
- * 바이트 단위로 같은 사본을 둡니다. 사본 동일성은 MCP 테스트가 막습니다(brand-core 와 같은 방식).
- * 두 패키지에서 똑같이 컴파일되도록 Node 내장 모듈만 씁니다.
+ * 원본은 이 파일 하나입니다(WI-0055 에서 공유 코어 `@axis-ds/registry-core` 로 옮김). `@axis-ds/cli` 는
+ * `packages/axis-cli/src/template/tailwind-core.ts` 에서 다시 내보내고, `@axis-ds/mcp` 는 빌드 때 번들합니다. 바이트 사본은 없습니다
+ * (cli · mcp 바이트 사본이 남은 것은 `brand-core.ts` 뿐). 두 패키지에서 똑같이 번들되도록 Node 내장 모듈만 씁니다.
  *
  * - Tailwind major 판정(`detectTailwind` 등): WI-0038 에서 `init/init.ts` 에 만든 것을 옮겼습니다. `init.ts` 는 다시 내보냅니다.
  * - `checkTailwindSetup`: `axis check` · MCP `axis.check_project` 의 tailwind.config 항목. Tailwind 4 이상은 설정 파일 없이
@@ -22,8 +22,11 @@
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
  *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
- *   설치본은 `findInstalledPackage`(상위 디렉터리 탐색, project.ts) 하나로 읽습니다. 종전 `installedVersion` 호출지
- *   (`detectTailwind` · `axisPackagesBelowTailwind4`)는 이번에 바꾸지 않았습니다(WI-0051 PRD 결정 D4).
+ *   설치본은 `findInstalledPackage`(상위 디렉터리 탐색, project.ts) 하나로 읽습니다.
+ * - WI-0074: `detectTailwind` · `axisPackagesBelowTailwind4` 도 같은 `findInstalledPackage` 로 읽습니다(종전에는 `<baseDir>/node_modules`
+ *   한 층만 읽어 호이스팅 모노레포에서 설치본을 못 찾고 선언으로 떨어졌습니다. WI-0051 PRD D4 에서 남겼던 것을 해소).
+ *   Plug'n'Play(`isPnpProject`)면 설치본을 읽지 않고 선언으로 갑니다(`packageVersionGate` · dependencies 와 같은 규칙).
+ *   init · theme add · template apply · axis add 도 같은 함수를 쓰므로 함께 바뀝니다(전이 표는 WI-0074 testplan).
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs";
@@ -185,8 +188,10 @@ function majorFromVersion(version: unknown): number | undefined {
 
 /**
  * 프로젝트의 Tailwind major 를 판정합니다(prd 1.6).
- * 1. 설치본 우선: `<baseDir>/node_modules/tailwindcss/package.json` 의 `version`. 실제로 쓰이는 버전이라 선언보다 앞섭니다.
- *    파일이 없거나 읽을 수 없거나 version 이 정확한 버전이 아니면 다음 단계로 갑니다.
+ * 1. 설치본 우선: `baseDir` 부터 상위로 찾은 첫 `node_modules/tailwindcss/package.json` 의 `version`(`findInstalledPackage`,
+ *    WI-0074). 실제로 쓰이는 버전이라 선언보다 앞섭니다. 가장 가까운 설치본에서 멈추므로 앱의 3.x 가 루트의 4.x 보다 앞섭니다.
+ *    찾지 못하거나 읽을 수 없거나 version 이 정확한 버전이 아니면 다음 단계로 갑니다. Plug'n'Play(`isPnpProject`)면 설치본을
+ *    읽지 않습니다(상위에 남은 node_modules 는 실제로 쓰이는 설치본이 아님).
  *    선언 범위의 major 구간(`tailwindMajorBounds`)을 읽을 수 있고 설치본 major 가 그 구간 밖이면 `mismatch` 에
  *    담습니다(F1 (b), 경고 줄은 `tailwindWarnings`). `>=3.4` 에 설치본 4.1.0 처럼 범위를 만족하면 다름이 아닙니다.
  * 2. 선언 범위: `package.json` 의 `dependencies` 다음 `devDependencies` 의 `tailwindcss`. `tailwindMajorFromRange` 로 읽습니다.
@@ -194,24 +199,19 @@ function majorFromVersion(version: unknown): number | undefined {
  */
 export function detectTailwind(baseDirInput: string, pkg?: Record<string, unknown>): TailwindDetection {
   const baseDir = resolve(baseDirInput);
-  const installedFile = join(baseDir, "node_modules", "tailwindcss", "package.json");
   const declared = pkg ? hasDependency(pkg, "tailwindcss") : undefined;
   const bounds = declared !== undefined ? tailwindMajorBounds(declared) : undefined;
   const declaredMajor = bounds?.lower;
-  try {
-    const installed: unknown = JSON.parse(readFileSync(installedFile, "utf8"));
-    const version = isPlainObject(installed) ? installed.version : undefined;
-    const major = majorFromVersion(version);
-    if (major !== undefined) {
-      const found: TailwindDetection = { major, source: "installed", value: String(version) };
-      // 설치본 major 가 선언 범위가 허용하는 구간 밖일 때만 다름으로 봅니다(`>=3.4` 에 4.1.0 은 다름이 아님).
-      if (declared !== undefined && bounds !== undefined && !majorWithin(major, bounds)) {
-        found.mismatch = { declared, declaredMajor: bounds.lower };
-      }
-      return found;
+  // 없음 · 읽을 수 없음 · 정확한 버전이 아님 · Plug'n'Play: 선언 범위로
+  const version = isPnpProject(baseDir) ? undefined : findInstalledPackage(baseDir, "tailwindcss")?.version;
+  const major = majorFromVersion(version);
+  if (version !== undefined && major !== undefined) {
+    const found: TailwindDetection = { major, source: "installed", value: version };
+    // 설치본 major 가 선언 범위가 허용하는 구간 밖일 때만 다름으로 봅니다(`>=3.4` 에 4.1.0 은 다름이 아님).
+    if (declared !== undefined && bounds !== undefined && !majorWithin(major, bounds)) {
+      found.mismatch = { declared, declaredMajor: bounds.lower };
     }
-  } catch {
-    // 없음 · 읽을 수 없음: 선언 범위로
+    return found;
   }
   if (declared !== undefined) {
     if (declaredMajor !== undefined) return { major: declaredMajor, source: "declared", value: declared };
@@ -460,29 +460,21 @@ export interface AxisPackageVersionIssue {
   installed?: string;
 }
 
-/** 설치본 version 이 정확한 버전(`1.4.2` · `1.4.0-beta.1`)이면 그대로, 아니면 `undefined`. `0.0.0-*` 은 읽지 않습니다. */
-function exactVersion(version: unknown): string | undefined {
-  if (typeof version !== "string") return undefined;
-  const v = version.trim();
-  if (!/^v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/.test(v) || /^v?0\.0\.0-/.test(v)) return undefined;
-  return v;
-}
-
-/** `<baseDir>/node_modules/<name>/package.json` 의 정확한 version. 없거나 읽지 못하거나 정확한 버전이 아니면 `undefined`. */
-function installedVersion(baseDir: string, name: string): string | undefined {
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(join(baseDir, "node_modules", ...name.split("/"), "package.json"), "utf8"));
-    return isPlainObject(parsed) ? exactVersion(parsed.version) : undefined;
-  } catch {
-    return undefined;
-  }
+/**
+ * `baseDir` 부터 상위로 찾은 설치본의 정확한 version(`findInstalledPackage`, WI-0074). 찾지 못하거나 읽지 못하거나 정확한 버전이
+ * 아니면(`exactVersionOf`, `0.0.0-*` 제외) `undefined`. Plug'n'Play 면 읽지 않습니다(`packageVersionGate` 와 같은 규칙).
+ */
+function installedAxisVersion(baseDir: string, name: string): string | undefined {
+  if (isPnpProject(baseDir)) return undefined;
+  return findInstalledPackage(baseDir, name)?.version;
 }
 
 /**
  * package.json 에 선언된 AXIS 패키지(`TAILWIND4_AXIS_PACKAGES`) 가운데 1.4.0 조건에 걸린 것을 선언 순서대로 돌려줍니다
  * (2026-10-20 사용자 결정 A1, 보정 3차 설치본 우선. `axis init` · `axis check` 가 같은 결과를 씁니다).
  * 판정 순서는 `detectTailwind` 와 같습니다.
- * 1. 설치본: `baseDir` 가 있으면 `<baseDir>/node_modules/<pkg>/package.json` 의 version(정확한 버전일 때만).
+ * 1. 설치본: `baseDir` 가 있으면 `baseDir` 부터 상위로 찾은 첫 `node_modules/<pkg>/package.json` 의 version(정확한 버전일 때만,
+ *    WI-0074 상위 탐색 · Plug'n'Play 는 읽지 않음).
  *    1.4.0 이상이면 선언이 `^1.3.0` · `1.x` · `catalog:` 여도 넣지 않고, 미만(`1.4.0-beta.1` 포함)이면 `below`(설치본 표시).
  * 2. 선언 하한: 설치본이 없으면(또는 `baseDir` 가 없으면) 종전 규칙.
  *    하한이 1.4.0 미만(`^1.3.0` · `1.x` · `^1.4.0-beta.1` · `1.3.0 - 1.5.0`) → `below`. 올리라고 안내합니다.
@@ -504,7 +496,7 @@ export function axisPackagesBelowTailwind4(
   for (const name of TAILWIND4_AXIS_PACKAGES) {
     const range = hasDependency(pkg, name);
     if (range === undefined || range.trim().startsWith("workspace:")) continue;
-    const installed = baseDir !== undefined ? installedVersion(baseDir, name) : undefined;
+    const installed = baseDir !== undefined ? installedAxisVersion(baseDir, name) : undefined;
     const installedLower = installed !== undefined ? lowerOf(installed) : undefined;
     if (installed !== undefined && installedLower !== undefined) {
       if (compareLower(installedLower, min) < 0) out.push({ name, range, status: "below", source: "installed", installed });

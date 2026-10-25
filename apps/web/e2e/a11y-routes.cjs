@@ -15,6 +15,7 @@
  */
 const fs = require('node:fs')
 const path = require('node:path')
+const { pickLibraryReps } = require('./library-reps.cjs')
 
 const WEB_ROOT = path.join(__dirname, '..')
 const APP_DIR = path.join(WEB_ROOT, 'src', 'app')
@@ -26,31 +27,33 @@ const COMBOS = ['default/light', 'default/dark', 'ontology/light', 'ontology/dar
 /**
  * 하이드레이션 · 데이터 로드 뒤에만 검사해야 하는 경로의 준비 선택자.
  * 지정이 없으면 공통으로 `h1` 이 보일 때까지 기다린다(library · templates 는 index.json 을 받기 전에 Skeleton 만 그린다).
+ * 정적 경로는 READY 에 주소로 적고, 동적 라우트는 DYNAMIC 규칙이 주소와 함께 준비 선택자를 돌려준다(대표 주소가 데이터로 정해지기 때문).
  */
 const READY = {
   // 하이드레이션 전에는 컨트롤 fieldset 이 disabled 라 라벨이 대비 검사에서 빠진다(WI-0025 M4)
   '/docs/brand-demo/': '[data-testid="brand-demo-controls"][data-ready="true"]',
 }
 
+/**
+ * library 상세 준비 선택자(WI-0078 D2-C): 상세 JSON 을 받아 그린 뒤에만 있는 「설치」 h2.
+ * 기본 `h1` 은 데이터 요청이 실패한 오류 화면(h1 「컴포넌트를 찾을 수 없습니다」)에도 있어서, 데이터가 비어도 오류 화면을 재고 통과했다.
+ * 로드 중(Skeleton) · 오류 화면에는 h2 가 없다.
+ */
+const LIBRARY_DETAIL_READY = 'h2:text-is("설치")'
+
 function readJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, rel), 'utf-8'))
 }
 
-/** 첫 AXIS 항목. 상세 화면이 우리 코드를 그리는 경우를 대표로 삼는다 */
-function firstAxisComponent() {
-  const index = readJson('library/index.json')
-  const entry = index.components.find((c) => c.source === 'axis')
-  if (!entry) throw new Error('library/index.json 에 source=axis 항목이 없어요 (대표 경로를 정할 수 없음)')
-  return entry
+/** 코드 파일이 있는 첫 항목(지금은 AXIS). library-detail.spec.ts 의 code 대표와 같은 항목이다(e2e/library-reps.cjs) */
+function libraryCodeRep() {
+  return pickLibraryReps().code
 }
 
-/** 동적 라우트(세그먼트 패턴) -> 대표 경로 1개 */
+/** 동적 라우트(세그먼트 패턴) -> 대표 경로 1개. 문자열 또는 { path, ready } 를 돌려준다 */
 const DYNAMIC = {
-  'library/[category]': () => `/library/${firstAxisComponent().category}/`,
-  'library/[category]/[slug]': () => {
-    const c = firstAxisComponent()
-    return `/library/${c.category}/${c.slug}/`
-  },
+  'library/[category]': () => `/library/${libraryCodeRep().category}/`,
+  'library/[category]/[slug]': () => ({ path: libraryCodeRep().pagePath, ready: LIBRARY_DETAIL_READY }),
   'templates/[slug]': () => {
     const index = readJson('templates/index.json')
     // 상세 JSON 이 있는 첫 템플릿(없는 slug 는 상세 페이지가 notFound)
@@ -85,16 +88,19 @@ function listA11yRoutes() {
     const urlSegs = segs.filter((s) => !(s.startsWith('(') && s.endsWith(')')))
     const route = urlSegs.join('/')
     let p
+    let ready
     let kind = 'static'
     if (urlSegs.some((s) => s.includes('['))) {
       const pick = DYNAMIC[route]
       if (!pick) throw new Error(`대표 경로 규칙이 없는 동적 라우트예요: ${route} (a11y-routes.cjs DYNAMIC 에 추가)`)
-      p = pick()
+      const picked = pick()
+      if (typeof picked === 'string') p = picked
+      else ({ path: p, ready } = picked)
       kind = 'dynamic'
     } else {
       p = route === '' ? '/' : `/${route}/`
     }
-    routes.push({ path: p, name: nameOf(p), kind, route: route || '/', readySelector: READY[p] ?? 'h1' })
+    routes.push({ path: p, name: nameOf(p), kind, route: route || '/', readySelector: ready ?? READY[p] ?? 'h1' })
   }
   routes.sort((a, b) => a.path.localeCompare(b.path))
   const dup = routes.map((r) => r.path).filter((v, i, a) => a.indexOf(v) !== i)

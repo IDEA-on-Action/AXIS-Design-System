@@ -33,6 +33,19 @@ export const axisAnimation = {
   'progress-indeterminate': 'progress-indeterminate 1.5s ease-in-out infinite',
 } satisfies Record<keyof typeof axisKeyframes, string>
 
+/**
+ * Tailwind 3 의 색 없는 `border` · `border-t` · `hr` 기본 테두리색 (WI-0077)
+ *
+ * Tailwind 3 preflight 는 `*, ::before, ::after { border: 0 solid theme('borderColor.DEFAULT') }` 를 냅니다.
+ * DEFAULT 를 정하지 않으면 Tailwind 기본값 gray-200(#e5e7eb)이 되고, 이 규칙이 `@axis-ds/tokens/css/shadcn` 의
+ * `* { border-color: hsl(var(--border)) }` 보다 뒤에 와서 이겨 다크 · 브랜드에서도 회색으로 남았습니다(1.8.0 이하).
+ * fallback `220 13% 91%` 는 gray-200 의 HSL(rgb(229, 231, 235))이라 `--border` 를 정의하지 않은 앱(shadcn CSS 를
+ * 넣지 않은 앱)은 종전 색을 그대로 씁니다. fallback 이 없으면 그 앱의 테두리가 currentColor(글자색)로 바뀝니다.
+ * Tailwind 4 진입점은 이 값을 옮기지 않습니다(scripts/tailwind4.mjs 의 TAILWIND3_ONLY_KEYS, 진입점이 base 레이어로
+ * 불러오는 같은 `*` 규칙이 맡음).
+ */
+const axisBorderColorDefault = 'hsl(var(--border, 220 13% 91%))'
+
 const axisPreset: Partial<Config> = {
   darkMode: ['class'],
   theme: {
@@ -84,6 +97,9 @@ const axisPreset: Partial<Config> = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+      },
+      borderColor: {
+        DEFAULT: axisBorderColorDefault,
       },
       borderRadius: {
         lg: 'var(--radius)',
