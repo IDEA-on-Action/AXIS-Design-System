@@ -7,11 +7,66 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 
-/** 프로젝트의 lockfile 로 설치 명령을 고릅니다(없으면 pnpm). */
-export function detectInstallCommand(baseDir: string): string {
-  if (existsSync(path.join(baseDir, "pnpm-lock.yaml"))) return "pnpm install";
-  if (existsSync(path.join(baseDir, "yarn.lock"))) return "yarn install";
-  if (existsSync(path.join(baseDir, "package-lock.json"))) return "npm install";
+/** lockfile 과 설치 명령(앞에서부터, 같은 층에 여럿이면 앞의 것) */
+const LOCKFILE_COMMANDS = [
+  ["pnpm-lock.yaml", "pnpm install"],
+  ["yarn.lock", "yarn install"],
+  ["package-lock.json", "npm install"],
+] as const;
+
+function lockfileCommandAt(dir: string): string | undefined {
+  return LOCKFILE_COMMANDS.find(([file]) => existsSync(path.join(dir, file)))?.[1];
+}
+
+/** 워크스페이스 루트 표지: `pnpm-workspace.yaml`, 또는 package.json 의 `workspaces`(배열 또는 `{ packages: 배열 }`) */
+function isWorkspaceRootDir(dir: string): boolean {
+  if (isFile(path.join(dir, "pnpm-workspace.yaml"))) return true;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
+  } catch {
+    return false;
+  }
+  if (!isPlainObject(parsed)) return false;
+  const ws = parsed.workspaces;
+  return Array.isArray(ws) || (isPlainObject(ws) && Array.isArray(ws.packages));
+}
+
+/**
+ * `baseDir` 부터 상위로 올라가며 가장 가까운 워크스페이스 루트(`pnpm-workspace.yaml` 또는 package.json `workspaces`)를 찾습니다(WI-0081).
+ * - 같은 층에서는 워크스페이스 표지를 먼저 봅니다(보통의 저장소 루트는 `.git` 과 표지가 함께 있음).
+ * - 표지보다 먼저 `.git`(디렉터리 또는 서브모듈의 파일형 gitdir)이 나오면 거기서 멈추고 `undefined` 입니다. 다른 저장소의 루트를
+ *   이 앱의 소유자로 보지 않기 위해서예요.
+ * - `baseDir` 자신이 워크스페이스 루트면 `baseDir` 입니다.
+ * - 글롭이 실제로 앱을 포함하는지(멤버십)는 보지 않습니다(배치 6b 결정, 잔여 오차로 기록).
+ * lockfile 판정(`detectInstallCommand`) · 의존성 선언 판정(dependencies-core)이 함께 씁니다. 설치본 탐색(`findInstalledPackage`)은
+ * Node 해석 방향이라 이 경계를 쓰지 않습니다.
+ */
+export function findWorkspaceRoot(baseDirInput: string): string | undefined {
+  let dir = path.resolve(baseDirInput);
+  for (;;) {
+    if (isWorkspaceRootDir(dir)) return dir;
+    if (existsSync(path.join(dir, ".git"))) return undefined;
+    const parent = path.dirname(dir);
+    if (parent === dir) return undefined;
+    dir = parent;
+  }
+}
+
+/**
+ * 프로젝트의 lockfile 로 설치 명령을 고릅니다(WI-0081).
+ * 앱 층(`baseDir`) lockfile 을 먼저 보고, 없으면 `findWorkspaceRoot` 로 찾은 워크스페이스 루트 층의 lockfile 을 봅니다(그 사이 층은 보지 않음).
+ * 둘 다 없거나 루트를 찾지 못하면 종전 기본값 pnpm 입니다. package.json `packageManager` 필드는 보지 않습니다(배치 6b 결정).
+ */
+export function detectInstallCommand(baseDirInput: string): string {
+  const baseDir = path.resolve(baseDirInput);
+  const own = lockfileCommandAt(baseDir);
+  if (own !== undefined) return own;
+  const root = findWorkspaceRoot(baseDir);
+  if (root !== undefined && root !== baseDir) {
+    const fromRoot = lockfileCommandAt(root);
+    if (fromRoot !== undefined) return fromRoot;
+  }
   return "pnpm install";
 }
 

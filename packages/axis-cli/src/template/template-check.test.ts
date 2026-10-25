@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 import { collectCheckResults, runCheck } from "./template-check.js";
 import {
   axisPackagesBelowTailwind4,
+  contentGlobCovers,
   contentGlobToRegExp,
   detectTailwind,
   findCreateNextAppDefaults,
@@ -1867,6 +1868,13 @@ describe("배치 3 ①: 설치본 기반 판정", () => {
   });
 });
 
+/**
+ * WI-0080 D4: 제안이 상위 경로(`../`)일 때 FAIL · WARN 문구 끝에 붙는 안내(판정에는 반영하지 않음). 세 호출지(cli check ·
+ * MCP check_project · theme add)가 같은 문자열을 써요. 수정 전 소스에서 테스트가 판정 단언으로 빨개지도록 import 하지 않고 적어 둡니다.
+ */
+const PARENT_NOTE =
+  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+
 // WI-0074: detectTailwind · axisPackagesBelowTailwind4 의 설치본 판독을 findInstalledPackage(상위 디렉터리 탐색)로.
 // 브리프 측정(발행본 cli 1.6.2 · mcp 1.3.5, 실제 설치 픽스처 20개 앱 · 항목 70개)의 전이 표를 stub 설치본으로 고정합니다.
 // - hoisted: npm workspaces · pnpm node-linker=hoisted 형태(앱 node_modules 에 tailwindcss · tokens 가 없고 루트에만 있음)
@@ -1876,13 +1884,21 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
   const TW3_CSS = '@import "@axis-ds/tokens/css";\n@tailwind base;\n@tailwind components;\n@tailwind utilities;\n';
   const TW3_CONFIG = 'import axis from "@axis-ds/tokens/tailwind";\nexport default { presets: [axis], content: ["./app/**/*.{ts,tsx}"] };\n';
   const H_CSS = `${TW4_CSS}@import "@axis-ds/ui-react/tailwind.css";\n@import "tw-animate-css";\nbody { font-family: Arial, Helvetica, sans-serif; }\n`;
-  type AppName = "a-twlatest" | "b-tokold" | "c-toklatest" | "d-rootonly" | "e-tw3" | "h-rootonly-ui";
-  const APPS: Record<AppName, { deps: Record<string, string>; css: string; tw3?: boolean }> = {
+  type AppName = "a-twlatest" | "b-tokold" | "c-toklatest" | "d-rootonly" | "e-tw3" | "f-tw3content" | "h-rootonly-ui";
+  /** `tw3` 는 Tailwind 3 앱(설정 파일 · 앱 node_modules 의 tailwindcss 3.4.19), `config` 는 그 설정 파일(없으면 TW3_CONFIG) */
+  const APPS: Record<AppName, { deps: Record<string, string>; css: string; tw3?: boolean; config?: string }> = {
     "a-twlatest": { deps: { "@axis-ds/tokens": "^1.8.0", tailwindcss: "latest" }, css: TW4_CSS },
     "b-tokold": { deps: { "@axis-ds/tokens": "^1.3.0", tailwindcss: "^4.1.0" }, css: TW4_CSS },
     "c-toklatest": { deps: { "@axis-ds/tokens": "latest", tailwindcss: "^4.1.0" }, css: TW4_CSS },
     "d-rootonly": { deps: { "@axis-ds/tokens": "^1.8.0" }, css: TW4_CSS },
     "e-tw3": { deps: { "@axis-ds/tokens": "^1.8.0", tailwindcss: "^3.4.0" }, css: TW3_CSS, tw3: true },
+    // WI-0080: Tailwind 3 + ui-react(브리프 픽스처 f-tw3content 와 같은 구조). content 는 componentsDir 만 덮고 ui-react 는 덮지 않음
+    "f-tw3content": {
+      deps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" },
+      css: TW3_CSS,
+      tw3: true,
+      config: 'import axis from "@axis-ds/tokens/tailwind";\nexport default { presets: [axis], content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"] };\n',
+    },
     "h-rootonly-ui": { deps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0" }, css: H_CSS },
   };
   /** 루트 설치본(4.3.3 · 1.8.0 은 브리프 측정 때의 npm 최신) */
@@ -1906,7 +1922,7 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
       await fs.outputFile(path.join(dir, "lib/utils.ts"), "export function cn() {}\n");
       await fs.outputFile(path.join(dir, "app/globals.css"), spec.css);
       if (spec.tw3) {
-        await fs.outputFile(path.join(dir, "tailwind.config.ts"), TW3_CONFIG);
+        await fs.outputFile(path.join(dir, "tailwind.config.ts"), spec.config ?? TW3_CONFIG);
         await writeInstalledStub(dir, "tailwindcss", "3.4.19");
       }
       if (layout === "isolated") {
@@ -1926,14 +1942,18 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
   const PASS4 = { name: "tailwind.config", severity: "pass", message: 'Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다' };
   const GLOBALS4 = { name: "globals.css", severity: "pass", message: "app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)" };
   const DEPS_WARN = { name: "dependencies", severity: "warn", message: "권장 의존성 누락: clsx, tailwind-merge" };
-  const DEPS_FAIL = { name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" };
-  /** 전이 뒤(hoisted · isolated 공통) 기대값. 수정 전 hoisted 는 a · b · c · d 의 tailwind.config 와 h 의 세 항목이 다릅니다. */
-  const AFTER: Record<AppName, unknown[]> = {
+  /** WI-0081: 루트에만 선언한 tailwindcss 는 워크스페이스 루트 선언으로 인정하고 출처를 문구에 붙임(종전 「필수 의존성 누락」 FAIL) */
+  const DEPS_ROOT = { name: "dependencies", severity: "warn", message: "권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)" };
+  /**
+   * 전이 뒤 기대값. a · b · c · d · e · h 는 hoisted · isolated 공통이에요(WI-0074 수정 전 hoisted 는 a · b · c · d 의 tailwind.config 와
+   * h 의 세 항목이 다름). f 는 레이아웃마다 content 제안이 달라 `expected(layout)` 이 레이아웃별 값을 붙입니다(WI-0080).
+   */
+  const AFTER: Record<Exclude<AppName, "f-tw3content">, unknown[]> = {
     "a-twlatest": [PASS4, GLOBALS4, DEPS_WARN],
     "b-tokold": [PASS4, GLOBALS4, DEPS_WARN],
     "c-toklatest": [PASS4, GLOBALS4, DEPS_WARN],
-    // 인접 결함(WI-0074 범위 밖): 루트에만 선언한 tailwindcss 를 dependencies 는 여전히 「필수 의존성 누락」으로 봄
-    "d-rootonly": [PASS4, GLOBALS4, DEPS_FAIL],
+    // WI-0081: 루트에만 선언한 tailwindcss 를 워크스페이스 루트 선언으로 인정(WI-0074 때는 「필수 의존성 누락」 FAIL 로 남겨 둔 인접 결함)
+    "d-rootonly": [PASS4, GLOBALS4, DEPS_ROOT],
     "e-tw3": [
       { name: "tailwind.config", severity: "pass", message: "tailwind.config.ts에 AXIS 토큰이 설정되어 있습니다 (@axis-ds/tokens/tailwind preset)" },
       { name: "globals.css", severity: "pass", message: "app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css import)" },
@@ -1947,15 +1967,42 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
     "h-rootonly-ui": [
       { name: "tailwind.config", severity: "warn", message: "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(body font-family: Arial) → 지우세요" },
       GLOBALS4,
-      DEPS_FAIL,
+      DEPS_ROOT,
       { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" },
     ],
   };
+  /** WI-0080: f 의 ui-react content 제안은 설치본 위치를 따라요(hoisted 는 루트 `../../node_modules`, isolated 는 앱 `./node_modules`) */
+  const F_SUGGEST = {
+    hoisted: "../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}",
+    isolated: "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}",
+  } as const;
+  const expected = (layout: "hoisted" | "isolated"): Record<AppName, unknown[]> => ({
+    ...AFTER,
+    "f-tw3content": [
+      AFTER["e-tw3"][0],
+      AFTER["e-tw3"][1],
+      DEPS_WARN,
+      {
+        name: "tailwind.content",
+        severity: "fail",
+        message:
+          `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${F_SUGGEST[layout]}"` +
+          (layout === "hoisted" ? ` (${PARENT_NOTE})` : ""),
+      },
+      {
+        name: "animation",
+        severity: "warn",
+        message:
+          '애니메이션 플러그인이 없습니다(@axis-ds/ui-react 선언, tailwindcss-animate 선언 없음 · tailwind.config.ts plugins 에 없음): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → tailwindcss-animate 설치 뒤 plugins 에 require("tailwindcss-animate")',
+      },
+    ],
+  });
 
   it("hoisted: 전이 표대로(a · d FAIL → PASS, b · c WARN → PASS, h 세 항목) 판정하고 detectTailwind 는 루트 설치본", async () => {
     const { apps } = await monorepo("hoisted");
+    const want = expected("hoisted");
     for (const name of Object.keys(APPS) as AppName[]) {
-      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: AFTER[name] });
+      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: want[name] });
     }
     expect(detectTailwind(apps["a-twlatest"], await pkgOf(apps["a-twlatest"]))).toEqual({ major: 4, source: "installed", value: "4.3.3" });
     expect(detectTailwind(apps["d-rootonly"], await pkgOf(apps["d-rootonly"]))).toEqual({ major: 4, source: "installed", value: "4.3.3" });
@@ -1966,8 +2013,9 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
 
   it("isolated(음성 대조): 앱 node_modules 에서 찾는 앱은 종전과 같은 판정, 루트에만 선언한 d · h 도 hoisted 와 같은 결과", async () => {
     const { apps } = await monorepo("isolated");
+    const want = expected("isolated");
     for (const name of Object.keys(APPS) as AppName[]) {
-      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: AFTER[name] });
+      expect({ name, items: await items(apps[name]) }).toEqual({ name, items: want[name] });
     }
   });
 
@@ -2052,5 +2100,262 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
     expect(plan.css?.tailwind4).toBe(true);
     expect(plan.css?.requiredBaseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
     expect(plan.tailwindConfig).toBeUndefined();
+  });
+});
+
+// WI-0080: Tailwind 3 content 판정의 ui-react 표본 · 제안을 findInstalledPackage(상위 탐색)로 찾은 설치본 위치 기준으로.
+// 기대값은 브리프 매트릭스의 빌드 실측(Tailwind 3.4.19 CLI 를 앱 디렉터리에서 실행, ui-react 전용 선택자 402개가 생기는지)이에요.
+// hoisted = npm workspaces · pnpm node-linker=hoisted(설치본이 루트 node_modules 에만), isolated = pnpm 기본(앱 node_modules 에 링크),
+// single = 단일 프로젝트, missing = 설치본 없음, pnp = Plug'n'Play(.pnp.cjs). testplan 2절 표와 같은 행이에요.
+describe("WI-0080: Tailwind 3 content 의 패키지 표본 · 제안을 설치본 위치 기준으로", () => {
+  type Layout = "hoisted" | "isolated" | "single" | "missing" | "pnp";
+  type Variant = "up" | "local" | "none" | "broad" | "relobj" | "abs" | "absOther";
+  const UI = "/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const UP = `../../node_modules${UI}`;
+  const LOCAL = `./node_modules${UI}`;
+  const BASE = '"./app/**/*.{ts,tsx}", "./components/ui/**/*.{ts,tsx}"';
+
+  /** 레이아웃대로 앱을 만들고 앱 디렉터리와 실제 설치 위치(node_modules 디렉터리, 없으면 앱 기준)를 돌려줍니다 */
+  async function app(layout: Layout): Promise<{ dir: string; realNodeModules: string }> {
+    const root = await tempDir();
+    const mono = layout === "hoisted" || layout === "isolated" || layout === "pnp";
+    const dir = mono ? path.join(root, "apps", "web") : root;
+    if (mono) await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, workspaces: ["apps/*"] });
+    if (layout === "hoisted" || layout === "pnp") await writeInstalledStub(root, "@axis-ds/ui-react", "1.8.1");
+    if (layout === "pnp") await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    if (layout === "isolated" || layout === "single") await writeInstalledStub(dir, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    if (layout !== "pnp") await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    const realNodeModules = layout === "hoisted" || layout === "pnp" ? path.join(root, "node_modules") : path.join(dir, "node_modules");
+    return { dir, realNodeModules };
+  }
+  function contentOf(v: Variant, realNodeModules: string): string {
+    switch (v) {
+      case "up":
+        return `[${BASE}, "${UP}"]`;
+      case "local":
+        return `[${BASE}, "${LOCAL}"]`;
+      case "none":
+        return `[${BASE}]`;
+      case "broad":
+        return `[${BASE}, "./**/*.{js,mjs}"]`;
+      case "relobj":
+        return `{ relative: true, files: [${BASE}, "${UP}"] }`;
+      case "abs":
+        return `[${BASE}, ${JSON.stringify(`${realNodeModules.split(path.sep).join("/")}${UI}`)}]`;
+      case "absOther":
+        return `[${BASE}, ${JSON.stringify(`${path.join(realNodeModules, "..", "elsewhere", "node_modules").split(path.sep).join("/")}${UI}`)}]`;
+    }
+  }
+  async function contentItem(layout: Layout, v: Variant) {
+    const { dir, realNodeModules } = await app(layout);
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: ${contentOf(v, realNodeModules)} };\n`);
+    return (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+  }
+  const PASS = {
+    name: "tailwind.content",
+    severity: "pass",
+    message: "tailwind.config.ts의 content 가 componentsDir(components/ui) · @axis-ds/ui-react 를 덮습니다",
+  };
+  const FAIL = (suggest: string) => ({
+    name: "tailwind.content",
+    severity: "fail",
+    message:
+      `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${suggest}"` +
+      (suggest.startsWith("../") ? ` (${PARENT_NOTE})` : ""),
+  });
+
+  /** 빌드 실측(앱 cwd)과 같은 판정. hoisted 의 up · relobj · abs 는 402/402, local · none 은 0, broad 는 44/402(** 가 ../ 를 넘지 않음) */
+  const MATRIX: Record<"hoisted" | "isolated" | "single", Record<Variant, unknown>> = {
+    hoisted: { up: PASS, local: FAIL(UP), none: FAIL(UP), broad: FAIL(UP), relobj: PASS, abs: PASS, absOther: FAIL(UP) },
+    isolated: { up: FAIL(LOCAL), local: PASS, none: FAIL(LOCAL), broad: PASS, relobj: FAIL(LOCAL), abs: PASS, absOther: FAIL(LOCAL) },
+    single: { up: FAIL(LOCAL), local: PASS, none: FAIL(LOCAL), broad: PASS, relobj: FAIL(LOCAL), abs: PASS, absOther: FAIL(LOCAL) },
+  };
+
+  for (const layout of ["hoisted", "isolated", "single"] as const) {
+    it(`매트릭스(${layout}): 판정 · 제안이 빌드 실측과 같음`, async () => {
+      for (const v of Object.keys(MATRIX[layout]) as Variant[]) {
+        expect({ layout, v, item: await contentItem(layout, v) }).toEqual({ layout, v, item: MATRIX[layout][v] });
+      }
+    });
+  }
+
+  it("AC1 · AC2 · AC3 (hoisted): 실제 위치 ../../node_modules 를 인정하고, 종전 제안 ./node_modules 만 있으면 FAIL(종전 거짓 PASS, 빌드 0/402)", async () => {
+    expect(await contentItem("hoisted", "up")).toEqual(PASS);
+    expect(await contentItem("hoisted", "local")).toEqual(FAIL(UP));
+    expect((await contentItem("hoisted", "none"))?.message).toContain(`@axis-ds/ui-react → "${UP}"`);
+  });
+
+  it("AC5: 설치본이 없거나 Plug'n'Play 면 종전 표본 node_modules/<pkg> · 제안 ./node_modules/<pkg> 를 씀", async () => {
+    expect(await contentItem("missing", "local")).toEqual(PASS);
+    expect(await contentItem("missing", "none")).toEqual(FAIL(LOCAL));
+    // PnP: 루트에 남은 node_modules 설치본을 읽지 않음(isPnpProject 가드). 가드를 지우면 up 이 PASS 로 바뀌어 빨개짐
+    expect(await contentItem("pnp", "up")).toEqual(FAIL(LOCAL));
+    expect(await contentItem("pnp", "local")).toEqual(PASS);
+  });
+
+  it("AC6: ** 는 ../ 세그먼트를 넘지 않음(hoisted 의 ./**/*.{js,mjs} 는 FAIL, 단일 프로젝트는 PASS 유지)", async () => {
+    expect(await contentItem("hoisted", "broad")).toEqual(FAIL(UP));
+    expect(await contentItem("single", "broad")).toEqual(PASS);
+  });
+
+  it("AC7: 절대경로 glob 은 resolve(baseDir, 표본) 와 비교(실제 위치면 PASS, 다른 위치면 FAIL)", async () => {
+    for (const layout of ["hoisted", "isolated", "single"] as const) {
+      expect({ layout, item: await contentItem(layout, "abs") }).toEqual({ layout, item: PASS });
+      expect({ layout, severity: (await contentItem(layout, "absOther"))?.severity }).toEqual({ layout, severity: "fail" });
+    }
+  });
+
+  it("contentGlobCovers 단위: 앞쪽 ../ 개수가 같을 때만 덮음 · 절대경로는 baseDir 기준 절대 표본과 비교", () => {
+    const base = path.resolve("/work/mono/apps/web");
+    const sample = "../../node_modules/@axis-ds/ui-react/dist/index.js";
+    expect(contentGlobCovers(UP, sample, base)).toBe(true);
+    expect(contentGlobCovers(`./${UP}`, sample, base)).toBe(true);
+    expect(contentGlobCovers("../node_modules/**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("./**/*.{js,mjs}", sample, base)).toBe(false);
+    expect(contentGlobCovers("**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("./**/*.{js,mjs}", "node_modules/@axis-ds/ui-react/dist/index.js", base)).toBe(true);
+    expect(contentGlobCovers("/work/mono/node_modules/@axis-ds/ui-react/dist/**/*.js", sample, base)).toBe(path.sep === "/");
+    expect(contentGlobCovers("/work/other/node_modules/@axis-ds/ui-react/dist/**/*.js", sample, base)).toBe(false);
+    // 정규식 자체는 ** 가 ../ 를 먹음(그래서 ../ 개수 비교를 따로 둠)
+    expect(contentGlobToRegExp("./**/*.{js,mjs}").test(sample)).toBe(true);
+  });
+
+  // 검토 후속(배치 6b 반박 검토 finding): 중괄호 안에 깊이가 다른 경로를 섞은 glob 은 갈래마다 ../ 개수를 따로 셈.
+  // 빌드 실측(npm · yarn workspaces 앱 cwd, Tailwind 3.4.17): `{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}` 는
+  // ui-react 선택자 372/372 인데 수정 전에는 FAIL(갈래를 펼치지 않고 앞쪽 ../ 를 0 으로 셈)
+  it("중괄호 갈래마다 ../ 개수를 셈(깊이를 섞은 glob 이 실제 설치 위치를 덮으면 PASS)", async () => {
+    const MIXED = "{./src,../../node_modules/@axis-ds/ui-react/dist}/**/*.{js,mjs,tsx}";
+    const base = path.resolve("/work/mono/apps/web");
+    const sample = "../../node_modules/@axis-ds/ui-react/dist/index.js";
+    expect(contentGlobCovers(MIXED, sample, base)).toBe(true);
+    expect(contentGlobCovers("./{src,../../node_modules/@axis-ds/ui-react/dist}/**/*.js", sample, base)).toBe(true);
+    // 갈래를 펼쳐도 ** 가 ../ 를 넘지 않는 규칙은 그대로(../ 하나짜리 갈래는 표본 ../../ 를 덮지 않음)
+    expect(contentGlobCovers("{./src,../node_modules}/**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("{./src,./lib}/**/*.js", sample, base)).toBe(false);
+    expect(contentGlobCovers("{./src,./node_modules/@axis-ds/ui-react/dist}/**/*.js", "node_modules/@axis-ds/ui-react/dist/index.js", base)).toBe(true);
+    // 절대경로 갈래도 펼친 뒤 절대 비교
+    expect(contentGlobCovers("{./src,/work/mono/node_modules/@axis-ds/ui-react/dist}/**/*.js", sample, base)).toBe(path.sep === "/");
+
+    const { dir: hoisted } = await app("hoisted");
+    await fs.outputFile(path.join(hoisted, "tailwind.config.ts"), `export default { content: [${BASE}, "${MIXED}"] };\n`);
+    expect((await collectCheckResults(hoisted)).find((r) => r.name === "tailwind.content")).toEqual(PASS);
+    // 음성 대조: 같은 glob 이 pnpm 기본(앱 node_modules 설치)에서는 실제 위치를 덮지 않아 FAIL
+    const { dir: isolated } = await app("isolated");
+    await fs.outputFile(path.join(isolated, "tailwind.config.ts"), `export default { content: [${BASE}, "${MIXED}"] };\n`);
+    expect((await collectCheckResults(isolated)).find((r) => r.name === "tailwind.content")).toEqual(FAIL(LOCAL));
+  });
+
+  // 검토 후속: pnpm 기본 앱의 node_modules/@axis-ds/ui-react 는 .pnpm 스토어로 가는 심링크예요. 스토어 실경로를 가리키는 절대 glob 도
+  // Tailwind 가 실제로 스캔하므로(빌드 실측 372/372) 실경로와도 비교. 수정 전에는 심링크 경로와만 비교해 FAIL
+  it("절대경로 glob 은 표본의 실경로(심링크를 푼 경로)와도 비교", async () => {
+    const root = await tempDir();
+    const dir = path.join(root, "apps", "web");
+    const store = path.join(root, "node_modules", ".pnpm", "@axis-ds+ui-react@1.8.1", "node_modules", "@axis-ds", "ui-react");
+    await fs.outputJSON(path.join(store, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.1" });
+    await fs.outputFile(path.join(store, "dist", "index.js"), "");
+    await fs.ensureDir(path.join(dir, "node_modules", "@axis-ds"));
+    await fs.symlink(store, path.join(dir, "node_modules", "@axis-ds", "ui-react"), "dir");
+    await fs.writeFile(path.join(root, "pnpm-workspace.yaml"), "packages:\n  - apps/*\n");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    const item = async (glob: string) => {
+      await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: [${BASE}, ${JSON.stringify(glob)}] };\n`);
+      return (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+    };
+    const real = (await fs.realpath(store)).split(path.sep).join("/");
+    expect(await item(`${real}/dist/**/*.{js,mjs}`)).toEqual(PASS);
+    // 종전대로 심링크 경로 · 상대 제안도 PASS, 다른 스토어 항목은 FAIL(음성 대조)
+    expect(await item(`${path.join(dir, "node_modules").split(path.sep).join("/")}${UI}`)).toEqual(PASS);
+    expect(await item(LOCAL)).toEqual(PASS);
+    expect((await item(`${real.replace("ui-react@1.8.1", "ui-react@9.9.9")}/dist/**/*.{js,mjs}`))?.severity).toBe("fail");
+  });
+});
+
+// WI-0081: dependencies 판정은 앱에 선언이 없으면 워크스페이스 루트(findWorkspaceRoot, .git 에서 중단) package.json 선언도 인정하고,
+// 문구에 「워크스페이스 루트에 선언」을 붙여요. 안내 명령(→ …)은 워크스페이스 루트 lockfile 을 따라요. 워크스페이스가 아닌 상위의 선언은
+// 여전히 「필수 의존성 누락」이에요(음성 대조). 브리프 측정: fx-npm d-rootonly · h-rootonly-ui · fx-pnpm · fx-pnpmhoisted d-rootonly 4행 rc 1.
+describe("WI-0081: dependencies 의 워크스페이스 루트 선언 인정", () => {
+  const TRIO = { tailwindcss: "^4.1.0", clsx: "^2.1.1", "tailwind-merge": "^3.4.0" };
+  /** 루트(root) + apps/web(app). rootPkg 가 null 이면 루트 package.json 을 만들지 않음 */
+  async function ws(rootPkg: Record<string, unknown> | null, appDeps: Record<string, string>, extra: Record<string, string> = {}, appRel = "apps/web") {
+    const root = await tempDir();
+    if (rootPkg) await fs.writeJSON(path.join(root, "package.json"), rootPkg);
+    for (const [rel, content] of Object.entries(extra)) await fs.outputFile(path.join(root, rel), content);
+    const app = path.join(root, appRel);
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: appDeps });
+    return { root, app };
+  }
+  const deps = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "dependencies");
+  const quiet = () => vi.spyOn(console, "log").mockImplementation(() => {});
+
+  it("npm 워크스페이스: 루트에만 tailwindcss · clsx · tailwind-merge 선언 + 루트 설치본 → PASS(출처 표시), check fail 0(종전 rc 1)", async () => {
+    const { root, app } = await ws({ name: "root", private: true, workspaces: ["apps/*"], devDependencies: TRIO }, {}, { "package-lock.json": "{}" });
+    for (const name of Object.keys(TRIO)) await writeInstalledStub(root, name);
+    expect(await deps(app)).toEqual({
+      name: "dependencies",
+      severity: "pass",
+      message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인, 워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge)",
+    });
+    // check 종료 코드(fail 0): d-rootonly 형 앱(Tailwind 4 · tokens 진입점 · componentsDir · cn)을 갖춰 다른 FAIL 이 없게 함
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/tokens": "^1.8.0" } });
+    await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "components/ui" });
+    await fs.outputFile(path.join(app, "lib/utils.ts"), "export function cn() {}\n");
+    await fs.outputFile(path.join(app, "app/globals.css"), '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n');
+    await writeInstalledStub(root, "tailwindcss", "4.3.3");
+    await writeInstalledStub(root, "@axis-ds/tokens", "1.8.0");
+    quiet();
+    const summary = await runCheck(app);
+    expect({ summary, fails: (await collectCheckResults(app)).filter((r) => r.severity === "fail") }).toMatchObject({ summary: { fail: 0 }, fails: [] });
+  });
+
+  it("yarn 워크스페이스: 미설치 WARN 의 안내 명령이 루트 yarn.lock 을 따름(종전 FAIL, 안내는 pnpm install)", async () => {
+    const { app } = await ws(
+      { name: "root", private: true, workspaces: ["apps/*"], devDependencies: { tailwindcss: "^4.1.0" } },
+      { clsx: "^2.1.1", "tailwind-merge": "^3.4.0" },
+      { "yarn.lock": "" }
+    );
+    expect(await deps(app)).toEqual({
+      name: "dependencies",
+      severity: "warn",
+      message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → yarn install (워크스페이스 루트에 선언: tailwindcss)",
+    });
+  });
+
+  it("앱 선언이 있으면 앱 선언을 쓰고 출처 표시 없음(루트에도 선언돼 있어도 종전 문구)", async () => {
+    const { root, app } = await ws({ name: "root", private: true, workspaces: ["apps/*"], devDependencies: TRIO }, TRIO, { "package-lock.json": "{}" });
+    for (const name of Object.keys(TRIO)) await writeInstalledStub(root, name);
+    expect(await deps(app)).toEqual({ name: "dependencies", severity: "pass", message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인)" });
+  });
+
+  it("음성 대조: 워크스페이스가 아닌 상위(workspaces 없음, fx-outside 변형)의 선언은 인정하지 않음 → FAIL 그대로", async () => {
+    const { root, app } = await ws({ name: "unrelated", private: true, devDependencies: TRIO }, {}, { "package-lock.json": "{}" }, "sub/app");
+    for (const name of Object.keys(TRIO)) await writeInstalledStub(root, name);
+    expect(await deps(app)).toEqual({ name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" });
+    quiet();
+    expect((await runCheck(app)).fail).toBeGreaterThan(0);
+  });
+
+  it("음성 대조: 앱과 워크스페이스 루트 사이에 .git 이 있으면(fx-gitstop) 루트 선언을 인정하지 않음 → FAIL", async () => {
+    const { root, app } = await ws({ name: "root", private: true, workspaces: ["repo/*"], devDependencies: TRIO }, {}, { "repo/.git/HEAD": "ref: refs/heads/main\n" }, "repo/app");
+    for (const name of Object.keys(TRIO)) await writeInstalledStub(root, name);
+    expect(await deps(app)).toEqual({ name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" });
+  });
+
+  it("음성 대조: 앱 · 워크스페이스 루트 어디에도 선언이 없으면 FAIL(설치본만 있어도 선언 기준)", async () => {
+    const { root, app } = await ws({ name: "root", private: true, workspaces: ["apps/*"] }, {});
+    await writeInstalledStub(root, "tailwindcss", "4.3.3");
+    expect(await deps(app)).toEqual({ name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" });
+  });
+
+  it("Plug'n'Play 워크스페이스: 선언 기준 PASS 문구에도 출처 표시", async () => {
+    const { app } = await ws({ name: "root", private: true, workspaces: ["apps/*"], devDependencies: TRIO }, {}, { "yarn.lock": "", ".pnp.cjs": "" });
+    expect(await deps(app)).toEqual({
+      name: "dependencies",
+      severity: "pass",
+      message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 3개, 워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge)",
+    });
   });
 });

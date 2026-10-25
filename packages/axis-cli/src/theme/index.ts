@@ -25,7 +25,7 @@ import {
   type ThemeAddPlan,
 } from "./theme-add.js";
 import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
-import { TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
+import { CONTENT_PARENT_PATH_NOTE, TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
 import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
 
 /** CSS 에서 `@import "<spec>"` 줄이 시작하는 위치(작은따옴표 · `url()` 포함). 없으면 -1 */
@@ -364,6 +364,8 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
         )
       );
     }
+    // WI-0080 D4: 제안이 상위 경로(호이스팅 설치본)이면 check 와 같은 cwd 기준 안내를 한 줄 더합니다
+    if (tw.contentMissing.some((t) => t.suggest.startsWith("../"))) lines.push(chalk.gray(`    ${CONTENT_PARENT_PATH_NOTE}`));
   }
 
   // 브랜드 켜기 안내(FR-2, Q1 · U10: 코드는 고치지 않음). WI-0065 D7: defaultBrand 대신 data-brand · setBrand 를 안내합니다

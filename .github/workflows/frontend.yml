@@ -46,8 +46,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # WI-0080: changeset 동반 검사(check-changeset-mcp-tokens)가 PR 은 origin/<base> 와의 merge-base, push 는 push 이전 커밋(github.event.before)과
+      # 비교해 registry-core 변경을 찾으므로 전체 이력이 필요해요(기본 fetch-depth 1 이면 기준이 없어 exit 2)
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -90,9 +94,14 @@ jobs:
 
       # WI-0076 후속 규칙: mcp 는 빌드할 때 tokens dist 값을 동봉하고 tokens 를 devDependency 로만 가진다.
       # 그래서 @axis-ds/tokens 를 올리는 changeset 이 있으면 @axis-ds/mcp 도 올려야 MCP 토큰 응답이 따라간다.
-      # 위반이면 exit 1, changeset 을 읽지 못하면 exit 2. 판정 단위 테스트도 함께 돈다
-      - name: tokens 발행 시 mcp 동반 changeset 검사 (WI-0076)
+      # WI-0080: packages/axis-registry-core/ 를 바꾸면(cli · mcp 가 번들하는 private 코어) @axis-ds/cli 와 @axis-ds/mcp 를 모두 올려야 한다.
+      # 바뀐 파일은 PR 이면 origin/<base> 와의 merge-base, push 면 github.event.before 와의 merge-base(없으면 HEAD^)와 비교한다(위 checkout fetch-depth: 0).
+      # 위반이면 exit 1, changeset 을 읽지 못하거나 비교 기준을 구하지 못하면 exit 2. 판정 단위 테스트도 함께 돈다
+      - name: changeset 동반 검사 (tokens → mcp WI-0076 · registry-core → cli · mcp WI-0080)
         run: pnpm check-changeset-mcp-tokens
+        env:
+          # push 는 커밋 여러 개가 한 번에 들어올 수 있어(rebase 머지 · 직접 push) push 이전 커밋과 비교한다. PR · dispatch 에서는 비어 있음
+          AXIS_PUSH_BEFORE: ${{ github.event.before }}
 
       # WI-0057 D4: library 데이터의 사이트 링크마다 문서 라우트(page.tsx)가 실재하는지와 index · search-index ·
       # categories · components · stats 정합을 네트워크 없이 본다. 외부 링크 GET 은 `pnpm check-library-links:remote`(수동)

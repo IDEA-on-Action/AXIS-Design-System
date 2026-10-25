@@ -505,9 +505,27 @@ describe("handleCheckProject WI-0074: 호이스팅 모노레포의 설치본을 
     expect(await items(h)).toEqual([
       { name: "tailwind.config", severity: "warn", message: "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(body font-family: Arial) → 지우세요" },
       GLOBALS4,
-      { name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" },
+      // WI-0081: 루트에만 선언한 tailwindcss 를 워크스페이스 루트 선언으로 인정(종전 「필수 의존성 누락」 FAIL)
+      { name: "dependencies", severity: "warn", message: "권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)" },
       { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" },
     ]);
+  });
+
+  it("WI-0081: 루트에만 tailwindcss 를 선언한 d-rootonly 는 FAIL 이 없고, 워크스페이스가 아닌 상위의 선언은 FAIL 그대로(음성 대조)", async () => {
+    const d = await app("d", { "@axis-ds/tokens": "^1.8.0" }, TW4_CSS, ROOT);
+    const all = (await handleCheckProject({ targetDir: d })).results;
+    expect(all.filter((r) => r.severity === "fail")).toEqual([]);
+    expect(all.find((r) => r.name === "dependencies")).toEqual({
+      name: "dependencies",
+      severity: "warn",
+      message: "권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)",
+    });
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "unrelated", private: true, devDependencies: { tailwindcss: "^4.1.0" } });
+    expect((await handleCheckProject({ targetDir: d })).results.find((r) => r.name === "dependencies")).toEqual({
+      name: "dependencies",
+      severity: "fail",
+      message: "필수 의존성 누락: tailwindcss",
+    });
   });
 
   it("양성 대조: 루트 tokens 설치본 1.3.0 이면 상위에서 읽은 설치본으로 WARN", async () => {
@@ -517,5 +535,42 @@ describe("handleCheckProject WI-0074: 호이스팅 모노레포의 설치본을 
       severity: "warn",
       message: "Tailwind 4: app/globals.css에 AXIS 토큰 진입점이 있지만 @axis-ds/tokens 버전 확인이 필요합니다 (1.4.0 이상 필요: @axis-ds/tokens 설치본 1.3.0)",
     });
+  });
+});
+
+// WI-0080: CLI template-check.test.ts 「WI-0080」 과 같은 tailwind.content 판정 · 문구(공유 코어 번들)
+describe("handleCheckProject WI-0080: 호이스팅 Tailwind 3 앱의 content 표본 · 제안 (CLI 와 같은 문구)", () => {
+  const UP = "../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const LOCAL = "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const PARENT_NOTE =
+    "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+  /** tmp 를 모노레포 루트로 두고 ui-react 설치본은 루트에만(hoisted), isolated 면 앱 node_modules 에도 둡니다 */
+  async function app(layout: "hoisted" | "isolated", content: string[]) {
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, workspaces: ["apps/*"] });
+    await writeInstalledStub(tmp, "@axis-ds/ui-react", "1.8.1");
+    const dir = path.join(tmp, "apps", "web");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    if (layout === "isolated") await writeInstalledStub(dir, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: ${JSON.stringify(content)} };\n`);
+    return dir;
+  }
+  const contentItem = async (dir: string) => (await handleCheckProject({ targetDir: dir })).results.find((r) => r.name === "tailwind.content");
+  const FAIL = (suggest: string, note: boolean) => ({
+    name: "tailwind.content",
+    severity: "fail",
+    message: `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${suggest}"${note ? ` (${PARENT_NOTE})` : ""}`,
+  });
+  const PASS = { name: "tailwind.content", severity: "pass", message: "tailwind.config.ts의 content 가 @axis-ds/ui-react 를 덮습니다" };
+
+  it("hoisted: 실제 위치 ../../node_modules 는 PASS, ./node_modules 만이면 FAIL 이고 제안은 ../../node_modules + cwd 안내", async () => {
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", UP]))).toEqual(PASS);
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", LOCAL]))).toEqual(FAIL(UP, true));
+    expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", "./**/*.{js,mjs}"]))).toEqual(FAIL(UP, true));
+  });
+
+  it("isolated(음성 대조): 앱 node_modules 설치본이면 종전 판정 · 문구(./node_modules, 안내 없음)", async () => {
+    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", LOCAL]))).toEqual(PASS);
+    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", UP]))).toEqual(FAIL(LOCAL, false));
   });
 });

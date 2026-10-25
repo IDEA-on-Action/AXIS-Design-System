@@ -776,6 +776,25 @@ describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치
       expect(out).not.toContain("pnpm add");
     }
   });
+
+  it("WI-0081: 앱에 lockfile 이 없으면 워크스페이스 루트 lockfile(npm · yarn)을 따름, 워크스페이스가 아닌 상위는 pnpm 그대로(음성 대조)", async () => {
+    for (const [lock, verb, workspaces] of [
+      ["package-lock.json", "npm install", true],
+      ["yarn.lock", "yarn add", true],
+      ["package-lock.json", "pnpm add", false],
+    ] as const) {
+      const app0 = await project({ tokens: "1.2", layout: "src-app" });
+      const root = await fs.mkdtemp(path.join(path.dirname(app0), "axis-ws-"));
+      created.push(root);
+      await fs.writeJSON(path.join(root, "package.json"), workspaces ? { name: "root", private: true, workspaces: ["apps/*"] } : { name: "unrelated", private: true });
+      await fs.writeFile(path.join(root, lock), "");
+      const dir = path.join(root, "apps", "web");
+      await fs.move(app0, dir);
+      const { out } = await runAdd(["sample", "-d", dir]);
+      expect({ lock, workspaces, upgrade: out.includes(`업그레이드: ${verb} "@axis-ds/tokens@^1.6.0"`) }).toEqual({ lock, workspaces, upgrade: true });
+      expect({ lock, workspaces, theme: out.includes(`@axis-ds/theme 설치: ${verb} "@axis-ds/theme@^1.3.0"`) }).toEqual({ lock, workspaces, theme: true });
+    }
+  });
 });
 
 describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () => {
@@ -803,5 +822,38 @@ describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () 
     await fs.writeJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" }, { spaces: 2 });
     const { out } = await runAdd(["sample", "-d", dir]);
     expect(out).not.toContain("Tailwind 설정 (");
+  });
+
+  // WI-0080: 세 번째 호출지(theme add 안내)도 check 와 같은 제안 · 안내를 씀. 호이스팅은 루트 설치본 기준 ../../node_modules
+  it("호이스팅 모노레포: ui-react content 제안이 ../../node_modules 이고 cwd 기준 안내 1줄, 앱 node_modules 에 있으면(음성 대조) 종전 ./node_modules", async () => {
+    const PARENT_NOTE =
+      "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+    const stub = (dir: string, name: string, version: string) =>
+      fs.outputJSON(path.join(dir, "node_modules", ...name.split("/"), "package.json"), { name, version });
+    const outFor = async (layout: "hoisted" | "isolated") => {
+      const root = await project({ tokens: "1.3", layout: "empty" });
+      await stub(root, "@axis-ds/ui-react", "1.8.1");
+      const app = path.join(root, "apps", "web");
+      await fs.outputJSON(path.join(app, "package.json"), {
+        name: "web",
+        private: true,
+        dependencies: { "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" },
+      });
+      await stub(app, "tailwindcss", "3.4.19");
+      if (layout === "isolated") await stub(app, "@axis-ds/ui-react", "1.8.1");
+      await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+      await fs.outputFile(path.join(app, "app", "globals.css"), "@tailwind base;\n");
+      await fs.outputFile(
+        path.join(app, "tailwind.config.ts"),
+        'import axisPreset from "@axis-ds/tokens/tailwind";\nexport default { presets: [axisPreset], content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"] };\n'
+      );
+      return (await runAdd(["sample", "-d", app])).out;
+    };
+    const hoisted = await outFor("hoisted");
+    expect(hoisted).toContain('content 가 @axis-ds/ui-react 를 덮지 않습니다. 넣으세요: "../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"');
+    expect(hoisted).toContain(PARENT_NOTE);
+    const isolated = await outFor("isolated");
+    expect(isolated).toContain('content 가 @axis-ds/ui-react 를 덮지 않습니다. 넣으세요: "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"');
+    expect(isolated).not.toContain(PARENT_NOTE);
   });
 });
