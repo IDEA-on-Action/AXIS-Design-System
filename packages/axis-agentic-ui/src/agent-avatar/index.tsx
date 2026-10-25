@@ -25,9 +25,9 @@ const sizeStyles = {
 };
 
 const statusStyles = {
-  online: "bg-[var(--axis-status-success)]",
-  busy: "bg-[var(--axis-status-warning)]",
-  offline: "bg-[var(--axis-status-neutral)]",
+  online: "bg-[var(--axis-text-success)]",
+  busy: "bg-[var(--axis-text-warning)]",
+  offline: "bg-[var(--axis-text-tertiary)]",
 };
 
 const typeColors = {

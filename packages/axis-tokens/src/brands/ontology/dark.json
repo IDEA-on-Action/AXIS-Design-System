@@ -187,6 +187,18 @@
       "shadow": { "value": "0 8px 24px rgba(0,0,0,.50)" }
     }
   },
+  "form-control": {
+    "border": { "value": "#2B2F35" },
+    "track": { "value": "#2A2E34" }
+  },
+  "progress": {
+    "fill": {
+      "default": { "value": "#6B98F0" },
+      "success": { "value": "{color.green.500}" },
+      "warning": { "value": "{color.yellow.500}" },
+      "destructive": { "value": "{color.red.500}" }
+    }
+  },
   "shadcn": {
     "background": "216 15.2% 6.5%",
     "foreground": "210 16.7% 95.3%",

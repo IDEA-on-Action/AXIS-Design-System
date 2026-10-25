@@ -16,7 +16,7 @@
     "files": [
       {
         "path": "index.tsx",
-        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\n/** 여러 줄의 텍스트를 입력받는 텍스트 영역 컴포넌트. 최소 높이, 포커스 링, 비활성 상태 스타일을 포함한다. */\nconst Textarea = React.forwardRef<\n  HTMLTextAreaElement,\n  React.ComponentPropsWithoutRef<\"textarea\">\n>(({ className, ...props }, ref) => (\n  <textarea\n    className={cn(\n      \"flex min-h-[80px] w-full rounded-md border border-[var(--axis-border-default)] bg-[var(--axis-surface-default)] px-3 py-2 text-sm\",\n      \"text-[var(--axis-text-primary)]\",\n      \"ring-offset-[var(--axis-surface-default)]\",\n      \"placeholder:text-[var(--axis-text-tertiary)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      className\n    )}\n    ref={ref}\n    {...props}\n  />\n));\nTextarea.displayName = \"Textarea\";\n\nexport { Textarea };\n",
+        "content": "import * as React from \"react\";\nimport { cn } from \"../utils\";\n\n/** 여러 줄의 텍스트를 입력받는 텍스트 영역 컴포넌트. 최소 높이, 포커스 링, 비활성 상태 스타일을 포함한다. */\nconst Textarea = React.forwardRef<\n  HTMLTextAreaElement,\n  React.ComponentPropsWithoutRef<\"textarea\">\n>(({ className, ...props }, ref) => (\n  <textarea\n    className={cn(\n      \"flex min-h-[80px] w-full rounded-md border border-[var(--axis-form-control-border)] bg-[var(--axis-surface-default)] px-3 py-2 text-sm\",\n      \"text-[var(--axis-text-primary)]\",\n      \"ring-offset-[var(--axis-surface-default)]\",\n      \"placeholder:text-[var(--axis-text-tertiary)]\",\n      \"focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2\",\n      \"disabled:cursor-not-allowed disabled:opacity-50\",\n      className\n    )}\n    ref={ref}\n    {...props}\n  />\n));\nTextarea.displayName = \"Textarea\";\n\nexport { Textarea };\n",
         "type": "component"
       }
     ],
@@ -25,5 +25,5 @@
     "registryDeps": []
   },
   "status": "active",
-  "updatedAt": "2026-10-23T00:00:00.000Z"
+  "updatedAt": "2026-10-25T00:00:00.000Z"
 }

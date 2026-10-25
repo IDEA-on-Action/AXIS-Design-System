@@ -92,7 +92,7 @@
       "type": "registry:ui",
       "title": "Run Progress",
       "description": "AI 에이전트 실행 진행률 표시 컴포넌트",
-      "sha256": "4d7611b71d67ccf57ce89b1a3ffdf954575e22e8dd8ff13aa86b7710367e8b24"
+      "sha256": "7c5729965b71edc5977a8ff41289b9e8973f0d67ae5469eb419c13207877ef7f"
     },
     {
       "name": "agentic-streaming-text",
@@ -106,14 +106,14 @@
       "type": "registry:ui",
       "title": "Approval Card",
       "description": "사용자 승인 요청 카드 컴포넌트",
-      "sha256": "7da9521e6f7e684d8fa0ccb8156877aa251c9cbf4d7f4491a5fa346daeb8111a"
+      "sha256": "412651c84e63a69339fc8788e4d75657fde05b0116a9161f7c32e73a3cd1dbd7"
     },
     {
       "name": "agentic-step-timeline",
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "sha256": "739536d14d7a68452553c5455af1750beaeff9defcc3d97e00148d06f5bd40fc"
+      "sha256": "6e451cc2f98a62cd4132221dc5187d710a5ddebb940f602cb838b93004a35a95"
     },
     {
       "name": "agentic-thinking-indicator",
@@ -134,14 +134,14 @@
       "type": "registry:ui",
       "title": "Recovery Banner",
       "description": "에러 복구 배너 컴포넌트",
-      "sha256": "8c5db2ca862c68c160a269a0375617b5ceac0c134494de785d34fea9d8cafed8"
+      "sha256": "17b3c5f59ccbecba3dcdaa37a4002d0c9b5843d0aa4a8c0635c9051163ff2572"
     },
     {
       "name": "agentic-agent-avatar",
       "type": "registry:ui",
       "title": "Agent Avatar",
       "description": "AI 에이전트 아바타 컴포넌트",
-      "sha256": "f976f582e9ed76b9708750374874a93a153845524863abb53416301366a6df3c"
+      "sha256": "2ac9c96807bc5103c9d7266dd7d2daacaac7e3856e17c9f862555c65e0218355"
     },
     {
       "name": "agentic-surface-renderer",
@@ -155,7 +155,7 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "d8ae7866ae417e004aa9b7b8d315a177ac2132b81929d6ff2c75a5414135f8f8"
+      "sha256": "7601f15cb9d796a5bae068ccb5a12b1c02078e2273bdb6be5e9d00324fd54bfb"
     },
     {
       "name": "agentic-message-bubble",
@@ -169,7 +169,7 @@
       "type": "registry:ui",
       "title": "Feedback Buttons",
       "description": "좋아요/싫어요 피드백 버튼 컴포넌트",
-      "sha256": "736cfcb470ad4d32fc3b70d1697984dd02e2d75a34f98d023908fc6831792f78"
+      "sha256": "f3d4919281f7f811af1e8bf98cbbc32914f830b441e50a53f71d8315c69c6440"
     },
     {
       "name": "agentic-token-usage-indicator",
@@ -190,21 +190,21 @@
       "type": "registry:ui",
       "title": "Code Block",
       "description": "코드 표시 + 복사 버튼 컴포넌트",
-      "sha256": "e42e0c7c18b2d7c270ad55208c33941f944d525888f4d5d765aa50578e025cc3"
+      "sha256": "e67665de3ccbd157e3b4037418760e401b1b77dbacb3456a8dc60594a217aa68"
     },
     {
       "name": "agentic-plan-card",
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "sha256": "ed6e7145a338b2b59a05aa3f829cf3f95e391d73d5a66c685cbd9349271e26da"
+      "sha256": "d0ad94a23363711259bd49c54aa5205054a4c6a13bd8abdfeef3fa534b68398e"
     },
     {
       "name": "agentic-attachment-card",
       "type": "registry:ui",
       "title": "Attachment Card",
       "description": "파일/이미지 첨부 표시 카드 컴포넌트",
-      "sha256": "1b5df56505341ef6b9a0adab7c50eced05e402b9a06cfdd3628ec4fda08e8af9"
+      "sha256": "d7116c7dc5c27cb6bc286a0316139d81ffd77c61bbb67a54e034d592183f7f66"
     },
     {
       "name": "agentic-diff-viewer",

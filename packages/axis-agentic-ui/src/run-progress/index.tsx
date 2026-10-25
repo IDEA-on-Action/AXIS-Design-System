@@ -29,7 +29,7 @@ export interface RunProgressProps {
 const statusColors: Record<StepStatus, string> = {
   pending: "bg-[var(--axis-status-neutral-muted)] text-[var(--axis-status-neutral-muted-contrast)]",
   running: "bg-[var(--axis-status-running)] text-[var(--axis-status-running-contrast)] animate-pulse motion-reduce:![animation-duration:5s]",
-  complete: "bg-[var(--axis-status-success)] text-[var(--axis-status-success-contrast)]",
+  complete: "bg-[var(--axis-text-success)] text-[var(--axis-status-success-contrast)]",
   error: "bg-[var(--axis-status-error)] text-[var(--axis-status-error-contrast)]",
 };
 

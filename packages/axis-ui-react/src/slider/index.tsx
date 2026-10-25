@@ -24,7 +24,7 @@ const Slider = React.forwardRef<
       )}
       {...props}
     >
-      <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--axis-surface-tertiary)]">
+      <SliderPrimitive.Track className="relative h-2 w-full grow overflow-hidden rounded-full bg-[var(--axis-form-control-track)]">
         <SliderPrimitive.Range className="absolute h-full bg-[var(--axis-interactive-primary)]" />
       </SliderPrimitive.Track>
       {/* 썸에 접근 가능한 이름 전달 (WI-0020 axe): aria-label/labelledby를 root에서 받아 thumb에 부여 */}

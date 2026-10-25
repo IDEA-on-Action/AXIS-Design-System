@@ -28,7 +28,7 @@
     "error": { "value": "{color.red.500}" },
     "success": { "value": "{color.green.500}" },
     "info": { "value": "{color.blue.500}" },
-    "warning": { "value": "{color.yellow.500}" }
+    "warning": { "value": "{color.yellow.700}" }
   },
   "icon": {
     "default": { "value": "{color.gray.600}" },
@@ -59,7 +59,7 @@
     "neutral-strong": { "value": "{color.gray.600}" },
     "neutral-bg": { "value": "{color.gray.100}" },
     "success-contrast": { "value": "{color.white}" },
-    "running-contrast": { "value": "{color.white}" },
+    "running-contrast": { "value": "{color.gray.950}" },
     "error-contrast": { "value": "{color.white}" },
     "neutral-muted-contrast": { "value": "{color.gray.700}" }
   },

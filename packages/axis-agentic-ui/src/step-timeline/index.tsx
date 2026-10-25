@@ -104,7 +104,7 @@ export function StepTimeline({
             aria-hidden="true"
             className={cn(
               "relative z-10 w-5 h-5 rounded-full flex items-center justify-center",
-              step.status === "complete" && "bg-[var(--axis-status-success)]",
+              step.status === "complete" && "bg-[var(--axis-text-success)]",
               step.status === "running" && "bg-[var(--axis-status-running)] animate-pulse motion-reduce:![animation-duration:5s]",
               step.status === "error" && "bg-[var(--axis-status-error)]",
               step.status === "skipped" && "bg-[var(--axis-status-neutral-muted)]",

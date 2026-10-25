@@ -59,7 +59,10 @@ const BOTH = ['light', 'dark'];
 const SELECTOR = { light: ':root', dark: '.dark' };
 const REJECT_HOVER_BG = { mix: '--axis-status-error', pct: 10, over: '--axis-surface-secondary' };
 
-/** WI-0029 짝 표. prd: 테마별 PRD 계산값(소수 둘째 자리 버림) */
+/**
+ * WI-0029 짝 표. prd: 테마별 PRD 계산값(소수 둘째 자리 버림)
+ * PlanCard 승인 글자는 WI-0063 에서 status-success-contrast 대신 button-text-default(흰색, 값 같음)를 쓴다.
+ */
 const PAIRS = [
   { fg: '--axis-button-text-default', bg: '--axis-button-bg-default', themes: BOTH, prd: { light: 5.16, dark: 5.16 } },
   { fg: '--axis-button-text-default', bg: '--axis-button-bg-hover', themes: BOTH, prd: { light: 6.70, dark: 6.70 } },
@@ -68,8 +71,8 @@ const PAIRS = [
   { fg: '--axis-button-destructive-text-default', bg: '--axis-button-destructive-bg-hover', themes: BOTH, prd: { light: 6.47, dark: 6.47 } },
   { fg: '--axis-button-destructive-text-default', bg: '--axis-button-destructive-bg-active', themes: BOTH, prd: { light: 8.31, dark: 8.31 } },
   { fg: '--axis-agent-message-user-text', bg: '--axis-agent-message-user-bg', themes: BOTH, prd: { light: 5.16, dark: 5.16 } },
-  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-bg', themes: BOTH, prd: { light: 5.01, dark: 5.01 } },
-  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-hover-bg', themes: BOTH, prd: { light: 7.13, dark: 7.13 } },
+  { fg: '--axis-button-text-default', bg: '--axis-plan-card-approve-bg', themes: BOTH, prd: { light: 5.01, dark: 5.01 } },
+  { fg: '--axis-button-text-default', bg: '--axis-plan-card-approve-hover-bg', themes: BOTH, prd: { light: 7.13, dark: 7.13 } },
   { fg: '--axis-plan-card-reject-text', bg: '--axis-surface-secondary', themes: BOTH, prd: { light: 5.87, dark: 4.71 } },
   { fg: '--axis-plan-card-reject-hover-text', bg: REJECT_HOVER_BG, themes: BOTH, prd: { light: 5.17, dark: 5.90 } },
   { fg: '--axis-text-tertiary', bg: '--axis-surface-default', themes: ['dark'], prd: { dark: 7.93 } },
@@ -137,14 +140,26 @@ const NON_TEXT = 3;
  * 표에 둘 수 없는 기본 브랜드 전용 짝 (WI-0062).
  * - input placeholder: ontology 라이트(#9AA1AB, 2.60)는 이번 범위에서 값을 바꾸지 않아(ontology 불변) 공용 표에 넣으면 ontology 가 실패한다.
  * - shadcn destructive-foreground / destructive: shadcn-compat.css 의 HSL 변수라 --axis-* 해석기가 읽지 못한다.
+ * - WI-0063 폼 컨트롤 경계 · 트랙 · Progress 채움: 기본 브랜드만 3:1 로 짙게 했다(D3 (가)). ontology 는 승인값
+ *   (입력 테두리 line-2, 부록 B ③)과 1.7.0 렌더 값을 유지해 공용 표에 넣으면 ontology 가 실패한다.
+ * - '#FFFFFF' 처럼 hex 로 적은 쪽은 토큰이 아닌 고정 색이다(Switch 썸 bg-white).
  */
 const DEFAULT_ONLY = [
   { fg: '--axis-input-text-placeholder', bg: '--axis-input-bg-default', min: TEXT, where: 'ui-react input:24 · select:24 placeholder' },
   { fg: '--destructive-foreground', bg: '--destructive', min: TEXT, shadcn: true, where: 'shadcn-compat destructive 버튼' },
+  { fg: '--axis-form-control-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react checkbox:16 · radio-group:26 · textarea:11 경계' },
+  { fg: '--axis-input-border-default', bg: '--axis-input-bg-default', min: NON_TEXT, where: 'ui-react input:23 · select:23 경계' },
+  { fg: '--axis-form-control-track', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react switch:16 꺼짐 트랙 · slider:27 트랙' },
+  { fg: '#FFFFFF', bg: '--axis-form-control-track', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 꺼짐 트랙' },
+  { fg: '#FFFFFF', bg: '--axis-interactive-primary', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 켜짐 트랙' },
+  { fg: '--axis-progress-fill-default', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:26 채움 / 트랙' },
+  { fg: '--axis-progress-fill-success', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:27' },
+  { fg: '--axis-progress-fill-warning', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:28' },
+  { fg: '--axis-progress-fill-destructive', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:29' },
 ];
 
-/** WI-0062 범위: 글자 행만. 비텍스트 · 아이콘 행은 WI-0063 이 더한다 */
-const inScope = p => p.kind !== 'icon' && p.min === TEXT;
+/** WI-0062 글자 행 + WI-0063 비텍스트 · 아이콘 행: 표 전 행 */
+const inScope = () => true;
 
 describe('기본 브랜드에 ontology 짝 표 적용 (WI-0062 · 0063, D2)', () => {
   assert.ok(existsSync(varsPath), `${varsPath} 없음: pnpm --filter @axis-ds/tokens build 를 먼저 실행한다`);
@@ -157,6 +172,7 @@ describe('기본 브랜드에 ontology 짝 표 적용 (WI-0062 · 0063, D2)', ()
     shadcn.set(m[1], vars);
   }
   const value = (theme, name, isShadcn) => {
+    if (name.startsWith('#')) return name.toUpperCase();
     const v = isShadcn ? shadcn.get(SELECTOR[theme])?.get(name) : blocks.get(SELECTOR[theme])?.get(name);
     assert.ok(v !== undefined, `${theme} ${name} 값 없음`);
     return isShadcn ? hslToHex(v) : v.toUpperCase();
@@ -167,7 +183,7 @@ describe('기본 브랜드에 ontology 짝 표 적용 (WI-0062 · 0063, D2)', ()
   const rows = [...CONTRAST_PAIRS.filter(inScope), ...DEFAULT_ONLY];
 
   test('적용 행이 비어 있지 않고 shadcn 블록을 읽었다 (양성 대조)', () => {
-    assert.ok(CONTRAST_PAIRS.filter(inScope).length >= 30, `글자 행 ${CONTRAST_PAIRS.filter(inScope).length}개`);
+    assert.ok(CONTRAST_PAIRS.filter(inScope).length >= 60, `적용 행 ${CONTRAST_PAIRS.filter(inScope).length}개`);
     for (const sel of Object.values(SELECTOR)) assert.ok((shadcn.get(sel)?.size ?? 0) >= 20, `shadcn ${sel} 블록 변수 ${shadcn.get(sel)?.size ?? 0}개`);
   });
 

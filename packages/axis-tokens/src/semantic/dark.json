@@ -58,8 +58,8 @@
     "neutral-muted": { "value": "{color.gray.300}" },
     "neutral-strong": { "value": "{color.gray.600}" },
     "neutral-bg": { "value": "{color.gray.100}" },
-    "success-contrast": { "value": "{color.white}" },
-    "running-contrast": { "value": "{color.white}" },
+    "success-contrast": { "value": "{color.gray.950}" },
+    "running-contrast": { "value": "{color.gray.950}" },
     "error-contrast": { "value": "{color.white}" },
     "neutral-muted-contrast": { "value": "{color.gray.700}" }
   },

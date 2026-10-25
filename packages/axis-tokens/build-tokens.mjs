@@ -126,6 +126,8 @@ declare const tokens: {
   dialog: Record<string, Record<string, string>>;
   'plan-card': Record<string, string>;
   'card-shadow': string;
+  'form-control': { border: string; track: string };
+  progress: { fill: Record<string, string> };
   control: { h: Record<string, string>; 'font-size': Record<string, string> };
   field: { h: string };
   toggle: { h: Record<string, string> };

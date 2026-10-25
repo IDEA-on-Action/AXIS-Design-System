@@ -235,6 +235,18 @@
       "shadow": { "value": "0 8px 24px rgba(17,20,24,.10)" }
     }
   },
+  "form-control": {
+    "border": { "value": "#E6E8EB" },
+    "track": { "value": "#EAECEF" }
+  },
+  "progress": {
+    "fill": {
+      "default": { "value": "#326ADA" },
+      "success": { "value": "{color.green.500}" },
+      "warning": { "value": "{color.yellow.500}" },
+      "destructive": { "value": "{color.red.500}" }
+    }
+  },
   "card-shadow": { "value": "0 0 #0000" },
   "shadcn": {
     "radius": "12px",

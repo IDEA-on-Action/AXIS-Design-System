@@ -58,28 +58,28 @@ const planStatusStyles: Record<PlanStatus, { border: string; badge: string }> = 
 
 const stepStatusIcons: Record<PlanStepStatus, React.ReactNode> = {
   pending: (
-    <svg className="w-4 h-4 text-[var(--axis-status-neutral)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <circle cx="12" cy="12" r="10" strokeWidth={2} />
     </svg>
   ),
   running: (
     <svg className="w-4 h-4 text-[var(--axis-status-running)] animate-spin motion-reduce:![animation-duration:3s]" viewBox="0 0 24 24" fill="none">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      <path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
     </svg>
   ),
   complete: (
-    <svg className="w-4 h-4 text-[var(--axis-status-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-text-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
     </svg>
   ),
   error: (
-    <svg className="w-4 h-4 text-[var(--axis-status-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-text-error)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     </svg>
   ),
   skipped: (
-    <svg className="w-4 h-4 text-[var(--axis-status-neutral)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <svg className="w-4 h-4 text-[var(--axis-text-tertiary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
     </svg>
   ),
@@ -176,7 +176,7 @@ export function PlanCard({
           {onApprove && (
             <button
               onClick={onApprove}
-              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-plan-card-approve-bg)] text-[var(--axis-status-success-contrast)] hover:bg-[var(--axis-plan-card-approve-hover-bg)] transition-colors"
+              className="px-3 py-1.5 text-xs font-medium rounded-md bg-[var(--axis-plan-card-approve-bg)] text-[var(--axis-button-text-default)] hover:bg-[var(--axis-plan-card-approve-hover-bg)] transition-colors"
             >
               승인
             </button>

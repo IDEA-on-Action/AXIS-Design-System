@@ -12,7 +12,7 @@
     },
     "border": {
       "default": { "value": "transparent", "$extensions": { "axis": { "themeIndependent": true } } },
-      "focus": { "value": "{color.blue.400}", "$extensions": { "axis": { "themeIndependent": true } } }
+      "focus": { "value": "{color.blue.500}", "$extensions": { "axis": { "themeIndependent": true } } }
     }
   },
   "button-secondary": {
@@ -55,8 +55,8 @@
       "placeholder": { "value": "{color.gray.500}", "$extensions": { "axis": { "dark": "{color.gray.400}" } } }
     },
     "border": {
-      "default": { "value": "{color.gray.300}", "$extensions": { "axis": { "dark": "{border.secondary}" } } },
-      "hover": { "value": "{color.gray.400}", "$extensions": { "axis": { "dark": "{color.gray.500}" } } },
+      "default": { "value": "{color.gray.500}", "$extensions": { "axis": { "themeIndependent": true } } },
+      "hover": { "value": "{color.gray.600}", "$extensions": { "axis": { "dark": "{color.gray.400}" } } },
       "focus": { "value": "{color.blue.500}", "$extensions": { "axis": { "dark": "{border.focus}" } } },
       "error": { "value": "{color.red.500}", "$extensions": { "axis": { "dark": "{border.error}" } } }
     }
@@ -110,6 +110,18 @@
     "reject-text": { "value": "{color.red.700}", "$extensions": { "axis": { "dark": "{status.error}" } } },
     "approve-bg": { "value": "{color.green.700}", "$extensions": { "axis": { "themeIndependent": true } } },
     "approve-hover-bg": { "value": "{color.green.800}", "$extensions": { "axis": { "themeIndependent": true } } }
+  },
+  "form-control": {
+    "border": { "value": "{color.gray.500}", "$extensions": { "axis": { "themeIndependent": true } } },
+    "track": { "value": "{color.gray.500}", "$extensions": { "axis": { "themeIndependent": true } } }
+  },
+  "progress": {
+    "fill": {
+      "default": { "value": "{color.blue.600}", "$extensions": { "axis": { "dark": "{color.blue.500}" } } },
+      "success": { "value": "{color.green.700}", "$extensions": { "axis": { "dark": "{color.green.500}" } } },
+      "warning": { "value": "{color.yellow.700}", "$extensions": { "axis": { "dark": "{color.yellow.500}" } } },
+      "destructive": { "value": "{color.red.600}", "$extensions": { "axis": { "dark": "{color.red.500}" } } }
+    }
   },
   "card-shadow": { "value": "{shadow.sm}", "$extensions": { "axis": { "themeIndependent": true } } },
   "control": {

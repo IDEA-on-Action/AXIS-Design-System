@@ -7,6 +7,7 @@
  * - WI-0029(기본 테마 흰 글자 대비, PRD 2.1 · 2.2)는 1.2.1 변수 값을 의도적으로 바꾼다. 바뀐 변수와 새 값은
  *   아래 WI0029_CHANGED 에 이름 단위로 적고, 그 목록 밖의 1.2.1 변수는 계속 불변이어야 한다.
  *   WI-0029 가 더하거나 기본값을 바꾼 신규 변수는 WI0029_NEW 에 적어 SOURCE.json expectedNew 위에 덮는다.
+ *   WI-0062 · WI-0063(기본 테마 텍스트 · 비텍스트 대비)도 같은 방식으로 WI0062_* · WI0063_* 표에 적는다.
  * - shadcn-compat.css 는 바이트 일치를 본다. 예외는 WI-0029 D6 의 다크 `--muted-foreground` 한 줄뿐이다
  *   (text.secondary 파생이라 D2 로 gray.400 → gray.300). 기대 출력은 1.2.1 원문에서 그 한 줄만 새 값으로 바꾼 것이고,
  *   그 밖의 줄이 하나라도 바뀌면 실패한다(WI0029_SHADCN · expectedShadcn).
@@ -145,9 +146,51 @@ export const WI0062_SHADCN = [
   { sel: ':root', name: '--destructive', base: '0 84% 60%', next: '0 72% 51%' },
 ];
 
-/** 실제 출력 대조에 쓰는 합친 예외(WI-0029 · WI-0062). 같은 변수를 두 WI 가 함께 바꾸면 뒤 WI 값이 이긴다 */
+/**
+ * WI-0063 예외 목록(기본 테마 비텍스트 대비, PRD 3장): 바뀐 1.2.1 변수와 새 값.
+ * 입력 경계 · 포커스 링 · Alert 경고 테두리. ontology 는 모두 덮어써 출력이 바뀌지 않는다.
+ */
+export const WI0063_CHANGED = {
+  ':root': {
+    '--axis-border-warning': '#A16207',
+    '--axis-button-border-focus': '#3B82F6',
+    '--axis-input-border-default': '#6B7280',
+    '--axis-input-border-hover': '#4B5563',
+  },
+  '.dark': {
+    '--axis-button-border-focus': '#3B82F6',
+    '--axis-input-border-default': '#6B7280',
+    '--axis-input-border-hover': '#9CA3AF',
+  },
+};
+/** WI-0063 이 더하거나 기본값을 바꾼 1.2.1 이후 신규 변수(흰 글자 짝 글리프 · 폼 컨트롤 · Progress 채움) */
+const WI0063_DEFAULT_NEW = {
+  '--axis-form-control-border': '#6B7280',
+  '--axis-form-control-track': '#6B7280',
+};
+const WI0063_NEW = {
+  ':root': {
+    ...WI0063_DEFAULT_NEW,
+    '--axis-status-running-contrast': '#030712',
+    '--axis-progress-fill-default': '#2563EB',
+    '--axis-progress-fill-success': '#15803D',
+    '--axis-progress-fill-warning': '#A16207',
+    '--axis-progress-fill-destructive': '#DC2626',
+  },
+  '.dark': {
+    ...WI0063_DEFAULT_NEW,
+    '--axis-status-success-contrast': '#030712',
+    '--axis-status-running-contrast': '#030712',
+    '--axis-progress-fill-default': '#3B82F6',
+    '--axis-progress-fill-success': '#22C55E',
+    '--axis-progress-fill-warning': '#EAB308',
+    '--axis-progress-fill-destructive': '#EF4444',
+  },
+};
+
+/** 실제 출력 대조에 쓰는 합친 예외(WI-0029 · WI-0062 · WI-0063). 같은 변수를 두 WI 가 함께 바꾸면 뒤 WI 값이 이긴다 */
 const mergeBlocks = (...tables) => Object.fromEntries(BLOCKS.map(sel => [sel, Object.assign({}, ...tables.map(t => t[sel] ?? {}))]));
-export const CHANGED_ALL = mergeBlocks(WI0029_CHANGED, WI0062_CHANGED);
+export const CHANGED_ALL = mergeBlocks(WI0029_CHANGED, WI0062_CHANGED, WI0063_CHANGED);
 export const SHADCN_ALL = [...WI0029_SHADCN, ...WI0062_SHADCN];
 
 /**
@@ -182,7 +225,7 @@ export function diffLines(aText, bText) {
 }
 
 const EXPECTED_NEW = Object.fromEntries(
-  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel], ...WI0026_NEW[sel], ...WI0062_NEW[sel] }]),
+  BLOCKS.map(sel => [sel, { ...SOURCE.expectedNew[sel], ...WI0029_NEW[sel], ...WI0026_NEW[sel], ...WI0062_NEW[sel], ...WI0063_NEW[sel] }]),
 );
 
 /**

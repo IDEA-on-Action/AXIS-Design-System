@@ -21,7 +21,7 @@ import { collectErrors, openDemo, radio } from './helpers/demo'
  *      판정 범위(2026-10-19 사용자 결정 D1 「주 표식만 판정」): 정지 상태의 주 표식(상태 아이콘 · 스피너 arc · 상태 점 · 점 안 글리프)만
  *      3:1 로 판정합니다. 스피너 트랙 원(opacity .25) · pulse 최저 시점 · PlanCard 왼쪽 상태 선 · 진행 막대 채움 · RunProgress 머리 점은
  *      재서 기록만 합니다(annotation · 로그, judge 'record').
- *      기본 브랜드에서 3:1 에 못 미치는 주 표식은 `DEFAULT_BRAND_FLOOR` 의 실측 하한보다 낮아지면 실패합니다(해소는 WI-0029 #94).
+ *      기본 브랜드 주 표식도 모두 3:1 로 판정합니다(WI-0063 이 `DEFAULT_BRAND_FLOOR` 8쌍을 해소해 표가 비었습니다).
  *      데모에 실요소가 없는 쌍(info · warning 아이콘, surface-secondary 위 아이콘, surface-secondary 위 neutral-muted 점)은
  *      같은 페이지에 프로브를 넣어 계속 잽니다(ontology, PROBE_RESIDUAL). 측정 대상이 M3 프로브보다 줄지 않았는지 기계로 검사합니다.
  *   ④ 대기 · 건너뜀 상태 점 `--axis-status-neutral-muted`: 3:1 에 못 미치는 값을 그대로 두기로 했고
@@ -48,12 +48,13 @@ const LINE_2: Record<ThemeName, string> = { light: '#D6DADF', dark: '#5F6874' }
  * approval-card 아이콘(info · warning). 보조 아이콘 `--axis-icon-*`(부록 B 가 bad-line · muted 를 승인)은 넣지 않습니다.
  */
 const STATUS_ICON_VARS = [
-  '--axis-status-neutral',
+  // WI-0063: 성공 · 오류 · 경고 · 대기 아이콘은 ontology 값이 같은 text-* 를 써요(ontology 렌더 색은 그대로)
+  '--axis-text-tertiary',
   '--axis-status-running',
-  '--axis-status-success',
-  '--axis-status-error',
+  '--axis-text-success',
+  '--axis-text-error',
   '--axis-status-info',
-  '--axis-status-warning',
+  '--axis-text-warning',
 ] as const
 const ICON_BACKGROUNDS = ['--axis-surface-default', '--axis-surface-secondary'] as const
 const NEUTRAL_MUTED_VAR = '--axis-status-neutral-muted'
@@ -79,28 +80,13 @@ const NEUTRAL_MUTED_FLOOR: Record<string, Record<string, number>> = {
 }
 
 /**
- * 기본 브랜드에서 3:1 에 못 미치는 주 표식의 하한 (2026-10-19 사용자 결정 D1, 해소는 WI-0029 #94).
- * 값 = 2026-10-19 실측값(소수 둘째 자리). 측정값이 이보다 낮아지면 실패합니다. 3 미만 값만 둡니다.
- * 키는 `표식 종류 변수 @ 바탕 이름` 입니다(floorKey). 여기 없는 기본 브랜드 주 표식은 3:1 로 판정합니다.
- * 1.3.0 은 기본 출력을 바꾸지 않으므로 기본 브랜드 색은 고치지 않고, 값을 올리는 변경(대비 개선)은 통과합니다.
+ * 기본 브랜드에서 3:1 에 못 미치는 주 표식의 하한 (2026-10-19 사용자 결정 D1).
+ * WI-0063(2026-10-25)이 2026-10-19 기록 8쌍(라이트 8 · 다크 3 칸)을 모두 3:1 이상으로 고쳐 비웠습니다
+ * (성공 점 · 아이콘 text-success, 대기 아이콘 text-tertiary, 스피너 arc 불투명, 점 위 글리프 짙은 글자 등).
+ * 이제 기본 브랜드 주 표식은 모두 3:1 로 판정합니다. 다시 하한이 필요해지면 키는 `표식 종류 변수 @ 바탕 이름`(floorKey),
+ * 값은 실측값(소수 둘째 자리, 3 미만)으로 둡니다.
  */
-const DEFAULT_BRAND_FLOOR: Record<string, Record<string, number>> = {
-  'default/light': {
-    'PlanCard 아이콘 --axis-status-success @ --axis-surface-default|--background': 2.28,
-    'PlanCard 아이콘 --axis-status-neutral @ --axis-surface-default|--background': 2.54,
-    'PlanCard 아이콘 스피너 arc --axis-status-running @ --axis-surface-default|--background': 2.83,
-    'StepTimeline 점 --axis-status-success @ --axis-surface-default|--background': 2.28,
-    'StepTimeline 글리프 --axis-status-success-contrast @ dot --axis-status-success': 2.28,
-    'RunProgress 점 --axis-status-success @ --axis-surface-default|--background': 2.28,
-    'RunProgress 글리프 --axis-status-success-contrast @ dot --axis-status-success': 2.28,
-    'RunProgress 글리프 스피너 arc --axis-status-running-contrast @ dot --axis-status-running': 2.97,
-  },
-  'default/dark': {
-    'StepTimeline 글리프 --axis-status-success-contrast @ dot --axis-status-success': 2.28,
-    'RunProgress 글리프 --axis-status-success-contrast @ dot --axis-status-success': 2.28,
-    'RunProgress 글리프 스피너 arc --axis-status-running-contrast @ dot --axis-status-running': 2.97,
-  },
-}
+const DEFAULT_BRAND_FLOOR: Record<string, Record<string, number>> = {}
 
 type Rgb = [number, number, number]
 
@@ -313,14 +299,14 @@ const STATE_BY_TEXT: Record<string, StepState> = {
  */
 const EXPECTED_VAR = {
   planCardIcon: {
-    pending: '--axis-status-neutral',
-    skipped: '--axis-status-neutral',
+    pending: '--axis-text-tertiary',
+    skipped: '--axis-text-tertiary',
     running: '--axis-status-running',
-    complete: '--axis-status-success',
-    error: '--axis-status-error',
+    complete: '--axis-text-success',
+    error: '--axis-text-error',
   },
   stepTimelineDot: {
-    complete: '--axis-status-success',
+    complete: '--axis-text-success',
     running: '--axis-status-running',
     error: '--axis-status-error',
     skipped: NEUTRAL_MUTED_VAR,
@@ -330,7 +316,7 @@ const EXPECTED_VAR = {
   runProgressDot: {
     pending: NEUTRAL_MUTED_VAR,
     running: '--axis-status-running',
-    complete: '--axis-status-success',
+    complete: '--axis-text-success',
     error: '--axis-status-error',
   },
   runProgressGlyph: {
@@ -361,7 +347,7 @@ const PROBE_PAIRS: readonly string[] = [
  */
 const PROBE_RESIDUAL: readonly { v: string; bg: (typeof ICON_BACKGROUNDS)[number]; kind: 'icon' | 'dot' }[] = [
   { v: '--axis-status-info', bg: '--axis-surface-default', kind: 'icon' },
-  { v: '--axis-status-warning', bg: '--axis-surface-default', kind: 'icon' },
+  { v: '--axis-text-warning', bg: '--axis-surface-default', kind: 'icon' },
   ...STATUS_ICON_VARS.map((v) => ({ v, bg: '--axis-surface-secondary' as const, kind: 'icon' as const })),
   { v: NEUTRAL_MUTED_VAR, bg: '--axis-surface-secondary', kind: 'dot' },
 ]
@@ -686,7 +672,8 @@ for (const brand of BRANDS) {
 
         const allVars = new Set<string>()
         for (const table of Object.values(EXPECTED_VAR)) for (const v of Object.values(table)) allVars.add(v)
-        for (const v of [...STATUS_ICON_VARS, '--axis-status-warning']) allVars.add(v)
+        // 왼쪽 선 · 진행 막대(기록만)는 status-warning · status-success 를 그대로 쓴다
+        for (const v of [...STATUS_ICON_VARS, '--axis-status-warning', '--axis-status-success']) allVars.add(v)
         const rendered = await resolveColors(page, {
           ...NAMED_BACKGROUNDS,
           ...Object.fromEntries([...allVars].map((v) => [v, `var(${v})`])),
@@ -957,7 +944,7 @@ for (const brand of BRANDS) {
             const floor = brand === 'default' ? DEFAULT_BRAND_FLOOR[combo]?.[floorKey(r)] : undefined
             if (floor !== undefined) {
               usedDefaultFloor.add(floorKey(r))
-              expect.soft(round2(ratio), `${where} 가 기본 브랜드 하한 ${floor} 보다 낮아짐 (WI-0029 #94)`).toBeGreaterThanOrEqual(floor)
+              expect.soft(round2(ratio), `${where} 가 기본 브랜드 하한 ${floor} 보다 낮아짐`).toBeGreaterThanOrEqual(floor)
             } else {
               expect.soft(ratio, `${where} ${hex(r.color)} 대 ${hex(r.background)} (${r.bgName})`).toBeGreaterThanOrEqual(MIN_NONTEXT)
             }

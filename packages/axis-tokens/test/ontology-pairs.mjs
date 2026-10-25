@@ -53,11 +53,13 @@ const NON_TEXT = 3;
  */
 export const CONTRAST_PAIRS = [
   // 흰 글자 짝 토큰 (D-5)
-  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: TEXT, sameString: true, kind: 'icon', where: 'run-progress:32 (완료 글리프)' },
-  // PlanCard 승인 버튼: WI-0029 에서 status-success 대신 전용 component 토큰(기본 green.700 · green.800)
-  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-bg', min: TEXT, sameString: true, where: 'plan-card:179' },
-  { fg: '--axis-status-success-contrast', bg: '--axis-plan-card-approve-hover-bg', min: TEXT, sameString: true, where: 'plan-card:179 hover' },
-  { fg: '--axis-status-success-contrast', bg: '--axis-status-success', min: NON_TEXT, kind: 'icon', where: 'step-timeline:107 · 115 (점 위 아이콘)' },
+  // WI-0063: 완료 점 바탕은 status-success 대신 text-success(기본 라이트 green.700 · 다크 green.400, ontology 는 두 값이 같음)
+  { fg: '--axis-status-success-contrast', bg: '--axis-text-success', min: TEXT, sameString: true, kind: 'icon', where: 'run-progress:32 (완료 글리프)' },
+  // PlanCard 승인 버튼: WI-0029 에서 status-success 대신 전용 component 토큰(기본 green.700 · green.800).
+  // 글자는 WI-0063 에서 status-success-contrast(다크 기본값이 짙은 글자로 바뀜) 대신 button-text-default(ontology 는 두 값이 같음)
+  { fg: '--axis-button-text-default', bg: '--axis-plan-card-approve-bg', min: TEXT, where: 'plan-card:179' },
+  { fg: '--axis-button-text-default', bg: '--axis-plan-card-approve-hover-bg', min: TEXT, where: 'plan-card:179 hover' },
+  { fg: '--axis-status-success-contrast', bg: '--axis-text-success', min: NON_TEXT, kind: 'icon', where: 'step-timeline:107 · 115 (점 위 아이콘)' },
   { fg: '--axis-status-running-contrast', bg: '--axis-status-running', min: TEXT, sameString: true, kind: 'icon', where: 'run-progress:31 (진행 스피너)' },
   { fg: '--axis-status-error-contrast', bg: '--axis-status-error', min: TEXT, sameString: true, kind: 'icon', where: 'run-progress:33 (오류 글리프)' },
   { fg: '--axis-status-neutral-muted-contrast', bg: '--axis-status-neutral-muted', min: TEXT, sameString: true, where: 'run-progress:30 (대기 단계 숫자)' },
@@ -72,12 +74,14 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-badge-error-text', bg: '--axis-badge-error-bg', min: TEXT, sameString: true, where: 'plan-card:47 배지' },
   { fg: '--axis-badge-info-text', bg: '--axis-badge-info-bg', min: TEXT, sameString: true, where: 'plan-card:51 배지' },
   // 상태 색을 아이콘에 쓰는 곳 (surface-default 위)
-  { fg: '--axis-status-success', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'tool-call-card:49 · plan-card:72' },
-  { fg: '--axis-status-error', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'approval-card:43 · tool-call-card:57' },
-  { fg: '--axis-status-warning', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'approval-card:38' },
+  // WI-0063: 성공 · 오류 · 경고 · 대기 아이콘은 ontology 값이 같은 text-* 로(기본 라이트 green.500 2.28 · yellow.500 1.91 · gray.400 2.54 해소).
+  // 진행 · 정보는 ontology 값이 같은 대체 토큰이 없어 status-* 그대로(기본 3.68, 스피너 arc 는 불투명으로 바꿔 합성 2.81 → 3.68)
+  { fg: '--axis-text-success', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'tool-call-card:49 · plan-card:72' },
+  { fg: '--axis-text-error', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'approval-card:43 · tool-call-card:57 · plan-card:77' },
+  { fg: '--axis-text-warning', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'approval-card:38' },
   { fg: '--axis-status-running', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'plan-card:66 · tool-call-card:40' },
   { fg: '--axis-status-info', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'approval-card:33' },
-  { fg: '--axis-status-neutral', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'plan-card:61 · tool-call-card:32' },
+  { fg: '--axis-text-tertiary', bg: '--axis-surface-default', min: TEXT, kind: 'icon', where: 'plan-card:61 · 82 · tool-call-card:32' },
   // 상태를 글자로 쓰는 곳: 상태 색 대신 text-* (WI-0062 D1 (가), ontology 는 두 변수 값이 같아 출력 불변)
   { fg: '--axis-text-error', bg: '--axis-surface-default', min: TEXT, where: 'token-usage-indicator:40 (한도 초과 글자)' },
   { fg: '--axis-text-warning', bg: '--axis-surface-default', min: TEXT, where: 'token-usage-indicator:41 (경고 글자)' },
@@ -87,20 +91,20 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-text-secondary', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:125 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:125' } },
   { fg: '--axis-text-error', bg: '--axis-surface-secondary', min: TEXT, where: 'diff-viewer:129 (헤더 :115)', parent: { at: 'diff-viewer/index.tsx:115', fgAt: 'diff-viewer/index.tsx:129' } },
   // RecoveryBanner 아이콘: 배너 루트가 surface-error. 아이콘이지만 이전 행과 같이 글자 기준(4.5)으로 둔다
-  { fg: '--axis-status-error', bg: '--axis-surface-error', min: TEXT, kind: 'icon', where: 'recovery-banner:42 (루트 :34)', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:42' } },
+  { fg: '--axis-text-error', bg: '--axis-surface-error', min: TEXT, kind: 'icon', where: 'recovery-banner:42 (루트 :34)', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:42' } },
   // CodeBlock 복사 완료 아이콘: 헤더(surface-secondary) 안 버튼, hover 때는 버튼이 surface-tertiary
-  { fg: '--axis-status-success', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'code-block:77 (헤더 :57)', parent: { at: 'code-block/index.tsx:57', fgAt: 'code-block/index.tsx:77' } },
-  { fg: '--axis-status-success', bg: '--axis-surface-tertiary', min: TEXT, kind: 'icon', where: 'code-block:77 hover (버튼 :73)', parent: { at: 'code-block/index.tsx:73', fgAt: 'code-block/index.tsx:77', variant: 'hover:' } },
+  { fg: '--axis-text-success', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'code-block:77 (헤더 :57)', parent: { at: 'code-block/index.tsx:57', fgAt: 'code-block/index.tsx:77' } },
+  { fg: '--axis-text-success', bg: '--axis-surface-tertiary', min: TEXT, kind: 'icon', where: 'code-block:77 hover (버튼 :73)', parent: { at: 'code-block/index.tsx:73', fgAt: 'code-block/index.tsx:77', variant: 'hover:' } },
   // ToolCallCard 상태 아이콘: 평소는 카드 루트(surface-default, :90), hover 때는 헤더 버튼이 surface-secondary(:100)
-  { fg: '--axis-status-neutral', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:32 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:32', variant: 'hover:' } },
+  { fg: '--axis-text-tertiary', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:32 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:32', variant: 'hover:' } },
   { fg: '--axis-status-running', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:40 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:40', variant: 'hover:' } },
-  { fg: '--axis-status-success', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:49 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:49', variant: 'hover:' } },
-  { fg: '--axis-status-error', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:57 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:57', variant: 'hover:' } },
+  { fg: '--axis-text-success', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:49 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:49', variant: 'hover:' } },
+  { fg: '--axis-text-error', bg: '--axis-surface-secondary', min: TEXT, kind: 'icon', where: 'tool-call-card:57 hover (버튼 :100)', parent: { at: 'tool-call-card/index.tsx:100', fgAt: 'tool-call-card/index.tsx:57', variant: 'hover:' } },
   // 옅은 바탕(color-mix 10%) 위 글자
   { fg: '--axis-diff-added-text', bg: { mix: '--axis-diff-added', pct: 10 }, min: TEXT, where: 'diff-viewer:71 · 77' },
   { fg: '--axis-diff-removed-text', bg: { mix: '--axis-diff-removed', pct: 10 }, min: TEXT, where: 'diff-viewer:72 · 78' },
-  { fg: '--axis-status-success', bg: { mix: '--axis-status-success', pct: 10 }, min: TEXT, sameString: true, kind: 'icon', where: 'feedback-buttons:62' },
-  { fg: '--axis-status-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, kind: 'icon', where: 'feedback-buttons:78' },
+  { fg: '--axis-text-success', bg: { mix: '--axis-status-success', pct: 10 }, min: TEXT, sameString: true, kind: 'icon', where: 'feedback-buttons:62' },
+  { fg: '--axis-text-error', bg: { mix: '--axis-status-error', pct: 10 }, min: TEXT, sameString: true, kind: 'icon', where: 'feedback-buttons:78' },
   // PlanCard 거절 버튼 글자: 하단 영역(surface-secondary) 위, 전용 component 토큰(WI-0029, 기본 라이트 red.700 · 다크 status-error)
   { fg: '--axis-plan-card-reject-text', bg: '--axis-surface-secondary', min: TEXT, where: 'plan-card:195 (하단 영역 :175)', parent: { at: 'plan-card/index.tsx:175', fgAt: 'plan-card/index.tsx:195' } },
   // PlanCard 거절 버튼 hover: 하단 영역(surface-secondary) 위 옅은 바탕, 글자는 전용 component 토큰(WI-0029 기본 라이트 red.700 · 다크 red.400)
@@ -125,8 +129,24 @@ export const CONTRAST_PAIRS = [
   // 비텍스트 (테두리 · 아이콘)
   { fg: '--axis-border-warning', bg: '--axis-surface-warning', min: NON_TEXT, where: 'alert:19' },
   { fg: '--axis-border-info', bg: '--axis-surface-info', min: NON_TEXT, where: 'alert:15' },
-  { fg: '--axis-status-error-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'attachment-card:86' },
+  // WI-0063: 오류 테두리는 status-error-border(기본 red.200, 1.44 · 1.32) 대신 border-error(ontology 는 두 값이 같음)
+  { fg: '--axis-border-error', bg: '--axis-surface-default', min: NON_TEXT, where: 'attachment-card:86' },
   // RecoveryBanner 테두리: 같은 요소의 바탕 surface-error 와 맞닿는다(바깥 쪽 바탕은 소비처마다 달라 표에 두지 않는다)
-  { fg: '--axis-status-error-border', bg: '--axis-surface-error', min: NON_TEXT, where: 'recovery-banner:34', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:34' } },
+  { fg: '--axis-border-error', bg: '--axis-surface-error', min: NON_TEXT, where: 'recovery-banner:34', parent: { at: 'recovery-banner/index.tsx:34', fgAt: 'recovery-banner/index.tsx:34' } },
   { fg: '--axis-icon-info', bg: '--axis-surface-default', min: NON_TEXT, where: '소비처 없음' },
+  // 상태 점 (WI-0063, 비텍스트 3:1). 대기 · 건너뜀 점 neutral-muted 는 사용자 결정으로 값 유지라 표에 두지 않는다(brand-nontext-contrast NEUTRAL_MUTED_FLOOR)
+  { fg: '--axis-text-success', bg: '--axis-surface-default', min: NON_TEXT, where: 'agent-avatar:28 온라인 점 · run-progress:32 · step-timeline:107 완료 점' },
+  { fg: '--axis-text-success', bg: '--axis-surface-secondary', min: NON_TEXT, where: 'run-progress:32 완료 점, 현재 단계 행(:122)', parent: { at: 'run-progress/index.tsx:122', fgAt: 'run-progress/index.tsx:32' } },
+  { fg: '--axis-text-warning', bg: '--axis-surface-default', min: NON_TEXT, where: 'agent-avatar:29 바쁨 점' },
+  { fg: '--axis-text-tertiary', bg: '--axis-surface-default', min: NON_TEXT, where: 'agent-avatar:30 오프라인 점' },
+  { fg: '--axis-status-running', bg: '--axis-surface-default', min: NON_TEXT, where: 'run-progress:31 · step-timeline:108 진행 점' },
+  { fg: '--axis-status-running', bg: '--axis-surface-secondary', min: NON_TEXT, where: 'run-progress:31 진행 점, 현재 단계 행(:122)', parent: { at: 'run-progress/index.tsx:122', fgAt: 'run-progress/index.tsx:31' } },
+  { fg: '--axis-status-error', bg: '--axis-surface-default', min: NON_TEXT, where: 'run-progress:33 · step-timeline:109 오류 점' },
+  { fg: '--axis-status-error-contrast', bg: '--axis-status-error', min: NON_TEXT, kind: 'icon', where: 'run-progress:33 오류 글리프' },
+  // 포커스 링 (WI-0063). button-border-focus 는 blue.400(흰 바탕 2.54) → blue.500
+  { fg: '--axis-border-focus', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react checkbox · radio · switch · slider · textarea 포커스 링' },
+  { fg: '--axis-input-border-focus', bg: '--axis-input-bg-default', min: NON_TEXT, where: 'ui-react input · select 포커스 링' },
+  { fg: '--axis-button-border-focus', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react button 포커스 링' },
+  // 켜진 컨트롤 (Switch 켜짐 · Checkbox 체크 · Slider 썸 테두리)
+  { fg: '--axis-interactive-primary', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react switch:15 · checkbox:20 · slider:34' },
 ];
