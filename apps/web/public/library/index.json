@@ -1302,6 +1302,8 @@
       "category": "ui",
       "source": "axis",
       "tags": [
+        "stateful",
+        "side-effects",
         "forwardRef",
         "animated"
       ],

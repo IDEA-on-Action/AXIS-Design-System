@@ -109,13 +109,13 @@
       "count": 22
     },
     {
-      "id": "container",
-      "name": "container",
-      "count": 8
-    },
-    {
       "id": "stateful",
       "name": "stateful",
+      "count": 9
+    },
+    {
+      "id": "container",
+      "name": "container",
       "count": 8
     },
     {
@@ -131,7 +131,7 @@
     {
       "id": "side-effects",
       "name": "side-effects",
-      "count": 2
+      "count": 3
     }
   ]
 }

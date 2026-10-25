@@ -38,4 +38,8 @@ export const CLIENT_MODULES = [
     path: "command/index",
     reason: "cmdk(\"use client\" 모듈)의 Command.Input · List · Empty · Group · Item · Separator 점 접근",
   },
+  {
+    path: "tooltip/index",
+    reason: "useState · useRef · useLayoutEffect · createContext(스크롤 닫힘 판정과 open 제어, WI-0073) + Content 의 onEscapeKeyDown · onPointerDownOutside 인라인 핸들러",
+  },
 ];
