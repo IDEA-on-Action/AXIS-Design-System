@@ -68,11 +68,13 @@ export default function Page() {
 }
 ```
 
-**클라이언트 경계가 있는 컴포넌트**: 아래 7개는 패키지 `dist` 파일에 `"use client"` 가 있어, 서버 컴포넌트가 렌더하면 그 컴포넌트만 브라우저에서 hydrate 됩니다(복사 · 펼침 · 보기 모드 전환 · 피드백 선택 · 타이핑 애니메이션).
+**클라이언트 경계가 있는 컴포넌트**: 아래 9개는 패키지 `dist` 파일에 `"use client"` 가 있어, 서버 컴포넌트가 렌더하면 그 컴포넌트만 브라우저에서 hydrate 됩니다(복사 · 펼침 · 보기 모드 전환 · 피드백 선택 · 타이핑 애니메이션 · 하이드레이션 뒤 시각 표시).
 
-`CodeBlock` · `ContextPanel` · `DiffViewer` · `FeedbackButtons` · `SourcePanel` · `StreamingText` · `ToolCallCard`
+`CodeBlock` · `ContextPanel` · `DiffViewer` · `FeedbackButtons` · `MessageBubble` · `SourcePanel` · `StepTimeline` · `StreamingText` · `ToolCallCard`
 
-나머지 11개(`AgentAvatar` · `ApprovalCard` · `AttachmentCard` · `MessageBubble` · `PlanCard` · `RecoveryBanner` · `RunProgress` · `StepTimeline` · `SurfaceRenderer` · `ThinkingIndicator` · `TokenUsageIndicator`)와 루트 배럴에는 지시문이 없어 서버에서 렌더됩니다. 판단 기준은 `useState` · `useEffect` · `useRef` 같은 클라이언트 전용 API 와 컴포넌트 안에서 이벤트 핸들러를 직접 만드는지이며, 목록은 패키지 소스 `scripts/client-modules.mjs` 한 곳에서 관리합니다.
+`MessageBubble` · `StepTimeline` 은 1.8.0 부터 클라이언트 경계가 있습니다(WI-0069). 서버와 브라우저의 시간대가 달라 생기는 하이드레이션 오류를 막으려고, `timeZone`(StepTimeline 은 `locale` 도) 을 주지 않으면 시각을 하이드레이션 뒤에 브라우저 시간대로 채웁니다. 서버 렌더부터 시각을 보이려면 `timeZone="Asia/Seoul"` 처럼 시간대를 지정하세요. `formatTime` 은 함수라 서버 컴포넌트에서는 넘길 수 없습니다.
+
+나머지 9개(`AgentAvatar` · `ApprovalCard` · `AttachmentCard` · `PlanCard` · `RecoveryBanner` · `RunProgress` · `SurfaceRenderer` · `ThinkingIndicator` · `TokenUsageIndicator`)와 루트 배럴에는 지시문이 없어 서버에서 렌더됩니다. 판단 기준은 `useState` · `useEffect` · `useRef` 같은 클라이언트 전용 API 와 컴포넌트 안에서 이벤트 핸들러를 직접 만드는지이며, 목록은 패키지 소스 `scripts/client-modules.mjs` 한 곳에서 관리합니다.
 
 **서버 컴포넌트에서 함수 prop 은 넘길 수 없습니다**: `onCopy` · `onFeedback` · `onComplete` · `onRetry` · `onApprove` 같은 함수는 서버에서 클라이언트로 직렬화할 수 없어 React 가 오류를 냅니다(React Server Components 규칙). 함수 prop 없이 쓰면 서버에서 렌더되고, 핸들러가 필요하면 그 부분을 `"use client"` 파일로 만들어 그 안에서 씁니다.
 

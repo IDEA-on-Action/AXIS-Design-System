@@ -62,7 +62,7 @@ export function CodeBlock({
             </code>
           )}
           {language && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-tertiary)]">
+            <span className="text-xs px-1.5 py-0.5 rounded bg-[var(--axis-surface-tertiary)] text-[var(--axis-text-secondary)]">
               {language}
             </span>
           )}
@@ -74,7 +74,7 @@ export function CodeBlock({
         >
           {copied ? (
             <>
-              <svg className="w-3.5 h-3.5 text-[var(--axis-status-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-3.5 h-3.5 text-[var(--axis-text-success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>복사됨</span>
@@ -90,9 +90,12 @@ export function CodeBlock({
         </button>
       </div>
 
-      {/* 코드 본문 */}
+      {/* 코드 본문: 스크롤 영역이라 키보드로 포커스해 스크롤할 수 있게 한다(WCAG 2.1.1, axe scrollable-region-focusable, WI-0069) */}
       <div
-        className="overflow-auto"
+        role="region"
+        tabIndex={0}
+        aria-label={filename ? `${filename} 코드` : language ? `${language} 코드` : "코드"}
+        className="overflow-auto rounded-b-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--axis-border-focus)]"
         style={maxHeight ? { maxHeight } : undefined}
       >
         <pre className="p-3 text-sm leading-relaxed">

@@ -948,7 +948,8 @@
     "category": "ui",
     "source": "axis",
     "tags": [
-      "forwardRef"
+      "forwardRef",
+      "accessible"
     ],
     "url": "/library/ui/command"
   },
@@ -960,6 +961,7 @@
     "category": "ui",
     "source": "axis",
     "tags": [
+      "stateful",
       "forwardRef",
       "animated",
       "accessible"
@@ -1013,8 +1015,10 @@
     "category": "ui",
     "source": "axis",
     "tags": [
+      "stateful",
       "forwardRef",
-      "animated"
+      "animated",
+      "accessible"
     ],
     "url": "/library/ui/popover"
   },
@@ -1086,10 +1090,11 @@
     "id": "axis-sheet",
     "slug": "sheet",
     "name": "Sheet",
-    "description": "화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소",
+    "description": "화면 측면에서 슬라이드되어 나타나는 시트(Sheet) 컴포넌트의 루트 요소. 열림/닫힘 상태를 관리한다.",
     "category": "ui",
     "source": "axis",
     "tags": [
+      "stateful",
       "forwardRef",
       "animated",
       "accessible"
@@ -1208,6 +1213,8 @@
     "category": "ui",
     "source": "axis",
     "tags": [
+      "stateful",
+      "side-effects",
       "forwardRef",
       "animated"
     ],

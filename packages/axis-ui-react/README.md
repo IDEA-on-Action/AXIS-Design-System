@@ -93,8 +93,8 @@ export default function Page() {
 
 | 경계 | 컴포넌트 |
 |---|---|
-| 모듈 전체(패키지 `dist` 파일에 `"use client"`) | `Avatar`(이미지 로드 오류 상태와 대체 표시), `Command` · `CommandInput` · `CommandList` · `CommandEmpty` · `CommandGroup` · `CommandItem` · `CommandSeparator`(cmdk) |
-| Radix 부분만(Radix 패키지 자체의 `"use client"`) | Accordion · Checkbox · Collapsible · Dialog · Dropdown Menu · Label · Popover · Radio Group · Scroll Area · Select · Separator · Sheet · Slider · Switch · Tabs · Toast · Toggle · Tooltip. 래퍼는 서버에서 렌더되고 Radix 부분이 클라이언트 참조가 됩니다 |
+| 모듈 전체(패키지 `dist` 파일에 `"use client"`) | `Avatar`(이미지 로드 오류 상태와 대체 표시), `Command` · `CommandInput` · `CommandList` · `CommandEmpty` · `CommandGroup` · `CommandItem` · `CommandSeparator`(cmdk), Dialog · Popover · Sheet(열림 상태를 알아 닫힌 트리거의 `aria-controls` 를 뺌, 1.8.0 · WI-0069), Tooltip(포커스 스크롤 닫힘 방지, WI-0073) |
+| Radix 부분만(Radix 패키지 자체의 `"use client"`) | Accordion · Checkbox · Collapsible · Dropdown Menu · Label · Radio Group · Scroll Area · Select · Separator · Slider · Switch · Tabs · Toast · Toggle. 래퍼는 서버에서 렌더되고 Radix 부분이 클라이언트 참조가 됩니다 |
 | 없음(서버에서 렌더) | Alert · Badge · Breadcrumb · Button · Card · Input · Progress · Skeleton · Table · Textarea |
 
 판단 기준은 `useState` · `useEffect` · `useContext` · `createContext` 같은 클라이언트 전용 API, DOM 이벤트 핸들러를 직접 만드는 코드, `"use client"` 모듈 내보내기의 점 접근(`Command.Input` 등)입니다. 지시문을 붙이는 파일 목록은 패키지 소스 `scripts/client-modules.mjs` 한 곳에서 관리합니다.

@@ -37,7 +37,7 @@ const sliderProps = [
 const basicExample = `import { Slider } from '@axis-ds/ui-react'
 
 export function Example() {
-  return <Slider defaultValue={[50]} max={100} step={1} />
+  return <Slider defaultValue={[50]} max={100} step={1} aria-label="음량" />
 }`
 
 export default function SliderPage() {
@@ -54,7 +54,8 @@ export default function SliderPage() {
 
       <DocSection title="Usage">
         <div className="mb-4 p-6 rounded-lg border">
-          <Slider defaultValue={[50]} max={100} step={1} className="w-[60%]" />
+          {/* 썸(role=slider)에 이름이 필요해요. aria-label · aria-labelledby 를 받아 썸에 전달해요(axe aria-input-field-name, WI-0069) */}
+          <Slider defaultValue={[50]} max={100} step={1} className="w-[60%]" aria-label="음량" />
         </div>
         <CodeBlock code={basicExample} />
       </DocSection>
@@ -79,6 +80,7 @@ export default function SliderPage() {
           <li key={0}>
             {'role="slider"와 aria-valuenow / aria-valuemin / aria-valuemax가 적용됩니다.'}
           </li>
+          <li key={1}>{'보이는 라벨이 없으면 aria-label, 있으면 aria-labelledby 를 Slider 에 주세요. 썸(role="slider")에 전달돼요.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

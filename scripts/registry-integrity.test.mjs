@@ -288,7 +288,16 @@ test("빈 interface: extends 하나뿐인 빈 interface 만 type 으로, 멤버�
 
 test('"use client": client-modules.mjs 목록의 항목만 맨 앞에 지시문', async () => {
   const { CLIENT_MODULES } = await import("../packages/axis-agentic-ui/scripts/client-modules.mjs");
+  const { CLIENT_MODULES: UI_CLIENT_MODULES } = await import("../packages/axis-ui-react/scripts/client-modules.mjs");
   const expected = new Set(CLIENT_MODULES.map((m) => `agentic-${m.path.replace(/\/index$/, "")}`));
+  // ui-react 는 컴포넌트 일부만 레지스트리에 있다(WI-0069 에서 dialog 가 client 모듈이 됨).
+  // 목록 중 `<이름>/index` 이면서 레지스트리 항목이 있는 것만 기대값에 넣는다(avatar · command · tooltip 은 항목 없음)
+  const uiInRegistry = UI_CLIENT_MODULES.map((m) => m.path)
+    .filter((p) => /^[a-z0-9-]+\/index$/.test(p))
+    .map((p) => p.replace(/\/index$/, ""))
+    .filter((name) => fs.existsSync(path.join(REG, `${name}.json`)));
+  for (const name of uiInRegistry) expected.add(name);
+  assert.ok(uiInRegistry.length > 0, "ui-react client 모듈 중 레지스트리 항목이 0개(dialog 가 있어야 함, 측정 실패)");
   const actual = new Set(
     fs
       .readdirSync(REG)

@@ -13,7 +13,7 @@ const Switch = React.forwardRef<
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--axis-border-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--axis-surface-default)]",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[state=checked]:bg-[var(--axis-interactive-primary)]",
-      "data-[state=unchecked]:bg-[var(--axis-surface-tertiary)]",
+      "data-[state=unchecked]:bg-[var(--axis-form-control-track,var(--axis-surface-tertiary))]",
       className
     )}
     {...props}

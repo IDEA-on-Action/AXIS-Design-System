@@ -31,7 +31,7 @@ export function RecoveryBanner({
     <div
       className={cn(
         "flex items-start gap-3 p-4 rounded-lg border",
-        "bg-[var(--axis-surface-error)] border-[var(--axis-status-error-border)]",
+        "bg-[var(--axis-surface-error)] border-[var(--axis-border-error)]",
         className
       )}
       role="alert"
@@ -39,7 +39,7 @@ export function RecoveryBanner({
       aria-describedby={description ? descId : undefined}
     >
       <svg
-        className="w-5 h-5 text-[var(--axis-status-error)] flex-shrink-0 mt-0.5"
+        className="w-5 h-5 text-[var(--axis-text-error)] flex-shrink-0 mt-0.5"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -65,7 +65,7 @@ export function RecoveryBanner({
           {onRetry && (
             <button
               onClick={onRetry}
-              aria-describedby={descId}
+              aria-describedby={description ? descId : undefined}
               className="px-3 py-1.5 text-sm font-medium rounded-md bg-[var(--axis-button-destructive-bg-default)] text-[var(--axis-button-destructive-text-default)] hover:bg-[var(--axis-button-destructive-bg-hover)] transition-colors"
             >
               재시도

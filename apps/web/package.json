@@ -13,6 +13,7 @@
     "test:e2e:a11y": "playwright test a11y",
     "test:e2e:nontext": "playwright test brand-nontext-contrast",
     "test:e2e:demo": "playwright test brand-demo",
+    "test:e2e:tooltip": "playwright test tooltip-persistence",
     "test:e2e:tokens": "playwright test -c playwright.tokens.config.ts"
   },
   "dependencies": {

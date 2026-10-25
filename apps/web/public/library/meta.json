@@ -106,16 +106,16 @@
     {
       "id": "accessible",
       "name": "accessible",
-      "count": 22
-    },
-    {
-      "id": "container",
-      "name": "container",
-      "count": 8
+      "count": 24
     },
     {
       "id": "stateful",
       "name": "stateful",
+      "count": 12
+    },
+    {
+      "id": "container",
+      "name": "container",
       "count": 8
     },
     {
@@ -131,7 +131,7 @@
     {
       "id": "side-effects",
       "name": "side-effects",
-      "count": 2
+      "count": 3
     }
   ]
 }

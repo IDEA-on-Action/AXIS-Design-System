@@ -174,8 +174,9 @@ export function ComponentDetailContent({ category, id }: ComponentDetailContentP
               size="icon"
               className="absolute right-2 top-2"
               onClick={() => copyToClipboard(installCommand)}
+              aria-label={copied ? '설치 명령 복사됨' : '설치 명령 복사'}
             >
-              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              {copied ? <Check className="h-4 w-4" aria-hidden="true" /> : <Copy className="h-4 w-4" aria-hidden="true" />}
             </Button>
           </div>
         </section>

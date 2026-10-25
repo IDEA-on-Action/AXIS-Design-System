@@ -57,7 +57,7 @@
       "type": "registry:ui",
       "title": "Dialog",
       "description": "AXIS 다이얼로그 컴포넌트 - 모달 UI",
-      "sha256": "17453188103044027ccb4379bc0f8163a73b4edb7f119e1144831c60a1c5eb16"
+      "sha256": "a6c0c65bae56587e78f9b53b92f6949472b51c81722c3d31ee1c76645ec7d94b"
     },
     {
       "name": "select",
@@ -78,7 +78,7 @@
       "type": "registry:ui",
       "title": "Toast",
       "description": "AXIS 토스트 컴포넌트 - 알림 메시지",
-      "sha256": "0d5168f10be4223f9d31bf815045c88abbd57a96ab932b05388d43a26e82546c"
+      "sha256": "c56513bb2338c57ffee093d7c610ce2ec493857621607ad735b1c4bb4806a21a"
     },
     {
       "name": "agentic-a11y-labels",
@@ -92,7 +92,7 @@
       "type": "registry:ui",
       "title": "Run Progress",
       "description": "AI 에이전트 실행 진행률 표시 컴포넌트",
-      "sha256": "4d7611b71d67ccf57ce89b1a3ffdf954575e22e8dd8ff13aa86b7710367e8b24"
+      "sha256": "7c5729965b71edc5977a8ff41289b9e8973f0d67ae5469eb419c13207877ef7f"
     },
     {
       "name": "agentic-streaming-text",
@@ -106,14 +106,14 @@
       "type": "registry:ui",
       "title": "Approval Card",
       "description": "사용자 승인 요청 카드 컴포넌트",
-      "sha256": "7da9521e6f7e684d8fa0ccb8156877aa251c9cbf4d7f4491a5fa346daeb8111a"
+      "sha256": "412651c84e63a69339fc8788e4d75657fde05b0116a9161f7c32e73a3cd1dbd7"
     },
     {
       "name": "agentic-step-timeline",
       "type": "registry:ui",
       "title": "Step Timeline",
       "description": "에이전트 실행 단계 타임라인 컴포넌트",
-      "sha256": "cd6719280a88c471f6d1e20493f07b5d1055d37bf899129462ac89df6dfe883c"
+      "sha256": "6e451cc2f98a62cd4132221dc5187d710a5ddebb940f602cb838b93004a35a95"
     },
     {
       "name": "agentic-thinking-indicator",
@@ -134,14 +134,14 @@
       "type": "registry:ui",
       "title": "Recovery Banner",
       "description": "에러 복구 배너 컴포넌트",
-      "sha256": "b4f6fe103ee7eab0b4e6684192a40e58e55dcc86d6dec6b285cb5a6d72b57560"
+      "sha256": "17b3c5f59ccbecba3dcdaa37a4002d0c9b5843d0aa4a8c0635c9051163ff2572"
     },
     {
       "name": "agentic-agent-avatar",
       "type": "registry:ui",
       "title": "Agent Avatar",
       "description": "AI 에이전트 아바타 컴포넌트",
-      "sha256": "f976f582e9ed76b9708750374874a93a153845524863abb53416301366a6df3c"
+      "sha256": "2ac9c96807bc5103c9d7266dd7d2daacaac7e3856e17c9f862555c65e0218355"
     },
     {
       "name": "agentic-surface-renderer",
@@ -155,63 +155,63 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "22f55b62257075be3e5bb393aea8077eb26cf913ae0595802213769025492b1f"
+      "sha256": "7601f15cb9d796a5bae068ccb5a12b1c02078e2273bdb6be5e9d00324fd54bfb"
     },
     {
       "name": "agentic-message-bubble",
       "type": "registry:ui",
       "title": "Message Bubble",
       "description": "대화 메시지 버블 컴포넌트 (user/assistant/system)",
-      "sha256": "9833745acfd486a8375e4ede01f51e9e440dd3f7f06a52850c82f951d14b3fec"
+      "sha256": "10137195374ecc5db3aba5809eb1229b8fe3c4b3e64a00e1427ed0a5d52f6408"
     },
     {
       "name": "agentic-feedback-buttons",
       "type": "registry:ui",
       "title": "Feedback Buttons",
       "description": "좋아요/싫어요 피드백 버튼 컴포넌트",
-      "sha256": "736cfcb470ad4d32fc3b70d1697984dd02e2d75a34f98d023908fc6831792f78"
+      "sha256": "f3d4919281f7f811af1e8bf98cbbc32914f830b441e50a53f71d8315c69c6440"
     },
     {
       "name": "agentic-token-usage-indicator",
       "type": "registry:ui",
       "title": "Token Usage Indicator",
       "description": "토큰 사용량 및 비용 표시 컴포넌트",
-      "sha256": "5c8c5ea1762f6cf0a2432745e296b7d3e5d244d4a33669858a9d1558be2274d5"
+      "sha256": "b64329101d9a9badf43b05245fbde3235ce0fc9ae5e98747fad874fc786d18b1"
     },
     {
       "name": "agentic-context-panel",
       "type": "registry:ui",
       "title": "Context Panel",
       "description": "모델/설정 메타 정보 패널 컴포넌트",
-      "sha256": "a9a618b1d657aed7c59a1a7753d2e0cdb1446b6d53f2ff6fa03763a1146da538"
+      "sha256": "930ef920ebd5bef9d68b38b03e4e5b4d77429a898db323512443c9847621c2eb"
     },
     {
       "name": "agentic-code-block",
       "type": "registry:ui",
       "title": "Code Block",
       "description": "코드 표시 + 복사 버튼 컴포넌트",
-      "sha256": "12f888378fac091cc2568b454eb275f0ed8ddb69d3533a85cc70bc960bbb2d4b"
+      "sha256": "e67665de3ccbd157e3b4037418760e401b1b77dbacb3456a8dc60594a217aa68"
     },
     {
       "name": "agentic-plan-card",
       "type": "registry:ui",
       "title": "Plan Card",
       "description": "AI 실행 계획 표시/승인 카드 컴포넌트",
-      "sha256": "ed6e7145a338b2b59a05aa3f829cf3f95e391d73d5a66c685cbd9349271e26da"
+      "sha256": "d0ad94a23363711259bd49c54aa5205054a4c6a13bd8abdfeef3fa534b68398e"
     },
     {
       "name": "agentic-attachment-card",
       "type": "registry:ui",
       "title": "Attachment Card",
       "description": "파일/이미지 첨부 표시 카드 컴포넌트",
-      "sha256": "1b5df56505341ef6b9a0adab7c50eced05e402b9a06cfdd3628ec4fda08e8af9"
+      "sha256": "d7116c7dc5c27cb6bc286a0316139d81ffd77c61bbb67a54e034d592183f7f66"
     },
     {
       "name": "agentic-diff-viewer",
       "type": "registry:ui",
       "title": "Diff Viewer",
       "description": "코드 변경사항 비교 표시 컴포넌트",
-      "sha256": "1c3d2b81011f6522b0d37e039c0b1ccf597c0eca0aa1a4749331142ae0625ca2"
+      "sha256": "953104e633bce2adb4d6c2a11024e70ffae7cfa6fcd75b2f618e41b5982e81d9"
     }
   ]
 }

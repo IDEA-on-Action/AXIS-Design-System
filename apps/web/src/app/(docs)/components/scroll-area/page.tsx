@@ -102,6 +102,7 @@ export default function ScrollAreaPage() {
         />
         <ul className="mt-4 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
           <li key={0}>{'네이티브 스크롤을 유지하므로 키보드/스크린리더 스크롤이 동작합니다.'}</li>
+          <li key={1}>{'뷰포트가 Tab 으로 포커스를 받아요(tabIndex 0). 안에 포커스할 요소가 없어도 키보드로 스크롤할 수 있어요.'}</li>
         </ul>
       </DocSection>
     </DocPageLayout>

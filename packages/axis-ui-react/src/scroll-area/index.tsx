@@ -12,7 +12,12 @@ const ScrollArea = React.forwardRef<
     className={cn("relative overflow-hidden", className)}
     {...props}
   >
-    <ScrollAreaPrimitive.Viewport className="h-full w-full rounded-[inherit]">
+    {/* 뷰포트에 포커스를 줄 수 있어야 키보드로 스크롤할 수 있다(WCAG 2.1.1, axe scrollable-region-focusable, WI-0069).
+        Radix 뷰포트는 tabIndex 가 없어 안에 포커스할 요소가 없으면 키보드로 내용을 볼 수 없었다 */}
+    <ScrollAreaPrimitive.Viewport
+      tabIndex={0}
+      className="h-full w-full rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--axis-border-focus)]"
+    >
       {children}
     </ScrollAreaPrimitive.Viewport>
     <ScrollBar />

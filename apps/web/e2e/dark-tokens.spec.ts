@@ -34,12 +34,15 @@ const RADIUS_FROM_SHADCN: Record<string, string> = {
 
 /**
  * 다크 계산값이 바뀌어야 하는 component 토큰과 그 다크 값 (WI-0033 plan 4.1, WI-0029 PRD 2.1 · 2.2).
- * placeholder 는 다크 값이 라이트와 같아(gray.400 고정, WI-0029 D2) 제외합니다.
+ * placeholder 는 WI-0062 에서 라이트를 gray.500(흰 바탕 4.83)으로 올리고 다크는 gray.400 을 유지해 다크 값이 라이트와 달라져 들어갑니다.
+ * button-bg-disabled 다크는 WI-0062 에서 gray.700 → gray.800(비활성 글자 gray.400 과 5.78:1).
+ * input-border-default 는 WI-0063 에서 라이트 · 다크 모두 gray.500(테마 무관)이 되어 빠지고, progress-fill 4개는 다크 값이 달라 들어갑니다.
+ * form-control-border · track 은 테마 무관 값이라 제외합니다.
  * button-text-disabled 는 다크 text.tertiary 가 gray.400 으로 바뀌어(WI-0029) 라이트 gray.500 과 달라져 들어갑니다.
  * plan-card approve-bg · approve-hover-bg 는 테마 무관 값이라 제외합니다.
  */
 const EXPECTED_DARK: Record<string, string> = {
-  '--axis-button-bg-disabled': '#374151',
+  '--axis-button-bg-disabled': '#1F2937',
   '--axis-button-text-disabled': '#9CA3AF',
   '--axis-button-secondary-bg-default': '#111827',
   '--axis-button-secondary-bg-hover': '#1F2937',
@@ -51,8 +54,8 @@ const EXPECTED_DARK: Record<string, string> = {
   '--axis-input-bg-default': '#030712',
   '--axis-input-bg-disabled': '#111827',
   '--axis-input-text-default': '#F3F4F6',
-  '--axis-input-border-default': '#374151',
-  '--axis-input-border-hover': '#6B7280',
+  '--axis-input-text-placeholder': '#9CA3AF',
+  '--axis-input-border-hover': '#9CA3AF',
   '--axis-input-border-focus': '#60A5FA',
   '--axis-input-border-error': '#F87171',
   '--axis-card-bg-default': '#030712',
@@ -71,6 +74,10 @@ const EXPECTED_DARK: Record<string, string> = {
   '--axis-dialog-content-border': '#1F2937',
   '--axis-plan-card-reject-hover-text': '#F87171',
   '--axis-plan-card-reject-text': '#EF4444',
+  '--axis-progress-fill-default': '#3B82F6',
+  '--axis-progress-fill-success': '#22C55E',
+  '--axis-progress-fill-warning': '#EAB308',
+  '--axis-progress-fill-destructive': '#EF4444',
 }
 
 /** components.json leaf 수 */

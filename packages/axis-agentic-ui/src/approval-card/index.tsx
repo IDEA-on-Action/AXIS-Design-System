@@ -35,12 +35,12 @@ const severityStyles: Record<Severity, { border: string; icon: string; bg: strin
   },
   warning: {
     border: "border-l-[var(--axis-status-warning)]",
-    icon: "text-[var(--axis-status-warning)]",
+    icon: "text-[var(--axis-text-warning)]",
     bg: "bg-[var(--axis-surface-warning)]",
   },
   error: {
     border: "border-l-[var(--axis-status-error)]",
-    icon: "text-[var(--axis-status-error)]",
+    icon: "text-[var(--axis-text-error)]",
     bg: "bg-[var(--axis-surface-error)]",
   },
 };

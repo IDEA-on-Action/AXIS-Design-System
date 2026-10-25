@@ -178,7 +178,7 @@ CSS 변수를 오버라이드하여 프로젝트에 맞는 테마를 적용할 �
 }
 ```
 
-> primitive 색 토큰(`--axis-color-*`)을 덮어쓰는 방식은 컴포넌트 대부분에 닿지 않습니다. 색은 시맨틱 · component 토큰을 덮어씁니다. 둥글기는 앱의 Tailwind 설정에 따라 닿는 변수가 다릅니다. `@axis-ds/tokens/tailwind` preset(Tailwind 3)이나 `@axis-ds/tokens/css/tailwind4` 진입점(Tailwind 4)을 쓰면 컴포넌트의 `rounded-sm|md|lg`가 `--radius`를 참조하므로 `--radius`를 덮어쓰고(`--axis-radius-*`는 닿지 않음), Tailwind 4 에서 진입점 없이 `@source` 만 쓰면 Tailwind 기본 둥글기가 적용되어 `--radius` 도 닿지 않습니다. [테마 커스터마이징 가이드](./theme-customization.md)의 「Tailwind 설정 확장」 Tailwind 3 예시처럼 `borderRadius`를 `var(--axis-radius-*)`로 매핑했다면 반대로 `--axis-radius-*`가 닿고 `--radius`는 닿지 않습니다. 브랜드 단위 전환은 [테마 커스터마이징 가이드](./theme-customization.md)의 「4. 브랜드 테마」를 참고합니다.
+> primitive 색 토큰(`--axis-color-*`)을 덮어쓰는 방식은 컴포넌트에 닿지 않습니다(1.8.0부터, 그 전에는 Progress 상태 채움에만 닿음). 색은 시맨틱 · component 토큰을 덮어씁니다. 1.8.0부터 Progress 채움은 `--axis-progress-fill-*`, Checkbox · RadioGroup · Textarea 경계와 Switch · Slider 트랙은 `--axis-form-control-border` · `--axis-form-control-track` 을 쓰므로 `--axis-surface-brand` · `--axis-border-default` · `--axis-surface-tertiary` 만 덮어쓰면 그 컴포넌트는 따라가지 않습니다. 둥글기는 앱의 Tailwind 설정에 따라 닿는 변수가 다릅니다. `@axis-ds/tokens/tailwind` preset(Tailwind 3)이나 `@axis-ds/tokens/css/tailwind4` 진입점(Tailwind 4)을 쓰면 컴포넌트의 `rounded-sm|md|lg`가 `--radius`를 참조하므로 `--radius`를 덮어쓰고(`--axis-radius-*`는 닿지 않음), Tailwind 4 에서 진입점 없이 `@source` 만 쓰면 Tailwind 기본 둥글기가 적용되어 `--radius` 도 닿지 않습니다. [테마 커스터마이징 가이드](./theme-customization.md)의 「Tailwind 설정 확장」 Tailwind 3 예시처럼 `borderRadius`를 `var(--axis-radius-*)`로 매핑했다면 반대로 `--axis-radius-*`가 닿고 `--radius`는 닿지 않습니다. 브랜드 단위 전환은 [테마 커스터마이징 가이드](./theme-customization.md)의 「4. 브랜드 테마」를 참고합니다.
 
 ---
 

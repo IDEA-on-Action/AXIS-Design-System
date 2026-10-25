@@ -43,7 +43,10 @@ const withButtonExample = `<div className="flex w-full max-w-sm items-center spa
 
 const disabledExample = `<Input disabled type="email" placeholder="Email" />`
 
-const fileExample = `<Input type="file" />`
+const fileExample = `<div className="grid w-full max-w-sm items-center gap-1.5">
+  <Label htmlFor="picture">Picture</Label>
+  <Input id="picture" type="file" />
+</div>`
 
 export default function InputPage() {
   return (
@@ -93,7 +96,11 @@ export default function InputPage() {
 
       <DocSection title="File Input">
         <div className="mb-4 p-6 rounded-lg border">
-          <Input type="file" className="max-w-sm" />
+          {/* 파일 입력은 placeholder 가 없어 라벨이 유일한 이름이에요(axe label, WI-0069) */}
+          <div className="grid w-full max-w-sm items-center gap-1.5">
+            <Label htmlFor="picture-demo">Picture</Label>
+            <Input id="picture-demo" type="file" />
+          </div>
         </div>
         <CodeBlock code={fileExample} />
       </DocSection>

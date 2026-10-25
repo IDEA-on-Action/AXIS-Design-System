@@ -227,9 +227,39 @@ describe('src/brands/ontology (FR-8)', () => {
     '--axis-table-head-font-size': '13px',
   };
 
+  // WI-0063 새 component 토큰(폼 컨트롤 경계 · 트랙, Progress 채움). 기본 브랜드만 3:1 로 짙게 하고(D3 (가)),
+  // ontology 는 1.7.0 에서 그 자리에 그려지던 값을 그대로 둬요(Checkbox · Radio · Textarea = border-default,
+  // Switch 꺼짐 · Slider 트랙 = surface-tertiary, Progress = surface-brand · green.500 · yellow.500 · red.500 primitive).
+  // 초안 2 뒤에 생긴 이름이라 초안에는 없어요. 이 표의 이름만 U18 초안 대조에서 빼고, 아래 테스트가 값이 정확히 같은지 봐요.
+  const WI0063_SAME = {
+    light: {
+      '--axis-form-control-border': '#E6E8EB', '--axis-form-control-track': '#EAECEF',
+      '--axis-progress-fill-default': '#326ADA', '--axis-progress-fill-success': '#22C55E',
+      '--axis-progress-fill-warning': '#EAB308', '--axis-progress-fill-destructive': '#EF4444',
+    },
+    dark: {
+      '--axis-form-control-border': '#2B2F35', '--axis-form-control-track': '#2A2E34',
+      '--axis-progress-fill-default': '#6B98F0', '--axis-progress-fill-success': '#22C55E',
+      '--axis-progress-fill-warning': '#EAB308', '--axis-progress-fill-destructive': '#EF4444',
+    },
+  };
+
+  test('WI-0063: 새 토큰의 ontology 값은 1.7.0 렌더 값과 같다(초안에는 없는 이름)', () => {
+    const draft = draftBlocks();
+    for (const theme of ['light', 'dark']) {
+      const mine = brandDecls(theme);
+      const got = Object.fromEntries(Object.keys(WI0063_SAME[theme]).map(n => [n, resolveRef(mine.get(n))]));
+      assert.deepEqual(got, WI0063_SAME[theme], theme);
+      // 1.7.0 에서 같은 자리를 칠하던 변수와 값이 같다(복제 표가 ontology 소스와 어긋나면 실패)
+      const from = { '--axis-form-control-border': '--axis-border-default', '--axis-form-control-track': '--axis-surface-tertiary', '--axis-progress-fill-default': '--axis-surface-brand' };
+      for (const [n, src] of Object.entries(from)) assert.equal(got[n], resolveRef(mine.get(src)), `${theme} ${n} = ${src}`);
+      assert.deepEqual(Object.keys(WI0063_SAME[theme]).filter(n => draft[theme].has(n)), []);
+    }
+  });
+
   // U18 역반영(2026-10-17) 뒤에는 반대 방향도 성립해야 해요: 브랜드 JSON 선언은 모두 초안에 같은 값으로 있다.
   // 참조(다크 interactive.primary = {color.blue.500})는 기본 소스로 풀어 초안의 hex 와 비교해요.
-  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 · WI-0026 밀도 제외)', () => {
+  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 · WI-0026 밀도 · WI-0063 새 토큰 제외)', () => {
     const draft = draftBlocks();
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
@@ -237,6 +267,7 @@ describe('src/brands/ontology (FR-8)', () => {
       for (const [name, value] of mine) {
         if (D2_OVERRIDES[theme][name] !== undefined) continue;
         if (WI0026_DENSITY[name] !== undefined) continue;
+        if (WI0063_SAME[theme][name] !== undefined) continue;
         assert.equal(draft[theme].get(name), resolveRef(value), `${theme} ${name}`);
       }
     }
