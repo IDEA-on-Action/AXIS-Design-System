@@ -24,7 +24,7 @@ import { applyBrand, readBrandState } from './helpers/brand'
  *   (이 단언이 없으면 브랜드 CSS 가 빠져도 기본 값으로 재고 통과한다).
  * - 경로 양성 대조: HTTP 200 이고 준비 선택자(기본 h1)가 보인 뒤에만 잰다. 정적 서버는 없는 경로에도 404 페이지를
  *   돌려주고, library · templates 는 데이터를 받기 전 Skeleton 만 그려서, 둘 다 재면 위반 0 으로 통과하기 때문이다.
- * - incomplete: axe 가 판정을 보류한 color-contrast 노드 중 대비 수치가 4.5 미만인 것을 실패로 본다(WI-0062 D2).
+ * - incomplete: axe 가 판정을 보류한 color-contrast 노드 중 대비 수치가 4.5(큰 글씨 3) 미만인 것을 실패로 본다(WI-0062 D2).
  *   axe 는 글자가 짧거나(too short) 겹친 요소가 있으면 위반 대신 incomplete 로 보고해, 실제 미달(예: 1.47)이 빠져나갔다.
  *   수치가 없는(0 또는 없음) 노드는 바탕을 정하지 못한 것이라 이 단언의 대상이 아니다.
  * - 기준선 없음(WI-0029 PRD AC1 · AC2): 기본 · ontology 브랜드 모두 위반 0 을 단언한다.
@@ -36,8 +36,17 @@ const { listA11yRoutes, COMBOS } = require('./a11y-routes.cjs') as {
 }
 const PAGES = listA11yRoutes()
 
-/** incomplete color-contrast 를 실패로 보는 대비 하한 */
-const INCOMPLETE_CONTRAST_MIN = 4.5
+/**
+ * incomplete color-contrast 를 실패로 보는 대비 하한: 큰 글씨(axe 의 fontSize · fontWeight 기준, 18pt 이상 또는 14pt 굵게)는 3, 그 밖은 4.5.
+ * 판정 함수는 helpers/contrast-threshold.cjs 에 있고, 가짜 노드로 판정을 확인하는 selfTest 가 어긋나면 설정 단계에서 멈춘다.
+ */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { isLowIncomplete, incompleteContrastMin, selfTest: contrastThresholdSelfTest } = require('./helpers/contrast-threshold.cjs') as {
+  isLowIncomplete: (data: AxeCheckData | null | undefined) => boolean
+  incompleteContrastMin: (data: AxeCheckData | null | undefined) => number
+  selfTest: () => number
+}
+contrastThresholdSelfTest()
 
 const THEMES = ['light', 'dark'] as const satisfies readonly ThemeName[]
 const BRANDS = ['default', 'ontology'] as const
@@ -49,13 +58,20 @@ if (COMBOS.join(',') !== BRANDS.flatMap((b) => THEMES.map((t) => `${b}/${t}`)).j
 /** 기본 브랜드 버튼 바탕 (variables.css :root · .dark 동일, 브랜드 미적용 확인용. WI-0029 에서 blue.500 → blue.600) */
 const DEFAULT_BUTTON_BG = '#2563EB'
 
+interface AxeCheckData {
+  fgColor?: string
+  bgColor?: string
+  contrastRatio?: number
+  fontSize?: string
+  fontWeight?: string
+}
 interface AxeNode {
   target: unknown
   html?: string
   any: Array<{
     id: string
     message?: string
-    data?: { fgColor?: string; bgColor?: string; contrastRatio?: number; fontSize?: string; fontWeight?: string } | null
+    data?: AxeCheckData | null
   }>
 }
 interface AxeViolation {
@@ -109,7 +125,7 @@ for (const brand of BRANDS) {
             .analyze()
 
           const violations = results.violations as unknown as AxeViolation[]
-          // incomplete color-contrast 중 대비 수치가 있는데 4.5 미만인 노드
+          // incomplete color-contrast 중 대비 수치가 있는데 하한(큰 글씨 3, 그 밖 4.5) 미만인 노드
           const lowIncomplete = (results.incomplete as unknown as AxeViolation[])
             .filter((v) => v.id === 'color-contrast')
             .flatMap((v) => v.nodes)
@@ -118,7 +134,7 @@ for (const brand of BRANDS) {
                 .filter((c) => c.id === 'color-contrast')
                 .map((c) => ({ target: n.target, html: n.html?.slice(0, 200), data: c.data, message: c.message })),
             )
-            .filter((x) => typeof x.data?.contrastRatio === 'number' && x.data.contrastRatio > 0 && x.data.contrastRatio < INCOMPLETE_CONTRAST_MIN)
+            .filter((x) => isLowIncomplete(x.data))
           // 측정 경로 기록: 검사한 노드가 있었는지(passes)를 남겨, 위반 0 이 미측정 0 이 아님을 확인할 수 있게 한다
           testInfo.annotations.push({
             type: 'a11y-summary',
@@ -160,8 +176,11 @@ for (const brand of BRANDS) {
             `a11y 위반(${brand}/${theme}): ${violations.map((v) => v.id).join(', ') || '없음'}`,
           ).toEqual([])
           expect(
-            lowIncomplete.map((x) => `${JSON.stringify(x.target)} ${x.data?.fgColor}/${x.data?.bgColor} ${x.data?.contrastRatio}`),
-            `axe incomplete color-contrast 대비 ${INCOMPLETE_CONTRAST_MIN} 미만(${brand}/${theme} ${path})`,
+            lowIncomplete.map(
+              (x) =>
+                `${JSON.stringify(x.target)} ${x.data?.fgColor}/${x.data?.bgColor} ${x.data?.contrastRatio} (하한 ${incompleteContrastMin(x.data)}, ${x.data?.fontSize} ${x.data?.fontWeight})`,
+            ),
+            `axe incomplete color-contrast 대비 하한 미만(${brand}/${theme} ${path})`,
           ).toEqual([])
         })
       }

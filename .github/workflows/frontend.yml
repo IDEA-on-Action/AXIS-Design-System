@@ -227,8 +227,9 @@ jobs:
         run: |
           fail=0
           # a11y 기대 건수: spec 이 읽는 경로 목록과 같은 파일에서 계산한다. 계산에 실패하면 0 을 기대값으로 쓰지 않고 멈춘다.
-          routes=$(node ../e2e/a11y-routes.cjs --count 2>&1); rc=$?
-          combos=$(node ../e2e/a11y-routes.cjs --combos 2>&1); rc2=$?
+          # Actions 기본 셸은 bash -e 라서 'x=$(...); rc=$?' 는 실패한 줄에서 멈추고 아래 ::error 에 닿지 않는다. '|| rc=$?' 로 받는다.
+          rc=0; routes=$(node ../e2e/a11y-routes.cjs --count 2>&1) || rc=$?
+          rc2=0; combos=$(node ../e2e/a11y-routes.cjs --combos 2>&1) || rc2=$?
           ncombo=$(wc -w <<< "$combos")
           if [ "$rc" -ne 0 ] || [ "$rc2" -ne 0 ] || ! [[ "$routes" =~ ^[0-9]+$ ]] || [ "$routes" -eq 0 ] || [ "$ncombo" -eq 0 ]; then
             echo "::error::a11y 경로 목록을 계산하지 못했어요 (rc=$rc/$rc2, routes='$routes', combos='$combos')"
