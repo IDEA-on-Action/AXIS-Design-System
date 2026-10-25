@@ -23,6 +23,7 @@
 | R0 ui-react README 종전 예시(`css/shadcn` 한 줄) | 후보 | 0/12 | 4/4 | 4/4 | `--axis-border-default` 미정의, Input 경계 rgb(17, 24, 39) · 다크 (243, 244, 246)(글자색), Progress 채움 rgba(0, 0, 0, 0). 음성 대조(AC5) |
 | R1 ui-react README 새 예시(`tokens/css` + `css/shadcn`) | 후보 | 0/12 | 4/4 | 4/4 | `--axis-border-default` 정의(#E5E7EB · 다크 #1F2937), Input (107, 114, 128), Progress (37, 99, 235) · 다크 (59, 130, 246)(AC5) |
 
+- `--border` 형식별(반박 검토 minor, Chromium 최소 페이지에 `border-color: hsl(var(--border, 220 13% 91%))` 와 글자색 rgb(10, 20, 30)): 정의 없음 rgb(229, 231, 235) · 삼중값 `220 13% 80%` rgb(197, 202, 211)(양성 대조), `#ff0000` · `hsl(0 100% 50%)` · `oklch(0.6 0.2 30)` 는 모두 rgb(10, 20, 30)(글자색). 삼중값이 아닌 `--border` 를 둔 앱은 회색에서 글자색으로 바뀌어 release-notes 「업그레이드 안내」 와 changeset 에 적었어요. 스크립트 · 결과는 scratchpad `w6impl/WI-0077/border-format.*`.
 - R0 · R1 은 브랜드 CSS 를 넣지 않아 ontology 상태가 기본과 같은 값이에요(브랜드 줄이 없는 README 예시 그대로).
 - axe color-contrast 는 V0 · R0 · R1 에서 0건, N0 다크 2개 상태에서 1건이고 1.8.0 과 후보가 같아요(이 WI 와 무관, 같은 화면에서 tokens 만 다름).
 
