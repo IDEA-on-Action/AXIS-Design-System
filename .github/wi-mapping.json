@@ -508,6 +508,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDTNgA",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0078",
+      "slug": "library-detail-e2e-smoke",
+      "issueNumber": 206,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDUJO0",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T00:00:00.000Z"
