@@ -540,6 +540,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDWo5A",
       "lastSyncedAt": "2026-10-25T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0082",
+      "slug": "select-placeholder-color",
+      "issueNumber": 211,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDWzlk",
+      "lastSyncedAt": "2026-10-25T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-25T09:30:00.000Z"
