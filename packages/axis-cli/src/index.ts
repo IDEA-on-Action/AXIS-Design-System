@@ -11,6 +11,7 @@ import { registerTemplateCommand, registerCheckCommand } from "./template/index.
 import { registerThemeCommand } from "./theme/index.js";
 import { registerInitCommand } from "./init/index.js";
 import { registerAddCommand, registerListCommand } from "./add/index.js";
+import { NonInteractiveError } from "./interactive.js";
 
 // 버전은 package.json 에서 읽습니다. dist/index.js 기준 ../package.json 도 패키지 루트입니다.
 const { version: CLI_VERSION } = createRequire(import.meta.url)("../package.json") as {
@@ -346,4 +347,13 @@ registerCheckCommand(program);
 // ==========================================
 registerThemeCommand(program);
 
-program.parse();
+// async action 을 끝까지 기다립니다(WI-0075 D3). 종전 program.parse() 는 action 의 Promise 를 기다리지 않아,
+// 답이 오지 않는 질문이 남으면 이벤트 루프가 빈 순간 rc 0 으로 끝났습니다. 이제 그런 경우는 Node 가
+// 「unsettled top-level await」(rc 13)로 드러냅니다. 가드를 빠뜨린 질문(NonInteractiveError)은 rc 1 로 바꿉니다.
+try {
+  await program.parseAsync();
+} catch (err) {
+  if (!(err instanceof NonInteractiveError)) throw err;
+  console.error(chalk.red(err.message));
+  process.exitCode = 1;
+}

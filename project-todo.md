@@ -72,7 +72,7 @@
 | 84 | Tailwind 3 CJS 설정에서 `require("@axis-ds/tokens/tailwind")` preset 이 적용되지 않음(1.5.1 · 1.6.2 실측 colors 0 · keyframes 0, cli 가 이 문구를 안내) | WI-0072 (#191) | P18 | P1 | ✅ 2026-10-25 (#196, tokens 1.7.0) |
 | 85 | Tooltip 이 스크롤에 닫혀 화면 밖 트리거로 Tab 이동 시 바로 사라짐(WCAG 1.4.13 후보, WI-0066 브리프에서 발견) | WI-0073 (#194) | P18 | P3 | ✅ 2026-10-25 (#207, ui-react 1.8.0) |
 | 86 | `check` 의 기존 설치본 판독(Tailwind 판정 · TW4 안내)을 상위 디렉터리 탐색으로(WI-0051 에서 분리, 기준선 재측정 필요) | WI-0074 (#199) | P18 | P3 | 🔄 |
-| 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | ⏳ |
+| 87 | `axis template init` 을 `--dir` 없이 비대화형으로 부르면 아무것도 만들지 않고 rc 0(WI-0067 실경로 검증에서 발견) | WI-0075 (#201) | P18 | P2 | 🔄 |
 | 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | 🔄 |
 | 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ⏳ |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | 🔄 |

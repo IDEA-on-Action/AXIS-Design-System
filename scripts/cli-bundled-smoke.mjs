@@ -12,15 +12,20 @@
  *   D7   AXIS_REGISTRY_URL 을 준 init -y 뒤 axis.config.json registry 는 기본값(env 값을 기록하지 않음)
  *   D5   동봉본의 registryDependencies 는 절대 URL(<공개 URL>/<이름>.json)인데, 그 basename 으로 utils ·
  *        agentic-a11y-labels 를 같은 동봉본에서 찾아 설치(G3 의 설치 파일 검사가 이 경로를 지남)
+ *   N    비TTY(WI-0075): stdin 을 /dev/null(stdio ignore)과 빈 파이프 두 조건으로 주고, 질문이 뜨는 경로가
+ *        「질문 한 줄 · 파일 0 · rc 0」으로 끝나지 않는지 봅니다. 템플릿은 127.0.0.1 서버의 2파일 픽스처(AXIS_TEMPLATE_URL).
+ *        template init(--dir 없음 → ./<이름>, 이름 없음 → rc 1) · template apply 충돌(rc 1, 바이트 그대로) ·
+ *        init(-y 없음 → 기본값) · v0 import(rc 1). 갈래 실행 건수가 기대와 다르면 측정 실패(rc 2).
+ *        이 갈래는 진입점의 `await program.parseAsync()` 안전망도 빌드 산출물로 지납니다(단위 테스트는 못 봄).
  *
  * 네트워크는 127.0.0.1 만 씁니다(npm 설치 없음). 사용: node scripts/cli-bundled-smoke.mjs [--cli <dist/index.js>]
  * 종료 코드: 0 통과 / 1 결함 / 2 측정 실패(cli 빌드 산출물 없음 · 훅 미동작)
  */
 import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync, appendFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -62,13 +67,34 @@ const server = createServer((_req, res) => {
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
 const HTML404 = `http://127.0.0.1:${server.address().port}/r`;
 
-function run(args, cwd, registry, netLog) {
+// 비TTY 갈래(N)용 템플릿 서버: index.json · smoke.json 만 200
+const TPL = {
+  name: 'Smoke', slug: 'smoke', description: 'cli-smoke 픽스처', category: 'dashboard', version: '1.0.0',
+  tags: [], features: [], dependencies: {}, devDependencies: {}, updatedAt: '2026-10-25T00:00:00.000Z',
+  files: [
+    { path: 'package.json', content: '{ "name": "smoke" }\n', type: 'config' },
+    { path: 'app/page.tsx', content: 'export default function Page() { return null; }\n', type: 'page' },
+  ],
+};
+const tplServer = createServer((req, res) => {
+  const body = req.url === '/templates/index.json'
+    ? { version: '1', updatedAt: TPL.updatedAt, total: 1, templates: [TPL] }
+    : req.url === '/templates/smoke.json' ? TPL : undefined;
+  res.writeHead(body ? 200 : 404, { 'content-type': 'application/json' });
+  res.end(JSON.stringify(body ?? { error: 'not found' }));
+});
+await new Promise((ok) => tplServer.listen(0, '127.0.0.1', ok));
+const TEMPLATE_URL = `http://127.0.0.1:${tplServer.address().port}/templates`;
+
+/** stdin: 'ignore'(= /dev/null, 기본) 또는 'empty-pipe'(파이프를 열고 바로 닫음) */
+function run(args, cwd, registry, netLog, stdin = 'ignore') {
   return new Promise((done) => {
     const child = spawn(process.execPath, ['--import', HOOK, CLI, ...args], {
       cwd,
-      env: { ...process.env, AXIS_REGISTRY_URL: registry, NET_LOG: netLog, NO_COLOR: '1' },
-      stdio: ['ignore', 'pipe', 'pipe'],
+      env: { ...process.env, AXIS_REGISTRY_URL: registry, AXIS_TEMPLATE_URL: TEMPLATE_URL, NET_LOG: netLog, NO_COLOR: '1' },
+      stdio: [stdin === 'empty-pipe' ? 'pipe' : 'ignore', 'pipe', 'pipe'],
     });
+    if (stdin === 'empty-pipe') child.stdin.end();
     let out = '';
     child.stdout.on('data', (d) => { out += d; });
     child.stderr.on('data', (d) => { out += d; });
@@ -179,7 +205,88 @@ console.log('\nG4-b 경로 이탈(componentsDir ../outside)');
   check(!existsSync(join(work, 'outside', 'button.tsx')) && !existsSync(join(work, 'outside', 'utils.ts')), '프로젝트 밖에 파일이 생기지 않음');
 }
 
+console.log('\nN 비TTY 질문 처리(WI-0075: stdin /dev/null · 빈 파이프)');
+{
+  const reg = 'http://127.0.0.1:9/r';
+  const filesUnder = (dir) => {
+    const res = {};
+    const walk = (cur) => {
+      for (const name of readdirSync(cur)) {
+        const full = join(cur, name);
+        if (statSync(full).isDirectory()) walk(full);
+        else if (name !== 'net.log') res[relative(dir, full)] = readFileSync(full, 'utf8');
+      }
+    };
+    walk(dir);
+    return res;
+  };
+  const EXPECTED_RUNS = 10;
+  let runs = 0;
+  for (const stdin of ['ignore', 'empty-pipe']) {
+    const tag = stdin === 'ignore' ? '/dev/null' : '빈 파이프';
+    {
+      const dir = join(work, `n-init-nodir-${stdin}`);
+      mkdirSync(dir, { recursive: true });
+      const r = await run(['template', 'init', 'smoke'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      const made = existsSync(join(dir, 'smoke')) ? Object.keys(filesUnder(join(dir, 'smoke'))).sort() : [];
+      check(
+        r.rc === 0 && JSON.stringify(made) === JSON.stringify(['app/page.tsx', 'axis.config.json', 'package.json'].map((p) => p.split('/').join(sep)).sort()),
+        `${tag} template init smoke(--dir 없음): ./smoke 에 3파일 · rc 0 (받은 값 rc ${r.rc}, ${made.length}파일)`,
+        r.out
+      );
+      check(r.out.includes("기본값 'smoke'"), `${tag} template init: 쓴 디렉토리를 1줄로 알림`, r.out);
+    }
+    {
+      const dir = join(work, `n-init-noslug-${stdin}`);
+      mkdirSync(dir, { recursive: true });
+      const r = await run(['template', 'init'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      check(
+        r.rc === 1 && Object.keys(filesUnder(dir)).length === 0 && r.out.includes('템플릿 이름을 주세요'),
+        `${tag} template init(이름 없음): rc 1 · 파일 0 · 이름 안내 (받은 값 rc ${r.rc})`,
+        r.out
+      );
+    }
+    {
+      const dir = join(work, `n-apply-conflict-${stdin}`);
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, 'package.json'), '// 사용자 파일\n');
+      const before = JSON.stringify(filesUnder(dir));
+      const r = await run(['template', 'apply', 'smoke'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      check(
+        r.rc === 1 && JSON.stringify(filesUnder(dir)) === before && r.out.includes('apply smoke -y'),
+        `${tag} template apply 충돌(-y 없음): rc 1 · 기존 파일 바이트 그대로 · -y 안내 (받은 값 rc ${r.rc})`,
+        r.out
+      );
+    }
+    {
+      const dir = newProject(`n-init-noy-${stdin}`);
+      const r = await run(['init'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      check(
+        r.rc === 0 && existsSync(join(dir, 'axis.config.json')) && r.out.includes('기본값으로 진행합니다(-y 와 같음)'),
+        `${tag} init(-y 없음): 기본값으로 axis.config.json 생성 · 1줄 알림 · rc 0 (받은 값 rc ${r.rc})`,
+        r.out
+      );
+    }
+    {
+      const dir = join(work, `n-v0-${stdin}`);
+      mkdirSync(dir, { recursive: true });
+      const r = await run(['v0', 'import'], dir, reg, join(dir, 'net.log'), stdin); runs++;
+      check(
+        r.rc === 1 && Object.keys(filesUnder(dir)).length === 0 && r.out.includes('axis v0 convert'),
+        `${tag} v0 import: rc 1 · 파일 0 · convert 안내 (받은 값 rc ${r.rc})`,
+        r.out
+      );
+    }
+  }
+  console.log(`  비TTY 갈래 ${runs}건 실행`);
+  if (runs !== EXPECTED_RUNS) {
+    console.error(`  ! 측정 실패: 비TTY 갈래 실행 ${runs}건(기대 ${EXPECTED_RUNS}건)`);
+    measureErrors++;
+  }
+}
+
 server.close();
+tplServer.close();
 rmSync(work, { recursive: true, force: true });
 if (measureErrors) {
   console.error(`\n[cli-smoke] 측정 실패 ${measureErrors}건${failures ? `, 결함 ${failures}건` : ''}`);

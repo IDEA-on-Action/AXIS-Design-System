@@ -133,6 +133,8 @@ jobs:
 
       # WI-0045 G3 · G4: 빌드한 cli(dist/index.js)를 실제로 실행해 동봉본 폴백(접속 불가 · 404 HTML), -y 건너뜀 ·
       # --overwrite, 경로 이탈 거부를 본다. 127.0.0.1 만 쓰고 npm 설치가 없어 수 초 걸린다(2026-10-21 로컬 실측 1.4초).
+      # WI-0075 N: stdin /dev/null · 빈 파이프에서 질문이 남는 명령(template init · apply 충돌 · init · v0 import)이
+      # 「질문만 찍고 rc 0」으로 끝나지 않는지도 본다(127.0.0.1 템플릿 픽스처, 갈래 건수가 기대와 다르면 rc 2).
       - name: CLI 실행 스모크 (WI-0045 G3 · G4)
         run: pnpm cli-smoke
 

@@ -244,6 +244,9 @@ pnpm install                                             # npm install 도 됩�
 npx @axis-ds/cli check                                   # tailwind.config · globals.css 가 PASS
 ```
 
+- `--dir` 을 빼면 템플릿 이름 디렉터리(`./theme-only`)에 만듭니다. 터미널에서는 디렉터리를 묻고, CI · 파이프처럼 입력이 없는 곳에서는 묻지 않고 그 기본값으로 진행하며 쓴 값을 한 줄 알립니다(cli 1.7.0 부터, 이전에는 질문만 찍고 아무것도 만들지 않은 채 rc 0).
+- 대상 디렉터리가 비어 있지 않으면 터미널에서는 계속할지 묻고, 입력이 없는 곳에서는 아무것도 쓰지 않고 rc 1 로 끝납니다. 그대로 진행하려면 `-y` 를 붙입니다(질문을 기본값으로 답하고, 템플릿과 같은 경로의 파일은 덮어씀, `template apply -y` 와 같은 뜻). 템플릿 이름을 빼면 입력이 없는 곳에서는 rc 1 로 이름을 안내합니다.
+
 ontology 를 켜려면 두 가지를 합니다.
 
 1. `app/globals.css` 의 `/* @import "@axis-ds/tokens/css/brands/ontology"; */` 주석을 풉니다. `npx @axis-ds/cli theme add ontology` 를 실행해도 같은 import 줄이 들어갑니다.

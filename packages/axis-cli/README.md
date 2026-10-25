@@ -112,6 +112,23 @@ axis theme add ontology
 - FAIL 이 하나라도 있으면 종료 코드 1 로 끝납니다. WARN 만 있으면 0 입니다(1.3.0 부터, 이전에는 결과와 관계없이 0).
 - MCP `axis.check_project` 도 같은 항목 · 문구를 냅니다.
 
+## 터미널이 아닌 곳에서 실행 (CI · 파이프 · `</dev/null`)
+
+stdin 이 터미널이 아니면 질문을 띄우지 않습니다(1.7.0 부터. 이전에는 `axis add` 말고는 질문 한 줄만 찍고 아무것도 하지 않은 채 rc 0 으로 끝났습니다). 질문의 성격에 따라 이렇게 합니다.
+
+| 명령 | 터미널이 아닐 때 |
+|---|---|
+| `axis init`(`-y` 없음) | `-y` 와 같은 기본값으로 진행하고 쓴 값을 한 줄 알림 |
+| `axis template init <name>`(`--dir` 없음) | 템플릿 이름 디렉터리(`./<name>`)로 진행하고 한 줄 알림 |
+| `axis template init`(이름 없음) | rc 1, 템플릿 이름 안내(템플릿 선택에는 기본값이 없음) |
+| `axis template init` 대상이 비어 있지 않음 | rc 1, 아무것도 쓰지 않음. `-y` 면 진행(템플릿과 같은 경로의 파일은 덮어씀) |
+| `axis template apply` 충돌 파일 있음 | rc 1, 아무것도 쓰지 않음. `-y` 면 덮어씀, `--dry-run` 으로 미리보기 |
+| `axis add` 내용이 다른 기존 파일 | `-y` 와 같이 건너뛰고 목록을 알림(종전과 같음) |
+| `axis v0 import` · `axis monet import` | rc 1, 대화형 터미널에서 실행하라는 안내(`v0` 는 `axis v0 convert <file>` 도 안내) |
+
+- `axis template init -y` 는 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행합니다(`template apply -y` 와 같은 뜻). 터미널에서도 같습니다.
+- 판정은 stdin 이 터미널인지 하나로 합니다. 그래서 `printf '\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트도 이제는 묻지 않고 위 표대로 동작합니다. 값은 `--dir` · `-y` 같은 옵션으로 주세요.
+
 ## 문서
 
 자세한 사용법은 [AXIS Design System 문서](https://axis-design-system.pages.dev)를 참고하세요.

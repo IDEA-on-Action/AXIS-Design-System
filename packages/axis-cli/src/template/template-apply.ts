@@ -4,10 +4,10 @@ import fs from "fs-extra";
 import path from "path";
 import chalk from "chalk";
 import ora from "ora";
-import prompts from "prompts";
 import { fetchTemplateDetail } from "./registry-client.js";
 import { runPostInstall } from "./post-install.js";
-import type { ApplyOptions, TemplateDetail } from "./types.js";
+import type { ApplyOptions, InitOptions, TemplateDetail } from "./types.js";
+import { ask, failNonInteractive, isInteractive, noteDefault } from "../interactive.js";
 import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js";
 import { detectTailwind, tailwindMajorFromRange } from "./tailwind-core.js";
 
@@ -47,7 +47,7 @@ export async function templateApplyWarnings(baseDir: string, detail: TemplateDet
 }
 
 /**
- * 템플릿 apply 로직 — 파일 쓰기 + postInstall 실행
+ * 템플릿 apply 로직 - 파일 쓰기 + postInstall 실행
  */
 export async function applyTemplate(
   slug: string,
@@ -86,12 +86,24 @@ export async function applyTemplate(
       console.log(chalk.gray(`  - ${c}`));
     }
 
-    const { proceed } = await prompts({
-      type: "confirm",
-      name: "proceed",
-      message: "충돌 파일을 덮어쓰시겠습니까?",
-      initial: false,
-    });
+    // 덮어쓰기는 기본값으로 삼지 않습니다(WI-0075 D1). 비대화형이면 아무것도 쓰지 않고 rc 1
+    const interactive = options.interactive ?? isInteractive();
+    if (!interactive) {
+      failNonInteractive("충돌 파일을 덮어쓸지 물을 수 없어 아무것도 쓰지 않았습니다.", [
+        `덮어쓰려면: axis template apply ${slug} -y`,
+        `미리보기: axis template apply ${slug} --dry-run`,
+      ]);
+      return;
+    }
+    const { proceed } = await ask(
+      {
+        type: "confirm",
+        name: "proceed",
+        message: "충돌 파일을 덮어쓰시겠습니까?",
+        initial: false,
+      },
+      interactive
+    );
     if (!proceed) {
       console.log(chalk.gray("취소되었습니다."));
       return;
@@ -156,28 +168,45 @@ export async function applyTemplate(
 }
 
 /**
- * 템플릿 init 로직 — 새 프로젝트 디렉토리 생성 + apply + axis.config.json 생성
+ * 템플릿 init 로직 - 새 프로젝트 디렉토리 생성 + apply + axis.config.json 생성
+ *
+ * 비대화형(WI-0075 D1) · `-y`(D2):
+ * - 템플릿 이름이 없으면 기본값이 없어 rc 1(이름 안내). 대화형이면 `-y` 여도 목록에서 고릅니다
+ * - `--dir` 이 없으면 템플릿 이름 디렉터리(`./<name>`)로 진행하고 그 값을 1줄로 알림
+ * - 디렉터리가 비어 있지 않으면 `-y` 는 진행(같은 경로의 파일은 덮어씀), `-y` 없는 비대화형은 rc 1(아무것도 쓰지 않음)
  */
 export async function initTemplate(
   slug: string | undefined,
-  options: { dir?: string }
+  options: InitOptions
 ): Promise<void> {
+  const interactive = options.interactive ?? isInteractive();
+
   // 템플릿 미지정 시 선택
   let selectedSlug = slug;
   if (!selectedSlug) {
+    if (!interactive) {
+      failNonInteractive("템플릿을 고를 수 없습니다. 템플릿 이름을 주세요.", [
+        "사용법: axis template init <name> [--dir <path>] [-y]",
+        "목록: axis template list",
+      ]);
+      return;
+    }
     const { fetchTemplateIndex } = await import("./registry-client.js");
     const index = await fetchTemplateIndex();
 
-    const { choice } = await prompts({
-      type: "select",
-      name: "choice",
-      message: "사용할 템플릿을 선택하세요:",
-      choices: index.templates.map((t) => ({
-        title: `${t.name} (${t.category})`,
-        description: t.description,
-        value: t.slug,
-      })),
-    });
+    const { choice } = await ask(
+      {
+        type: "select",
+        name: "choice",
+        message: "사용할 템플릿을 선택하세요:",
+        choices: index.templates.map((t) => ({
+          title: `${t.name} (${t.category})`,
+          description: t.description,
+          value: t.slug,
+        })),
+      },
+      interactive
+    );
 
     if (!choice) {
       console.log(chalk.gray("취소되었습니다."));
@@ -188,14 +217,24 @@ export async function initTemplate(
 
   // 디렉토리 결정
   let targetDir = options.dir;
+  if (!targetDir && (!interactive || options.yes)) {
+    // 기본값(템플릿 이름)이 있고 파괴적이지 않아 그대로 진행합니다. 비어 있지 않으면 아래 확인이 막습니다
+    targetDir = selectedSlug!;
+    const msg = `프로젝트 디렉토리를 기본값 '${targetDir}' 로 정했습니다(바꾸려면 --dir <path>).`;
+    if (interactive) console.log(chalk.gray(`-y 라 ${msg}`));
+    else noteDefault(msg);
+  }
   if (!targetDir) {
     // prompts 응답은 any 라 대입해도 targetDir 이 string 으로 좁혀지지 않아요. 응답 타입을 명시합니다
-    const { dir } = (await prompts({
-      type: "text",
-      name: "dir",
-      message: "프로젝트 디렉토리:",
-      initial: selectedSlug,
-    })) as { dir?: string };
+    const { dir } = (await ask(
+      {
+        type: "text",
+        name: "dir",
+        message: "프로젝트 디렉토리:",
+        initial: selectedSlug,
+      },
+      interactive
+    )) as { dir?: string };
     if (!dir) {
       console.log(chalk.gray("취소되었습니다."));
       return;
@@ -209,13 +248,26 @@ export async function initTemplate(
   if (await fs.pathExists(resolved)) {
     const entries = await fs.readdir(resolved);
     if (entries.length > 0) {
-      const { proceed } = await prompts({
-        type: "confirm",
-        name: "proceed",
-        message: `'${targetDir}'에 이미 파일이 있습니다. 계속하시겠습니까?`,
-        initial: false,
-      });
-      if (!proceed) return;
+      if (options.yes) {
+        console.log(chalk.yellow(`! '${targetDir}'에 이미 파일이 있지만 -y 라 진행합니다(템플릿과 같은 경로의 파일은 덮어씀).`));
+      } else if (!interactive) {
+        failNonInteractive(`'${targetDir}'에 이미 파일이 있어 계속할지 물을 수 없습니다. 아무것도 쓰지 않았습니다.`, [
+          `빈 디렉터리를 주세요: axis template init ${selectedSlug} --dir <path>`,
+          `그대로 진행하려면(같은 경로의 파일은 덮어씀): axis template init ${selectedSlug} --dir ${targetDir} -y`,
+        ]);
+        return;
+      } else {
+        const { proceed } = await ask(
+          {
+            type: "confirm",
+            name: "proceed",
+            message: `'${targetDir}'에 이미 파일이 있습니다. 계속하시겠습니까?`,
+            initial: false,
+          },
+          interactive
+        );
+        if (!proceed) return;
+      }
     }
   } else {
     await fs.ensureDir(resolved);

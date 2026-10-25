@@ -12,7 +12,12 @@
 import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
-import prompts from "prompts";
+import { ask, failNonInteractive, isInteractive } from "./interactive.js";
+
+/** 질문을 띄울 수 있는지(WI-0075). 없으면 stdin 이 TTY 인지로 정합니다 */
+export interface V0PromptOptions {
+  interactive?: boolean;
+}
 
 // V0 코드 변환 규칙
 const V0_CONVERSION_RULES = [
@@ -97,7 +102,8 @@ export class V0Client {
   }
 
   // V0 URL에서 가져오기 안내
-  async importFromUrl(): Promise<void> {
+  async importFromUrl(opts: V0PromptOptions = {}): Promise<void> {
+    const interactive = opts.interactive ?? isInteractive();
     console.log(chalk.blue("\n🔗 V0 URL에서 컴포넌트 가져오기\n"));
 
     console.log(chalk.yellow("V0는 직접 API를 제공하지 않습니다."));
@@ -118,27 +124,38 @@ export class V0Client {
     console.log(chalk.gray("  2. 파일별로 코드 복사"));
     console.log(chalk.gray("  3. npx @axis-ds/cli v0 convert로 변환\n"));
 
-    const { method } = await prompts({
-      type: "select",
-      name: "method",
-      message: "어떤 방법을 사용하시겠습니까?",
-      choices: [
-        { title: "GitHub에서 클론", value: "github" },
-        { title: "다운로드한 ZIP 파일 변환", value: "zip" },
-        { title: "클립보드에서 변환", value: "clipboard" },
-        { title: "취소", value: "cancel" },
-      ],
-    });
+    // 고를 방법에 기본값이 없어 비대화형이면 rc 1(WI-0075 D4)
+    if (!interactive) {
+      failNonInteractive("방법을 고를 수 없습니다. 아무것도 쓰지 않았습니다.", [
+        "위 방법 1~3 을 직접 따르거나 대화형 터미널에서 다시 실행하세요.",
+        "파일이 있으면: axis v0 convert <file> [-o <path>]",
+      ]);
+      return;
+    }
+    const { method } = await ask(
+      {
+        type: "select",
+        name: "method",
+        message: "어떤 방법을 사용하시겠습니까?",
+        choices: [
+          { title: "GitHub에서 클론", value: "github" },
+          { title: "다운로드한 ZIP 파일 변환", value: "zip" },
+          { title: "클립보드에서 변환", value: "clipboard" },
+          { title: "취소", value: "cancel" },
+        ],
+      },
+      interactive
+    );
 
     switch (method) {
       case "github":
         await this.setupGitHubSync();
         break;
       case "zip":
-        await this.convertFromZip();
+        await this.convertFromZip({ interactive });
         break;
       case "clipboard":
-        await this.convertFromClipboard();
+        await this.convertFromClipboard({ interactive });
         break;
     }
   }
@@ -163,15 +180,25 @@ export class V0Client {
   }
 
   // ZIP 파일에서 변환
-  async convertFromZip(): Promise<void> {
+  async convertFromZip(opts: V0PromptOptions = {}): Promise<void> {
     console.log(chalk.blue("\n📦 ZIP 파일에서 변환\n"));
 
-    const { zipPath } = await prompts({
-      type: "text",
-      name: "zipPath",
-      message: "다운로드한 ZIP 파일 경로:",
-      validate: (v) => (v.length > 0 ? true : "경로를 입력하세요"),
-    });
+    const interactive = opts.interactive ?? isInteractive();
+    if (!interactive) {
+      failNonInteractive("ZIP 파일 경로를 물을 수 없습니다.", [
+        "압축을 푼 뒤: axis v0 convert <file> [-o <path>]",
+      ]);
+      return;
+    }
+    const { zipPath } = await ask(
+      {
+        type: "text",
+        name: "zipPath",
+        message: "다운로드한 ZIP 파일 경로:",
+        validate: (v) => (v.length > 0 ? true : "경로를 입력하세요"),
+      },
+      interactive
+    );
 
     if (!zipPath) return;
 
@@ -182,26 +209,39 @@ export class V0Client {
   }
 
   // 클립보드에서 변환
-  async convertFromClipboard(): Promise<void> {
+  async convertFromClipboard(opts: V0PromptOptions = {}): Promise<void> {
     console.log(chalk.blue("\n📋 클립보드에서 V0 코드 변환\n"));
 
-    const { componentName } = await prompts({
-      type: "text",
-      name: "componentName",
-      message: "컴포넌트 이름 (예: hero-section):",
-      validate: (v) => (v.length > 0 ? true : "이름을 입력하세요"),
-    });
+    const interactive = opts.interactive ?? isInteractive();
+    if (!interactive) {
+      failNonInteractive("붙여 넣을 코드와 이름을 물을 수 없습니다. 아무것도 쓰지 않았습니다.", [
+        "코드를 파일로 저장한 뒤: axis v0 convert <file> [-o <path>]",
+      ]);
+      return;
+    }
+    const { componentName } = await ask(
+      {
+        type: "text",
+        name: "componentName",
+        message: "컴포넌트 이름 (예: hero-section):",
+        validate: (v) => (v.length > 0 ? true : "이름을 입력하세요"),
+      },
+      interactive
+    );
 
     if (!componentName) return;
 
     console.log(chalk.gray("\nV0에서 복사한 코드를 붙여넣으세요."));
     console.log(chalk.gray("(입력 완료 후 빈 줄에서 Enter 두 번)\n"));
 
-    const { code } = await prompts({
-      type: "text",
-      name: "code",
-      message: "코드:",
-    });
+    const { code } = await ask(
+      {
+        type: "text",
+        name: "code",
+        message: "코드:",
+      },
+      interactive
+    );
 
     if (!code) {
       console.log(chalk.yellow("\n코드가 입력되지 않았습니다."));
