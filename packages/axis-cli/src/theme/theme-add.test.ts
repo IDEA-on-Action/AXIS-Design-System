@@ -715,7 +715,8 @@ describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치
 
   // WI-0086 검토 후속(major): detectTailwind 가 워크스페이스 루트 선언도 보므로, 루트에만 tailwindcss ^4 를 선언한(미설치) 앱에서
   // theme add 가 전역 CSS 에 쓰는 기본 토큰 줄이 Tailwind 3 의 두 줄(css · shadcn)에서 Tailwind 4 진입점으로 바뀜(changeset · release-notes 에 기록).
-  // 같은 분기의 컴포넌트 tailwind.css 목록은 아직 앱 선언만 봄(theme-add 356, WI-0087 범위). WI-0087 에서 바꾸면 마지막 기대를 뒤집음.
+  // 같은 분기의 컴포넌트 tailwind.css 목록은 WI-0087(DEC-2)부터 루트 선언도 보지만, 설치본에 tailwind.css 가 있을 때만 줄을 씀.
+  // 이 픽스처는 루트 ui-react 가 미설치라 줄이 들어가지 않는 음성 대조로 남음(기대 불변, 설치본 쪽은 아래 「WI-0087」 describe).
   it("WI-0086: 루트에만 tailwindcss ^4.1.0(미설치) → 전역 CSS 에 tailwind4 진입점 · 브랜드, 앱 package.json 은 쓰지 않음, 음성 대조는 Tailwind 3 두 줄", async () => {
     const make = async (workspaces: boolean) => {
       const root = await project({ tokens: "1.3", layout: "empty" });
@@ -892,5 +893,305 @@ describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () 
     const isolated = await outFor("isolated");
     expect(isolated).toContain('content 가 @axis-ds/ui-react 를 덮지 않습니다. 넣으세요: "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"');
     expect(isolated).not.toContain(PARENT_NOTE);
+  });
+});
+
+describe("WI-0087: theme add 가 워크스페이스 루트 선언을 인정(판정은 앱 다음 루트, 쓰기는 앱으로만)", () => {
+  const ROOT_PRESENT = "package.json: @axis-ds/tokens ^1.8.0 가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음";
+  const ROOT_UPGRADE = "워크스페이스 루트 package.json 의 @axis-ds/tokens 선언을 ^1.3.0 이상으로 올리고 설치하세요.";
+  const THEME_HINT = "ThemeProvider 를 쓰면 @axis-ds/theme 설치";
+  const UI_LINE = '@import "@axis-ds/ui-react/tailwind.css";';
+
+  interface WsOptions {
+    /** npm: package.json workspaces · pnpm: pnpm-workspace.yaml · outside: 워크스페이스 표지 없는 상위 */
+    kind?: "npm" | "pnpm" | "outside";
+    /** 루트 node_modules 에 둘 tokens 설치본 */
+    tokens?: "1.3" | "1.2" | "none";
+    rootDeps?: Record<string, string>;
+    rootDevDeps?: Record<string, string>;
+    appDeps?: Record<string, string>;
+    /** 앱 devDependencies 의 tailwindcss 와 전역 CSS 첫 줄 */
+    tailwind?: 3 | 4;
+    /** 루트 node_modules 에 둘 컴포넌트 패키지 설치본(tailwindCss: 패키지 안에 tailwind.css 파일이 있는지) */
+    installed?: Record<string, { version: string; tailwindCss: boolean }>;
+    /** 루트에 .pnp.cjs */
+    pnp?: boolean;
+    /** 앱 디렉터리 자체의 lockfile */
+    appLock?: string;
+  }
+
+  /** 루트(워크스페이스 표지) 아래 apps/web 앱을 만듭니다. 돌려준 값은 앱 경로입니다. */
+  async function wsApp(o: WsOptions = {}): Promise<string> {
+    const root = await project({ tokens: o.tokens ?? "none", layout: "empty" });
+    const kind = o.kind ?? "npm";
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      ...(kind === "npm" ? { workspaces: ["apps/*"] } : {}),
+      ...(o.rootDeps ? { dependencies: o.rootDeps } : {}),
+      ...(o.rootDevDeps ? { devDependencies: o.rootDevDeps } : {}),
+    });
+    if (kind === "pnpm") await fs.writeFile(path.join(root, "pnpm-workspace.yaml"), 'packages:\n  - "apps/*"\n');
+    if (o.pnp) await fs.writeFile(path.join(root, ".pnp.cjs"), "");
+    for (const [name, inst] of Object.entries(o.installed ?? {})) {
+      const dir = path.join(root, "node_modules", ...name.split("/"));
+      await fs.outputJSON(path.join(dir, "package.json"), { name, version: inst.version });
+      if (inst.tailwindCss) await fs.outputFile(path.join(dir, "tailwind.css"), '@source "./dist";\n');
+    }
+    const app = path.join(root, "apps", "web");
+    const tw = o.tailwind ?? 3;
+    await fs.outputJSON(
+      path.join(app, "package.json"),
+      { name: "web", private: true, dependencies: o.appDeps ?? {}, devDependencies: { tailwindcss: tw === 4 ? "^4.1.0" : "^3.4.0" } },
+      { spaces: 2 }
+    );
+    if (o.appLock) await fs.writeFile(path.join(app, o.appLock), "");
+    await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+    await fs.outputFile(path.join(app, "app", "globals.css"), tw === 4 ? '@import "tailwindcss";\n\nbody { margin: 0; }\n' : "@tailwind base;\n");
+    return app;
+  }
+
+  const appPkgFile = (app: string) => path.join(app, "package.json");
+  const appPkgText = (app: string) => fs.readFile(appPkgFile(app), "utf8");
+
+  it("npm workspaces 루트 devDependencies 에 tokens 선언 → present/root, 앱 package.json 쓰기 없음, CLI 출력은 루트 문구", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "1.3", rootDevDeps: { "@axis-ds/tokens": "^1.8.0" } });
+    const before = await appPkgText(app);
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.errors).toEqual([]);
+    expect(plan.dependency?.action).toBe("present");
+    expect(plan.dependency?.declaredRange).toBe("^1.8.0");
+    expect(plan.dependency?.declaredSource).toBe("root");
+    expect(plan.writes.map((w) => w.file)).not.toContain(appPkgFile(app));
+    const { out, exitCode } = await runAdd(["sample", "-d", app]);
+    expect(exitCode).toBe(0);
+    expect(countLines(out, `- ${ROOT_PRESENT}`)).toBe(1);
+    expect(out).not.toContain('dependencies 에 "@axis-ds/tokens"');
+    expect(out).not.toContain("가 이미 있어 범위를 바꾸지 않음");
+    // 설치본이 있으므로 설치 안내 줄 없음
+    expect(out).not.toContain("설치: pnpm install");
+    expect(out).toContain("파일 2개를 바꿨습니다.");
+    expect(await appPkgText(app)).toBe(before);
+  });
+
+  it("pnpm-workspace.yaml 루트 dependencies 에 tokens 선언 → present/root, 앱 package.json 쓰기 없음", async () => {
+    const app = await wsApp({ kind: "pnpm", tokens: "1.3", rootDeps: { "@axis-ds/tokens": "^1.8.0" } });
+    const before = await appPkgText(app);
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.dependency).toMatchObject({ action: "present", declaredRange: "^1.8.0", declaredSource: "root" });
+    expect(plan.writes.map((w) => w.file)).not.toContain(appPkgFile(app));
+    applyThemeAdd(plan);
+    expect(await appPkgText(app)).toBe(before);
+  });
+
+  it("루트 선언 · tokens 미설치 → 루트 문구 다음에 설치 명령 줄(lockfile 로 고름), 앱 선언 미설치 출력은 종전대로(음성 대조)", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "none", rootDevDeps: { "@axis-ds/tokens": "^1.8.0" } });
+    await fs.writeFile(path.join(path.dirname(path.dirname(app)), "package-lock.json"), "");
+    const { out } = await runAdd(["sample", "-d", app]);
+    const lines = out.split("\n");
+    const at = lines.findIndex((l) => l.includes(ROOT_PRESENT));
+    expect(at).toBeGreaterThan(-1);
+    expect(lines[at + 1]).toContain("설치: npm install");
+    // 음성 대조: 앱에 선언된 tokens(미설치)는 종전 present 문구 한 줄뿐(설치 줄을 붙이지 않음)
+    const own = await wsApp({ kind: "npm", tokens: "none", appDeps: { "@axis-ds/tokens": "^1.8.0" } });
+    const ownOut = (await runAdd(["sample", "-d", own])).out.split("\n");
+    const ownAt = ownOut.findIndex((l) => l.includes("package.json: @axis-ds/tokens ^1.8.0 가 이미 있어 범위를 바꾸지 않음"));
+    expect(ownAt).toBeGreaterThan(-1);
+    expect(ownOut[ownAt + 1]).not.toContain("설치:");
+  });
+
+  it("루트에 @axis-ds/theme 선언 → themeMissing false · ThemeProvider 설치 안내 없음, 앱 · 루트 모두 없으면 안내 1줄(음성 대조)", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "1.3", rootDeps: { "@axis-ds/theme": "^1.8.0" } });
+    expect(planThemeAdd(app, "sample").dependency?.themeMissing).toBe(false);
+    expect((await runAdd(["sample", "-d", app])).out).not.toContain(THEME_HINT);
+    const none = await wsApp({ kind: "npm", tokens: "1.3" });
+    expect(planThemeAdd(none, "sample").dependency?.themeMissing).toBe(true);
+    expect(countLines((await runAdd(["sample", "-d", none])).out, `${THEME_HINT}: pnpm add "@axis-ds/theme@^1.3.0"`)).toBe(1);
+  });
+
+  it("Tailwind 4 + 루트 ui-react 선언 · 설치본에 tailwind.css 있음 → 전역 CSS 에 컴포넌트 줄 추가, CLI 출력도 추가 문구", async () => {
+    const app = await wsApp({
+      kind: "pnpm",
+      tokens: "1.3",
+      tailwind: 4,
+      rootDeps: { "@axis-ds/ui-react": "^1.8.1" },
+      installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: true } },
+    });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/tailwind4", "@axis-ds/ui-react/tailwind.css"]);
+    expect(plan.css?.deferredComponentImports ?? []).toEqual([]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).toContain('app/globals.css: @import "@axis-ds/ui-react/tailwind.css"; 추가(컴포넌트 스캔 경로, 위치 무관)');
+    expect(countLines(await fs.readFile(path.join(app, "app", "globals.css"), "utf8"), UI_LINE)).toBe(1);
+  });
+
+  it("Tailwind 4 + 루트 ui-react 설치본이 있지만 tailwind.css 가 없음(1.3.x) → 줄 없음 + 안내 1줄", async () => {
+    const app = await wsApp({
+      kind: "npm",
+      tokens: "1.3",
+      tailwind: 4,
+      rootDeps: { "@axis-ds/ui-react": "^1.3.0" },
+      installed: { "@axis-ds/ui-react": { version: "1.3.2", tailwindCss: false } },
+    });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
+    expect(plan.css?.deferredComponentImports).toEqual([{ name: "@axis-ds/ui-react", installedVersion: "1.3.2" }]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(
+      countLines(
+        out,
+        '! 워크스페이스 루트에 선언된 @axis-ds/ui-react 의 설치본(1.3.2)에 tailwind.css 가 없어(1.4.0 부터 제공) @import "@axis-ds/ui-react/tailwind.css"; 를 넣지 않았습니다. 1.4.0 이상으로 올린 뒤 theme add 를 다시 실행하거나 직접 넣으세요.'
+      )
+    ).toBe(1);
+    expect(countLines(await fs.readFile(path.join(app, "app", "globals.css"), "utf8"), UI_LINE)).toBe(0);
+  });
+
+  // 검토 후속: 1.4.0 이상인데 tailwind.css 만 없으면(손상된 설치) 「1.4.0 이상으로 올리세요」가 아니라 다시 설치를 안내해요
+  it("Tailwind 4 + 루트 ui-react 설치본이 1.4.0 이상인데 tailwind.css 가 없음 → 줄 없음 + 다시 설치 안내", async () => {
+    const app = await wsApp({
+      kind: "npm",
+      tokens: "1.3",
+      tailwind: 4,
+      rootDeps: { "@axis-ds/ui-react": "^1.8.1" },
+      installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: false } },
+    });
+    expect(planThemeAdd(app, "sample").css?.deferredComponentImports).toEqual([{ name: "@axis-ds/ui-react", installedVersion: "1.8.1" }]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(
+      countLines(
+        out,
+        '! 워크스페이스 루트에 선언된 @axis-ds/ui-react 의 설치본(1.8.1)에 tailwind.css 가 없어 @import "@axis-ds/ui-react/tailwind.css"; 를 넣지 않았습니다. 설치가 손상됐을 수 있으니 다시 설치(pnpm install) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.'
+      )
+    ).toBe(1);
+    expect(out).not.toContain("1.4.0 이상으로 올린 뒤");
+  });
+
+  // 검토 후속: 사용자가 이미 넣어 둔 줄은 「넣지 않았습니다」 안내 대상이 아니에요(다시 실행해도 같은 안내가 반복되지 않음)
+  it("Tailwind 4 + 루트 ui-react 미설치라도 전역 CSS 에 그 줄이 이미 있으면 안내 없음", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "1.3", tailwind: 4, rootDeps: { "@axis-ds/ui-react": "^1.8.1" } });
+    await fs.outputFile(path.join(app, "app", "globals.css"), `@import "tailwindcss";\n${UI_LINE}\n\nbody { margin: 0; }\n`);
+    expect(planThemeAdd(app, "sample").css?.deferredComponentImports ?? []).toEqual([]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).not.toContain("를 넣지 않았습니다");
+    expect(countLines(await fs.readFile(path.join(app, "app", "globals.css"), "utf8"), UI_LINE)).toBe(1);
+  });
+
+  it("Tailwind 4 + 루트 ui-react 선언 · 미설치 → 줄 없음 + 설치 안내 1줄, 앱 선언 · 미설치는 종전대로 줄 추가(음성 대조)", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "1.3", tailwind: 4, rootDeps: { "@axis-ds/ui-react": "^1.8.1" } });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
+    expect(plan.css?.deferredComponentImports).toEqual([{ name: "@axis-ds/ui-react" }]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(
+      countLines(
+        out,
+        '! @axis-ds/ui-react 가 워크스페이스 루트에 선언됐지만 설치되지 않아 @import "@axis-ds/ui-react/tailwind.css"; 를 넣지 않았습니다. 설치(pnpm install) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.'
+      )
+    ).toBe(1);
+    expect(countLines(await fs.readFile(path.join(app, "app", "globals.css"), "utf8"), UI_LINE)).toBe(0);
+    // 음성 대조: 앱 선언은 설치 여부와 상관없이 종전대로 씀(theme-add 711 과 같은 경계)
+    const own = await wsApp({ kind: "npm", tokens: "1.3", tailwind: 4, appDeps: { "@axis-ds/ui-react": "^1.8.1" } });
+    const ownPlan = planThemeAdd(own, "sample");
+    expect(ownPlan.css?.baseImports).toContain("@axis-ds/ui-react/tailwind.css");
+    expect(ownPlan.css?.deferredComponentImports ?? []).toEqual([]);
+  });
+
+  it("Tailwind 3 + 루트 ui-react 선언 · 설치본(tailwind.css 있음) → tailwind.css 줄 0, 안내도 없음", async () => {
+    const app = await wsApp({
+      kind: "npm",
+      tokens: "1.3",
+      tailwind: 3,
+      rootDeps: { "@axis-ds/ui-react": "^1.8.1" },
+      installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: true } },
+    });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.css?.tailwind4).toBe(false);
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css", "@axis-ds/tokens/css/shadcn"]);
+    expect(plan.css?.deferredComponentImports ?? []).toEqual([]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).not.toContain("tailwind.css");
+    expect(countLines(await fs.readFile(path.join(app, "app", "globals.css"), "utf8"), UI_LINE)).toBe(0);
+  });
+
+  it("P1 Plug'n'Play(.pnp.cjs): 루트 선언을 인정하지 않음 → 앱에 tokens 씀 · 설치 안내 유지 · 컴포넌트 줄 없음 · theme 안내 유지(종전)", async () => {
+    const app = await wsApp({
+      kind: "npm",
+      tokens: "1.3",
+      tailwind: 4,
+      pnp: true,
+      rootDeps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/theme": "^1.8.0", "@axis-ds/ui-react": "^1.8.1" },
+      installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: true } },
+    });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.dependency?.action).toBe("add");
+    expect(plan.dependency?.declaredSource).toBeUndefined();
+    expect(plan.dependency?.themeMissing).toBe(true);
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
+    expect(plan.css?.deferredComponentImports ?? []).toEqual([]);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).toContain('package.json: dependencies 에 "@axis-ds/tokens": "^1.6.0" 추가');
+    expect(out).toContain("설치는 실행하지 않았습니다. 설치: pnpm install");
+    expect(out).toContain(THEME_HINT);
+    expect(out).not.toContain("워크스페이스 루트에 선언");
+    expect((await readJson(appPkgFile(app))).dependencies).toEqual({ "@axis-ds/tokens": "^1.6.0" });
+  });
+
+  it("P2 앱 디렉터리 자체에 lockfile → 루트 선언을 인정하지 않음(종전), lockfile 5종 모두", async () => {
+    for (const lock of ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock"]) {
+      const app = await wsApp({
+        kind: "npm",
+        tokens: "1.3",
+        tailwind: 4,
+        appLock: lock,
+        rootDeps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/theme": "^1.8.0", "@axis-ds/ui-react": "^1.8.1" },
+        installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: true } },
+      });
+      const plan = planThemeAdd(app, "sample");
+      expect({ lock, action: plan.dependency?.action, themeMissing: plan.dependency?.themeMissing }).toEqual({
+        lock,
+        action: "add",
+        themeMissing: true,
+      });
+      expect({ lock, base: plan.css?.baseImports }).toEqual({ lock, base: ["@axis-ds/tokens/css/tailwind4"] });
+      expect(plan.writes.map((w) => w.file)).toContain(appPkgFile(app));
+    }
+  });
+
+  it("워크스페이스가 아닌 상위의 선언 → 종전 add(앱에 ^1.6.0)", async () => {
+    const app = await wsApp({ kind: "outside", tokens: "1.3", rootDeps: { "@axis-ds/tokens": "^1.8.0", "@axis-ds/theme": "^1.8.0" } });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.dependency?.action).toBe("add");
+    expect(plan.dependency?.themeMissing).toBe(true);
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).toContain('package.json: dependencies 에 "@axis-ds/tokens": "^1.6.0" 추가');
+    expect(out).not.toContain("워크스페이스 루트에 선언");
+  });
+
+  it("앱 · 루트 동시 선언 → 앱 우선(source app, 앱 범위), 종전 문구", async () => {
+    const app = await wsApp({
+      kind: "npm",
+      tokens: "1.3",
+      appDeps: { "@axis-ds/tokens": "^1.7.0" },
+      rootDeps: { "@axis-ds/tokens": "^1.8.0" },
+    });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.dependency).toMatchObject({ action: "present", declaredRange: "^1.7.0", declaredSource: "app" });
+    const { out } = await runAdd(["sample", "-d", app]);
+    expect(out).toContain("package.json: @axis-ds/tokens ^1.7.0 가 이미 있어 범위를 바꾸지 않음");
+    expect(out).not.toContain("워크스페이스 루트에 선언");
+  });
+
+  // DEC-8 사용자 재결정: 루트 선언이면 앱 기준 업그레이드 명령(앱에서 실행하면 앱에 새 선언이 생김)을 내지 않고 루트 선언을 올리라는 줄만 내요
+  it("루트 선언 · 설치본 < 1.3.0 → 업그레이드 명령 없이 루트 선언을 올리라는 줄, 앱 선언은 종전 명령(음성 대조)", async () => {
+    const app = await wsApp({ kind: "npm", tokens: "1.2", rootDeps: { "@axis-ds/tokens": "^1.2.0" } });
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.dependency).toMatchObject({ action: "present", declaredSource: "root", upgrade: true });
+    const out = (await runAdd(["sample", "-d", app])).out;
+    expect(countLines(out, ROOT_UPGRADE)).toBe(1);
+    expect(out).not.toContain("업그레이드:");
+    const own = await wsApp({ kind: "npm", tokens: "1.2", appDeps: { "@axis-ds/tokens": "^1.2.0" } });
+    const ownOut = (await runAdd(["sample", "-d", own])).out;
+    expect(ownOut).toContain('업그레이드: pnpm add "@axis-ds/tokens@^1.6.0"');
+    expect(ownOut).not.toContain(ROOT_UPGRADE);
   });
 });

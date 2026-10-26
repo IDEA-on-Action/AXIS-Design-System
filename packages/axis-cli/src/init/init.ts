@@ -43,7 +43,14 @@ import {
   type TailwindDetection,
 } from "../template/tailwind-core.js";
 import { CLSX_RANGE, TAILWIND_MERGE_RANGES, selectUtilsDependencies } from "@axis-ds/registry-core/utils-deps";
-import { addCommandFor, declaredDependency, detectProjectPaths, projectFileExists } from "@axis-ds/registry-core/project";
+import {
+  addCommandFor,
+  declaredDependency,
+  detectProjectPaths,
+  findInstalledPackage,
+  isPnpProject,
+  projectFileExists,
+} from "@axis-ds/registry-core/project";
 
 // Tailwind 4 진입점을 내는 컴포넌트 패키지 목록은 axis check(B1)와 같이 쓰려고 공유 코어에 둡니다.
 export { TAILWIND4_COMPONENT_PACKAGES };
@@ -203,14 +210,49 @@ export async function resolveInitAnswers(baseDirInput: string, tailwind4?: boole
 /**
  * Dialog · Select 등의 열고 닫는 애니메이션(`animate-in` 류) 안내(WI-0065 D8). 이미 선언돼 있으면 `undefined`.
  * Tailwind 3 은 `tailwindcss-animate` 를 plugins 에, Tailwind 4 는 `tw-animate-css` 를 전역 CSS 에 import 합니다.
+ *
+ * `baseDir` 를 주면(WI-0087 DEC-4 · DEC-6 · P1) 선언은 앱 다음 워크스페이스 루트(`declaredDependency`), 설치본은 node_modules 상위 탐색
+ * (`findInstalledPackage`)으로 보고 세 갈래로 나눕니다.
+ * - 이름 집합은 axis check 와 같습니다: Tailwind 3 은 `tailwindcss-animate` 만, Tailwind 4 는 `tw-animate-css` · `tailwindcss-animate` 둘 다
+ *   (둘 다 선언되면 `tw-animate-css` 로 판정하고 문구를 냅니다).
+ * - ① 선언 없음: 종전 줄 ② 선언 + 설치: 침묵 ③ 선언 · 미설치: 「(워크스페이스 루트에) 선언돼 있지만 설치되지 않았습니다」와 설치 명령.
+ * - Yarn PnP(`isPnpProject`)면 루트 선언은 앱에서 해석되지 않으므로 인정하지 않고(앱 선언만), 설치본을 판정할 수 없으니 선언이 있으면 종전처럼 침묵합니다.
+ * `baseDir` 가 없으면 종전 판정(앱 선언만, 두 이름 중 하나라도 있으면 침묵)입니다.
  */
 export function animationGuideLine(
   pkg: Record<string, unknown> | undefined,
   tailwind4: boolean,
-  installCommand: string
+  installCommand: string,
+  baseDir?: string
 ): string | undefined {
   const name = tailwind4 ? ANIMATION_PLUGIN_TAILWIND4 : ANIMATION_PLUGIN_TAILWIND3;
-  if (pkg !== undefined && (hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined || hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND4) !== undefined)) {
+  if (baseDir !== undefined) {
+    const pnp = isPnpProject(baseDir);
+    const candidates = tailwind4 ? [ANIMATION_PLUGIN_TAILWIND4, ANIMATION_PLUGIN_TAILWIND3] : [ANIMATION_PLUGIN_TAILWIND3];
+    const declaredOf = (n: string) => {
+      if (pkg === undefined) return undefined;
+      if (pnp) return hasDependency(pkg, n) !== undefined ? ({ source: "app" } as const) : undefined;
+      return declaredDependency(baseDir, pkg, n);
+    };
+    for (const candidate of candidates) {
+      const declared = declaredOf(candidate);
+      if (declared === undefined) continue;
+      // ② 선언 + 설치(PnP 는 설치본을 판정할 수 없어 종전처럼 침묵)
+      if (pnp || findInstalledPackage(baseDir, candidate) !== undefined) return undefined;
+      // ③ 선언 · 미설치
+      const declaredWhere = declared.source === "root" ? "워크스페이스 루트에 " : "";
+      const setup = !tailwind4
+        ? `tailwind.config 의 plugins 에 require("${candidate}") 를 넣으세요`
+        : candidate === ANIMATION_PLUGIN_TAILWIND4
+          ? `전역 CSS 에 @import "${candidate}"; 를 넣으세요`
+          : `전역 CSS 에 @plugin "${candidate}"; 를 넣으세요`;
+      return `애니메이션: ${candidate} 는 ${declaredWhere}선언돼 있지만 설치되지 않았습니다. ${installCommand} 뒤 ${setup}.`;
+    }
+    // ① 선언 없음: 아래 종전 줄
+  } else if (
+    pkg !== undefined &&
+    (hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined || hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND4) !== undefined)
+  ) {
     return undefined;
   }
   // 범위를 정하지 않고 이름만 안내합니다(플러그인 버전은 앱이 고름). 명령 앞부분(`npm install` 등)은 lockfile 로 고릅니다
@@ -884,8 +926,8 @@ export async function runInit(
   }
   reportDependencies(plan, log);
 
-  // 애니메이션 플러그인 안내 한 줄(WI-0065 D8). 이미 선언돼 있으면 내지 않습니다
-  const animation = animationGuideLine(readPackageJsonSafe(baseDir), tailwind4, plan.installCommand);
+  // 애니메이션 플러그인 안내 한 줄(WI-0065 D8). 선언 · 설치돼 있으면 내지 않고, 선언만 있으면 설치 안내를 냅니다(WI-0087: 워크스페이스 루트 선언 · 설치본을 봄)
+  const animation = animationGuideLine(readPackageJsonSafe(baseDir), tailwind4, plan.installCommand, baseDir);
   if (animation !== undefined) log(chalk.yellow(`  ${animation}`));
 
   // Tailwind 4 전역 CSS 연동 안내(WI-0044 FR-3). Tailwind 3 · 판정 불가는 출력이 종전과 같습니다.

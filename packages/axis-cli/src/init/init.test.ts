@@ -41,6 +41,7 @@ import { fileURLToPath } from "url";
 import { registerInitCommand } from "./index.js";
 import {
   addCommandFor,
+  animationGuideLine,
   applyUtilsDependencies,
   CLSX_RANGE,
   detectTailwind,
@@ -2071,14 +2072,127 @@ describe("WI-0065 D8: init 애니메이션 플러그인 안내", () => {
     );
   });
 
-  it("음성 대조: 플러그인이 이미 선언돼 있으면 안내 없음", async () => {
+  // WI-0087 DEC-5: 선언만으로 침묵하던 대조를 「선언 + 설치 → 침묵」으로 바꿨습니다(선언 · 미설치는 아래 WI-0087 테스트)
+  it("음성 대조: 플러그인이 선언 · 설치돼 있으면 안내 없음", async () => {
     const dir = await tmpDir();
     await fs.writeFile(
       path.join(dir, "package.json"),
       JSON.stringify({ name: "x", devDependencies: { tailwindcss: "^3.4.0", "tailwindcss-animate": "^1.0.7" } })
     );
+    await fs.outputJSON(path.join(dir, "node_modules", "tailwindcss-animate", "package.json"), { name: "tailwindcss-animate", version: "1.0.7" });
     const r = await runInitCli(dir);
     expect(r.logs.some((l) => l.includes("애니메이션:"))).toBe(false);
+  });
+});
+
+// WI-0087 DEC-4 · DEC-6 · P1: 애니메이션 안내는 앱 다음 워크스페이스 루트 선언(declaredDependency)과 설치본(node_modules 상위 탐색)을 봄
+describe("WI-0087: init 애니메이션 안내가 워크스페이스 루트 선언 · 설치본을 봄", () => {
+  const A3 = "tailwindcss-animate";
+  const A4 = "tw-animate-css";
+  /** ① 미선언: 종전 줄(pnpm lockfile) */
+  const OLD3 =
+    '애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. pnpm add tailwindcss-animate 뒤 tailwind.config 의 plugins 에 require("tailwindcss-animate") 를 넣으세요.';
+  const OLD4 =
+    '애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. pnpm add tw-animate-css 뒤 전역 CSS 에 @import "tw-animate-css"; 를 넣으세요.';
+  /** ③ 선언 · 미설치: 출처(루트 · 앱)와 Tailwind 버전 · 선언 이름별 문구 */
+  const WHERE_ROOT = "워크스페이스 루트에 ";
+  const NOINST3 = (where = "") =>
+    `애니메이션: tailwindcss-animate 는 ${where}선언돼 있지만 설치되지 않았습니다. pnpm install 뒤 tailwind.config 의 plugins 에 require("tailwindcss-animate") 를 넣으세요.`;
+  const NOINST4_IMPORT = (where = "") =>
+    `애니메이션: tw-animate-css 는 ${where}선언돼 있지만 설치되지 않았습니다. pnpm install 뒤 전역 CSS 에 @import "tw-animate-css"; 를 넣으세요.`;
+  const NOINST4_PLUGIN = (where = "") =>
+    `애니메이션: tailwindcss-animate 는 ${where}선언돼 있지만 설치되지 않았습니다. pnpm install 뒤 전역 CSS 에 @plugin "tailwindcss-animate"; 를 넣으세요.`;
+
+  interface AnimFixture {
+    root?: Record<string, string>;
+    app?: Record<string, string>;
+    /** 루트 node_modules 에 둘 설치본 이름 */
+    installed?: string[];
+    pnp?: boolean;
+    workspaces?: boolean;
+  }
+  /** 루트(pnpm-lock.yaml · workspaces) 아래 apps/web 을 만들고 앱 경로와 앱 package.json 을 돌려줍니다 */
+  async function animApp(f: AnimFixture): Promise<{ app: string; pkg: Record<string, unknown> }> {
+    const root = await tmpDir();
+    const workspaces = f.workspaces === false ? {} : { workspaces: ["apps/*"] };
+    await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, ...workspaces, devDependencies: f.root ?? {} });
+    await fs.writeFile(path.join(root, "pnpm-lock.yaml"), "");
+    for (const name of f.installed ?? []) {
+      await fs.outputJSON(path.join(root, "node_modules", name, "package.json"), { name, version: "1.0.0" });
+    }
+    if (f.pnp) await fs.writeFile(path.join(root, ".pnp.cjs"), "");
+    const app = path.join(root, "apps", "web");
+    const pkg = { name: "web", devDependencies: f.app ?? {} };
+    await fs.outputJSON(path.join(app, "package.json"), pkg);
+    return { app, pkg };
+  }
+  const guide = async (f: AnimFixture, tw4: boolean) => {
+    const { app, pkg } = await animApp(f);
+    return animationGuideLine(pkg, tw4, "pnpm install", app);
+  };
+
+  // anim/run.mjs 15변형의 수정 후 기대(V 번호는 그 스크립트의 변형 이름)
+  const matrix: { v: string; tw4: boolean; f: AnimFixture; expected: string | undefined }[] = [
+    { v: "V1 TW3 루트 선언 + 설치 → 침묵(종전: pnpm add 권고)", tw4: false, f: { root: { [A3]: "^1.0.7" }, installed: [A3] }, expected: undefined },
+    { v: "V2 TW3 루트 선언 · 미설치 → 설치 안내", tw4: false, f: { root: { [A3]: "^1.0.7" } }, expected: NOINST3(WHERE_ROOT) },
+    { v: "V3 TW4 루트 선언 + 설치 → 침묵", tw4: true, f: { root: { [A4]: "^1.2.0" }, installed: [A4] }, expected: undefined },
+    { v: "V4 TW4 루트 선언 · 미설치 → @import 설치 안내", tw4: true, f: { root: { [A4]: "^1.2.0" } }, expected: NOINST4_IMPORT(WHERE_ROOT) },
+    { v: "V5 TW3 미선언 · 미설치 → 종전 줄", tw4: false, f: {}, expected: OLD3 },
+    { v: "V6 TW4 미선언 · 미설치 → 종전 줄", tw4: true, f: {}, expected: OLD4 },
+    { v: "V7 TW3 루트에 tw-animate-css 만 → 종전 줄", tw4: false, f: { root: { [A4]: "^1.2.0" } }, expected: OLD3 },
+    { v: "V8 TW4 루트에 tailwindcss-animate 만 · 미설치 → @plugin 설치 안내", tw4: true, f: { root: { [A3]: "^1.0.7" } }, expected: NOINST4_PLUGIN(WHERE_ROOT) },
+    { v: "V9 TW3 앱 선언 · 미설치 → 설치 안내(종전: 침묵)", tw4: false, f: { app: { [A3]: "^1.0.7" } }, expected: NOINST3() },
+    { v: "V10 TW3 미선언 · 설치본만 → 종전 줄", tw4: false, f: { installed: [A3] }, expected: OLD3 },
+    { v: "V11 TW4 미선언 · 설치본만 → 종전 줄", tw4: true, f: { installed: [A4] }, expected: OLD4 },
+    { v: "V12 TW4 앱 선언 · 미설치 → @import 설치 안내", tw4: true, f: { app: { [A4]: "^1.2.0" } }, expected: NOINST4_IMPORT() },
+    { v: "V13 TW3 앱에 tw-animate-css 만 → 종전 미선언 줄(종전: 침묵)", tw4: false, f: { app: { [A4]: "^1.2.0" } }, expected: OLD3 },
+    { v: "V14 TW4 앱에 tailwindcss-animate 만 · 미설치 → @plugin 설치 안내", tw4: true, f: { app: { [A3]: "^1.0.7" } }, expected: NOINST4_PLUGIN() },
+    { v: "V15 TW3 앱 선언 + 설치 → 침묵", tw4: false, f: { app: { [A3]: "^1.0.7" }, installed: [A3] }, expected: undefined },
+  ];
+  for (const c of matrix) {
+    it(c.v, async () => {
+      expect(await guide(c.f, c.tw4)).toBe(c.expected);
+    });
+  }
+
+  it("TW4 에 두 이름이 모두 선언되면 tw-animate-css 로 판정 · 문구(DEC-6)", async () => {
+    // tailwindcss-animate 는 설치돼 있어도 tw-animate-css 가 미설치면 tw-animate-css 안내
+    expect(await guide({ root: { [A3]: "^1.0.7" }, app: { [A4]: "^1.2.0" }, installed: [A3] }, true)).toBe(NOINST4_IMPORT());
+    expect(await guide({ root: { [A3]: "^1.0.7", [A4]: "^1.2.0" }, installed: [A4] }, true)).toBeUndefined();
+  });
+
+  it("음성 대조(P1): Yarn PnP 면 루트 선언을 인정하지 않고 종전 동작", async () => {
+    // 루트 선언만: 종전처럼 미선언 줄
+    expect(await guide({ root: { [A3]: "^1.0.7" }, pnp: true }, false)).toBe(OLD3);
+    expect(await guide({ root: { [A4]: "^1.2.0" }, pnp: true }, true)).toBe(OLD4);
+    // 앱 선언: 설치본을 판정할 수 없으니 종전처럼 침묵
+    expect(await guide({ app: { [A3]: "^1.0.7" }, pnp: true }, false)).toBeUndefined();
+  });
+
+  it("음성 대조: 워크스페이스가 아닌 상위의 선언은 인정하지 않음 → 종전 줄", async () => {
+    expect(await guide({ root: { [A3]: "^1.0.7" }, installed: [A3], workspaces: false }, false)).toBe(OLD3);
+  });
+
+  it("음성 대조: baseDir 없이 부르면 종전 판정(앱 선언만, 설치본 · 이름 집합을 보지 않음)", () => {
+    expect(animationGuideLine({ devDependencies: { [A3]: "^1.0.7" } }, false, "pnpm install")).toBeUndefined();
+    expect(animationGuideLine({ devDependencies: { [A4]: "^1.2.0" } }, false, "pnpm install")).toBeUndefined();
+    expect(animationGuideLine({ name: "web" }, false, "pnpm install")).toBe(OLD3);
+    expect(animationGuideLine({ name: "web" }, true, "pnpm install")).toBe(OLD4);
+    expect(animationGuideLine(undefined, false, "pnpm install")).toBe(OLD3);
+  });
+
+  // 호출지(init 실행 경로)가 baseDir 를 넘기는지: 루트 tailwindcss ^3.4.0 으로 Tailwind 3 판정
+  it("axis init -y: 루트 선언 + 설치는 침묵, 루트 선언 · 미설치와 앱 선언 · 미설치는 설치 안내", async () => {
+    const tw3 = { tailwindcss: "^3.4.0" };
+    const inst = await animApp({ root: { ...tw3, [A3]: "^1.0.7" }, installed: [A3] });
+    expect((await runInitCli(inst.app)).logs.some((l) => l.includes("애니메이션:"))).toBe(false);
+    const rootNoInst = await animApp({ root: { ...tw3, [A3]: "^1.0.7" } });
+    expect((await runInitCli(rootNoInst.app)).logs).toContain(`  ${NOINST3(WHERE_ROOT)}`);
+    const appNoInst = await animApp({ root: tw3, app: { [A3]: "^1.0.7" } });
+    expect((await runInitCli(appNoInst.app)).logs).toContain(`  ${NOINST3()}`);
+    // 양성 대조: 어디에도 선언이 없으면 종전 줄이 그대로 나옴
+    const none = await animApp({ root: tw3 });
+    expect((await runInitCli(none.app)).logs).toContain(`  ${OLD3}`);
   });
 });
 

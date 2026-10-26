@@ -16,6 +16,7 @@ import {
   type TokensStatus,
 } from "./brand-core.js";
 import {
+  COMPONENT_TAILWIND_CSS_MIN_VERSION,
   THEME_MIN_VERSION,
   THEME_PACKAGE,
   TOKENS_DEPENDENCY_RANGE,
@@ -24,7 +25,7 @@ import {
   planThemeAdd,
   type ThemeAddPlan,
 } from "./theme-add.js";
-import { addCommandFor, detectInstallCommand, workspaceRunCommand } from "@axis-ds/registry-core/project";
+import { addCommandFor, compareExactVersions, detectInstallCommand, workspaceRunCommand } from "@axis-ds/registry-core/project";
 import { CONTENT_PARENT_PATH_NOTE, TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
 import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
 
@@ -312,6 +313,24 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
       )
     );
   }
+  // WI-0087 DEC-2: 루트에만 선언된 컴포넌트 패키지의 tailwind.css 는 설치본에 파일이 있을 때만 넣고, 넣지 않았으면 이유를 한 줄씩 알립니다
+  for (const d of css?.deferredComponentImports ?? []) {
+    const line = `@import "${d.name}/tailwind.css";`;
+    // 1.4.0 이상인데 파일이 없으면 올릴 버전 문제가 아니라 설치가 손상된 것이라 다시 설치를 안내합니다
+    const current =
+      d.installedVersion !== undefined &&
+      d.installedVersion !== "?" &&
+      (compareExactVersions(d.installedVersion, COMPONENT_TAILWIND_CSS_MIN_VERSION) ?? -1) >= 0;
+    lines.push(
+      chalk.yellow(
+        d.installedVersion === undefined
+          ? `  ! ${d.name} 가 워크스페이스 루트에 선언됐지만 설치되지 않아 ${line} 를 넣지 않았습니다. 설치(${plan.installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+          : current
+            ? `  ! 워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion})에 tailwind.css 가 없어 ${line} 를 넣지 않았습니다. 설치가 손상됐을 수 있으니 다시 설치(${plan.installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+            : `  ! 워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion === "?" ? "버전 모름" : d.installedVersion})에 tailwind.css 가 없어(${COMPONENT_TAILWIND_CSS_MIN_VERSION} 부터 제공) ${line} 를 넣지 않았습니다. ${COMPONENT_TAILWIND_CSS_MIN_VERSION} 이상으로 올린 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+      )
+    );
+  }
   if (css && css.otherBrands.length > 0) {
     lines.push(
       chalk.yellow(
@@ -327,6 +346,12 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
       `  ${chalk.green("✓")} package.json: dependencies 에 "${TOKENS_PACKAGE}": "${TOKENS_DEPENDENCY_RANGE}" 추가`,
       `    설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`
     );
+  } else if (dep?.action === "present" && dep.declaredSource === "root") {
+    // WI-0087 DEC-1: 루트 선언이면 앱 package.json 에 쓰지 않았고, 설치본이 없을 때만 설치 명령을 붙입니다(앱 선언 출력은 종전 그대로)
+    lines.push(
+      `  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음`
+    );
+    if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
   } else if (dep?.action === "present") {
     lines.push(`  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 이미 있어 범위를 바꾸지 않음`);
   } else if (dep?.action === "no-package-json") {
@@ -336,9 +361,15 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     lines.push(
       chalk.yellow(
         `  ! 설치된 ${TOKENS_PACKAGE} ${plan.tokens.version} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`
-      ),
-      `    업그레이드: ${chalk.cyan(dep.tokensAddCommand)}`
+      )
     );
+    // WI-0087 DEC-8(사용자 재결정): 선언이 루트에 있으면 앱 기준 업그레이드 명령은 내지 않습니다. 앱 디렉터리에서 실행하면
+    // 앱 package.json 에 새 선언이 생겨 「앱 package.json 은 바꾸지 않음」과 어긋나기 때문입니다
+    if (dep.action === "present" && dep.declaredSource === "root") {
+      lines.push(`    워크스페이스 루트 package.json 의 ${TOKENS_PACKAGE} 선언을 ^${MIN_BRAND_TOKENS_VERSION} 이상으로 올리고 설치하세요.`);
+    } else {
+      lines.push(`    업그레이드: ${chalk.cyan(dep.tokensAddCommand)}`);
+    }
   }
 
   // axis.config.json
