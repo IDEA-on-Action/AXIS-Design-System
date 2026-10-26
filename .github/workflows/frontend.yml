@@ -244,14 +244,15 @@ jobs:
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
       # 기대 건수는 spec 을 바꾸면 함께 고친다. a11y 는 손으로 적지 않고 apps/web/e2e/a11y-routes.cjs(spec 과 같은 경로 목록)에서
       # 경로 수 x 조합 수로 계산한다(WI-0062 D2, 2026-10-25 실측 59경로 x 4 = 236). 실측(playwright --list): demo 8 (2026-10-18),
-      # nontext 8 (2026-10-19, 포커스 링 ontology 2조합 x 2 + 상태 표식 실요소 4조합 x 1, D1 「주 표식만 판정」),
+      # nontext 12 (2026-10-19 8건: 포커스 링 ontology 2조합 x 2 + 상태 표식 실요소 4조합 x 1, D1 「주 표식만 판정」.
+      # 2026-10-26 WI-0079 에서 ui-react 폼 컨트롤 · Progress · placeholder 실요소 4조합 x 1 추가),
       # tokens 22 (2026-10-19, 라이트 선택자 (0,2,0) 상향과 「프로젝트 :root 가 브랜드 뒤」 갈래 5건 추가).
       # tooltip 6 (2026-10-25, 1280x720 지속성 · Esc · 포커스 이동 · 포인터 이탈과 hover 스크롤 4 + 1280x3000 음성 대조 2, WI-0073).
       # library 4 (2026-10-25, 양성 3 + 404 주입 자기 검사 1, WI-0078). 대표 3종은 e2e/library-reps.cjs 가 index.json 속성으로 고르고
       # (code 는 source axis 첫 항목 · 코드 있음, renamed 는 slug 가 바뀐 첫 항목, existing 은 source 가 다른 코드 없는 첫 항목, 셋이 서로 다른 항목,
       # WI-0083) 대표 3개의 상세 JSON 만 읽는다. 못 고르거나 대표가 규칙에 안 맞으면 설정 단계에서 멈추므로 데이터가 바뀌어도 3 은 그대로다. 종류를 늘리거나 줄일 때만 이 값과 아래 describe 별 건수를 함께 고친다.
       # a11y 는 조합(default/light · default/dark · ontology/light · ontology/dark)마다 경로 수만큼인지도 본다.
-      # nontext 는 상태 표식 4조합마다 1건, 포커스 링 ontology 라이트 · 다크마다 2건인지 본다.
+      # nontext 는 상태 표식 4조합마다 1건, 폼 컨트롤 4조합마다 1건, 포커스 링 ontology 라이트 · 다크마다 2건인지 본다.
       - name: E2E 실행 건수 가드
         id: e2e-count
         if: ${{ !cancelled() && steps.e2e-a11y.outcome != 'skipped' }}
@@ -275,7 +276,7 @@ jobs:
             echo '|---|---|---|---|---|---|---|'
           } >> "$GITHUB_STEP_SUMMARY"
           echo "a11y 경로 ${routes}개 x 조합 ${ncombo}개 = ${a11y_want}건" >> "$GITHUB_STEP_SUMMARY"
-          for spec in "a11y:${a11y_want}" nontext:8 tokens:22 demo:8 tooltip:6 library:4; do
+          for spec in "a11y:${a11y_want}" nontext:12 tokens:22 demo:8 tooltip:6 library:4; do
             name=${spec%%:*}; want=${spec##*:}; f="$name.json"
             if [ ! -s "$f" ]; then
               echo "::error::$name: $f 가 없어요 (측정 실패, 0건 실행)"
@@ -303,7 +304,7 @@ jobs:
             done
           fi
           if [ -s nontext.json ]; then
-            for want in 'nontext status (default/light):1' 'nontext status (default/dark):1' 'nontext status (ontology/light):1' 'nontext status (ontology/dark):1' 'nontext (ontology/light):2' 'nontext (ontology/dark):2'; do
+            for want in 'nontext status (default/light):1' 'nontext status (default/dark):1' 'nontext status (ontology/light):1' 'nontext status (ontology/dark):1' 'nontext (ontology/light):2' 'nontext (ontology/dark):2' 'nontext form controls (default/light):1' 'nontext form controls (default/dark):1' 'nontext form controls (ontology/light):1' 'nontext form controls (ontology/dark):1'; do
               t=${want%:*}; w=${want##*:}
               n=$(jq --arg t "$t" '[.. | objects | select(.title? == $t) | .specs[]?] | length' nontext.json)
               if ! [[ "$n" =~ ^[0-9]+$ ]] || [ "$n" -ne "$w" ]; then

@@ -12,6 +12,8 @@ import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { V1_PALETTE } from './ontology-pairs.mjs';
+
 import {
   cssVarName,
   listBrands,
@@ -193,14 +195,14 @@ describe('src/brands/ontology (FR-8)', () => {
     dark: { '--axis-button-destructive-bg-hover': '#3A1A1A', '--axis-button-destructive-bg-active': '#3A1A1A' },
   };
 
-  test('초안 2 선언(bg-muted 제외)이 모두 같은 값으로 들어 있다 (D2 교체분 제외)', () => {
+  test('초안 2 선언(bg-muted 제외)이 모두 같은 값으로 들어 있다 (D2 · WI-0079 교체분 제외)', () => {
     const draft = draftBlocks();
     assert.ok(draft.light.size > 90 && draft.dark.size > 80, `초안을 읽지 못했습니다: ${draft.light.size}/${draft.dark.size}`);
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
       for (const [name, value] of draft[theme]) {
         if (name === '--axis-bg-muted') continue; // D-f
-        const expected = D2_OVERRIDES[theme][name] ?? value;
+        const expected = D2_OVERRIDES[theme][name] ?? WI0079_OVERRIDES[theme][name] ?? value;
         assert.equal(resolveRef(mine.get(name)), expected, `${theme} ${name}`);
       }
     }
@@ -227,39 +229,47 @@ describe('src/brands/ontology (FR-8)', () => {
     '--axis-table-head-font-size': '13px',
   };
 
-  // WI-0063 새 component 토큰(폼 컨트롤 경계 · 트랙, Progress 채움). 기본 브랜드만 3:1 로 짙게 하고(D3 (가)),
-  // ontology 는 1.7.0 에서 그 자리에 그려지던 값을 그대로 둬요(Checkbox · Radio · Textarea = border-default,
-  // Switch 꺼짐 · Slider 트랙 = surface-tertiary, Progress = surface-brand · green.500 · yellow.500 · red.500 primitive).
-  // 초안 2 뒤에 생긴 이름이라 초안에는 없어요. 이 표의 이름만 U18 초안 대조에서 빼고, 아래 테스트가 값이 정확히 같은지 봐요.
-  const WI0063_SAME = {
-    light: {
-      '--axis-form-control-border': '#E6E8EB', '--axis-form-control-track': '#EAECEF',
-      '--axis-progress-fill-default': '#326ADA', '--axis-progress-fill-success': '#22C55E',
-      '--axis-progress-fill-warning': '#EAB308', '--axis-progress-fill-destructive': '#EF4444',
-    },
-    dark: {
-      '--axis-form-control-border': '#2B2F35', '--axis-form-control-track': '#2A2E34',
-      '--axis-progress-fill-default': '#6B98F0', '--axis-progress-fill-success': '#22C55E',
-      '--axis-progress-fill-warning': '#EAB308', '--axis-progress-fill-destructive': '#EF4444',
-    },
+  // WI-0063 새 component 토큰(폼 컨트롤 경계 · 트랙, Progress 채움). 1.8.0 은 ontology 에 1.7.0 렌더 값을 그대로 넣었고,
+  // WI-0079(2026-10-26 사용자 결정, design-review.md 권장안 + Q3 destructive 분리)에서 v1 팔레트 안의 값으로 바꿨어요.
+  // 경계 · 트랙 = 라이트 sub · 다크 muted, Progress success · warning · destructive = ink-2 · bad · bad-dark, default = key(surface-brand 와 같음).
+  // 값은 팔레트 이름으로 적어요(hex 를 복제하지 않음). 초안 2 뒤에 생긴 이름이라 초안에는 없어요.
+  // 이 표의 이름만 U18 초안 대조에서 빼고, 아래 테스트가 값이 정확히 같은지 봐요.
+  const pal = (light, dark) => ({ light: V1_PALETTE[light].light, dark: V1_PALETTE[dark ?? light].dark });
+  const WI0079_NAMES = {
+    '--axis-form-control-border': pal('sub', 'muted'),
+    '--axis-form-control-track': pal('sub', 'muted'),
+    '--axis-progress-fill-default': pal('key'),
+    '--axis-progress-fill-success': pal('ink-2'),
+    '--axis-progress-fill-warning': pal('bad'),
+    '--axis-progress-fill-destructive': pal('bad-dark'),
+  };
+  const WI0063_SAME = Object.fromEntries(['light', 'dark'].map(theme => [
+    theme, Object.fromEntries(Object.entries(WI0079_NAMES).map(([n, v]) => [n, v[theme]])),
+  ]));
+
+  // WI-0079: 초안 2 에 있는 이름인데 값을 바꾼 것. Input placeholder 는 muted 대신 sub-aa(다크 sub)로,
+  // WI-0025 부록 B ②(2026-10-19 디자인 오너 확인 「muted 는 placeholder 에만」)를 철회했어요(부록 B 철회 기록).
+  const WI0079_OVERRIDES = {
+    light: { '--axis-input-text-placeholder': V1_PALETTE['sub-aa'].light },
+    dark: { '--axis-input-text-placeholder': V1_PALETTE['sub-aa'].dark },
   };
 
-  test('WI-0063: 새 토큰의 ontology 값은 1.7.0 렌더 값과 같다(초안에는 없는 이름)', () => {
+  test('WI-0063 · WI-0079: 새 토큰의 ontology 값이 v1 팔레트 결정 값이다(초안에는 없는 이름)', () => {
     const draft = draftBlocks();
+    assert.equal(WI0063_SAME.light['--axis-form-control-border'], '#6B7280', '팔레트 표 읽기(양성 대조)');
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
       const got = Object.fromEntries(Object.keys(WI0063_SAME[theme]).map(n => [n, resolveRef(mine.get(n))]));
       assert.deepEqual(got, WI0063_SAME[theme], theme);
-      // 1.7.0 에서 같은 자리를 칠하던 변수와 값이 같다(복제 표가 ontology 소스와 어긋나면 실패)
-      const from = { '--axis-form-control-border': '--axis-border-default', '--axis-form-control-track': '--axis-surface-tertiary', '--axis-progress-fill-default': '--axis-surface-brand' };
-      for (const [n, src] of Object.entries(from)) assert.equal(got[n], resolveRef(mine.get(src)), `${theme} ${n} = ${src}`);
+      // Progress default 는 1.7.0 에서 같은 자리를 칠하던 surface-brand 와 값이 같다(복제 표가 ontology 소스와 어긋나면 실패)
+      assert.equal(got['--axis-progress-fill-default'], resolveRef(mine.get('--axis-surface-brand')), `${theme} progress-fill-default = surface-brand`);
       assert.deepEqual(Object.keys(WI0063_SAME[theme]).filter(n => draft[theme].has(n)), []);
     }
   });
 
   // U18 역반영(2026-10-17) 뒤에는 반대 방향도 성립해야 해요: 브랜드 JSON 선언은 모두 초안에 같은 값으로 있다.
   // 참조(다크 interactive.primary = {color.blue.500})는 기본 소스로 풀어 초안의 hex 와 비교해요.
-  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 · WI-0026 밀도 · WI-0063 새 토큰 제외)', () => {
+  test('U18: 브랜드 JSON 선언이 모두 초안에 같은 값으로 있다 (D2 교체분 · WI-0026 밀도 · WI-0063 새 토큰 · WI-0079 placeholder 제외)', () => {
     const draft = draftBlocks();
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
@@ -268,6 +278,7 @@ describe('src/brands/ontology (FR-8)', () => {
         if (D2_OVERRIDES[theme][name] !== undefined) continue;
         if (WI0026_DENSITY[name] !== undefined) continue;
         if (WI0063_SAME[theme][name] !== undefined) continue;
+        if (WI0079_OVERRIDES[theme][name] !== undefined) continue;
         assert.equal(draft[theme].get(name), resolveRef(value), `${theme} ${name}`);
       }
     }

@@ -138,24 +138,13 @@ const NON_TEXT = 3;
 
 /**
  * 표에 둘 수 없는 기본 브랜드 전용 짝 (WI-0062).
- * - input placeholder: ontology 라이트(#9AA1AB, 2.60)는 이번 범위에서 값을 바꾸지 않아(ontology 불변) 공용 표에 넣으면 ontology 가 실패한다.
  * - shadcn destructive-foreground / destructive: shadcn-compat.css 의 HSL 변수라 --axis-* 해석기가 읽지 못한다.
- * - WI-0063 폼 컨트롤 경계 · 트랙 · Progress 채움: 기본 브랜드만 3:1 로 짙게 했다(D3 (가)). ontology 는 승인값
- *   (입력 테두리 line-2, 부록 B ③)과 1.7.0 렌더 값을 유지해 공용 표에 넣으면 ontology 가 실패한다.
- * - '#FFFFFF' 처럼 hex 로 적은 쪽은 토큰이 아닌 고정 색이다(Switch 썸 bg-white).
+ * - Input · Select 경계: ontology 는 승인 예외(입력 테두리 line-2, 부록 B ③, WI-0079 에서도 유지)라 공용 표에 넣으면 ontology 가 실패한다.
+ * - WI-0079: placeholder · 폼 컨트롤 경계 · 트랙 · Switch 썸 · Progress 채움 짝은 ontology 값을 고쳐 공용 표(CONTRAST_PAIRS)로 옮겼다.
  */
 const DEFAULT_ONLY = [
-  { fg: '--axis-input-text-placeholder', bg: '--axis-input-bg-default', min: TEXT, where: 'ui-react input:24 · select:24 placeholder' },
   { fg: '--destructive-foreground', bg: '--destructive', min: TEXT, shadcn: true, where: 'shadcn-compat destructive 버튼' },
-  { fg: '--axis-form-control-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react checkbox:16 · radio-group:26 · textarea:11 경계' },
   { fg: '--axis-input-border-default', bg: '--axis-input-bg-default', min: NON_TEXT, where: 'ui-react input:23 · select:23 경계' },
-  { fg: '--axis-form-control-track', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react switch:16 꺼짐 트랙 · slider:27 트랙' },
-  { fg: '#FFFFFF', bg: '--axis-form-control-track', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 꺼짐 트랙' },
-  { fg: '#FFFFFF', bg: '--axis-interactive-primary', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 켜짐 트랙' },
-  { fg: '--axis-progress-fill-default', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:26 채움 / 트랙' },
-  { fg: '--axis-progress-fill-success', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:27' },
-  { fg: '--axis-progress-fill-warning', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:28' },
-  { fg: '--axis-progress-fill-destructive', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:29' },
 ];
 
 /** WI-0062 글자 행 + WI-0063 비텍스트 · 아이콘 행: 표 전 행 */
@@ -177,13 +166,19 @@ describe('기본 브랜드에 ontology 짝 표 적용 (WI-0062 · 0063, D2)', ()
     assert.ok(v !== undefined, `${theme} ${name} 값 없음`);
     return isShadcn ? hslToHex(v) : v.toUpperCase();
   };
+  // bgShadcn: 바탕만 shadcn 변수(페이지 바탕 --background, WI-0079)
   const bgOf = (theme, bg, isShadcn) => (typeof bg === 'string'
     ? value(theme, bg, isShadcn)
     : mixOver(value(theme, bg.mix), value(theme, bg.over ?? '--axis-surface-default'), bg.pct));
   const rows = [...CONTRAST_PAIRS.filter(inScope), ...DEFAULT_ONLY];
 
   test('적용 행이 비어 있지 않고 shadcn 블록을 읽었다 (양성 대조)', () => {
-    assert.ok(CONTRAST_PAIRS.filter(inScope).length >= 60, `적용 행 ${CONTRAST_PAIRS.filter(inScope).length}개`);
+    assert.ok(CONTRAST_PAIRS.filter(inScope).length >= 80, `적용 행 ${CONTRAST_PAIRS.filter(inScope).length}개`);
+    // WI-0079 에서 공용 표로 옮긴 짝이 실제로 표에 있다(DEFAULT_ONLY 에서 빼기만 하고 옮기지 않으면 기본 브랜드 가드가 사라진다)
+    for (const fg of ['--axis-input-text-placeholder', '--axis-form-control-border', '--axis-form-control-track', '--axis-progress-fill-success', '--axis-progress-fill-warning', '--axis-progress-fill-destructive', '--axis-progress-fill-default']) {
+      assert.ok(CONTRAST_PAIRS.some(p => p.fg === fg), `공용 표에 ${fg} 없음`);
+    }
+    assert.equal(CONTRAST_PAIRS.filter(p => p.bgShadcn).length, 2, '페이지 바탕(--background) 짝 2개');
     for (const sel of Object.values(SELECTOR)) assert.ok((shadcn.get(sel)?.size ?? 0) >= 20, `shadcn ${sel} 블록 변수 ${shadcn.get(sel)?.size ?? 0}개`);
   });
 
@@ -193,7 +188,7 @@ describe('기본 브랜드에 ontology 짝 표 적용 (WI-0062 · 0063, D2)', ()
       const bgLabel = typeof pair.bg === 'string' ? pair.bg : `${pair.bg.mix} ${pair.bg.pct}% over ${pair.bg.over ?? '--axis-surface-default'}`;
       test(`기본 ${theme} ${pair.fg} / ${bgLabel} >= ${min} (${pair.where})`, t => {
         const fg = value(theme, pair.fg, pair.shadcn);
-        const bg = bgOf(theme, pair.bg, pair.shadcn);
+        const bg = bgOf(theme, pair.bg, pair.shadcn || pair.bgShadcn);
         const r = ratio(fg, bg);
         t.diagnostic(`${fg} / ${bg} = ${floor2(r).toFixed(2)}:1`);
         assert.ok(r >= min, `${fg}/${bg} = ${r.toFixed(2)}:1 (${pair.where})`);

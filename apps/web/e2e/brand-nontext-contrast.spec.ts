@@ -29,6 +29,11 @@ import { collectErrors, openDemo, radio } from './helpers/demo'
  *      하한이 없는 (브랜드/테마, 바탕) 쌍은 「하한이 설정되지 않음」으로 실패합니다.
  *   `DEFAULT_BRAND_FLOOR` 의 값은 3 미만이어야 하고(3:1 을 넘는 주 표식을 하한으로 낮추지 않음), 두 하한 표 모두 키가 측정 행과
  *   하나도 맞지 않으면 실패합니다(낡은 키가 조용히 남지 않게).
+ *   ⑤ ui-react 폼 컨트롤 · Progress · placeholder 실요소(기본 · ontology × 라이트 · 다크, WI-0079): 컴포넌트 문서 페이지의 실제 요소에서
+ *      Checkbox · Radio · Textarea 경계, Switch 꺼짐 · Slider 트랙, Switch 썸 대 트랙, Progress 채움 대 트랙, Input placeholder 를 잽니다.
+ *      경계 · 트랙은 실제 바탕과 함께 컨트롤이 놓일 수 있는 바탕 셋(card = surface-default, panel = surface-secondary,
+ *      페이지 = --background)에서 모두 3:1, placeholder 는 입력 바탕 위 4.5:1(1.4.3, axe 가 placeholder 를 판정하지 않음)입니다.
+ *      렌더 색이 대상 변수(FORM_TARGETS 의 expectVar)의 렌더 색과 같은지도 단언합니다. 측정 대상은 FORM_TARGETS 표와 정확히 같은 수입니다.
  * 링 판정 쌍은 링 대 바탕(가장 가까운 불투명 바탕을 합성한 색)이고, 링 오프셋 색은 기록만 합니다(결정 21).
  * 측정 대상 개수는 기대값과 정확히 같아야 합니다(미측정 0 · 조용한 축소를 통과로 읽지 않음).
  * 앱 수준 7변수(`--primary` 포함, AC6 결정 23)는 a11y.spec.ts 의 브랜드 양성 대조가 모든 페이지에서 확인합니다.
@@ -966,6 +971,164 @@ for (const brand of BRANDS) {
         for (const k of Object.keys(NEUTRAL_MUTED_FLOOR[combo] ?? {})) {
           expect.soft(usedMutedFloor.has(k), `NEUTRAL_MUTED_FLOOR ${combo} '${k}' 가 측정 행과 맞지 않음`).toBe(true)
         }
+      })
+    })
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ⑤ ui-react 폼 컨트롤 · Progress · placeholder 실요소 (WI-0079)
+// ---------------------------------------------------------------------------
+
+/**
+ * how: border = border-top-color, 바탕은 부모부터 / bg = background-color, 바탕은 부모부터(썸은 트랙 위)
+ *   / fill = 첫 자식(채움) background-color, 바탕은 요소(트랙)부터 / placeholder = ::placeholder color, 바탕은 요소(입력)부터
+ * surfaces: true 이면 실제 바탕에 더해 card · panel · 페이지 바탕 위에서도 min 을 요구합니다(컨트롤이 놓일 수 있는 바탕).
+ * expectVar: 렌더 색이 이 변수(또는 고정 색 '#RRGGBB')의 렌더 색과 같아야 합니다(엉뚱한 요소를 재면 실패).
+ */
+const FORM_TARGETS = [
+  { id: 'checkbox-border', path: '/components/checkbox/', sel: 'main button[role="checkbox"][data-state="unchecked"]:not([disabled])', how: 'border', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-border' },
+  { id: 'radio-border', path: '/components/radio-group/', sel: 'main button[role="radio"][data-state="unchecked"]:not([disabled])', how: 'border', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-border' },
+  { id: 'textarea-border', path: '/components/textarea/', sel: 'main textarea:not([disabled])', how: 'border', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-border' },
+  { id: 'switch-track', path: '/components/switch/', sel: 'main button[role="switch"][data-state="unchecked"]:not([disabled])', how: 'bg', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-track' },
+  { id: 'switch-thumb/track', path: '/components/switch/', sel: 'main button[role="switch"][data-state="unchecked"]:not([disabled]) > span', how: 'bg', min: MIN_NONTEXT, surfaces: false, expectVar: '#FFFFFF' },
+  { id: 'slider-track', path: '/components/slider/', sel: 'main span[class*="form-control-track"]', how: 'bg', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-track' },
+  { id: 'progress-default/track', path: '/components/progress/', sel: 'main [role="progressbar"][aria-label="Default 25%"]', how: 'fill', min: MIN_NONTEXT, surfaces: false, expectVar: '--axis-progress-fill-default' },
+  { id: 'progress-success/track', path: '/components/progress/', sel: 'main [role="progressbar"][aria-label="Success 50%"]', how: 'fill', min: MIN_NONTEXT, surfaces: false, expectVar: '--axis-progress-fill-success' },
+  { id: 'progress-warning/track', path: '/components/progress/', sel: 'main [role="progressbar"][aria-label="Warning 75%"]', how: 'fill', min: MIN_NONTEXT, surfaces: false, expectVar: '--axis-progress-fill-warning' },
+  { id: 'progress-destructive/track', path: '/components/progress/', sel: 'main [role="progressbar"][aria-label="Destructive 90%"]', how: 'fill', min: MIN_NONTEXT, surfaces: false, expectVar: '--axis-progress-fill-destructive' },
+  { id: 'input-placeholder', path: '/components/input/', sel: 'main input[placeholder]:not([disabled])', how: 'placeholder', min: 4.5, surfaces: false, expectVar: '--axis-input-text-placeholder' },
+] as const
+
+async function measureForm(locator: Locator, how: (typeof FORM_TARGETS)[number]['how']) {
+  return locator.evaluate((el, m) => {
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 1
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) throw new Error('canvas 2d 없음')
+    const rgba = (css: string): [number, number, number, number] => {
+      ctx.clearRect(0, 0, 1, 1)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0)'
+      ctx.fillStyle = css
+      ctx.fillRect(0, 0, 1, 1)
+      const d = ctx.getImageData(0, 0, 1, 1).data
+      return [d[0], d[1], d[2], d[3] / 255]
+    }
+    const over = (top: [number, number, number, number], under: [number, number, number]) =>
+      [0, 1, 2].map((i) => Math.round(top[i] * top[3] + under[i] * (1 - top[3]))) as [number, number, number]
+    const behind = (start: Element | null) => {
+      const chain: Element[] = []
+      for (let n: Element | null = start; n; n = n.parentElement) chain.push(n)
+      let bg: [number, number, number] = [255, 255, 255]
+      for (const n of chain.reverse()) {
+        const c = rgba(getComputedStyle(n).backgroundColor)
+        if (c[3] > 0) bg = over(c, bg)
+      }
+      return bg
+    }
+    const cs = getComputedStyle(el)
+    let css: string
+    let under: [number, number, number]
+    if (m === 'border') {
+      css = cs.borderTopColor
+      under = behind(el.parentElement)
+    } else if (m === 'bg') {
+      css = cs.backgroundColor
+      under = behind(el.parentElement)
+    } else if (m === 'fill') {
+      const fill = el.firstElementChild
+      if (!fill) throw new Error('Progress 채움 요소 없음')
+      css = getComputedStyle(fill).backgroundColor
+      under = behind(el)
+    } else {
+      css = getComputedStyle(el, '::placeholder').color
+      under = behind(el)
+    }
+    const c = rgba(css)
+    return { color: [c[0], c[1], c[2]] as [number, number, number], alpha: c[3], background: under }
+  }, how)
+}
+
+interface FormRow {
+  id: string
+  color: Rgb
+  alpha: number
+  background: Rgb
+  expect: Rgb
+  surfaces: Record<string, Rgb> | null
+  min: number
+}
+
+for (const brand of BRANDS) {
+  for (const theme of THEMES) {
+    test.describe(`nontext form controls (${brand}/${theme})`, () => {
+      test.use({ colorScheme: theme })
+
+      test('폼 컨트롤 경계 · 트랙 · Progress 채움 · placeholder (WI-0079)', async ({ page }, testInfo) => {
+        if (brand !== 'default') await applyBrand(page, brand)
+        const rows: FormRow[] = []
+        for (const path of [...new Set(FORM_TARGETS.map((t) => t.path))]) {
+          await page.goto(path)
+          await page.waitForLoadState('networkidle')
+          const html = page.locator('html')
+          if (brand === 'default') await expect(html).not.toHaveAttribute('data-brand', /.+/)
+          else await expect(html).toHaveAttribute('data-brand', brand)
+          if (theme === 'dark') await expect(html).toHaveClass(/dark/)
+          else await expect(html).not.toHaveClass(/dark/)
+          const targets = FORM_TARGETS.filter((t) => t.path === path)
+          const named = await resolveColors(page, {
+            card: 'var(--axis-surface-default)',
+            panel: 'var(--axis-surface-secondary)',
+            page: 'hsl(var(--background))',
+            ...Object.fromEntries(targets.map((t) => [t.id, t.expectVar.startsWith('#') ? t.expectVar : `var(${t.expectVar})`])),
+          })
+          for (const t of targets) {
+            const loc = page.locator(t.sel)
+            expect(await loc.count(), `${t.id}: 측정할 요소가 없음 (${t.sel})`).toBeGreaterThan(0)
+            const m = await measureForm(loc.first(), t.how)
+            rows.push({
+              id: t.id,
+              ...m,
+              expect: named[t.id],
+              surfaces: t.surfaces ? { card: named.card, panel: named.panel, page: named.page } : null,
+              min: t.min,
+            })
+          }
+        }
+
+        expect(rows.length, '측정 대상 수 = FORM_TARGETS').toBe(FORM_TARGETS.length)
+        for (const r of rows) {
+          const actual = contrast(r.color, r.background)
+          const extra: Record<string, number> = r.surfaces
+            ? Object.fromEntries(Object.entries(r.surfaces).map(([k, v]) => [k, round2(contrast(r.color, v))]))
+            : {}
+          testInfo.annotations.push({
+            type: 'nontext-form',
+            description: JSON.stringify({
+              id: r.id,
+              color: hex(r.color),
+              alpha: r.alpha,
+              background: hex(r.background),
+              ratio: round2(actual),
+              ...extra,
+            }),
+          })
+          expect.soft(r.alpha, `${r.id} 불투명`).toBe(1)
+          expect.soft(hex(r.color), `${r.id} 렌더 색 = 대상 변수`).toBe(hex(r.expect))
+          expect.soft(actual, `${r.id} ${hex(r.color)} / 실제 바탕 ${hex(r.background)}`).toBeGreaterThanOrEqual(r.min)
+          for (const [k, v] of Object.entries(extra)) {
+            expect.soft(v, `${r.id} ${hex(r.color)} / ${k}`).toBeGreaterThanOrEqual(r.min)
+          }
+        }
+        // Q3(WI-0079): warning 과 destructive 막대는 서로 다른 색이어야 함(ontology 는 bad · bad-dark 두 단계)
+        const colorOf = (id: string) => {
+          const row = rows.find((r) => r.id === id)
+          expect(row, `${id} 측정 행 없음`).toBeDefined()
+          return hex(row!.color)
+        }
+        expect(colorOf('progress-warning/track'), 'Progress warning 과 destructive 가 같은 색').not.toBe(
+          colorOf('progress-destructive/track'),
+        )
       })
     })
   }

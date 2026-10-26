@@ -64,8 +64,9 @@ function resolveRef(value, depth = 0) {
   return resolveRef(base.refs.get(m[1]), depth + 1);
 }
 
-/** 테마별 실제 적용 값: 다크는 다크 선언, 없으면 라이트 선언(문서 안내대로 tokens CSS 뒤에 import 할 때) */
+/** 테마별 실제 적용 값: 다크는 다크 선언, 없으면 라이트 선언(문서 안내대로 tokens CSS 뒤에 import 할 때). '#RRGGBB' 는 고정 색 */
 function effective(theme, name) {
+  if (name.startsWith('#')) return name.toUpperCase();
   const v = theme === 'dark' ? (dark.get(name) ?? light.get(name)) : light.get(name);
   assert.ok(v !== undefined, `${theme} ${name} 값 없음`);
   return String(resolveRef(v)).toUpperCase();
@@ -86,7 +87,26 @@ const mixOver = (fg, under, pct) => '#' + [1, 3, 5].map(i => Math.round(
   parseInt(fg.slice(i, i + 2), 16) * (pct / 100) + parseInt(under.slice(i, i + 2), 16) * (1 - pct / 100),
 ).toString(16).padStart(2, '0')).join('').toUpperCase();
 
-function bgOf(theme, bg) {
+/** shadcn-compat.css 와 같은 HSL 세 값(`H S% L%`)을 6자리 hex 로 */
+function hslToHex(triple) {
+  const m = /^([\d.]+) ([\d.]+)% ([\d.]+)%$/.exec(triple);
+  assert.ok(m, `HSL 형식이 아님: ${triple}`);
+  const [h, sat, l] = [Number(m[1]), Number(m[2]) / 100, Number(m[3]) / 100];
+  const a = sat * Math.min(l, 1 - l);
+  const f = n => { const k = (n + h / 30) % 12; return l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return '#' + [0, 8, 4].map(n => Math.round(f(n) * 255).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
+/** shadcn 변수(브랜드 JSON shadcn 블록): 다크는 다크 선언, 없으면 라이트 선언 */
+function shadcnValue(theme, name) {
+  const key = name.replace(/^--/, '');
+  const v = theme === 'dark' ? (ontology.shadcn.dark[key] ?? ontology.shadcn.light[key]) : ontology.shadcn.light[key];
+  assert.ok(typeof v === 'string', `${theme} shadcn ${name} 값 없음`);
+  return /^#/.test(v) ? v.toUpperCase() : hslToHex(v);
+}
+
+function bgOf(theme, bg, bgShadcn = false) {
+  if (bgShadcn) return shadcnValue(theme, bg);
   if (typeof bg === 'string') return effective(theme, bg);
   return mixOver(effective(theme, bg.mix), effective(theme, bg.over ?? '--axis-surface-default'), bg.pct);
 }
@@ -222,6 +242,41 @@ describe('ontology 접기 값 (U15 · D4 · D2)', () => {
     }
   });
 
+  // WI-0079(2026-10-26 사용자 결정, 확인 문서 design-review.md 권장안 + Q3 destructive 분리): 값은 v1 팔레트 이름으로 단언한다.
+  // 다크 경계 · 트랙은 라이트 sub 와 같은 역할이지만 다크 sub(#9CA3AD) 가 아니라 muted 단계를 쓴다(확인 문서 5절 ① B).
+  test('WI-0079: 폼 컨트롤 경계 · 트랙 = 라이트 sub · 다크 muted', () => {
+    for (const name of ['--axis-form-control-border', '--axis-form-control-track']) {
+      assert.equal(effective('light', name), P('sub').light, `light ${name}`);
+      assert.equal(effective('dark', name), P('muted').dark, `dark ${name}`);
+    }
+  });
+
+  test('WI-0079: Progress success = ink-2, warning = bad, destructive = bad-dark (상태 색 접기와 같은 의미)', () => {
+    for (const theme of ['light', 'dark']) {
+      assert.equal(effective(theme, '--axis-progress-fill-success'), P('ink-2')[theme]);
+      assert.equal(effective(theme, '--axis-progress-fill-warning'), P('bad')[theme]);
+      assert.equal(effective(theme, '--axis-progress-fill-destructive'), P('bad-dark')[theme]);
+      // 상태 색 접기(부록 B ⑥)와 같은 매핑: success = status-success, warning = status-warning, destructive = status-warning-strong
+      assert.equal(effective(theme, '--axis-progress-fill-success'), effective(theme, '--axis-status-success'));
+      assert.equal(effective(theme, '--axis-progress-fill-warning'), effective(theme, '--axis-status-warning'));
+      assert.equal(effective(theme, '--axis-progress-fill-destructive'), effective(theme, '--axis-status-warning-strong'));
+      // Q3: warning 과 destructive 가 같은 빨강이 되지 않게 두 단계로 나눈다
+      assert.notEqual(effective(theme, '--axis-progress-fill-warning'), effective(theme, '--axis-progress-fill-destructive'), `${theme} warning = destructive`);
+    }
+  });
+
+  test('WI-0079: Input placeholder = 라이트 sub-aa · 다크 sub (부록 B ② 「muted 는 placeholder 에만」 철회), Textarea placeholder 와 같은 값', () => {
+    for (const theme of ['light', 'dark']) {
+      assert.equal(effective(theme, '--axis-input-text-placeholder'), P('sub-aa')[theme]);
+      assert.notEqual(effective(theme, '--axis-input-text-placeholder'), P('muted')[theme]);
+      assert.equal(effective(theme, '--axis-input-text-placeholder'), effective(theme, '--axis-text-tertiary'));
+    }
+  });
+
+  test('WI-0079: Input 테두리는 부록 B ③ 예외 그대로 line-2 (바꾸지 않음)', () => {
+    for (const theme of ['light', 'dark']) assert.equal(effective(theme, '--axis-input-border-default'), P('line-2')[theme]);
+  });
+
   test('라이트에만 두는 값은 테마 무관 값(transparent · 그림자)뿐이다', () => {
     const lightOnly = [...light.keys()].filter(n => !dark.has(n) && n.startsWith('--axis-'));
     for (const n of lightOnly) {
@@ -251,7 +306,7 @@ describe('ontology 짝 대비 (plan 5.3 검산)', () => {
       const bgLabel = typeof pair.bg === 'string' ? pair.bg : `${pair.bg.mix} ${pair.bg.pct}% over ${pair.bg.over ?? '--axis-surface-default'}`;
       test(`${theme} ${pair.fg} / ${bgLabel} >= ${pair.min}`, () => {
         const fg = effective(theme, pair.fg);
-        const bg = bgOf(theme, pair.bg);
+        const bg = bgOf(theme, pair.bg, pair.bgShadcn);
         const r = ratio(fg, bg);
         assert.ok(r >= pair.min, `${fg}/${bg} = ${r.toFixed(2)}:1 (${pair.where})`);
       });
