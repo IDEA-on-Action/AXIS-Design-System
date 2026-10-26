@@ -1,6 +1,6 @@
 # WI-0082 릴리스 노트: Select placeholder 색
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #211 | 대상: `@axis-ds/ui-react` patch(WI-0079 와 같은 발행, linked 4패키지 1.8.2 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #211 | 대상: `@axis-ds/ui-react` patch · `@axis-ds/cli` patch(동봉 레지스트리 사본, 2026-10-26 결정)(WI-0079 와 같은 발행, linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 예정)
 
 ## 바뀐 점
 

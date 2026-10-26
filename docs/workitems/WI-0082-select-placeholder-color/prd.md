@@ -53,4 +53,4 @@ ui-react `SelectTrigger` 는 `placeholder:text-[var(--axis-input-text-placeholde
 
 ## 4. 범위 밖
 
-- `axis-cli` 동봉 레지스트리 사본: cli 를 올리지 않으면 cli 1.7.1 의 오프라인 폴백 사본은 종전 select 소스로 남아요(원격 pages.dev 우선이라 일반 경로는 새 소스). 결과 보고의 결정 필요 항목으로 넘겨요.
+- `axis-cli` 동봉 레지스트리 사본: cli 를 올리지 않으면 cli 1.7.1 의 오프라인 폴백 사본은 종전 select 소스로 남아요(원격 pages.dev 우선이라 일반 경로는 새 소스). 결과 보고의 결정 필요 항목으로 넘겼고, 2026-10-26 사용자 결정으로 cli patch 를 함께 올려요(cli 1.7.3).
