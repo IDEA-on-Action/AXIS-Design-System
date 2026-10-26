@@ -99,6 +99,7 @@ export {
   formatListBrandsResult,
   handleGetBrand,
   formatGetBrandResult,
+  tokensInstallCommandFor,
   type ListBrandsParams,
   type ListBrandsResult,
   type GetBrandParams,

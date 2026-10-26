@@ -84,7 +84,7 @@ axis theme add ontology
 ```
 
 - `axis theme add` 는 `axis.config.json` 의 `globalCss` → `app/globals.css` → `src/app/globals.css` → `styles/globals.css` → `src/styles/globals.css` → 루트 `globals.css` 순으로 찾은 파일의 앞쪽 import 구간 끝(`@tailwind` 등 규칙보다 앞)에 줄을 넣습니다. 1.6.0 부터 브랜드 import 앞에 기본 토큰 CSS 도 넣습니다: Tailwind 3 은 `@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn`, Tailwind 4 는 `@axis-ds/tokens/css/tailwind4` 와 `package.json` 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 의 `tailwind.css` 입니다. 이미 있는 줄은 다시 넣지 않으므로 여러 번 실행해도 같습니다. 규칙 뒤에 있는 기존 `@import` 는 CSS 규칙상 무시될 수 있어 맨 앞으로 옮기라고 알립니다(Next.js 15 는 위치와 관계없이 앞으로 끌어올려 적용함을 측정).
-- `package.json` 에 `@axis-ds/tokens` 가 없으면 `dependencies` 에 `^1.6.0`(1.6.0 부터, 이전에는 `^1.3.0`)을 더하고 설치 명령만 안내합니다. 설치는 실행하지 않습니다. 설치 · 업그레이드 안내 명령은 lockfile 로 고릅니다(`npm install` · `yarn add` · `pnpm add`).
+- `package.json` 에 `@axis-ds/tokens` 가 없으면 `dependencies` 에 `^1.6.0`(1.6.0 부터, 이전에는 `^1.3.0`)을 더하고 설치 명령만 안내합니다. 설치는 실행하지 않습니다. 설치 · 업그레이드 안내 명령은 lockfile 로 고릅니다(`npm install` · `yarn add` · `pnpm add`). lockfile 이 없으면 `package.json` 의 `packageManager`(`npm@…` · `yarn@…` · `pnpm@…`)를 보고, 둘 다 없으면 `pnpm` 입니다(1.7.2 부터 `packageManager` 를 봄).
 - 브랜드 CSS 는 `[data-brand="<brand>"]` 선택자로 적용되므로 루트 레이아웃의 `<html data-brand>` 나 `ThemeProvider` 의 `setBrand` 가 있어야 화면이 바뀝니다. 코드는 고치지 않고, 레이아웃에서 찾지 못하면 두 방법의 예시를 냅니다(`defaultBrand` 는 `@axis-ds/theme` 1.6.2 이하에서 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 유지되지 않아 예시에 쓰지 않습니다). 마크업 `data-brand` 와 `ThemeProvider` 를 함께 쓰는 레이아웃이면 theme 1.7.0 이상이 필요하다고 한 줄 더 알립니다(1.6.1 부터). Tailwind 3 이면 preset · content 가 빠졌을 때 넣을 줄도 안내합니다(설정 파일은 고치지 않음). preset 안내는 1.6.1 부터 CommonJS 에서 모든 tokens 버전에 되는 `require("@axis-ds/tokens/tailwind").default` 입니다(1.6.0 의 `.default` 없는 형태는 tokens 1.6.2 이하에서 preset 이 빠짐).
 - 넣은 import 줄의 출력은 1.6.1 부터 실제 위치 · 분류를 따릅니다. 컴포넌트 `tailwind.css` 는 「컴포넌트 스캔 경로, 위치 무관」, 기본 토큰 CSS 는 브랜드 줄보다 앞에 들어갔을 때만 「브랜드 앞」이고 뒤에 들어가면 옮기라고 경고합니다.
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이면 목록 대신 설치 · 업그레이드 안내를 내고 종료 코드 1 로 끝납니다.
@@ -128,6 +128,7 @@ stdin 이 터미널이 아니면 질문을 띄우지 않습니다(1.7.0 부터).
 
 - `axis template init -y` 는 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행합니다(`template apply -y` 와 같은 뜻). 터미널에서도 같습니다.
 - 판정은 stdin 이 터미널인지 하나로 합니다. 그래서 `printf '\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트도 이제는 묻지 않고 위 표대로 동작합니다. 값은 `--dir` · `-y` 같은 옵션으로 주세요.
+- `axis template apply` 의 「필요한 의존성」 명령과 `axis template init` 의 다음 단계(`install` · `dev`)는 대상 디렉터리의 lockfile(없으면 `packageManager`)로 매니저를 고르고 범위를 따옴표로 감쌉니다(1.7.2 부터, 1.7.1 까지는 `pnpm` 고정).
 - Windows Git Bash(mintty)처럼 사람이 앞에 있어도 stdin 이 터미널로 잡히지 않는 환경에서는 질문 없이 위 표대로 동작할 수 있습니다(실측 전). 질문이 뜨지 않으면 `winpty npx axis ...` 로 실행하거나, PowerShell · Windows Terminal 에서 실행하거나, `--dir` · `-y` 같은 옵션으로 값을 주세요.
 
 ## 문서

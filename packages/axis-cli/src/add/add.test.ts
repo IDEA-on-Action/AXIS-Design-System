@@ -1580,3 +1580,35 @@ describe("add: 링크 거부 문구가 init 과 맞음", () => {
     expect(err).not.toContain(path.join(dir, "src/components/ui/button.tsx"));
   });
 });
+
+// WI-0086: add 의 의존성 안내(missingDependencies, MCP install_component 의 dependencyCommand 도 같은 함수)가 워크스페이스 루트 선언을
+// 「있음」으로 봄. 브리프 측정: 발행본 cli 1.7.1 은 루트에 clsx · tailwind-merge 가 있어도 `npm install ... "clsx@^2.1.1" "tailwind-merge@^2.6.0"` 안내.
+describe("WI-0086: add 의존성 안내의 워크스페이스 루트 선언 인정", () => {
+  async function wsProject(rootPkg: Record<string, unknown>): Promise<string> {
+    const root = await tmpDir();
+    await fs.writeJSON(path.join(root, "package.json"), rootPkg);
+    await fs.writeFile(path.join(root, "package-lock.json"), "{}");
+    const dir = path.join(root, "apps", "web");
+    await fs.move(await project(), dir);
+    await fs.writeJSON(path.join(dir, "package.json"), { name: "web", dependencies: { tailwindcss: "^3.4.0" } });
+    return dir;
+  }
+
+  it("루트에 clsx · tailwind-merge 가 있으면 안내에서 빠지고 radix-slot · cva 만 남음, 앱 package.json 은 그대로", async () => {
+    const dir = await wsProject({ name: "root", private: true, workspaces: ["apps/*"], devDependencies: { clsx: "^2.1.1", "tailwind-merge": "^2.6.0" } });
+    const before = await fs.readFile(path.join(dir, "package.json"), "utf8");
+    const r = await add(dir, ["button"]);
+    expect(r.code).toBe(0);
+    const text = r.out.join("\n");
+    expect(text).toContain("npm install @radix-ui/react-slot class-variance-authority");
+    expect(text).not.toContain("clsx@");
+    expect(text).not.toContain("tailwind-merge@");
+    expect(await fs.readFile(path.join(dir, "package.json"), "utf8")).toBe(before);
+  });
+
+  it("음성 대조: 워크스페이스가 아닌 상위의 선언은 인정하지 않아 종전처럼 clsx · tailwind-merge 를 안내", async () => {
+    const dir = await wsProject({ name: "unrelated", private: true, devDependencies: { clsx: "^2.1.1", "tailwind-merge": "^2.6.0" } });
+    const r = await add(dir, ["button"]);
+    expect(r.out.join("\n")).toContain('@radix-ui/react-slot class-variance-authority "clsx@^2.1.1" "tailwind-merge@^2.6.0"');
+  });
+});

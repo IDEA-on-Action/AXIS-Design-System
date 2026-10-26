@@ -570,16 +570,16 @@
       "slug": "pinned-pnpm-guidance",
       "issueNumber": 217,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDbTxI",
-      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-26T14:20:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0086",
       "slug": "has-dependency-unify",
       "issueNumber": 218,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDbTyQ",
-      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-10-26T14:20:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0087",
@@ -604,7 +604,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNSk",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0090",
+      "slug": "pnpm-content-upward-false-fail",
+      "issueNumber": 227,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDf1-o",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-26T09:20:00.000Z"
+  "updatedAt": "2026-10-26T14:20:00.000Z"
 }

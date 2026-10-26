@@ -33,7 +33,7 @@
 
 ### 1.3 범위 밖
 
-- 루트에만 ui-react 를 선언한 앱은 content 대상이 생기지 않아요(tailwind-core 의 지역 `hasDependency` 가 앱 package.json 만 봄). WI-0086(#218) 로 분리됐어요.
+- 루트에만 ui-react 를 선언한 앱은 content 대상이 생기지 않아요(tailwind-core 의 지역 `hasDependency` 가 앱 package.json 만 봄). WI-0086(#218) 로 분리됐어요. → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정)
 - `findInstalledPackage` 는 워크스페이스 경계에서 멈추지 않아요(배치 6b 결정: 멈춤을 두지 않음). 그래서 앱 · 워크스페이스에 설치본이 없고 홈 같은 상위에만 있으면 표본 · 제안이 `../../../../node_modules/...` 처럼 프로젝트 밖을 가리켜요. Node 해석과 같아 의도로 두고, 폴백은 「상위 어디에도 없을 때만」이에요(반박 검토 minor).
 - 심링크를 거친 baseDir(`--dir` · MCP 인자)에서는 `findInstalledPackage` 가 `path.resolve` 만 써서 심링크 쪽 상위를 올라가요. 실경로 쪽 워크스페이스의 설치본을 못 찾으면 종전 표본 `node_modules/<pkg>` 로 돌아가요(종전과 같은 동작, 회귀 아님, 검토 minor 를 잔여 경계로 기록). cwd 로 실행할 때는 `process.cwd()` 가 실경로라 해당하지 않아요.
 - WI-0027 이 같은 `tailwind-core.ts` 를 고칠 예정이라 이 WI 를 먼저 머지해요(project-todo 388행).

@@ -574,3 +574,48 @@ describe("handleCheckProject WI-0080: 호이스팅 Tailwind 3 앱의 content 표
     expect(await contentItem(await app("isolated", ["./app/**/*.tsx", UP]))).toEqual(FAIL(LOCAL, false));
   });
 });
+
+// WI-0086: axis.check_project 도 같은 코어를 번들하므로 루트에만 ui-react 를 선언한 Tailwind 3 앱에 content · animation 항목이 생기고,
+// targetDir 를 앱 링크로 줘도 실경로와 같은 판정이에요(cli check 와 같은 문구, 브리프 측정 L1 15/15 다름 → 0).
+describe("WI-0086: check_project 의 루트 선언 인정 · 심링크 targetDir", () => {
+  const UP = "../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  async function wsApp(): Promise<string> {
+    const root = await fs.realpath(tmp);
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      workspaces: ["apps/*"],
+      devDependencies: { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0", "tailwindcss-animate": "^1.0.7" },
+    });
+    await fs.writeFile(path.join(root, "package-lock.json"), "{}");
+    for (const [name, version] of [["tailwindcss", "3.4.19"], ["@axis-ds/tokens", "1.8.1"], ["@axis-ds/ui-react", "1.8.1"], ["tailwindcss-animate", "1.0.7"]]) {
+      await fs.outputJSON(path.join(root, "node_modules", ...name.split("/"), "package.json"), { name, version });
+    }
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: {} });
+    await fs.outputJSON(path.join(app, "axis.config.json"), {});
+    await fs.outputFile(
+      path.join(app, "tailwind.config.js"),
+      'module.exports = { presets: [require("@axis-ds/tokens/tailwind")], content: ["./app/**/*.{ts,tsx}"], plugins: [require("tailwindcss-animate")] };\n'
+    );
+    return app;
+  }
+  const pick = (results: { name: string }[]) => results.filter((r) => r.name === "tailwind.content" || r.name === "animation");
+
+  it("루트 선언 앱: content FAIL(상위 제안) · animation PASS, 앱 링크 targetDir 도 같은 결과", async () => {
+    const app = await wsApp();
+    const real = (await handleCheckProject({ targetDir: app })).results;
+    expect(pick(real)).toEqual([
+      expect.objectContaining({ name: "tailwind.content", severity: "fail", message: expect.stringContaining(`@axis-ds/ui-react → "${UP}"`) }),
+      { name: "animation", severity: "pass", message: "tailwind.config.js의 plugins 에 tailwindcss-animate 가 있습니다" },
+    ]);
+    const links = await fs.mkdtemp(path.join(os.tmpdir(), "axis-mcp-link-"));
+    try {
+      const link = path.join(links, "web-link");
+      await fs.symlink(app, link, "dir");
+      expect((await handleCheckProject({ targetDir: link })).results).toEqual(real);
+    } finally {
+      await fs.remove(links);
+    }
+  });
+});

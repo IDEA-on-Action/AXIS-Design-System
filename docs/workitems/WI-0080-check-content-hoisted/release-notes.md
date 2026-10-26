@@ -27,4 +27,4 @@
 
 - `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1 (2026-10-26, PR #219 머지 79c3208, Release PR #221 머지 cb8f27c, publish run 40247657745, provenance 2/2). linked 4패키지는 1.8.1 그대로
 - 발행본 재측정: 매트릭스 24경우 cli · mcp 각 24/24(대조 1.7.0 · 1.4.0 각 12/24), cli · mcp 불일치 0, 음성 대조 10/10(testplan 6절)
-- 저장소 규칙의 main push 모드 검사는 아직 registry-core 변경이 있는 push 에서 돈 적이 없어 정착 대기예요(testplan 6절)
+- 저장소 규칙의 main push 모드 검사는 2026-10-26 #225 main push run 40269191762 에서 registry-core 4개를 세고 통과해 정착 확정이에요(testplan 6.1절)

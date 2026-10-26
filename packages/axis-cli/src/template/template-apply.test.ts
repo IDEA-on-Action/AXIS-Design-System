@@ -288,3 +288,96 @@ describe("WI-0075 명령 등록", () => {
     expect(promptsSpy).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("WI-0085 template apply · init 의 설치 안내가 대상 디렉터리의 매니저를 따름", () => {
+  const DEPS = { react: "^19.0.0", clsx: "^2.1.1" };
+  const DEV = { typescript: "^5.7.0" };
+
+  beforeEach(() => {
+    fixture.detail.dependencies = { ...DEPS };
+    fixture.detail.devDependencies = { ...DEV };
+  });
+  afterEach(() => {
+    fixture.detail.dependencies = {};
+    fixture.detail.devDependencies = {};
+  });
+
+  /** tmpdir 아래에 파일 트리(값이 객체면 JSON) */
+  async function tree(files: Record<string, string | Record<string, unknown>>): Promise<string> {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "axis-tpl85-"));
+    created.push(root);
+    for (const [rel, content] of Object.entries(files)) {
+      if (typeof content === "string") await fs.outputFile(path.join(root, rel), content);
+      else await fs.outputJSON(path.join(root, rel), content);
+    }
+    return root;
+  }
+
+  /** 「필요한 의존성:」 다음 줄들 */
+  const depLines = () => {
+    const i = out.findIndex((l) => l.includes("필요한 의존성:"));
+    return i < 0 ? [] : out.slice(i + 1).filter((l) => /^ {2}\S/.test(l) && !l.includes("템플릿 적용 완료")).map((l) => l.trim()).slice(0, 2);
+  };
+  /** 「다음 단계:」 다음 줄들(cd 제외) */
+  const nextLines = () => {
+    const i = out.findIndex((l) => l.includes("다음 단계:"));
+    return i < 0 ? [] : out.slice(i + 1).map((l) => l.trim()).filter((l) => l !== "" && !l.startsWith("cd "));
+  };
+
+  const WS = (lock: string, extra: Record<string, unknown> = {}) => ({
+    "package.json": { name: "root", private: true, workspaces: ["apps/*"], ...extra },
+    ...(lock ? { [lock]: "" } : {}),
+    "apps/web/package.json": { name: "web", private: true },
+  });
+
+  const applyCases: [string, Record<string, string | Record<string, unknown>>, string, string[]][] = [
+    ["ws-npm(루트 package-lock)", WS("package-lock.json"), "apps/web", ['npm install "react@^19.0.0" "clsx@^2.1.1"', 'npm install -D "typescript@^5.7.0"']],
+    ["ws-yarn(루트 yarn.lock)", WS("yarn.lock"), "apps/web", ['yarn add "react@^19.0.0" "clsx@^2.1.1"', 'yarn add -D "typescript@^5.7.0"']],
+    ["single-npm", { "package.json": { name: "a" }, "package-lock.json": "" }, ".", ['npm install "react@^19.0.0" "clsx@^2.1.1"', 'npm install -D "typescript@^5.7.0"']],
+    ["single-yarn", { "package.json": { name: "a" }, "yarn.lock": "" }, ".", ['yarn add "react@^19.0.0" "clsx@^2.1.1"', 'yarn add -D "typescript@^5.7.0"']],
+    // 템플릿 package.json 이 앱 package.json 을 덮어써도 쓰기 전의 packageManager 로 고름
+    ["pm-npm(lockfile 없음, packageManager npm@)", { "package.json": { name: "a", packageManager: "npm@10.9.0" } }, ".", ['npm install "react@^19.0.0" "clsx@^2.1.1"', 'npm install -D "typescript@^5.7.0"']],
+    ["none(음성 대조)", { "package.json": { name: "a" } }, ".", ['pnpm add "react@^19.0.0" "clsx@^2.1.1"', 'pnpm add -D "typescript@^5.7.0"']],
+  ];
+
+  for (const [label, files, sub, expected] of applyCases) {
+    it(`apply ${label}: ${expected[0].split(" ")[0]} 명령 · -D · 따옴표`, async () => {
+      const root = await tree(files);
+      await inTmp(); // cwd 는 무관한 빈 디렉터리
+      await applyTemplate("fixture", { dir: path.join(root, sub), yes: true, interactive: false });
+      expect(rc()).toBe(0);
+      expect(depLines()).toEqual(expected);
+    });
+  }
+
+  const initCases: [string, Record<string, string | Record<string, unknown>> | null, string, string[]][] = [
+    ["ws-npm 의 apps/new", WS("package-lock.json"), "apps/new", ["npm install", "npm run dev"]],
+    ["ws-yarn 의 apps/new", WS("yarn.lock"), "apps/new", ["yarn install", "yarn dev"]],
+    ["ws-pm-yarn(lockfile 없음, 루트 packageManager yarn@)", WS("", { packageManager: "yarn@4.5.0" }), "apps/new", ["yarn install", "yarn dev"]],
+    ["ws-pnpm(회귀 확인)", { "pnpm-workspace.yaml": "packages:\n  - apps/*\n", "package.json": { name: "root" }, "pnpm-lock.yaml": "" }, "apps/new", ["pnpm install", "pnpm dev"]],
+    ["빈 tmpdir", null, "new", ["pnpm install", "pnpm dev"]],
+    // 음성 대조: 워크스페이스가 아닌 상위의 lockfile 은 쓰지 않음(WI-0081 경계)
+    ["single-npm/new(워크스페이스 아닌 상위)", { "package.json": { name: "a" }, "package-lock.json": "" }, "new", ["pnpm install", "pnpm dev"]],
+  ];
+
+  for (const [label, files, sub, expected] of initCases) {
+    it(`init ${label}: 다음 단계 ${expected.join(" · ")}`, async () => {
+      const root = files ? await tree(files) : await tree({});
+      // cwd 는 lockfile 이 없는 다른 디렉터리(변이 I1: --dir 대신 cwd 로 판정하면 npm · yarn 행이 빨강)
+      await inTmp();
+      await initTemplate("fixture", { dir: path.join(root, sub), interactive: false });
+      expect(rc()).toBe(0);
+      expect(nextLines()).toEqual(expected);
+      // apply 단계의 의존성 줄도 같은 매니저
+      expect(depLines()[0]?.split(" ")[0]).toBe(expected[0].split(" ")[0]);
+    });
+  }
+
+  it("cwd 가 npm 프로젝트여도 --dir 의 매니저를 따름(I1 의 반대 방향)", async () => {
+    const root = await tree({ "package.json": { name: "a" } });
+    const cwd = await inTmp();
+    await fs.outputFile(path.join(cwd, "package-lock.json"), "");
+    await initTemplate("fixture", { dir: path.join(root, "new"), interactive: false });
+    expect(nextLines()).toEqual(["pnpm install", "pnpm dev"]);
+  });
+});

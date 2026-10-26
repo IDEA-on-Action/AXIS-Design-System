@@ -10,6 +10,30 @@ import type { ApplyOptions, InitOptions, TemplateDetail } from "./types.js";
 import { ask, failNonInteractive, isInteractive, noteDefault } from "../interactive.js";
 import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js";
 import { detectTailwind, tailwindMajorFromRange } from "./tailwind-core.js";
+import { addCommandFor, detectInstallCommand, runScriptCommand } from "@axis-ds/registry-core/project";
+
+/**
+ * template apply 의 「필요한 의존성」 줄(WI-0085). `installCommand` 는 대상 디렉터리의 lockfile · `packageManager` 로 고른 설치 명령이고
+ * (`detectInstallCommand`, 템플릿 파일을 쓰기 전에 고름: 템플릿의 package.json 이 사용자 `packageManager` 를 덮어쓰기 때문),
+ * 다른 안내처럼 범위를 따옴표로 감쌉니다. 종전에는 `pnpm add` · `pnpm add -D` 고정이었습니다. MCP `axis.apply_template` 와 같은 명령입니다.
+ */
+export function templateDependencyCommands(
+  installCommand: string,
+  detail: Pick<TemplateDetail, "dependencies" | "devDependencies">
+): string[] {
+  const lines: string[] = [];
+  const deps = detail.dependencies ?? {};
+  const devDeps = detail.devDependencies ?? {};
+  if (Object.keys(deps).length > 0) lines.push(addCommandFor(installCommand, deps));
+  if (Object.keys(devDeps).length > 0) lines.push(addCommandFor(installCommand, devDeps, { dev: true }));
+  return lines;
+}
+
+/** template init 의 다음 단계(WI-0085). 프로젝트 디렉터리(템플릿을 쓰기 전) 기준으로 설치 · 개발 서버 명령을 고릅니다(종전 `pnpm install` · `pnpm dev` 고정) */
+export function templateInitNextSteps(projectDir: string): string[] {
+  const installCommand = detectInstallCommand(projectDir);
+  return [installCommand, runScriptCommand(installCommand, "dev")];
+}
 
 /**
  * 기존 프로젝트에 apply 할 때의 경고(WI-0037 D3: 템플릿은 빈 디렉터리의 `template init` 을 보장하고, 기존 프로젝트 apply 는
@@ -65,6 +89,8 @@ export async function applyTemplate(
   }
 
   const baseDir = path.resolve(options.dir || ".");
+  // 의존성 안내의 매니저는 템플릿 파일(package.json 포함)을 쓰기 전의 프로젝트로 고릅니다(WI-0085)
+  const installCommand = detectInstallCommand(baseDir);
 
   // 기존 프로젝트 구조 경고(WI-0037 D3, 쓰기는 막지 않음)
   for (const w of await templateApplyWarnings(baseDir, detail)) {
@@ -144,23 +170,10 @@ export async function applyTemplate(
 
   // 의존성 안내
   if (!options.skipDeps) {
-    const allDeps = { ...detail.dependencies, ...detail.devDependencies };
-    const depList = Object.entries(allDeps);
-    if (depList.length > 0) {
+    const commands = templateDependencyCommands(installCommand, detail);
+    if (commands.length > 0) {
       console.log(chalk.yellow("\n필요한 의존성:"));
-      const deps = Object.entries(detail.dependencies || {})
-        .map(([k, v]) => `${k}@${v}`)
-        .join(" ");
-      const devDeps = Object.entries(detail.devDependencies || {})
-        .map(([k, v]) => `${k}@${v}`)
-        .join(" ");
-
-      if (deps) {
-        console.log(chalk.cyan(`  pnpm add ${deps}`));
-      }
-      if (devDeps) {
-        console.log(chalk.cyan(`  pnpm add -D ${devDeps}`));
-      }
+      for (const command of commands) console.log(chalk.cyan(`  ${command}`));
     }
   }
 
@@ -273,6 +286,9 @@ export async function initTemplate(
     await fs.ensureDir(resolved);
   }
 
+  // 다음 단계 명령은 apply 와 같이 템플릿 파일을 쓰기 전의 디렉터리로 고릅니다(WI-0085)
+  const nextSteps = templateInitNextSteps(resolved);
+
   // apply 재사용
   await applyTemplate(selectedSlug!, { dir: targetDir, yes: true });
 
@@ -286,6 +302,5 @@ export async function initTemplate(
 
   console.log(chalk.blue(`\n다음 단계:`));
   console.log(chalk.cyan(`  cd ${targetDir}`));
-  console.log(chalk.cyan(`  pnpm install`));
-  console.log(chalk.cyan(`  pnpm dev`));
+  for (const command of nextSteps) console.log(chalk.cyan(`  ${command}`));
 }

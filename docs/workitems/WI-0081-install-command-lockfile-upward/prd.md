@@ -21,8 +21,8 @@
 | # | 결정 | 근거 |
 |---|---|---|
 | D1 | lockfile 은 앱 층 → 없으면 가장 가까운 워크스페이스 루트(`pnpm-workspace.yaml` 또는 package.json `workspaces` 배열 · `{ packages: 배열 }`) 층만 인정. 그 사이 층의 lockfile 은 보지 않아요. 루트 판정 전에 `.git`(디렉터리 또는 파일)이 나오면 중단, 못 찾으면 종전 기본값 `pnpm install`. 같은 층에서는 워크스페이스 표지를 `.git` 보다 먼저 봐요. 같은 층에 lockfile 이 여럿이면 종전 우선순위(pnpm → yarn → npm) | 브리프 시뮬레이션: 결함 행(fx-npm npm, fx-yarn yarn)을 고치고 음성 대조(fx-outside · fx-gitstop)를 pnpm 으로 유지. 멤버십(글롭) 검사는 범위 · 위험이 커서 잔여 오차로 둬요 |
-| D2 | package.json `packageManager` 필드는 쓰지 않아요 | 이슈 범위는 lockfile 상위 탐색. 후속 WI-0085(#217) 에서 검토 |
-| D3 | `detectInstallCommand` 를 거치지 않는 pnpm 고정 안내(template apply · theme · mcp brand · mcp template · monet)는 고치지 않고 testplan 4절에 전수 목록만 남겨요 | WI-0085(#217) 로 분리. mcp brand.ts 의 「U6 범위」 결정을 뒤집지 않음 |
+| D2 | package.json `packageManager` 필드는 쓰지 않아요 | 이슈 범위는 lockfile 상위 탐색. 후속 WI-0085(#217) 에서 검토. **정정(2026-10-26, 배치 6c 결정 · WI-0085)**: lockfile 이 없을 때만 `packageManager` 를 다음 순위로 써요(앱 층 → 같은 워크스페이스 루트 층, 모르는 이름은 무시). 이 WI 의 AC5 기대도 그에 따라 바뀌었어요(아래 AC5 정정) |
+| D3 | `detectInstallCommand` 를 거치지 않는 pnpm 고정 안내(template apply · theme · mcp brand · mcp template · monet)는 고치지 않고 testplan 4절에 전수 목록만 남겨요 | WI-0085(#217) 로 분리. mcp brand.ts 의 「U6 범위」 결정을 뒤집지 않음. **정정(2026-10-26, WI-0085)**: U6 은 WI-0028 plan 의 tokens **버전 범위** 결정(^1.3.0, WI-0065 D7-범위에서 ^1.6.0)이고 pnpm 고정 결정이 아니었어요. MCP brand 의 pnpm 한 가지 안내는 WI-0065 가 범위 밖으로 미룬 것이라, WI-0085 에서 lockfile · packageManager 로 고르게 바꿔도 U6 을 뒤집지 않아요 |
 | D4 | dependencies 의 필수 · 권장 판정은 앱에 선언이 없으면 D1 의 `findWorkspaceRoot` 로 찾은 루트 package.json 선언도 인정하고, 문구 끝에 「워크스페이스 루트에 선언: …」을 붙여요. 그런 앱의 check rc 는 1→0 이 될 수 있어요(사용자 결정). 워크스페이스 밖 상위의 선언은 여전히 FAIL | 안내 명령과 의존성 판정이 같은 워크스페이스 경계를 써요. pnpm isolated 에서도 루트 devDependency 는 앱에서 해석돼 판정이 실행과 맞아요 |
 | D5 | `findInstalledPackage` 에는 워크스페이스 멈춤을 두지 않아요 | 설치본 탐색은 Node 해석 방향(WI-0074 설계 경계 유지) |
 | D6 | 단위 테스트는 vitest 가 실제로 도는 `packages/axis-cli/src` 아래에 둬요(`workspace-root.test.ts`) | registry-core 에는 test 스크립트 · 테스트 파일이 없음(반박 검토 major) |
@@ -30,11 +30,11 @@
 
 ### 1.3 범위 밖
 
-- `tailwind-core.ts` 의 지역 `hasDependency`(detectTailwind 선언 폴백 · packageVersionGate · content 대상 · animation)는 앱 package.json 만 봐요. 그래서 루트에만 ui-react 를 선언한 Tailwind 3 앱은 content 대상이 생기지 않아요. WI-0086(#218) 로 분리했어요(WI-0027 과의 tailwind-core 충돌을 키우지 않기 위해서).
+- `tailwind-core.ts` 의 지역 `hasDependency`(detectTailwind 선언 폴백 · packageVersionGate · content 대상 · animation)는 앱 package.json 만 봐요. 그래서 루트에만 ui-react 를 선언한 Tailwind 3 앱은 content 대상이 생기지 않아요. WI-0086(#218) 로 분리했어요(WI-0027 과의 tailwind-core 충돌을 키우지 않기 위해서). → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정)
 - `@axis-ds/*` 설치 확인 대상(dependencies 3단계)은 종전대로 앱 선언만 봐요.
 - 워크스페이스 글롭이 앱을 포함하는지는 보지 않아요. 글롭에서 빠진 앱이 루트 아래 있으면 루트 lockfile · 선언을 채택해요(D1 잔여 오차, release-notes 에 기록).
-- 심링크를 거친 baseDir(`--dir` · MCP 인자)에서는 `findWorkspaceRoot` · `findInstalledPackage` 가 `path.resolve` 만 써서(realpath 아님) 심링크 쪽 상위를 올라가요. 그래서 워크스페이스 루트를 못 찾고 종전 판정(pnpm install · 앱 선언만)으로 돌아가요. 종전과 같은 동작이라 회귀가 아니고 잔여 경계로 둬요(반박 검토 minor, 스크래치 픽스처 실측). cwd 로 실행할 때는 `process.cwd()` 가 실경로라 해당하지 않아요.
-- `axis init` 의 utils 의존성 추가(`planUtilsDependencies`)는 앱 package.json 만 봐요. 그래서 워크스페이스 루트에 `clsx` · `tailwind-merge` 를 선언한 앱에도 둘을 앱 package.json 에 다시 넣어요. check 는 루트 선언을 인정하므로 두 명령의 판단이 달라요(반박 검토 minor, rootonly 픽스처 실측). 이번 WI 에서는 고치지 않고 후속 판단을 결정 필요로 넘겨요(WI-0086 에 합칠지 새 WI 로 뺄지).
+- 심링크를 거친 baseDir(`--dir` · MCP 인자)에서는 `findWorkspaceRoot` · `findInstalledPackage` 가 `path.resolve` 만 써서(realpath 아님) 심링크 쪽 상위를 올라가요. 그래서 워크스페이스 루트를 못 찾고 종전 판정(pnpm install · 앱 선언만)으로 돌아가요. 종전과 같은 동작이라 회귀가 아니고 잔여 경계로 둬요(반박 검토 minor, 스크래치 픽스처 실측). cwd 로 실행할 때는 `process.cwd()` 가 실경로라 해당하지 않아요. → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정)
+- `axis init` 의 utils 의존성 추가(`planUtilsDependencies`)는 앱 package.json 만 봐요. 그래서 워크스페이스 루트에 `clsx` · `tailwind-merge` 를 선언한 앱에도 둘을 앱 package.json 에 다시 넣어요. check 는 루트 선언을 인정하므로 두 명령의 판단이 달라요(반박 검토 minor, rootonly 픽스처 실측). 이번 WI 에서는 고치지 않고 후속 판단을 결정 필요로 넘겨요(WI-0086 에 합칠지 새 WI 로 뺄지). 배치 6c 결정으로 WI-0086 에 합류 → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정)
 - 서브모듈 · 중첩 저장소 안의 앱은 `.git` 에서 먼저 멈춰 바깥 루트 lockfile 에 닿지 않아요(의도, 테스트로 고정).
 
 ## 2. 요구사항
@@ -56,7 +56,7 @@
 - **AC2**: fx-yarn 형(루트 `yarn.lock` + workspaces, `{ packages }` 객체형 포함)에서 4줄 + check「→ yarn install」. 변이 M1 에서 빨강.
 - **AC3**: fx-outside 형(상위 package.json 에 workspaces 없음)과 fx-gitstop 형(앱과 루트 사이 `.git`, 디렉터리 · 파일형)은 `pnpm install`. 변이 M2(멈춤 없는 상위 탐색) · M5(`.git` 멈춤 제거)에서 빨강.
 - **AC4**: 앱 층 lockfile 우선(루트 npm · 앱 yarn.lock → yarn), 단일 앱 npm · yarn · pnpm 그대로. 변이 M3(루트 먼저)에서 빨강. 같은 층의 `.git` 과 표지는 표지 먼저(변이 M4 에서 빨강).
-- **AC5**: `pnpm-workspace.yaml` 만 · workspaces 만 · packageManager `npm@` · `yarn@` 이 있어도 lockfile 이 없으면 `pnpm install`.
+- **AC5**: `pnpm-workspace.yaml` 만 · workspaces 만 · packageManager `npm@` · `yarn@` 이 있어도 lockfile 이 없으면 `pnpm install`. **정정(2026-10-26, WI-0085)**: packageManager `npm@` · `yarn@` 변형은 `npm install` · `yarn install` 로 바뀌었어요(배치 6c 결정). `pnpm-workspace.yaml` 만 · workspaces 만 변형은 그대로 `pnpm install` 이에요(`workspace-root.test.ts` AC5).
 - **AC6**: 루트에만 tailwindcss 를 선언한 d-rootonly · h-rootonly-ui 형은 cli · mcp 모두 FAIL 이 사라지고「(워크스페이스 루트에 선언: tailwindcss)」, cli rc 1→0. 음성 대조: 워크스페이스 밖 상위 선언 · `.git` 너머 선언 · 어디에도 선언 없음은 FAIL 그대로. 변이 D1(루트 인정 제거) · D2(아무 상위나 인정) · D3(출처 표시 제거)에서 빨강.
 - **AC7**: 배포 뒤 testplan 2절 `meas.sh` 를 새 발행본으로 다시 돌려, 수정 전 대비 바뀐 줄이 2절 표와 같아요(안내 8줄 · check cli 13줄 · mcp 9줄, 그 밖 전이 0).
 - **AC8**: testplan 4절 전수 목록. 계측 대조군: 같은 grep 이 `project.ts` 의 `detectInstallCommand` 정의 줄을 잡아요.
