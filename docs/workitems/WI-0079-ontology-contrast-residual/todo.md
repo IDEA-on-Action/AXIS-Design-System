@@ -1,6 +1,6 @@
 # WI-0079: ontology 남은 대비 미달 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #208 | 상태: 구현 · 검증 완료(2026-10-26), push · PR 전
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #208 | 상태: ✅ 완료 · 발행(2026-10-26, linked 1.8.2 · cli 1.7.3 · mcp 1.4.3)
 
 ## 결정 · 조사
 - [x] 후보 · 대비 · 영향 범위 · 고칠 테스트 정리(design-review.md, 2026-10-25)
@@ -36,3 +36,8 @@
 - [x] `brand.json` `a11y.status` 갱신과 단언(brands.test)
 - [x] WI-0082 changeset 에 cli patch 추가(changeset status 1.8.2 · cli 1.7.3 · mcp 1.4.3)
 - [x] 게이트 · E2E 재실행(testplan 4b)
+
+## 발행 · 발행본 재측정 (2026-10-26)
+- [x] 발행: PR #228 머지 d7ae4a5, Release PR #229 머지 8afc883(사용자 직접 머지라 PR CI 가 붙지 않았고, 머지 뒤 main run 40302973137 CI · Deploy Production success 로 확인), publish run 40302972775, provenance 6/6
+- [x] 발행본 재측정(testplan 6절): npm 6패키지 버전 · provenance 6/6, tokens 1.8.2 ontology.css 라이트 · 다크 12값, 1.8.1 대비 diff 는 대상 변수 줄뿐, 기본 브랜드 CSS 불변, 소비자 앱(Next 15.5.28 + Tailwind 4) 대비 실측 통과, 1.8.1 음성 대조에서 미달 재현
+- [x] Issue #208 닫힘 · Project 4 Done 확인

@@ -55,3 +55,21 @@
 - `library:refresh-axis`: 파일 쓰기 4개(axis-select · ui 카테고리 · index · meta)
 - `build:registry`: `r/select.json` 내용과 `r/index.json` · `r/registry.json` 의 select sha256 만 바뀌고, version 1.8.1 은 1.5.0 으로 되돌렸어요
 - 템플릿 `updatedAt` 은 되돌렸어요
+
+## 5. 발행본 재측정 (측정, 2026-10-26)
+
+- 대상: npm 발행본 `@axis-ds/ui-react` 1.8.2 · `cli` 1.7.3(같은 발행의 linked 4패키지 1.8.2 · mcp 1.4.3, PR #228 머지 d7ae4a5, Release PR #229 머지 8afc883(사용자 직접 머지라 PR CI 가 붙지 않았고, 머지 뒤 main run 40302973137 CI · Deploy Production success 로 확인), publish run 40302972775, provenance 6/6). 대조 1.8.1.
+- 조건: 새 HOME · XDG_CONFIG_HOME 에서 env 주입 없이 `npm view` · `npm pack` · `npm install`(정확 버전) · `next build` · `next start` 를 돌렸어요. 소비자 앱은 Next 15.5.28 + Tailwind 4(quick-start 방식, globals.css 순서 tailwindcss → tw-animate-css → tokens/css/tailwind4 → ui-react/tailwind.css → tokens/css/brands/ontology)이고, lock 의 resolved 가 registry.npmjs.org 의 1.8.2 · 1.8.1 tgz 이며 tokens · ui-react · theme 사본이 각 1개예요. `next build` rc 0, `next start` 200.
+- 측정 도구만 레포 본체 apps/web 의 Playwright(Chromium)를 썼어요(소비자 앱 설치 경로에는 들어가지 않음). 브랜드 · 다크는 html 에 `data-brand="ontology"` 와 `.dark` 를 스크립트로 붙여 켰고 ThemeProvider 경로는 재지 않았어요. 대비는 WCAG 2.x 상대 휘도, 반투명 색은 실제 조상 바탕 위에 합성한 값이에요.
+- 음성 대조: 같은 스크립트로 1.8.1 소비자 앱을 재서 값이 갈렸어요(측정이 실제로 돌았다는 근거).
+
+| 조합 | 값 없음(1.8.2) | 대비 | 고른 뒤 · defaultValue | 1.8.1 값 없음 |
+|---|---|---|---|---|
+| ontology 라이트 | #5F6673 = 변수값 | 5.78 | #111418(body 색) | #111418(본문색, 변수값 #9aa1ab 와 다름) |
+| ontology 다크 | #9CA3AD = 변수값 | 6.92 | #F1F3F5(body 색) | #F1F3F5(본문색) |
+| 기본 라이트 | #6B7280 | 4.83 | 본문색 | #111827(본문색) |
+| 기본 다크 | #9CA3AF | 7.93 | 본문색 | #F3F4F6(본문색) |
+
+- 값을 고를 때는 실제로 클릭해 '가' 를 골랐고, 고른 뒤 `data-placeholder` 가 없어지는 것을 확인했어요.
+- 기본 브랜드 측정 행에서 1.8.1 과 1.8.2 가 다른 칸은 Select placeholder 하나뿐이고, 기본 브랜드 CSS 는 바뀌지 않았어요(파일 diff rc 0 · 계산 변수 8개 같음). ui-react `dist/select` 빌드가 바뀐 결과라 모든 브랜드에 적용되는 변화이고, 릴리스 노트의 「기본 브랜드에서도 보이는 변화」 문구와 맞아요.
+- 판정: 2절 수정 후 값과 발행본 값이 같아요(기본 브랜드 본문색 hex 는 측정한 앱의 body 색이라 문서 사이트 값과 다르지만, 「본문색과 같다」는 판정은 같아요). 불일치 0.

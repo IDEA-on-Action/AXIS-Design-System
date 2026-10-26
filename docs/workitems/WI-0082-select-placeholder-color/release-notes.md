@@ -1,6 +1,6 @@
 # WI-0082 릴리스 노트: Select placeholder 색
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #211 | 대상: `@axis-ds/ui-react` patch · `@axis-ds/cli` patch(동봉 레지스트리 사본, 2026-10-26 결정)(WI-0079 와 같은 발행, linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #211 | 대상: `@axis-ds/ui-react` patch · `@axis-ds/cli` patch(동봉 레지스트리 사본, 2026-10-26 결정)(WI-0079 와 같은 발행, linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 발행)
 
 ## 바뀐 점
 
@@ -22,3 +22,8 @@
 ## 업그레이드
 
 컴포넌트를 그대로 쓰면 할 일이 없어요. `axis add select` 로 소스를 복사해 쓰는 프로젝트는 다시 받거나 Trigger 클래스의 `placeholder:text-[var(--axis-input-text-placeholder)]` 를 `[&[data-placeholder]>span]:text-[var(--axis-input-text-placeholder)]` 로 바꾸세요(`data-[placeholder]:text-[...]` 처럼 Trigger 전체에 주면 화살표도 흐려져요). `className` 으로 Trigger 글자색을 직접 준 경우, 값이 없는 동안의 안내 글자는 이제 그 색이 아니라 placeholder 색이에요.
+
+## 발행
+
+- `@axis-ds/ui-react` 1.8.2 · `@axis-ds/cli` 1.7.3 (2026-10-26, linked 4패키지 1.8.2 · mcp 1.4.3 과 같은 발행, PR #228 머지 d7ae4a5, Release PR #229 머지 8afc883(사용자 직접 머지라 PR CI 가 붙지 않았고, 머지 뒤 main run 40302973137 CI · Deploy Production success 로 확인), publish run 40302972775, provenance 6/6). WI-0079 와 같은 발행이에요
+- 발행본 재측정: 소비자 앱에서 4조합 값 없는 Select 의 안내 글자가 위 표의 이후 값과 같고(ontology 는 변수값과 일치), 고른 뒤에는 본문색, 1.8.1 은 4조합 모두 본문색(testplan 5절)
