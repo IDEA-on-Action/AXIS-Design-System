@@ -106,8 +106,8 @@
       "slug": "ontology-console-template",
       "issueNumber": 86,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhAzEuc",
-      "lastSyncedAt": "2026-10-15T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-26T12:30:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0028",
@@ -614,5 +614,5 @@
       "lastStatus": "✅"
     }
   ],
-  "updatedAt": "2026-10-26T14:20:00.000Z"
+  "updatedAt": "2026-10-26T12:30:00.000Z"
 }

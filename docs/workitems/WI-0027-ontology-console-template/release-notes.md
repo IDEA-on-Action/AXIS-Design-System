@@ -31,6 +31,7 @@
 - changeset 없음. 발행 패키지 소스(`packages/*/src` 의 테스트 밖 파일) 변경 0, `@ax/web` 은 미발행
 - **머지 조건**: npm 에 `@axis-ds/tokens` · `ui-react` · `theme` 1.8.2 가 있어야 해요(PRD D6). 2026-10-26 측정 중 발행을 확인했고(tokens 1.8.2 2026-10-26T09:56Z, cli 1.7.3 · mcp 1.4.3), 결과 앱은 npm 발행본으로 다시 쟀어요. Release 쪽 발행본 재측정이 끝났는지는 머지 전에 확인해요
 - 머지는 Release 머지와 간격을 두고 단독 push, Deploy Production 완료 뒤 pages.dev 색인 · 상세 JSON 확인(AC1 · AC8)
+- **배포 완료(2026-10-26)**: PR #232 머지 0d621b6(2026-10-26, 다른 세션의 Release #231 main run 완료 뒤 단독 push), 머지 커밋의 frontend.yml run 40318288781 CI success · Deploy Production success. pages.dev https://axis-design-system.pages.dev/templates/index.json 200 · total 43 · ontology-console(category console) 항목 있음, ontology-console.json 200, 없는 slug 404(음성 대조). 새 HOME · XDG_CONFIG_HOME · npm 캐시, 환경변수 주입 없이 npm 발행본 @axis-ds/cli 1.7.4: template list 에 ontology-console(console) 표시, template init ontology-console --dir app rc 0, npm install rc 0(설치본 tokens · ui-react · theme 1.8.2), next build rc 0, 빌드 HTML .next/server/app/index.html 이 <html lang="ko" data-brand="ontology">, npm run check:ontology 검사 파일 20개 위반 0건.
 
 ## 알려진 제한 · 후속
 

@@ -208,3 +208,8 @@
 | 같은 그룹 안 이동(온톨로지를 접고 요소 링크) | 접은 상태 유지(경로 그룹이 바뀔 때만 펼침) |
 
 음성 대조: 검토 측정(`w27impl/review-shots`, 수정 전 같은 발행본 경로)에서 접은 목록이 hiddenAttr true · display flex · 높이 91.5 였고, 클라이언트 이동 뒤 aria-current 링크가 숨은 목록 안에 있었어요.
+
+## 9. 머지 · 배포 뒤 실경로 (AC1 · AC2 · AC8, 2026-10-26)
+
+- PR #232 머지 0d621b6(2026-10-26, 다른 세션의 Release #231 main run 완료 뒤 단독 push), 머지 커밋의 frontend.yml run 40318288781 CI success · Deploy Production success. pages.dev https://axis-design-system.pages.dev/templates/index.json 200 · total 43 · ontology-console(category console) 항목 있음, ontology-console.json 200, 없는 slug 404(음성 대조). 새 HOME · XDG_CONFIG_HOME · npm 캐시, 환경변수 주입 없이 npm 발행본 @axis-ds/cli 1.7.4: template list 에 ontology-console(console) 표시, template init ontology-console --dir app rc 0, npm install rc 0(설치본 tokens · ui-react · theme 1.8.2), next build rc 0, 빌드 HTML .next/server/app/index.html 이 <html lang="ko" data-brand="ontology">, npm run check:ontology 검사 파일 20개 위반 0건.
+- AC8: 배포 색인의 ontology-console 항목이 커밋한 생성물과 같은 의존성 · 설명을 담고 있어요(updatedAt 만 배포 빌드 값).

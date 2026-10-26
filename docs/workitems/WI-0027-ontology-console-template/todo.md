@@ -1,6 +1,6 @@
 # WI-0027: 온톨로지 콘솔 템플릿 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #86 | 상태: 구현 · 로컬 검증 완료(2026-10-26), PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #86 | 상태: ✅ 완료 · Pages 배포(2026-10-26, #232)
 
 ## 결정
 - [x] PRD v0.6: 낡은 전제 9건 정정, MVP · 후속 분리, 결정 D1 ~ D11 기록
@@ -39,5 +39,5 @@
 
 ## 릴리스
 - [x] changeset 없음 확인(발행 패키지 소스 변경 0, cli 테스트 파일 1개만 · 발행물 dist 무관)
-- [ ] 머지 조건: npm 1.8.2 발행 · 재측정 뒤 단독 push(D6)
-- [ ] 배포 뒤 AC1 · AC2(실경로) · AC8
+- [x] 머지 조건: npm 1.8.2 발행 · 재측정 뒤 단독 push(D6) - #232 머지 0d621b6
+- [x] 배포 뒤 AC1 · AC2(실경로) · AC8 - PR #232 머지 0d621b6(2026-10-26, 다른 세션의 Release #231 main run 완료 뒤 단독 push), 머지 커밋의 frontend.yml run 40318288781 CI success · Deploy Production success. pages.dev https://axis-design-system.pages.dev/templates/index.json 200 · total 43 · ontology-console(category console) 항목 있음, ontology-console.json 200, 없는 slug 404(음성 대조). 새 HOME · XDG_CONFIG_HOME · npm 캐시, 환경변수 주입 없이 npm 발행본 @axis-ds/cli 1.7.4: template list 에 ontology-console(console) 표시, template init ontology-console --dir app rc 0, npm install rc 0(설치본 tokens · ui-react · theme 1.8.2), next build rc 0, 빌드 HTML .next/server/app/index.html 이 <html lang="ko" data-brand="ontology">, npm run check:ontology 검사 파일 20개 위반 0건.
