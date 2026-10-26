@@ -80,6 +80,23 @@ describe("axis theme list", () => {
     expect(TOKENS_INSTALL_COMMAND).toBe('pnpm add "@axis-ds/tokens@^1.6.0"');
   });
 
+  it("WI-0085: 빌드 전 안내의 워크스페이스 빌드 명령도 같은 매니저(npm · yarn · packageManager), 없으면 종전 pnpm --filter", async () => {
+    const cases: [Record<string, string>, Record<string, unknown> | undefined, string[]][] = [
+      [{ "package-lock.json": "" }, undefined, ["npm run build -w @axis-ds/tokens", 'npm install "@axis-ds/tokens@^1.6.0"']],
+      [{ "yarn.lock": "" }, undefined, ["yarn workspace @axis-ds/tokens build", 'yarn add "@axis-ds/tokens@^1.6.0"']],
+      [{}, { packageManager: "npm@10.9.0" }, ["npm run build -w @axis-ds/tokens", 'npm install "@axis-ds/tokens@^1.6.0"']],
+      [{}, undefined, ["pnpm --filter @axis-ds/tokens build", 'pnpm add "@axis-ds/tokens@^1.6.0"']],
+    ];
+    for (const [files, pkgExtra, [build, reinstall]] of cases) {
+      const dir = await project("1.3-unbuilt");
+      for (const [name, content] of Object.entries(files)) await fs.writeFile(`${dir}/${name}`, content);
+      if (pkgExtra) await fs.writeJSON(`${dir}/package.json`, { name: "empty", private: true, ...pkgExtra });
+      logs = [];
+      const { out } = await runTheme(["list", "-d", dir]);
+      expect({ files, out: out.includes(`워크스페이스면 ${build}, 아니면 재설치: ${reinstall}`) }).toEqual({ files, out: true });
+    }
+  });
+
   for (const [tokens, reason, command] of guides) {
     it(`T2-5: tokens ${tokens} 는 안내와 rc 1, 빈 목록 문구 없음`, async () => {
       const dir = await project(tokens);

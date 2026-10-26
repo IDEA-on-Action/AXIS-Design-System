@@ -22,6 +22,7 @@ import {
   versionGateLabel,
 } from "@axis-ds/registry-core/tailwind-core";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
+import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
@@ -146,6 +147,11 @@ export interface ApplyTemplateResult {
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   dryRun: boolean;
+  /**
+   * 대상 디렉터리의 lockfile · `packageManager` 로 고른 설치 명령(WI-0085, `detectInstallCommand`). 「필요한 의존성」 명령의 매니저를 정합니다.
+   * 없으면(종전 결과 객체) 포매터가 pnpm 으로 안내합니다.
+   */
+  installCommand?: string;
 }
 
 export interface DiffTemplateParams {
@@ -216,6 +222,8 @@ export async function handleApplyTemplate(
 ): Promise<ApplyTemplateResult> {
   const detail = await fetchTemplateDetail(params.name);
   const baseDir = path.resolve(params.targetDir);
+  // 의존성 안내의 매니저는 템플릿 파일(package.json 포함)을 쓰기 전의 프로젝트로 고릅니다(WI-0085, CLI template apply 와 같음)
+  const installCommand = detectInstallCommand(baseDir);
   const files: ApplyTemplateResult["files"] = [];
 
   for (const file of detail.files) {
@@ -261,6 +269,7 @@ export async function handleApplyTemplate(
     dependencies: detail.dependencies || {},
     devDependencies: detail.devDependencies || {},
     dryRun: !!params.dryRun,
+    installCommand,
   };
 }
 
@@ -529,11 +538,13 @@ export function formatApplyTemplateResult(result: ApplyTemplateResult): string {
   const devDeps = Object.entries(result.devDependencies);
   if (deps.length > 0 || devDeps.length > 0) {
     lines.push("", "### 필요한 의존성", "");
+    // WI-0085: CLI `axis template apply` 와 같은 명령(대상 디렉터리 매니저 · 범위 따옴표 · `-D`). 종전에는 `pnpm add` 고정
+    const installCommand = result.installCommand ?? "pnpm install";
     if (deps.length > 0) {
-      lines.push(`\`pnpm add ${deps.map(([k, v]) => `${k}@${v}`).join(" ")}\``);
+      lines.push(`\`${addCommandFor(installCommand, result.dependencies)}\``);
     }
     if (devDeps.length > 0) {
-      lines.push(`\`pnpm add -D ${devDeps.map(([k, v]) => `${k}@${v}`).join(" ")}\``);
+      lines.push(`\`${addCommandFor(installCommand, result.devDependencies, { dev: true })}\``);
     }
   }
 

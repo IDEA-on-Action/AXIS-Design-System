@@ -54,7 +54,7 @@ import {
   type RegistryIndex,
   type RegistryItem,
 } from "../registry/index.js";
-import { declaredDependency, detectInstallCommand, isPlainObject, workspaceRootPackage } from "../project.js";
+import { addCommandPrefix, declaredDependency, detectInstallCommand, isPlainObject, workspaceRootPackage } from "../project.js";
 import { detectTailwind } from "../template/tailwind-core.js";
 import { AXIS_QUICK_START_URL } from "../site.js";
 import { selectUtilsDependencies } from "../utils-deps.js";
@@ -538,14 +538,12 @@ export function dependencyName(spec: string): string {
   return at > 0 ? spec.slice(0, at) : spec;
 }
 
-/** lockfile 에 맞춘 추가 명령. 범위가 있으면 따옴표로 감쌉니다(`^` 보존) */
+/** lockfile 에 맞춘 추가 명령. 범위가 있으면 따옴표로 감쌉니다(`^` 보존). 명령 앞부분은 project.ts `addCommandPrefix`(WI-0085) */
 export function addCommandForSpecs(installCommand: string, specs: Record<string, string | undefined>): string {
   const args = Object.entries(specs)
     .map(([name, range]) => (range ? `"${name}@${range}"` : name))
     .join(" ");
-  if (installCommand.startsWith("yarn")) return `yarn add ${args}`;
-  if (installCommand.startsWith("npm")) return `npm install ${args}`;
-  return `pnpm add ${args}`;
+  return `${addCommandPrefix(installCommand)} ${args}`;
 }
 
 export interface AddResult {

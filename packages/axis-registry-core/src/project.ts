@@ -70,22 +70,64 @@ export function findWorkspaceRoot(baseDirInput: string): string | undefined {
   }
 }
 
+/** package.json `packageManager`(Corepack 형식 `<이름>@<버전>`)의 이름과 설치 명령. 이 셋 밖의 이름(bun 등)은 모르는 이름이라 무시합니다(WI-0085) */
+const PACKAGE_MANAGER_COMMANDS: Readonly<Record<string, string>> = {
+  pnpm: "pnpm install",
+  yarn: "yarn install",
+  npm: "npm install",
+};
+
+/** `dir/package.json` 의 `packageManager` 로 고른 설치 명령. 없거나 문자열이 아니거나 모르는 이름 · 깨진 JSON 이면 `undefined` */
+function packageManagerCommandAt(dir: string): string | undefined {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
+  } catch {
+    return undefined;
+  }
+  if (!isPlainObject(parsed) || typeof parsed.packageManager !== "string") return undefined;
+  const name = /^(pnpm|yarn|npm)@/.exec(parsed.packageManager.trim())?.[1];
+  return name !== undefined ? PACKAGE_MANAGER_COMMANDS[name] : undefined;
+}
+
 /**
- * 프로젝트의 lockfile 로 설치 명령을 고릅니다(WI-0081).
- * 앱 층(`baseDir`) lockfile 을 먼저 보고, 없으면 `findWorkspaceRoot` 로 찾은 워크스페이스 루트 층의 lockfile 을 봅니다(그 사이 층은 보지 않음).
- * 둘 다 없거나 루트를 찾지 못하면 종전 기본값 pnpm 입니다. package.json `packageManager` 필드는 보지 않습니다(배치 6b 결정).
+ * 프로젝트의 lockfile · `packageManager` 로 설치 명령을 고릅니다(WI-0081 · WI-0085).
+ * 순서(앞에서 정해지면 끝):
+ * 1. 앱 층(`baseDir`) lockfile
+ * 2. `findWorkspaceRoot` 로 찾은 워크스페이스 루트 층 lockfile(그 사이 층은 보지 않음)
+ * 3. 앱 층 package.json `packageManager`
+ * 4. 같은 워크스페이스 루트 층 package.json `packageManager`
+ * 5. 종전 기본값 pnpm
+ * lockfile 은 실제로 쓴 도구의 흔적이라 선언(`packageManager`)보다 먼저예요. `packageManager` 는 lockfile 이 없을 때만 보고(배치 6c 결정,
+ * 배치 6b 에서는 보지 않았음), 경계는 lockfile 과 같아요(워크스페이스가 아닌 상위 · `.git` 너머는 보지 않음). 모르는 이름(bun 등)은 무시합니다.
  */
 export function detectInstallCommand(baseDirInput: string): string {
   // 실경로로 맞춰야 아래 `root !== baseDir` 비교가 링크 경로에서도 맞습니다(findWorkspaceRoot 도 실경로를 돌려줌, WI-0086)
   const baseDir = resolveBaseDir(baseDirInput);
   const own = lockfileCommandAt(baseDir);
   if (own !== undefined) return own;
-  const root = findWorkspaceRoot(baseDir);
-  if (root !== undefined && root !== baseDir) {
+  const found = findWorkspaceRoot(baseDir);
+  const root = found !== undefined && found !== baseDir ? found : undefined;
+  if (root !== undefined) {
     const fromRoot = lockfileCommandAt(root);
     if (fromRoot !== undefined) return fromRoot;
   }
+  const ownManager = packageManagerCommandAt(baseDir);
+  if (ownManager !== undefined) return ownManager;
+  if (root !== undefined) {
+    const rootManager = packageManagerCommandAt(root);
+    if (rootManager !== undefined) return rootManager;
+  }
   return "pnpm install";
+}
+
+/** 설치 명령(`pnpm install` 등) 또는 그것으로 만든 명령이 가리키는 패키지 매니저(접두로 판정, 모르면 pnpm) */
+export type PackageManagerName = "pnpm" | "yarn" | "npm";
+
+export function packageManagerOf(command: string): PackageManagerName {
+  if (command.startsWith("yarn")) return "yarn";
+  if (command.startsWith("npm")) return "npm";
+  return "pnpm";
 }
 
 export function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
@@ -148,17 +190,68 @@ export function isPlainObject(value: unknown): value is Record<string, unknown> 
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/** 추가 명령 옵션(WI-0085) */
+export interface AddCommandOptions {
+  /** devDependencies 로 추가(`-D`, 세 매니저 모두 같은 플래그) */
+  dev?: boolean;
+}
+
+/**
+ * 추가 명령의 앞부분(`pnpm add` · `npm install` · `yarn add`, `dev` 면 뒤에 ` -D`). `addCommandFor` 와 add 의 `addCommandForSpecs`,
+ * 패키지 이름 없이 안내하는 곳(monet import)이 함께 씁니다(WI-0085, 종전에는 같은 분기를 따로 복제).
+ */
+export function addCommandPrefix(installCommand: string, options: AddCommandOptions = {}): string {
+  const dev = options.dev ? " -D" : "";
+  switch (packageManagerOf(installCommand)) {
+    case "yarn":
+      return `yarn add${dev}`;
+    case "npm":
+      return `npm install${dev}`;
+    default:
+      return `pnpm add${dev}`;
+  }
+}
+
 /**
  * lockfile 로 고른 설치 명령(`detectInstallCommand`)에서 패키지 추가 명령을 만듭니다(WI-0038, WI-0065 에서 init 에서 옮김).
- * 범위의 `^` 가 셸에서 사라지지 않게 따옴표로 감쌉니다.
+ * 범위의 `^` 가 셸에서 사라지지 않게 따옴표로 감쌉니다. `dev` 면 `-D`(WI-0085, template apply · init 의 devDependencies).
  */
-export function addCommandFor(installCommand: string, deps: Readonly<Record<string, string>>): string {
+export function addCommandFor(
+  installCommand: string,
+  deps: Readonly<Record<string, string>>,
+  options: AddCommandOptions = {}
+): string {
   const specs = Object.entries(deps)
     .map(([name, range]) => `"${name}@${range}"`)
     .join(" ");
-  if (installCommand.startsWith("yarn")) return `yarn add ${specs}`;
-  if (installCommand.startsWith("npm")) return `npm install ${specs}`;
-  return `pnpm add ${specs}`;
+  return `${addCommandPrefix(installCommand, options)} ${specs}`;
+}
+
+/** 프로젝트 스크립트 실행 명령(`pnpm dev` · `npm run dev` · `yarn dev`, WI-0085: template init 다음 단계) */
+export function runScriptCommand(installCommand: string, script: string): string {
+  switch (packageManagerOf(installCommand)) {
+    case "yarn":
+      return `yarn ${script}`;
+    case "npm":
+      return `npm run ${script}`;
+    default:
+      return `pnpm ${script}`;
+  }
+}
+
+/**
+ * 워크스페이스의 다른 패키지에서 스크립트를 실행하는 명령(WI-0085: tokens 빌드 전 안내).
+ * `pnpm --filter <pkg> <script>` · `npm run <script> -w <pkg>`(npm 7 이상) · `yarn workspace <pkg> <script>`.
+ */
+export function workspaceRunCommand(installCommand: string, pkg: string, script: string): string {
+  switch (packageManagerOf(installCommand)) {
+    case "yarn":
+      return `yarn workspace ${pkg} ${script}`;
+    case "npm":
+      return `npm run ${script} -w ${pkg}`;
+    default:
+      return `pnpm --filter ${pkg} ${script}`;
+  }
 }
 
 /**

@@ -50,6 +50,7 @@ import {
   formatListBrandsResult,
   handleGetBrand,
   formatGetBrandResult,
+  tokensInstallCommandFor,
 } from "./tools/index.js";
 
 import { TOKEN_CATEGORIES, type TokenCategory } from "./types.js";
@@ -698,7 +699,8 @@ server.tool(
   async ({ targetDir }) => {
     try {
       const result = await handleListBrands({ targetDir });
-      const formatted = formatListBrandsResult(result);
+      // WI-0085: 미설치 · 미지원 · 빌드 전 안내를 targetDir 의 lockfile · packageManager 로(CLI theme list 와 같은 명령)
+      const formatted = formatListBrandsResult(result, tokensInstallCommandFor(targetDir));
 
       return {
         content: [
@@ -726,7 +728,7 @@ server.tool(
 // 도구 등록: axis.get_brand (WI-0028 FR-4)
 server.tool(
   "axis.get_brand",
-  "브랜드 하나의 import 경로 · Provider 설정 예시(defaultBrand) · 주요 토큰 · 보정 내역을 조회합니다.",
+  "브랜드 하나의 import 경로 · 브랜드 켜기 예시(<html data-brand> · ThemeProvider setBrand) · 주요 토큰 · 보정 내역을 조회합니다.",
   {
     name: z.string().describe("브랜드 이름 (예: ontology)"),
     targetDir: z.string().optional().describe("대상 프로젝트 디렉토리 (기본: 현재 디렉토리)"),
@@ -734,7 +736,7 @@ server.tool(
   async ({ name, targetDir }) => {
     try {
       const result = await handleGetBrand({ name, targetDir });
-      const formatted = formatGetBrandResult(result, name);
+      const formatted = formatGetBrandResult(result, name, tokensInstallCommandFor(targetDir));
 
       return {
         content: [

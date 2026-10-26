@@ -4,7 +4,7 @@
  *
  * 규칙(배치 6b 결정): 앱 층 lockfile 우선 → 없으면 워크스페이스 루트(pnpm-workspace.yaml 또는 package.json workspaces)까지 올라가
  * 그 층의 lockfile 만 인정 → 그 전에 .git(디렉터리 또는 파일)이 나오면 중단 → 못 찾으면 종전 기본값 pnpm install.
- * 같은 층에 lockfile 이 여럿이면 종전 우선순위(pnpm → yarn → npm). packageManager 필드는 쓰지 않습니다.
+ * 같은 층에 lockfile 이 여럿이면 종전 우선순위(pnpm → yarn → npm). packageManager 필드는 lockfile 이 없을 때만 봅니다(WI-0085, 아래 describe).
  *
  * 판별력이 있는 행은 npm · yarn 이에요. pnpm 행은 기본값과 같아 상위 탐색이 깨져도 초록이라 회귀 확인용입니다.
  */
@@ -13,14 +13,20 @@ import fs from "fs-extra";
 import os from "os";
 import path from "path";
 import {
+  addCommandFor,
+  addCommandPrefix,
   declaredDependency,
   detectInstallCommand,
   findInstalledPackage,
   findWorkspaceRoot,
   isPnpProject,
+  packageManagerOf,
   resolveBaseDir,
+  runScriptCommand,
   workspaceRootPackage,
+  workspaceRunCommand,
 } from "@axis-ds/registry-core/project";
+import { addCommandForSpecs } from "@axis-ds/registry-core/add";
 
 const created: string[] = [];
 afterEach(async () => {
@@ -164,21 +170,18 @@ describe("WI-0081: detectInstallCommand 의 워크스페이스 루트 탐색", (
     }
   });
 
-  it("AC5 lockfile 없는 워크스페이스 루트 → 종전 기본값 pnpm install, packageManager 필드는 보지 않음", async () => {
-    const variants: Record<string, string | Record<string, unknown>>[] = [
-      { "pnpm-workspace.yaml": "packages:\n  - apps/*\n", "package.json": { name: "root", private: true } },
-      { "package.json": { name: "root", private: true, workspaces: ["apps/*"] } },
-      { "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "npm@10.9.0" } },
-      { "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "yarn@4.5.0" } },
+  it("AC5 lockfile 없는 워크스페이스 루트 → 종전 기본값 pnpm install(WI-0085 뒤: packageManager 가 있으면 그 매니저)", async () => {
+    // WI-0081 AC5 는 packageManager 변형 2개도 pnpm 이었어요. 배치 6c 결정(lockfile 다음 순위로 packageManager)으로 npm · yarn 으로 바뀌어요
+    const variants: [Record<string, string | Record<string, unknown>>, string][] = [
+      [{ "pnpm-workspace.yaml": "packages:\n  - apps/*\n", "package.json": { name: "root", private: true } }, "pnpm install"],
+      [{ "package.json": { name: "root", private: true, workspaces: ["apps/*"] } }, "pnpm install"],
+      [{ "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "npm@10.9.0" } }, "npm install"],
+      [{ "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "yarn@4.5.0" } }, "yarn install"],
     ];
-    for (const files of variants) {
+    for (const [files, cmd] of variants) {
       const root = await tree({ ...files, "apps/web/package.json": APP_PKG });
       const app = path.join(root, "apps", "web");
-      expect({ files: Object.keys(files), root: findWorkspaceRoot(app) === root, cmd: detectInstallCommand(app) }).toEqual({
-        files: Object.keys(files),
-        root: true,
-        cmd: "pnpm install",
-      });
+      expect({ files, root: findWorkspaceRoot(app) === root, cmd: detectInstallCommand(app) }).toEqual({ files, root: true, cmd });
     }
   });
 
@@ -305,5 +308,152 @@ describe("WI-0086: 공개 함수 진입부의 실경로(resolveBaseDir)", () => 
     expect(resolveBaseDir(missing)).toBe(missing);
     expect(resolveBaseDir("relative/x")).toBe(path.resolve("relative/x"));
     expect(detectInstallCommand(missing)).toBe("pnpm install");
+  });
+});
+
+describe("WI-0085: lockfile 이 없을 때 package.json packageManager 신호(배치 6c 결정)", () => {
+  it("환경 가드: tmpdir 조상 package.json 에 packageManager 가 없음(있으면 아래 「pnpm 유지」 기대가 머신마다 달라짐)", async () => {
+    const dir = await tree({ "package.json": APP_PKG });
+    let cur = path.dirname(dir);
+    const found: string[] = [];
+    let checked = 0;
+    for (;;) {
+      checked++;
+      try {
+        const pkg = JSON.parse(await fs.readFile(path.join(cur, "package.json"), "utf8")) as Record<string, unknown>;
+        if ("packageManager" in pkg) found.push(cur);
+      } catch {
+        // package.json 없음 · 깨짐
+      }
+      const parent = path.dirname(cur);
+      if (parent === cur) break;
+      cur = parent;
+    }
+    expect(checked).toBeGreaterThan(0);
+    expect(found).toEqual([]);
+  });
+
+  it("단일 앱: npm@ · yarn@ · pnpm@ → 각 매니저, 모르는 이름 · 문자열 아님 · 이름만 · 깨진 JSON → 종전 pnpm", async () => {
+    const cases: [unknown, string][] = [
+      ["npm@10.9.0", "npm install"],
+      ["yarn@4.5.0", "yarn install"],
+      ["yarn@1.22.22+sha512.abc", "yarn install"],
+      [" npm@10.9.0 ", "npm install"],
+      ["pnpm@9.15.4", "pnpm install"],
+      ["bun@1.1.0", "pnpm install"],
+      ["yarn", "pnpm install"],
+      [123, "pnpm install"],
+      [{ name: "npm" }, "pnpm install"],
+    ];
+    for (const [packageManager, cmd] of cases) {
+      const dir = await tree({ "package.json": { ...APP_PKG, packageManager } });
+      expect({ packageManager, cmd: detectInstallCommand(dir) }).toEqual({ packageManager, cmd });
+    }
+    const broken = await tree({ "package.json": '{ "packageManager": "npm@10.9.0", ' });
+    expect(detectInstallCommand(broken)).toBe("pnpm install");
+  });
+
+  it("lockfile 이 먼저(conflict): 같은 층 package-lock.json + packageManager yarn@ → npm install(변이 P1: packageManager 를 lockfile 앞에)", async () => {
+    const dir = await tree({ "package.json": { ...APP_PKG, packageManager: "yarn@4.5.0" }, "package-lock.json": "{}" });
+    expect(detectInstallCommand(dir)).toBe("npm install");
+  });
+
+  it("루트 lockfile 이 앱 packageManager 보다 먼저: 루트 yarn.lock + 앱 npm@ → yarn install", async () => {
+    const root = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"] },
+      "yarn.lock": "",
+      "apps/web/package.json": { ...APP_PKG, packageManager: "npm@10.9.0" },
+    });
+    expect(detectInstallCommand(path.join(root, "apps", "web"))).toBe("yarn install");
+  });
+
+  it("앱 packageManager 가 루트 packageManager 보다 먼저, 앱이 모르는 이름이면 루트 것", async () => {
+    const root = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "yarn@4.5.0" },
+      "apps/web/package.json": { ...APP_PKG, packageManager: "npm@10.9.0" },
+      "apps/bun/package.json": { ...APP_PKG, packageManager: "bun@1.1.0" },
+      "apps/plain/package.json": APP_PKG,
+    });
+    expect(detectInstallCommand(path.join(root, "apps", "web"))).toBe("npm install");
+    expect(detectInstallCommand(path.join(root, "apps", "bun"))).toBe("yarn install");
+    expect(detectInstallCommand(path.join(root, "apps", "plain"))).toBe("yarn install");
+  });
+
+  it("음성 대조(변이 P3: 아무 상위 package.json): 워크스페이스가 아닌 상위 · .git 너머 · 중간 층의 packageManager 는 보지 않음", async () => {
+    const outside = await tree({
+      "package.json": { name: "outer", private: true, packageManager: "npm@10.9.0" },
+      "apps/web/package.json": APP_PKG,
+    });
+    expect(detectInstallCommand(path.join(outside, "apps", "web"))).toBe("pnpm install");
+    const gitstop = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "npm@10.9.0" },
+      "apps/web/.git/": "",
+      "apps/web/package.json": APP_PKG,
+    });
+    expect(detectInstallCommand(path.join(gitstop, "apps", "web"))).toBe("pnpm install");
+    const middle = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*/*"] },
+      "apps/package.json": { name: "mid", private: true, packageManager: "npm@10.9.0" },
+      "apps/x/web/package.json": APP_PKG,
+    });
+    expect(detectInstallCommand(path.join(middle, "apps", "x", "web"))).toBe("pnpm install");
+  });
+
+  it("앱 링크(L1)로 주어도 실경로와 같음: 루트 packageManager npm@ 워크스페이스(WI-0086 실경로 진입부와 합친 전이)", async () => {
+    const root = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"], packageManager: "npm@10.9.0" },
+      "apps/web/package.json": APP_PKG,
+    });
+    const links = await fs.realpath(await fs.mkdtemp(path.join(os.tmpdir(), "axis-wslink-")));
+    created.push(links);
+    const link = path.join(links, "web");
+    await fs.symlink(path.join(root, "apps", "web"), link);
+    expect(detectInstallCommand(link)).toBe("npm install");
+    expect(detectInstallCommand(path.join(root, "apps", "web"))).toBe("npm install");
+  });
+});
+
+describe("WI-0085: 명령 헬퍼(registry-core project.ts 한 곳)", () => {
+  const managers = ["pnpm install", "npm install", "yarn install"] as const;
+
+  it("packageManagerOf: 설치 명령 · 추가 명령 접두로 판정, 모르면 pnpm", () => {
+    expect(managers.map(packageManagerOf)).toEqual(["pnpm", "npm", "yarn"]);
+    expect(packageManagerOf('npm install "x@^1.0.0"')).toBe("npm");
+    expect(packageManagerOf("bun install")).toBe("pnpm");
+  });
+
+  it("addCommandFor: 따옴표 범위, dev 면 -D, 옵션 없으면 종전 바이트", () => {
+    const deps = { react: "^19.0.0", "@types/node": "^20" };
+    expect(managers.map((m) => addCommandFor(m, deps))).toEqual([
+      'pnpm add "react@^19.0.0" "@types/node@^20"',
+      'npm install "react@^19.0.0" "@types/node@^20"',
+      'yarn add "react@^19.0.0" "@types/node@^20"',
+    ]);
+    expect(managers.map((m) => addCommandFor(m, deps, { dev: true }))).toEqual([
+      'pnpm add -D "react@^19.0.0" "@types/node@^20"',
+      'npm install -D "react@^19.0.0" "@types/node@^20"',
+      'yarn add -D "react@^19.0.0" "@types/node@^20"',
+    ]);
+    // 빈 deps 는 종전처럼 끝에 공백(init.ts 가 trimEnd 로 씀)
+    expect(addCommandFor("pnpm install", {})).toBe("pnpm add ");
+    expect(managers.map((m) => addCommandPrefix(m))).toEqual(["pnpm add", "npm install", "yarn add"]);
+  });
+
+  it("add 의 addCommandForSpecs 는 헬퍼 위로 옮겨도 동작 불변(범위 없는 항목은 따옴표 없이)", () => {
+    const specs = { clsx: "^2.1.1", "tailwind-merge": undefined };
+    expect(managers.map((m) => addCommandForSpecs(m, specs))).toEqual([
+      'pnpm add "clsx@^2.1.1" tailwind-merge',
+      'npm install "clsx@^2.1.1" tailwind-merge',
+      'yarn add "clsx@^2.1.1" tailwind-merge',
+    ]);
+  });
+
+  it("runScriptCommand · workspaceRunCommand: 매니저별 스크립트 · 워크스페이스 실행", () => {
+    expect(managers.map((m) => runScriptCommand(m, "dev"))).toEqual(["pnpm dev", "npm run dev", "yarn dev"]);
+    expect(managers.map((m) => workspaceRunCommand(m, "@axis-ds/tokens", "build"))).toEqual([
+      "pnpm --filter @axis-ds/tokens build",
+      "npm run build -w @axis-ds/tokens",
+      "yarn workspace @axis-ds/tokens build",
+    ]);
   });
 });

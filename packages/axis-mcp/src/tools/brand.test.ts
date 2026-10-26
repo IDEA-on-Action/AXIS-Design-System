@@ -9,6 +9,7 @@ import {
   formatListBrandsResult,
   formatGetBrandResult,
   TOKENS_INSTALL_COMMAND,
+  tokensInstallCommandFor,
 } from "./brand.js";
 
 // WI-0028 P5 (T5-2 · T5-4 · T5-5): MCP 브랜드 도구.
@@ -178,5 +179,59 @@ describe("CLI · MCP 응답 동일성 (T5-5, AC3)", () => {
     expect(text).toContain("점검일: -");
     expect(text).toContain("게이트: -");
     expect(text).toContain(brand.adjustments.reference);
+  });
+});
+
+describe("WI-0085: 안내가 targetDir 의 lockfile · packageManager 를 따름(CLI theme list 와 같은 명령)", () => {
+  // CLI 원본(theme/index.ts)의 안내 함수를 같은 픽스처에 돌려 문자열을 비교합니다(동적 import, rootDir 밖)
+  const CLI_THEME = path.resolve(HERE, "../../../axis-cli/src/theme/index.ts");
+  interface CliTheme {
+    tokensInstallCommand: (baseDir: string) => string;
+    tokensStatusGuide: (status: "not-installed" | "unsupported" | "not-built", version?: string, cmd?: string) => string[];
+  }
+  // eslint-disable-next-line no-control-regex
+  const ANSI = /\u001b\[[0-9;]*m/g;
+
+  const variants: [string, Record<string, string>, Record<string, unknown> | undefined, string][] = [
+    ["npm lockfile", { "package-lock.json": "" }, undefined, "npm"],
+    ["yarn lockfile", { "yarn.lock": "" }, undefined, "yarn"],
+    ["packageManager yarn@", {}, { packageManager: "yarn@4.5.0" }, "yarn"],
+    ["없음(종전 pnpm)", {}, undefined, "pnpm"],
+  ];
+
+  for (const [label, files, pkgExtra, manager] of variants) {
+    it(`${label}: list_brands · get_brand 3상태 안내가 ${manager}, CLI 줄과 같음`, async () => {
+      const cli = (await import(pathToFileURL(CLI_THEME).href)) as CliTheme;
+      for (const tokens of ["none", "1.2", "1.3-unbuilt"] as TokensFixture[]) {
+        const dir = await project(tokens);
+        for (const [name, content] of Object.entries(files)) await fs.writeFile(path.join(dir, name), content);
+        if (pkgExtra) await fs.writeJSON(path.join(dir, "package.json"), { name: "empty", private: true, ...pkgExtra });
+        const cmd = tokensInstallCommandFor(dir);
+        expect(cmd).toBe(cli.tokensInstallCommand(dir));
+        expect(cmd.split(" ")[0]).toBe(manager);
+        const list = await handleListBrands({ targetDir: dir });
+        const got = await handleGetBrand({ name: "sample", targetDir: dir });
+        expect(list.status).not.toBe("ok");
+        const listText = formatListBrandsResult(list, cmd);
+        const getText = formatGetBrandResult(got, "sample", cmd);
+        // CLI 안내 줄(색 제거 · 앞 공백 제거)의 명령 부분이 MCP 글에 그대로 있음(MCP 는 백틱)
+        const cliLines = cli
+          .tokensStatusGuide(list.status as "not-installed", list.version, cli.tokensInstallCommand(dir))
+          .map((l) => l.replace(ANSI, "").trim())
+          .slice(1);
+        expect(cliLines.length).toBe(1);
+        const mcpLine = listText.split("\n").find((l) => l.startsWith("- "))!.slice(2).replace(/`/g, "");
+        expect({ tokens, mcpLine }).toEqual({ tokens, mcpLine: cliLines[0] });
+        expect(getText).toContain(listText.split("\n").find((l) => l.startsWith("- "))!);
+        if (manager !== "pnpm") expect(listText).not.toContain("pnpm");
+      }
+    });
+  }
+
+  it("installCommand 를 주지 않으면 종전 pnpm(외부 사용처 호환)", async () => {
+    const dir = await project("1.3-unbuilt");
+    await fs.writeFile(path.join(dir, "package-lock.json"), "");
+    const text = formatListBrandsResult(await handleListBrands({ targetDir: dir }));
+    expect(text).toContain(`\`pnpm --filter @axis-ds/tokens build\`, 아니면 재설치: \`${TOKENS_INSTALL_COMMAND}\``);
   });
 });

@@ -24,7 +24,7 @@ import {
   planThemeAdd,
   type ThemeAddPlan,
 } from "./theme-add.js";
-import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
+import { addCommandFor, detectInstallCommand, workspaceRunCommand } from "@axis-ds/registry-core/project";
 import { CONTENT_PARENT_PATH_NOTE, TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
 import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
 
@@ -63,19 +63,21 @@ export interface ThemeOutput {
 }
 
 /**
- * tokens 를 설치 · 업그레이드할 때 안내하는 명령(U6 범위, WI-0065 D7 에서 lockfile 로 고르도록 바꿈).
- * 종전에는 `pnpm add` 로 고정이라 npm · yarn 프로젝트에도 pnpm 명령이 나왔습니다. lockfile 이 없으면 종전과 같은 pnpm 입니다.
+ * tokens 를 설치 · 업그레이드할 때 안내하는 명령. 범위는 U6(WI-0028 의 tokens 범위 결정, WI-0065 D7-범위에서 `^1.6.0`)이고,
+ * 매니저는 WI-0065 D7 부터 lockfile 로, WI-0085 부터 lockfile 이 없으면 package.json `packageManager` 로 고릅니다(`detectInstallCommand`).
+ * 종전에는 `pnpm add` 로 고정이라 npm · yarn 프로젝트에도 pnpm 명령이 나왔습니다. 둘 다 없으면 종전과 같은 pnpm 입니다.
  */
 export function tokensInstallCommand(baseDir: string): string {
   return addCommandFor(detectInstallCommand(baseDir), { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
 }
 
-/** lockfile 이 없을 때의 안내 명령(종전 상수 이름 유지, 범위는 `TOKENS_DEPENDENCY_RANGE`) */
+/** lockfile · `packageManager` 가 없을 때의 안내 명령(종전 상수 이름 유지, 범위는 `TOKENS_DEPENDENCY_RANGE`) */
 export const TOKENS_INSTALL_COMMAND = addCommandFor("pnpm install", { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
 
 /**
  * `status` 가 `ok` 가 아닐 때의 안내. 빈 목록이 아니라 「측정을 못 했다」를 알립니다(plan 3장 5-3).
  * `installCommand` 는 `tokensInstallCommand(baseDir)` 로 고른 명령입니다(주지 않으면 lockfile 이 없을 때와 같은 pnpm).
+ * 빌드 전의 워크스페이스 빌드 명령도 같은 매니저로 고릅니다(WI-0085, `workspaceRunCommand`. 종전에는 `pnpm --filter` 고정).
  */
 export function tokensStatusGuide(
   status: Exclude<TokensStatus, "ok">,
@@ -100,7 +102,7 @@ export function tokensStatusGuide(
         chalk.yellow(
           `${TOKENS_PACKAGE}${version ? ` ${version}` : ""} 는 있지만 빌드 산출물이 없어 브랜드를 읽을 수 없습니다.`
         ),
-        `  워크스페이스면 ${chalk.cyan(`pnpm --filter ${TOKENS_PACKAGE} build`)}, 아니면 재설치: ${chalk.cyan(installCommand)}`,
+        `  워크스페이스면 ${chalk.cyan(workspaceRunCommand(installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${chalk.cyan(installCommand)}`,
       ];
   }
 }
