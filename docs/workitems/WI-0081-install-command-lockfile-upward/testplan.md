@@ -98,7 +98,7 @@ check(cli rc · dependencies 줄, MCP 는 같은 문구의 markdown 줄. 바뀐 
 | `axis-registry-core/src/add/add.ts:505` → 537 `addCommandForSpecs` → 841 | cli add · MCP `axis.install_component` dependencyCommand |
 | `axis-registry-core/src/template/dependencies-core.ts:95` | check · check_project 미설치 안내 |
 
-pnpm 고정으로 남긴 곳(D3, WI-0085(#217) 대상):
+pnpm 고정으로 남긴 곳(D3, WI-0085(#217) 대상). **해소(2026-10-26, WI-0085)**: 아래 줄은 기본값 상수(`TOKENS_INSTALL_COMMAND`)와 accordion 데모(배치 6c 결정으로 그대로)를 빼고 모두 대상 디렉터리 매니저를 따르게 바뀌었어요. `template-apply.ts:290` `pnpm dev` 도 함께예요(WI-0085 testplan). 「U6 범위 결정」은 버전 범위 결정이었다는 정정은 prd D3:
 
 | 위치 | 내용 |
 |---|---|
