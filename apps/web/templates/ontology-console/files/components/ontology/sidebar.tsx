@@ -42,6 +42,12 @@ export function Sidebar() {
   const pathname = usePathname() ?? '/'
   const current = groups.find((g) => g.items.some((i) => isActive(pathname, i.href)))?.id
   const [open, setOpen] = useState<string | undefined>(current ?? groups[0].id)
+  // 레이아웃의 사이드바는 화면을 옮겨도 다시 마운트되지 않아요. 경로가 다른 그룹으로 바뀌면 그 그룹을 펼쳐요
+  const [lastCurrent, setLastCurrent] = useState(current)
+  if (current !== lastCurrent) {
+    setLastCurrent(current)
+    if (current) setOpen(current)
+  }
 
   return (
     <nav aria-label="주 메뉴" className="flex min-h-0 flex-col overflow-hidden pb-3 pl-[18px] pr-2.5 pt-3.5">
@@ -86,7 +92,12 @@ export function Sidebar() {
                   className={cn('size-3.5 text-muted-foreground transition-transform', expanded && 'rotate-180')}
                 />
               </button>
-              <ul id={`nav-${g.id}`} hidden={!expanded} className="flex flex-col gap-0.5 pb-2.5 pl-3.5 pt-1">
+              {/* hidden 속성만으로는 .flex(display:flex)가 preflight 의 [hidden] 규칙을 이겨요. 접힌 목록은 display 클래스를 빼요 */}
+              <ul
+                id={`nav-${g.id}`}
+                hidden={!expanded}
+                className={expanded ? 'flex flex-col gap-0.5 pb-2.5 pl-3.5 pt-1' : 'hidden'}
+              >
                 {g.items.map((item) => {
                   const active = isActive(pathname, item.href)
                   return (
