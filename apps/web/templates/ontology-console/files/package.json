@@ -1,0 +1,34 @@
+{
+  "name": "axis-ontology-console",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "check:ontology": "node scripts/check-ontology.mjs"
+  },
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0",
+    "clsx": "^2.1.1",
+    "@axis-ds/tokens": "^1.8.2",
+    "@axis-ds/ui-react": "^1.8.2",
+    "@axis-ds/theme": "^1.8.2",
+    "lucide-react": "^0.469.0",
+    "pretendard": "^1.3.9"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.7.0",
+    "@types/node": "^20",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}

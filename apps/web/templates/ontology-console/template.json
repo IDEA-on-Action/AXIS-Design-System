@@ -1,0 +1,44 @@
+{
+  "name": "Ontology Console",
+  "slug": "ontology-console",
+  "description": "온톨로지 플랫폼 계열 업무 콘솔 템플릿입니다. 사이드바 240px와 콘텐츠 카드 한 장으로 된 셸에 통합 뷰 · 목록 · depth 상세 · 프로젝트 상세 2분할 화면을 AXIS core 컴포넌트(@axis-ds/ui-react)와 ontology 브랜드로 조립했습니다.",
+  "category": "console",
+  "version": "0.1.0",
+  "author": "AXIS Design System",
+  "tags": ["console", "ontology", "sidebar", "list", "detail", "split"],
+  "features": [
+    "사이드바 240px + 콘텐츠 카드 한 장 셸 (대메뉴 하나만 펼침, 100vh 고정 · 카드 안 스크롤)",
+    "통합 뷰: 인사 · 현황 카드 · 보조 상자 420px",
+    "목록 페이지: 검색 · 필터 칩 · Table, 줄을 누르면 depth 상세",
+    "depth 상세: 뒤로 · 이전 · 다음, 세그먼트 탭, 절 사이 40px",
+    "프로젝트 상세 2분할 (왼쪽 열 300px)",
+    "1199px 이하 1열",
+    "ontology 브랜드 기본 적용 (<html data-brand=\"ontology\"> + ThemeProvider defaultBrand)",
+    "라이트 · 다크 전환 (@axis-ds/theme)",
+    "규칙 검사 스크립트 npm run check:ontology (엠 대시 · 느낌표 · 한쪽 색 선 · 카드 그림자 · 팔레트 밖 색)",
+    "가상 예시 데이터",
+    "Pretendard 글꼴"
+  ],
+  "dependencies": {
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^2.6.0",
+    "clsx": "^2.1.1",
+    "@axis-ds/tokens": "^1.8.2",
+    "@axis-ds/ui-react": "^1.8.2",
+    "@axis-ds/theme": "^1.8.2",
+    "lucide-react": "^0.469.0",
+    "pretendard": "^1.3.9"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.7.0",
+    "@types/node": "^20",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.0",
+    "postcss": "^8.4.0"
+  }
+}
