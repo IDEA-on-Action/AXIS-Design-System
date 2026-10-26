@@ -1085,15 +1085,79 @@ export function contentGlobCovers(glob: string, sample: string, baseDirInput: st
 export const CONTENT_PARENT_PATH_NOTE =
   "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
 
-/** 패키지 content 대상의 표본 · 제안(WI-0080). 설치본을 못 찾거나 PnP 면 종전 `node_modules/<pkg>` 입니다. */
-function packageContentTarget(baseDir: string, name: string): { sample: string; suggest: string } {
+/** baseDir 기준 상대 디렉터리(posix). 다른 드라이브(Windows)처럼 상대 경로로 못 바꾸거나 baseDir 자신이면 `undefined`. */
+function relDirOf(baseDir: string, dir: string): string | undefined {
+  const rel = relative(baseDir, dir);
+  return rel === "" || isAbsolute(rel) ? undefined : rel.split(sep).join("/");
+}
+
+function realDir(dir: string): string | undefined {
+  try {
+    return realpathSync(dir);
+  } catch {
+    return undefined;
+  }
+}
+
+function packageVersion(dir: string): string | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(join(dir, "package.json"), "utf8"));
+    return isPlainObject(parsed) && typeof parsed.version === "string" ? parsed.version : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 패키지 content 대상의 표본 · 제안(WI-0080). 설치본을 못 찾거나 PnP 면 종전 `node_modules/<pkg>` 입니다.
+ * WI-0090: 표본 `sample`(찾은 설치본) 말고도 Tailwind 가 같은 파일을 스캔하게 되는 경로를 `alternates` 로 함께 돌려줍니다.
+ * - 찾은 설치본의 실경로(pnpm 기본이면 `.pnpm` 스토어)를 baseDir 기준 상대 경로로 쓴 것
+ * - 찾은 설치본보다 위의 `node_modules/<pkg>` 가운데 실경로가 같은 것(pnpm 기본에서 앱 · 루트가 같은 스토어에 링크)
+ * 실경로가 다른 상위 설치본은 `others` 로 따로 돌려줍니다. 그 경로를 가리키면 Tailwind 는 다른 버전의 파일을 스캔합니다
+ * (빌드 실측: 루트 1.8.1 · 앱 1.8.2 에서 선택자 426/427, Select placeholder 클래스 누락). 그래서 덮음으로 보지 않고 안내에만 씁니다.
+ */
+function packageContentTarget(
+  baseDir: string,
+  name: string
+): { sample: string; suggest: string; alternates: string[]; others: Array<{ sample: string; note: string }> } {
   const found = isPnpProject(baseDir) ? undefined : findInstalledPackage(baseDir, name);
-  const rel = found === undefined ? undefined : relative(baseDir, found.dir);
-  // 다른 드라이브(Windows)처럼 상대 경로로 못 바꾸면 종전 경로로 둡니다
-  const relDir = rel === undefined || rel === "" || isAbsolute(rel) ? `node_modules/${name}` : rel.split(sep).join("/");
+  const relDir = (found === undefined ? undefined : relDirOf(baseDir, found.dir)) ?? `node_modules/${name}`;
+  const alternates: string[] = [];
+  const others: Array<{ sample: string; note: string }> = [];
+  const real = found === undefined ? undefined : realDir(found.dir);
+  if (found !== undefined && real !== undefined) {
+    const relReal = relDirOf(baseDir, real);
+    if (relReal !== undefined && relReal !== relDir) alternates.push(`${relReal}/dist/index.js`);
+    // found.dir = <조상>/node_modules/<name> 이므로 <조상>의 부모부터 올라갑니다
+    let dir = dirname(resolve(found.dir, ...name.split("/").map(() => ".."), ".."));
+    for (;;) {
+      const candidate = join(dir, "node_modules", ...name.split("/"));
+      const rel = existsSync(join(candidate, "package.json")) ? relDirOf(baseDir, candidate) : undefined;
+      if (rel !== undefined) {
+        const candidateReal = realDir(candidate);
+        if (candidateReal === real) alternates.push(`${rel}/dist/index.js`);
+        else {
+          const theirs = packageVersion(candidate);
+          const ours = found.version ?? packageVersion(found.dir);
+          // 버전이 같아도 실경로가 다르면 파일이 같다는 보장이 없어(패치 · 다시 빌드한 사본) 덮음으로 보지 않습니다(사용자 결정)
+          const versions =
+            theirs === undefined || ours === undefined ? "" : theirs === ours ? `(버전은 ${ours} 로 같음)` : `(${theirs}, 앱 ${ours})`;
+          others.push({
+            sample: `${rel}/dist/index.js`,
+            note: `상위 경로 ${rel} 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않아요`,
+          });
+        }
+      }
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
   return {
     sample: `${relDir}/dist/index.js`,
     suggest: `${relDir.startsWith("../") ? "" : "./"}${relDir}/dist/**/*.{js,mjs}`,
+    alternates,
+    others,
   };
 }
 
@@ -1155,6 +1219,8 @@ export interface ContentTarget {
   /** 넣을 glob(안내용) */
   suggest: string;
   covered: boolean;
+  /** 덮지 않을 때 붙이는 이유(실경로가 다른 상위 설치본을 가리키는 glob 이 있음, WI-0090) */
+  note?: string;
 }
 
 export interface TailwindContentInspection {
@@ -1191,7 +1257,7 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
   if (configFile === undefined) return null;
 
-  const targets: Omit<ContentTarget, "covered">[] = [];
+  const targets: Array<Omit<ContentTarget, "covered" | "note"> & { alternates?: string[]; others?: Array<{ sample: string; note: string }> }> = [];
   const componentsDir = readAxisConfigLike(baseDir)?.componentsDir;
   const rel = typeof componentsDir === "string" ? normalizeRel(componentsDir) : undefined;
   if (rel !== undefined) {
@@ -1210,7 +1276,12 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
     configFile,
     unreadable: read === undefined,
     dynamic: read?.dynamic ?? false,
-    targets: targets.map((t) => ({ ...t, covered: globs.some((g) => contentGlobCovers(g, t.sample, baseDir)) })),
+    targets: targets.map(({ alternates = [], others = [], ...t }) => {
+      const covers = (sample: string) => globs.some((g) => contentGlobCovers(g, sample, baseDir));
+      const covered = [t.sample, ...alternates].some(covers);
+      const note = covered ? undefined : others.find((o) => covers(o.sample))?.note;
+      return note === undefined ? { ...t, covered } : { ...t, covered, note };
+    }),
   };
 }
 
@@ -1237,7 +1308,7 @@ export function checkTailwindContent(baseDir: string): ContentCheckResult | null
       message: `${r.configFile}의 content 가 ${r.targets.map((t) => t.label).join(" · ")} 를 덮습니다`,
     };
   }
-  const list = missing.map((t) => `${t.label} → "${t.suggest}"`).join(" · ");
+  const list = missing.map((t) => `${t.label} → "${t.suggest}"${t.note === undefined ? "" : ` (${t.note})`}`).join(" · ");
   // WI-0080 D4: 상위 경로 제안이 있을 때만 cwd 기준 안내를 붙입니다(종전 문구는 바이트 그대로)
   const note = missing.some((t) => t.suggest.startsWith("../")) ? ` (${CONTENT_PARENT_PATH_NOTE})` : "";
   if (r.unreadable || r.dynamic) {

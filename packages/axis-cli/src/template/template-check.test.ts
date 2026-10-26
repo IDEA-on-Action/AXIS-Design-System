@@ -2275,6 +2275,89 @@ describe("WI-0080: Tailwind 3 content 의 패키지 표본 · 제안을 설치�
   });
 });
 
+// WI-0090: pnpm 기본 레이아웃에서 앱 · 루트가 모두 ui-react 를 선언하면 앱 node_modules 링크가 표본이라, 같은 스토어를 가리키는 루트 링크
+// (`../../node_modules/...`)나 스토어 실경로를 상대 경로로 쓴 glob 이 거짓 FAIL 이었어요. 빌드 실측(Tailwind 3.4.19 CLI 앱 cwd, ui-react 1.8.2):
+// 두 변형 모두 앱 경로 변형과 바이트 같은 CSS(선택자 427). 루트가 다른 버전(1.8.1)이면 루트 링크 변형은 426 으로 Select placeholder 클래스가
+// 빠져 FAIL 이 맞아요(음성 대조). 그래서 실경로가 앱 설치본과 같은 상위 설치본만 인정하고, 다르면 FAIL 문구에 이유를 붙여요(사용자 결정).
+describe("WI-0090: 앱 설치본과 실경로가 같은 상위 설치본 · 스토어 상대 실경로를 content 표본으로 인정", () => {
+  const UI = "/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const UP = `../../node_modules${UI}`;
+  const LOCAL = `./node_modules${UI}`;
+  const BASE = '"./app/**/*.{ts,tsx}", "./components/ui/**/*.{ts,tsx}"';
+  const STORE = (v: string) => `node_modules/.pnpm/@axis-ds+ui-react@${v}/node_modules/@axis-ds/ui-react`;
+  const PASS = {
+    name: "tailwind.content",
+    severity: "pass",
+    message: "tailwind.config.ts의 content 가 componentsDir(components/ui) · @axis-ds/ui-react 를 덮습니다",
+  };
+  const FAIL = (extra = "") => ({
+    name: "tailwind.content",
+    severity: "fail",
+    message: `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${LOCAL}"${extra}`,
+  });
+  const OTHER = (versions: string) =>
+    ` (상위 경로 ../../node_modules/@axis-ds/ui-react 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않아요)`;
+
+  async function store(root: string, v: string): Promise<string> {
+    const dir = path.join(root, ...STORE(v).split("/"));
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "@axis-ds/ui-react", version: v });
+    await fs.outputFile(path.join(dir, "dist", "index.js"), "");
+    return dir;
+  }
+  async function link(target: string, at: string): Promise<void> {
+    await fs.ensureDir(path.join(at, "node_modules", "@axis-ds"));
+    await fs.symlink(target, path.join(at, "node_modules", "@axis-ds", "ui-react"), "dir");
+  }
+  /** 앱은 1.8.1 스토어에 링크, 루트는 rootVersion 스토어에 링크(undefined 면 루트 설치본 없음) */
+  async function app(rootVersion: string | undefined): Promise<string> {
+    const root = await tempDir();
+    const dir = path.join(root, "apps", "web");
+    await link(await store(root, "1.8.1"), dir);
+    if (rootVersion !== undefined) await link(rootVersion === "1.8.1" ? path.join(root, ...STORE("1.8.1").split("/")) : await store(root, rootVersion), root);
+    await fs.writeFile(path.join(root, "pnpm-workspace.yaml"), "packages:\n  - apps/*\n");
+    await fs.outputJSON(path.join(root, "package.json"), { name: "root", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0" } });
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    await writeInstalledStub(dir, "tailwindcss", "3.4.19");
+    return dir;
+  }
+  async function item(dir: string, glob: string | undefined) {
+    const extra = glob === undefined ? "" : `, ${JSON.stringify(glob)}`;
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: [${BASE}${extra}] };\n`);
+    return (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+  }
+
+  it("AC1: 루트 링크가 앱과 같은 스토어면 ../../node_modules 를 인정(종전 거짓 FAIL, 빌드 427 = 앱 경로 427)", async () => {
+    const dir = await app("1.8.1");
+    expect(await item(dir, UP)).toEqual(PASS);
+    // 종전 행은 그대로
+    expect(await item(dir, LOCAL)).toEqual(PASS);
+    expect(await item(dir, undefined)).toEqual(FAIL());
+  });
+
+  it("AC2: 스토어 실경로를 상대 경로로 쓴 glob 을 인정(종전 거짓 FAIL, 절대 실경로는 이미 PASS)", async () => {
+    const dir = await app(undefined);
+    expect(await item(dir, `../../${STORE("1.8.1")}/dist/**/*.{js,mjs}`)).toEqual(PASS);
+    expect(await item(dir, `../../node_modules/.pnpm/**${UI}`)).toEqual(PASS);
+    // 음성 대조: 다른 스토어 항목 · 깊이가 다른 상대 경로는 FAIL
+    expect((await item(dir, `../../${STORE("9.9.9")}/dist/**/*.{js,mjs}`))?.severity).toBe("fail");
+    expect((await item(dir, `../${STORE("1.8.1")}/dist/**/*.{js,mjs}`))?.severity).toBe("fail");
+  });
+
+  it("AC3: 루트 링크가 다른 버전 스토어면 FAIL 을 유지하고 이유를 붙임(빌드 426, Select placeholder 클래스 누락)", async () => {
+    const dir = await app("1.8.0");
+    expect(await item(dir, UP)).toEqual(FAIL(OTHER("(1.8.0, 앱 1.8.1)")));
+    // 이유는 그 상위 설치본을 덮는 glob 이 있을 때만 붙여요
+    expect(await item(dir, undefined)).toEqual(FAIL());
+    expect(await item(dir, LOCAL)).toEqual(PASS);
+  });
+
+  it("AC4: 루트 설치본이 없으면 ../../node_modules 는 종전대로 FAIL(이유 없음)", async () => {
+    const dir = await app(undefined);
+    expect(await item(dir, UP)).toEqual(FAIL());
+  });
+});
+
 // WI-0081: dependencies 판정은 앱에 선언이 없으면 워크스페이스 루트(findWorkspaceRoot, .git 에서 중단) package.json 선언도 인정하고,
 // 문구에 「워크스페이스 루트에 선언」을 붙여요. 안내 명령(→ …)은 워크스페이스 루트 lockfile 을 따라요. 워크스페이스가 아닌 상위의 선언은
 // 여전히 「필수 의존성 누락」이에요(음성 대조). 브리프 측정: fx-npm d-rootonly · h-rootonly-ui · fx-pnpm · fx-pnpmhoisted d-rootonly 4행 rc 1.
