@@ -35,7 +35,7 @@
 - `axis init` 의 애니메이션 안내(init.ts 213 `animationGuideLine`)는 앱 선언만 봐요(종전부터). 281 Tailwind 4 컴포넌트 import 안내 · 294 「@axis-ds/tokens 설치:」는 Tailwind 4 판정 전이로 루트 선언 tokens 를 다시 설치하라는 줄이 새로 생겨(testplan I5) 검토 후속에서 `declaredDependency` 로 고쳤어요.
 - 워크스페이스 글롭 멤버십, yarn 레이아웃, Windows 의 realpath(subst · 대소문자) 동작은 재지 않았어요(추정 · 미검증).
 - 링크 경로로 쓴 절대 content glob(`/links/app/node_modules/...`)은 기준이 실경로라 덮음으로 보지 않아요(추정, 측정 행 없음).
-- pnpm 기본에서 앱 · 루트가 모두 ui-react 를 선언하면 앱 쪽 링크가 표본이 돼 `../../node_modules/...` content 가 FAIL 인 기존 거짓 FAIL(WI-0080 D1 표본 하나 설계, 브리프 위험 1): 이번 WI 가 만든 것이 아니고 바꾸지 않았어요(pnpm/c1-appdecl-up real 행 바이트 불변).
+- pnpm 기본에서 앱 · 루트가 모두 ui-react 를 선언하면 앱 쪽 링크가 표본이 돼 `../../node_modules/...` content 가 FAIL 인 기존 거짓 FAIL(WI-0080 D1 표본 하나 설계, 브리프 위험 1): 이번 WI 가 만든 것이 아니고 바꾸지 않았어요(pnpm/c1-appdecl-up real 행 바이트 불변). → WI-0090(#227)에서 해소(실경로가 같은 상위 설치본을 표본으로 인정).
 
 ## 2. 요구사항
 
