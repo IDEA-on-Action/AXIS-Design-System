@@ -15,11 +15,20 @@
  * 5. 필수 · 권장 의존성은 앱 package.json 에 선언이 없으면 워크스페이스 루트(`findWorkspaceRoot`, `.git` 에서 중단) package.json 의
  *    선언도 인정하고, 문구 끝에 「워크스페이스 루트에 선언: …」을 붙입니다(WI-0081, 사용자 결정). 워크스페이스가 아닌 상위의 선언은
  *    인정하지 않습니다. `@axis-ds/*` 설치 확인 대상은 종전대로 앱 선언만 봅니다.
+ *    WI-0086: 이 판정은 project.ts 의 공용 헬퍼 `declaredDependency` 로 옮겼고, tailwind-core · init · add 가 같은 헬퍼를 씁니다.
  */
 
 import { readFileSync } from "node:fs";
-import { join, resolve } from "node:path";
-import { detectInstallCommand, findInstalledPackage, findWorkspaceRoot, hasDependency, isPlainObject, isPnpProject } from "../project.js";
+import { join } from "node:path";
+import {
+  declaredDependency,
+  detectInstallCommand,
+  findInstalledPackage,
+  isPlainObject,
+  isPnpProject,
+  resolveBaseDir,
+  workspaceRootPackage,
+} from "../project.js";
 
 /** dependencies 항목. CLI · MCP 의 `CheckResult` 와 같은 모양입니다. */
 export interface DependenciesCheckResult {
@@ -44,21 +53,9 @@ function declaredAxisPackages(pkg: Record<string, unknown>): string[] {
   return out;
 }
 
-/** 앱이 곧 루트가 아닐 때 워크스페이스 루트 package.json(읽지 못하면 `undefined`, WI-0081) */
-function workspaceRootPackage(baseDir: string): Record<string, unknown> | undefined {
-  const root = findWorkspaceRoot(baseDir);
-  if (root === undefined || root === baseDir) return undefined;
-  try {
-    const parsed: unknown = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-    return isPlainObject(parsed) ? parsed : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 /** dependencies 항목을 판정합니다(WI-0051). */
 export function checkDependencies(baseDirInput: string): DependenciesCheckResult {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   let pkg: Record<string, unknown>;
   try {
     const parsed: unknown = JSON.parse(readFileSync(join(baseDir, "package.json"), "utf8"));
@@ -71,19 +68,21 @@ export function checkDependencies(baseDirInput: string): DependenciesCheckResult
     return { name: "dependencies", severity: "fail", message: "package.json 을 읽지 못했습니다(JSON 확인)" };
   }
 
-  // 앱 선언이 우선이고, 앱에 없을 때만 워크스페이스 루트 선언을 봅니다(WI-0081)
-  const rootPkg = workspaceRootPackage(baseDir);
-  const fromRoot = (d: string) => !hasDependency(pkg, d) && rootPkg !== undefined && Boolean(hasDependency(rootPkg, d));
-  const missingRequired = REQUIRED_DEPENDENCIES.filter((d) => !hasDependency(pkg, d) && !fromRoot(d));
+  // 앱 선언이 우선이고, 앱에 없을 때만 워크스페이스 루트 선언을 봅니다(WI-0081, WI-0086 부터 공용 헬퍼 declaredDependency)
+  const rootPkg = workspaceRootPackage(baseDir) ?? null;
+  const declared = (d: string) => declaredDependency(baseDir, pkg, d, rootPkg);
+  const fromRoot = (d: string) => declared(d)?.source === "root";
+  const missingRequired = REQUIRED_DEPENDENCIES.filter((d) => declared(d) === undefined);
   if (missingRequired.length > 0) {
     return { name: "dependencies", severity: "fail", message: `필수 의존성 누락: ${missingRequired.join(", ")}` };
   }
-  const missingRecommended = RECOMMENDED_DEPENDENCIES.filter((d) => !hasDependency(pkg, d) && !fromRoot(d));
+  const missingRecommended = RECOMMENDED_DEPENDENCIES.filter((d) => declared(d) === undefined);
   const rootDeclared = [...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => fromRoot(d));
   const rootNote = rootDeclared.length > 0 ? `워크스페이스 루트에 선언: ${rootDeclared.join(", ")}` : undefined;
 
+  // `@axis-ds/*` 설치 확인 대상은 종전대로 앱 선언만 봅니다(WI-0081 1.3 · 배치 6c 결정)
   const targets = [
-    ...[...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => hasDependency(pkg, d) !== undefined || fromRoot(d)),
+    ...[...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => declared(d) !== undefined),
     ...declaredAxisPackages(pkg),
   ];
   const pnp = isPnpProject(baseDir);

@@ -11,6 +11,7 @@ import {
   detectTailwind,
   findCreateNextAppDefaults,
   hasComponentSource,
+  packageVersionGate,
   rangeLowerAtLeast,
   readTailwindContent,
 } from "./tailwind-core.js";
@@ -2357,5 +2358,241 @@ describe("WI-0081: dependencies 의 워크스페이스 루트 선언 인정", ()
       severity: "pass",
       message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 3개, 워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge)",
     });
+  });
+});
+
+// WI-0086: tailwind-core 의 의존성 선언 판정(Tailwind 버전 · 1.4.0 안내 · 버전 게이트 · Tailwind 4 컴포넌트 tailwind.css · content 대상 ·
+// animation)을 공용 헬퍼 declaredDependency(앱 다음 워크스페이스 루트)로, 공개 함수 진입부의 기준 디렉터리를 실경로(resolveBaseDir)로.
+// 브리프 측정(발행본 cli 1.7.1 · mcp 1.4.1, 실제 설치 픽스처 fx-npm · fx-pnpm · fx-pnpmhoisted)의 전이 표를 stub 설치본으로 고정합니다.
+// npm = workspaces + 루트 node_modules 설치본, pnpm = pnpm-workspace + 루트 node_modules/<pkg> 가 .pnpm 스토어로 가는 링크.
+describe("WI-0086: 루트 선언 인정 일관화 · 심링크 baseDir", () => {
+  type Layout = "npm" | "pnpm";
+  const UI_GLOB = "/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const UP = `../../node_modules${UI_GLOB}`;
+  const LOCAL = `./node_modules${UI_GLOB}`;
+  const TW3_ROOT = {
+    tailwindcss: "^3.4.0",
+    "@axis-ds/tokens": "^1.8.0",
+    "@axis-ds/ui-react": "^1.8.0",
+    "tailwindcss-animate": "^1.0.7",
+    clsx: "^2.1.1",
+    "tailwind-merge": "^2.6.0",
+  };
+  const TW3_INSTALLED = {
+    tailwindcss: "3.4.19",
+    "@axis-ds/tokens": "1.8.1",
+    "@axis-ds/ui-react": "1.8.1",
+    "tailwindcss-animate": "1.0.7",
+    clsx: "2.1.1",
+    "tailwind-merge": "2.6.0",
+  };
+  const tw3Config = (content: string[], plugins = '[require("tailwindcss-animate")]') =>
+    `module.exports = { presets: [require("@axis-ds/tokens/tailwind")], content: ${JSON.stringify(content)}, plugins: ${plugins} };\n`;
+  const quietLog = () => vi.spyOn(console, "log").mockImplementation(() => {});
+
+  /** 레이아웃대로 설치본 하나를 둡니다(pnpm 은 .pnpm 스토어 + 링크) */
+  async function install(dir: string, name: string, version: string, layout: Layout) {
+    if (layout === "npm") return writeInstalledStub(dir, name, version);
+    const store = path.join(dir, "node_modules", ".pnpm", `${name.replace("/", "+")}@${version}`, "node_modules", ...name.split("/"));
+    await fs.outputJSON(path.join(store, "package.json"), { name, version });
+    await fs.outputFile(path.join(store, "dist", "index.js"), "");
+    const at = path.join(dir, "node_modules", ...name.split("/"));
+    await fs.ensureDir(path.dirname(at));
+    await fs.symlink(store, at, "dir");
+  }
+
+  /** 워크스페이스 루트(rootDeps 선언 · installed 설치) + apps/web(appDeps 선언, files) */
+  async function ws86(opts: {
+    layout?: Layout;
+    rootDeps?: Record<string, string>;
+    installed?: Record<string, string>;
+    appDeps?: Record<string, string>;
+    files?: Record<string, string>;
+    workspaces?: boolean;
+  }) {
+    const layout = opts.layout ?? "npm";
+    const root = await fs.realpath(await tempDir());
+    const marker = opts.workspaces !== false && layout === "npm" ? { workspaces: ["apps/*"] } : {};
+    await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, ...marker, devDependencies: opts.rootDeps ?? {} });
+    if (opts.workspaces !== false && layout === "pnpm") await fs.writeFile(path.join(root, "pnpm-workspace.yaml"), "packages:\n  - apps/*\n");
+    await fs.writeFile(path.join(root, layout === "npm" ? "package-lock.json" : "pnpm-lock.yaml"), layout === "npm" ? "{}" : "");
+    for (const [name, version] of Object.entries(opts.installed ?? {})) await install(root, name, version, layout);
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: opts.appDeps ?? {} });
+    await fs.outputJSON(path.join(app, "axis.config.json"), {});
+    await fs.outputFile(path.join(app, "app/globals.css"), '@import "@axis-ds/tokens/css";\n');
+    for (const [rel, content] of Object.entries(opts.files ?? {})) await fs.outputFile(path.join(app, rel), content);
+    return { root, app };
+  }
+  /** 앱 디렉터리 자체를 가리키는 링크(L1, 다른 디렉터리에 둠) */
+  async function linkTo(app: string): Promise<string> {
+    const links = await tempDir();
+    const link = path.join(links, "web-link");
+    await fs.symlink(app, link, "dir");
+    return link;
+  }
+  const item = async (dir: string, name: string) => (await collectCheckResults(dir)).find((r) => r.name === name);
+  const appPkg = async (app: string) => (await fs.readJSON(path.join(app, "package.json"))) as Record<string, unknown>;
+  const CONTENT_FAIL = (suggest: string) => ({
+    name: "tailwind.content",
+    severity: "fail",
+    message:
+      `tailwind.config.js의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${suggest}"` +
+      (suggest.startsWith("../") ? ` (${PARENT_NOTE})` : ""),
+  });
+  const CONTENT_PASS = { name: "tailwind.content", severity: "pass", message: "tailwind.config.js의 content 가 @axis-ds/ui-react 를 덮습니다" };
+  const ANIM_PASS = { name: "animation", severity: "pass", message: "tailwind.config.js의 plugins 에 tailwindcss-animate 가 있습니다" };
+
+  for (const layout of ["npm", "pnpm"] as const) {
+    it(`AC1 ${layout}: 루트에만 ui-react 를 선언한 Tailwind 3 앱에 content 항목이 생김(./app 만이면 FAIL · 상위 제안, 덮으면 PASS, 종전에는 항목 없음)`, async () => {
+      const none = await ws86({ layout, rootDeps: TW3_ROOT, installed: TW3_INSTALLED, files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}"]) } });
+      expect(await item(none.app, "tailwind.content")).toEqual(CONTENT_FAIL(UP));
+      quietLog();
+      expect((await runCheck(none.app)).fail).toBe(1);
+      const up = await ws86({ layout, rootDeps: TW3_ROOT, installed: TW3_INSTALLED, files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}", UP]) } });
+      expect(await item(up.app, "tailwind.content")).toEqual(CONTENT_PASS);
+      expect((await runCheck(up.app)).fail).toBe(0);
+    });
+  }
+
+  it("AC2 animation: 루트에만 ui-react · tailwindcss-animate 를 선언 · 설치하고 plugins 에 있으면 PASS, 없으면 「plugins 에 없음」 WARN(「선언 없음」이 아님)", async () => {
+    const ok = await ws86({ rootDeps: TW3_ROOT, installed: TW3_INSTALLED, files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}", UP]) } });
+    expect(await item(ok.app, "animation")).toEqual(ANIM_PASS);
+    const noPlugin = await ws86({ rootDeps: TW3_ROOT, installed: TW3_INSTALLED, files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}", UP], "[]") } });
+    expect(await item(noPlugin.app, "animation")).toEqual({
+      name: "animation",
+      severity: "warn",
+      message:
+        '애니메이션 플러그인이 없습니다(@axis-ds/ui-react 선언, tailwind.config.js plugins 에 없음): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → tailwindcss-animate 설치 뒤 plugins 에 require("tailwindcss-animate")',
+    });
+  });
+
+  it("AC2 Tailwind 4 설치 앱(루트 ui-react · tw-animate-css 선언, CSS import 없음): tailwind.config 에 컴포넌트 스캔 경로 WARN · animation WARN", async () => {
+    const { app } = await ws86({
+      rootDeps: { tailwindcss: "^4.1.0", "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0", "tw-animate-css": "^1.2.0" },
+      installed: { tailwindcss: "4.3.3", "@axis-ds/tokens": "1.8.1", "@axis-ds/ui-react": "1.8.1", "tw-animate-css": "1.4.0" },
+      files: { "app/globals.css": '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n' },
+    });
+    expect(await item(app, "tailwind.config")).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message: 'Tailwind 4: app/globals.css에 컴포넌트 스캔 경로(tailwind.css)가 없습니다 → @import "@axis-ds/ui-react/tailwind.css";',
+    });
+    expect(await item(app, "animation")).toEqual({
+      name: "animation",
+      severity: "warn",
+      message:
+        '애니메이션 플러그인이 없습니다(@axis-ds/ui-react 선언): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → tw-animate-css 설치 뒤 @import "tw-animate-css";',
+    });
+  });
+
+  it("AC3 미설치 루트 선언: tailwindcss ^4.1.0 이면 Tailwind 4 분기(「tailwind.config 파일이 없습니다」 FAIL 이 아님), 1.4.0 안내 · preset 게이트도 루트 선언", async () => {
+    const tw4 = await ws86({
+      rootDeps: { tailwindcss: "^4.1.0", "@axis-ds/tokens": "^1.3.0", "@axis-ds/ui-react": "^1.3.0" },
+      files: { "app/globals.css": '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n@import "@axis-ds/ui-react/tailwind.css";\n' },
+    });
+    const pkg = await appPkg(tw4.app);
+    expect(detectTailwind(tw4.app, pkg)).toEqual({ major: 4, source: "declared", value: "^4.1.0" });
+    expect(axisPackagesBelowTailwind4(pkg, tw4.app)).toEqual([
+      { name: "@axis-ds/tokens", range: "^1.3.0", status: "below", source: "declared" },
+      { name: "@axis-ds/ui-react", range: "^1.3.0", status: "below", source: "declared" },
+    ]);
+    // baseDir 를 주지 않으면 종전대로 앱 선언만(루트를 볼 기준이 없음)
+    expect(axisPackagesBelowTailwind4(pkg)).toEqual([]);
+    const setup = await item(tw4.app, "tailwind.config");
+    expect(setup?.severity).toBe("warn");
+    expect(setup?.message).toContain("(1.4.0 이상 필요: @axis-ds/tokens ^1.3.0 · @axis-ds/ui-react ^1.3.0)");
+    quietLog();
+    expect((await runCheck(tw4.app)).fail).toBe(0);
+
+    const tw3 = await ws86({
+      rootDeps: { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.6.0" },
+      files: { "tailwind.config.js": 'module.exports = { presets: [require("@axis-ds/tokens/tailwind")], content: ["./app/**/*.{ts,tsx}"] };\n' },
+    });
+    expect((await item(tw3.app, "tailwind.config"))?.message).toContain("@axis-ds/tokens 선언 ^1.6.0 에서는 CommonJS 의 require");
+  });
+
+  it("brand-core theme 게이트(packageVersionGate): 루트에만 선언한 미설치 @axis-ds/theme 는 「선언」 근거(종전 「설치본 · 선언 없음」)", async () => {
+    const { app } = await ws86({ rootDeps: { "@axis-ds/theme": "^1.5.0" } });
+    expect(packageVersionGate(app, await appPkg(app), "@axis-ds/theme", "1.7.0")).toEqual({ status: "below", source: "declared", value: "^1.5.0" });
+    // 설치본이 있으면 설치본 우선(전이 없음)
+    const inst = await ws86({ rootDeps: { "@axis-ds/theme": "^1.5.0" }, installed: { "@axis-ds/theme": "1.8.1" } });
+    expect(packageVersionGate(inst.app, await appPkg(inst.app), "@axis-ds/theme", "1.7.0")).toEqual({ status: "ok", source: "installed", value: "1.8.1" });
+  });
+
+  it("음성 대조: 앱 선언 앱은 종전 판정, 워크스페이스가 아닌 상위의 선언은 인정하지 않음(content · animation 항목 없음)", async () => {
+    const appDecl = await ws86({
+      rootDeps: TW3_ROOT,
+      installed: TW3_INSTALLED,
+      appDeps: { "@axis-ds/ui-react": "^1.8.0", "tailwindcss-animate": "^1.0.7" },
+      files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}"]) },
+    });
+    expect(await item(appDecl.app, "tailwind.content")).toEqual(CONTENT_FAIL(UP));
+    expect(await item(appDecl.app, "animation")).toEqual(ANIM_PASS);
+    const outside = await ws86({ workspaces: false, rootDeps: TW3_ROOT, installed: TW3_INSTALLED, files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}"]) } });
+    expect(await item(outside.app, "tailwind.content")).toBeUndefined();
+    expect(await item(outside.app, "animation")).toBeUndefined();
+  });
+
+  for (const layout of ["npm", "pnpm"] as const) {
+    it(`AC5 ${layout}: 앱 링크(L1)로 준 check 가 실경로와 같은 판정(루트 선언 · 앱 선언 · 절대 glob 행)`, async () => {
+      const variants: Array<{ label: string; appDeps?: Record<string, string>; content: (root: string) => string[] }> = [
+        { label: "g1-none", content: () => ["./app/**/*.{ts,tsx}"] },
+        { label: "g1-up", content: () => ["./app/**/*.{ts,tsx}", UP] },
+        { label: "c1-appdecl", appDeps: { "@axis-ds/ui-react": "^1.8.0", "tailwindcss-animate": "^1.0.7" }, content: () => ["./app/**/*.{ts,tsx}"] },
+        // 반박 검토: 실경로 절대 glob 은 링크로 줄 때 판정 기준(baseDir)도 실경로여야 함(contentGlobCovers). 탐색만 실경로면 거짓 FAIL
+        { label: "c1-abs", appDeps: { "@axis-ds/ui-react": "^1.8.0" }, content: (root) => ["./app/**/*.{ts,tsx}", `${root}/node_modules${UI_GLOB}`] },
+      ];
+      for (const v of variants) {
+        const { root, app } = await ws86({ layout, rootDeps: TW3_ROOT, installed: TW3_INSTALLED, appDeps: v.appDeps });
+        await fs.outputFile(path.join(app, "tailwind.config.js"), tw3Config(v.content(root.split(path.sep).join("/"))));
+        const link = await linkTo(app);
+        const real = await collectCheckResults(app);
+        expect({ label: v.label, results: await collectCheckResults(link) }).toEqual({ label: v.label, results: real });
+        if (v.label === "c1-abs") expect({ label: v.label, content: real.find((r) => r.name === "tailwind.content") }).toEqual({ label: v.label, content: CONTENT_PASS });
+        if (v.label === "g1-none") expect({ label: v.label, content: real.find((r) => r.name === "tailwind.content") }).toEqual({ label: v.label, content: CONTENT_FAIL(UP) });
+      }
+    });
+  }
+
+  // WI-0086 검토 후속(minor): export 된 contentGlobCovers 를 링크 baseDir 로 직접 부를 때도 실경로 기준으로 판정(진입부 resolveBaseDir).
+  // 내부 호출자(inspectTailwindContent)는 이미 실경로를 넘겨 위 AC5 행만으로는 이 줄을 지워도 빨개지지 않았음(동치 변이)
+  it("contentGlobCovers 단위: 링크 baseDir 의 절대 glob 은 실경로 기준(상위로 나가는 표본 · 아직 없는 표본)", async () => {
+    const root = await fs.realpath(await tempDir());
+    const app = path.join(root, "apps", "web");
+    await fs.outputFile(path.join(root, "node_modules", "@axis-ds", "ui-react", "dist", "index.js"), "");
+    await fs.ensureDir(app);
+    const link = await linkTo(app);
+    const posix = (p: string) => p.split(path.sep).join("/");
+    const upGlob = `${posix(root)}/node_modules/@axis-ds/ui-react/dist/**/*.js`;
+    const upSample = "../../node_modules/@axis-ds/ui-react/dist/index.js";
+    const localGlob = `${posix(app)}/components/**/*.tsx`;
+    const localSample = "components/ui/button.tsx";
+    expect([contentGlobCovers(upGlob, upSample, app), contentGlobCovers(localGlob, localSample, app)]).toEqual([true, true]);
+    expect([contentGlobCovers(upGlob, upSample, link), contentGlobCovers(localGlob, localSample, link)]).toEqual([true, true]);
+    // 음성 대조: 다른 위치를 가리키는 절대 glob 은 링크로 불러도 덮지 않음
+    expect(contentGlobCovers(`${posix(root)}/other/**/*.js`, upSample, link)).toBe(false);
+  });
+
+  it("AC6 pnpm 기본(앱 node_modules/@axis-ds/ui-react 가 .pnpm 스토어 링크): 실경로 · 링크 모두 제안 ./node_modules/…(스토어 경로가 새지 않고 링크 기준 상대경로로 깨지지 않음)", async () => {
+    const { root, app } = await ws86({
+      layout: "pnpm",
+      rootDeps: { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.0" },
+      installed: { tailwindcss: "3.4.19", "@axis-ds/tokens": "1.8.1" },
+      appDeps: { "@axis-ds/ui-react": "^1.8.0" },
+      files: { "tailwind.config.js": tw3Config(["./app/**/*.{ts,tsx}"]) },
+    });
+    const store = path.join(root, "node_modules", ".pnpm", "@axis-ds+ui-react@1.8.1", "node_modules", "@axis-ds", "ui-react");
+    await fs.outputJSON(path.join(store, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.1" });
+    await fs.ensureDir(path.join(app, "node_modules", "@axis-ds"));
+    await fs.symlink(store, path.join(app, "node_modules", "@axis-ds", "ui-react"), "dir");
+    expect(await item(app, "tailwind.content")).toEqual(CONTENT_FAIL(LOCAL));
+    expect(await item(await linkTo(app), "tailwind.content")).toEqual(CONTENT_FAIL(LOCAL));
+  });
+
+  it("ENOENT: 없는 경로는 종전처럼 resolve 기준(메시지 그대로)", async () => {
+    const missing = path.join(await tempDir(), "no-such-dir");
+    const results = await collectCheckResults(missing);
+    expect(results.find((r) => r.name === "dependencies")).toEqual({ name: "dependencies", severity: "fail", message: "package.json 파일이 없습니다" });
   });
 });

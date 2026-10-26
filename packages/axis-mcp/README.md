@@ -41,7 +41,7 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 - 이름은 레지스트리 이름 그대로입니다. Agentic UI 는 `agentic-` 접두를 붙입니다(예: `agentic-run-progress`). 의존 항목(`utils` · `agentic-a11y-labels`)은 함께 설치됩니다.
 - `targetDir` 는 이미 있는 프로젝트 루트입니다(상대 경로는 서버의 현재 디렉터리 기준). `axis.config.json` 이 있으면 그 `componentsDir` · `agenticDir` 에, 없으면 `components/ui` · `components/agentic` 에 설치하고 그 사실을 알립니다. 프로젝트 밖으로 나가는 경로는 아무것도 쓰지 않고 실패합니다.
 - 내용이 다른 기존 파일은 덮어쓰지 않고 건너뛰며 응답 첫머리에 건너뛴 수를 적습니다. `overwrite: true` 일 때만 덮어씁니다.
-- 의존성은 설치하지 않고 lockfile 에 맞는 명령(`pnpm add` · `npm install` · `yarn add`)만 안내합니다.
+- 의존성은 설치하지 않고 lockfile 에 맞는 명령(`pnpm add` · `npm install` · `yarn add`)만 안내합니다. lockfile 이 없으면 `package.json` 의 `packageManager` 를 봅니다(1.4.2 부터). `axis.apply_template` 의 「필요한 의존성」 · `axis.list_brands` · `axis.get_brand` 의 설치 안내도 1.4.2 부터 같은 방식으로 `targetDir` 의 매니저를 따릅니다(1.4.1 까지는 `pnpm` 고정).
 
 ## 토큰 도구
 

@@ -29,21 +29,29 @@
  *   init · theme add · template apply · axis add 도 같은 함수를 쓰므로 함께 바뀝니다(전이 표는 WI-0074 testplan).
  * - WI-0080: Tailwind 3 content 판정의 패키지 표본 · 제안도 `findInstalledPackage` 로 찾은 설치본 위치(baseDir 기준 상대 경로)를
  *   씁니다(호이스팅이면 `../../node_modules/<pkg>`). 덮음 판정은 `contentGlobCovers`(앞쪽 `../` 개수 비교 · 절대경로 비교)입니다.
+ * - WI-0086: 의존성 선언 판정(Tailwind 버전 · 1.4.0 안내 · 버전 게이트 · Tailwind 4 컴포넌트 tailwind.css · content 대상 ·
+ *   animation 의 ui-react 사용과 tailwindcss-animate 선언)은 project.ts 의 `declaredDependency`(앱 다음 워크스페이스 루트)로 봅니다.
+ *   공개 함수는 진입부에서 `resolveBaseDir`(심볼릭 링크를 푼 실경로)로 기준 디렉터리를 한 번 맞추고, 찾은 설치본 디렉터리는 풀지 않습니다.
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
-import { ROOT_LAYOUT_FILES, compareExactVersions, findInstalledPackage, isPnpProject } from "../project.js";
+import {
+  ROOT_LAYOUT_FILES,
+  compareExactVersions,
+  declaredDependency,
+  findInstalledPackage,
+  hasDependency,
+  isPnpProject,
+  resolveBaseDir,
+} from "../project.js";
 
-/** `package.json` 의 dependencies 다음 devDependencies 에서 선언 범위를 찾습니다(theme-add 의 `hasDependency` 와 같은 동작). */
-function hasDependency(pkg: Record<string, unknown>, name: string): string | undefined {
-  for (const field of ["dependencies", "devDependencies"]) {
-    const deps = pkg[field];
-    if (typeof deps === "object" && deps !== null && name in deps) {
-      return String((deps as Record<string, unknown>)[name]);
-    }
-  }
-  return undefined;
+/**
+ * 판정에 쓰는 의존성 선언 범위(WI-0086). 앱 package.json 다음 워크스페이스 루트 package.json 순입니다(`declaredDependency`).
+ * 종전에는 이 파일에 앱 선언만 보는 지역 `hasDependency` 사본이 있어, 설치본은 루트에서 찾으면서 선언은 앱만 보는 비대칭이었습니다.
+ */
+function declaredRange(baseDir: string, pkg: Record<string, unknown> | undefined, name: string): string | undefined {
+  return declaredDependency(baseDir, pkg, name)?.range;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -200,8 +208,8 @@ function majorFromVersion(version: unknown): number | undefined {
  * 3. 판정 불가: 둘 다 없거나 읽지 못하면 `source: "none"`(기본값은 `selectUtilsDependencies` 가 정함).
  */
 export function detectTailwind(baseDirInput: string, pkg?: Record<string, unknown>): TailwindDetection {
-  const baseDir = resolve(baseDirInput);
-  const declared = pkg ? hasDependency(pkg, "tailwindcss") : undefined;
+  const baseDir = resolveBaseDir(baseDirInput);
+  const declared = pkg ? declaredRange(baseDir, pkg, "tailwindcss") : undefined;
   const bounds = declared !== undefined ? tailwindMajorBounds(declared) : undefined;
   const declaredMajor = bounds?.lower;
   // 없음 · 읽을 수 없음 · 정확한 버전이 아님 · Plug'n'Play: 선언 범위로
@@ -303,7 +311,7 @@ const AXIS_VARIABLE_DEFINITION = /(?<![\w-])--axis-[\w-]+\s*:/;
  * 가이드(theme-customization 4절 import 순서)가 안내하는 `app/layout.tsx` 의 `import "@axis-ds/tokens/css"` 구성입니다.
  */
 export function findLayoutTokensCssImport(baseDirInput: string): { file: string; spec: string } | undefined {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   for (const candidate of ROOT_LAYOUT_FILES) {
     const file = join(baseDir, candidate);
     if (!existsSync(file)) continue;
@@ -332,7 +340,7 @@ export function findLayoutTokensCssImport(baseDirInput: string): { file: string;
  * (Tailwind 4 는 같은 판정을 tailwind.config 항목 B2 에서 냅니다).
  */
 export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   for (const candidate of TAILWIND_CSS_CANDIDATES) {
     const file = join(baseDir, candidate);
     if (!existsSync(file)) continue;
@@ -492,11 +500,12 @@ export function axisPackagesBelowTailwind4(
   baseDirInput?: string
 ): AxisPackageVersionIssue[] {
   if (!pkg) return [];
-  const baseDir = baseDirInput !== undefined ? resolve(baseDirInput) : undefined;
+  const baseDir = baseDirInput !== undefined ? resolveBaseDir(baseDirInput) : undefined;
   const out: AxisPackageVersionIssue[] = [];
   const min = lowerOf(TAILWIND4_MIN_AXIS_VERSION)!;
   for (const name of TAILWIND4_AXIS_PACKAGES) {
-    const range = hasDependency(pkg, name);
+    // `baseDir` 가 있으면 워크스페이스 루트 선언도 봅니다(WI-0086). 없으면 종전대로 앱 선언만 봅니다.
+    const range = baseDir !== undefined ? declaredRange(baseDir, pkg, name) : hasDependency(pkg, name);
     if (range === undefined || range.trim().startsWith("workspace:")) continue;
     const installed = baseDir !== undefined ? installedAxisVersion(baseDir, name) : undefined;
     const installedLower = installed !== undefined ? lowerOf(installed) : undefined;
@@ -740,7 +749,7 @@ export function packageVersionGate(
   name: string,
   min: string
 ): PackageVersionGate {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   if (!isPnpProject(baseDir)) {
     const installed = findInstalledPackage(baseDir, name)?.version;
     if (installed !== undefined) {
@@ -748,7 +757,7 @@ export function packageVersionGate(
       if (cmp !== undefined) return { status: cmp >= 0 ? "ok" : "below", source: "installed", value: installed };
     }
   }
-  const declared = pkg ? hasDependency(pkg, name) : undefined;
+  const declared = pkg ? declaredRange(baseDir, pkg, name) : undefined;
   if (declared !== undefined) {
     const atLeast = rangeLowerAtLeast(declared, min);
     if (atLeast !== undefined) return { status: atLeast ? "ok" : "below", source: "declared", value: declared };
@@ -785,14 +794,18 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  *    `tailwind.css` 가 필요 없으므로 이 항목을 만들지 않습니다(버전 안내는 다른 문제가 있을 때 끝에 붙음).
  * 버전 안내(`tailwind4VersionNote`)는 문제 목록이 아니라 WARN 문구 끝에 한 번 붙습니다.
  */
-function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, versions: AxisPackageVersionIssue[]): string[] {
+function tailwind4Issues(
+  css: string,
+  pkg: Record<string, unknown> | undefined,
+  versions: AxisPackageVersionIssue[],
+  baseDir: string
+): string[] {
   const issues: string[] = [];
   const hasEntry = hasTokensTailwind4Import(css);
   if (!hasEntry) issues.push(`AXIS 토큰 진입점이 없습니다 → ${TOKENS_TAILWIND4_IMPORT_LINE}`);
   const missing = TAILWIND4_COMPONENT_PACKAGES.filter(
     (name) =>
-      pkg !== undefined &&
-      hasDependency(pkg, name) !== undefined &&
+      declaredRange(baseDir, pkg, name) !== undefined &&
       !hasComponentTailwindImport(css, name) &&
       !hasComponentSource(css, name)
   );
@@ -826,7 +839,7 @@ function tailwind4Issues(css: string, pkg: Record<string, unknown> | undefined, 
  *   종전 문구 그대로입니다.
  */
 export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   const pkg = readPackageJson(baseDir);
   const tailwind = detectTailwind(baseDir, pkg);
   if (tailwind.major !== undefined && tailwind.major >= 4) {
@@ -843,7 +856,7 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
         };
       }
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
-      const issues = tailwind4Issues(css, pkg, versions);
+      const issues = tailwind4Issues(css, pkg, versions, baseDir);
       if (issues.length > 0) {
         return {
           name: "tailwind.config",
@@ -1056,7 +1069,11 @@ function contentGlobBranchCovers(glob: string, sample: string, baseDir: string):
  * Tailwind 3 는 `relative: true` 가 없으면 content 를 빌드를 실행한 디렉터리(cwd) 기준으로 풀지만, 판정은 baseDir(앱 디렉터리)을
  * cwd 로 둡니다(D4: 판정에 반영하지 않고 상위 경로 제안에 `CONTENT_PARENT_PATH_NOTE` 를 붙임).
  */
-export function contentGlobCovers(glob: string, sample: string, baseDir: string): boolean {
+export function contentGlobCovers(glob: string, sample: string, baseDirInput: string): boolean {
+  // 표본은 실경로 기준 상대 경로라 절대 glob 비교의 기준도 실경로로 맞춥니다(WI-0086). 내부 호출자 inspectTailwindContent 는 진입부에서
+  // 이미 실경로를 넘기므로 check 의 링크 판정(반박 검토 AC5 c1-abs 행)은 그쪽 덕분이고, 이 줄은 export 된 이 함수를 링크 경로로 직접 부를 때를
+  // 맞춥니다(검토 후속 단위 테스트 「링크 baseDir 의 절대 glob」이 고정)
+  const baseDir = resolveBaseDir(baseDirInput);
   const branches = expandBraces(glob.trim()) ?? [glob];
   return branches.some((b) => contentGlobBranchCovers(b, sample, baseDir));
 }
@@ -1167,7 +1184,7 @@ function normalizeRel(p: string): string | undefined {
  * glob 은 설정 파일이 있는 디렉터리(프로젝트 루트) 기준으로 맞춥니다(`contentGlobCovers`). 판정은 문자열 판독이라 실제 파일이 있는지는 보지 않습니다.
  */
 export function inspectTailwindContent(baseDirInput: string): TailwindContentInspection | null {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   const pkg = readPackageJson(baseDir);
   const tailwind = detectTailwind(baseDir, pkg);
   if (tailwind.major !== undefined && tailwind.major >= 4) return null;
@@ -1181,7 +1198,7 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
     targets.push({ label: `componentsDir(${componentsDir as string})`, sample: `${rel}/button.tsx`, suggest: `./${rel}/**/*.{ts,tsx}` });
   }
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
-    if (pkg !== undefined && hasDependency(pkg, name) !== undefined) {
+    if (declaredRange(baseDir, pkg, name) !== undefined) {
       targets.push({ label: name, ...packageContentTarget(baseDir, name) });
     }
   }
@@ -1301,10 +1318,10 @@ export interface AnimationCheckResult {
  * - 플러그인 판정(Tailwind 4): CSS 후보 첫 파일에 `@import "tw-animate-css"` 또는 `@plugin "tailwindcss-animate"`
  */
 export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult | null {
-  const baseDir = resolve(baseDirInput);
+  const baseDir = resolveBaseDir(baseDirInput);
   const pkg = readPackageJson(baseDir);
   const config = readAxisConfigLike(baseDir);
-  const declared = pkg !== undefined && hasDependency(pkg, "@axis-ds/ui-react") !== undefined;
+  const declared = declaredRange(baseDir, pkg, "@axis-ds/ui-react") !== undefined;
   const copied = typeof config?.componentsDir === "string" && componentsUseAnimation(baseDir, config.componentsDir);
   if (!declared && !copied) return null;
   const by = declared ? "@axis-ds/ui-react 선언" : "componentsDir 의 animate-in 류 클래스";
@@ -1326,7 +1343,7 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
   const source = configFile !== undefined ? stripJsComments(readFileSync(join(baseDir, configFile), "utf8")) : "";
   const plugins = configFile !== undefined ? readAnimationPluginUse(source) : "absent";
-  const pluginDeclared = pkg !== undefined && hasDependency(pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined;
+  const pluginDeclared = declaredRange(baseDir, pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined;
   // WI-0070: 「미설치」는 선언이 아니라 설치본으로 봅니다(Plug'n'Play 는 선언 기준)
   const pluginInstalled =
     pluginDeclared && (isPnpProject(baseDir) || findInstalledPackage(baseDir, ANIMATION_PLUGIN_TAILWIND3) !== undefined);

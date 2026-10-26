@@ -21,7 +21,7 @@
 
 - 앱과 워크스페이스 루트 사이에 `.git`(디렉터리 또는 서브모듈의 파일)이 있으면 거기서 멈춰요. 서브모듈 안 앱은 바깥 저장소의 lockfile · 선언을 보지 않아요.
 - 워크스페이스 글롭이 그 앱을 실제로 포함하는지는 보지 않아요. 글롭에서 빠진 앱이 루트 아래 있으면 루트 lockfile · 선언을 따라요.
-- lockfile 과 상관없이 pnpm 으로 고정된 안내(`axis template apply`, MCP brand · template 안내, monet 안내)는 이번에 바꾸지 않았어요(WI-0085 에서 다뤄요).
+- lockfile 과 상관없이 pnpm 으로 고정된 안내(`axis template apply`, MCP brand · template 안내, monet 안내)는 이번에 바꾸지 않았어요(WI-0085 에서 다뤄요). **해소(2026-10-26, WI-0085, cli 1.7.2 · mcp 1.4.2 예상)**: 이 안내들도 대상 프로젝트 매니저를 따르고, lockfile 이 없으면 `packageManager` 를 봐요.
 - 루트에만 `@axis-ds/ui-react` 를 선언한 앱의 Tailwind 판정(content 대상 · animation 등)은 아직 앱 선언만 봐요(WI-0086 에서 다뤄요).
 
 ## 발행

@@ -154,8 +154,8 @@ CLI `packages/axis-cli/src/template/template-check.test.ts`: WI-0074 monorepo �
 | R1 | changeset 검사 push 모드가 `HEAD^` 하나만 봄(rebase 머지 · 직접 push 의 앞 커밋 누락) | 맞음. 새 테스트(커밋 3개, 첫 커밋만 registry-core)를 수정 전 스크립트에 돌리면 rc 0(기대 1)으로 빨강 | 고침: frontend.yml 이 `github.event.before` 를 `AXIS_PUSH_BEFORE` 로 넘기고, 스크립트는 그 커밋과 HEAD 의 merge-base 를 기준으로 씀. 비었거나 0 sha 면 `HEAD^`, sha 형식 오류 · 받지 못한 커밋이면 exit 2 |
 | R2 | `contentGlobCovers` 가 중괄호 안의 상위 경로 갈래를 못 셈(검토 두 건 공통) | 맞음. 단위 · 호이스팅 픽스처 테스트가 수정 전 소스에서 빨강 | 고침(D7): 중괄호 갈래를 펼쳐(중첩 포함, 256개 상한) 갈래마다 판정. 빌드 정답은 검토 실측 372/372(npm · yarn ws 앱 cwd) |
 | R3 | 절대경로 glob 이 심링크 경로와만 비교(pnpm `.pnpm` 스토어 실경로 거짓 FAIL) | 맞음. 심링크 스토어 픽스처 테스트가 수정 전 소스에서 빨강 | 고침(D3 확장): 표본의 실경로(있는 조상까지 realpath)와도 비교. 빌드 정답은 검토 실측 372/372 |
-| R4 | `findWorkspaceRoot` · `findInstalledPackage` 가 realpath 를 쓰지 않음(심링크 baseDir) | 맞음(검토 픽스처 실측). 종전 동작과 같아 회귀 아님 | 후속: WI-0080 · WI-0081 PRD 1.3 「범위 밖」에 잔여 경계로 기록 |
-| R5 | init 의 utils 의존성 추가가 루트 선언을 무시(check 와 판단 불일치) | 맞음(검토 rootonly 픽스처 실측) | 후속: WI-0081 PRD 1.3 에 기록, WI-0086 합류 · 새 WI 여부는 결정 필요로 넘김 |
+| R4 | `findWorkspaceRoot` · `findInstalledPackage` 가 realpath 를 쓰지 않음(심링크 baseDir) | 맞음(검토 픽스처 실측). 종전 동작과 같아 회귀 아님 | 후속: WI-0080 · WI-0081 PRD 1.3 「범위 밖」에 잔여 경계로 기록 → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정) |
+| R5 | init 의 utils 의존성 추가가 루트 선언을 무시(check 와 판단 불일치) | 맞음(검토 rootonly 픽스처 실측) | 후속: WI-0081 PRD 1.3 에 기록, WI-0086 합류 · 새 WI 여부는 결정 필요로 넘김. 배치 6c 결정으로 WI-0086 에 합류 → 해소: WI-0086(#218, 배치 6c, 2026-10-26 구현, cli 1.7.2 · mcp 1.4.2 예정) |
 
 새 테스트 4건과 수정 전 확인:
 

@@ -12,6 +12,7 @@
 import chalk from "chalk";
 import fs from "fs-extra";
 import path from "path";
+import { addCommandPrefix, detectInstallCommand } from "@axis-ds/registry-core/project";
 import { ask, failNonInteractive, isInteractive } from "./interactive.js";
 
 // Monet 카테고리 목록
@@ -210,10 +211,21 @@ export class MonetClient {
 
     console.log(chalk.green(`\n✓ ${filePath} 저장 완료`));
     console.log(chalk.gray("\n다음 단계:"));
-    console.log(chalk.gray("  1. 파일을 열어 import 경로 수정"));
-    console.log(chalk.gray("  2. 필요한 의존성 설치 (pnpm add ...)"));
-    console.log(chalk.gray("  3. 컴포넌트 사용\n"));
+    for (const line of monetImportNextSteps(process.cwd())) console.log(chalk.gray(`  ${line}`));
+    console.log("");
   }
+}
+
+/**
+ * `monet import` 저장 뒤 다음 단계(WI-0085). 의존성 설치 줄은 `baseDir`(import 는 cwd 기준으로 axis.config.json 을 읽음)의
+ * lockfile · `packageManager` 로 매니저를 고릅니다. 종전에는 `(pnpm add ...)` 고정이었습니다.
+ */
+export function monetImportNextSteps(baseDir: string): string[] {
+  return [
+    "1. 파일을 열어 import 경로 수정",
+    `2. 필요한 의존성 설치 (${addCommandPrefix(detectInstallCommand(baseDir))} ...)`,
+    "3. 컴포넌트 사용",
+  ];
 }
 
 // Monet 관련 유틸리티

@@ -82,8 +82,8 @@
 | 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | ⏳ |
 | 95 | library 대표 선택이 상세 JSON 129개를 모두 읽음 · TW3 preset 테스트가 dist 진입점을 검사하지 않음(배치 6 검토 후속, 배치 6b) | WI-0083 (#212) | P18 | P3 | ✅ 2026-10-26 (#220, npm 발행 없음) |
 | 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
-| 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ⏳ |
-| 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ⏳ |
+| 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | 🔄 |
+| 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | 🔄 |
 | 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ⏳ |
 | 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
 | 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | ⏳ |
