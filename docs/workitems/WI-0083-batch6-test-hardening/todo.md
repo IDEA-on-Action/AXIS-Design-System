@@ -1,6 +1,6 @@
 # WI-0083: library 대표 선택 · TW3 preset dist 진입점 테스트 보강 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #212 | 상태: 🔄 구현 · 게이트 완료, PR 대기(브랜치 `test/wi-0083`, push · PR 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #212 | 상태: ✅ 완료(2026-10-26, #220 머지 3591f9b, npm 발행 없음)
 
 ## 결정 · 조사
 - [x] 사용자 결정 D1-A · D2-A · D3-A 변형 · D4-A · D5-A · changeset 없음 기록 (PRD 1.3)
@@ -28,5 +28,5 @@
 - [x] 검토 minor 3건 반영(symlink 종류 · 변이 대상 선택 · tsup 단계 가드), 변이 V1 · V2 · V3 실패 확인, 재게이트 (testplan 7절)
 
 ## 마무리
-- [ ] PR 생성 · CI 통과 · 머지 (push · PR 은 이 작업 범위 밖)
-- [ ] 머지 뒤 project-todo ✅ · wi-mapping lastStatus ✅ · `gh issue close 212`
+- [x] PR 생성 · CI 통과 · 머지 (2026-10-26 #220, PR CI 19m45s 통과, 머지 3591f9b. main push run 40246082456 통과)
+- [x] 머지 뒤 project-todo ✅ · wi-mapping lastStatus ✅ · `gh issue close 212` (#212 닫힘 2026-10-26, Project 4 Done)

@@ -1,6 +1,6 @@
 # WI-0081 릴리스 노트: 워크스페이스 앱의 설치 안내 명령과 dependencies 판정이 워크스페이스 루트를 봐요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #210 | 대상: `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(예정, 배치 6b Release PR 에서 WI-0080 과 합쳐짐). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #210 | 대상: `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(2026-10-26 발행, 배치 6b 에서 WI-0080 과 합쳐짐, PR #219 머지 79c3208 · Release PR #221 머지 cb8f27c, publish run 40247657745, provenance). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -26,4 +26,5 @@
 
 ## 발행
 
-- (배포 뒤 기록)
+- `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1 (2026-10-26, PR #219 머지 79c3208, Release PR #221 머지 cb8f27c, publish run 40247657745, provenance 2/2). linked 4패키지는 1.8.1 그대로
+- 발행본 재측정: npm · yarn 워크스페이스 안내 8줄만 바뀜, 루트에만 선언한 앱 4개 cli rc 1 → 0, 워크스페이스 밖 선언은 FAIL 유지, cli · mcp 불일치 0(testplan 7절)

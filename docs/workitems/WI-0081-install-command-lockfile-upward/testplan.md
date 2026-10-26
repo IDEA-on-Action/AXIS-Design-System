@@ -135,9 +135,15 @@ pnpm 고정으로 남긴 곳(D3, WI-0085(#217) 대상):
 - `registry-install-smoke.mjs` 는 dependencyCommand 가 `pnpm add ` 로 시작한다고 기대해요. `--work` 를 npm lockfile 이 있는 워크스페이스 아래로 주면 실패할 수 있어요(CI 기본 경로는 tmpdir 이라 영향 없음).
 - 판별력 있는 행은 npm · yarn 뿐이에요. pnpm 행은 상위 탐색이 깨져도 초록이라 변이 판정은 npm · yarn 행으로 했어요.
 
-## 7. 발행 뒤 재측정 (AC7, 미수행)
+## 7. 발행 뒤 재측정 (AC7, 2026-10-26)
 
-- 새 발행본(cli 1.7.1 · mcp 1.4.1)을 `m/tools` 와 다른 새 디렉터리에 npm 으로 설치하고, `meas.sh` 의 new 경로를 그 설치본으로 바꿔 다시 돌려요. 2절 표의 수정 후 열과 줄 단위로 같아야 해요(바뀐 줄 안내 8 · cli 13 · mcp 9, 그 밖 0).
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(PR #219 머지 79c3208, Release PR #221 머지 cb8f27c, publish run 40247657745, provenance 2/2 `https://slsa.dev/provenance/v1`), 대조 cli 1.7.0 · mcp 1.4.0. 둘 다 `m/tools` 와 다른 새 디렉터리(tools-old · tools-new)에 `env -i` PATH · 새 HOME · 새 XDG_CONFIG_HOME 으로 npm 설치(rc 0), resolved 는 `registry.npmjs.org` tgz, `--version` 1.7.0 / 1.7.1.
+- 안내 명령(`meas-pub.sh` rc 0, 9개 명령 rc 0): 신구 각 49줄, diff 는 2절 표의 8줄뿐(npm 4줄 · yarn 4줄, 1.7.0 은 같은 8줄이 pnpm). 이 신판 결과는 구현 때 worktree 빌드로 잰 `guide-new.txt` 와 diff rc 0, 구판 결과는 이전 `guide-pub.txt` 와 diff rc 0.
+- 양성 대조: ctl-npm · ctl-yarn(앱 옆 lock) 은 신구 모두 `npm install` · `yarn install`, 추출 grep 이 npm · yarn 줄을 실제로 잡음. 음성 대조: fx-outside · fx-gitstop 6개 명령, pnpm · pnpmhoisted 6개 명령은 신구 diff 0(모두 pnpm).
+- check(8앱): 바뀐 줄 cli 13 · mcp 9(check-old.json · check-new.json 을 줄 단위로 다시 셈, 2절 기대값과 같음). 루트에만 선언한 4앱(fx-npm d-rootonly · h-rootonly-ui, fx-pnpm d-rootonly, fx-pnpmhoisted d-rootonly)은 1.7.0 rc 1 「FAIL 필수 의존성 누락: tailwindcss」 → 1.7.1 rc 0 「WARN 권장 의존성 누락: clsx, tailwind-merge (워크스페이스 루트에 선언: tailwindcss)」, mcp 1.4.1 도 같은 문구. fx-outside-tw/sub/app 은 신구 rc 1 FAIL 유지, a-twlatest · fx-single 은 신구 같음, fx-yarn w81-check 는 신구 rc 1 이고 설치 안내만 `pnpm install` → `yarn install`. check 8행 41항목의 cli · mcp 불일치 행은 신구 모두 0.
+- 구현 때와 다른 조건: fx-gitstop 은 빈 `.git` 디렉터리 대신 `git init` 한 실제 저장소(결과 같음, 신구 모두 pnpm). pnpm 픽스처는 새 HOME 에서 corepack 이 최신 pnpm 을 받으려다 실패해 루트 package.json 에 `packageManager: pnpm@9.15.4` 를 넣고 설치(원래 픽스처와 같은 설정, 측정 단계 env 주입 없음).
+- 미측정: yarn 은 원래 측정처럼 빈 yarn.lock · 미설치 상태로만 쟀어요. 실제 yarn 설치 결과 위의 check 동작은 재지 않았어요.
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6b/w/`(guide-old.txt · guide-new.txt · check-old.json · check-new.json)
 
 ## 8. 반박 검토 후속 (2026-10-26)
 

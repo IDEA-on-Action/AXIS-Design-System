@@ -129,9 +129,21 @@ CLI `packages/axis-cli/src/template/template-check.test.ts`: WI-0074 monorepo �
 | `registry-install-smoke` | rc 0, 5/5 |
 | E2E | 실행하지 않음: `apps/web` · 디자인 패키지 변경 없음(바뀐 것은 registry-core · cli · mcp 테스트 · scripts · 문서), 해당 spec 없음 |
 
-## 6. 발행 뒤 재측정 (AC8, 배포 뒤)
+## 6. 발행 뒤 재측정 (AC8, 2026-10-26)
 
-- [ ] npm 에서 받은 cli 1.7.1 · mcp 1.4.1 로 `matrix2.mjs` 를 다시 돌려 after 24/24 · cliMcpMismatch 0 · negativeControl 10/10 확인
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(PR #219 머지 79c3208, Release PR #221 머지 cb8f27c, publish run 40247657745, provenance 2/2 `https://slsa.dev/provenance/v1`), 대조 cli 1.7.0 · mcp 1.4.0. package-lock resolved 가 `registry.npmjs.org` 의 네 tgz 이고 `--version` 실행값 1.7.0 / 1.7.1.
+- 환경: `env -i` PATH · 새 HOME · 새 XDG_CONFIG_HOME 으로 tools-old · tools-new 를 npm 설치(rc 0), 측정 드라이버도 같은 env. 픽스처(fx-npm · fx-pnpm · fx-pnpmhoisted · fx-single3 · fx-single)는 `mkfx.mjs` 로 새로 만들어 레지스트리에서 설치(npm rc 0, pnpm 9.15.4 rc 0). 배치 실측: npm · pnpm hoisted 의 f-tw3content 는 ui-react 1.8.1 이 `../..` 에, pnpm 기본 · single 은 앱 `node_modules` 에 있음. tailwindcss 3.4.19.
+- 측정이 돈 근거: `matrix-pub.mjs` rc 0 · stderr 0바이트 · 24행, 판정을 못 읽은 행 0 · 빈 문구 0 · 빌드 실패 0, out/ CSS 42개. 정답 기준 ui-react 전용 선택자 402개(npm hoisted up 빌드 - none 빌드).
+- 결과: cli 1.7.1 24/24 · mcp 1.4.1 24/24 정답 일치, 대조 cli 1.7.0 · mcp 1.4.0 각 12/24(틀린 12행은 호이스팅 2종의 up · local · broad · relobj · abs 10행, pnpm 기본 abs 1행, single abs 1행). hoisted broad 는 402개 중 44개만 맞혀 1.7.1 FAIL 이 정답과 같음. cli · mcp content 문구 불일치 신판 0 · 구판 0.
+- 음성 대조: pnpm 기본 · single 의 abs 가 아닌 10행은 신구 문구 · rc 10/10 바이트 일치.
+- theme add ontology(신구 4경우 rc 0): 1.7.1 은 fx-npm · fx-pnpmhoisted 에서 `../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 제안 + cwd 안내 1줄(2줄), fx-pnpm 은 `./node_modules/...` 1줄로 1.7.0 과 같음. 1.7.0 은 세 픽스처 모두 `./node_modules/...` 1줄.
+- 측정 조건: 새 HOME 에서 corepack 이 최신 pnpm 을 받으려다 실패해 픽스처 루트 package.json 에 `packageManager: pnpm@9.15.4` 를 넣고 설치(원래 픽스처와 같은 설정, 측정 단계에는 env 주입 없음).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6b/w/`(matrix2.json · matrix.txt · theme-add.json · theme-add-h.json)
+
+### 6.1 changeset 검사 실경로 (CI, 2026-10-26)
+
+- PR 모드: #219 PR CI(13m47s)에서 기준 merge-base 6d455f7 · registry-core 3파일 · cli · mcp changeset 각 2개로 통과. 확장 검사가 PR 모드로 실제로 돌았어요.
+- main push 모드(정착 대기): #219 push run 40246073020 은 #220 push 에 취소되어(cancelled) 검사 단계가 skipped, #220 push run 40246082456 은 기준 `github.event.before` 79c3208 · registry-core 0개로 통과. 그래서 **registry-core 변경이 있는 push 에서 push 모드 검사가 실제로 돈 적은 아직 없어요.** 다음 registry-core 머지(WI-0085 · 0086)를 다른 머지와 겹치지 않게 단독 push 로 보내, 그 run 의 검사 단계가 skipped 가 아니라 실행되어 registry-core 파일 수를 셌는지 확인해요.
 
 ## 7. 반박 검토 후속 (2026-10-26, 검토 2건 모두 approve · major 0 · minor 6)
 

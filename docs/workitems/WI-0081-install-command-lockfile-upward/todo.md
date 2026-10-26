@@ -1,6 +1,6 @@
 # WI-0081: 설치 안내 명령 · dependencies 판정의 워크스페이스 루트 탐색 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #210 | 상태: 🔄 진행 중(2026-10-26, 구현 · 게이트 완료, PR · 발행 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #210 | 상태: ✅ 완료(2026-10-26, cli 1.7.1 · mcp 1.4.1, #219 · Release #221)
 
 ## 결정
 - [x] D1 앱 층 → 워크스페이스 루트 lockfile(.git 에서 중단, 기본 pnpm) · D2 packageManager 미사용 · D3 pnpm 고정 안내는 WI-0085 로 · D4 루트 선언 인정 + 출처 표시 · D5 findInstalledPackage 멈춤 없음 · D6 단위 테스트는 cli 아래 · D7 cli · mcp patch (배치 6b 결정)
@@ -21,6 +21,6 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0081-install-command-lockfile-upward.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
-- [ ] PR · 머지(배치 6b 순서 WI-0080 → WI-0081 → Release)
-- [ ] 발행본으로 testplan 2절 `meas.sh` 다시 재기(AC7)
+- [x] PR · 머지(배치 6b 순서 WI-0080 → WI-0081 → Release) (2026-10-26 #219 머지 79c3208, WI-0080 과 한 PR. Release #221 머지 cb8f27c 에서 cli 1.7.1 · mcp 1.4.1, run 40247657745)
+- [x] 발행본으로 testplan 2절 `meas.sh` 다시 재기(AC7) (2026-10-26: 안내 49줄 중 바뀐 줄 8 · check 바뀐 줄 cli 13 · mcp 9, 구현 때 worktree 빌드 결과와 diff rc 0, 음성 · 양성 대조 그대로. testplan 7절)
 - [ ] 후속 WI-0085(#217) · WI-0086(#218) 진행

@@ -1,6 +1,6 @@
 # WI-0083: library 대표 선택 · TW3 preset dist 진입점 테스트 보강 릴리스 노트
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #212 | 날짜: 2026-10-26 | 배포: 미배포(브랜치 `test/wi-0083`, PR 전), npm 발행 없음
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #212 | 날짜: 2026-10-26 | 배포: PR #220 머지 3591f9b(2026-10-26), npm 발행 없음
 
 ## 요약
 
@@ -29,4 +29,4 @@
 
 ## 배포
 
-- 미배포. 이 브랜치는 push · PR 전이에요. 6b Release(WI-0080 · 0081) 와 별도 PR 로 머지해요.
+- 2026-10-26 PR #220 머지 3591f9b(PR CI 19m45s 통과). 6b Release(WI-0080 · 0081, Release PR #221 → cli 1.7.1 · mcp 1.4.1) 와 별도 PR 이고, 이 WI 로 발행된 npm 패키지는 없어요(changeset 없음, linked 4패키지 1.8.1 그대로).

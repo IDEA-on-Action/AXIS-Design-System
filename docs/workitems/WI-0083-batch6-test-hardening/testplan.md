@@ -79,6 +79,8 @@
 
 ## 6. 발행 영향
 
+머지(2026-10-26): PR #220 머지 3591f9b, PR CI 19m45s 통과, main push run 40246082456 통과. 발행된 npm 패키지 없음(publish run 40247657745 가 낸 것은 WI-0080 · 0081 의 cli 1.7.1 · mcp 1.4.1 뿐이고 tokens 는 1.8.1 그대로).
+
 changeset 없음. tokens `files` 는 `["dist"]` 이고 dist 바이트가 같아요(5절). 나머지 바뀐 파일(apps/web/e2e · scripts · 루트 package.json · frontend.yml · docs)은 발행 패키지 밖이에요. check-changeset-mcp-tokens 통과.
 
 ## 7. 검토 반영 (2026-10-26, minor 3건)

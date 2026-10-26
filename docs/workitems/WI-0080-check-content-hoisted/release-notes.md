@@ -1,6 +1,6 @@
 # WI-0080 릴리스 노트: 호이스팅 모노레포의 Tailwind 3 content 를 실제 설치 위치로 판정해요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #209 | 대상: `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(예정, 배치 6b Release PR 에서 WI-0081 과 합쳐짐). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #209 | 대상: `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1(2026-10-26 발행, 배치 6b 에서 WI-0081 과 합쳐짐, PR #219 머지 79c3208 · Release PR #221 머지 cb8f27c, publish run 40247657745, provenance). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -25,4 +25,6 @@
 
 ## 발행
 
-- (배포 뒤 기록)
+- `@axis-ds/cli` 1.7.1 · `@axis-ds/mcp` 1.4.1 (2026-10-26, PR #219 머지 79c3208, Release PR #221 머지 cb8f27c, publish run 40247657745, provenance 2/2). linked 4패키지는 1.8.1 그대로
+- 발행본 재측정: 매트릭스 24경우 cli · mcp 각 24/24(대조 1.7.0 · 1.4.0 각 12/24), cli · mcp 불일치 0, 음성 대조 10/10(testplan 6절)
+- 저장소 규칙의 main push 모드 검사는 아직 registry-core 변경이 있는 push 에서 돈 적이 없어 정착 대기예요(testplan 6절)
