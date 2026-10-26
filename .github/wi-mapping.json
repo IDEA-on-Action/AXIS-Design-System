@@ -588,6 +588,22 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDdkkc",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0088",
+      "slug": "template-apply-preserve-pm",
+      "issueNumber": 223,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNRk",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0089",
+      "slug": "mcp-brand-cache-stale",
+      "issueNumber": 224,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNSk",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-26T09:20:00.000Z"

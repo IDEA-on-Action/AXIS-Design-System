@@ -85,6 +85,8 @@
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ⏳ |
 | 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ⏳ |
 | 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ⏳ |
+| 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
+| 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | ⏳ |
 
 ### 완료
 
@@ -401,6 +403,7 @@
 - 배치 6c 결정(2026-10-26, 브리프 · 반박 검토 뒤): WI-0085 는 lockfile 이 없을 때만 packageManager 필드를 신호로 씀(lockfile 다음 순위, 사용자 결정. 배치 6b D2 · WI-0081 AC5 의 「packageManager 는 보지 않음」을 이 순위로 바꿈), 매니저별 워크스페이스 실행 명령 · 의존성 따옴표 · -D 헬퍼를 registry-core project.ts 한 곳에, accordion 데모 문구는 그대로, U6 은 버전 범위 결정이었음을 주석 · WI-0081 문서에 정정. WI-0086 은 declaredDependency 공용 헬퍼(쓰기는 앱 pkg 로만)로 tailwind-core 7곳 · init utils · cli add · MCP install 의 루트 선언 판단을 합치고(사용자 결정), theme add 쓰기 경로는 WI-0087 로 분리, declaredAxisPackages 는 앱 선언만 유지, realpath 는 공개 함수 진입부에서 한 번(절대 glob x 심링크 행을 AC 에 추가). 한 PR(커밋 WI-0086 → WI-0085) · 한 Release(cli 1.7.2 · mcp 1.4.2 patch), 단독 push 후 push run 완료를 확인하고 Release 머지
 - ontology 테마 완료 목표(2026-10-26, 사용자 결정): 범위는 WI-0079 · 0082(남은 대비 · Select placeholder) 발행 + WI-0027 온톨로지 콘솔 템플릿 배포. WI-0079 는 디자인 오너 답을 기다리지 않고 확인 문서의 권장 묶음으로 반영(경계 · 트랙 = 라이트 sub #6B7280 · 다크 muted #7A828D, Progress success · warning = ink-2 · bad, Input placeholder = 라이트 sub-aa #5F6673 · 다크 sub #9CA3AD). 오너가 나중에 다른 값을 고르면 다시 발행. 순서: 배치 6c(진행 중) → WI-0079 · 0082 → WI-0027
 - WI-0079 세부 결정(2026-10-26, 사용자): Q4 placeholder 는 권장안(sub-aa)으로 바꾸며 WI-0025 부록 B ②(2026-10-19 디자인 오너 승인 「muted 는 placeholder 에만」)를 철회한다고 release-notes · 부록 B 에 기록, Q5 Input 테두리는 부록 B ③ 예외 유지(바꾸지 않음), 디자인 오너에게는 확인 문서 맨 위에 「권장안으로 먼저 반영 · 다른 값이면 다시 발행」 안내를 넣음
+- 배치 6c 검토 뒤 결정(2026-10-26, 사용자): init 애니메이션 안내 · theme add 컴포넌트 tailwind.css 목록의 루트 선언 처리는 WI-0087(#222)에 합침, template apply 의 packageManager 소실은 WI-0088(#223), MCP 판독 캐시 낡음은 WI-0089(#224)로 등록
 - 배치 6 완료(2026-10-26): PR #214 머지 4a5e185 · 규칙 PR #215 머지 8aaa9aa(tokens 를 올리는 changeset 에 mcp 동반 강제) · Release PR #216 머지 61ae674, publish run 40205738223 success, npm tokens · theme · ui-react · agentic-ui 1.8.1 · cli 1.7.0 · mcp 1.4.0, provenance 6/6. 발행본 재측정 5건 통과(불일치 0, 각 WI testplan). 남은 것: WI-0075 실제 터미널 대화형 1회(사람), WI-0074 d-rootonly 계열 rc 1 · npm 워크스페이스 init 의 pnpm 안내는 WI-0081 축, WI-0076 tokens 1.8.0 · 1.8.1 CSS dist 가 같아 버전 동반은 출처 줄로만 확인, WI-0078 pages.dev 응답의 커밋 해시는 따로 확인하지 않음
 - 배치 6b 완료(2026-10-26): PR #219 머지 79c3208(WI-0080 · 0081 + registry-core changeset 동반 검사) · PR #220 머지 3591f9b(WI-0083, 발행 없음) · Release PR #221 머지 cb8f27c, publish run 40247657745 success, npm cli 1.7.1 · mcp 1.4.1, provenance 2/2, linked 4패키지는 1.8.1 그대로. PR CI #219 13m47s · #220 19m45s · #221 14m3s. 발행본 재측정 9항목 통과(불일치 0): WI-0080 매트릭스 cli · mcp 각 24/24(대조 12/24) · 음성 대조 10/10 · theme add 안내, WI-0081 npm · yarn 안내 8줄 · 루트 선언 4앱 rc 1→0 · 워크스페이스 밖 FAIL 유지(각 WI testplan). 남은 것: changeset 검사 main push 모드 정착 대기(WI-0085 · 0086 단독 push 로 확인), yarn 은 미설치 상태로만 측정(실제 yarn 설치 위 check 는 미측정)
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
