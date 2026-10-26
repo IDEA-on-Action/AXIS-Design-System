@@ -13,7 +13,7 @@
 | 브랜드 | 처음부터 ontology: `<html data-brand="ontology">` + `ThemeProvider defaultBrand="ontology"`, `globals.css` 브랜드 import, `axis.config.json` 의 `brand` |
 | 컴포넌트 | `@axis-ds/ui-react` 의 Button · Badge · Card · Table · Tabs · Input 조립. 새 core 컴포넌트 없음 |
 | 의존성 | `@axis-ds/tokens` · `@axis-ds/ui-react` · `@axis-ds/theme` `^1.8.2`(템플릿 중 ui-react · theme 를 쓰는 첫 템플릿), `lucide-react`, `tailwindcss-animate` |
-| 규칙 검사 | `npm run check:ontology`: 엠 대시 · 느낌표 문구 · 한쪽 색 선 · 카드 그림자 · 팔레트 밖 색. 위반이면 rc 1 과 `파일:줄` |
+| 규칙 검사 | `npm run check:ontology`: 엠 대시 · 느낌표 문구 · 한쪽 색 선 · 카드 그림자 · 팔레트 밖 색(이름 색 포함). `cn()` 인자나 `className={...}` 로 나눠 쓴 클래스도 합쳐서 봐요. 위반이면 rc 1 과 `파일:줄` |
 | 예시 데이터 | 가상(주문 · 재고 도메인), 실제 회사 · 개인 이름 없음 |
 | 갤러리 | 새 category `console`(Console 탭) |
 
@@ -38,3 +38,6 @@
 - 수정 화면 · 검토 패널 · 마크다운 편집기 · 칸반 · 에이전트 대화 · 기록 · 로그인 · 노드 캔버스는 후속 WI
 - 결과 앱 axe 측정은 로컬 기록이고 CI 에 연결하지 않았어요(D7)
 - `axis template apply ontology-console -y` · MCP `apply_template` 는 기존 `axis.config.json` 을 덮어써요(AC9 측정, WI-0088 과 같은 부류)
+- `check:ontology` 는 소스 정적 판정이라 변수에 담아 넘긴 클래스 · 런타임 조립 문자열은 보지 않아요(README 「검사의 한계」)
+- 데스크톱 콘솔 기준이에요. 폰 폭(390px 등)에서는 사이드바 240px 가 남아 표가 잘려요(README 「지원 화면 폭」)
+- 문서 사이트 a11y 게이트의 `templates/[slug]` 대표는 dashboard 하나라 `/templates/ontology-console/` 상세 페이지는 그 게이트로 재지 않아요(후속 검토)

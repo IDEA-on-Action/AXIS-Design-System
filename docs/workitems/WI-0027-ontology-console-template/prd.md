@@ -1,6 +1,6 @@
 # WI-0027: 온톨로지 콘솔 템플릿 PRD
 
-> 작성일: 2026-10-15 | 버전: v0.6(2026-10-26, 착수 전 전제 갱신 · MVP 분리 · 결정 반영) | 작성자: Sinclair Seo | WI: WI-0027 | GitHub: #86 | 상태: 결정 반영 · 구현 중
+> 작성일: 2026-10-15 | 버전: v0.6.1(2026-10-26, 착수 전 전제 갱신 · MVP 분리 · 결정 반영 · 구현 검토 반영) | 작성자: Sinclair Seo | WI: WI-0027 | GitHub: #86 | 상태: 결정 반영 · 구현 중
 > 기준: `main` d7ae4a5(PR #228 WI-0079 · 0082 머지). 발행본은 linked 1.8.1 · cli 1.7.2 · mcp 1.4.2 이고, Release PR #229(linked 1.8.2 · cli 1.7.3 · mcp 1.4.3)가 진행 중이에요
 > 표기: **측정**(이번에 실행해 얻은 값) · **계산**(값에서 유도) · **추정**(실행하지 않음)
 > 선행(충족): WI-0025 FR-6 `defaultBrand` · FR-8 `brands/ontology`(1.3.0), WI-0026 밀도 토큰(1.7.0), WI-0067 템플릿 4종 AXIS 토큰 전환(Pages, #200), WI-0068 마크업 data-brand 우선(theme 1.7.0), WI-0028 FR-5 brand 검사(완료 2026-10-24), WI-0079 · 0082 ontology 대비 값(#228 머지). 남은 조건: npm 1.8.2 발행 · 재측정(머지 조건, 착수 조건 아님)
@@ -12,7 +12,7 @@
 - AC2 를 `apply`(create-next-app 위 덮어쓰기)에서 `init`(빈 디렉터리, WI-0037 이 보장하는 경로)으로 바꿨어요. `apply` 대상에 config 가 이미 있는 경우는 AC9 로 따로 봐요.
 - 각 AC 에 실측 방법과 음성 대조를 붙였어요.
 - 디자인 원본이 v0.28(2026-10-22 확정, 사용자 로컬 사본)까지 나온 것을 확인했고, 화면 정본을 v0.28 로 정했어요(1.5, D4).
-- 결정 D1 ~ D9 를 2.0 에 모았어요(/goal 진행 중 권장안으로 확정).
+- 결정 D1 ~ D11 을 2.0 에 모았어요(/goal 진행 중 권장안으로 확정).
 
 ---
 
@@ -32,7 +32,7 @@
 **MVP(이번 WI 배포 단위, D3)**
 - 앱 셸: 사이드바 240px(워크스페이스 이름 · 대메뉴 한 번에 하나만 펼침 · 하위 메뉴) + 콘텐츠 카드 한 장, 100vh 고정 · 카드 안 스크롤, 1199px 이하 1열
 - 통합 뷰(`/`): 인사 · 현황 카드 · 보조 상자 420px
-- 목록 페이지(`/entities`): ListHead · ListToolbar(검색 + 필터 칩) · Table, 줄을 누르면 depth 상세로
+- 목록 페이지(`/entities`): ListHead · 도구줄(검색 + 필터 칩, `entity-list.tsx` 안) · Table, 줄을 누르면 depth 상세로
 - depth 상세(`/entities/[id]`): DetailHead(뒤로 · 이전 · 다음), 절 사이 40px, 탭은 세그먼트
 - 프로젝트 상세 2분할(`/projects/[id]`): 카드 안 왼쪽 열 300px + 오른쪽 본문
 - 가상 예시 데이터(`lib/demo-data.ts`), 실데이터 · 인증 없음
@@ -98,7 +98,7 @@
 - FR-1: `apps/web/templates/ontology-console/template.json`(category `console`) 과 `files/` 를 작성해요. 루트 레이아웃은 `<html lang="ko" data-brand="ontology" suppressHydrationWarning>` 로 서버 HTML 에 브랜드를 넣고 `<ThemeProvider defaultBrand="ontology">` 로 감싸 런타임 `setBrand` · `setTheme` 를 쓸 수 있게 해요. `globals.css` 는 `@axis-ds/tokens/css` · `@axis-ds/tokens/css/shadcn` · `@axis-ds/tokens/css/brands/ontology` 3줄을 `@tailwind` 앞에 둬요(주석 아님). `files/axis.config.json` 은 D10 형식이에요.
 - FR-2: 화면 패턴은 템플릿 내부 컴포넌트(`files/components/ontology/*`)로 두고 AXIS core(Button · Badge · Card · Table · Tabs · Input)를 조립해요. 새 core 컴포넌트는 만들지 않아요. 기존 4종은 `@axis-ds/tokens` 만 쓰므로 `@axis-ds/ui-react` · `@axis-ds/theme` 의존은 이 템플릿이 처음이에요. template.json 과 `files/package.json` 에 같은 범위로 적어요(생성기 `build-template-index.mjs` 가 다르면 빌드 실패). Tailwind 3 `content` 는 D11, `tailwindcss-animate` 를 `plugins` 와 devDependencies 에 둬요(ui-react 를 쓰면 check animation 항목). `lib/utils.ts`(cn) 를 넣어 `axis check` utils 항목이 PASS 가 되게 해요. 템플릿 안 import 는 상대 경로로 써요(`apps/web` 의 tsc 가 템플릿 파일을 함께 검사하고 `@/*` 가 `apps/web/src` 를 가리킴, 측정).
 - FR-3: 레이아웃 규칙. 높이 100vh 고정, 카드 안 스크롤, 브레드크럼 없음, 1199px 이하 1열(Q6 결정 유지, 프로토타입 v0.24 · v0.26 · v0.28 모두 `@media (max-width: 1199px)` 17 · 22 · 21건. v0.28 처럼 사이드바는 남기고 카드 안 분할 · 보조 상자 · 그리드가 1열), 메뉴 첫 화면은 목록 페이지, 줄을 누르면 depth 상세(시트는 잠깐 보는 곳에만), 탭은 세그먼트, 요소 타일은 회색 하나 + 아이콘.
-- FR-4a(MVP): 템플릿 앱 안의 규칙 검사 스크립트 `scripts/check-ontology.mjs` 와 `package.json` 의 `check:ontology` 스크립트. 대상은 앱의 `app/` · `components/` · `lib/` 소스(인자로 다른 디렉터리를 줄 수 있음). 규칙은 결정적인 것만: 엠 대시(U+2014) · 느낌표(한글이 든 JSX 문구 · 문자열) · 한쪽 색 선(`border-l` · `border-r` · `border-s` · `border-e` 와 중립이 아닌 테두리 색 클래스 조합, CSS `border-left` · `border-right` 색 지정) · 카드 그림자(`<Card` · `bg-card` 와 `shadow-*` 조합, 선택자에 card 가 든 CSS `box-shadow`) · 팔레트 밖 리터럴 색(hex · `rgb()` · `hsl()` 숫자 리터럴, Tailwind 기본 팔레트 클래스 `*-red-500` · `*-white` 등). 위반이 있으면 rc 1 과 `파일:줄`, 검사한 파일이 0개면 rc 2(측정 실패). cli · mcp 는 바꾸지 않아요.
+- FR-4a(MVP): 템플릿 앱 안의 규칙 검사 스크립트 `scripts/check-ontology.mjs` 와 `package.json` 의 `check:ontology` 스크립트. 대상은 앱의 `app/` · `components/` · `lib/` 소스(인자로 다른 디렉터리를 줄 수 있음). 규칙은 결정적인 것만: 엠 대시(U+2014) · 느낌표(한글이 든 JSX 문구 · 문자열) · 한쪽 색 선(`border-l` · `border-r` · `border-s` · `border-e` 와 중립이 아닌 테두리 색 클래스 조합, CSS `border-left` · `border-right` 색 지정) · 카드 그림자(`<Card` · `bg-card` · 카드 모양(`rounded-*` + `border`) 과 `shadow-*` 조합, `<Card style` 의 `boxShadow`, 선택자에 card 가 든 CSS `box-shadow`) · 팔레트 밖 리터럴 색(hex · `rgb()` · `hsl()` 숫자 리터럴, CSS 이름 색, Tailwind 기본 팔레트 클래스 `*-red-500` · `*-white` 등). 클래스 조합은 문자열 하나뿐 아니라 `className={...}` 표현식과 `cn()` · `clsx()` · `cva()` · `twMerge()` 인자 안의 문자열 전체를 합쳐 봐요(v0.6.1). 한쪽 색 선은 style 객체 `borderLeft` · `borderRight` 등도 봐요. 소스 정적 판정이라 변수에 담아 넘긴 클래스 · 런타임에 조립한 문자열은 보지 않아요(README 한계). 위반이 있으면 rc 1 과 `파일:줄`, 검사한 파일이 0개면 rc 2(측정 실패). cli · mcp 는 바꾸지 않아요.
 - FR-4b(후속 WI): template.json `checks` 필드와 실행 규약, `axis check` · MCP `axis.check_project` 가 적용된 템플릿의 검사를 찾아 실행. 사용자 프로젝트의 스크립트를 실행하는 동작 변경이라 별도 설계 · 발행(cli · mcp minor)이 필요해요.
 - FR-5(후속 WI): 갤러리 · 상세 화면 미리보기. 지금 `preview?: string` 타입(`template-types.ts:29`, cli `types.ts`)만 있고 값 · 자산 · 렌더링 코드는 0건(측정)이라 그대로예요.
 - FR-6: `scripts/template-smoke.mjs` 의 기본 slug 목록을 `apps/web/public/templates/index.json`(또는 `--templates-dir`)의 로컬 템플릿(`type` 이 `external` 이 아니고 `<slug>.json` 이 있는 항목)에서 계산해요(D9). `ontology-console` 에는 빌드 HTML(`.next/server/app/index.html`)의 `data-brand="ontology"` 1건 이상을 판정에 더해요(slug 별 추가 판정 표).
@@ -167,3 +167,4 @@
 | v0.4 | 2026-10-16 | 디자인 오너 개정 r2 반영, 화면 기준 v0.24(디자인 시스템 v1), Q6 |
 | v0.5 | 2026-10-20 | 디자인 오너 개정 r3(기준 v0.26) 화면 범위 병합(WI-0043), Q7 |
 | v0.6 | 2026-10-26 | 낡은 전제 9건 정정(1.4), MVP · 후속 분리(1.3), FR-4 를 4a · 4b 로 분리, AC2 를 init 기준으로, AC 별 실측 · 음성 대조, AC9(apply 위 config) 추가, 정본 v0.28, 결정 D1 ~ D11 반영 |
+| v0.6.1 | 2026-10-26 | 구현 검토 반영: FR-4a 판정 범위를 클래스 묶음(className 표현식 · cn() 인자) · style 객체 · CSS 이름 색 · 카드 모양 div 로 넓힘, 앵커 `#add` 오탐 제외. 1.3 의 ListToolbar 를 실제 구조(entity-list 안 도구줄)로, 요지의 D1 ~ D9 를 D1 ~ D11 로 정정 |

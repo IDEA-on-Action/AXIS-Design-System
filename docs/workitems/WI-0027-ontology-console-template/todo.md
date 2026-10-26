@@ -29,6 +29,14 @@
 - [x] AC9: apply 대상에 config 가 있을 때 동작 기록(cli 는 충돌 표시 · `-y` 때만 덮음, MCP 는 확인 없이 덮음 · 소스 판독)
 - [x] cli `init.test.ts` 템플릿 개수 고정(4) 해소
 
+## 구현 검토 반영 (2026-10-26)
+- [x] 사이드바: 접힌 하위 목록이 `.flex` 때문에 보이던 결함 수정(접히면 display 클래스를 빼고 `hidden` 만), 클라이언트 이동으로 경로 그룹이 바뀌면 그 그룹을 펼침
+- [x] check:ontology: 클래스 묶음(className 표현식 · cn() 인자) 합산 판정, style 객체 한쪽 색 선 · Card boxShadow, CSS · style 이름 색, 카드 모양 div 그림자, 따옴표가 섞인 JSX 문구 느낌표, 앵커 `#add` 오탐 제외
+- [x] 변이 27종 A/B(구판 17/27 · 신판 27/27), testplan 8절
+- [x] PRD v0.6.1(D1 ~ D11 표기, ListToolbar 정정, FR-4a 범위), README 판정 범위 · 한계 · 지원 폭
+- [x] project-todo 배치 5 비고 갱신, origin/main 병합(project-todo 충돌 해소)
+- [ ] 후속: a11y 경로에 `/templates/ontology-console/` 를 넣을지(건수 가드 236 → 변경), registry-core `axis-config.ts:13` 주석(brand 를 템플릿 config 도 씀) 정정
+
 ## 릴리스
 - [x] changeset 없음 확인(발행 패키지 소스 변경 0, cli 테스트 파일 1개만 · 발행물 dist 무관)
 - [ ] 머지 조건: npm 1.8.2 발행 · 재측정 뒤 단독 push(D6)

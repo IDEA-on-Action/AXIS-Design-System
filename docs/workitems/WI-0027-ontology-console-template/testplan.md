@@ -126,7 +126,7 @@
 | 절 사이 | 40 | 40 |
 | 페이지 높이(100vh 고정) | 900 | `scrollHeight` 900 |
 | 줄 클릭 | depth 상세로 | `/entities/e-order` |
-| 대메뉴 하나만 펼침 | 하나만 | 프로젝트를 여니 `aria-expanded` false · true |
+| 대메뉴 하나만 펼침 | 하나만 | 프로젝트를 여니 `aria-expanded` false · true. **이 행은 속성만 재서 표시 결함을 놓쳤어요(8절에서 계산 스타일로 재측정)** |
 | 1200px → 1199px | 2분할 → 1열, 보조 상자 → 카드 아래 | `300px 632px` → `931px`, 보조 상자 420 옆 → 933 폭 아래 |
 
 ## 7. apply 위 config (AC9)
@@ -142,3 +142,68 @@
 
 - cli 는 충돌을 보여 주고 `-y` 없이는 쓰지 않아요(말없이 덮지 않음). `-y` 를 주면 package.json(WI-0088) 과 같이 config 도 덮어요.
 - MCP `apply_template` 은 소스 판독(`packages/axis-mcp/src/tools/template.ts` `handleApplyTemplate`): 확인 없이 쓰고 결과에 `action: "overwritten"` 만 남겨요(실행 측정은 하지 않음, MCP dist 가 서버 진입점 하나로 묶여 있어 함수만 부르지 못함). 후속 처리는 결과 보고의 결정 항목이에요.
+
+## 8. 구현 검토 반영 재측정 (2026-10-26)
+
+검토 2건(changes_requested)의 지적을 실측으로 판정하고 고친 뒤 다시 쟀어요. 측정 자료: scratchpad `w27fix/`(레포 밖).
+
+### 8.1 판정
+
+| 지적 | 심각도 | 판정 | 조치 |
+|---|---|---|---|
+| 사이드바: 접은 하위 목록이 보임(`hidden` + `.flex`) | major | 맞음. preflight `[hidden]:where(...)` 와 `.flex` 명시도가 같고 유틸리티가 뒤라 flex 가 이김 | 접히면 className 을 `hidden` 하나로, 펼치면 flex 클래스 |
+| check:ontology: cn() 여러 인자 · style 객체를 못 봄 | major | 맞음. 구판에 같은 변이를 넣어 rc 0 재현(8.2 A/B) | 클래스 묶음(className 표현식 · cn/clsx/cva/twMerge 인자) 합산, style 객체 판정 추가 |
+| 사이드바 펼침 상태가 경로를 따라가지 않음 | minor | 맞음 | 경로 그룹이 바뀔 때만 그 그룹을 펼침(같은 그룹 안 이동은 사용자가 접은 상태 유지) |
+| 팔레트 오탐(`#add`) · 놓침(CSS 이름 색, 따옴표 섞인 JSX 느낌표) | minor | 맞음 | 앵커 · URL 조각 제외, CSS · style 이름 색 148개, JSX 조각은 문자열 리터럴을 지운 나머지를 봄 |
+| 카드 모양 div(bg-card 없음) 그림자 통과 | minor | 맞음(FR-4a 정의 안이었음) | `rounded-*` + `border` 조합을 카드로 보도록 넓힘, PRD FR-4a · README 갱신 |
+| PRD D1 ~ D9 표기 · ListToolbar | minor | 맞음 | v0.6.1 로 정정 |
+| project-todo 배치 5 비고 · origin/main 충돌 | minor | 맞음 | 비고 갱신, origin/main 병합 |
+| v0.28 과 보조 상자 · 폰 폭 차이 | minor(기록) | 맞음, PRD 결정에 따른 차이 | README 「지원 화면 폭」 에 기록. 디자인 오너 확인은 결정 항목 |
+| a11y 경로에 새 상세 페이지 없음 | minor(기록) | 맞음(59경로 그대로) | 후속. 넣으면 건수 가드 236 이 240 으로 바뀌어 가드 · 문서를 함께 고쳐야 해요 |
+| registry-core `axis-config.ts:13` 주석 | minor(기록) | 맞음 | 후속(발행 패키지 소스 변경 0 유지) |
+
+### 8.2 check:ontology 변이 A/B
+
+같은 27종 변이(`check-mutations-v2.mjs`, 위반 기대 20 · 통과 기대 7)를 구판 · 신판 스크립트에 태웠어요. 템플릿 `files/` 사본 기준이고 기준 상태는 둘 다 rc 0(20파일).
+
+| 판 | 기대와 일치 | 놓침 · 오탐 |
+|---|---|---|
+| 구판(검토 전) | 17/27 | 놓침 8: cn 두 번째 인자 Card 그림자 · cn 조건부 한쪽 색 선 · style borderLeft · bg-card 없는 카드형 div 그림자 · 따옴표 섞인 JSX 느낌표 · CSS 이름 색 · style 이름 색 · Card style boxShadow. 오탐 2: `href="#add"` · `/entities#add` |
+| 신판 | 27/27 | 0 |
+
+통과 기대 7종(앵커 · URL 조각 · `!==` 근처 한글 · `shadow-none` Card · `border-r` + `text-primary` · `border-r` + `ring-primary`, style 중립 테두리)은 신판에서 모두 rc 0 이에요. 결과 앱 사본에서도 `cn(..., active && '... border-primary', 'border-l-4')` 를 넣으면 rc 1(`sidebar.tsx:108 one-side-line`), 되돌리면 rc 0 이에요.
+
+### 8.3 저장소 게이트 · E2E
+
+| 게이트 | 결과 |
+|---|---|
+| turbo lint · type-check · build · test `--force` | rc 0 · 0 · 0 · 0, Cached 0 (7 · 11 · 8 · 7 tasks) |
+| frontend.yml run 11단계 | 모두 rc 0 (registry-install-smoke 5/5) |
+| E2E static a11y · nontext · demo · tooltip · library · tokens | rc 0, 236 · 12 · 8 · 6 · 4 · 22, unexpected · flaky · skipped 0 (a11y 기대 59 x 4 = 236) |
+| 생성물 | `ontology-console.json` 만 내용 변경(sidebar · check 스크립트), 26파일 모두 소스와 일치. 기존 4종 · index.json 은 updatedAt 만이라 되돌림, build:registry 뒤 r/ version 1.5.0 되돌림 |
+
+### 8.4 결과 앱 (발행본)
+
+새 HOME · `XDG_CONFIG_HOME` · npm 캐시를 scratchpad 로 격리하고, 발행본 `npx @axis-ds/cli@1.7.3 template init ontology-console`(`AXIS_TEMPLATE_URL` 로 이 브랜치 생성물 주입 전제) → `npm install`(tokens · ui-react · theme 1.8.2 발행본, tarball 주입 없음) → `next build`.
+
+| 항목 | 결과 |
+|---|---|
+| init · install · build | rc 0 · 0 · 0. 받은 sidebar · check 스크립트에 수정 표지 있음 |
+| 서버 HTML `data-brand="ontology"` | index 1 · entities 1 |
+| `npm run check:ontology` | rc 0, 20파일 · 위반 0건 |
+| `axis check`(cli 1.7.3) | rc 0, 9 pass / 0 warn / 0 fail |
+| axe(라이트 · 다크 x 4화면, wcag2a/aa · 21a/aa) | 위반 0, passes 25 ~ 27(측정 수행 확인). 다크는 localStorage `axis-theme` 주입 전제, `--primary` 라이트 · 다크 모두 설치본 기대값과 같음 |
+| AC4 치수 | 사이드바 240 · 여백 16/16/18 · 둥글기 12px · 그림자 투명 · 보조 상자 420 · 왼쪽 열 300 · 절 사이 40 · scrollHeight 900, 1199px 에서 1열 |
+
+사이드바 계산 스타일(`nav2.mjs`, 1440x900):
+
+| 상황 | 결과 |
+|---|---|
+| `/entities` 첫 로드 | 온톨로지 펼침(display flex · 높이 51.75), 프로젝트 접힘(hidden · display none · 높이 0), aria-current 「요소 목록」 보임 |
+| 온톨로지까지 접음 | 두 목록 모두 display none · 높이 0, ariaSnapshot 에 하위 링크 0(버튼 둘만) |
+| 프로젝트 펼침 | 프로젝트 display flex · 높이 91.5, 온톨로지 none |
+| `/entities/e-order` 의 프로젝트 링크로 클라이언트 이동 | `/projects/p-commerce`, aria-expanded 온톨로지 false · 프로젝트 true, aria-current 「주문 처리 온톨로지」 보임 |
+| 반대로 프로젝트 표의 요소 링크로 이동 | 온톨로지 true · 프로젝트 false, aria-current 「요소 목록」 보임 |
+| 같은 그룹 안 이동(온톨로지를 접고 요소 링크) | 접은 상태 유지(경로 그룹이 바뀔 때만 펼침) |
+
+음성 대조: 검토 측정(`w27impl/review-shots`, 수정 전 같은 발행본 경로)에서 접은 목록이 hiddenAttr true · display flex · 높이 91.5 였고, 클라이언트 이동 뒤 aria-current 링크가 숨은 목록 안에 있었어요.
