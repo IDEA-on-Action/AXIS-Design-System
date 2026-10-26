@@ -1,6 +1,6 @@
 # WI-0090: pnpm 기본 레이아웃 content 거짓 FAIL TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #227 | 상태: 🔄 구현 완료 · PR 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #227 | 상태: ✅ 완료(2026-10-26, cli 1.7.4 · mcp 1.4.4)
 
 ## 결정
 - [x] D1 실경로 같은 상위 설치본만 · D2 스토어 상대 실경로 포함 · D3 이유 문구 · D4 cli · mcp patch (2026-10-26 사용자 결정)
@@ -16,4 +16,4 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0090-content-pnpm-store.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
-- [ ] PR · 머지, Release PR 머지, 발행본으로 testplan 2절 재측정
+- [x] PR · 머지, Release PR 머지, 발행본으로 testplan 2절 재측정 (2026-10-26 #230 머지 9b58ca1, Release #231 머지 64eaec7, publish run 40316401629, provenance 2/2, 발행본 10/10)

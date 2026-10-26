@@ -38,3 +38,9 @@ PRD 1.1 표 그대로예요. 같은 버전 픽스처에서 `../../node_modules/.
 ## 4. 게이트
 
 - `turbo run lint type-check test --filter=@axis-ds/cli --filter=@axis-ds/mcp --filter=@axis-ds/registry-core --force`: 9/9 성공, Cached 0. cli 877 · mcp 181 통과.
+
+## 5. 발행 뒤 재측정 (2026-10-26)
+
+- PR #230 머지 9b58ca1(PR CI run 40311765155 · main Frontend run 40313927346 success), Release PR #231 머지 64eaec7(Version PR 은 CI 0건이라 사용자가 게이트 우회 머지), publish run 40316401629 success, npm `@axis-ds/cli@1.7.4` · `@axis-ds/mcp@1.4.4`, provenance 2/2(slsa v1). 발행 직후 npm 조회 E404 는 4회차(약 1.5분)에 해소.
+- 발행본 cli 1.7.4 로 2절 픽스처 10행을 다시 재서 수정 후 열과 같아요: 같은 버전 5/5(대조 FAIL · 나머지 PASS), 다른 버전 5/5(대조 · 상위 `../../` FAIL, 나머지 PASS). 빌드 정답 일치 10/10.
+- MCP 발행본(1.4.4)은 같은 코어를 번들하지만 이번에 픽스처로 따로 재지 않았어요(단위 테스트로만 확인).
