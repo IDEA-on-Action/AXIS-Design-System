@@ -262,7 +262,8 @@ function readPackageJsonSafe(baseDir: string): Record<string, unknown> | undefin
  *   컴포넌트 패키지가 없으면(복사 설치만 쓰면 프로젝트 소스라 스캔됨) 패키지를 쓸 때 더하라는 줄만 냅니다.
  * - create-next-app 기본 globals.css 의 `:root` · `@theme inline` · `@media (prefers-color-scheme: dark)` · `body` 블록을
  *   지우라는 주의(`TAILWIND4_CONFLICT_LINE`, quick-start 와 같은 내용).
- * - `@axis-ds/tokens` 가 package.json 에 없으면 설치 명령(theme add 와 같은 lockfile 판정).
+ * - `@axis-ds/tokens` 가 package.json 에 없으면 설치 명령(theme add 와 같은 lockfile 판정). 컴포넌트 패키지 · tokens 선언은 `baseDir` 를 주면
+ *   워크스페이스 루트 선언도 칩니다(WI-0086 검토 후속: Tailwind 4 판정이 루트 선언을 보게 된 뒤 루트의 tokens 를 앱에 다시 설치하라던 줄).
  * - tokens · ui-react · agentic-ui 의 1.4.0 조건(A1, `axisPackagesBelowTailwind4(pkg, baseDir)`, axis check 와 같은 함수 ·
  *   같은 판정): 보정 3차부터 설치본(node_modules, WI-0074 부터 `baseDir` 부터 상위 탐색) version 을 먼저 봅니다. 설치본이 1.4.0 이상이면 선언이
  *   `^1.3.0` · `catalog:` 여도 안내하지 않고, 미만이면 설치본 버전을 보여 주며 `^1.4.0` 으로 올리는 명령을 냅니다.
@@ -278,7 +279,10 @@ export function tailwind4GuideLines(
   globalCss: string,
   baseDir?: string
 ): string[] {
-  const used = TAILWIND4_COMPONENT_PACKAGES.filter((name) => pkg !== undefined && hasDependency(pkg, name) !== undefined);
+  // 선언 판정은 axis check 와 같은 경계(앱 다음 워크스페이스 루트, `declaredDependency`). `baseDir` 가 없으면 종전처럼 앱 선언만 봅니다(WI-0086 검토 후속)
+  const declared = (name: string) =>
+    pkg !== undefined && (baseDir !== undefined ? declaredDependency(baseDir, pkg, name) : hasDependency(pkg, name)) !== undefined;
+  const used = TAILWIND4_COMPONENT_PACKAGES.filter((name) => declared(name));
   const lines = [
     `Tailwind 4: 전역 CSS(${globalCss}) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).`,
     '  @import "tailwindcss";',
@@ -291,7 +295,7 @@ export function tailwind4GuideLines(
     );
   }
   lines.push(TAILWIND4_CONFLICT_LINE);
-  if (pkg === undefined || hasDependency(pkg, TOKENS_PACKAGE) === undefined) {
+  if (!declared(TOKENS_PACKAGE)) {
     const add = addCommandFor(installCommand, { [TOKENS_PACKAGE]: `^${TAILWIND4_TOKENS_VERSION}` });
     lines.push(`  ${TOKENS_PACKAGE} 설치: ${add}`);
   }

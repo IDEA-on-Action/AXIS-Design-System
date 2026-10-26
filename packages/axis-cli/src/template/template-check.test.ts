@@ -2555,6 +2555,25 @@ describe("WI-0086: 루트 선언 인정 일관화 · 심링크 baseDir", () => {
     });
   }
 
+  // WI-0086 검토 후속(minor): export 된 contentGlobCovers 를 링크 baseDir 로 직접 부를 때도 실경로 기준으로 판정(진입부 resolveBaseDir).
+  // 내부 호출자(inspectTailwindContent)는 이미 실경로를 넘겨 위 AC5 행만으로는 이 줄을 지워도 빨개지지 않았음(동치 변이)
+  it("contentGlobCovers 단위: 링크 baseDir 의 절대 glob 은 실경로 기준(상위로 나가는 표본 · 아직 없는 표본)", async () => {
+    const root = await fs.realpath(await tempDir());
+    const app = path.join(root, "apps", "web");
+    await fs.outputFile(path.join(root, "node_modules", "@axis-ds", "ui-react", "dist", "index.js"), "");
+    await fs.ensureDir(app);
+    const link = await linkTo(app);
+    const posix = (p: string) => p.split(path.sep).join("/");
+    const upGlob = `${posix(root)}/node_modules/@axis-ds/ui-react/dist/**/*.js`;
+    const upSample = "../../node_modules/@axis-ds/ui-react/dist/index.js";
+    const localGlob = `${posix(app)}/components/**/*.tsx`;
+    const localSample = "components/ui/button.tsx";
+    expect([contentGlobCovers(upGlob, upSample, app), contentGlobCovers(localGlob, localSample, app)]).toEqual([true, true]);
+    expect([contentGlobCovers(upGlob, upSample, link), contentGlobCovers(localGlob, localSample, link)]).toEqual([true, true]);
+    // 음성 대조: 다른 위치를 가리키는 절대 glob 은 링크로 불러도 덮지 않음
+    expect(contentGlobCovers(`${posix(root)}/other/**/*.js`, upSample, link)).toBe(false);
+  });
+
   it("AC6 pnpm 기본(앱 node_modules/@axis-ds/ui-react 가 .pnpm 스토어 링크): 실경로 · 링크 모두 제안 ./node_modules/…(스토어 경로가 새지 않고 링크 기준 상대경로로 깨지지 않음)", async () => {
     const { root, app } = await ws86({
       layout: "pnpm",

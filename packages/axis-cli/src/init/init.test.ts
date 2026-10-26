@@ -2236,6 +2236,42 @@ describe("WI-0086: init 은 워크스페이스 루트에 선언된 utils 의존�
     expect(r.logs).toContain("  이미 있음(버전 유지): clsx (^2.1.1) (워크스페이스 루트에 선언: clsx)");
   });
 
+  // 검토 지적(minor): 루트에 tailwindcss ^4 만 있고 tailwind-merge 는 없으면 앱에 쓰는 범위가 Tailwind 4 기준으로 바뀜(종전 ^2.6.0)
+  it("루트에 tailwindcss ^4.1.0 만 선언(미설치): 앱에 쓰는 tailwind-merge 가 ^3.4.0(종전 Tailwind 3 판정의 ^2.6.0)", async () => {
+    const app = await wsApp({ tailwindcss: "^4.1.0" }, APP_TEXT);
+    await runInitCli(app);
+    expect(JSON.parse(await fs.readFile(path.join(app, "package.json"), "utf8")).dependencies).toEqual({
+      "@axis-ds/tokens": "^1.8.0",
+      clsx: "^2.1.1",
+      "tailwind-merge": "^3.4.0",
+    });
+  });
+
+  // 검토 지적(minor): Tailwind 4 안내의 「@axis-ds/tokens 설치:」 · 컴포넌트 tailwind.css 줄도 루트 선언을 봄(init 이 루트 선언으로 Tailwind 4 를
+  // 판정한 뒤 루트에 이미 있는 tokens 를 더 낮은 범위로 앱에 설치하라고 안내하던 줄, 배포본에는 없던 줄)
+  it("Tailwind 4 안내: 루트에 tokens · ui-react 선언이면 tokens 설치 줄 없음 · ui-react tailwind.css 줄 있음, 음성 대조는 종전", async () => {
+    const NAME_ONLY = '{\n  "name": "web"\n}\n';
+    const ROOT4 = { tailwindcss: "^4.1.0", "@axis-ds/tokens": "^1.8.1", "@axis-ds/ui-react": "^1.8.1" };
+    const TOKENS_LINE = '  @axis-ds/tokens 설치: npm install "@axis-ds/tokens@^1.4.0"';
+    const UI_LINE = '  @import "@axis-ds/ui-react/tailwind.css";';
+    const ws = await wsApp(ROOT4, NAME_ONLY);
+    const lines = tailwind4GuideLines({ name: "web" }, "npm install", "./g.css", ws);
+    expect(lines).not.toContain(TOKENS_LINE);
+    expect(lines).toContain(UI_LINE);
+    const r = await runInitCli(ws);
+    expect(r.logs.some((l) => l.includes("@axis-ds/tokens 설치:"))).toBe(false);
+    // 루트에 없는 utils 의존성만 앱에 추가하고 tokens 는 앱에 쓰지 않음
+    expect(JSON.parse(await fs.readFile(path.join(ws, "package.json"), "utf8")).dependencies).toEqual({ clsx: "^2.1.1", "tailwind-merge": "^3.4.0" });
+    // 음성 대조: 워크스페이스가 아닌 상위의 선언 · baseDir 를 주지 않은 호출은 종전처럼 앱 선언만 봄
+    const outside = await wsApp(ROOT4, NAME_ONLY, { workspaces: false });
+    const outsideLines = tailwind4GuideLines({ name: "web" }, "npm install", "./g.css", outside);
+    expect(outsideLines).toContain(TOKENS_LINE);
+    expect(outsideLines).not.toContain(UI_LINE);
+    const noBase = tailwind4GuideLines({ name: "web" }, "npm install", "./g.css");
+    expect(noBase).toContain(TOKENS_LINE);
+    expect(noBase).not.toContain(UI_LINE);
+  });
+
   it("음성 대조: 앱 선언이면 종전 문구, 워크스페이스가 아닌 상위 · 어디에도 없으면 종전처럼 앱에 추가", async () => {
     const appDecl = await wsApp(ROOT_UTILS, '{\n  "name": "web",\n  "dependencies": { "clsx": "^2.0.0", "tailwind-merge": "^2.5.0" }\n}\n');
     expect((await runInitCli(appDecl)).logs).toContain("✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): clsx (^2.0.0), tailwind-merge (^2.5.0)");

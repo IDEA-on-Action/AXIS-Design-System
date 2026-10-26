@@ -713,6 +713,43 @@ describe("WI-0065 D7: 기본 토큰 CSS 자동 삽입 · 삽입 위치 · 설치
     ]);
   });
 
+  // WI-0086 검토 후속(major): detectTailwind 가 워크스페이스 루트 선언도 보므로, 루트에만 tailwindcss ^4 를 선언한(미설치) 앱에서
+  // theme add 가 전역 CSS 에 쓰는 기본 토큰 줄이 Tailwind 3 의 두 줄(css · shadcn)에서 Tailwind 4 진입점으로 바뀜(changeset · release-notes 에 기록).
+  // 같은 분기의 컴포넌트 tailwind.css 목록은 아직 앱 선언만 봄(theme-add 356, WI-0087 범위). WI-0087 에서 바꾸면 마지막 기대를 뒤집음.
+  it("WI-0086: 루트에만 tailwindcss ^4.1.0(미설치) → 전역 CSS 에 tailwind4 진입점 · 브랜드, 앱 package.json 은 쓰지 않음, 음성 대조는 Tailwind 3 두 줄", async () => {
+    const make = async (workspaces: boolean) => {
+      const root = await project({ tokens: "1.3", layout: "empty" });
+      await fs.writeJSON(path.join(root, "package.json"), {
+        name: "root",
+        private: true,
+        ...(workspaces ? { workspaces: ["apps/*"] } : {}),
+        devDependencies: { tailwindcss: "^4.1.0", "@axis-ds/ui-react": "^1.8.1" },
+      });
+      const app = path.join(root, "apps", "web");
+      await fs.outputJSON(path.join(app, "package.json"), { name: "web", dependencies: { "@axis-ds/tokens": "^1.3.0" } });
+      await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+      await fs.outputFile(path.join(app, "app", "globals.css"), '@import "tailwindcss";\n\nbody { margin: 0; }\n');
+      return app;
+    };
+    const app = await make(true);
+    const pkgBefore = await fs.readFile(path.join(app, "package.json"), "utf8");
+    const plan = planThemeAdd(app, "sample");
+    expect(plan.errors).toEqual([]);
+    expect(plan.css?.tailwind4).toBe(true);
+    expect(plan.css?.baseImports).toEqual(["@axis-ds/tokens/css/tailwind4"]);
+    applyThemeAdd(plan);
+    expect((await fs.readFile(path.join(app, "app", "globals.css"), "utf8")).split("\n").slice(0, 3)).toEqual([
+      '@import "tailwindcss";',
+      '@import "@axis-ds/tokens/css/tailwind4";',
+      IMPORT_SAMPLE,
+    ]);
+    expect(await fs.readFile(path.join(app, "package.json"), "utf8")).toBe(pkgBefore);
+    // 음성 대조: 워크스페이스가 아닌 상위의 선언은 인정하지 않음(종전과 같은 Tailwind 3 두 줄)
+    const outside = planThemeAdd(await make(false), "sample");
+    expect(outside.css?.tailwind4).toBe(false);
+    expect(outside.css?.baseImports).toEqual(["@axis-ds/tokens/css", "@axis-ds/tokens/css/shadcn"]);
+  });
+
   // WI-0070: 출력 문구는 실제 위치 · 분류를 따른다(종전에는 모든 줄이 「기본 토큰 CSS, 브랜드 앞」)
   it("WI-0070 재실행: 브랜드 뒤에 들어간 컴포넌트 tailwind.css 는 「컴포넌트 스캔 경로, 위치 무관」, 처음 실행은 「브랜드 앞」", async () => {
     const dir = await project({ tokens: "1.3", layout: "app-init" });

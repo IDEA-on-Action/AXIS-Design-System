@@ -23,4 +23,5 @@
 - [x] changeset `.changeset/wi-0086-has-dependency-unify.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
 - [ ] WI-0085 커밋을 같은 브랜치에 올린 뒤 PR · 머지(단독 push, push run 완료 확인 뒤 Release 머지)
 - [ ] 발행본으로 testplan 2절 스크립트 다시 재기(AC9, WI-0085 전이와 합친 표)
-- [ ] 결정 필요: init.ts 213 · 281 · 294 의 앱 선언 전용 안내(testplan R1)
+- [x] 검토 후속: init.ts 281 · 294 를 declaredDependency 로(I5), I6 · TA1 전이 기록 · 테스트 고정, contentGlobCovers 링크 단위 테스트(변이 R1)
+- [ ] 결정 필요: init.ts 213 애니메이션 안내(앱 선언 전용, 종전부터)와 theme-add 356 컴포넌트 tailwind.css 목록을 WI-0087 에 합칠지(testplan R1 · R5)

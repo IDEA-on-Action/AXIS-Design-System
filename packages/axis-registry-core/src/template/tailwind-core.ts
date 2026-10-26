@@ -1070,7 +1070,9 @@ function contentGlobBranchCovers(glob: string, sample: string, baseDir: string):
  * cwd 로 둡니다(D4: 판정에 반영하지 않고 상위 경로 제안에 `CONTENT_PARENT_PATH_NOTE` 를 붙임).
  */
 export function contentGlobCovers(glob: string, sample: string, baseDirInput: string): boolean {
-  // 표본은 실경로 기준 상대 경로라 절대 glob 비교의 기준도 실경로로 맞춥니다(WI-0086 반박 검토: 링크로 준 앱의 절대 glob 거짓 FAIL)
+  // 표본은 실경로 기준 상대 경로라 절대 glob 비교의 기준도 실경로로 맞춥니다(WI-0086). 내부 호출자 inspectTailwindContent 는 진입부에서
+  // 이미 실경로를 넘기므로 check 의 링크 판정(반박 검토 AC5 c1-abs 행)은 그쪽 덕분이고, 이 줄은 export 된 이 함수를 링크 경로로 직접 부를 때를
+  // 맞춥니다(검토 후속 단위 테스트 「링크 baseDir 의 절대 glob」이 고정)
   const baseDir = resolveBaseDir(baseDirInput);
   const branches = expandBraces(glob.trim()) ?? [glob];
   return branches.some((b) => contentGlobBranchCovers(b, sample, baseDir));
