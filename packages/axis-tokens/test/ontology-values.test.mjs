@@ -251,16 +251,23 @@ describe('ontology 접기 값 (U15 · D4 · D2)', () => {
     }
   });
 
-  test('WI-0079: Progress success = ink-2, warning = bad, destructive = bad-dark (상태 색 접기와 같은 의미)', () => {
+  // Progress warning(2026-10-26 사용자 결정): v1 에 노랑이 없어(PRD Q8) 빨강 두 단계(bad · bad-dark)로는 destructive 와
+  // 구분이 약했다(휘도 대비 1.33 · 1.26). 그래서 warning 만 v1 팔레트 밖의 AXIS 원시색 노랑을 참조한다.
+  // 「hex 는 v1 팔레트 안에서만」 테스트는 hex 리터럴만 보므로 참조는 예외 목록 없이 통과한다(종전 1.8.0 도
+  // green · yellow-500 을 같은 방식의 원시색 참조로 두었다). 대신 여기서 참조 문자열 자체를 단언해 hex 로 바뀌지 않게 한다.
+  test('WI-0079: Progress success = ink-2, warning = AXIS 원시색 노랑(라이트 yellow-700 · 다크 yellow-500), destructive = bad-dark', () => {
+    assert.equal(light.get('--axis-progress-fill-warning'), '{color.yellow.700}');
+    assert.equal(dark.get('--axis-progress-fill-warning'), '{color.yellow.500}');
+    assert.equal(effective('light', '--axis-progress-fill-warning'), '#A16207');
+    assert.equal(effective('dark', '--axis-progress-fill-warning'), '#EAB308');
     for (const theme of ['light', 'dark']) {
       assert.equal(effective(theme, '--axis-progress-fill-success'), P('ink-2')[theme]);
-      assert.equal(effective(theme, '--axis-progress-fill-warning'), P('bad')[theme]);
       assert.equal(effective(theme, '--axis-progress-fill-destructive'), P('bad-dark')[theme]);
-      // 상태 색 접기(부록 B ⑥)와 같은 매핑: success = status-success, warning = status-warning, destructive = status-warning-strong
+      // success · destructive 는 상태 색 접기(부록 B ⑥)와 같은 매핑: success = status-success, destructive = status-warning-strong
       assert.equal(effective(theme, '--axis-progress-fill-success'), effective(theme, '--axis-status-success'));
-      assert.equal(effective(theme, '--axis-progress-fill-warning'), effective(theme, '--axis-status-warning'));
       assert.equal(effective(theme, '--axis-progress-fill-destructive'), effective(theme, '--axis-status-warning-strong'));
-      // Q3: warning 과 destructive 가 같은 빨강이 되지 않게 두 단계로 나눈다
+      // warning 은 상태 색 접기(status-warning = bad)를 따르지 않는다(빨강 계열이 아니다)
+      assert.notEqual(effective(theme, '--axis-progress-fill-warning'), effective(theme, '--axis-status-warning'), `${theme} warning 이 bad 로 되돌아감`);
       assert.notEqual(effective(theme, '--axis-progress-fill-warning'), effective(theme, '--axis-progress-fill-destructive'), `${theme} warning = destructive`);
     }
   });

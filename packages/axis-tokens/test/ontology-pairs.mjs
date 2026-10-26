@@ -167,6 +167,6 @@ export const CONTRAST_PAIRS = [
   { fg: '#FFFFFF', bg: '--axis-interactive-primary', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 켜짐 트랙' },
   { fg: '--axis-progress-fill-default', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:26 채움 / 트랙' },
   { fg: '--axis-progress-fill-success', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:27' },
-  { fg: '--axis-progress-fill-warning', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:28' },
+  { fg: '--axis-progress-fill-warning', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:28 (ontology 는 원시색 노랑, 라이트 4.16 · 다크 7.12)' },
   { fg: '--axis-progress-fill-destructive', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:29' },
 ];

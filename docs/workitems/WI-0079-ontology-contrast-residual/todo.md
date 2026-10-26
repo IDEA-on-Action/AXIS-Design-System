@@ -29,3 +29,10 @@
 - [x] 브라우저 실측(수정 후) · 기본 브랜드 음성 대조 · 스크린샷 대조
 - [x] 게이트(testplan 4절)
 - [x] project-todo 91행 · wi-mapping lastStatus 🔄
+
+## 검토 뒤 결정 반영 (2026-10-26)
+- [x] Progress warning 을 원시색 노랑(라이트 `{color.yellow.700}` · 다크 `{color.yellow.500}`)으로, 테스트 기대값 갱신(ontology-values · brands.test · CONTRAST_PAIRS where · brand-nontext 주석)
+- [x] warning 대 destructive 구분 재계산(휘도 대비 · 색상 각도), 트랙 위 대비 브라우저 실측(testplan 4b)
+- [x] `brand.json` `a11y.status` 갱신과 단언(brands.test)
+- [x] WI-0082 changeset 에 cli patch 추가(changeset status 1.8.2 · cli 1.7.3 · mcp 1.4.3)
+- [x] 게이트 · E2E 재실행(testplan 4b)

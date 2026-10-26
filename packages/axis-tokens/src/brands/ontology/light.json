@@ -243,7 +243,7 @@
     "fill": {
       "default": { "value": "#326ADA" },
       "success": { "value": "#2A2F36" },
-      "warning": { "value": "#C8332E" },
+      "warning": { "value": "{color.yellow.700}" },
       "destructive": { "value": "#A8281F" }
     }
   },

@@ -27,7 +27,7 @@
 | Switch 꺼짐 · Slider 트랙 | #6B7280 | #F7F7F7 4.51 | 4.51 · 4.83 · 4.39 | 3 | 통과 |
 | Switch 흰 썸 / 트랙 | #FFFFFF | #6B7280 4.83 | - | 3 | 통과 |
 | Progress success / 트랙 | #2A2F36 | #EAECEF 11.39 | 12.58 · 13.48 · 12.25 | 3 | 통과 |
-| Progress warning / 트랙 | #C8332E | #EAECEF 4.47 | 4.94 · 5.29 · 4.81 | 3 | 통과 |
+| Progress warning / 트랙 (4b 결정 전 값) | #C8332E | #EAECEF 4.47 | 4.94 · 5.29 · 4.81 | 3 | 통과 |
 | Progress destructive / 트랙 | #A8281F | #EAECEF 5.94 | 6.56 · 7.03 · 6.39 | 3 | 통과 |
 | Progress default / 트랙 (바꾸지 않음) | #326ADA | #EAECEF 4.21 | - | 3 | 통과 |
 | Input placeholder | #5F6673 | #FFFFFF 5.78 | 5.39 · 5.78 · 5.25 | 4.5 | 통과 |
@@ -41,7 +41,7 @@
 | Switch 꺼짐 · Slider 트랙 | #7A828D | #0E1013 4.90 | 4.90 · 4.53 · 4.11 | 3 | 통과 |
 | Switch 흰 썸 / 트랙 | #FFFFFF | #7A828D 3.89 | - | 3 | 통과 |
 | Progress success / 트랙 | #D0D4D9 | #2A2E34 9.16 | 12.79 · 11.82 · 10.71 | 3 | 통과 |
-| Progress warning / 트랙 | #F07A72 | #2A2E34 5.02 | 7.01 · 6.48 · 5.87 | 3 | 통과 |
+| Progress warning / 트랙 (4b 결정 전 값) | #F07A72 | #2A2E34 5.02 | 7.01 · 6.48 · 5.87 | 3 | 통과 |
 | Progress destructive / 트랙 | #F49890 | #2A2E34 6.33 | 8.84 · 8.16 · 7.40 | 3 | 통과 |
 | Input placeholder | #9CA3AD | #17191D 6.92 | 7.49 · 6.92 · 6.27 | 4.5 | 통과 |
 | (예외) Input 테두리 | #5F6874 | #0E1013 3.37 | 3.37 · 3.12 · 2.83 | - | 수정 전과 같음 |
@@ -79,16 +79,41 @@
 
 - frontend.yml 건수 가드: nontext 8 → 12, describe 별 「nontext form controls (브랜드/테마)」 1건씩을 더했어요.
 
-## 4b. 검토 뒤 확인: warning 과 destructive 의 구분 (계산 · 측정, 2026-10-26)
+## 4b. 검토 뒤 결정: Progress warning 을 노랑으로 (계산 · 측정, 2026-10-26)
 
-| 짝 | 라이트 | 다크 |
+검토에서 빨강 두 단계(warning `bad` 대 destructive `bad-dark`)의 구분이 약하다는 지적을 받았고, 사용자 결정으로 warning 만 AXIS 원시색 노랑(라이트 `{color.yellow.700}` #A16207 · 다크 `{color.yellow.500}` #EAB308)으로 바꿨어요. destructive · success 는 그대로예요.
+
+**warning 대 destructive 의 구분 (계산: 상대휘도 대비 · HSV 색상 각도 차)**
+
+| 짝 | 라이트 휘도 대비 · 색상 차 | 다크 휘도 대비 · 색상 차 |
 |---|---|---|
-| 이번 값 warning `bad` 대 destructive `bad-dark` | #C8332E / #A8281F 1.33 | #F07A72 / #F49890 1.26 |
-| 나누지 않았을 때 `bad` 대 red-500 | #C8332E / #EF4444 1.41 | #F07A72 / #EF4444 1.39 |
-| 발행본 1.8.1 노랑 대 빨강 | #EAB308 / #EF4444 1.96 | 같음 |
+| 이번 값 노랑 대 `bad-dark` | #A16207 / #A8281F 1.43 · 31.5도 | #EAB308 / #F49890 1.12 · 40.6도 |
+| 직전 값 `bad` 대 `bad-dark` | #C8332E / #A8281F 1.33 · 2.0도 | #F07A72 / #F49890 1.26 · 1.0도 |
+| 발행본 1.8.1 yellow-500 대 red-500 | #EAB308 / #EF4444 1.96 · 45.4도 | 같음 |
 
-- 상대휘도 대비 계산값이고, 브랜치 소비자 실측(Chromium 계산값, 검토 측)과 같아요. 색상은 둘 다 2~5도 빨강이에요.
-- 테스트는 두 값이 다르다는 것(`notEqual`, E2E 렌더 색 비교)만 보고, 구분할 수 있는 최소 차이는 재지 않아요. 결정(빨강 두 단계)대로 값을 두었고, 최소 휘도 차이 기준을 둘지는 디자인 오너 확인 항목으로 남겨요.
+- 색상(hue)으로는 노랑과 빨강이 30~40도 갈라져 직전(1~2도)보다 뚜렷해요. 휘도 대비는 라이트 1.43(직전 1.33)으로 조금 늘고 다크 1.12(직전 1.26)로 줄었어요. 다크는 밝기가 비슷한 노랑 · 분홍이라 적록 색각 이상에서는 구분이 약할 수 있어 상태 이름을 글자로 함께 보여 주는 안내는 그대로예요.
+- 계산 스크립트: `scratchpad/w79fu/calc.py`(결과 `calc.txt`).
+
+**트랙 위 대비 (측정: 정적 빌드 Chromium 계산값, `scratchpad/w79fu/afterfu.txt`)**
+
+| 테마 | warning 색 | 트랙 위 | bg · card · panel |
+|---|---|---|---|
+| 라이트 | #A16207 | #EAECEF 4.16 | 4.60 · 4.92 · 4.47 |
+| 다크 | #EAB308 | #2A2E34 7.12 | 9.93 · 9.18 · 8.32 |
+
+- 직전 측정(`scratchpad/w79impl/after82.txt`)과 `diff` 하면 ontology 라이트 · 다크 Progress warning 2행만 달라요. 기본 브랜드 26행과 ontology 나머지 행은 같아요(음성 대조). 바뀐 2행은 측정이 변화를 잡는다는 양성 대조예요.
+- 단위 테스트 변이: ontology 라이트 warning 을 `#C8332E` 로 되돌리면 `ontology-values`(WI-0079 Progress 테스트)와 `brands.test`(WI0063_SAME 대조) 2건이 실패하고, 되돌린 뒤 통과해요.
+- 「hex 는 v1 팔레트 안에서만」 테스트는 hex 리터럴만 보므로 원시색 참조는 예외 목록 없이 통과해요(1.8.0 의 green · yellow-500 참조와 같은 방식). 대신 `ontology-values` 가 소스의 참조 문자열(`{color.yellow.700}` · `{color.yellow.500}`)과 풀린 hex 를 직접 단언해요.
+
+**이번 반영의 게이트 (측정, 2026-10-26, main 6617869 병합 뒤)**
+
+| 단계 | 결과 |
+|---|---|
+| `pnpm lint --force` · `type-check --force` · `build --force` · `turbo run test --force` | 7 · 11 · 8 · 7 tasks 성공, 모두 Cached 0. tokens 568 · ui-react 199 · agentic-ui 148 · theme 47 · cli 873 · mcp 181 |
+| check-token-refs · check-contrast-pairs · check-types-versions · check-changeset-mcp-tokens(tokens 1 · mcp 1 · cli 1, registry-core 변경 0) · check-library-links | 통과 |
+| build:registry · test:registry · check-licenses · pack-smoke(퍼블리시 대상 6개) · cli-smoke · registry-install-smoke 5/5 | 통과 |
+| E2E(정적 빌드, CI=1): a11y 236(a11y-routes.cjs 59경로 x 4조합) · nontext 12 · demo 8 · tooltip 6 · library 4 · tokens 22 | 모두 통과, 실패 · 건너뜀 0 |
+| `changeset status` | tokens · theme · ui-react · agentic-ui 1.8.2 · cli 1.7.3 · mcp 1.4.3 |
 
 ## 5. 생성물
 

@@ -1143,7 +1143,7 @@ for (const brand of BRANDS) {
             expect.soft(v, `${r.id} ${hex(r.color)} / ${k}`).toBeGreaterThanOrEqual(r.min)
           }
         }
-        // Q3(WI-0079): warning 과 destructive 막대는 서로 다른 색이어야 함(ontology 는 bad · bad-dark 두 단계)
+        // Q3(WI-0079): warning 과 destructive 막대는 서로 다른 색이어야 함(ontology 는 warning 노랑 yellow-700 · 500, destructive bad-dark, 2026-10-26 결정)
         const colorOf = (id: string) => {
           const row = rows.find((r) => r.id === id)
           expect(row, `${id} 측정 행 없음`).toBeDefined()

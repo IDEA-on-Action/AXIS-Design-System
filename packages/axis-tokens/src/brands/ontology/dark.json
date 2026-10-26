@@ -195,7 +195,7 @@
     "fill": {
       "default": { "value": "#6B98F0" },
       "success": { "value": "#D0D4D9" },
-      "warning": { "value": "#F07A72" },
+      "warning": { "value": "{color.yellow.500}" },
       "destructive": { "value": "#F49890" }
     }
   },

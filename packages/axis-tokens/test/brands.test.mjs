@@ -231,8 +231,10 @@ describe('src/brands/ontology (FR-8)', () => {
 
   // WI-0063 새 component 토큰(폼 컨트롤 경계 · 트랙, Progress 채움). 1.8.0 은 ontology 에 1.7.0 렌더 값을 그대로 넣었고,
   // WI-0079(2026-10-26 사용자 결정, design-review.md 권장안 + Q3 destructive 분리)에서 v1 팔레트 안의 값으로 바꿨어요.
-  // 경계 · 트랙 = 라이트 sub · 다크 muted, Progress success · warning · destructive = ink-2 · bad · bad-dark, default = key(surface-brand 와 같음).
-  // 값은 팔레트 이름으로 적어요(hex 를 복제하지 않음). 초안 2 뒤에 생긴 이름이라 초안에는 없어요.
+  // 경계 · 트랙 = 라이트 sub · 다크 muted, Progress success · destructive = ink-2 · bad-dark, default = key(surface-brand 와 같음).
+  // Progress warning 은 2026-10-26 사용자 결정으로 v1 팔레트 밖의 AXIS 원시색 노랑(라이트 yellow-700 · 다크 yellow-500)이에요.
+  // v1 에 노랑이 없어(PRD Q8) 빨강 두 단계로는 destructive 와 구분이 약했기 때문이에요(WI-0079 testplan 4b).
+  // 값은 팔레트 · 원시색 이름으로 적어요(hex 를 복제하지 않음). 초안 2 뒤에 생긴 이름이라 초안에는 없어요.
   // 이 표의 이름만 U18 초안 대조에서 빼고, 아래 테스트가 값이 정확히 같은지 봐요.
   const pal = (light, dark) => ({ light: V1_PALETTE[light].light, dark: V1_PALETTE[dark ?? light].dark });
   const WI0079_NAMES = {
@@ -240,7 +242,7 @@ describe('src/brands/ontology (FR-8)', () => {
     '--axis-form-control-track': pal('sub', 'muted'),
     '--axis-progress-fill-default': pal('key'),
     '--axis-progress-fill-success': pal('ink-2'),
-    '--axis-progress-fill-warning': pal('bad'),
+    '--axis-progress-fill-warning': { light: resolveRef('{color.yellow.700}'), dark: resolveRef('{color.yellow.500}') },
     '--axis-progress-fill-destructive': pal('bad-dark'),
   };
   const WI0063_SAME = Object.fromEntries(['light', 'dark'].map(theme => [
@@ -257,6 +259,9 @@ describe('src/brands/ontology (FR-8)', () => {
   test('WI-0063 · WI-0079: 새 토큰의 ontology 값이 v1 팔레트 결정 값이다(초안에는 없는 이름)', () => {
     const draft = draftBlocks();
     assert.equal(WI0063_SAME.light['--axis-form-control-border'], '#6B7280', '팔레트 표 읽기(양성 대조)');
+    // 원시색 참조 풀이 양성 대조: yellow-700 · yellow-500 의 hex
+    assert.equal(WI0063_SAME.light['--axis-progress-fill-warning'], '#A16207', '원시색 yellow-700 풀이');
+    assert.equal(WI0063_SAME.dark['--axis-progress-fill-warning'], '#EAB308', '원시색 yellow-500 풀이');
     for (const theme of ['light', 'dark']) {
       const mine = brandDecls(theme);
       const got = Object.fromEntries(Object.keys(WI0063_SAME[theme]).map(n => [n, resolveRef(mine.get(n))]));
@@ -347,6 +352,11 @@ describe('src/brands/ontology (FR-8)', () => {
     assert.match(ontology.meta.a11y.status, /문서 사이트 9페이지 기본 상태 기준/);
     assert.match(ontology.meta.a11y.status, /컴포넌트 실측 · hover 미포함/);
     assert.match(ontology.meta.a11y.status, /디자인 오너 사후 확인 완료\(2026-10-19\)/);
+    // WI-0079(2026-10-26): 권장안을 디자인 오너 재확인 전에 선반영했고, 부록 B ② 승인은 철회됐음을 함께 적는다
+    assert.match(ontology.meta.a11y.status, /2026-10-26 WI-0079 권장안 선반영/);
+    assert.match(ontology.meta.a11y.status, /부록 B ② placeholder 승인 철회/);
+    assert.match(ontology.meta.a11y.status, /Progress warning 노랑 · destructive bad-dark/);
+    assert.match(ontology.meta.a11y.status, /디자인 오너 재확인 대기$/);
     assert.equal(ontology.meta.a11y.checkedAt, '2026-10-18');
     assert.equal(ontology.meta.a11y.gate, 'CI frontend.yml E2E a11y (WI-0025 AC8)');
     assert.doesNotMatch(JSON.stringify(ontology.meta), /책임|가칭/);
