@@ -54,7 +54,7 @@ import {
   type RegistryIndex,
   type RegistryItem,
 } from "../registry/index.js";
-import { detectInstallCommand, hasDependency, isPlainObject } from "../project.js";
+import { declaredDependency, detectInstallCommand, isPlainObject, workspaceRootPackage } from "../project.js";
 import { detectTailwind } from "../template/tailwind-core.js";
 import { AXIS_QUICK_START_URL } from "../site.js";
 import { selectUtilsDependencies } from "../utils-deps.js";
@@ -500,7 +500,11 @@ export function planFiles(layout: InstallLayout, items: RegistryItem[]): { files
   return { files, errors };
 }
 
-/** package.json 에 없는 dependencies(이름 순). clsx · tailwind-merge 는 init 과 같은 범위를 붙입니다 */
+/**
+ * package.json 에 없는 dependencies(이름 순). clsx · tailwind-merge 는 init 과 같은 범위를 붙입니다.
+ * WI-0086: 앱 package.json 다음 워크스페이스 루트 package.json 의 선언도 「있음」으로 봅니다(`declaredDependency`, axis check 의
+ * dependencies 항목 · init 과 같은 경계). 안내 명령은 앱에서 실행하는 그대로이고, package.json 은 쓰지 않습니다.
+ */
 export function missingDependencies(root: string, items: RegistryItem[]): { specs: Record<string, string | undefined>; installCommand: string } {
   const installCommand = detectInstallCommand(root);
   let pkg: Record<string, unknown> | undefined;
@@ -512,11 +516,12 @@ export function missingDependencies(root: string, items: RegistryItem[]): { spec
     pkg = undefined;
   }
   const ranges = selectUtilsDependencies(detectTailwind(root, pkg));
+  const rootPkg = pkg !== undefined ? (workspaceRootPackage(root) ?? null) : null;
   const specs: Record<string, string | undefined> = {};
   for (const item of items) {
     for (const dep of item.dependencies) {
       const name = dependencyName(dep);
-      if (pkg !== undefined && hasDependency(pkg, name) !== undefined) continue;
+      if (declaredDependency(root, pkg, name, rootPkg) !== undefined) continue;
       if (name in specs) continue;
       const explicit = dep.length > name.length ? dep.slice(name.length + 1) : undefined;
       specs[name] = explicit ?? (ranges as Record<string, string>)[name];

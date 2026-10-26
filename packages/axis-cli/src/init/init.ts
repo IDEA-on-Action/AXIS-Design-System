@@ -43,7 +43,7 @@ import {
   type TailwindDetection,
 } from "../template/tailwind-core.js";
 import { CLSX_RANGE, TAILWIND_MERGE_RANGES, selectUtilsDependencies } from "@axis-ds/registry-core/utils-deps";
-import { addCommandFor, detectProjectPaths, projectFileExists } from "@axis-ds/registry-core/project";
+import { addCommandFor, declaredDependency, detectProjectPaths, projectFileExists } from "@axis-ds/registry-core/project";
 
 // Tailwind 4 진입점을 내는 컴포넌트 패키지 목록은 axis check(B1)와 같이 쓰려고 공유 코어에 둡니다.
 export { TAILWIND4_COMPONENT_PACKAGES };
@@ -345,8 +345,11 @@ export interface UtilsDependencyPlan {
   ranges: Record<string, string>;
   /** `tailwind-merge` 범위를 고른 근거 */
   tailwind: TailwindDetection;
-  /** 이미 있던 의존성과 선언된 범위(바꾸지 않음) */
-  present: { name: string; range: string }[];
+  /**
+   * 이미 있던 의존성과 선언된 범위(바꾸지 않음). `source` 는 선언 위치입니다(WI-0086: 워크스페이스 루트 선언이면 `root`,
+   * 앱 package.json 에 다시 쓰지 않음).
+   */
+  present: { name: string; range: string; source?: "app" | "root" }[];
   /** `unwritable` 의 이유 */
   reason?: string;
   /** lockfile 로 고른 설치 명령(예: `pnpm install`) */
@@ -417,9 +420,11 @@ export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan
   plan.addCommand = addCommandFor(installCommand, plan.ranges);
 
   const missing: Record<string, string> = {};
+  // WI-0086: 앱 선언 다음 워크스페이스 루트 선언(axis check 의 dependencies 항목과 같은 헬퍼 · 경계)도 「이미 있음」으로 봅니다.
+  // 쓰기는 계속 앱 package.json 에만 하고, 루트 선언은 앱으로 옮기지 않습니다.
   for (const [name, range] of Object.entries(plan.ranges)) {
-    const declared = hasDependency(pkg, name);
-    if (declared !== undefined) plan.present.push({ name, range: declared });
+    const declared = declaredDependency(baseDir, pkg, name);
+    if (declared !== undefined) plan.present.push({ name, range: declared.range, source: declared.source });
     else missing[name] = range;
   }
   plan.added = Object.keys(missing);
@@ -494,6 +499,9 @@ type Log = (...args: unknown[]) => void;
 /** 의존성 단계의 안내 줄을 출력합니다. */
 function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   const presentText = plan.present.map((p) => `${p.name} (${p.range})`).join(", ");
+  // 루트 선언이면 출처를 붙입니다(axis check 의 「워크스페이스 루트에 선언: …」과 같은 문구, WI-0086). 앱 선언만이면 종전 문구 그대로
+  const rootPresent = plan.present.filter((p) => p.source === "root").map((p) => p.name);
+  const rootNote = rootPresent.length > 0 ? ` (워크스페이스 루트에 선언: ${rootPresent.join(", ")})` : "";
   const basis = `  tailwind-merge 범위 기준: ${describeTailwindBasis(plan.tailwind)}`;
   // 근거 줄과 그 판정의 경고 줄(F1)
   const logBasis = () => {
@@ -503,11 +511,11 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   if (plan.action === "add") {
     const addedText = plan.added.map((n) => `${n}@${plan.ranges[n]}`).join(", ");
     log(chalk.green(`✓ package.json dependencies 에 추가: ${addedText}`));
-    if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}`));
+    if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}${rootNote}`));
     if (plan.added.includes("tailwind-merge")) logBasis();
     log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
   } else if (plan.action === "present") {
-    log(chalk.green(`✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): ${presentText}`));
+    log(chalk.green(`✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): ${presentText}${rootNote}`));
     log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
   } else if (plan.action === "no-package-json") {
     log(chalk.yellow("! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다."));

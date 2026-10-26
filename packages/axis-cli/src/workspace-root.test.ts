@@ -12,7 +12,15 @@ import { describe, it, expect, afterEach } from "vitest";
 import fs from "fs-extra";
 import os from "os";
 import path from "path";
-import { detectInstallCommand, findWorkspaceRoot } from "@axis-ds/registry-core/project";
+import {
+  declaredDependency,
+  detectInstallCommand,
+  findInstalledPackage,
+  findWorkspaceRoot,
+  isPnpProject,
+  resolveBaseDir,
+  workspaceRootPackage,
+} from "@axis-ds/registry-core/project";
 
 const created: string[] = [];
 afterEach(async () => {
@@ -29,7 +37,8 @@ async function tree(files: Record<string, string | Record<string, unknown>>): Pr
     else if (typeof content === "string") await fs.outputFile(file, content);
     else await fs.outputJSON(file, content);
   }
-  return root;
+  // WI-0086: 탐색 함수가 실경로(realpath)를 돌려주므로 tmpdir 이 링크인 머신(macOS /var → /private/var 등)에서도 비교가 맞게 실경로로
+  return fs.realpath(root);
 }
 
 const APP_PKG = { name: "web", private: true };
@@ -201,5 +210,100 @@ describe("WI-0081: detectInstallCommand 의 워크스페이스 루트 탐색", (
       const app = path.join(root, "apps", "web");
       expect({ rootPkg, root: findWorkspaceRoot(app), cmd: detectInstallCommand(app) }).toEqual({ rootPkg, root: undefined, cmd: "pnpm install" });
     }
+  });
+});
+
+// WI-0086: 의존성 선언 판정의 공용 헬퍼(declaredDependency)와 공개 함수 진입부의 실경로(resolveBaseDir).
+// 선언은 앱 package.json 다음 워크스페이스 루트 package.json(findWorkspaceRoot 와 같은 경계)이고, 기준 디렉터리는 심볼릭 링크를 푼 실경로예요.
+describe("WI-0086: declaredDependency(앱 다음 워크스페이스 루트 선언)", () => {
+  const ROOT_DEPS = { tailwindcss: "^3.4.0", clsx: "^2.1.1", "@axis-ds/ui-react": "^1.8.0" };
+
+  it("앱 선언이 있으면 앱(source app), 없으면 워크스페이스 루트(source root), 어디에도 없으면 undefined", async () => {
+    const root = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"], devDependencies: ROOT_DEPS },
+      "apps/web/package.json": { name: "web", dependencies: { clsx: "^2.0.0" } },
+    });
+    const app = path.join(root, "apps", "web");
+    const pkg = { name: "web", dependencies: { clsx: "^2.0.0" } };
+    expect(declaredDependency(app, pkg, "clsx")).toEqual({ range: "^2.0.0", source: "app" });
+    expect(declaredDependency(app, pkg, "tailwindcss")).toEqual({ range: "^3.4.0", source: "root" });
+    expect(declaredDependency(app, pkg, "@axis-ds/ui-react")).toEqual({ range: "^1.8.0", source: "root" });
+    expect(declaredDependency(app, pkg, "tailwind-merge")).toBeUndefined();
+    // 앱 package.json 이 없으면(pkg undefined) 루트도 보지 않음(종전 동작)
+    expect(declaredDependency(app, undefined, "tailwindcss")).toBeUndefined();
+    // rootPkg 를 넘기면 다시 읽지 않고 그것을 씀(null 은 루트 없음)
+    expect(declaredDependency(app, pkg, "tailwindcss", null)).toBeUndefined();
+    expect(declaredDependency(app, pkg, "tailwindcss", { devDependencies: { tailwindcss: "^4" } })).toEqual({ range: "^4", source: "root" });
+  });
+
+  it("음성 대조: 워크스페이스가 아닌 상위 · .git 너머 · 앱이 곧 루트면 루트 선언을 인정하지 않음", async () => {
+    const outside = await tree({ "package.json": { name: "unrelated", devDependencies: ROOT_DEPS }, "sub/app/package.json": APP_PKG });
+    expect(declaredDependency(path.join(outside, "sub", "app"), APP_PKG, "tailwindcss")).toBeUndefined();
+    const gitstop = await tree({
+      "package.json": { name: "root", workspaces: ["repo/*"], devDependencies: ROOT_DEPS },
+      "repo/.git/HEAD": "ref: refs/heads/main\n",
+      "repo/app/package.json": APP_PKG,
+    });
+    expect(declaredDependency(path.join(gitstop, "repo", "app"), APP_PKG, "tailwindcss")).toBeUndefined();
+    const self = await tree({ "package.json": { name: "root", workspaces: ["apps/*"], devDependencies: ROOT_DEPS } });
+    expect(workspaceRootPackage(self)).toBeUndefined();
+    expect(declaredDependency(self, APP_PKG, "tailwindcss")).toBeUndefined();
+  });
+});
+
+describe("WI-0086: 공개 함수 진입부의 실경로(resolveBaseDir)", () => {
+  /** npm 워크스페이스(루트 package-lock + 루트 node_modules 설치본) + apps/web, 그리고 앱 디렉터리 자체를 가리키는 링크(L1) */
+  async function linked() {
+    const root = await tree({
+      "package.json": { name: "root", private: true, workspaces: ["apps/*"], devDependencies: { tailwindcss: "^3.4.0" } },
+      "package-lock.json": "{}",
+      "node_modules/tailwindcss/package.json": { name: "tailwindcss", version: "3.4.19" },
+      "apps/web/package.json": APP_PKG,
+    });
+    const app = path.join(root, "apps", "web");
+    const links = await tree({});
+    const link = path.join(links, "web-link");
+    await fs.symlink(app, link, "dir");
+    return { root, app, link };
+  }
+
+  it("앱 링크(L1)를 주어도 실경로와 같은 루트 · 설치 명령 · 설치본 · 루트 선언(수정 전: 링크 쪽 상위를 올라가 못 찾음)", async () => {
+    const { root, app, link } = await linked();
+    expect(resolveBaseDir(link)).toBe(app);
+    expect({ root: findWorkspaceRoot(link), cmd: detectInstallCommand(link), pnp: isPnpProject(link) }).toEqual({ root, cmd: "npm install", pnp: false });
+    expect(findInstalledPackage(link, "tailwindcss")).toEqual({ dir: path.join(root, "node_modules", "tailwindcss"), version: "3.4.19" });
+    expect(declaredDependency(link, APP_PKG, "tailwindcss")).toEqual({ range: "^3.4.0", source: "root" });
+  });
+
+  it("루트 쪽 링크(L2, 링크/apps/web)와 실경로는 종전과 같음(음성 대조)", async () => {
+    const { root, app } = await linked();
+    const links = await tree({});
+    const wsLink = path.join(links, "ws");
+    await fs.symlink(root, wsLink, "dir");
+    expect(findWorkspaceRoot(app)).toBe(root);
+    expect(detectInstallCommand(path.join(wsLink, "apps", "web"))).toBe("npm install");
+    expect(declaredDependency(path.join(wsLink, "apps", "web"), APP_PKG, "tailwindcss")).toEqual({ range: "^3.4.0", source: "root" });
+  });
+
+  it("찾은 설치본 dir 은 풀지 않음: 앱 node_modules 의 pnpm 스토어 링크는 링크 경로 그대로(풀면 .pnpm 경로가 제안에 새어 나옴)", async () => {
+    const root = await tree({
+      "package.json": { name: "root", private: true },
+      "pnpm-workspace.yaml": "packages:\n  - apps/*\n",
+      "node_modules/.pnpm/@axis-ds+ui-react@1.8.1/node_modules/@axis-ds/ui-react/package.json": { name: "@axis-ds/ui-react", version: "1.8.1" },
+      "apps/web/package.json": APP_PKG,
+      "apps/web/node_modules/@axis-ds/": "",
+    });
+    const app = path.join(root, "apps", "web");
+    const store = path.join(root, "node_modules", ".pnpm", "@axis-ds+ui-react@1.8.1", "node_modules", "@axis-ds", "ui-react");
+    await fs.symlink(store, path.join(app, "node_modules", "@axis-ds", "ui-react"), "dir");
+    expect(findInstalledPackage(app, "@axis-ds/ui-react")?.dir).toBe(path.join(app, "node_modules", "@axis-ds", "ui-react"));
+  });
+
+  it("없는 경로(ENOENT)는 종전처럼 path.resolve 결과로 폴백", async () => {
+    const base = await tree({});
+    const missing = path.join(base, "no-such-dir");
+    expect(resolveBaseDir(missing)).toBe(missing);
+    expect(resolveBaseDir("relative/x")).toBe(path.resolve("relative/x"));
+    expect(detectInstallCommand(missing)).toBe("pnpm install");
   });
 });

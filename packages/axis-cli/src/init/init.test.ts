@@ -2177,3 +2177,75 @@ describe("WI-0075 D1: -y 없는 init 을 비대화형으로 부르면 기본값�
     expect([config.componentsDir, config.tailwindConfig, config.globalCss]).toEqual(["./src/ui", "./tailwind.config.js", "./styles/globals.css"]);
   });
 });
+
+// WI-0086: init 의 utils 의존성(clsx · tailwind-merge) 판정이 워크스페이스 루트 선언도 「이미 있음」으로 봄(declaredDependency, axis check 의
+// dependencies 항목과 같은 경계). 쓰기는 앱 package.json 에만 하고 루트 선언을 앱으로 옮기지 않아요. 브리프 측정: 발행본 cli 1.7.1 은
+// npm · pnpm · pnpm hoisted 3/3 에서 루트 선언 clsx · tailwind-merge 를 앱에 다시 써 넣음(diff 3줄).
+describe("WI-0086: init 은 워크스페이스 루트에 선언된 utils 의존성을 앱에 다시 쓰지 않음", () => {
+  /** 루트(workspaces · lockfile · devDependencies) 아래 apps/web(package.json 원문)을 만들고 앱 경로를 돌려줍니다 */
+  async function wsApp(rootDeps: Record<string, string>, appPkgText: string, opts: { workspaces?: boolean; lock?: string } = {}): Promise<string> {
+    const root = await tmpDir();
+    const workspaces = opts.workspaces === false ? {} : { workspaces: ["apps/*"] };
+    await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, ...workspaces, devDependencies: rootDeps });
+    await fs.writeFile(path.join(root, opts.lock ?? "package-lock.json"), "{}");
+    const app = path.join(root, "apps", "web");
+    await fs.ensureDir(app);
+    await fs.writeFile(path.join(app, "package.json"), appPkgText);
+    return app;
+  }
+  const APP_TEXT = '{\n  "name": "web",\n  "dependencies": {\n    "@axis-ds/tokens": "^1.8.0"\n  }\n}\n';
+  const ROOT_UTILS = { tailwindcss: "^3.4.0", clsx: "^2.1.1", "tailwind-merge": "^2.6.0" };
+
+  for (const lock of ["package-lock.json", "pnpm-lock.yaml"]) {
+    it(`루트(${lock})에 clsx · tailwind-merge 선언 → 앱 package.json 바이트 불변, 출처 표시(종전: 앱 dependencies 에 추가)`, async () => {
+      const app = await wsApp(ROOT_UTILS, APP_TEXT, { lock });
+      const r = await runInitCli(app);
+      expect(await fs.readFile(path.join(app, "package.json"), "utf8")).toBe(APP_TEXT);
+      expect(r.logs).toContain(
+        "✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): clsx (^2.1.1), tailwind-merge (^2.6.0) (워크스페이스 루트에 선언: clsx, tailwind-merge)"
+      );
+      const plan = planUtilsDependencies(app);
+      expect({ action: plan.action, write: plan.write, present: plan.present }).toEqual({
+        action: "present",
+        write: undefined,
+        present: [
+          { name: "clsx", range: "^2.1.1", source: "root" },
+          { name: "tailwind-merge", range: "^2.6.0", source: "root" },
+        ],
+      });
+    });
+  }
+
+  it("루트 Tailwind 4 미설치(tailwindcss ^4.1.0 · tailwind-merge ^3.0.0): 범위 기준이 루트 선언 Tailwind 4, 앱에 ^2.6.0 을 쓰지 않음", async () => {
+    const app = await wsApp({ tailwindcss: "^4.1.0", clsx: "^2.1.1", "tailwind-merge": "^3.0.0" }, APP_TEXT);
+    const plan = planUtilsDependencies(app);
+    expect(plan.tailwind).toEqual({ major: 4, source: "declared", value: "^4.1.0" });
+    expect(plan.ranges["tailwind-merge"]).toBe("^3.4.0");
+    expect(plan.action).toBe("present");
+    await runInitCli(app);
+    expect(await fs.readFile(path.join(app, "package.json"), "utf8")).toBe(APP_TEXT);
+  });
+
+  it("루트에 clsx 만 있으면 tailwind-merge 만 앱에 추가하고 clsx 는 출처 표시", async () => {
+    const app = await wsApp({ tailwindcss: "^3.4.0", clsx: "^2.1.1" }, APP_TEXT);
+    const r = await runInitCli(app);
+    expect(JSON.parse(await fs.readFile(path.join(app, "package.json"), "utf8")).dependencies).toEqual({
+      "@axis-ds/tokens": "^1.8.0",
+      "tailwind-merge": "^2.6.0",
+    });
+    expect(r.logs).toContain("  이미 있음(버전 유지): clsx (^2.1.1) (워크스페이스 루트에 선언: clsx)");
+  });
+
+  it("음성 대조: 앱 선언이면 종전 문구, 워크스페이스가 아닌 상위 · 어디에도 없으면 종전처럼 앱에 추가", async () => {
+    const appDecl = await wsApp(ROOT_UTILS, '{\n  "name": "web",\n  "dependencies": { "clsx": "^2.0.0", "tailwind-merge": "^2.5.0" }\n}\n');
+    expect((await runInitCli(appDecl)).logs).toContain("✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): clsx (^2.0.0), tailwind-merge (^2.5.0)");
+    for (const app of [await wsApp(ROOT_UTILS, APP_TEXT, { workspaces: false }), await wsApp({}, APP_TEXT)]) {
+      await runInitCli(app);
+      expect(JSON.parse(await fs.readFile(path.join(app, "package.json"), "utf8")).dependencies).toEqual({
+        "@axis-ds/tokens": "^1.8.0",
+        clsx: "^2.1.1",
+        "tailwind-merge": "^2.6.0",
+      });
+    }
+  });
+});
