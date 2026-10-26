@@ -604,6 +604,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNSk",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0090",
+      "slug": "pnpm-content-upward-false-fail",
+      "issueNumber": 227,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDf1-o",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-26T14:20:00.000Z"
