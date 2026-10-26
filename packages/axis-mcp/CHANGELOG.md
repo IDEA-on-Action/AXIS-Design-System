@@ -1,5 +1,26 @@
 # @axis-ds/mcp
 
+## 1.4.2
+
+### Patch Changes
+
+- 7d1915b: 설치 · 실행 안내가 대상 프로젝트의 패키지 매니저를 따라요(WI-0085). 종전에는 일부 안내가 lockfile 판정을 거치지 않고 `pnpm` 으로 고정이라 npm · yarn 프로젝트에도 pnpm 명령이 나왔어요.
+  - `axis template apply` 의 「필요한 의존성」 · MCP `axis.apply_template`: 대상 디렉터리의 매니저로 `npm install …` · `npm install -D …` · `yarn add …` · `yarn add -D …` · `pnpm add …` 를 내고, 다른 안내처럼 범위를 따옴표로 감싸요(`"react@^19.0.0"`, `^` 가 셸에서 사라지지 않게). 매니저는 템플릿 파일을 쓰기 전의 프로젝트로 골라요.
+  - `axis template init` 의 다음 단계: `npm install` · `npm run dev`, `yarn install` · `yarn dev`, `pnpm install` · `pnpm dev` 가운데 새 프로젝트 디렉터리에 맞는 것.
+  - `axis theme list` · `axis theme info` · MCP `axis.list_brands` · `axis.get_brand` 의 tokens 빌드 전 안내: 워크스페이스 빌드 명령이 `pnpm --filter @axis-ds/tokens build` · `npm run build -w @axis-ds/tokens` · `yarn workspace @axis-ds/tokens build` 로 매니저를 따라요. MCP 브랜드 도구의 설치 · 업그레이드 · 재설치 명령도 CLI 처럼 `targetDir` 의 매니저를 따라요(종전 pnpm 한 가지).
+  - `axis monet import` 다음 단계의 의존성 설치 줄도 현재 디렉터리의 매니저를 따라요.
+  - 설치 명령 판정(`axis init` · `axis theme add` · `axis add` · `axis check` 등 모든 안내 공통): 앱 층과 워크스페이스 루트 층에 lockfile 이 없으면 `package.json` 의 `packageManager`(`npm@…` · `yarn@…` · `pnpm@…`, 앱 다음 같은 워크스페이스 루트)를 봐요. lockfile 이 있으면 종전처럼 lockfile 이 먼저이고, 모르는 이름(`bun@…` 등)은 무시해 종전 기본값 `pnpm` 이에요. 그래서 lockfile 없이 `packageManager` 만 있는 프로젝트는 이미 lockfile 을 따르던 안내도 npm · yarn 명령으로 바뀌어요.
+  - lockfile · `packageManager` 가 없는 프로젝트의 명령은 종전과 같아요. 다만 template apply · init 의 pnpm 의존성 줄에는 따옴표가 붙어요.
+  - MCP `axis.get_brand` 도구 설명의 예시를 `defaultBrand` 대신 실제 응답과 같은 `<html data-brand>` · `setBrand` 로 고쳤어요.
+
+- 7d1915b: 워크스페이스(모노레포) 앱에서 Tailwind · 컴포넌트 패키지 판정과 의존성 안내가 워크스페이스 루트 `package.json` 의 선언도 봐요(WI-0086). 종전에는 `dependencies` 항목만 루트 선언을 인정하고 나머지 판정은 앱 선언만 봐서, 같은 화면에서 판정이 갈렸어요.
+  - `axis check` · `axis.check_project`: 루트에만 `@axis-ds/ui-react` 를 선언한 Tailwind 3 앱에 `tailwind.content` · `animation` 항목이 새로 나와요. `content` 가 컴포넌트 경로를 덮지 않으면 `tailwind.content` FAIL 이라 종료 코드가 0 에서 1 로 바뀔 수 있어요(실제 빌드에서 컴포넌트 클래스가 만들어지지 않던 상태예요. 제안 경로를 `content` 에 넣으세요).
+  - 루트에만 `tailwindcss` ^4 를 선언하고 아직 설치하지 않은 앱은 Tailwind 4 로 판정해 「tailwind.config 파일이 없습니다」 FAIL 이 사라져요(종료 코드 1 에서 0). Tailwind 4 의 1.4.0 안내 · 컴포넌트 `tailwind.css` 안내, Tailwind 3 preset 버전 게이트, brand 의 `@axis-ds/theme` 버전 게이트도 루트 선언을 근거로 써요(설치본이 있으면 종전처럼 설치본이 먼저).
+  - `axis init`: 루트에 선언된 `clsx` · `tailwind-merge` 를 앱 `package.json` 에 다시 쓰지 않고 「워크스페이스 루트에 선언: …」으로 알려요. 루트에만 `tailwindcss` ^4 가 있으면 앱에 새로 쓰는 `tailwind-merge` 범위가 `^2.6.0` 에서 `^3.4.0` 으로 바뀌어요(Tailwind 4 판정). Tailwind 4 안내의 「@axis-ds/tokens 설치:」 · 컴포넌트 `tailwind.css` 줄도 루트 선언을 봐요(루트에 있는 tokens 를 앱에 다시 설치하라고 하지 않아요). `axis add` · MCP `axis.install_component` 의 의존성 안내에서도 루트에 선언된 것은 빠져요.
+  - `--dir` · MCP `targetDir` 를 앱 디렉터리를 가리키는 심볼릭 링크로 줘도 실경로와 같은 판정이에요(종전에는 링크 쪽 상위를 올라가 루트 · 설치본을 못 찾았어요).
+  - `axis theme add`: 루트에만 `tailwindcss` ^4 를 선언한(미설치) 앱에서 전역 CSS 에 넣는 기본 토큰 줄이 Tailwind 3 의 `@import "@axis-ds/tokens/css"` · `@import "@axis-ds/tokens/css/shadcn"` 에서 `@import "@axis-ds/tokens/css/tailwind4"` 로 바뀌어요(Tailwind 판정이 루트 선언을 보기 때문). 같은 자리의 컴포넌트 `tailwind.css` 줄은 아직 앱 선언만 봐서, 루트에만 `@axis-ds/ui-react` 가 있으면 넣지 않아요(WI-0087).
+  - 워크스페이스가 아닌 상위 · `.git` 너머의 선언은 여전히 인정하지 않고, 쓰기는 앱 `package.json` 에만 해요. `axis theme add` 가 루트 선언을 앱 `package.json` 에 다시 쓰는 경로는 이번에 바꾸지 않았어요(WI-0087).
+
 ## 1.4.1
 
 ### Patch Changes
