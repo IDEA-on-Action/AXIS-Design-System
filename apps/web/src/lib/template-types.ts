@@ -1,6 +1,6 @@
 // Template 데이터 타입 정의
 
-export type TemplateCategory = 'minimal' | 'landing-page' | 'dashboard' | 'app' | 'agentic'
+export type TemplateCategory = 'minimal' | 'landing-page' | 'dashboard' | 'app' | 'agentic' | 'console'
 
 export interface TemplateFile {
   path: string
@@ -58,4 +58,5 @@ export const templateCategories: Record<TemplateCategory, { name: string; descri
   dashboard: { name: 'Dashboard', description: '대시보드 템플릿', icon: 'bar-chart' },
   app: { name: 'Application', description: '풀 애플리케이션 템플릿', icon: 'app-window' },
   agentic: { name: 'Agentic', description: 'AI/Agent 전용 템플릿', icon: 'bot' },
+  console: { name: 'Console', description: '사이드바 · 목록 · 상세로 된 업무 콘솔 템플릿', icon: 'panels' },
 }

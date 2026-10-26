@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, Input, Badge } from '@axis-ds/ui-react'
 import { Skeleton } from '@/components/skeleton'
-import { Search, FileCode, Layers, Layout, BarChart3, AppWindow, Bot, Filter, ExternalLink } from 'lucide-react'
+import { Search, FileCode, Layers, Layout, BarChart3, AppWindow, Bot, Filter, ExternalLink, PanelsTopLeft } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { TemplateIndex, TemplateMetadata, TemplateCategory } from '@/lib/template-types'
 import { templateCategories } from '@/lib/template-types'
@@ -16,6 +16,7 @@ const categoryIconMap: Record<string, React.ComponentType<{ className?: string }
   'bar-chart': BarChart3,
   'app-window': AppWindow,
   bot: Bot,
+  panels: PanelsTopLeft,
 }
 
 // 소스 라벨 매핑
