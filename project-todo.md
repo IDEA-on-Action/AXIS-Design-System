@@ -76,10 +76,10 @@
 | 88 | MCP 동봉 토큰 데이터가 실제 tokens 값과 어긋남(생성 이후 미갱신, 배치 4 반박 검토에서 발견) | WI-0076 (#202) | P18 | P3 | ✅ 2026-10-26 (#214, mcp 1.4.0) |
 | 89 | Tailwind 3 quick-start 예시에서 border 테두리가 다크 · 브랜드에서도 회색(preflight 순서, WI-0067 에서 발견) | WI-0077 (#203) | P18 | P3 | ✅ 2026-10-26 (#214, linked 1.8.1) |
 | 90 | library 상세 화면 데이터 fetch 경로(`library/components/<id>.json`)를 지키는 E2E 스모크가 없음(WI-0060 검토에서 발견) | WI-0078 (#206) | P18 | P3 | ✅ 2026-10-26 (#214, Pages · npm 발행 없음) |
-| 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | 🔄 |
+| 91 | ontology 브랜드의 남은 대비 미달(컨트롤 경계 1.10~1.42 · Progress success · warning 채움 1.93 · 1.62 · 라이트 placeholder 2.60) 값 결정, 디자인 오너 확인 필요(배치 4 에서 ontology 값 불변으로 남김) | WI-0079 (#208) | P18 | P2 | ✅ 2026-10-26 (#228, linked 1.8.2 · cli 1.7.3 · mcp 1.4.3) |
 | 92 | 호이스팅 모노레포에서 check 의 Tailwind 3 content 판정이 실제 위치(`../../node_modules/...`)를 인정하지 않음(WI-0074 브리프에서 분리) | WI-0080 (#209) | P18 | P3 | ✅ 2026-10-26 (#219, cli 1.7.1 · mcp 1.4.1, changeset 검사 push 모드 정착 확정 run 40269191762) |
 | 93 | `detectInstallCommand` 가 lockfile 을 한 층만 봐서 npm 워크스페이스에서 pnpm 명령을 안내함(WI-0074 브리프에서 분리) | WI-0081 (#210) | P18 | P3 | ✅ 2026-10-26 (#219, cli 1.7.1 · mcp 1.4.1) |
-| 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | 🔄 |
+| 94 | Select 의 placeholder 색 클래스가 button 에 붙어 효과가 없음(placeholder 가 입력한 값처럼 진하게 보임, WI-0079 검토에서 발견, WI-0079 반영과 같은 발행) | WI-0082 (#211) | P18 | P3 | ✅ 2026-10-26 (#228, linked 1.8.2) |
 | 95 | library 대표 선택이 상세 JSON 129개를 모두 읽음 · TW3 preset 테스트가 dist 진입점을 검사하지 않음(배치 6 검토 후속, 배치 6b) | WI-0083 (#212) | P18 | P3 | ✅ 2026-10-26 (#220, npm 발행 없음) |
 | 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
@@ -93,6 +93,8 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 94 | Select 의 placeholder 색을 trigger 안 값 표시에 적용, npm linked v1.8.2 릴리스 (#228 · #229, publish run 40302972775) | WI-0082 (#211) | P18 | 2026-10-26 |
+| 91 | ontology 브랜드의 남은 대비 미달을 확인 문서 권장 묶음으로 반영(경계 · 트랙 · Progress 채움 · placeholder), npm linked v1.8.2 · cli v1.7.3 · mcp v1.4.3 릴리스 (#228 · #229, publish run 40302972775) | WI-0079 (#208) | P18 | 2026-10-26 |
 | 98 | 의존성 선언 판정이 워크스페이스 루트 선언을 봄(tailwind-core · init utils · add · MCP install 공용 헬퍼) · 심링크 --dir 실경로 기준, npm cli v1.7.2 · mcp v1.4.2 릴리스 (#225 · #226, publish run 40271807118, provenance 2/2) | WI-0086 (#218) | P18 | 2026-10-26 |
 | 97 | 설치 · 실행 안내가 매니저별(npm · yarn · pnpm) · lockfile 이 없으면 packageManager 필드를 따름, npm cli v1.7.2 · mcp v1.4.2 릴리스 (#225 · #226, publish run 40271807118, provenance 2/2) | WI-0085 (#217) | P18 | 2026-10-26 |
 | 95 | library 대표 선택이 대표 3개 상세 JSON 만 읽음 · check-library-links code 모양 판정 · TW3 preset dist 세 진입점 테스트, npm 발행 없음 (#220) | WI-0083 (#212) | P18 | 2026-10-26 |
