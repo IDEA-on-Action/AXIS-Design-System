@@ -363,14 +363,15 @@ describe("axis init: package.json 의존성(D1)", () => {
     }
   });
 
-  it("tailwind-merge: 템플릿 4종은 1.6 규칙(Tailwind 3 → ^2.6.0)과 같음 (WI-0037 D2 로 정정)", async () => {
+  it("tailwind-merge: 저장소 템플릿 전부가 1.6 규칙(Tailwind 3 → ^2.6.0)과 같음 (WI-0037 D2 로 정정)", async () => {
     // 종전에는 tailwindcss ^3.4.0(Tailwind 3)에 tailwind-merge ^3.4.0 을 써서 알려진 불일치로 고정했습니다.
     // WI-0037 D2(Tailwind 3 유지 + ^2.6)로 고쳤으므로 이제 규칙값과 같아야 합니다. 다시 어긋나면 이 기대값이 깨집니다.
     const templatesDir = path.resolve(HERE, "../../../../apps/web/templates");
     const names = (await fs.readdir(templatesDir)).filter((n) =>
       fs.existsSync(path.join(templatesDir, n, "files", "package.json"))
     );
-    expect(names.length).toBe(4);
+    // 템플릿이 늘어도 목록을 손으로 고치지 않게 개수는 고정하지 않고 0건(측정 실패)만 막습니다(WI-0027, 위 clsx 테스트와 같은 방식)
+    expect(names.length).toBeGreaterThan(0);
     for (const n of names) {
       const filesDir = path.join(templatesDir, n, "files");
       const pkg = await fs.readJSON(path.join(filesDir, "package.json"));

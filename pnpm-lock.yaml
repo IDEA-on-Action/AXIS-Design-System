@@ -54,6 +54,9 @@ importers:
       '@axis-ds/agentic-ui':
         specifier: workspace:*
         version: link:../../packages/axis-agentic-ui
+      '@axis-ds/theme':
+        specifier: workspace:*
+        version: link:../../packages/axis-theme
       '@axis-ds/tokens':
         specifier: workspace:*
         version: link:../../packages/axis-tokens

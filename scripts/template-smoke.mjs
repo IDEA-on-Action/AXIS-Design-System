@@ -14,9 +14,12 @@
  *      WI-0067: AXIS 토큰 전환 회귀도 잡도록 `--axis-*` 변수 정의 1건 이상 · 전환 전 자체 --primary(240 5.9% 10%) 0건을 더합니다.
  *      `.bg-background` 는 전환 전후 모두 1건이라 이 두 조건이 없으면 자체 변수 템플릿도 PASS 였습니다(WI-0067 측정).
  *      AXIS 값 자체(예: --primary 221 39% 11%)는 tokens 버전마다 바뀔 수 있어 판정에 넣지 않습니다.
+ *      WI-0027: slug 별 추가 판정(EXTRA_CHECKS 표). ontology-console 은 빌드 HTML(.next/server/app/index.html)에
+ *      data-brand="ontology" 가 1건 이상이어야 합니다(서버 HTML 부터 브랜드를 켜는지).
  *
  * 사용: node scripts/template-smoke.mjs [slug ...] [--templates-dir <dir>] [--cli <dist/index.js>] [--keep]
- *   slug 를 주지 않으면 로컬 템플릿 4종(theme-only · dashboard · landing-page · hr-dashboard)
+ *   slug 를 주지 않으면 템플릿 디렉터리의 index.json 에서 로컬 템플릿(type 이 external 이 아니고 <slug>.json 이 있는 항목)을
+ *   모두 고릅니다(WI-0027 D9, 목록을 손으로 복제하지 않음). index.json 을 읽지 못하거나 0건이면 측정 실패(2)
  *   --templates-dir: 다른 템플릿 JSON 디렉터리(음성 대조: 고치기 전 JSON 을 넣어 FAIL 이 나는지 확인)
  * 종료 코드: 0 통과 / 1 결함 / 2 측정 실패(cli 빌드 산출물 없음 · 서버 실패)
  */
@@ -38,7 +41,6 @@ const TEMPLATES_DIR = resolve(opt('--templates-dir') ?? join(ROOT, 'apps', 'web'
 const KEEP = args.includes('--keep');
 const valued = new Set(['--templates-dir', '--cli']);
 const slugs = args.filter((a, i) => !a.startsWith('--') && !valued.has(args[i - 1]));
-const SLUGS = slugs.length > 0 ? slugs : ['theme-only', 'dashboard', 'landing-page', 'hr-dashboard'];
 
 if (!existsSync(CLI)) {
   console.error(`[template-smoke] 측정 실패: cli 빌드 산출물이 없습니다: ${CLI}`);
@@ -48,6 +50,36 @@ if (!existsSync(TEMPLATES_DIR)) {
   console.error(`[template-smoke] 측정 실패: 템플릿 디렉터리가 없습니다: ${TEMPLATES_DIR}`);
   process.exit(2);
 }
+
+/** index.json 의 로컬 템플릿 slug(외부 블록 제외, 상세 JSON 이 있는 것만) */
+function localSlugs() {
+  try {
+    const index = JSON.parse(readFileSync(join(TEMPLATES_DIR, 'index.json'), 'utf8'));
+    return (index.templates ?? [])
+      .filter((t) => t && typeof t.slug === 'string' && t.type !== 'external' && existsSync(join(TEMPLATES_DIR, `${t.slug}.json`)))
+      .map((t) => t.slug);
+  } catch (err) {
+    console.error(`[template-smoke] 측정 실패: index.json 을 읽지 못했습니다: ${err.message}`);
+    process.exit(2);
+  }
+}
+const SLUGS = slugs.length > 0 ? slugs : localSlugs();
+if (SLUGS.length === 0) {
+  console.error(`[template-smoke] 측정 실패: 고를 로컬 템플릿이 0건입니다(${TEMPLATES_DIR}/index.json)`);
+  process.exit(2);
+}
+
+/**
+ * slug 별 추가 판정(WI-0027). 빌드 결과 디렉터리를 받아 { label, value, pass } 를 돌려줍니다.
+ * 표에 없는 slug 는 공통 판정만 합니다
+ */
+const EXTRA_CHECKS = {
+  'ontology-console': (dir) => {
+    const html = join(dir, '.next', 'server', 'app', 'index.html');
+    const n = existsSync(html) ? (readFileSync(html, 'utf8').match(/data-brand="ontology"/g) ?? []).length : 0;
+    return { label: 'data-brand="ontology"(index.html)', value: n, pass: n > 0 };
+  },
+};
 
 /** 명령을 실행하고 rc 와 출력(stdout+stderr)을 돌려줍니다. 셸을 거치지 않습니다. */
 function run(cmd, cmdArgs, cwd, env = {}) {
@@ -84,7 +116,7 @@ const rows = [];
 let measureFailed = false;
 for (const slug of SLUGS) {
   const dir = join(work, slug);
-  const row = { slug, init: '-', install: '-', build: '-', tailwindLeft: '-', bgBackground: '-', axisVars: '-', legacyPrimary: '-', verdict: 'FAIL' };
+  const row = { slug, init: '-', install: '-', build: '-', tailwindLeft: '-', bgBackground: '-', axisVars: '-', legacyPrimary: '-', extra: '-', verdict: 'FAIL' };
   rows.push(row);
   const init = await run(process.execPath, [CLI, 'template', 'init', slug, '--dir', dir], ROOT, env);
   row.init = init.rc;
@@ -109,10 +141,18 @@ for (const slug of SLUGS) {
   row.bgBackground = (css.match(/\.bg-background\{/g) ?? []).length;
   row.axisVars = (css.match(/--axis-[a-z0-9-]+:/g) ?? []).length;
   row.legacyPrimary = (css.match(LEGACY_PRIMARY) ?? []).length;
+  const extra = EXTRA_CHECKS[slug]?.(dir);
+  if (extra) row.extra = `${extra.label} ${extra.value}`;
   // 판정: CSS 파일이 있고, @tailwind 지시문이 남지 않았고, 유틸리티가 생성되고, AXIS 토큰 변수가 들어 있고 전환 전 자체 --primary 가 없음.
   // build rc 0 은 필요조건일 뿐입니다
   row.verdict =
-    build.rc === 0 && cssFiles.length > 0 && row.tailwindLeft === 0 && row.bgBackground > 0 && row.axisVars > 0 && row.legacyPrimary === 0
+    build.rc === 0 &&
+    cssFiles.length > 0 &&
+    row.tailwindLeft === 0 &&
+    row.bgBackground > 0 &&
+    row.axisVars > 0 &&
+    row.legacyPrimary === 0 &&
+    (extra ? extra.pass : true)
       ? 'PASS'
       : 'FAIL';
   if (row.verdict === 'FAIL') console.error(`[template-smoke] ${slug}: build 출력 끝\n${build.out.slice(-1500)}`);
@@ -120,10 +160,10 @@ for (const slug of SLUGS) {
 server.close();
 
 console.log('\n템플릿 스모크 (CSS 내용 판정: @tailwind 0건 · .bg-background 1건 이상 · --axis-* 정의 1건 이상 · 전환 전 --primary 0건)');
-console.log('slug | init rc | install rc | build rc | @tailwind 잔존 | .bg-background | --axis-* 정의 | 전환 전 --primary | 판정');
+console.log('slug | init rc | install rc | build rc | @tailwind 잔존 | .bg-background | --axis-* 정의 | 전환 전 --primary | 추가 판정 | 판정');
 for (const r of rows) {
   console.log(
-    `${r.slug} | ${r.init} | ${r.install} | ${r.build} | ${r.tailwindLeft} | ${r.bgBackground} | ${r.axisVars} | ${r.legacyPrimary} | ${r.verdict}`
+    `${r.slug} | ${r.init} | ${r.install} | ${r.build} | ${r.tailwindLeft} | ${r.bgBackground} | ${r.axisVars} | ${r.legacyPrimary} | ${r.extra} | ${r.verdict}`
   );
 }
 if (!KEEP) rmSync(work, { recursive: true, force: true });

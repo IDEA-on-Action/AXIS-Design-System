@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@axis-ds/agentic-ui": "workspace:*",
+    "@axis-ds/theme": "workspace:*",
     "@axis-ds/tokens": "workspace:*",
     "@axis-ds/ui-react": "workspace:*",
     "@tanstack/react-query": "^5.64.2",

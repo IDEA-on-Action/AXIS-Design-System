@@ -1,0 +1,8 @@
+{
+  "$schema": "https://axis-design-system.pages.dev/schema.json",
+  "template": "ontology-console",
+  "componentsDir": "./components/ui",
+  "tailwindConfig": "./tailwind.config.ts",
+  "globalCss": "./app/globals.css",
+  "brand": "ontology"
+}
