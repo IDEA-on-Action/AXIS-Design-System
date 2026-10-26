@@ -1,6 +1,6 @@
 # WI-0027 테스트 계획 · 결과: 온톨로지 콘솔 템플릿
 
-> PRD: [prd.md](./prd.md) | TODO: [todo.md](./todo.md) | GitHub: #86 | 실행일: 2026-10-26 | 기준: `main` d7ae4a5 위 브랜치 `feat/wi-0027-ontology-console`
+> PRD: [prd.md](./prd.md) | TODO: [todo.md](./todo.md) | GitHub: #86 | 실행일: 2026-10-26 | 기준: `main` d7ae4a5 위 브랜치 `feat/wi-0027-ontology-console`(8절은 origin/main fd0a480 병합 뒤 포함)
 > 표기: **측정**(이번에 실행) · **추정**(실행하지 않음). 측정 자료: 세션 scratchpad `w27impl/`(레포 밖)
 > npm 상태: 착수 때는 1.8.2 가 없어(`npm view` 1.8.1) 로컬 tarball 로 먼저 쟀고, 측정 중 Release #229 가 발행돼(tokens 1.8.2 `time.modified` 2026-10-26T09:56Z, ui-react · theme 1.8.2, cli 1.7.3, mcp 1.4.3) **npm 발행본으로 다시 쟀어요.** 아래 표의 결과 앱 값은 발행본 기준이고, tarball 측정은 4절에 따로 적어요.
 
@@ -180,6 +180,7 @@
 | turbo lint · type-check · build · test `--force` | rc 0 · 0 · 0 · 0, Cached 0 (7 · 11 · 8 · 7 tasks) |
 | frontend.yml run 11단계 | 모두 rc 0 (registry-install-smoke 5/5) |
 | E2E static a11y · nontext · demo · tooltip · library · tokens | rc 0, 236 · 12 · 8 · 6 · 4 · 22, unexpected · flaky · skipped 0 (a11y 기대 59 x 4 = 236) |
+| origin/main 병합 뒤(9a01eab, 들어온 것은 패키지 버전 · CHANGELOG · 문서뿐) | turbo 4종 `--force` rc 0, Cached 0 · frontend.yml run 11단계 rc 0 · 생성물 6개 JSON 모두 updatedAt 외 차이 0. E2E 는 앱 소스 변경이 없어 병합 전 측정을 근거로 둠 |
 | 생성물 | `ontology-console.json` 만 내용 변경(sidebar · check 스크립트), 26파일 모두 소스와 일치. 기존 4종 · index.json 은 updatedAt 만이라 되돌림, build:registry 뒤 r/ version 1.5.0 되돌림 |
 
 ### 8.4 결과 앱 (발행본)
