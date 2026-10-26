@@ -84,7 +84,7 @@
 | 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
-| 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | 🔄 PR #233 |
+| 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ✅ 2026-10-27 (#233, cli 1.7.5) |
 | 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
 | 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | ⏳ |
 | 102 | pnpm 기본 레이아웃에서 상위 설치본을 가리키는 content glob 을 check 가 거짓 FAIL(배치 6c 재측정에서 발견, 종전부터) | WI-0090 (#227) | P18 | P3 | ✅ 2026-10-26 (#230, cli 1.7.4 · mcp 1.4.4) |
@@ -97,6 +97,7 @@
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 99 | theme add 가 루트 선언 tokens 를 앱 package.json 에 다시 쓰지 않음 · 루트 theme 선언이면 ThemeProvider 안내 끔 · Tailwind 4 루트 선언 컴포넌트 tailwind.css 는 설치본에 파일이 있을 때만, init 애니메이션 안내 3갈래(PnP · 자체 lockfile 은 종전), npm cli v1.7.5 릴리스 (#233 · #238, publish run 40396533945, provenance 1/1) | WI-0087 (#222) | P18 | 2026-10-27 |
 | 39 | 온톨로지 콘솔 템플릿 `ontology-console` MVP(셸 · 통합 뷰 · 목록 · depth 상세 · 프로젝트 상세 2분할, ontology 기본 적용, check:ontology), Pages 배포(run 40318288781), 발행본 cli 1.7.4 init → install → build rc 0 · data-brand 확인 | WI-0027 (#232) | P17 | 2026-10-26 |
 | 102 | pnpm 기본 레이아웃에서 실경로가 같은 상위 설치본 · 스토어 상대 실경로 content glob 을 인정(다른 실경로는 FAIL + 이유), npm cli v1.7.4 · mcp v1.4.4 릴리스 (#230 · #231, publish run 40316401629, provenance 2/2) | WI-0090 (#227) | P18 | 2026-10-26 |
 | 94 | Select 의 placeholder 색을 trigger 안 값 표시에 적용, npm linked v1.8.2 릴리스 (#228 · #229, publish run 40302972775) | WI-0082 (#211) | P18 | 2026-10-26 |

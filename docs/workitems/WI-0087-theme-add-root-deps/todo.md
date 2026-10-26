@@ -5,7 +5,7 @@
 ## 결정
 - [x] P1 PnP 종전 · P2 앱 lockfile 종전 · DEC-1 tokens 루트 present · 설치 안내 · DEC-2 tailwind.css 설치본 파일 게이트 · DEC-3 theme 안내 · DEC-4 init 3갈래 · DEC-5 2073 대조 전환 · DEC-6 이름 집합 · devDeps 인정 · DEC-7 · DEC-8 · DEC-9 · cli patch (2026-10-26 사용자 결정)
 - [x] 확정 U1 ~ U9(prd 5절: DEC-8 덧붙임 위치, DEC-2 문구 · 1.4.0 이상 불완전 설치 · 이미 있는 줄, 설치 줄 조건, 루트 upgrade 명령, init ③ 문구 · 순서)
-- [ ] DEC-9 범위 밖 4건 별도 WI 등록 (Master)
+- [x] DEC-9 범위 밖 4건 별도 WI 등록 (Master)
 
 ## 구현
 - [x] `theme-add.ts`: 루트 package.json 1회 읽기(rootPkg), tokens · theme 판정 `declaredDependency`, `DependencyStep.declaredSource`, Tailwind 4 컴포넌트 줄 설치본 파일 게이트 · `CssStep.deferredComponentImports`, P1 · P2 조건(앱 lockfile 5종 `APP_LOCKFILES`)
@@ -22,6 +22,6 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0087-theme-add-root-deps.md`(@axis-ds/cli patch)
-- [ ] PR · 머지
-- [ ] Release PR 머지 · npm 발행(예상 cli 1.7.5)
-- [ ] 발행본으로 testplan 3절 픽스처 다시 재기
+- [x] PR · 머지
+- [x] Release PR 머지 · npm 발행(예상 cli 1.7.5)
+- [x] 발행본으로 testplan 3절 픽스처 다시 재기

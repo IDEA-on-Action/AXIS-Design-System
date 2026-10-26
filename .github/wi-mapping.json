@@ -587,7 +587,7 @@
       "issueNumber": 222,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDdkkc",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0088",
@@ -646,5 +646,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-26T15:00:00.000Z"
+  "updatedAt": "2026-10-27T00:00:00.000Z"
 }
