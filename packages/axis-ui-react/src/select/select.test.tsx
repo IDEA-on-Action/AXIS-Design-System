@@ -33,9 +33,21 @@ describe("Select placeholder 색 (WI-0082)", () => {
     expect(trigger.textContent).toContain("테마를 고르세요");
   });
 
-  it("data-placeholder 상태에 placeholder 글자색을 준다", () => {
+  it("data-placeholder 상태의 SelectValue span 에만 placeholder 글자색을 준다", () => {
     const trigger = renderSelect();
-    expect(classes(trigger)).toContain(`data-[placeholder]:${PH}`);
+    expect(classes(trigger)).toContain(`[&[data-placeholder]>span]:${PH}`);
+  });
+
+  it("Trigger 자신의 글자색은 placeholder 색으로 바꾸지 않는다 (화살표가 currentColor 라 따라감)", () => {
+    const trigger = renderSelect();
+    // Trigger 전체에 걸면 화살표 svg(stroke=currentColor, opacity-50)가 placeholder 색을 따라가 3:1 아래로 떨어진다(실측 2.0~2.7)
+    expect(classes(trigger)).not.toContain(`data-[placeholder]:${PH}`);
+    const svg = trigger.querySelector(":scope > svg");
+    expect(svg).not.toBeNull();
+    expect(svg!.getAttribute("stroke")).toBe("currentColor");
+    expect(classes(svg!).filter((c) => c.includes("placeholder"))).toEqual([]);
+    const span = trigger.querySelector(":scope > span");
+    expect(span?.textContent).toContain("테마를 고르세요");
   });
 
   it("button 에 효과가 없는 ::placeholder 클래스를 두지 않는다", () => {

@@ -156,7 +156,7 @@ export const CONTRAST_PAIRS = [
   // 이제 ontology 도 통과한다. 경계 · 트랙은 컨트롤이 놓이는 바탕 세 가지(card = surface-default, panel = surface-secondary,
   // 페이지 바탕 = shadcn --background, bgShadcn)를 모두 본다. card 만 보면 여유가 적은 바탕(panel)이 가려진다.
   // '#FFFFFF' 처럼 hex 로 적은 쪽은 토큰이 아닌 고정 색이다(Switch 썸 bg-white).
-  { fg: '--axis-input-text-placeholder', bg: '--axis-input-bg-default', min: TEXT, where: 'ui-react input:24 placeholder' },
+  { fg: '--axis-input-text-placeholder', bg: '--axis-input-bg-default', min: TEXT, where: 'ui-react input:24 · select:26 placeholder' },
   { fg: '--axis-form-control-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react checkbox:16 · radio-group:26 · textarea:11 경계 / card' },
   { fg: '--axis-form-control-border', bg: '--axis-surface-secondary', min: NON_TEXT, where: '같은 경계 / panel' },
   { fg: '--axis-form-control-border', bg: '--background', bgShadcn: true, min: NON_TEXT, where: '같은 경계 / 페이지 바탕' },

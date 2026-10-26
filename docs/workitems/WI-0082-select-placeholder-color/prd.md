@@ -27,7 +27,7 @@ ui-react `SelectTrigger` 는 `placeholder:text-[var(--axis-input-text-placeholde
 
 | # | 결정 | 근거 |
 |---|---|---|
-| D1 | Radix 가 값이 없을 때 Trigger 에 붙이는 `data-placeholder` 상태에 `--axis-input-text-placeholder` 를 적용(`data-[placeholder]:text-[...]`), 효과 없는 `placeholder:` 클래스는 뺌 | 사용자 결정(작업 지시), shadcn Select 와 같은 방식 |
+| D1 | Radix 가 값이 없을 때 Trigger 에 붙이는 `data-placeholder` 상태에 `--axis-input-text-placeholder` 를 적용하되 Trigger 가 아니라 그 안의 SelectValue span 에만 줌(`[&[data-placeholder]>span]:text-[var(--axis-input-text-placeholder)]`), 효과 없는 `placeholder:` 클래스는 뺌 | 사용자 결정(작업 지시). span 한정은 검토 지적(2026-10-26): Trigger 전체에 주면 화살표(`currentColor` · 50%)가 따라가 3:1 아래로 떨어짐 |
 | D2 | 기본 · ontology 둘 다 적용, 대비 4.5:1 이상 | 같음 |
 | D3 | 값을 고른 뒤의 글자색은 바꾸지 않음 | 회귀 방지 |
 

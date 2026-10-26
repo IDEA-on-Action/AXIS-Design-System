@@ -31,7 +31,7 @@ import { collectErrors, openDemo, radio } from './helpers/demo'
  *   하나도 맞지 않으면 실패합니다(낡은 키가 조용히 남지 않게).
  *   ⑤ ui-react 폼 컨트롤 · Progress · placeholder 실요소(기본 · ontology × 라이트 · 다크, WI-0079): 컴포넌트 문서 페이지의 실제 요소에서
  *      Checkbox · Radio · Textarea 경계, Switch 꺼짐 · Slider 트랙, Switch 썸 대 트랙, Progress 채움 대 트랙, Input · Select placeholder 를 잽니다
- *      (Select 는 값이 없는 Trigger 의 SelectValue 글자, WI-0082).
+ *      (Select 는 값이 없는 Trigger 의 SelectValue 글자, WI-0082). 값이 없는 Select 의 화살표(50% 합성)도 Trigger 바탕 위 3:1 로 잽니다.
  *      경계 · 트랙은 실제 바탕과 함께 컨트롤이 놓일 수 있는 바탕 셋(card = surface-default, panel = surface-secondary,
  *      페이지 = --background)에서 모두 3:1, placeholder 는 입력 바탕 위 4.5:1(1.4.3, axe 가 placeholder 를 판정하지 않음)입니다.
  *      렌더 색이 대상 변수(FORM_TARGETS 의 expectVar)의 렌더 색과 같은지도 단언합니다. 측정 대상은 FORM_TARGETS 표와 정확히 같은 수입니다.
@@ -985,8 +985,10 @@ for (const brand of BRANDS) {
  * how: border = border-top-color, 바탕은 부모부터 / bg = background-color, 바탕은 부모부터(썸은 트랙 위)
  *   / fill = 첫 자식(채움) background-color, 바탕은 요소(트랙)부터 / placeholder = ::placeholder color, 바탕은 요소(입력)부터
  *   / selectph = Trigger 안 첫 span(SelectValue) color, 바탕은 요소(Trigger)부터
+ *   / chevron = Trigger 의 화살표 svg 색(stroke=currentColor)에 svg opacity 를 곱해 Trigger 바탕 위에 합성한 색, 바탕은 요소(Trigger)부터
  * surfaces: true 이면 실제 바탕에 더해 card · panel · 페이지 바탕 위에서도 min 을 요구합니다(컨트롤이 놓일 수 있는 바탕).
  * expectVar: 렌더 색이 이 변수(또는 고정 색 '#RRGGBB')의 렌더 색과 같아야 합니다(엉뚱한 요소를 재면 실패).
+ *   null 이면 대조하지 않습니다(chevron: 반투명 합성색이라 변수 하나와 같을 수 없어, 선택자가 대상을 고정합니다).
  */
 const FORM_TARGETS = [
   { id: 'checkbox-border', path: '/components/checkbox/', sel: 'main button[role="checkbox"][data-state="unchecked"]:not([disabled])', how: 'border', min: MIN_NONTEXT, surfaces: true, expectVar: '--axis-form-control-border' },
@@ -1002,6 +1004,8 @@ const FORM_TARGETS = [
   { id: 'input-placeholder', path: '/components/input/', sel: 'main input[placeholder]:not([disabled])', how: 'placeholder', min: 4.5, surfaces: false, expectVar: '--axis-input-text-placeholder' },
   // WI-0082: Select 의 placeholder 글자(SelectValue span). 값이 없는 Trigger 에만 Radix 가 data-placeholder 를 붙인다
   { id: 'select-placeholder', path: '/components/select/', sel: 'main button[role="combobox"][data-placeholder]:not([disabled])', how: 'selectph', min: 4.5, surfaces: false, expectVar: '--axis-input-text-placeholder' },
+  // WI-0082 검토: 값이 없는 Trigger 의 화살표가 placeholder 색을 따라가면 50% 합성 대비가 3:1 아래로 떨어진다. 화살표는 placeholder 상태와 무관하게 3:1
+  { id: 'select-chevron', path: '/components/select/', sel: 'main button[role="combobox"][data-placeholder]:not([disabled])', how: 'chevron', min: MIN_NONTEXT, surfaces: false, expectVar: null },
 ] as const
 
 async function measureForm(locator: Locator, how: (typeof FORM_TARGETS)[number]['how']) {
@@ -1044,6 +1048,14 @@ async function measureForm(locator: Locator, how: (typeof FORM_TARGETS)[number][
       if (!fill) throw new Error('Progress 채움 요소 없음')
       css = getComputedStyle(fill).backgroundColor
       under = behind(el)
+    } else if (m === 'chevron') {
+      const svg = el.querySelector(':scope > svg')
+      if (!svg) throw new Error('Select 화살표 svg 없음')
+      const scs = getComputedStyle(svg)
+      const raw = rgba(scs.stroke && scs.stroke !== 'none' ? scs.stroke : scs.color)
+      under = behind(el)
+      const composite = over([raw[0], raw[1], raw[2], raw[3] * Number(scs.opacity)], under)
+      return { color: composite, alpha: 1, background: under }
     } else if (m === 'selectph') {
       const span = el.querySelector('span')
       if (!span) throw new Error('Select 값 표시 span 없음')
@@ -1063,7 +1075,7 @@ interface FormRow {
   color: Rgb
   alpha: number
   background: Rgb
-  expect: Rgb
+  expect: Rgb | null
   surfaces: Record<string, Rgb> | null
   min: number
 }
@@ -1089,7 +1101,9 @@ for (const brand of BRANDS) {
             card: 'var(--axis-surface-default)',
             panel: 'var(--axis-surface-secondary)',
             page: 'hsl(var(--background))',
-            ...Object.fromEntries(targets.map((t) => [t.id, t.expectVar.startsWith('#') ? t.expectVar : `var(${t.expectVar})`])),
+            ...Object.fromEntries(
+              targets.flatMap((t) => (t.expectVar === null ? [] : [[t.id, t.expectVar.startsWith('#') ? t.expectVar : `var(${t.expectVar})`]])),
+            ),
           })
           for (const t of targets) {
             const loc = page.locator(t.sel)
@@ -1098,7 +1112,7 @@ for (const brand of BRANDS) {
             rows.push({
               id: t.id,
               ...m,
-              expect: named[t.id],
+              expect: t.expectVar === null ? null : named[t.id],
               surfaces: t.surfaces ? { card: named.card, panel: named.panel, page: named.page } : null,
               min: t.min,
             })
@@ -1123,7 +1137,7 @@ for (const brand of BRANDS) {
             }),
           })
           expect.soft(r.alpha, `${r.id} 불투명`).toBe(1)
-          expect.soft(hex(r.color), `${r.id} 렌더 색 = 대상 변수`).toBe(hex(r.expect))
+          if (r.expect) expect.soft(hex(r.color), `${r.id} 렌더 색 = 대상 변수`).toBe(hex(r.expect))
           expect.soft(actual, `${r.id} ${hex(r.color)} / 실제 바탕 ${hex(r.background)}`).toBeGreaterThanOrEqual(r.min)
           for (const [k, v] of Object.entries(extra)) {
             expect.soft(v, `${r.id} ${hex(r.color)} / ${k}`).toBeGreaterThanOrEqual(r.min)

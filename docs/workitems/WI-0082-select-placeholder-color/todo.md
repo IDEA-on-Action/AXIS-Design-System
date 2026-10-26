@@ -7,11 +7,13 @@
 - [x] Radix Trigger 의 `data-placeholder` 속성 확인(jsdom · Chromium)
 
 ## 테스트 먼저
+- [x] (검토 뒤) `select.test.tsx` 5건: span 한정 클래스 · Trigger 자신에는 placeholder 색 없음 → 수정 전 소스에서 2 실패
+- [x] (검토 뒤) E2E ⑤ select-chevron 행(값 없는 Trigger 화살표 50% 합성, 3:1) → 수정 전 4조합 모두 실패
 - [x] `packages/axis-ui-react/src/select/select.test.tsx` 4건 → 수정 전 2 실패
 - [x] E2E `brand-nontext-contrast` ⑤ select-placeholder 행 → 수정 전 4조합 모두 「렌더 색 = 대상 변수」 실패
 
 ## 구현
-- [x] `SelectTrigger`: `placeholder:text-[...]` → `data-[placeholder]:text-[var(--axis-input-text-placeholder)]`
+- [x] `SelectTrigger`: `placeholder:text-[...]` → `[&[data-placeholder]>span]:text-[var(--axis-input-text-placeholder)]`(처음 `data-[placeholder]:text-[...]` 로 Trigger 전체에 줬다가 화살표 회귀로 span 한정으로 바꿈)
 
 ## 생성물 · 릴리스
 - [x] `library:refresh-axis`(axis-select · ui 카테고리 · index · meta) · `build:registry`(r/select.json · 목록 sha256, version 1.5.0 유지) · 템플릿 updatedAt 되돌림

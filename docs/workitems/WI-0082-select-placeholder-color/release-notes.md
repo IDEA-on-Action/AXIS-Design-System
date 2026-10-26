@@ -16,9 +16,9 @@
 (Chromium 계산값, ontology 값은 WI-0079 반영 뒤)
 
 - 값을 고른 뒤의 글자색은 그대로예요.
-- 화살표 아이콘은 `currentColor`(50%)라 placeholder 상태에서는 같은 placeholder 색을 따라가요.
+- placeholder 색은 안내 글자(span)에만 줘요. 화살표 아이콘은 종전처럼 본문 색 50% 라 Trigger 바탕 위 3:1 이상이에요(기본 3.74 · 5.16, ontology 3.46 · 4.82).
 - **기본 브랜드에서도 보이는 변화**예요. 값 없는 Select 의 안내 글자가 회색이 돼요.
 
 ## 업그레이드
 
-컴포넌트를 그대로 쓰면 할 일이 없어요. `axis add select` 로 소스를 복사해 쓰는 프로젝트는 다시 받거나 Trigger 클래스의 `placeholder:text-[var(--axis-input-text-placeholder)]` 를 `data-[placeholder]:text-[var(--axis-input-text-placeholder)]` 로 바꾸세요. `className` 으로 Trigger 글자색을 직접 준 경우 그 색이 placeholder 상태에서도 이기는지(Tailwind 순서)를 확인하세요.
+컴포넌트를 그대로 쓰면 할 일이 없어요. `axis add select` 로 소스를 복사해 쓰는 프로젝트는 다시 받거나 Trigger 클래스의 `placeholder:text-[var(--axis-input-text-placeholder)]` 를 `[&[data-placeholder]>span]:text-[var(--axis-input-text-placeholder)]` 로 바꾸세요(`data-[placeholder]:text-[...]` 처럼 Trigger 전체에 주면 화살표도 흐려져요). `className` 으로 Trigger 글자색을 직접 준 경우, 값이 없는 동안의 안내 글자는 이제 그 색이 아니라 placeholder 색이에요.

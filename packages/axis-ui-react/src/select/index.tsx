@@ -22,7 +22,8 @@ const SelectTrigger = React.forwardRef<
       "flex h-[var(--axis-field-h,2.5rem)] w-full items-center justify-between rounded-[var(--axis-radius-field,0.375rem)] border px-3 py-2 text-sm",
       "bg-[var(--axis-input-bg-default)] border-[var(--axis-input-border-default)]",
       // placeholder 글자는 SelectValue 의 span 이라 ::placeholder 가 닿지 않는다. 값이 없을 때 Radix 가 붙이는 data-placeholder 로 칠한다(WI-0082)
-      "data-[placeholder]:text-[var(--axis-input-text-placeholder)]",
+      // Trigger 가 아니라 그 안의 span 에만 준다. Trigger 에 주면 화살표(currentColor, 50%)도 따라가 대비가 3:1 아래로 떨어진다
+      "[&[data-placeholder]>span]:text-[var(--axis-input-text-placeholder)]",
       "hover:border-[var(--axis-input-border-hover)]",
       "focus:outline-none focus:ring-2 focus:ring-[var(--axis-input-border-focus)] focus:ring-offset-2",
       "disabled:cursor-not-allowed disabled:opacity-50",
