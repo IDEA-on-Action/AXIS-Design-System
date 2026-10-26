@@ -1,5 +1,7 @@
 # WI-0079 ontology 남은 대비 미달 · 디자인 오너 확인 요청 (초안)
 
+> **권장안으로 먼저 반영했어요 (2026-10-26 사용자 결정).** 7절 권장안(① · ② B, ③ A, ④ A)에 Q3 의 destructive 분리(`bad-dark`)를 더해 토큰에 넣었고, Q5 Input 테두리는 부록 B ③ 예외대로 그대로예요. 같은 날 검토 뒤 Progress warning 만 ③ A 의 `bad` 대신 AXIS 원시색 노랑(라이트 yellow-700 #A16207 · 다크 yellow-500 #EAB308, ③ B 의 warning 값)으로 바꿨어요. 빨강 두 단계의 휘도 대비가 1.33 · 1.26 으로 구분이 약했기 때문이에요. 지금 값: success `ink-2`, warning 노랑(트랙 위 4.16 · 7.12), destructive `bad-dark`. v1 에 노랑이 없다는 PRD Q8 제약은 상태 색 접기에는 그대로이고, Progress warning 채움 하나만 예외예요. 다른 값을 고르시면 그 값으로 다시 발행해요. 반영 내용과 실측은 같은 폴더의 `prd.md` · `testplan.md` · `release-notes.md` 에 있어요.
+
 > 작성 2026-10-25 · 기준 `@axis-ds/tokens` 1.8.0 발행본 · 레포 main f622364 · GitHub #208
 > 이 문서는 값 후보와 근거를 모은 초안이에요. 고른 값은 아직 토큰에 넣지 않았어요.
 > 검토판(2026-10-25, main 3b5ed0f 기준 재대조): 대비 수치는 독립 계산으로 전부 일치했고, 고친 곳은 §3 placeholder 승인 범위 · 인용 행 번호 · Switch 엄지 수치 · Select placeholder 영향 · 고칠 테스트 목록이에요. 바뀐 곳에는 「(검토 정정)」 · 「(검토 추가)」를 붙였어요.

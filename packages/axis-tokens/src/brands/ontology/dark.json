@@ -146,7 +146,7 @@
     },
     "text": {
       "default": { "value": "#F1F3F5" },
-      "placeholder": { "value": "#7A828D" }
+      "placeholder": { "value": "#9CA3AD" }
     },
     "border": {
       "default": { "value": "#5F6874" },
@@ -188,15 +188,15 @@
     }
   },
   "form-control": {
-    "border": { "value": "#2B2F35" },
-    "track": { "value": "#2A2E34" }
+    "border": { "value": "#7A828D" },
+    "track": { "value": "#7A828D" }
   },
   "progress": {
     "fill": {
       "default": { "value": "#6B98F0" },
-      "success": { "value": "{color.green.500}" },
+      "success": { "value": "#D0D4D9" },
       "warning": { "value": "{color.yellow.500}" },
-      "destructive": { "value": "{color.red.500}" }
+      "destructive": { "value": "#F49890" }
     }
   },
   "shadcn": {

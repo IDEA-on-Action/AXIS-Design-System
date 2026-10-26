@@ -194,7 +194,7 @@
     },
     "text": {
       "default": { "value": "#111418" },
-      "placeholder": { "value": "#9AA1AB" }
+      "placeholder": { "value": "#5F6673" }
     },
     "border": {
       "default": { "value": "#D6DADF" },
@@ -236,15 +236,15 @@
     }
   },
   "form-control": {
-    "border": { "value": "#E6E8EB" },
-    "track": { "value": "#EAECEF" }
+    "border": { "value": "#6B7280" },
+    "track": { "value": "#6B7280" }
   },
   "progress": {
     "fill": {
       "default": { "value": "#326ADA" },
-      "success": { "value": "{color.green.500}" },
-      "warning": { "value": "{color.yellow.500}" },
-      "destructive": { "value": "{color.red.500}" }
+      "success": { "value": "#2A2F36" },
+      "warning": { "value": "{color.yellow.700}" },
+      "destructive": { "value": "#A8281F" }
     }
   },
   "card-shadow": { "value": "0 0 #0000" },

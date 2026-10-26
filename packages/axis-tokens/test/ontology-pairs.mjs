@@ -13,6 +13,8 @@
  *   `<variant>bg-[var(부모 바탕)]` 과 `var(fg)` 가 있는지 단언한다(행이 밀리거나 부모 바탕이 바뀌면 실패).
  *   부모 바탕 = 문자열 bg 이면 bg, 옅은 바탕이면 bg.over 다. 경로는 packages/axis-agentic-ui/src 기준.
  *
+ * - fg 가 '#RRGGBB' 이면 토큰이 아닌 고정 색이다(Switch 썸 bg-white). bgShadcn: true 이면 bg 는 shadcn 변수
+ *   (`--background`, 문서 사이트 · 앱의 페이지 바탕)이고, ontology 는 브랜드 JSON shadcn 블록, 기본은 shadcn-compat.css 에서 읽는다(WI-0079).
  * - kind: 'icon' 인 행은 글자가 아니라 아이콘 · 글리프(svg)다. ontology(ontology-values.test)는 종전대로 행의 min 을 적용하고,
  *   기본 브랜드(default-contrast.test, WI-0062 · 0063)는 WCAG 분류대로 비텍스트 3:1(1.4.11)을 적용한다.
  *   글자 행(kind 없음)은 두 브랜드 모두 min 을 그대로 적용한다.
@@ -149,4 +151,22 @@ export const CONTRAST_PAIRS = [
   { fg: '--axis-button-border-focus', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react button 포커스 링' },
   // 켜진 컨트롤 (Switch 켜짐 · Checkbox 체크 · Slider 썸 테두리)
   { fg: '--axis-interactive-primary', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react switch:15 · checkbox:20 · slider:34' },
+  // WI-0079: 기본 브랜드 전용 표(default-contrast DEFAULT_ONLY)에 있던 폼 컨트롤 · Progress · placeholder 짝을 두 브랜드 공용으로 옮겼다.
+  // ontology 값을 고쳐(경계 · 트랙 sub/muted, Progress success · warning · destructive = ink-2 · bad · bad-dark, placeholder sub-aa/sub)
+  // 이제 ontology 도 통과한다. 경계 · 트랙은 컨트롤이 놓이는 바탕 세 가지(card = surface-default, panel = surface-secondary,
+  // 페이지 바탕 = shadcn --background, bgShadcn)를 모두 본다. card 만 보면 여유가 적은 바탕(panel)이 가려진다.
+  // '#FFFFFF' 처럼 hex 로 적은 쪽은 토큰이 아닌 고정 색이다(Switch 썸 bg-white).
+  { fg: '--axis-input-text-placeholder', bg: '--axis-input-bg-default', min: TEXT, where: 'ui-react input:24 · select:26 placeholder' },
+  { fg: '--axis-form-control-border', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react checkbox:16 · radio-group:26 · textarea:11 경계 / card' },
+  { fg: '--axis-form-control-border', bg: '--axis-surface-secondary', min: NON_TEXT, where: '같은 경계 / panel' },
+  { fg: '--axis-form-control-border', bg: '--background', bgShadcn: true, min: NON_TEXT, where: '같은 경계 / 페이지 바탕' },
+  { fg: '--axis-form-control-track', bg: '--axis-surface-default', min: NON_TEXT, where: 'ui-react switch:16 꺼짐 트랙 · slider:27 트랙 / card' },
+  { fg: '--axis-form-control-track', bg: '--axis-surface-secondary', min: NON_TEXT, where: '같은 트랙 / panel' },
+  { fg: '--axis-form-control-track', bg: '--background', bgShadcn: true, min: NON_TEXT, where: '같은 트랙 / 페이지 바탕' },
+  { fg: '#FFFFFF', bg: '--axis-form-control-track', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 꺼짐 트랙' },
+  { fg: '#FFFFFF', bg: '--axis-interactive-primary', min: NON_TEXT, where: 'ui-react switch 썸(bg-white) / 켜짐 트랙' },
+  { fg: '--axis-progress-fill-default', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:26 채움 / 트랙' },
+  { fg: '--axis-progress-fill-success', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:27' },
+  { fg: '--axis-progress-fill-warning', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:28 (ontology 는 원시색 노랑, 라이트 4.16 · 다크 7.12)' },
+  { fg: '--axis-progress-fill-destructive', bg: '--axis-surface-tertiary', min: NON_TEXT, where: 'ui-react progress:29' },
 ];

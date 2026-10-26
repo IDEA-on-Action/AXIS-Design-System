@@ -213,7 +213,7 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 | 미달 쌍 (원본) | 대비 | AXIS 프리셋의 처리 |
 |---|---|---|
 | `key`/`key-light` (고른 칩 · 메뉴 글자) | 4.32:1 | brand · info 글자는 `key-dark`를 씁니다(5.79:1) |
-| `muted`/`card` (흐린 글) | 2.61:1 | 글자에 쓰지 않고 placeholder · 보조 아이콘 · 입력 hover 테두리에만 씁니다 |
+| `muted`/`card` (흐린 글) | 2.61:1 | 글자에 쓰지 않고 ~~placeholder ·~~ 보조 아이콘 · 입력 hover 테두리에만 씁니다 (placeholder 는 2026-10-26 철회, 아래 「철회 기록」) |
 | `line-2`/`card` (입력 테두리) | 1.40:1 | 원본 유지, 포커스 때 `key`로 구분합니다(부록 A 끝 참고) |
 | `bad-line`/`card` (주의 점) | 1.52:1 | warning 아이콘에만 쓰고, 상태는 늘 글자와 함께 보입니다 |
 
@@ -225,6 +225,14 @@ shadcn 행은 HSL 원문 값입니다. 원본 hex로 정확히 렌더되도록 �
 - 위 승인 범위에 맞추려고 바꾼 값: destructive 버튼 hover · active 바탕 `bad-line` → `bad-light`, Alert warning 테두리 · `status.error-border` `bad-line` → `bad`, 비활성 버튼 글자 `muted` → `sub-aa`
 - 대기 · 건너뜀 상태 점 `status.neutral-muted`(2026-10-18 추가): 라이트 `line-2` 1.40:1 · 1.28:1, 다크 3.12:1 · 2.83:1(surface-default · surface-secondary 위)로 비텍스트 3:1 미달 바탕이 있어요. 값은 유지하고(디자인 오너가 값 유지를 명시적으로 수락, 2026-10-19) 비텍스트 spec이 하한 회귀 가드로 기록합니다
 - 초안 역반영: 초안 2에 없던 42개 값(상태 · diff · 에이전트 · interactive · dialog · 버튼 비활성 등)을 `axis-theme-ontology.css`에 추가
+
+**철회 기록 (2026-10-26, WI-0079 사용자 결정)**
+
+- 승인 범위 ② 미달 쌍 처리 중 「`muted` 는 placeholder 에만」(2026-10-19 디자인 오너 사후 확인 대상)을 **placeholder 부분만 철회**합니다. WCAG 2.2 Understanding 1.4.3 이 placeholder 를 글자 대비 대상이라고 적고 있고, 라이트 `muted` #9AA1AB 는 입력 바탕 #FFFFFF 위 2.61:1 이에요. axe 는 placeholder 를 판정하지 않아 CI a11y 게이트로는 드러나지 않았어요.
+- 바뀐 값: `--axis-input-text-placeholder` 라이트 `muted` #9AA1AB → `sub-aa` #5F6673(5.78:1), 다크 `muted` #7A828D → `sub` #9CA3AD(6.92:1). Textarea placeholder(`--axis-text-tertiary`)와 같은 값이에요. 보조 아이콘 · 입력 hover 테두리의 `muted` 는 그대로예요.
+- 초안 2(`axis-theme-ontology.css`)의 placeholder 줄은 고치지 않았고, 초안 대조 테스트(`packages/axis-tokens/test/brands.test.mjs` `WI0079_OVERRIDES`)가 이 차이만 예외로 둡니다.
+- 승인 범위 ③(라이트 입력 테두리 `line-2` 원본 유지)은 **철회하지 않습니다**(WI-0079 Q5 사용자 결정, Input 테두리 그대로).
+- 같은 WI 에서 부록 B 밖의 새 변수(폼 컨트롤 경계 · 트랙, Progress 채움)도 v1 팔레트 값으로 바꿨어요. 디자인 오너는 권장안으로 먼저 반영한 값을 확인하고, 다른 값을 고르면 다시 발행합니다(`docs/workitems/WI-0079-ontology-contrast-residual/`).
 
 ---
 

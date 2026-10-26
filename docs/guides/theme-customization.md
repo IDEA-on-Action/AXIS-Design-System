@@ -596,7 +596,7 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 
 ### ontology 프리셋: 값의 출처와 접근성 보정
 
-> 아래 보정과 색 결정은 대리 승인(2026-10-16 · 2026-10-17) 뒤 **디자인 오너의 사후 확인을 마쳤습니다(2026-10-19)**. 확인 결과 값은 바뀌지 않았습니다(`brand.json`의 `a11y.status`).
+> 아래 보정과 색 결정은 대리 승인(2026-10-16 · 2026-10-17) 뒤 **디자인 오너의 사후 확인을 마쳤습니다(2026-10-19)**. 확인 결과 값은 바뀌지 않았습니다. 다만 2026-10-26 WI-0079 권장안을 디자인 오너 재확인 전에 먼저 반영했고(부록 B ② placeholder 승인 철회, Progress warning 노랑 · destructive `bad-dark`, 아래 「남은 대비 미달 보정」), 재확인을 기다립니다(`brand.json`의 `a11y.status`).
 
 값의 출처는 디자인 시스템 「온톨로지 플랫폼」 v1입니다. 라이트는 WCAG AA를 맞추려고 원본 값에 한 값만 보정했고, 다크는 원본 그대로입니다.
 
@@ -611,7 +611,7 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 | 미달 쌍 (원본) | 대비 | 처리 |
 |---|---|---|
 | `key`/`key-light` (고른 칩 · 메뉴 글자) | 4.32:1 | brand · info 글자는 `key-dark`(#2757B8)를 씁니다(5.79:1) |
-| `muted`/`card` (흐린 글) | 2.61:1 | 글자에 쓰지 않고 placeholder · 보조 아이콘 · 입력 hover 테두리에만 씁니다 |
+| `muted`/`card` (흐린 글) | 2.61:1 | 글자에 쓰지 않고 보조 아이콘 · 입력 hover 테두리에만 씁니다. placeholder 에도 썼지만 1.4.3(4.5:1) 미달이라 WI-0079 에서 철회하고 `sub-aa` 로 바꿨습니다(아래) |
 | `line-2`/`card` (입력 테두리) | 1.40:1 | 원본을 유지하고, 키보드 포커스 때 `key` 색 2px 링으로 구분합니다(링 대비 라이트 4.66:1 · 다크 6.69:1) |
 | `bad-line`/`card` (주의 점) | 1.52:1 | warning 아이콘에만 쓰고, 상태는 늘 글자와 함께 표시합니다 |
 
@@ -625,7 +625,24 @@ document.documentElement.removeAttribute("data-brand")           // 해제
 - PlanCard 새 변수 3개(1.6.0부터): 거절 버튼 글자 `--axis-plan-card-reject-text` 라이트 #C8332E · 다크 #F07A72, 승인 버튼 바탕 `--axis-plan-card-approve-bg` #2A2F36 · #D0D4D9, 승인 버튼 hover 바탕 `--axis-plan-card-approve-hover-bg` #111418 · #F1F3F5. 1.5.x 의 PlanCard 가 읽던 ontology `status-error` · `status-success` · `status-success-strong` 과 같은 값이라 ontology 화면은 바뀌지 않았습니다
 - 대기 · 건너뜀 상태 점 `status-neutral-muted`는 비텍스트 대비 3:1에 못 미치는 바탕이 있습니다. 라이트 #D6DADF는 `surface-default` 위 1.40:1 · `surface-secondary` 위 1.28:1 · 페이지 바탕(`--background` #F7F7F7) 위 1.31:1, 다크 #5F6874는 3.12:1 · 2.83:1 · 3.37:1(#0E1013)입니다
 
-v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로 구분되지 않습니다. 상태는 글자 · 아이콘과 함께 표시합니다.
+**남은 대비 미달 보정 (WI-0079, 2026-10-26)**
+
+1.8.0 에서 ontology 에 1.7.0 렌더 값을 그대로 넣어 두었던 폼 컨트롤 · Progress 변수와 Input placeholder 를 바꿨습니다. Progress warning 만 AXIS 원시색 노랑이고 나머지는 v1 팔레트 안의 값입니다. 디자인 오너 확인 문서(`docs/workitems/WI-0079-ontology-contrast-residual/design-review.md`)의 권장안으로 먼저 반영했고, 오너가 다른 값을 고르면 다시 발행합니다. 기본 브랜드 값은 바뀌지 않았습니다.
+
+| 변수 | 이전 (라이트 · 다크) | 이후 (라이트 · 다크) | 대비 (라이트 · 다크) |
+|---|---|---|---|
+| `--axis-form-control-border` (Checkbox · Radio · Textarea 경계) | `line` #E6E8EB · #2B2F35 | `sub` #6B7280 · `muted` #7A828D | 페이지 · card · panel 위 4.51 · 4.83 · 4.39 / 4.90 · 4.53 · 4.11 |
+| `--axis-form-control-track` (Switch 꺼짐 · Slider 트랙) | `panel-2` #EAECEF · #2A2E34 | `sub` #6B7280 · `muted` #7A828D | 위와 같음, Switch 흰 썸 대 트랙 4.83 · 3.89 |
+| `--axis-progress-fill-success` | green-500 #22C55E | `ink-2` #2A2F36 · #D0D4D9 | 트랙 위 11.39 · 9.16 |
+| `--axis-progress-fill-warning` | yellow-500 #EAB308 | 원시색 yellow-700 #A16207 · yellow-500 #EAB308(다크는 그대로) | 트랙 위 4.16 · 7.12 |
+| `--axis-progress-fill-destructive` | red-500 #EF4444 | `bad-dark` #A8281F · #F49890 | 트랙 위 5.94 · 6.33 |
+| `--axis-input-text-placeholder` | `muted` #9AA1AB · #7A828D | `sub-aa` #5F6673 · `sub` #9CA3AD | 입력 바탕 위 5.78 · 6.92 |
+
+- Progress success · destructive 는 상태 색 접기와 같은 의미 매핑입니다(success = `status-success`, destructive = `status-warning-strong`). warning 은 상태 색 접기(`bad`)를 따르지 않고 v1 팔레트 밖의 AXIS 원시색 노랑(`{color.yellow.700}` · `{color.yellow.500}`)을 참조합니다. 빨강 두 단계로는 destructive 와 구분이 약했기 때문입니다(휘도 대비 1.33 · 1.26). 노랑으로 바꾼 뒤 warning 대 destructive 는 휘도 대비 1.43 · 1.12, 색상 차 31.5도 · 40.6도입니다. 휘도 차이는 여전히 작으니 상태 이름은 글자로 함께 보여 주세요.
+- Input placeholder 는 Textarea placeholder(`--axis-text-tertiary`)와 같은 값이 됐습니다.
+- Input · Select 트리거 테두리 `--axis-input-border-default`(`line-2`)는 위 표의 예외(부록 B ③)대로 바꾸지 않았습니다. 그래서 라이트에서는 Checkbox · Textarea 경계(4.51)보다 옅습니다(1.31).
+
+v1은 색이 무채색 · `key` · `bad` 세 계열이라 상태가 색만으로 구분되지 않습니다(예외는 위 Progress warning 의 노랑 하나). 상태는 글자 · 아이콘과 함께 표시합니다.
 
 ---
 

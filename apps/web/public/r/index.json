@@ -64,7 +64,7 @@
       "type": "registry:ui",
       "title": "Select",
       "description": "AXIS 셀렉트 컴포넌트 - 드롭다운 선택",
-      "sha256": "e5bb8064708798ae0cab6f8ee4b3ede34e334c5b16af6d54640ca875a4fb0db2"
+      "sha256": "3c38d5bbe13dee18e111a4453a0fc4cb43e0bab40233bb3ae7282e96a67d1b7d"
     },
     {
       "name": "tabs",
