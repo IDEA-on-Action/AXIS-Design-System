@@ -569,9 +569,15 @@ describe("handleCheckProject WI-0080: 호이스팅 Tailwind 3 앱의 content 표
     expect(await contentItem(await app("hoisted", ["./app/**/*.tsx", "./**/*.{js,mjs}"]))).toEqual(FAIL(UP, true));
   });
 
-  it("isolated(음성 대조): 앱 node_modules 설치본이면 종전 판정 · 문구(./node_modules, 안내 없음)", async () => {
+  // WI-0090: 루트 설치본이 앱 설치본과 실경로가 다르면(이 픽스처는 두 디렉터리 모두 실제 디렉터리) 판정은 종전대로 FAIL 이고,
+  // 그 상위 설치본을 가리키는 glob 이 있으면 이유를 붙여요(CLI 와 같은 문구)
+  it("isolated(음성 대조): 앱 node_modules 설치본이면 종전 판정 · 제안(./node_modules), 루트 사본을 가리키면 이유를 붙임", async () => {
     expect(await contentItem(await app("isolated", ["./app/**/*.tsx", LOCAL]))).toEqual(PASS);
-    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", UP]))).toEqual(FAIL(LOCAL, false));
+    const fail = FAIL(LOCAL, false);
+    expect(await contentItem(await app("isolated", ["./app/**/*.tsx", UP]))).toEqual({
+      ...fail,
+      message: `${fail.message} (상위 경로 ../../node_modules/@axis-ds/ui-react 는 앱이 쓰는 설치본과 다른 설치본(버전은 1.8.1 로 같음)이라 덮음으로 보지 않아요)`,
+    });
   });
 });
 
