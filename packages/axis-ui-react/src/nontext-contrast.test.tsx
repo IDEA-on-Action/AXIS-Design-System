@@ -4,7 +4,7 @@ import { Checkbox, Progress, RadioGroup, RadioGroupItem, Slider, Switch, Textare
 
 /**
  * WI-0063: 폼 컨트롤 경계 · 트랙과 Progress 채움이 비텍스트 대비용 component 토큰을 쓰는지 고정한다(D3 (가)).
- * 값의 대비는 tokens default-contrast.test(기본 브랜드)와 ontology-values.test(ontology, WI-0079 에서 v1 팔레트 값으로 3:1 이상)가 같은 짝 표로 본다.
+ * 값의 대비는 tokens default-contrast.test(기본 브랜드)와 ontology-values.test(ontology, WI-0079 에서 3:1 이상. Progress warning 만 v1 팔레트 밖 원시색 yellow)가 같은 짝 표로 본다.
  * 1.7.0 은 border-default(흰 바탕 1.23) · surface-tertiary(1.23) · surface-brand · 원색 primitive 를 직접 썼다.
  * 새 변수에는 그 1.7.0 변수를 fallback 으로 둔다. tokens 1.7.0 CSS 와 섞여도 투명 · currentColor 가 아니라 1.7.0 렌더로 물러난다.
  */
