@@ -84,10 +84,14 @@
 | 96 | Windows Git Bash 에서 대화형 판정(stdin isTTY) 실측과 보강 검토(cli 1.7.0 WI-0075 후속, README 안내만 반영) | WI-0084 (#213) | P18 | P3 | ⏳ |
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
-| 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ⏳ |
+| 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | 🔄 PR #233 |
 | 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
 | 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | ⏳ |
 | 102 | pnpm 기본 레이아웃에서 상위 설치본을 가리키는 content glob 을 check 가 거짓 FAIL(배치 6c 재측정에서 발견, 종전부터) | WI-0090 (#227) | P18 | P3 | ✅ 2026-10-26 (#230, cli 1.7.4 · mcp 1.4.4) |
+| 103 | check 가 Yarn PnP 에서 루트에만 선언한 패키지를 설치됨으로 판정(앱에서 해석 불가, WI-0087 브리프에서 발견) | WI-0091 (#234) | P18 | P3 | ⏳ |
+| 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ⏳ |
+| 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ⏳ |
+| 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ⏳ |
 
 ### 완료
 

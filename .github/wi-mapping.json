@@ -587,7 +587,7 @@
       "issueNumber": 222,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDdkkc",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastStatus": "🔄"
     },
     {
       "wiId": "WI-0088",
@@ -612,7 +612,39 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDf1-o",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0091",
+      "slug": "check-pnp-root-declared",
+      "issueNumber": 234,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDnm_M",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0092",
+      "slug": "tw4-animation-check-install",
+      "issueNumber": 235,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDnnEw",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0093",
+      "slug": "theme-list-install-hint",
+      "issueNumber": 236,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDnnK8",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0094",
+      "slug": "axis-deps-root-declared",
+      "issueNumber": 237,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDnnPM",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-26T12:30:00.000Z"
+  "updatedAt": "2026-10-26T15:00:00.000Z"
 }
