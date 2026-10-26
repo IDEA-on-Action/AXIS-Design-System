@@ -1,6 +1,6 @@
 # WI-0079 릴리스 노트: ontology 남은 대비 미달
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 확인 문서: [design-review.md](./design-review.md) | GitHub: #208 | 대상: `@axis-ds/tokens` patch · `@axis-ds/mcp` patch(WI-0082 의 `@axis-ds/ui-react` · `@axis-ds/cli` patch 와 같은 발행, linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 예정)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 확인 문서: [design-review.md](./design-review.md) | GitHub: #208 | 대상: `@axis-ds/tokens` patch · `@axis-ds/mcp` patch(WI-0082 의 `@axis-ds/ui-react` · `@axis-ds/cli` patch 와 같은 발행, linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 발행)
 
 ## 바뀐 점
 
@@ -39,3 +39,8 @@ ontology 브랜드에 남아 있던 대비 미달을 고쳤어요. Progress warn
 ## 업그레이드
 
 컴포넌트를 그대로 쓰면 할 일이 없어요. ontology 의 위 변수 값을 직접 참조하거나 덮어쓰던 앱은 새 값을 확인하세요. 종전 색을 유지하려면 앱 CSS 에서 `[data-brand="ontology"]` 블록 뒤에 같은 변수를 다시 정의하면 되지만, 그러면 위 대비 미달이 되돌아와요.
+
+## 발행
+
+- `@axis-ds/tokens` · `theme` · `ui-react` · `agentic-ui` 1.8.2 · `@axis-ds/cli` 1.7.3 · `@axis-ds/mcp` 1.4.3 (2026-10-26, PR #228 머지 d7ae4a5, Release PR #229 머지 8afc883(사용자 직접 머지라 PR CI 가 붙지 않았고, 머지 뒤 main run 40302973137 CI · Deploy Production success 로 확인), publish run 40302972775, provenance 6/6). WI-0082 와 같은 발행이에요
+- 발행본 재측정: tokens 1.8.2 `ontology.css` 12값이 위 표와 같고, 1.8.1 대비 바뀐 줄은 대상 변수뿐, 기본 브랜드 CSS 불변. 소비자 앱에서 경계 · 트랙 최저 4.11, Progress 최저 4.16, placeholder 5.78 · 6.92, 1.8.1 은 미달 재현(testplan 6절)

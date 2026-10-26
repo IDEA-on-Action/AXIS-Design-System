@@ -121,3 +121,25 @@
 - `build:registry`: `r/index.json` · `r/registry.json` 의 version 1.5.0 → 1.8.1 만 바뀌어 되돌렸어요(항목 내용 변화 없음)
 - `apps/web/public/templates/*.json`: 빌드가 바꾼 `updatedAt` 만이라 되돌렸어요
 - mcp 동봉 토큰 데이터 `dist/data/tokens.json`: ontology 색 #C8332E 0건, 기본 #2563EB 13건(양성 대조)이라 brand 값을 담지 않아 바뀌지 않아요
+
+## 6. 발행본 재측정 (측정, 2026-10-26)
+
+- 대상: npm 발행본 `@axis-ds/tokens` · `theme` · `ui-react` · `agentic-ui` 1.8.2, `cli` 1.7.3, `mcp` 1.4.3(PR #228 머지 d7ae4a5, Release PR #229 머지 8afc883(사용자 직접 머지라 PR CI 가 붙지 않았고, 머지 뒤 main run 40302973137 CI · Deploy Production success 로 확인), publish run 40302972775, provenance 6/6). 대조 tokens 1.8.1.
+- 조건: 새 HOME · XDG_CONFIG_HOME 에서 env 주입 없이 `npm view` · `npm pack` · `npm install`(정확 버전) · `next build` · `next start` 를 돌렸어요. 소비자 앱은 Next 15.5.28 + Tailwind 4(quick-start 방식, globals.css 순서 tailwindcss → tw-animate-css → tokens/css/tailwind4 → ui-react/tailwind.css → tokens/css/brands/ontology)이고, lock 의 resolved 가 registry.npmjs.org 의 1.8.2 · 1.8.1 tgz 이며 tokens · ui-react · theme 사본이 각 1개예요. `next build` rc 0, `next start` 200.
+- 측정 도구만 레포 본체 apps/web 의 Playwright(Chromium)를 썼어요(소비자 앱 설치 경로에는 들어가지 않음). 브랜드 · 다크는 html 에 `data-brand="ontology"` 와 `.dark` 를 스크립트로 붙여 켰고 ThemeProvider 경로는 재지 않았어요. 대비는 WCAG 2.x 상대 휘도, 반투명 색은 실제 조상 바탕 위에 합성한 값이에요.
+- 음성 대조: 같은 스크립트로 1.8.1 소비자 앱을 재서 값이 갈렸어요(측정이 실제로 돌았다는 근거).
+
+| 항목 | 결과 |
+|---|---|
+| `npm view @latest` 버전 · provenance | 6패키지 버전 일치, `dist.attestations.provenance.predicateType` = `https://slsa.dev/provenance/v1` 6/6. tokens 1.8.2 발행 2026-10-26T09:56:22Z(18:56 KST, #229 머지 18:52 뒤) |
+| tokens 1.8.2 `ontology.css` 라이트 블록 | placeholder #5F6673 · border #6B7280 · track #6B7280 · success #2A2F36 · warning #A16207 · destructive #A8281F, 기대값 6/6 일치 |
+| tokens 1.8.2 `ontology.css` 다크 블록 | placeholder #9CA3AD · border #7A828D · track #7A828D · success #D0D4D9 · warning #EAB308 · destructive #F49890, 기대값 6/6 일치 |
+| 1.8.1 대비 `ontology.css` diff | rc 1, 바뀐 줄은 대상 변수 줄뿐(라이트 6 · 다크 5). 다크 warning #EAB308 은 1.8.1 에서도 같은 값이라 diff 에 나오지 않아요 |
+| 기본 브랜드 CSS 불변 | `diff -rq` 차이 3건(brand.json · ontology.css · package.json, 양성 대조). variables.css · tailwind4.css · shadcn-compat.css 개별 diff rc 0, 앱 계산 변수 8개 1.8.1 과 같음 |
+| 경계(Checkbox · Radio · Textarea) 대 page · card · panel | 라이트 #6B7280 4.51 · 4.83 · 4.39, 다크 #7A828D 4.90 · 4.53 · 4.11(최저 4.11, 기준 3:1) |
+| 트랙(Switch 꺼짐 · Slider) 대 page · card · panel | 라이트 4.51 · 4.83 · 4.39, 다크 4.90 · 4.53 · 4.11 |
+| Progress 채움 대 트랙 | 라이트(트랙 #EAECEF) success 11.39 · warning 4.16 · destructive 5.94, 다크(트랙 #2A2E34) 9.16 · 7.12 · 6.33 |
+| Input · Textarea placeholder | 라이트 #5F6673 5.78(#FFFFFF 위), 다크 #9CA3AD 6.92(#17191D 위) |
+| 1.8.1 음성 대조 | 라이트 경계 1.15 · 1.23 · 1.12, 트랙 1.10 · 1.18 · 1.08, Progress 1.93 · 1.62 · 3.18, placeholder 2.61. 다크 경계 1.42 · 1.31 · 1.19, 트랙 1.40 · 1.29 · 1.17, Progress 5.99 · 7.12 · 3.63, placeholder 4.53. 미달 재현 |
+
+- 판정: 3절 · 4b 절의 수정 후 값과 발행본 값이 같아요. 불일치 0.
