@@ -75,7 +75,18 @@
 
 ## 5. 남은 것 · 위험
 
-- R1 발행 뒤 재측정(AC10): 새 발행본으로 2절을 다시 돌려 수정 후 표와 1:1 인지.
+- ~~R1 발행 뒤 재측정(AC10): 새 발행본으로 2절을 다시 돌려 수정 후 표와 1:1 인지.~~ 2026-10-26 해소(6절, 1:1 일치)
 - R2 yarn 실제 설치본에서 `yarn workspace X build` · `yarn dev`, npm 7 미만에서 `-w` 는 미측정.
 - R3 Corepack 탐색 방식은 미측정(prd 1.3).
 - R4 monet import 대화형 출력은 미측정(판정 함수 단위 테스트만).
+
+## 6. 발행 뒤 재측정 (AC10, 2026-10-26)
+
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(PR #225 머지 7d1915b, Release PR #226 머지 37b73d0, publish run 40271807118, provenance 2/2), 대조 cli 1.7.1 · mcp 1.4.1. 설치본 버전을 실측으로 확인(tools 1.7.2 · 1.4.2, tools-old 1.7.1 · 1.4.1, npm install rc 0).
+- 환경: 자식 프로세스 env 는 PATH · 새 HOME · 새 XDG_CONFIG_HOME 만. 조상 가드(package.json · lockfile · .git)에 걸린 것 0개, 같은 루프를 레포 경로에서 돌린 양성 대조는 3개를 잡음. 2절의 `scripts/meas.mjs` · `mkfx.sh` 를 그대로 재사용(15픽스처 x 11칸).
+- 결과: 1.7.2 · 1.4.2 의 `meas-run-new.json` 은 구현 때 `meas-run-after.json` 과 cmp rc 0(35760 바이트). 기대 매니저와 다른 명령 신판 0/285 · 구판 171/285, 픽스처별 신판 0(ws-npm · ws-yarn · single-npm · single-yarn · pm-*-nolock 4종 · link-ws-npm 각 0/19). cli · mcp 문자열 비교 90쌍 불일치 0.
+- 종료 코드: 칸 165 중 바뀐 칸 121 · 같은 칸 44, rc 가 바뀐 칸 0. 신판 rc 는 templateApply 0 · templateInit 0 · theme 3상태 1 로 기대값과 같음.
+- 음성 대조: none · ws-pnpm · pm-bun-nolock · outside-pm-npm 4개는 신구 pnpm 0/19 오차, 바뀐 칸은 templateApply · mcpApply · templateInit 의 따옴표뿐, 나머지 8칸 바이트 같음. 계측 대조군: 구판 cli 설치 줄이 lockfile 픽스처에서 npm · yarn 인 것 5/5.
+- 측정 방법 재현: 1.7.1 · 1.4.1 로 잰 `meas-run-old.json` 이 구현 때 `meas-run-published.json` 과 cmp rc 0(33066 바이트).
+- 미측정(R2 · R3 그대로): 실제 yarn 설치본의 `yarn workspace X build` · `yarn dev`, npm 7 미만 `-w`, Corepack 탐색 방식(픽스처가 lockfile 스텁).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6c/w85-new/meas-run-new.json` · `wpub6c/w85-old/meas-run-old.json` · `wpub6c/w85-an/`(analyze.txt · cmp.txt · byfx.py)

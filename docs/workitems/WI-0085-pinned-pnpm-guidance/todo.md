@@ -1,6 +1,6 @@
 # WI-0085: pnpm 고정 안내 정리 · packageManager 신호 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #217 | 상태: 🔄 구현 완료 · 머지 대기(브랜치 `fix/batch6c`, push · PR 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #217 | 상태: ✅ 완료(2026-10-26, cli 1.7.2 · mcp 1.4.2, #225 · Release #226)
 
 ## 결정
 - [x] D1 lockfile 다음 순위로 packageManager(사용자 결정) · D2 매니저별 워크스페이스 실행 · D3 따옴표 · -D · D4 헬퍼는 project.ts 한 곳 · D5 accordion 그대로 · D6 쓰기 전 판정 · D7 선택 인자 · D8 U6 정정 · get_brand 설명 · D9 cli · mcp patch
@@ -20,5 +20,5 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0085-pinned-pnpm-guidance.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
-- [ ] PR · 머지(WI-0086 과 한 PR, 단독 push, push run 완료와 검사 단계 registry-core N>0 을 로그로 확인한 뒤 Release 머지)
-- [ ] 발행본으로 testplan 2절 다시 재기(AC10, WI-0086 전이와 합친 표)
+- [x] PR · 머지(WI-0086 과 한 PR, 단독 push, push run 완료와 검사 단계 registry-core N>0 을 로그로 확인한 뒤 Release 머지) (2026-10-26 #225 머지 7d1915b, main push run 40269191762 success · 검사 「registry-core 4개 · cli · mcp changeset 각 2개」 통과, Release #226 머지 37b73d0 에서 cli 1.7.2 · mcp 1.4.2, publish run 40271807118)
+- [x] 발행본으로 testplan 2절 다시 재기(AC10, WI-0086 전이와 합친 표) (2026-10-26: meas-run-new.json 이 구현 때 meas-run-after.json 과 cmp rc 0, 기대 매니저와 다른 명령 0/285(구판 1.7.1 · 1.4.1 171/285), rc 변화 0, cli · mcp 90쌍 불일치 0. testplan 6절)

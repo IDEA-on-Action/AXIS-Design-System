@@ -137,8 +137,27 @@
 
 | # | 내용 | 처리 |
 |---|---|---|
-| R1 | init.ts 213 · 281 · 294 는 앱 선언만 봐요. I5 처럼 루트 선언 tokens 를 다시 설치하라고 안내할 수 있어요 | 281 · 294 는 검토 후속에서 고침(Tailwind 4 판정 전이로 새로 생긴 줄). 213 애니메이션 안내는 Tailwind 3 에서도 종전부터 있던 앱 선언 전용 동작이라 후속(WI-0087 에 합칠지, 새 WI 인지 결정 필요) |
-| R2 | 심링크 --dir 의 설치 안내 명령은 실경로 루트 lockfile 을 따라요(WI-0085 영역과 겹치는 행동 전이). 이번 매트릭스에서 L1 행의 미설치 안내(noinst 「→ pnpm install」)가 실경로와 같아짐을 확인 | WI-0085 커밋 뒤 합친 전이 표로 재측정(AC9) |
+| R1 | init.ts 213 · 281 · 294 는 앱 선언만 봐요. I5 처럼 루트 선언 tokens 를 다시 설치하라고 안내할 수 있어요 | 281 · 294 는 검토 후속에서 고침(Tailwind 4 판정 전이로 새로 생긴 줄). 213 애니메이션 안내는 Tailwind 3 에서도 종전부터 있던 앱 선언 전용 동작이라 후속. 2026-10-26 사용자 결정으로 WI-0087(#222)에 합침 |
+| R2 | 심링크 --dir 의 설치 안내 명령은 실경로 루트 lockfile 을 따라요(WI-0085 영역과 겹치는 행동 전이). 이번 매트릭스에서 L1 행의 미설치 안내(noinst 「→ pnpm install」)가 실경로와 같아짐을 확인 | WI-0085 커밋 뒤 합친 전이 표로 재측정(AC9). 2026-10-26 발행본에서 확인(7절, 링크 행 60/60 · WI-0085 link-ws-npm 0/19) |
 | R3 | Windows realpath(subst · 8.3 이름 · 대소문자) | 미검증. relative 가 다른 드라이브면 종전 `node_modules/<pkg>` 폴백(tailwind-core packageContentTarget) |
 | R4 | 링크 경로로 쓴 절대 content glob 은 실경로 기준이라 덮음으로 보지 않음 | 추정, 측정 행 없음. 사용 예가 나오면 후속 |
 | R5 | theme add · template apply 경로의 공용 코어 전이(3.3) | theme add 전역 CSS 쓰기 전이는 TA1 로 측정 · 테스트 고정, changeset · release-notes 에 기록. theme-add 356(컴포넌트 tailwind.css 목록) · 432-433(package.json 쓰기)은 WI-0087. template apply 경고는 미측정 |
+
+## 7. 발행 뒤 재측정 (AC9, 2026-10-26)
+
+- 대상: npm 발행본 `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(PR #225 머지 7d1915b, Release PR #226 머지 37b73d0, publish run 40271807118, provenance 2/2), 대조 cli 1.7.1 · mcp 1.4.1. 설치본 버전 실측 확인, npm install rc 0.
+- 환경: 자식 프로세스 env 는 PATH · 새 HOME · 새 XDG_CONFIG_HOME 만, 조상 가드에 걸린 것 0개(레포 경로 양성 대조 3개). 측정 조건: 새 HOME 의 corepack 이 pnpm 12.15.0 을 받아 `bin/pnpm.cjs` 가 없어 rc 1 로 실패해, pnpm 픽스처 2개는 명령줄에서 `corepack pnpm@9.15.4 install` 로 설치(rc 0 x2, 레포와 같은 버전, env · packageManager 주입 없음). 사용자 환경의 pnpm 12 실경로는 미측정.
+- 재현성: 2절 매트릭스(85행)의 발행본 결과 `pub-new.json` 은 구현 때 `after.json` 과, `pub-old.json` 은 `before.json` 과 cmp rc 0. cmp2 출력도 diff rc 0. 픽스처 앱 · 루트 파일 137개가 구현 픽스처와 바이트로 같음. 계측 대조군 c1-appdecl real 의 content · animation 줄 신 3/3 · 구 3/3.
+- 3.1 전이(루트에만 ui-react 를 선언한 Tailwind 3 앱): g1-none 구판 항목 5개 rc 0(content · animation 없음) → 신판 7개 rc 1, content FAIL(제안 `../../node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}`) · animation PASS. g1-up 5개 rc 0 → 7개 rc 0, 둘 다 PASS. g1-noanim 5개 rc 0 → 7개 rc 1, content FAIL · animation WARN. 3레이아웃 같음.
+- 정답 축: 앱 cwd 에서 루트 설치본 Tailwind 3.4.19 CLI 로 빌드해 ui-react 선택자 집합 U(|U|=402) · 애니메이션 선택자 D(plugin 유무 차, |D|=30)와의 교집합을 셈. g1-none 0/402(FAIL 이 맞음), check 제안 content 를 더하면 402/402 · 30/30. g1-up 402/402. g1-noanim 0/402, 제안을 더해도 애니메이션 0/30(WARN 이 맞음). 구판의 침묵은 거짓 음성이었고 신판 판정 6칸 x 3레이아웃이 정답과 모두 일치.
+- 루트 Tailwind 4 미설치: noinst4/r-app 구판 rc 1 「FAIL tailwind.config 파일이 없습니다」 → 신판 rc 0, 항목 6개 · FAIL 0(Tailwind 4 분기 WARN · 미설치 WARN 「→ pnpm install (워크스페이스 루트에 선언: …)」 · animation WARN). 대조 noinst4/c-app 은 rc 0 → 0, 바이트 같음. inst4/r-app 은 rc 0 그대로, 항목 5 → 6.
+- 3.2 init · add(10앱): 신판 init -y 뒤 package.json 바이트 불변 10/10, 루트 선언 5앱에서 「이미 있습니다(버전 유지) … (워크스페이스 루트에 선언: clsx, tailwind-merge)」, add button 안내에 clsx · tailwind-merge 0/10. 구판은 바뀜 5/10, add 안내에 둘이 들어간 앱 5/10. 앱 선언 대조 5앱은 신구 모두 불변. MCP `axis.install_component`(6앱): 신판 안내에 둘 0/6 · package.json 불변 6/6, 구판은 g2-init 3/3 에 둘을 안내.
+- 심링크 `--dir`(cmp2, 60행): 신판 60/60 · 구판 37/60, 구현 측정과 같음.
+- 불변 대조: 앱 선언 real 9행 · c-app 3행 · ENOENT 1행이 신구 바이트 같음(13/13). pnpm 기본 c1-appdecl · c1-appdecl-up 은 신구 모두 rc 1 · content FAIL(`./node_modules/…` 제안). 바뀐 real 행 12행이 3.1 의 T1~T6(12행)과 같음.
+- cli · mcp 대칭: mcp 결과가 있는 67행에서 판정 줄 문자열 불일치 신판 0/67 · 구판 0/67, 판정 줄 수 비대칭 0. add 안내도 cli add 와 MCP install_component 가 같은 명령 줄.
+- 기준 파일과 다른 것 2건:
+  - init: 신판 `init-pubnew.json` 은 `init-after.json` 과 cmp rc 1. 차이는 noinst4/r-app · inst4/r-app 의 「@axis-ds/tokens 설치: pnpm add/npm install "@axis-ds/tokens@^1.4.0"」 2줄이 신판에 없는 것뿐이고 pkgSame · rc · add 칸은 같음(diff rc 0). `init-after.json` 은 첫 구현 0ad6d5e 의 산출물이고 3.2 I5 검토 후속에서 이 줄을 없앴으니 발행본이 최종 기대와 맞음. 후속 뒤 init JSON 기준 파일은 남아 있지 않아 그 줄은 I5 서술로만 대조.
+  - 정답 축 분모: 이번 |U|=402(빌드 CSS 의 `.` 시작 선택자, content = 설치본 ui-react dist 실경로, plugin 있음)는 PRD 의 0/388 과 분모가 다름. 세는 방법 차이로 보이나 브리프의 계수 스크립트가 남아 있지 않아 대조하지 못함. 판정(0 이면 FAIL, 전부면 PASS)에는 영향 없음.
+- 새로 본 것(이번 배포의 회귀 아님, 신구 바이트 같음): pnpm 기본 레이아웃의 앱 선언 c1-appdecl-up 은 check 가 content FAIL · `./node_modules/@axis-ds/ui-react/…` 제안 · rc 1 인데, 같은 앱을 실제 Tailwind 3 로 빌드하면 `../../node_modules/…` glob 으로 402/402 · 30/30 이 나와 거짓 FAIL 후보예요. npm · pnpm hoisted 의 같은 앱은 PASS. 이 testplan 은 이 행을 불변(AC6)으로만 다뤘어요. 새 WI 등록 여부는 사용자 결정 대기.
+- 범위 밖 미측정: init.ts 213 애니메이션 안내(R1, WI-0087), theme add 356 · 432-433(WI-0087), template apply 경고 경로(R5).
+- 원자료: `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/69d8f408-60b9-4bb2-8b0a-d1cb1f9af027/scratchpad/wpub6c/w86/`(pub-new.json · pub-old.json · cmp-pub.txt · init-pubnew.json · init-pubold.json · truth/truth.json · sc/truth.mjs · sc/mcpinstall.mjs · sc/rowdiff.mjs)

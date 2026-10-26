@@ -1,6 +1,6 @@
 # WI-0086 릴리스 노트: Tailwind · 컴포넌트 패키지 판정과 의존성 안내가 워크스페이스 루트 선언을 봐요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #218 | 대상: `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(예상, 배치 6c 에서 WI-0085 와 한 Release, 미발행). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #218 | 대상: `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(2026-10-26 발행, 배치 6c 에서 WI-0085 와 한 Release, PR #225 머지 7d1915b · Release PR #226 머지 37b73d0, publish run 40271807118, provenance). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -30,4 +30,5 @@
 
 ## 발행
 
-- 미발행. WI-0085 와 한 PR · 한 Release(cli 1.7.2 · mcp 1.4.2 예상) 뒤 이 절을 채워요.
+- `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2 (2026-10-26, PR #225 머지 7d1915b, Release PR #226 머지 37b73d0, publish run 40271807118, provenance 2/2). linked 4패키지는 1.8.1 그대로
+- 발행본 재측정: 85행 매트릭스가 구현 측정과 바이트 일치, 심링크 `--dir` 행 60/60(1.7.1 은 37/60), 루트에만 ui-react 를 선언한 Tailwind 3 앱의 content · animation 판정이 실제 빌드 결과와 3레이아웃 모두 일치, 루트 Tailwind 4 미설치 앱 rc 1 → 0, init · add · MCP install 이 루트 선언 clsx · tailwind-merge 를 다시 쓰거나 안내하지 않음, cli · mcp 불일치 0(testplan 7절)

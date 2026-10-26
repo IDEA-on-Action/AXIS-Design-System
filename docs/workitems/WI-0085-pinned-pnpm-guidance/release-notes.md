@@ -1,6 +1,6 @@
 # WI-0085 릴리스 노트: 설치 · 실행 안내가 프로젝트의 패키지 매니저를 따라요
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #217 | 대상: `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(예상, 배치 6c 에서 WI-0086 과 한 Release, 미발행). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | GitHub: #217 | 대상: `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2(2026-10-26 발행, 배치 6c 에서 WI-0086 과 한 Release, PR #225 머지 7d1915b · Release PR #226 머지 37b73d0, publish run 40271807118, provenance). tokens · theme · ui-react · agentic-ui 는 바뀌지 않아요
 
 ## 바뀐 점
 
@@ -25,4 +25,5 @@
 
 ## 발행
 
-- 미발행. WI-0086 과 한 PR · 한 Release(cli 1.7.2 · mcp 1.4.2 예상) 뒤 이 절을 채워요.
+- `@axis-ds/cli` 1.7.2 · `@axis-ds/mcp` 1.4.2 (2026-10-26, PR #225 머지 7d1915b, Release PR #226 머지 37b73d0, publish run 40271807118, provenance 2/2). linked 4패키지는 1.8.1 그대로
+- 발행본 재측정: 15픽스처 x 11칸 결과가 구현 때 수정 후 기대값과 바이트로 같음, 기대 매니저와 다른 명령 0/285(1.7.1 · 1.4.1 은 171/285), 종료 코드 변화 0, cli · mcp 불일치 0(testplan 6절)

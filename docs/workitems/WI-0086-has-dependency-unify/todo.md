@@ -1,6 +1,6 @@
 # WI-0086: 의존성 선언 판정의 워크스페이스 루트 합류 · 심링크 baseDir TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #218 | 상태: 🔄 구현 완료 · 머지 대기(브랜치 `fix/batch6c`, push · PR 전)
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #218 | 상태: ✅ 완료(2026-10-26, cli 1.7.2 · mcp 1.4.2, #225 · Release #226)
 
 ## 결정
 - [x] D1 공용 헬퍼 declaredDependency(쓰기는 앱 pkg 로만) · D2 tailwind-core 7곳 + init utils + add(MCP install), theme add 쓰기 경로는 WI-0087 · D3 declaredAxisPackages 앱 선언만 · D4 realpath 는 공개 함수 진입부에서 한 번(절대 glob x 심링크 행 AC) · D5 cli · mcp patch · D6 커밋 WI-0086 → WI-0085 (배치 6c 결정)
@@ -21,7 +21,7 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0086-has-dependency-unify.md`(@axis-ds/cli patch · @axis-ds/mcp patch)
-- [ ] WI-0085 커밋을 같은 브랜치에 올린 뒤 PR · 머지(단독 push, push run 완료 확인 뒤 Release 머지)
-- [ ] 발행본으로 testplan 2절 스크립트 다시 재기(AC9, WI-0085 전이와 합친 표)
+- [x] WI-0085 커밋을 같은 브랜치에 올린 뒤 PR · 머지(단독 push, push run 완료 확인 뒤 Release 머지) (2026-10-26 #225 머지 7d1915b, main push run 40269191762 success, Release #226 머지 37b73d0 에서 cli 1.7.2 · mcp 1.4.2, publish run 40271807118)
+- [x] 발행본으로 testplan 2절 스크립트 다시 재기(AC9, WI-0085 전이와 합친 표) (2026-10-26: 85행 매트릭스 신구가 구현 산출물과 cmp rc 0, 링크 행 60/60(구판 37/60), 루트 선언 TW3 앱 판정 6칸 x 3레이아웃이 실제 빌드 정답과 일치, init · add 10앱 · MCP install 6앱, cli · mcp 불일치 0/67. testplan 7절)
 - [x] 검토 후속: init.ts 281 · 294 를 declaredDependency 로(I5), I6 · TA1 전이 기록 · 테스트 고정, contentGlobCovers 링크 단위 테스트(변이 R1)
-- [ ] 결정 필요: init.ts 213 애니메이션 안내(앱 선언 전용, 종전부터)와 theme-add 356 컴포넌트 tailwind.css 목록을 WI-0087 에 합칠지(testplan R1 · R5)
+- [x] 결정 필요: init.ts 213 애니메이션 안내(앱 선언 전용, 종전부터)와 theme-add 356 컴포넌트 tailwind.css 목록을 WI-0087 에 합칠지(testplan R1 · R5) (2026-10-26 사용자 결정: WI-0087(#222)에 합침, project-todo 「배치 6c 검토 뒤 결정」)

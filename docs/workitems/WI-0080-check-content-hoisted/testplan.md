@@ -143,7 +143,7 @@ CLI `packages/axis-cli/src/template/template-check.test.ts`: WI-0074 monorepo �
 ### 6.1 changeset 검사 실경로 (CI, 2026-10-26)
 
 - PR 모드: #219 PR CI(13m47s)에서 기준 merge-base 6d455f7 · registry-core 3파일 · cli · mcp changeset 각 2개로 통과. 확장 검사가 PR 모드로 실제로 돌았어요.
-- main push 모드(정착 대기): #219 push run 40246073020 은 #220 push 에 취소되어(cancelled) 검사 단계가 skipped, #220 push run 40246082456 은 기준 `github.event.before` 79c3208 · registry-core 0개로 통과. 그래서 **registry-core 변경이 있는 push 에서 push 모드 검사가 실제로 돈 적은 아직 없어요.** 다음 registry-core 머지(WI-0085 · 0086)를 다른 머지와 겹치지 않게 단독 push 로 보내, 그 run 의 검사 단계가 skipped 가 아니라 실행되어 registry-core 파일 수를 셌는지 확인해요.
+- main push 모드(2026-10-26 정착 확정): #225 main push run 40269191762 success 에서 기준 `github.event.before` e2a9725 · 바뀐 파일 43개 · registry-core 4개 · cli · mcp changeset 각 2개로 「통과(registry-core → cli · mcp)」. 검사 단계가 skipped 가 아니라 실제로 돌아 registry-core 파일 수를 셌어요. 이전 기록: #219 push run 40246073020 은 #220 push 에 취소되어(cancelled) 검사 단계가 skipped, #220 push run 40246082456 은 기준 `github.event.before` 79c3208 · registry-core 0개로 통과. 그래서 **registry-core 변경이 있는 push 에서 push 모드 검사가 실제로 돈 적은 아직 없어요.** 다음 registry-core 머지(WI-0085 · 0086)를 다른 머지와 겹치지 않게 단독 push 로 보내, 그 run 의 검사 단계가 skipped 가 아니라 실행되어 registry-core 파일 수를 셌는지 확인해요.
 
 ## 7. 반박 검토 후속 (2026-10-26, 검토 2건 모두 approve · major 0 · minor 6)
 

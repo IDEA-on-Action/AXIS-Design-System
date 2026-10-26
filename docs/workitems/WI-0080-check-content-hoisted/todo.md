@@ -1,6 +1,6 @@
 # WI-0080: Tailwind 3 content 판정의 설치본 위치 TODO
 
-> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #209 | 상태: ✅ 완료(2026-10-26, cli 1.7.1 · mcp 1.4.1, #219 · Release #221). changeset 검사의 main push 모드는 정착 대기
+> PRD: [prd.md](./prd.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #209 | 상태: ✅ 완료(2026-10-26, cli 1.7.1 · mcp 1.4.1, #219 · Release #221). changeset 검사의 main push 모드는 2026-10-26 정착 확정(run 40269191762)
 
 ## 결정
 - [x] D1 설치본 기준 상대 표본 · 제안 · D2 `../` 개수 비교 · D3 절대경로 인정 · D4 cwd 안내 한 줄 · D5 세 호출지 같은 문구 · D6 registry-core changeset 동반 CI 검사 (배치 6b 결정)
@@ -27,4 +27,4 @@
 - [x] PR · 머지(배치 6b 순서 WI-0080 → WI-0081 → Release) (2026-10-26 #219 머지 79c3208, Release #221 머지 cb8f27c 에서 cli 1.7.1 · mcp 1.4.1, run 40247657745)
 - [x] 발행본으로 testplan 6절 다시 재기 (2026-10-26: cli 1.7.1 · mcp 1.4.1 각 24/24, 대조 1.7.0 · 1.4.0 각 12/24, cli · mcp 불일치 0, 음성 대조 10/10. testplan 6절)
 - [x] changeset 검사 PR 모드 실경로: #219 PR CI 에서 기준 merge-base 6d455f7 · registry-core 3파일 · cli · mcp changeset 각 2개로 통과
-- [ ] 정착 대기: changeset 검사 main push 모드가 registry-core 변경이 있는 push 에서 실제로 돈 적이 없음(#219 push run 40246073020 은 #220 push 에 취소되어 검사 단계 skipped, #220 push run 40246082456 은 registry-core 0개). 다음 registry-core 머지(WI-0085 · 0086)를 단독 push 로 보내 그 run 의 검사 단계가 skipped 가 아니라 실제로 돌았는지 확인
+- [x] 정착 확정(2026-10-26): #225 main push run 40269191762 success 에서 기준 `github.event.before` e2a9725 · 바뀐 파일 43개 · registry-core 4개 · cli · mcp changeset 각 2개로 「통과(registry-core → cli · mcp)」. 이전 상태(정착 대기): changeset 검사 main push 모드가 registry-core 변경이 있는 push 에서 실제로 돈 적이 없음(#219 push run 40246073020 은 #220 push 에 취소되어 검사 단계 skipped, #220 push run 40246082456 은 registry-core 0개). 다음 registry-core 머지(WI-0085 · 0086)를 단독 push 로 보내 그 run 의 검사 단계가 skipped 가 아니라 실제로 돌았는지 확인
