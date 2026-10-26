@@ -5,10 +5,19 @@
  * 설치 명령은 실행하지 않고 안내만 합니다(U6). 같은 브랜드로 다시 실행하면 쓸 파일이 0개입니다(멱등).
  */
 
-import { accessSync, constants, existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
-import { addCommandFor, detectInstallCommand, hasDependency, isPlainObject } from "@axis-ds/registry-core/project";
+import {
+  addCommandFor,
+  declaredDependency,
+  detectInstallCommand,
+  findInstalledPackage,
+  hasDependency,
+  isPlainObject,
+  isPnpProject,
+  workspaceRootPackage,
+} from "@axis-ds/registry-core/project";
 import {
   TAILWIND4_COMPONENT_PACKAGES,
   TOKENS_TAILWIND4_ENTRY,
@@ -86,7 +95,25 @@ export interface CssStep {
   lateImports: string[];
   /** Tailwind major 4 이상으로 판정했는지 */
   tailwind4: boolean;
+  /**
+   * 워크스페이스 루트에만 선언된 컴포넌트 패키지 가운데 설치본에 `tailwind.css` 가 없어 줄을 넣지 않은 것(WI-0087 DEC-2, Tailwind 4 만).
+   * `installedVersion` 이 있으면 설치본은 있지만 파일이 없는 경우(1.4.0 미만), 없으면 미설치입니다. 없거나 비면 종전과 같습니다.
+   */
+  deferredComponentImports?: DeferredComponentImport[];
 }
+
+/** 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유(WI-0087 DEC-2) */
+export interface DeferredComponentImport {
+  name: string;
+  /** 설치본 버전(설치본은 있지만 `tailwind.css` 가 없을 때). 미설치면 없음. 설치본 버전을 읽지 못하면 `"?"` */
+  installedVersion?: string;
+}
+
+/** 컴포넌트 패키지가 `tailwind.css` 를 배포하기 시작한 버전(ui-react · agentic-ui CHANGELOG 1.4.0) */
+export const COMPONENT_TAILWIND_CSS_MIN_VERSION = "1.4.0";
+
+/** 앱 디렉터리 자체에 있으면 워크스페이스 멤버가 아닌 독립 앱으로 보는 lockfile(WI-0087 P2, theme add 안에서만 봄) */
+const APP_LOCKFILES = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock"] as const;
 
 /** Tailwind 3 설정 안내(WI-0065 D7: 파일은 고치지 않고 감지 결과로 안내, check 가 판정) */
 export interface TailwindConfigStep {
@@ -104,6 +131,8 @@ export interface DependencyStep {
   action: "add" | "present" | "no-package-json";
   /** package.json 에 적힌 범위(있으면) */
   declaredRange?: string;
+  /** `present` 일 때 선언을 찾은 곳(`app`: 앱 package.json · `root`: 워크스페이스 루트 package.json, WI-0087 DEC-1). 그 밖에는 없음 */
+  declaredSource?: "app" | "root";
   /** 설치된 버전이 1.3.0 미만이라 업그레이드를 안내해야 함 */
   upgrade: boolean;
   /** 설치 · 업그레이드 안내 명령(lockfile 로 고름, 예: `npm install "@axis-ds/tokens@^1.6.0"`) */
@@ -263,6 +292,15 @@ export function realPathInside(baseDir: string, file: string): { inside: boolean
   return { inside, realPath };
 }
 
+/** 파일이 있고 일반 파일인지(심볼릭 링크는 따라감) */
+function isFile(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
 /** 실제 경로(심볼릭 링크를 따라간 경로)가 `.css` 파일인지 봅니다. */
 function isStylesheet(realPath: string): boolean {
   return path.extname(realPath).toLowerCase() === ".css";
@@ -345,18 +383,39 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     }
   }
 
+  // WI-0087: 의존성 선언은 앱 package.json 다음 워크스페이스 루트 package.json 으로 판정합니다(쓰기는 계속 앱 파일로만).
+  // 루트 package.json 은 여기서 한 번 읽어 컴포넌트 tailwind.css · tokens · theme 세 판정이 같이 씁니다(detectTailwind 는 따로 읽음).
+  // Plug'n'Play(P1)이거나 앱 디렉터리 자체에 lockfile 이 있으면(P2, 워크스페이스 멤버가 아닌 독립 앱) 루트 선언을 인정하지 않고 종전처럼 앱 선언만 봅니다.
+  const rootDeclarationsAllowed =
+    pkg !== undefined && !isPnpProject(baseDir) && !APP_LOCKFILES.some((f) => existsSync(path.join(baseDir, f)));
+  const rootPkg = rootDeclarationsAllowed ? (workspaceRootPackage(baseDir) ?? null) : null;
+
   // 3. CSS (FR-2 탐색 순서, U14 (A), U2 대안 2 위치, U13)
   // WI-0065 D7: 브랜드 import 앞에 기본 토큰 CSS 를 넣습니다(Tailwind 3: variables → shadcn, Tailwind 4: tailwind4 진입점 →
   // 선언된 컴포넌트 패키지의 tailwind.css). 이미 있는 것은 넣지 않고, 위치는 파일 앞쪽 import 구간의 끝(규칙보다 앞)입니다.
   const tailwind = detectTailwind(baseDir, pkg);
   const tailwind4 = tailwind.major !== undefined && tailwind.major >= 4;
+  const componentImports: string[] = [];
+  const deferredComponentImports: DeferredComponentImport[] = [];
+  if (tailwind4 && pkg !== undefined) {
+    for (const n of TAILWIND4_COMPONENT_PACKAGES) {
+      // 앱 선언은 종전대로 설치 여부와 상관없이 넣습니다
+      if (hasDependency(pkg, n) !== undefined) {
+        componentImports.push(n);
+        continue;
+      }
+      // WI-0087 DEC-2: 루트에만 선언했으면 설치본에 tailwind.css 파일이 실제로 있을 때만 넣습니다(없는 줄은 빌드를 Can't resolve 로 깸)
+      if (declaredDependency(baseDir, pkg, n, rootPkg)?.source !== "root") continue;
+      const installed = findInstalledPackage(baseDir, n);
+      if (installed !== undefined && isFile(path.join(installed.dir, "tailwind.css"))) {
+        componentImports.push(n);
+      } else {
+        deferredComponentImports.push(installed === undefined ? { name: n } : { name: n, installedVersion: installed.version ?? "?" });
+      }
+    }
+  }
   const requiredBaseImports = tailwind4
-    ? [
-        TOKENS_TAILWIND4_ENTRY,
-        ...TAILWIND4_COMPONENT_PACKAGES.filter((n) => pkg !== undefined && hasDependency(pkg, n) !== undefined).map(
-          (n) => `${n}/tailwind.css`
-        ),
-      ]
+    ? [TOKENS_TAILWIND4_ENTRY, ...componentImports.map((n) => `${n}/tailwind.css`)]
     : [...TAILWIND3_BASE_IMPORTS];
   const location = findGlobalCss(baseDir, config);
   if (location.path) {
@@ -378,6 +437,8 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     const otherBrands = [...new Set(imported.filter((n) => n !== brand))];
     const brandAdded = !imported.includes(brand);
     const baseImports = requiredBaseImports.filter((spec) => !hasCssImport(before, spec));
+    // 사용자가 이미 넣어 둔 줄은 「넣지 않았습니다」 안내 대상이 아닙니다
+    const deferredHere = deferredComponentImports.filter((d) => !hasCssImport(before, `${d.name}/tailwind.css`));
     const lines = [...baseImports.map((spec) => `@import "${spec}";`), ...(brandAdded ? [`@import "${plan.importPath}";`] : [])];
     plan.css = {
       file: location.path,
@@ -389,6 +450,7 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
       requiredBaseImports,
       lateImports: findLateImports(before),
       tailwind4,
+      ...(deferredHere.length > 0 ? { deferredComponentImports: deferredHere } : {}),
     };
     if (lines.length > 0) {
       plan.writes.push({ file: location.path, before, after: insertImportLines(before, lines) });
@@ -403,6 +465,7 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
       requiredBaseImports,
       lateImports: [],
       tailwind4,
+      ...(deferredComponentImports.length > 0 ? { deferredComponentImports } : {}),
     };
   }
 
@@ -429,10 +492,20 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   if (pkgText === null || pkg === undefined) {
     plan.dependency = { action: "no-package-json", upgrade, themeMissing: false, tokensAddCommand, themeAddCommand };
   } else {
-    const themeMissing = hasDependency(pkg, THEME_PACKAGE) === undefined;
-    const declared = hasDependency(pkg, TOKENS_PACKAGE);
+    // WI-0087 DEC-3 · DEC-1: theme · tokens 선언도 앱 다음 루트로 판정합니다(P1 · P2 조건이면 rootPkg 가 null 이라 앱 선언만, 종전)
+    const themeMissing = declaredDependency(baseDir, pkg, THEME_PACKAGE, rootPkg) === undefined;
+    const declared = declaredDependency(baseDir, pkg, TOKENS_PACKAGE, rootPkg);
     if (declared !== undefined) {
-      plan.dependency = { action: "present", declaredRange: declared, upgrade, themeMissing, tokensAddCommand, themeAddCommand };
+      // 루트 선언이면 앱 package.json 에 쓰지 않습니다(범위가 낮아도 범위 안내 없음, DEC-7)
+      plan.dependency = {
+        action: "present",
+        declaredRange: declared.range,
+        declaredSource: declared.source,
+        upgrade,
+        themeMissing,
+        tokensAddCommand,
+        themeAddCommand,
+      };
     } else {
       const deps = isPlainObject(pkg.dependencies) ? { ...pkg.dependencies } : {};
       deps[TOKENS_PACKAGE] = TOKENS_DEPENDENCY_RANGE;

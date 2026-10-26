@@ -31,8 +31,8 @@
 
 ### 1.3 범위 밖
 
-- `axis theme add` 가 루트에 선언된 의존성을 앱 package.json 에 다시 쓰는 경로(theme-add 356 · 432-433): WI-0087. 다만 theme add 가 부르는 `detectTailwind` · `inspectTailwindContent` 는 공용 코어라 판단(Tailwind 버전 · content 안내)과 전역 CSS 에 쓰는 기본 토큰 줄(Tailwind 4 진입점)은 함께 바뀌어요(testplan 3.3 TA1, changeset · release-notes 에 기록).
-- `axis init` 의 애니메이션 안내(init.ts 213 `animationGuideLine`)는 앱 선언만 봐요(종전부터). 281 Tailwind 4 컴포넌트 import 안내 · 294 「@axis-ds/tokens 설치:」는 Tailwind 4 판정 전이로 루트 선언 tokens 를 다시 설치하라는 줄이 새로 생겨(testplan I5) 검토 후속에서 `declaredDependency` 로 고쳤어요.
+- `axis theme add` 가 루트에 선언된 의존성을 앱 package.json 에 다시 쓰는 경로(theme-add 356 · 432-433): WI-0087. 다만 theme add 가 부르는 `detectTailwind` · `inspectTailwindContent` 는 공용 코어라 판단(Tailwind 버전 · content 안내)과 전역 CSS 에 쓰는 기본 토큰 줄(Tailwind 4 진입점)은 함께 바뀌어요(testplan 3.3 TA1, changeset · release-notes 에 기록). → WI-0087(#222)에서 해소(tokens · theme 판정과 Tailwind 4 컴포넌트 tailwind.css 줄이 루트 선언을 인정, 쓰기는 앱으로만).
+- `axis init` 의 애니메이션 안내(init.ts 213 `animationGuideLine`)는 앱 선언만 봐요(종전부터). → WI-0087(#222)에서 해소(루트 선언 · 설치본을 보고 3갈래로 안내). 281 Tailwind 4 컴포넌트 import 안내 · 294 「@axis-ds/tokens 설치:」는 Tailwind 4 판정 전이로 루트 선언 tokens 를 다시 설치하라는 줄이 새로 생겨(testplan I5) 검토 후속에서 `declaredDependency` 로 고쳤어요.
 - 워크스페이스 글롭 멤버십, yarn 레이아웃, Windows 의 realpath(subst · 대소문자) 동작은 재지 않았어요(추정 · 미검증).
 - 링크 경로로 쓴 절대 content glob(`/links/app/node_modules/...`)은 기준이 실경로라 덮음으로 보지 않아요(추정, 측정 행 없음).
 - pnpm 기본에서 앱 · 루트가 모두 ui-react 를 선언하면 앱 쪽 링크가 표본이 돼 `../../node_modules/...` content 가 FAIL 인 기존 거짓 FAIL(WI-0080 D1 표본 하나 설계, 브리프 위험 1): 이번 WI 가 만든 것이 아니고 바꾸지 않았어요(pnpm/c1-appdecl-up real 행 바이트 불변). → WI-0090(#227)에서 해소(실경로가 같은 상위 설치본을 표본으로 인정).
