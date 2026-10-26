@@ -580,6 +580,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDbTyQ",
       "lastSyncedAt": "2026-10-26T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0087",
+      "slug": "theme-add-root-declared",
+      "issueNumber": 222,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhDdkkc",
+      "lastSyncedAt": "2026-10-26T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-26T09:20:00.000Z"
