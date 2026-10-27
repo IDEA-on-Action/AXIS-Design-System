@@ -992,12 +992,14 @@ describe("WI-0087: theme add 가 워크스페이스 루트 선언을 인정(판�
     const at = lines.findIndex((l) => l.includes(ROOT_PRESENT));
     expect(at).toBeGreaterThan(-1);
     expect(lines[at + 1]).toContain("설치: npm install");
-    // 음성 대조: 앱에 선언된 tokens(미설치)는 종전 present 문구 한 줄뿐(설치 줄을 붙이지 않음)
+    // 앱에 선언된 tokens(미설치)는 종전 present 문구 다음에 선언대로 설치하는 명령 줄(WI-0093 Q17 이 WI-0087 DEC-1 의 「설치 줄 없음」을 다시 정함).
+    // 추가 명령(범위를 붙인 add)이 아니라 install 이에요(add 를 실행하면 앱 범위 ^1.8.0 이 다시 쓰여요)
     const own = await wsApp({ kind: "npm", tokens: "none", appDeps: { "@axis-ds/tokens": "^1.8.0" } });
     const ownOut = (await runAdd(["sample", "-d", own])).out.split("\n");
     const ownAt = ownOut.findIndex((l) => l.includes("package.json: @axis-ds/tokens ^1.8.0 가 이미 있어 범위를 바꾸지 않음"));
     expect(ownAt).toBeGreaterThan(-1);
-    expect(ownOut[ownAt + 1]).not.toContain("설치:");
+    expect(ownOut[ownAt + 1]).toMatch(/^ {4}설치: (pnpm|npm|yarn) install$/);
+    expect(ownOut[ownAt + 1]).not.toContain("@axis-ds/tokens@");
   });
 
   it("루트에 @axis-ds/theme 선언 → themeMissing false · ThemeProvider 설치 안내 없음, 앱 · 루트 모두 없으면 안내 1줄(음성 대조)", async () => {

@@ -216,6 +216,88 @@ export function pnpRootOnlyDependency(
 /** 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못한다는 문구(WI-0091, check · MCP 공용). 앞에 「<이름> 가」를 붙여 씁니다. */
 export const PNP_ROOT_ONLY_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
 
+/**
+ * 앱 디렉터리 자체에 있으면 워크스페이스 멤버가 아닌 독립 앱으로 보는 lockfile(WI-0087 P2). WI-0093 에서 cli theme-add.ts 의 모듈 상수를
+ * 옮겼어요(theme add · theme list · info · MCP 브랜드 도구가 같은 목록을 씀). bun 은 설치 명령(`LOCKFILE_COMMANDS`)에는 없지만 독립 앱 표지로는 봐요.
+ */
+export const APP_LOCKFILES = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock"] as const;
+
+/** 앱 디렉터리(`baseDir`) 자체에 `APP_LOCKFILES` 가운데 하나가 있는지(WI-0087 P2) */
+export function hasAppLockfile(baseDirInput: string): boolean {
+  const baseDir = path.resolve(baseDirInput);
+  return APP_LOCKFILES.some((f) => existsSync(path.join(baseDir, f)));
+}
+
+/**
+ * 워크스페이스 루트 선언을 이 앱의 선언으로 인정해도 되는지(WI-0087 P1 · P2 경계, WI-0093 에서 theme-add.ts 에서 옮김).
+ * - 앱 package.json(`pkg`)이 없으면 아니에요(`declaredDependency` 와 같음).
+ * - Plug'n'Play(`isPnpProject`)면 아니에요(P1: 루트 선언이 앱에서 해석된다는 보장이 없음).
+ * - 앱 디렉터리 자체에 lockfile 이 있으면 아니에요(P2: 워크스페이스 멤버가 아니라 따로 설치되는 앱).
+ */
+export function rootDeclarationsAllowed(baseDir: string, pkg: Record<string, unknown> | undefined): boolean {
+  return pkg !== undefined && !isPnpProject(baseDir) && !hasAppLockfile(baseDir);
+}
+
+/** 의존성 설치 안내의 갈래(WI-0093, `dependencyInstallGuide` 참고) */
+export type DependencyInstallKind = "add" | "install" | "install-at-root" | "pnp";
+
+/**
+ * 의존성 하나를 설치 · 다시 설치하라고 안내할 방법(WI-0093). 선언 출처로 고릅니다.
+ * - `add`: 선언이 없음(package.json 없음 포함, P1 · P2 로 루트 선언을 인정하지 않는 경우 포함). 종전처럼 `addCommand` 를 안내해요.
+ * - `install`: 앱 선언(`source: "app"`), 또는 pnpm · yarn 워크스페이스의 루트 선언(`source: "root"`). 앱 디렉터리에서
+ *   `installCommand`(`<pm> install`)를 실행하면 선언대로 설치돼요(pnpm 9.15.4 · yarn 4.5.3 node-modules 실측).
+ * - `install-at-root`: npm 워크스페이스의 루트 선언. 앱 디렉터리의 `npm install` 은 루트 선언을 설치하지 않아서(npm 10.9.4 실측)
+ *   워크스페이스 루트에서 `installCommand`(`npm install`)를 실행해야 해요.
+ * - `pnp`: Plug'n'Play 이고 앱에 선언이 있음(`source: "app"`). node_modules 로는 설치본을 판정하지 못해 설치 명령을 내지 않아요.
+ */
+export interface DependencyInstallGuide {
+  kind: DependencyInstallKind;
+  /** 선언을 찾은 곳(`add` 면 없음) */
+  source?: "app" | "root";
+  /** 선언된 범위(`add` 면 없음) */
+  range?: string;
+  /** lockfile · `packageManager` 로 고른 설치 명령(`detectInstallCommand`, 예: `pnpm install`) */
+  installCommand: string;
+  /** 범위를 붙인 추가 명령(`addCommandFor`, 예: `pnpm add "@axis-ds/tokens@^1.6.0"`). 범위를 올려야 할 때도 이것을 써요 */
+  addCommand: string;
+}
+
+/** `dir/package.json` 을 객체로 읽습니다. 없거나 깨졌거나 객체가 아니면 `undefined` */
+function readPackageJsonAt(dir: string): Record<string, unknown> | undefined {
+  try {
+    const parsed: unknown = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8"));
+    return isPlainObject(parsed) ? parsed : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
+ * 선언 출처로 의존성 `name` 의 설치 안내 방법을 고릅니다(WI-0093 Q13 · Q14 · Q15, theme list · info · MCP 브랜드 도구 공용).
+ * 경계는 theme add 와 같아요(`rootDeclarationsAllowed`: P1 · P2). `range` 는 추가 명령(`addCommand`)에 붙이는 범위예요.
+ * 매니저는 `detectInstallCommand` 로 고르고, npm 이면 루트 선언을 `install-at-root` 로 돌려줘요. Plug'n'Play 에서는 루트 선언을
+ * 인정하지 않고(P1) 앱 선언만 `pnp` 로 돌려줘요.
+ */
+export function dependencyInstallGuide(baseDirInput: string, name: string, range: string): DependencyInstallGuide {
+  const baseDir = resolveBaseDir(baseDirInput);
+  const installCommand = detectInstallCommand(baseDir);
+  const base = { installCommand, addCommand: addCommandFor(installCommand, { [name]: range }) };
+  const pkg = readPackageJsonAt(baseDir);
+  if (pkg === undefined) return { kind: "add", ...base };
+  const own = hasDependency(pkg, name);
+  if (isPnpProject(baseDir)) return own !== undefined ? { kind: "pnp", source: "app", range: own, ...base } : { kind: "add", ...base };
+  if (own !== undefined) return { kind: "install", source: "app", range: own, ...base };
+  if (!rootDeclarationsAllowed(baseDir, pkg)) return { kind: "add", ...base };
+  const declared = declaredDependency(baseDir, pkg, name);
+  if (declared?.source !== "root") return { kind: "add", ...base };
+  return {
+    kind: packageManagerOf(installCommand) === "npm" ? "install-at-root" : "install",
+    source: "root",
+    range: declared.range,
+    ...base,
+  };
+}
+
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }

@@ -100,6 +100,7 @@ export {
   handleGetBrand,
   formatGetBrandResult,
   tokensInstallCommandFor,
+  tokensInstallGuideFor,
   type ListBrandsParams,
   type ListBrandsResult,
   type GetBrandParams,

@@ -66,6 +66,7 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 
 - `targetDir` 를 주지 않으면 서버의 현재 디렉터리를 봅니다.
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이거나 빌드 산출물이 없으면 오류(`isError`)가 아니라 설치 · 업그레이드 안내를 돌려줍니다. 빈 목록으로 답하지 않습니다.
+  - 1.4.5 부터 안내는 CLI `axis theme list` 와 같게 선언 출처를 따릅니다(앱 · pnpm · yarn 루트 선언은 `<pm> install`, npm 루트 선언은 「워크스페이스 루트에서 `npm install`」, Yarn PnP 앱 선언은 판정하지 못했다는 한 줄, 선언이 없으면 종전 추가 명령).
 - 프로젝트에 적용하는 일(import 추가 · `axis.config.json` 의 `brand`)은 CLI `axis theme add <brand>` 가 맡습니다.
 
 ## 문서

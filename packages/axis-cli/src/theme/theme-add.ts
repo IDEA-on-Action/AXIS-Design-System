@@ -11,12 +11,14 @@ import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
 import {
   addCommandFor,
   declaredDependency,
+  dependencyInstallGuide,
   detectInstallCommand,
   findInstalledPackage,
   hasDependency,
   isPlainObject,
-  isPnpProject,
+  rootDeclarationsAllowed,
   workspaceRootPackage,
+  type DependencyInstallGuide,
 } from "@axis-ds/registry-core/project";
 import {
   TAILWIND4_COMPONENT_PACKAGES,
@@ -112,9 +114,6 @@ export interface DeferredComponentImport {
 /** 컴포넌트 패키지가 `tailwind.css` 를 배포하기 시작한 버전(ui-react · agentic-ui CHANGELOG 1.4.0) */
 export const COMPONENT_TAILWIND_CSS_MIN_VERSION = "1.4.0";
 
-/** 앱 디렉터리 자체에 있으면 워크스페이스 멤버가 아닌 독립 앱으로 보는 lockfile(WI-0087 P2, theme add 안에서만 봄) */
-const APP_LOCKFILES = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock"] as const;
-
 /** Tailwind 3 설정 안내(WI-0065 D7: 파일은 고치지 않고 감지 결과로 안내, check 가 판정) */
 export interface TailwindConfigStep {
   /** 찾은 설정 파일 이름. 없으면 없음 */
@@ -159,6 +158,11 @@ export interface ThemeAddPlan {
   configChanged: boolean;
   /** 설치 안내에 쓸 명령(lockfile 로 고름) */
   installCommand: string;
+  /**
+   * tokens 선언 출처로 고른 설치 안내 방법(WI-0093 B1 · B2 · B3, theme list · info · MCP 와 같은 registry-core `dependencyInstallGuide`).
+   * Plug'n'Play 앱 선언이면 `pnp`, npm 루트 선언이면 `install-at-root` 예요
+   */
+  tokensGuide: DependencyInstallGuide;
   /** Tailwind 3 설정 안내(Tailwind 4 이상이면 없음) */
   tailwindConfig?: TailwindConfigStep;
   /** 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾은 결과(WI-0065 D7, 안내용) */
@@ -321,6 +325,7 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     unverifiedBrand: false,
     configChanged: false,
     installCommand: detectInstallCommand(baseDir),
+    tokensGuide: dependencyInstallGuide(baseDir, TOKENS_PACKAGE, TOKENS_DEPENDENCY_RANGE),
     writes: [],
   };
 
@@ -386,9 +391,8 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   // WI-0087: 의존성 선언은 앱 package.json 다음 워크스페이스 루트 package.json 으로 판정합니다(쓰기는 계속 앱 파일로만).
   // 루트 package.json 은 여기서 한 번 읽어 컴포넌트 tailwind.css · tokens · theme 세 판정이 같이 씁니다(detectTailwind 는 따로 읽음).
   // Plug'n'Play(P1)이거나 앱 디렉터리 자체에 lockfile 이 있으면(P2, 워크스페이스 멤버가 아닌 독립 앱) 루트 선언을 인정하지 않고 종전처럼 앱 선언만 봅니다.
-  const rootDeclarationsAllowed =
-    pkg !== undefined && !isPnpProject(baseDir) && !APP_LOCKFILES.some((f) => existsSync(path.join(baseDir, f)));
-  const rootPkg = rootDeclarationsAllowed ? (workspaceRootPackage(baseDir) ?? null) : null;
+  // 판정과 lockfile 목록은 registry-core `rootDeclarationsAllowed` · `APP_LOCKFILES` 에 있어요(WI-0093 Q14, theme list · info · MCP 와 공용)
+  const rootPkg = rootDeclarationsAllowed(baseDir, pkg) ? (workspaceRootPackage(baseDir) ?? null) : null;
 
   // 3. CSS (FR-2 탐색 순서, U14 (A), U2 대안 2 위치, U13)
   // WI-0065 D7: 브랜드 import 앞에 기본 토큰 CSS 를 넣습니다(Tailwind 3: variables → shadcn, Tailwind 4: tailwind4 진입점 →
