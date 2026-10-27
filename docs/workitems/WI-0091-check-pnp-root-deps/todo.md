@@ -24,4 +24,6 @@
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0091-0094-0092-check-root-pnp-animation.md`(@axis-ds/cli patch + @axis-ds/mcp patch)
-- [ ] PR · 머지 · 발행(Master)
+- [x] PR · 머지 · 발행(Master)
+
+> 완료 기록(2026-10-28, Master): #245 머지 → cli 1.7.6 · mcp 1.4.5 (#247, run 40578802526, provenance 2/2), 발행본 재측정 2026-10-28. 발행본 실측 통과(PR-A 7/7 · PR-B 18/18, CLI · MCP 출력 일치).
