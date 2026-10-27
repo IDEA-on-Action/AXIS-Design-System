@@ -329,4 +329,67 @@ describe("WI-0093: list · info · add 의 tokens 설치 안내가 선언 출처
       expect({ fx, install: /^ {4}설치: /m.test(out), rebuild: out.includes("재설치") }).toEqual({ fx, install: false, rebuild: false });
     }
   });
+
+  it("theme add B1: Yarn PnP 앱 선언이면 미설치 · 빌드 전 · 미지원 모두 theme list 와 같은 PnP 한 줄, 설치 · 재설치 · 업그레이드 줄 없음", async () => {
+    const PNP = "@axis-ds/tokens ^1.8.0 가 package.json 에 선언돼 있지만 Plug'n'Play 설치라 설치본을 판정하지 못해 브랜드를 읽을 수 없습니다.";
+    for (const tokens of ["none", "1.3-unbuilt", "1.2"] as const) {
+      const dir = await ws({ kind: "yarn", tokens, appDeps: DECL, pnp: true });
+      const lines = await addLines(dir);
+      const at = lines.findIndex((l) => l.includes("package.json: @axis-ds/tokens ^1.8.0 가 이미 있어 범위를 바꾸지 않음"));
+      expect({ tokens, at: at > -1 }).toEqual({ tokens, at: true });
+      expect({ tokens, next: lines[at + 1] }).toEqual({ tokens, next: `    ${PNP}` });
+      const out = lines.join("\n");
+      expect({ tokens, pnpCount: out.split(PNP).length - 1 }).toEqual({ tokens, pnpCount: 1 });
+      expect({ tokens, install: /^ {4}설치: /m.test(out), rebuild: out.includes("재설치"), upgrade: out.includes("업그레이드:") }).toEqual({
+        tokens,
+        install: false,
+        rebuild: false,
+        upgrade: false,
+      });
+      // theme list 도 같은 한 줄(B1 통일 대상)
+      expect({ tokens, list: (await guideLines("list", dir)).lines }).toEqual({ tokens, list: [PNP] });
+    }
+    // 양성 대조: .pnp.cjs 를 치우면 종전 갈래(미지원은 업그레이드 줄)
+    const plain = await ws({ kind: "yarn", tokens: "1.2", appDeps: DECL });
+    expect((await addLines(plain)).join("\n")).toContain('업그레이드: yarn add "@axis-ds/tokens@^1.6.0"');
+  });
+
+  it("theme add B2 · B3: 빌드 전 재설치 줄은 선언 출처와 상관없이 나오고 공용 문구를 씀(npm 루트 선언은 「워크스페이스 루트에서 npm install」)", async () => {
+    const cases: [string, Ws, string, string][] = [
+      [
+        "B2 npm 루트 선언 · 빌드 전",
+        { kind: "npm", tokens: "1.3-unbuilt", rootDeps: DECL },
+        "가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음",
+        "    워크스페이스면 npm run build -w @axis-ds/tokens, 아니면 재설치: 워크스페이스 루트에서 npm install",
+      ],
+      [
+        "B3 pnpm 앱 선언 · 빌드 전",
+        { kind: "pnpm", tokens: "1.3-unbuilt", appDeps: DECL },
+        "가 이미 있어 범위를 바꾸지 않음",
+        "    워크스페이스면 pnpm --filter @axis-ds/tokens build, 아니면 재설치: pnpm install",
+      ],
+      [
+        "B3 npm 앱 선언 · 빌드 전(앱 선언이라 앱에서 install)",
+        { kind: "npm", tokens: "1.3-unbuilt", appDeps: DECL },
+        "가 이미 있어 범위를 바꾸지 않음",
+        "    워크스페이스면 npm run build -w @axis-ds/tokens, 아니면 재설치: npm install",
+      ],
+      // B2 범위 밖(WI-0096 잔여): npm 루트 선언 · 미설치의 theme add 설치 줄은 종전 앱 디렉터리 명령 그대로
+      [
+        "npm 루트 선언 · 미설치(종전 그대로)",
+        { kind: "npm", tokens: "none", rootDeps: DECL },
+        "가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음",
+        "    설치: npm install",
+      ],
+    ];
+    for (const [label, fx, anchorText, expected] of cases) {
+      const dir = await ws(fx);
+      const before = await fs.readFile(`${dir}/package.json`, "utf8");
+      const lines = await addLines(dir);
+      const at = lines.findIndex((l) => l.includes(anchorText));
+      expect({ label, at: at > -1 }).toEqual({ label, at: true });
+      expect({ label, next: lines[at + 1] }).toEqual({ label, next: expected });
+      expect({ label, same: (await fs.readFile(`${dir}/package.json`, "utf8")) === before }).toEqual({ label, same: true });
+    }
+  });
 });

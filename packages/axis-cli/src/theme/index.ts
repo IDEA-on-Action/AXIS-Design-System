@@ -104,6 +104,20 @@ export function tokensPnpMessage(range?: string): string {
 export const ROOT_TOKENS_UPGRADE_GUIDE = `워크스페이스 루트 package.json 의 ${TOKENS_PACKAGE} 선언을 ^${MIN_BRAND_TOKENS_VERSION} 이상으로 올리고 설치하세요.`;
 
 /**
+ * 설치 · 재설치 안내에 쓰는 명령 구절(WI-0093). `install-at-root`(npm 루트 선언)는 「워크스페이스 루트에서 npm install」,
+ * `install` 은 `<pm> install`, 그 밖에는 범위를 붙인 추가 명령이에요. theme list · info 와 theme add 의 재설치 줄(B2 · B3)이 같이 써요
+ */
+function installPhrase(g: DependencyInstallGuide): string {
+  if (g.kind === "install-at-root") return `워크스페이스 루트에서 ${chalk.cyan(g.installCommand)}`;
+  return chalk.cyan(g.kind === "install" ? g.installCommand : g.addCommand);
+}
+
+/** 빌드 전 tokens 의 빌드 · 재설치 안내 줄 본문(theme list · info 와 theme add 가 같은 문장, WI-0093 B2 · B3) */
+function rebuildGuide(g: DependencyInstallGuide): string {
+  return `워크스페이스면 ${chalk.cyan(workspaceRunCommand(g.installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${installPhrase(g)}`;
+}
+
+/**
  * `status` 가 `ok` 가 아닐 때의 안내. 빈 목록이 아니라 「측정을 못 했다」를 알립니다(plan 3장 5-3).
  * `guide` 는 `tokensInstallGuide(baseDir)` 로 고른 안내 방법이에요(WI-0093). 문자열을 주면 종전처럼 그 명령을 그대로 안내하고,
  * 주지 않으면 lockfile 이 없을 때와 같은 pnpm 추가 명령이에요.
@@ -121,10 +135,7 @@ export function tokensStatusGuide(
 ): string[] {
   const g = asGuide(guide);
   if (g.kind === "pnp") return [chalk.yellow(tokensPnpMessage(g.range))];
-  const install =
-    g.kind === "install-at-root"
-      ? `워크스페이스 루트에서 ${chalk.cyan(g.installCommand)}`
-      : chalk.cyan(g.kind === "install" ? g.installCommand : g.addCommand);
+  const install = installPhrase(g);
   switch (status) {
     case "not-installed":
       return [chalk.yellow(`${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`), `  설치: ${install}`];
@@ -140,7 +151,7 @@ export function tokensStatusGuide(
         chalk.yellow(
           `${TOKENS_PACKAGE}${version ? ` ${version}` : ""} 는 있지만 빌드 산출물이 없어 브랜드를 읽을 수 없습니다.`
         ),
-        `  워크스페이스면 ${chalk.cyan(workspaceRunCommand(g.installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${install}`,
+        `  ${rebuildGuide(g)}`,
       ];
   }
 }
@@ -382,6 +393,9 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
 
   // package.json
   const dep = plan.dependency;
+  // WI-0093 B1: Yarn Plug'n'Play 앱 선언이면 theme list · MCP 와 같은 PnP 한 줄로 통일해요(미설치 · 미지원 · 빌드 전 모두, 설치 줄 없음)
+  const tokensGuide = plan.tokensGuide;
+  const pnpTokens = tokensGuide.kind === "pnp" && plan.tokens.status !== "ok";
   if (dep?.action === "add") {
     lines.push(
       `  ${chalk.green("✓")} package.json: dependencies 에 "${TOKENS_PACKAGE}": "${TOKENS_DEPENDENCY_RANGE}" 추가`,
@@ -392,21 +406,22 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     lines.push(
       `  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음`
     );
+    // 루트 선언 미설치 줄은 종전 그대로 앱 디렉터리 명령이에요(npm 루트 위치 문구는 WI-0096)
     if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
-    // WI-0093 Q17: 루트 선언인데 설치본이 빌드 전이면 재설치 안내(theme list 의 빌드 전 안내와 같은 줄, 앱 package.json 에 쓰지 않으므로 install)
-    else if (plan.tokens.status === "not-built") {
-      lines.push(
-        `    워크스페이스면 ${chalk.cyan(workspaceRunCommand(plan.installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${chalk.cyan(plan.installCommand)}`
-      );
-    }
+    // WI-0093 Q17 · B2: 루트 선언인데 설치본이 빌드 전이면 재설치 안내(theme list 의 빌드 전 안내와 같은 줄, npm 루트 선언이면 「워크스페이스 루트에서 npm install」)
+    else if (plan.tokens.status === "not-built") lines.push(`    ${rebuildGuide(tokensGuide)}`);
   } else if (dep?.action === "present") {
     lines.push(`  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 이미 있어 범위를 바꾸지 않음`);
+    if (pnpTokens) lines.push(`    ${chalk.yellow(tokensPnpMessage(tokensGuide.range))}`);
     // WI-0093 Q17(WI-0087 DEC-1 재오픈): 앱 선언인데 설치본이 없으면 선언대로 설치하는 명령(add 를 내면 범위가 다시 쓰여요)
-    if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
+    else if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
+    // WI-0093 B3: 앱 선언인데 설치본이 빌드 전이면 루트 선언과 대칭으로 재설치 안내
+    else if (plan.tokens.status === "not-built") lines.push(`    ${rebuildGuide(tokensGuide)}`);
   } else if (dep?.action === "no-package-json") {
     lines.push(chalk.yellow(`  ! package.json 이 없어 의존성을 추가하지 않았습니다. 설치: ${dep.tokensAddCommand}`));
   }
-  if (dep?.upgrade) {
+  // WI-0093 B1: PnP 앱 선언이면 미지원도 위의 PnP 한 줄로 갈음해요(theme list 와 같음)
+  if (dep?.upgrade && !pnpTokens) {
     lines.push(
       chalk.yellow(
         `  ! 설치된 ${TOKENS_PACKAGE} ${plan.tokens.version} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`

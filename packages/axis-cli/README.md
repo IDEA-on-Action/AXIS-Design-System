@@ -89,8 +89,8 @@ axis theme add ontology
 - 브랜드 CSS 는 `[data-brand="<brand>"]` 선택자로 적용되므로 루트 레이아웃의 `<html data-brand>` 나 `ThemeProvider` 의 `setBrand` 가 있어야 화면이 바뀝니다. 코드는 고치지 않고, 레이아웃에서 찾지 못하면 두 방법의 예시를 냅니다(`defaultBrand` 는 `@axis-ds/theme` 1.6.2 이하에서 `setBrand(undefined)` 로 끈 상태가 새로고침 뒤 유지되지 않아 예시에 쓰지 않습니다). 마크업 `data-brand` 와 `ThemeProvider` 를 함께 쓰는 레이아웃이면 theme 1.7.0 이상이 필요하다고 한 줄 더 알립니다(1.6.1 부터). Tailwind 3 이면 preset · content 가 빠졌을 때 넣을 줄도 안내합니다(설정 파일은 고치지 않음). preset 안내는 1.6.1 부터 CommonJS 에서 모든 tokens 버전에 되는 `require("@axis-ds/tokens/tailwind").default` 입니다(1.6.0 의 `.default` 없는 형태는 tokens 1.6.2 이하에서 preset 이 빠짐).
 - 넣은 import 줄의 출력은 1.6.1 부터 실제 위치 · 분류를 따릅니다. 컴포넌트 `tailwind.css` 는 「컴포넌트 스캔 경로, 위치 무관」, 기본 토큰 CSS 는 브랜드 줄보다 앞에 들어갔을 때만 「브랜드 앞」이고 뒤에 들어가면 옮기라고 경고합니다.
 - `@axis-ds/tokens` 가 없거나 1.3.0 미만이면 목록 대신 설치 · 업그레이드 안내를 내고 종료 코드 1 로 끝납니다.
-  - 1.7.5 다음 patch 부터 `theme list` · `theme info` 의 안내는 선언 출처를 따릅니다. 앱이나 pnpm · yarn 워크스페이스 루트에 선언돼 있으면 「설치: <pm> install」, npm 워크스페이스 루트에 선언돼 있으면 「설치: 워크스페이스 루트에서 npm install」, 루트 선언이 1.3.0 미만이면 루트 선언을 올리라는 줄, 빌드 전 재설치도 install 입니다. Yarn PnP 에서 앱에 선언이 있으면 설치본을 판정하지 못했다는 한 줄을 냅니다. 선언이 없으면(또는 PnP · 앱 자체 lockfile 이라 루트 선언을 보지 않으면) 종전 추가 명령입니다.
-  - 같은 patch 부터 `theme add` 는 앱에 선언된 tokens 가 설치되지 않았으면 「설치: <pm> install」을, 루트 선언 설치본이 빌드 전이면 재설치 안내를 더합니다.
+  - 1.7.6 부터 `theme list` · `theme info` 의 안내는 선언 출처를 따릅니다. 앱이나 pnpm · yarn 워크스페이스 루트에 선언돼 있으면 「설치: <pm> install」, npm 워크스페이스 루트에 선언돼 있으면 「설치: 워크스페이스 루트에서 npm install」, 루트 선언이 1.3.0 미만이면 루트 선언을 올리라는 줄, 빌드 전 재설치도 install 입니다. Yarn PnP 에서 앱에 선언이 있으면 설치본을 판정하지 못했다는 한 줄을 냅니다. 선언이 없으면(또는 PnP · 앱 자체 lockfile 이라 루트 선언을 보지 않으면) 종전 추가 명령입니다.
+  - 같은 1.7.6 부터 `theme add` 는 앱에 선언된 tokens 가 설치되지 않았으면 「설치: <pm> install」을, 설치본이 빌드 전이면 선언 출처(앱 · 루트)와 상관없이 `theme list` 와 같은 재설치 안내(npm 워크스페이스 루트 선언이면 「워크스페이스 루트에서 npm install」)를 더합니다. Yarn PnP 에서 앱에 선언이 있으면 설치 · 재설치 · 업그레이드 줄 대신 `theme list` 와 같은 판정하지 못했다는 한 줄을 냅니다. 루트 선언 미설치의 「설치: <pm> install」 줄은 npm 이어도 앱 디렉터리 명령 그대로입니다.
 - `axis check` 는 `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 가 맞는지도 봅니다.
 
 ## 프로젝트 검증 (`axis check`)

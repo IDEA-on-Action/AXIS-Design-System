@@ -11,12 +11,14 @@ import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
 import {
   addCommandFor,
   declaredDependency,
+  dependencyInstallGuide,
   detectInstallCommand,
   findInstalledPackage,
   hasDependency,
   isPlainObject,
   rootDeclarationsAllowed,
   workspaceRootPackage,
+  type DependencyInstallGuide,
 } from "@axis-ds/registry-core/project";
 import {
   TAILWIND4_COMPONENT_PACKAGES,
@@ -156,6 +158,11 @@ export interface ThemeAddPlan {
   configChanged: boolean;
   /** 설치 안내에 쓸 명령(lockfile 로 고름) */
   installCommand: string;
+  /**
+   * tokens 선언 출처로 고른 설치 안내 방법(WI-0093 B1 · B2 · B3, theme list · info · MCP 와 같은 registry-core `dependencyInstallGuide`).
+   * Plug'n'Play 앱 선언이면 `pnp`, npm 루트 선언이면 `install-at-root` 예요
+   */
+  tokensGuide: DependencyInstallGuide;
   /** Tailwind 3 설정 안내(Tailwind 4 이상이면 없음) */
   tailwindConfig?: TailwindConfigStep;
   /** 브랜드를 켜는 코드(data-brand · setBrand 등)를 찾은 결과(WI-0065 D7, 안내용) */
@@ -318,6 +325,7 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
     unverifiedBrand: false,
     configChanged: false,
     installCommand: detectInstallCommand(baseDir),
+    tokensGuide: dependencyInstallGuide(baseDir, TOKENS_PACKAGE, TOKENS_DEPENDENCY_RANGE),
     writes: [],
   };
 

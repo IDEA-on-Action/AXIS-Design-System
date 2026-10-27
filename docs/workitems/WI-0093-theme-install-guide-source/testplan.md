@@ -29,6 +29,17 @@
 - mcp 10건이 수정 전에 모두 빨강인 것은 새 export(`tokensInstallGuideFor` · cli `tokensInstallGuide`)가 없어서예요. 선언 없음 행의 빨강은 동작 차이가 아니라 이 이유예요.
 - 수정 후 전체: cli 925 / 925(기준 912 + 13, 계산과 측정 일치), mcp 191 / 191(181 + 10).
 
+### 2.1 구현 후 추가 결정 B1 ~ B4 (측정)
+
+| 파일 | 추가 | 수정 후 |
+|---|---|---|
+| cli `theme-commands.test.ts` | B1: PnP 앱 선언(yarn 워크스페이스 + `.pnp.cjs`) × tokens 미설치 · 빌드 전(`1.3-unbuilt`) · 미지원(`1.2`)에서 theme add 가 앱 선언 줄 다음에 PnP 한 줄 · PnP 줄 1개 · 설치 / 재설치 / 업그레이드 줄 없음, theme list 도 같은 한 줄. 양성 대조로 `.pnp.cjs` 없는 같은 레이아웃 미지원은 `업그레이드: yarn add "@axis-ds/tokens@^1.6.0"` | 1건 |
+| cli `theme-commands.test.ts` | B2 · B3: npm 루트 선언 빌드 전 → 「워크스페이스면 npm run build -w @axis-ds/tokens, 아니면 재설치: 워크스페이스 루트에서 npm install」, pnpm · npm 앱 선언 빌드 전 → 「… 재설치: pnpm install」 · 「… 재설치: npm install」, npm 루트 선언 미설치 → 「설치: npm install」(종전 그대로, WI-0096 대조). 네 경우 모두 앱 package.json 바이트 불변 | 1건 |
+| mcp `index-brand-wiring.test.ts`(새 파일) | B4: SDK `McpServer` · `StdioServerTransport` 를 대역으로 바꾸고 `src/index.ts` 를 불러 등록된 처리기를 실행. npm 루트 선언 미설치 → 두 도구 모두 「설치: 워크스페이스 루트에서 `npm install`」 · `@axis-ds/tokens@` 없음, PnP 앱 선언 → 두 도구 모두 PnP 한 줄 · 「설치: `」 없음 | 2건 |
+
+- 수정 후 cli `src/theme/` 129 / 129, cli 전체 927 / 927(925 + 2), mcp 전체 193 / 193(191 + 2, 9 파일).
+- 이 브랜치 dist 로 PnP 앱 선언(tokens 미설치) 픽스처에 `theme add sample` 을 실행한 출력(측정, rc 0): 「- package.json: @axis-ds/tokens ^1.8.0 가 이미 있어 범위를 바꾸지 않음」 다음 줄이 「    @axis-ds/tokens ^1.8.0 가 package.json 에 선언돼 있지만 Plug'n'Play 설치라 설치본을 판정하지 못해 브랜드를 읽을 수 없습니다.」, 「설치:」로 시작하는 tokens 줄 없음. 「! @axis-ds/tokens 를 읽을 수 없어(not-installed) 이름 규칙만 확인했습니다 …」 줄과 `ThemeProvider 를 쓰면 @axis-ds/theme 설치: yarn add "@axis-ds/theme@^1.3.0"` 줄은 종전 그대로 나와요(B1 범위 밖).
+
 ## 3. 변이 (측정, `trackB-mut.py`, 한 번에 하나씩 넣고 복원)
 
 | 변이 | cli `src/theme/` 실패 | mcp `brand.test.ts` 실패 |
@@ -44,6 +55,19 @@
 | m9 MCP 빌드 전 재설치를 add 로 | 0 | 3 |
 
 모두 빨강 1건 이상이에요. 끝난 뒤 `git diff --stat` 로 원래 변경만 남은 것을 확인했어요.
+
+### 3.1 추가 결정 변이 (측정, `trackB-mut2.py` · MCP 등록부 sed, 한 번에 하나씩 넣고 복원)
+
+| 변이 | 실패 |
+|---|---|
+| M1 B1 미지원에서 업그레이드 줄 억제(`!pnpTokens`) 제거 | cli `src/theme/` 1 / 129 |
+| M2 B1 PnP 판정을 끔(`pnpTokens = false`) | cli `src/theme/` 1 / 129 |
+| M3 B2 루트 빌드 전 재설치 줄을 종전 `plan.installCommand` 문구로 | cli `src/theme/` 1 / 129 |
+| M4 B3 앱 선언 빌드 전 재설치 줄 제거 | cli `src/theme/` 1 / 129 |
+| M5 B4 `axis.list_brands` 호출지를 종전 `tokensInstallCommandFor` 로 | mcp `index-brand-wiring.test.ts` 2 / 2 |
+| M6 B4 `axis.get_brand` 호출지에서 안내 인자를 뺌(종전 pnpm 기본값) | mcp `index-brand-wiring.test.ts` 2 / 2 |
+
+끝난 뒤 `git diff --stat` 로 원래 변경만 남은 것을 확인했어요.
 
 ## 4. 실제 매니저 (측정, `trackB-pm/measure.sh`)
 
@@ -92,11 +116,13 @@
 
 | 명령 | 결과 |
 |---|---|
-| `pnpm type-check --force` | rc 0, 11/11, Cached 0 |
-| `pnpm lint --force` | rc 0, 7/7, Cached 0 |
-| `pnpm build --force` | rc 0, 8/8, Cached 0(빌드가 다시 만든 `apps/web/public/templates/*.json` 은 커밋 전에 되돌림) |
-| cli `vitest run`(전체) | rc 0, 925 / 925 |
-| mcp `vitest run`(전체) | rc 0, 191 / 191 |
+| `pnpm exec turbo run type-check --force` | rc 0, 11/11, Cached 0 |
+| `pnpm exec turbo run lint --force` | rc 0, 7/7, Cached 0 |
+| `pnpm exec turbo run build --force` | rc 0, 8/8, Cached 0(빌드가 다시 만든 `apps/web/public/templates/*.json` 은 커밋 전에 되돌림) |
+| cli `npx vitest run`(전체) | rc 0, 21 파일 927 / 927 |
+| mcp `npx vitest run`(전체) | rc 0, 9 파일 193 / 193 |
+
+추가 결정 B1 ~ B4 를 반영한 뒤 다시 잰 값이에요(처음 구현 때는 cli 925 · mcp 191).
 
 registry-core 는 테스트 파일이 없고 헬퍼는 cli · mcp 테스트가 덮어요.
 
