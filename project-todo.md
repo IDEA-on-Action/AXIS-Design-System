@@ -88,10 +88,16 @@
 | 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
 | 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | ⏳ |
 | 102 | pnpm 기본 레이아웃에서 상위 설치본을 가리키는 content glob 을 check 가 거짓 FAIL(배치 6c 재측정에서 발견, 종전부터) | WI-0090 (#227) | P18 | P3 | ✅ 2026-10-26 (#230, cli 1.7.4 · mcp 1.4.4) |
-| 103 | check 가 Yarn PnP 에서 루트에만 선언한 패키지를 설치됨으로 판정(앱에서 해석 불가, WI-0087 브리프에서 발견) | WI-0091 (#234) | P18 | P3 | ⏳ |
-| 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ⏳ |
-| 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ⏳ |
-| 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ⏳ |
+| 103 | check 가 Yarn PnP 에서 루트에만 선언한 패키지를 설치됨으로 판정(앱에서 해석 불가, WI-0087 브리프에서 발견) | WI-0091 (#234) | P18 | P3 | 🔄 진행(2026-10-27, PR-A) |
+| 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | 🔄 진행(2026-10-27, PR-A) |
+| 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | 🔄 진행(2026-10-27, PR-B) |
+| 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | 🔄 진행(2026-10-27, PR-A) |
+| 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ |
+| 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | ⏳ |
+| 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ⏳ |
+| 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ⏳ |
+| 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
+| 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ⏳ |
 
 ### 완료
 
