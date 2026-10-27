@@ -15,6 +15,7 @@ import {
   rangeLowerAtLeast,
   readTailwindContent,
 } from "./tailwind-core.js";
+import { isPnpProject } from "@axis-ds/registry-core/project";
 import { templateApplyWarnings } from "./template-apply.js";
 import { planUtilsDependencies, tailwind4GuideLines } from "../init/init.js";
 import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
@@ -1535,7 +1536,16 @@ describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", ()
     const tw4Ok = await project({ "app/globals.css": '@import "tailwindcss";\n@import "tw-animate-css";' }, tw4, {});
     expect(await item(copied, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("componentsDir 의 animate-in 류 클래스") });
     expect(await item(tw4None, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining('@import "tw-animate-css";') });
-    expect(await item(tw4Ok, "animation")).toMatchObject({ severity: "pass" });
+    // WI-0092(사용자 결정 Q9 · Q10 · Q12): 줄만 있고 tw-animate-css 선언 · 설치본이 없으면 WARN(종전 PASS, 실빌드 rc 1 인 상태)
+    expect(await item(tw4Ok, "animation")).toMatchObject({ severity: "warn", message: expect.stringContaining("tw-animate-css 선언 없음") });
+    // 같은 줄에 선언 · 설치본을 갖추면 PASS(종전 PASS 의 의미를 새 행으로 지킴)
+    const tw4Installed = await project(
+      { "app/globals.css": '@import "tailwindcss";\n@import "tw-animate-css";' },
+      { ...tw4, devDependencies: { ...tw4.devDependencies, "tw-animate-css": "^1.3.0" } },
+      {}
+    );
+    await writeInstalledStub(tw4Installed, "tw-animate-css", "1.4.0");
+    expect(await item(tw4Installed, "animation")).toEqual({ name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" });
   });
 
   it("animation 스캔: 심링크는 따라가지 않아 순환 링크에서도 끝나고, 링크 너머의 animate-in 은 세지 않음", async () => {
@@ -1969,7 +1979,14 @@ describe("WI-0074: 호이스팅 모노레포의 설치본을 상위 디렉터리
       { name: "tailwind.config", severity: "warn", message: "Tailwind 4: app/globals.css에 create-next-app 기본 정의가 남아 있습니다(body font-family: Arial) → 지우세요" },
       GLOBALS4,
       DEPS_ROOT,
-      { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" },
+      // WI-0092(사용자 결정 Q12): WI-0074 원 픽스처(fx-npm)는 tw-animate-css 를 어디에도 선언하지 않았고, ui-react 의 optional peer 라
+      // npm 이 설치하지 않아요(2026-10-27 npm 10.9.4 재현: ui-react 설치 · tw-animate-css 없음). 그래서 PASS 가 아니라 WARN 이 맞아요.
+      {
+        name: "animation",
+        severity: "warn",
+        message:
+          "app/globals.css의 애니메이션 플러그인을 쓸 수 없습니다(@axis-ds/ui-react 선언, tw-animate-css 선언 없음): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → tw-animate-css 를 package.json 에 선언 · 설치하세요",
+      },
     ],
   };
   /** WI-0080: f 의 ui-react content 제안은 설치본 위치를 따라요(hoisted 는 루트 `../../node_modules`, isolated 는 앱 `./node_modules`) */
@@ -2434,12 +2451,14 @@ describe("WI-0081: dependencies 의 워크스페이스 루트 선언 인정", ()
     expect(await deps(app)).toEqual({ name: "dependencies", severity: "fail", message: "필수 의존성 누락: tailwindcss" });
   });
 
-  it("Plug'n'Play 워크스페이스: 선언 기준 PASS 문구에도 출처 표시", async () => {
+  // WI-0091(사용자 결정 Q1 · Q5 · Q8): 종전 기대는 「루트 선언 = 선언됨 = 설치됨」 PASS 였어요(Yarn 4.5.3 실측으로 앱 issuer 해석 FAIL ·
+  // 빌드 rc 1 인 레이아웃). 이제 Plug'n'Play 는 루트 선언을 인정하지 않고 필수 FAIL 을 전용 문구로 내요.
+  it("Plug'n'Play 워크스페이스: 루트에만 선언한 필수 · 권장은 인정하지 않고 전용 문구 FAIL(WI-0091, 종전 PASS)", async () => {
     const { app } = await ws({ name: "root", private: true, workspaces: ["apps/*"], devDependencies: TRIO }, {}, { "yarn.lock": "", ".pnp.cjs": "" });
     expect(await deps(app)).toEqual({
       name: "dependencies",
-      severity: "pass",
-      message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 3개, 워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge)",
+      severity: "fail",
+      message: "필수 의존성 tailwindcss 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요",
     });
   });
 });
@@ -2677,5 +2696,354 @@ describe("WI-0086: 루트 선언 인정 일관화 · 심링크 baseDir", () => {
     const missing = path.join(await tempDir(), "no-such-dir");
     const results = await collectCheckResults(missing);
     expect(results.find((r) => r.name === "dependencies")).toEqual({ name: "dependencies", severity: "fail", message: "package.json 파일이 없습니다" });
+  });
+});
+
+// WI-0091 · WI-0094 · WI-0092 (PR-A, 사용자 결정 Q1 ~ Q12 · Q19). 2026-10-27.
+// - WI-0091: Yarn Plug'n'Play 에서 루트에만 선언한 패키지는 앱 issuer 가 해석하지 못해요(Yarn 4.5.3 실측 A · E · G: 빌드 rc 1 인데 check PASS).
+//   check 경로에서만 앱 선언을 보고(Q1 · Q2), 필수 FAIL · 권장 WARN 을 전용 문구로(Q5), 버전 게이트는 「앱에서 해석되지 않음」 WARN(Q7).
+//   isPnpProject 는 findWorkspaceRoot 처럼 .git 에서 멈춰요(Q3, refute-stray-1 실측: 상위 빈 .pnp.cjs 가 node-modules 프로젝트를 PnP 로 오인).
+// - WI-0094: dependencies 의 @axis-ds/* 설치 확인 대상에 워크스페이스 루트 선언을 넣고, 루트 출처 미설치를 따로 알려요(Q11 · Q19).
+// - WI-0092: Tailwind 4 animation 은 CSS 줄마다 그 패키지의 선언 + 설치본을 봐요(Q9), 줄은 있는데 미설치는 WARN(Q10).
+describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 대상 · Tailwind 4 animation 설치본", () => {
+  const PNP_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
+  const item = async (dir: string, name: string) => (await collectCheckResults(dir)).find((r) => r.name === name);
+  const quietLog = () => vi.spyOn(console, "log").mockImplementation(() => {});
+
+  /**
+   * 실제 Yarn PnP 레이아웃(사용자 결정 Q8): 루트 package.json workspaces + yarn.lock + .yarnrc.yml(nodeLinker: pnp) + .pnp.cjs,
+   * node_modules 없음. 루트 선언(rootDeps) · 앱 선언(appDeps) · 앱 파일(files). `.pnp.cjs` 는 Yarn 이 만든 파일의 머리 주석만 둬요
+   * (판정은 파일 존재만 봄, 빈 표지와 같은 결과여야 해요).
+   */
+  async function pnpWs(opts: { rootDeps?: Record<string, string>; appDeps?: Record<string, string>; files?: Record<string, string>; config?: Record<string, unknown> }) {
+    const root = await tempDir();
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      packageManager: "yarn@4.5.3",
+      workspaces: ["apps/*"],
+      devDependencies: opts.rootDeps ?? {},
+    });
+    await fs.writeFile(path.join(root, "yarn.lock"), "__metadata:\n  version: 8\n");
+    await fs.writeFile(path.join(root, ".yarnrc.yml"), "nodeLinker: pnp\n");
+    await fs.writeFile(path.join(root, ".pnp.cjs"), '#!/usr/bin/env node\n/* eslint-disable */\n// @ts-nocheck\n"use strict";\n');
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: opts.appDeps ?? {} });
+    await fs.outputJSON(path.join(app, "axis.config.json"), opts.config ?? {});
+    for (const [rel, content] of Object.entries(opts.files ?? {})) await fs.outputFile(path.join(app, rel), content);
+    return { root, app };
+  }
+  const TRIO3 = { tailwindcss: "^3.4.0", clsx: "^2.1.1", "tailwind-merge": "^2.6.0" };
+  const BARE_CJS =
+    'module.exports = { content: ["./app/**/*.{ts,tsx}"], presets: [require("@axis-ds/tokens/tailwind")], plugins: [require("tailwindcss-animate")] };\n';
+
+  describe("WI-0091: Plug'n'Play 루트 선언(check 경로)", () => {
+    it("A(TW3 루트 전용): dependencies 필수 FAIL 전용 문구 · tokens 게이트 WARN · animation 전용 사유, 앱 선언(B)은 PASS", async () => {
+      const a = await pnpWs({
+        rootDeps: { ...TRIO3, "@axis-ds/tokens": "^1.6.0", "@axis-ds/ui-react": "^1.8.0", "tailwindcss-animate": "^1.0.7" },
+        files: { "tailwind.config.cjs": BARE_CJS },
+      });
+      expect(await item(a.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "fail",
+        message: `필수 의존성 tailwindcss 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+      });
+      expect(await item(a.app, "tailwind.config")).toEqual({
+        name: "tailwind.config",
+        severity: "warn",
+        message: `tailwind.config.cjs에 AXIS preset 참조가 있지만 @axis-ds/tokens 가 ${PNP_NOTE}(워크스페이스 루트 선언 ^1.6.0) → 앱 package.json 에 @axis-ds/tokens 1.7.0 이상을 선언하세요`,
+      });
+      // ui-react 사용 판정은 루트 선언을 계속 인정(Q7), 플러그인 선언은 앱만(Q1)
+      // 추가 결정 A1: TW3 PnP 루트 전용 플러그인은 다른 PnP 문구와 같은 틀
+      expect(await item(a.app, "animation")).toEqual({
+        name: "animation",
+        severity: "warn",
+        message: `애니메이션 플러그인 tailwindcss-animate 가 ${PNP_NOTE}(@axis-ds/ui-react 선언): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 tailwindcss-animate 를 선언하세요`,
+      });
+      quietLog();
+      expect((await runCheck(a.app)).fail).toBeGreaterThan(0);
+
+      // 양성 대조 B: 같은 레이아웃에서 앱에 선언하면 PnP 선언 기준 PASS(설치본은 읽지 않음)
+      const b = await pnpWs({
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "^1.7.0", "@axis-ds/ui-react": "^1.8.0", "tailwindcss-animate": "^1.0.7" },
+        files: { "tailwind.config.cjs": BARE_CJS },
+      });
+      expect(await item(b.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "pass",
+        message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 5개)",
+      });
+      expect(await item(b.app, "tailwind.config")).toMatchObject({ severity: "pass" });
+      expect(await item(b.app, "animation")).toEqual({ name: "animation", severity: "pass", message: "tailwind.config.cjs의 plugins 에 tailwindcss-animate 가 있습니다" });
+    });
+
+    it("권장만 루트 전용이면 WARN 전용 문구(필수는 앱 선언), 루트 @axis-ds 는 대상에 넣지 않고 같은 전용 문구로 알림(Q1 · Q19 · A3)", async () => {
+      const { app } = await pnpWs({
+        rootDeps: { clsx: "^2.1.1", "tailwind-merge": "^2.6.0", "@axis-ds/ui-react": "^1.8.0" },
+        appDeps: { tailwindcss: "^3.4.0" },
+      });
+      expect(await item(app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: `권장 의존성 clsx, tailwind-merge 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요 / @axis-ds/ui-react 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+      });
+    });
+
+    it("추가 결정 A3(M7): PnP 에서 @axis-ds/* 만 루트 전용이면 전용 문구 WARN(종전 PASS), 종료 코드 불변, 앱 · 루트 둘 다면 알리지 않음", async () => {
+      const m7 = await pnpWs({
+        rootDeps: { "@axis-ds/ui-react": "1.8.2" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "1.8.2", "@axis-ds/theme": "1.8.2" },
+      });
+      expect(await item(m7.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: `@axis-ds/ui-react 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+      });
+      // 종료 코드 불변: dependencies 는 fail 이 아님(다른 항목의 fail 은 fixture 에 설정 파일이 없어서예요)
+      expect((await collectCheckResults(m7.app)).filter((r) => r.name === "dependencies" && r.severity === "fail")).toEqual([]);
+
+      // 양성 대조: 앱에도 선언하면 대상(앱 출처)이 되고 PnP 선언 기준 PASS
+      const both = await pnpWs({
+        rootDeps: { "@axis-ds/ui-react": "1.8.2" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "1.8.2", "@axis-ds/theme": "1.8.2", "@axis-ds/ui-react": "1.8.2" },
+      });
+      expect(await item(both.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "pass",
+        message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 6개)",
+      });
+    });
+
+    it("추가 결정 A1: TW3 PnP 루트 전용 플러그인이 plugins 에도 없으면 같은 틀에 사유 · require 안내를 덧붙임", async () => {
+      const { app } = await pnpWs({
+        rootDeps: { "tailwindcss-animate": "^1.0.7" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0" },
+        files: { "tailwind.config.cjs": 'module.exports = { content: ["./app/**/*.{ts,tsx}"], presets: [require("@axis-ds/tokens/tailwind")] };\n' },
+      });
+      expect(await item(app, "animation")).toEqual({
+        name: "animation",
+        severity: "warn",
+        message: `애니메이션 플러그인 tailwindcss-animate 가 ${PNP_NOTE}(@axis-ds/ui-react 선언, tailwind.config.cjs plugins 에 없음): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 tailwindcss-animate 를 선언하세요 · plugins 에 require("tailwindcss-animate")`,
+      });
+    });
+
+    it("G(TW4 루트 전용): Tailwind major 는 루트 선언으로 Tailwind 4 분기(Q6), 해석 불가는 dependencies 에서 FAIL", async () => {
+      const g = await pnpWs({
+        rootDeps: { tailwindcss: "^4.1.0", clsx: "^2.1.1", "tailwind-merge": "^3.4.0", "@axis-ds/tokens": "^1.8.0" },
+        files: { "app/globals.css": '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n' },
+      });
+      expect(detectTailwind(g.app, await fs.readJSON(path.join(g.app, "package.json")))).toEqual({ major: 4, source: "declared", value: "^4.1.0" });
+      expect(await item(g.app, "tailwind.config")).toMatchObject({ severity: "pass", message: expect.stringContaining("Tailwind 4") });
+      expect(await item(g.app, "dependencies")).toMatchObject({ severity: "fail", message: expect.stringContaining(PNP_NOTE) });
+    });
+
+    it("theme 게이트: 마크업 data-brand + ThemeProvider 에 루트 전용 theme 는 「앱에서 해석되지 않음」 WARN, packageVersionGate 는 옵션일 때만 unresolved", async () => {
+      const { app } = await pnpWs({
+        rootDeps: { ...TRIO3, "@axis-ds/theme": "^1.7.0" },
+        appDeps: TRIO3,
+        config: { brand: "ontology" },
+        files: { "app/layout.tsx": '<html data-brand="ontology"><ThemeProvider>{children}</ThemeProvider></html>' },
+      });
+      expect(await item(app, "brand.activation")).toEqual({
+        name: "brand.activation",
+        severity: "warn",
+        message: `app/layout.tsx의 <html data-brand> 를 ThemeProvider 와 함께 쓰는데 @axis-ds/theme 가 ${PNP_NOTE}(워크스페이스 루트 선언 ^1.7.0) → 앱 package.json 에 @axis-ds/theme 1.7.0 이상을 선언하거나 setBrand("ontology")`,
+      });
+      const pkg = (await fs.readJSON(path.join(app, "package.json"))) as Record<string, unknown>;
+      expect(packageVersionGate(app, pkg, "@axis-ds/theme", "1.7.0", { appOnlyInPnp: true })).toEqual({ status: "unresolved", source: "declared", value: "^1.7.0" });
+      // 옵션 없는 호출(check 밖 호출지)은 종전대로 루트 선언을 인정(Q2)
+      expect(packageVersionGate(app, pkg, "@axis-ds/theme", "1.7.0")).toEqual({ status: "ok", source: "declared", value: "^1.7.0" });
+    });
+
+    it("음성 대조: node-modules 워크스페이스(.pnp.cjs 없음)의 루트 선언 인정은 그대로", async () => {
+      const root = await tempDir();
+      await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], devDependencies: TRIO3 });
+      await fs.writeFile(path.join(root, "yarn.lock"), "");
+      for (const name of Object.keys(TRIO3)) await writeInstalledStub(root, name);
+      const app = path.join(root, "apps", "web");
+      await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true });
+      expect(await item(app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "pass",
+        message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인, 워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge)",
+      });
+    });
+
+    it("isPnpProject 는 .git 에서 멈춤: 저장소 밖 상위의 .pnp.cjs 는 PnP 가 아님(refute-stray-1), 같은 층 · 저장소 안은 PnP", async () => {
+      const outer = await tempDir();
+      await fs.writeFile(path.join(outer, ".pnp.cjs"), "");
+      const repo = path.join(outer, "C");
+      await fs.outputFile(path.join(repo, ".git", "HEAD"), "ref: refs/heads/main\n");
+      await fs.outputJSON(path.join(repo, "package.json"), { name: "c", private: true, dependencies: TRIO3 });
+      for (const name of Object.keys(TRIO3)) await writeInstalledStub(repo, name);
+      expect(isPnpProject(repo)).toBe(false);
+      expect(await item(repo, "dependencies")).toEqual({ name: "dependencies", severity: "pass", message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인)" });
+      // 양성 대조: .git 이 없으면 종전처럼 상위 .pnp.cjs 를 따라 PnP
+      const noGit = path.join(outer, "D");
+      await fs.outputJSON(path.join(noGit, "package.json"), { name: "d", private: true, dependencies: TRIO3 });
+      expect(isPnpProject(noGit)).toBe(true);
+      // 같은 층에 .git 과 .pnp.cjs 가 함께 있으면(보통의 Yarn PnP 저장소 루트) PnP, 그 하위 앱도 PnP
+      const pnpRepo = path.join(outer, "E");
+      await fs.outputFile(path.join(pnpRepo, ".git", "HEAD"), "ref: refs/heads/main\n");
+      await fs.writeFile(path.join(pnpRepo, ".pnp.cjs"), "");
+      await fs.outputJSON(path.join(pnpRepo, "apps", "web", "package.json"), { name: "web" });
+      expect(isPnpProject(pnpRepo)).toBe(true);
+      expect(isPnpProject(path.join(pnpRepo, "apps", "web"))).toBe(true);
+    });
+  });
+
+  describe("WI-0094: @axis-ds/* 설치 확인 대상에 워크스페이스 루트 선언", () => {
+    /** npm 워크스페이스 루트(rootDeps · installed) + apps/web(필수 · 권장은 앱 선언 · 앱 설치본, appDeps · appLock) */
+    async function npmWs(opts: {
+      rootDeps: Record<string, string>;
+      installed?: Record<string, string>;
+      appDeps?: Record<string, string>;
+      appLock?: string;
+      workspaces?: boolean;
+      gitBetween?: boolean;
+    }) {
+      const root = await tempDir();
+      await fs.writeJSON(path.join(root, "package.json"), {
+        name: "root",
+        private: true,
+        ...(opts.workspaces === false ? {} : { workspaces: ["apps/*"] }),
+        devDependencies: opts.rootDeps,
+      });
+      await fs.writeFile(path.join(root, "package-lock.json"), "{}");
+      for (const [name, version] of Object.entries(opts.installed ?? {})) await writeInstalledStub(root, name, version);
+      const app = path.join(root, "apps", "web");
+      if (opts.gitBetween) await fs.outputFile(path.join(root, "apps", ".git", "HEAD"), "ref: refs/heads/main\n");
+      await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: { ...TRIO3, ...(opts.appDeps ?? {}) } });
+      for (const name of Object.keys(TRIO3)) await writeInstalledStub(app, name);
+      if (opts.appLock) await fs.writeFile(path.join(app, opts.appLock), "");
+      return { root, app };
+    }
+
+    it("루트 전용 · 미설치 → WARN 「워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다」, 출처 표시에도 넣음(종전 PASS 「3개 확인」)", async () => {
+      const { app } = await npmWs({ rootDeps: { "@axis-ds/ui-react": "^1.8.0", "@axis-ds/tokens": "^1.8.0" }, installed: { "@axis-ds/tokens": "1.8.2" } });
+      expect(await item(app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message:
+          "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → npm install (워크스페이스 루트에 선언: @axis-ds/ui-react, @axis-ds/tokens)",
+      });
+      // WARN 이라 종료 코드에 더해지지 않음(Q11: rc 불변)
+      expect((await collectCheckResults(app)).filter((r) => r.name === "dependencies" && r.severity === "fail")).toEqual([]);
+    });
+
+    it("루트 전용 · 설치 → PASS, 대상 수만 늘어남(3 → 5)", async () => {
+      const { app } = await npmWs({
+        rootDeps: { "@axis-ds/ui-react": "^1.8.0", "@axis-ds/tokens": "^1.8.0" },
+        installed: { "@axis-ds/ui-react": "1.8.2", "@axis-ds/tokens": "1.8.2" },
+      });
+      expect(await item(app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "pass",
+        message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (5개 확인, 워크스페이스 루트에 선언: @axis-ds/ui-react, @axis-ds/tokens)",
+      });
+    });
+
+    it("앱 · 루트 둘 다 선언이면 앱 출처(종전 문구), 도구 패키지(@axis-ds/cli)도 이름 필터 없이 대상(Q19)", async () => {
+      const both = await npmWs({ rootDeps: { "@axis-ds/ui-react": "^1.8.0" }, appDeps: { "@axis-ds/ui-react": "^1.8.0" } });
+      expect(await item(both.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: "선언됐지만 설치되지 않은 의존성: @axis-ds/ui-react → npm install",
+      });
+      const tool = await npmWs({ rootDeps: { "@axis-ds/cli": "^1.7.0" } });
+      expect(await item(tool.app, "dependencies")).toMatchObject({
+        severity: "warn",
+        message: expect.stringContaining("워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/cli"),
+      });
+    });
+
+    it("앱 lockfile(P2)이 있어도 루트 선언을 무시하지 않음(Q19, 필수 · 권장과 같은 규칙)", async () => {
+      const { app } = await npmWs({ rootDeps: { "@axis-ds/ui-react": "^1.8.0" }, appLock: "package-lock.json" });
+      expect(await item(app, "dependencies")).toMatchObject({
+        severity: "warn",
+        message: expect.stringContaining("워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react"),
+      });
+    });
+
+    it("음성 대조: 워크스페이스가 아닌 상위(N1) · .git 너머 루트(N2)의 @axis-ds 선언은 대상이 아님", async () => {
+      const n1 = await npmWs({ rootDeps: { "@axis-ds/ui-react": "^1.8.0" }, workspaces: false });
+      const n2 = await npmWs({ rootDeps: { "@axis-ds/ui-react": "^1.8.0" }, gitBetween: true });
+      for (const { app } of [n1, n2]) {
+        expect(await item(app, "dependencies")).toEqual({ name: "dependencies", severity: "pass", message: "필수 및 권장 의존성이 선언 · 설치되어 있습니다 (3개 확인)" });
+      }
+    });
+  });
+
+  describe("WI-0092: Tailwind 4 animation 은 CSS 줄마다 그 패키지의 선언 + 설치본", () => {
+    const TW4 = { tailwindcss: "^4.1.0", "@axis-ds/ui-react": "^1.8.0" };
+    const IMPORT = '@import "tailwindcss";\n@import "tw-animate-css";\n';
+    const PLUGIN = '@import "tailwindcss";\n@plugin "tailwindcss-animate";\n';
+    const PASS = { name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" };
+    async function single(css: string, deps: Record<string, string>, installed: Record<string, string> = {}) {
+      const dir = await tempDir();
+      await fs.writeJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: { ...TW4, ...deps } });
+      await fs.outputFile(path.join(dir, "app/globals.css"), css);
+      await writeInstalledStub(dir, "tailwindcss", "4.1.14");
+      for (const [name, version] of Object.entries(installed)) await writeInstalledStub(dir, name, version);
+      return dir;
+    }
+    const warn = (reasons: string, pkgs: string) => ({
+      name: "animation",
+      severity: "warn",
+      message: `app/globals.css의 애니메이션 플러그인을 쓸 수 없습니다(@axis-ds/ui-react 선언, ${reasons}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${pkgs} 를 package.json 에 선언 · 설치하세요`,
+    });
+
+    it("S1 선언 · 설치 → PASS, S2 선언 · 미설치 → WARN(종전 PASS, 실빌드 rc 1), S4 유령 설치(선언 없음) → WARN", async () => {
+      expect(await item(await single(IMPORT, { "tw-animate-css": "^1.3.0" }, { "tw-animate-css": "1.4.0" }), "animation")).toEqual(PASS);
+      expect(await item(await single(IMPORT, { "tw-animate-css": "^1.3.0" }), "animation")).toEqual(warn("tw-animate-css 미설치(선언만 있음)", "tw-animate-css"));
+      expect(await item(await single(IMPORT, {}, { "tw-animate-css": "1.4.0" }), "animation")).toEqual(warn("tw-animate-css 선언 없음", "tw-animate-css"));
+    });
+
+    it("S9 다른 이름(tailwindcss-animate)만 설치돼 있어도 PASS 가 아님, @plugin 줄은 tailwindcss-animate 로 판정", async () => {
+      expect(await item(await single(IMPORT, { "tailwindcss-animate": "^1.0.7" }, { "tailwindcss-animate": "1.0.7" }), "animation")).toEqual(
+        warn("tw-animate-css 선언 없음", "tw-animate-css")
+      );
+      expect(await item(await single(PLUGIN, { "tailwindcss-animate": "^1.0.7" }, { "tailwindcss-animate": "1.0.7" }), "animation")).toEqual(PASS);
+      expect(await item(await single(PLUGIN, { "tailwindcss-animate": "^1.0.7" }), "animation")).toEqual(
+        warn("tailwindcss-animate 미설치(선언만 있음)", "tailwindcss-animate")
+      );
+    });
+
+    it("두 줄이 다 있으면 줄마다 보고, 하나라도 미설치면 그 줄의 패키지만 안내", async () => {
+      const css = '@import "tailwindcss";\n@import "tw-animate-css";\n@plugin "tailwindcss-animate";\n';
+      const dir = await single(css, { "tw-animate-css": "^1.3.0", "tailwindcss-animate": "^1.0.7" }, { "tw-animate-css": "1.4.0" });
+      expect(await item(dir, "animation")).toEqual(warn("tailwindcss-animate 미설치(선언만 있음)", "tailwindcss-animate"));
+    });
+
+    it("호이스팅 모노레포: 루트 선언 · 루트 설치본 → PASS, 줄 없음은 종전 WARN 그대로(AC6 대조군과 같은 문구)", async () => {
+      const root = await tempDir();
+      await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], devDependencies: { "tw-animate-css": "^1.3.0" } });
+      await writeInstalledStub(root, "tw-animate-css", "1.4.0");
+      await writeInstalledStub(root, "tailwindcss", "4.1.14");
+      const app = path.join(root, "apps", "web");
+      await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, dependencies: TW4 });
+      await fs.outputFile(path.join(app, "app/globals.css"), IMPORT);
+      expect(await item(app, "animation")).toEqual(PASS);
+      await fs.outputFile(path.join(app, "app/globals.css"), '@import "tailwindcss";\n');
+      expect(await item(app, "animation")).toEqual({
+        name: "animation",
+        severity: "warn",
+        message: '애니메이션 플러그인이 없습니다(@axis-ds/ui-react 선언): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → tw-animate-css 설치 뒤 @import "tw-animate-css";',
+      });
+    });
+
+    it("Plug'n'Play: 앱 선언이면 PASS(설치본은 읽지 않음), 루트에만 선언이면 전용 사유 WARN(Q9 의 PnP 는 Q1 규칙)", async () => {
+      const ok = await pnpWs({ appDeps: { ...TW4, "tw-animate-css": "^1.3.0" }, files: { "app/globals.css": IMPORT } });
+      expect(await item(ok.app, "animation")).toEqual(PASS);
+      const rootOnly = await pnpWs({ rootDeps: { "tw-animate-css": "^1.3.0" }, appDeps: TW4, files: { "app/globals.css": IMPORT } });
+      expect(await item(rootOnly.app, "animation")).toEqual(warn(`tw-animate-css 가 ${PNP_NOTE}`, "tw-animate-css"));
+    });
+
+    it("WARN 이라 종료 코드는 바뀌지 않음(Q10): 줄은 있는데 미설치여도 animation 항목은 fail 이 아님", async () => {
+      const dir = await single(IMPORT, { "tw-animate-css": "^1.3.0" });
+      const results = await collectCheckResults(dir);
+      expect(results.find((r) => r.name === "animation")?.severity).toBe("warn");
+      expect(results.filter((r) => r.name === "animation" && r.severity === "fail")).toEqual([]);
+    });
   });
 });

@@ -37,12 +37,14 @@
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import {
+  PNP_ROOT_ONLY_NOTE,
   ROOT_LAYOUT_FILES,
   compareExactVersions,
   declaredDependency,
   findInstalledPackage,
   hasDependency,
   isPnpProject,
+  pnpRootOnlyDependency,
   resolveBaseDir,
 } from "../project.js";
 
@@ -52,6 +54,15 @@ import {
  */
 function declaredRange(baseDir: string, pkg: Record<string, unknown> | undefined, name: string): string | undefined {
   return declaredDependency(baseDir, pkg, name)?.range;
+}
+
+/**
+ * check 판정 전용 선언 범위(WI-0091, 사용자 결정 Q1 · Q2). Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다.
+ * 거짓 PASS 를 만드는 판정(버전 게이트 · 애니메이션 플러그인 선언)만 씁니다. Tailwind major 판정 · B1 · content 대상 · 1.4.0 안내 ·
+ * animation 의 ui-react 사용 판정은 종전대로 `declaredRange` 입니다(사용자 결정 Q6 · Q7).
+ */
+function declaredRangeForCheck(baseDir: string, pkg: Record<string, unknown> | undefined, name: string): string | undefined {
+  return declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true })?.range;
 }
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
@@ -731,7 +742,10 @@ function isCommonJsConfig(file: string, source: string): boolean {
 
 /** 패키지 버전 조건 판정 결과(설치본 우선, 다음 선언 하한, 다음 판정 불가) */
 export interface PackageVersionGate {
-  status: "ok" | "below" | "unknown";
+  /**
+   * `unresolved`(WI-0091): Plug'n'Play 에서 워크스페이스 루트에만 선언돼 앱이 해석하지 못함(`appOnlyInPnp` 일 때만). `value` 는 루트 선언 범위
+   */
+  status: "ok" | "below" | "unknown" | "unresolved";
   /** 판정 근거 */
   source: "installed" | "declared" | "none";
   /** 설치본 version 또는 선언 범위 */
@@ -742,12 +756,14 @@ export interface PackageVersionGate {
  * 프로젝트의 `<name>` 이 `min` 이상인지 봅니다(WI-0068 · WI-0072 공용). 설치본은 `findInstalledPackage`(상위 탐색)로 읽습니다.
  * 1. 설치본 version 이 있으면 그것으로 판정 2. 없으면 package.json 선언 하한(`rangeLowerAtLeast`) 3. 둘 다 없으면 `unknown`.
  * Plug'n'Play 는 설치본을 읽지 않고 선언으로 갑니다.
+ * `options.appOnlyInPnp`(WI-0091, check 경로 전용): Plug'n'Play 면 루트 선언을 인정하지 않고, 루트에만 있으면 `unresolved` 입니다.
  */
 export function packageVersionGate(
   baseDirInput: string,
   pkg: Record<string, unknown> | undefined,
   name: string,
-  min: string
+  min: string,
+  options: { appOnlyInPnp?: boolean } = {}
 ): PackageVersionGate {
   const baseDir = resolveBaseDir(baseDirInput);
   if (!isPnpProject(baseDir)) {
@@ -757,7 +773,11 @@ export function packageVersionGate(
       if (cmp !== undefined) return { status: cmp >= 0 ? "ok" : "below", source: "installed", value: installed };
     }
   }
-  const declared = pkg ? declaredRange(baseDir, pkg, name) : undefined;
+  const declared = pkg ? declaredDependency(baseDir, pkg, name, undefined, options)?.range : undefined;
+  if (declared === undefined && options.appOnlyInPnp) {
+    const rootOnly = pnpRootOnlyDependency(baseDir, pkg, name);
+    if (rootOnly !== undefined) return { status: "unresolved", source: "declared", value: rootOnly.range };
+  }
   if (declared !== undefined) {
     const atLeast = rangeLowerAtLeast(declared, min);
     if (atLeast !== undefined) return { status: atLeast ? "ok" : "below", source: "declared", value: declared };
@@ -766,8 +786,9 @@ export function packageVersionGate(
   return { status: "unknown", source: "none" };
 }
 
-/** 판정 근거 표시(`설치본 1.6.2` · `선언 ^1.6.0` · `설치본 · 선언 없음`) */
+/** 판정 근거 표시(`설치본 1.6.2` · `선언 ^1.6.0` · `설치본 · 선언 없음` · `워크스페이스 루트 선언 ^1.6.0`) */
 export function versionGateLabel(gate: PackageVersionGate): string {
+  if (gate.status === "unresolved") return `워크스페이스 루트 선언 ${gate.value}`;
   if (gate.source === "installed") return `설치본 ${gate.value}`;
   if (gate.source === "declared") return `선언 ${gate.value}`;
   return "설치본 · 선언 없음";
@@ -887,7 +908,15 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
       // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
       const code = stripJsComments(content);
       if (isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code)) {
-        const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION);
+        const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION, { appOnlyInPnp: true });
+        if (gate.status === "unresolved") {
+          // WI-0091(사용자 결정 Q7): 루트에만 선언한 tokens 는 Plug'n'Play 에서 앱이 require 하지 못해 preset 이 들어오지 않습니다
+          return {
+            name: "tailwind.config",
+            severity: "warn",
+            message: `${file}에 AXIS preset 참조가 있지만 @axis-ds/tokens 가 ${PNP_ROOT_ONLY_NOTE}(${versionGateLabel(gate)}) → 앱 package.json 에 @axis-ds/tokens ${TOKENS_CJS_PRESET_FIXED_VERSION} 이상을 선언하세요`,
+          };
+        }
         if (gate.status !== "ok") {
           const why =
             gate.status === "below"
@@ -1386,7 +1415,11 @@ export interface AnimationCheckResult {
  * 열고 닫는 애니메이션 33개 클래스가 0개 생성). ui-react 를 쓰지 않으면 `null`(항목을 더하지 않음).
  * - 사용 판정: package.json 에 `@axis-ds/ui-react` 선언, 또는 componentsDir 아래 파일에 `animate-in` · `animate-out` 클래스
  * - 플러그인 판정(Tailwind 3): `tailwindcss-animate` 선언 + 설정 파일에서 그 이름 참조(`require` · `import`)
- * - 플러그인 판정(Tailwind 4): CSS 후보 첫 파일에 `@import "tw-animate-css"` 또는 `@plugin "tailwindcss-animate"`
+ * - 플러그인 판정(Tailwind 4): CSS 후보 첫 파일에 `@import "tw-animate-css"` 또는 `@plugin "tailwindcss-animate"`.
+ *   WI-0092(사용자 결정 Q9 · Q10): 줄마다 그 줄이 가리키는 패키지의 선언(앱 다음 워크스페이스 루트, Plug'n'Play 는 앱만) + 설치본을
+ *   봅니다. 있는 줄이 모두 선언 · 설치돼 있을 때만 pass 이고, 줄은 있는데 선언 · 설치가 없으면 WARN(Tailwind 3 와 같음, 종료 코드 불변).
+ *   다른 이름의 패키지만 설치돼 있어도 pass 가 아닙니다. 종전에는 줄만 보고 pass 여서 빌드가 깨지는 미설치 앱도 초록이었습니다.
+ * - WI-0091: 플러그인 선언은 Plug'n'Play 면 앱 선언만 봅니다(루트에만 있으면 전용 사유). ui-react 사용 판정은 종전대로 루트 선언도 봅니다.
  */
 export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult | null {
   const baseDir = resolveBaseDir(baseDirInput);
@@ -1397,36 +1430,61 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
   if (!declared && !copied) return null;
   const by = declared ? "@axis-ds/ui-react 선언" : "componentsDir 의 animate-in 류 클래스";
   const tailwind = detectTailwind(baseDir, pkg);
+  const pnp = isPnpProject(baseDir);
+  /** 플러그인 패키지 하나의 선언 · 설치 사유(문제 없으면 `undefined`). Plug'n'Play 는 설치본을 읽지 않고 앱 선언으로 봅니다(WI-0070 규칙). */
+  const pluginProblem = (name: string): string | undefined => {
+    if (declaredRangeForCheck(baseDir, pkg, name) === undefined) {
+      return pnpRootOnlyDependency(baseDir, pkg, name) !== undefined ? `${name} 가 ${PNP_ROOT_ONLY_NOTE}` : `${name} 선언 없음`;
+    }
+    if (!pnp && findInstalledPackage(baseDir, name) === undefined) return `${name} 미설치(선언만 있음)`;
+    return undefined;
+  };
   if (tailwind.major !== undefined && tailwind.major >= 4) {
     const file = TAILWIND_CSS_CANDIDATES.find((c) => existsSync(join(baseDir, c)));
     const css = file !== undefined ? stripCssComments(readFileSync(join(baseDir, file), "utf8")) : "";
-    const ok =
-      new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`).test(css) ||
-      new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(css);
-    return ok
-      ? { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다` }
-      : {
-          name: "animation",
-          severity: "warn",
-          message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";`,
-        };
+    // 줄마다 그 줄이 가리키는 패키지(WI-0092)
+    const lines: string[] = [];
+    if (new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`).test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
+    if (new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND3);
+    if (lines.length === 0) {
+      return {
+        name: "animation",
+        severity: "warn",
+        message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";`,
+      };
+    }
+    const problems = lines.map((name) => ({ name, why: pluginProblem(name) })).filter((x) => x.why !== undefined);
+    if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다` };
+    return {
+      name: "animation",
+      severity: "warn",
+      message: `${file}의 애니메이션 플러그인을 쓸 수 없습니다(${by}, ${problems.map((x) => x.why).join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${problems.map((x) => x.name).join(" · ")} 를 package.json 에 선언 · 설치하세요`,
+    };
   }
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
   const source = configFile !== undefined ? stripJsComments(readFileSync(join(baseDir, configFile), "utf8")) : "";
   const plugins = configFile !== undefined ? readAnimationPluginUse(source) : "absent";
-  const pluginDeclared = declaredRange(baseDir, pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined;
-  // WI-0070: 「미설치」는 선언이 아니라 설치본으로 봅니다(Plug'n'Play 는 선언 기준)
-  const pluginInstalled =
-    pluginDeclared && (isPnpProject(baseDir) || findInstalledPackage(baseDir, ANIMATION_PLUGIN_TAILWIND3) !== undefined);
-  if (plugins === "found" && pluginDeclared && pluginInstalled) {
+  // WI-0070: 「미설치」는 선언이 아니라 설치본으로 봅니다(Plug'n'Play 는 선언 기준). WI-0091: Plug'n'Play 의 선언은 앱 선언만 봅니다.
+  const pluginReason = pluginProblem(ANIMATION_PLUGIN_TAILWIND3);
+  if (plugins === "found" && pluginReason === undefined) {
     return { name: "animation", severity: "pass", message: `${configFile}의 plugins 에 ${ANIMATION_PLUGIN_TAILWIND3} 가 있습니다` };
   }
   const cfg = configFile ?? "tailwind.config";
+  const configReason =
+    plugins === "dynamic" ? `${cfg} plugins 를 정적으로 다 읽지 못해 확인하지 못함` : plugins !== "found" ? `${cfg} plugins 에 없음` : undefined;
+  // 추가 결정 A1: Plug'n'Play 루트 전용 선언은 다른 PnP 문구와 같은 틀(「… 가 <PNP_ROOT_ONLY_NOTE> → 앱 package.json 에 선언하세요」)로 냅니다
+  if (pluginReason !== undefined && pnpRootOnlyDependency(baseDir, pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined) {
+    const extra = configReason !== undefined ? `, ${configReason}` : "";
+    const plug = configReason !== undefined ? ` · plugins 에 require("${ANIMATION_PLUGIN_TAILWIND3}")` : "";
+    return {
+      name: "animation",
+      severity: "warn",
+      message: `애니메이션 플러그인 ${ANIMATION_PLUGIN_TAILWIND3} 가 ${PNP_ROOT_ONLY_NOTE}(${by}${extra}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 ${ANIMATION_PLUGIN_TAILWIND3} 를 선언하세요${plug}`,
+    };
+  }
   const reasons: string[] = [];
-  if (!pluginDeclared) reasons.push(`${ANIMATION_PLUGIN_TAILWIND3} 선언 없음`);
-  else if (!pluginInstalled) reasons.push(`${ANIMATION_PLUGIN_TAILWIND3} 미설치(선언만 있음)`);
-  if (plugins === "dynamic") reasons.push(`${cfg} plugins 를 정적으로 다 읽지 못해 확인하지 못함`);
-  else if (plugins !== "found") reasons.push(`${cfg} plugins 에 없음`);
+  if (pluginReason !== undefined) reasons.push(pluginReason);
+  if (configReason !== undefined) reasons.push(configReason);
   return {
     name: "animation",
     severity: "warn",

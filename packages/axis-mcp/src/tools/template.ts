@@ -22,7 +22,7 @@ import {
   versionGateLabel,
 } from "@axis-ds/registry-core/tailwind-core";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
-import { addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
+import { PNP_ROOT_ONLY_NOTE, addCommandFor, detectInstallCommand } from "@axis-ds/registry-core/project";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
@@ -353,6 +353,14 @@ function brandCheckResult(check: BrandImportCheck): CheckResult {
  * (packages/axis-cli/src/template/template-check.ts)와 같은 문구입니다.
  */
 function brandActivationResult(check: BrandActivationCheck): CheckResult {
+  if (check.found && check.theme?.status === "unresolved") {
+    // WI-0091(사용자 결정 Q7): Plug'n'Play 에서 루트에만 선언한 theme 는 앱이 해석하지 못합니다
+    return {
+      name: "brand.activation",
+      severity: "warn",
+      message: `${check.found}의 <html data-brand> 를 ThemeProvider 와 함께 쓰는데 @axis-ds/theme 가 ${PNP_ROOT_ONLY_NOTE}(${versionGateLabel(check.theme)}) → 앱 package.json 에 @axis-ds/theme ${THEME_MARKUP_BRAND_MIN_VERSION} 이상을 선언하거나 setBrand("${check.brand}")`,
+    };
+  }
   if (check.found && check.theme && check.theme.status !== "ok") {
     // WI-0068: 마크업 data-brand + ThemeProvider(켜는 코드 없음)는 theme 1.6.2 이하에서 마운트 때 브랜드를 지웁니다
     const label = versionGateLabel(check.theme);
