@@ -171,20 +171,50 @@ export function workspaceRootPackage(baseDirInput: string): Record<string, unkno
  * - `pkg` 가 없으면(앱 package.json 없음 · 읽지 못함) 루트도 보지 않고 `undefined` 입니다(종전 동작).
  * - 판정 전용입니다. 쓰는 쪽(init · add · theme add)은 계속 앱 `pkg` 에만 씁니다. 루트 선언을 앱 파일로 옮기지 않습니다.
  * - `rootPkg` 를 주면 그것을 루트 package.json 으로 씁니다(같은 판정에서 여러 번 부를 때 다시 읽지 않으려고). `null` 은 루트 없음입니다.
+ * - `options.appOnlyInPnp`(WI-0091): Plug'n'Play(`isPnpProject`)면 루트 선언을 인정하지 않고 앱 선언만 봅니다. PnP 에서 앱 issuer 는
+ *   자기 package.json 에 없는 패키지를 해석하지 못하기 때문입니다(Yarn 4.5.3 실측, `pnpFallbackMode: all` 은 예외인데 잔여 오차로 둠).
+ *   `axis check` · MCP `axis.check_project` 의 판정만 켭니다(사용자 결정 Q2). init · theme add · add · template apply 는 종전대로입니다.
  */
 export function declaredDependency(
   baseDir: string,
   pkg: Record<string, unknown> | undefined,
   name: string,
-  rootPkg?: Record<string, unknown> | null
+  rootPkg?: Record<string, unknown> | null,
+  options: DeclaredDependencyOptions = {}
 ): DeclaredDependency | undefined {
   if (pkg === undefined) return undefined;
   const own = hasDependency(pkg, name);
   if (own !== undefined) return { range: own, source: "app" };
+  if (options.appOnlyInPnp && isPnpProject(baseDir)) return undefined;
   const root = rootPkg === undefined ? workspaceRootPackage(baseDir) : rootPkg ?? undefined;
   const fromRoot = root !== undefined ? hasDependency(root, name) : undefined;
   return fromRoot !== undefined ? { range: fromRoot, source: "root" } : undefined;
 }
+
+/** `declaredDependency` 옵션(WI-0091) */
+export interface DeclaredDependencyOptions {
+  /** Plug'n'Play 면 루트 선언을 인정하지 않음(check 경로 전용) */
+  appOnlyInPnp?: boolean;
+}
+
+/**
+ * Plug'n'Play 에서 워크스페이스 루트에만 선언된 의존성(WI-0091). 앱에는 없고 루트에는 있을 때 그 선언을, 아니면 `undefined` 입니다.
+ * `declaredDependency(..., { appOnlyInPnp: true })` 가 인정하지 않은 선언을 「누락」과 구분해 알리려고 씁니다
+ * (「워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못함」, 사용자 결정 Q5 · Q7).
+ */
+export function pnpRootOnlyDependency(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  name: string,
+  rootPkg?: Record<string, unknown> | null
+): DeclaredDependency | undefined {
+  if (pkg === undefined || hasDependency(pkg, name) !== undefined || !isPnpProject(baseDir)) return undefined;
+  const found = declaredDependency(baseDir, pkg, name, rootPkg);
+  return found?.source === "root" ? found : undefined;
+}
+
+/** 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못한다는 문구(WI-0091, check · MCP 공용). 앞에 「<이름> 가」를 붙여 씁니다. */
+export const PNP_ROOT_ONLY_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
 
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -405,11 +435,16 @@ export function findInstalledPackage(baseDirInput: string, name: string): Instal
   }
 }
 
-/** Plug'n'Play 설치인지(`baseDir` 부터 상위로 `.pnp.cjs` · `.pnp.js` 를 찾음). 이때는 node_modules 로 설치본을 판정하지 않습니다. */
+/**
+ * Plug'n'Play 설치인지(`baseDir` 부터 상위로 `.pnp.cjs` · `.pnp.js` 를 찾음). 이때는 node_modules 로 설치본을 판정하지 않습니다.
+ * WI-0091(사용자 결정 Q3): `findWorkspaceRoot` 와 같게 같은 층에서는 표지를 먼저 보고, 표지 없이 `.git` 이 나오면 거기서 멈춥니다.
+ * 종전에는 저장소 밖 상위에 남은 `.pnp.cjs` 때문에 node-modules 프로젝트를 Plug'n'Play 로 잘못 판정했습니다.
+ */
 export function isPnpProject(baseDirInput: string): boolean {
   let dir = resolveBaseDir(baseDirInput);
   for (;;) {
     if (isFile(path.join(dir, ".pnp.cjs")) || isFile(path.join(dir, ".pnp.js"))) return true;
+    if (existsSync(path.join(dir, ".git"))) return false;
     const parent = path.dirname(dir);
     if (parent === dir) return false;
     dir = parent;
