@@ -50,7 +50,7 @@ import {
   formatListBrandsResult,
   handleGetBrand,
   formatGetBrandResult,
-  tokensInstallCommandFor,
+  tokensInstallGuideFor,
 } from "./tools/index.js";
 
 import { TOKEN_CATEGORIES, type TokenCategory } from "./types.js";
@@ -700,7 +700,7 @@ server.tool(
     try {
       const result = await handleListBrands({ targetDir });
       // WI-0085: 미설치 · 미지원 · 빌드 전 안내를 targetDir 의 lockfile · packageManager 로(CLI theme list 와 같은 명령)
-      const formatted = formatListBrandsResult(result, tokensInstallCommandFor(targetDir));
+      const formatted = formatListBrandsResult(result, tokensInstallGuideFor(targetDir));
 
       return {
         content: [
@@ -736,7 +736,7 @@ server.tool(
   async ({ name, targetDir }) => {
     try {
       const result = await handleGetBrand({ name, targetDir });
-      const formatted = formatGetBrandResult(result, name, tokensInstallCommandFor(targetDir));
+      const formatted = formatGetBrandResult(result, name, tokensInstallGuideFor(targetDir));
 
       return {
         content: [

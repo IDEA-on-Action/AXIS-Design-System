@@ -25,7 +25,14 @@ import {
   planThemeAdd,
   type ThemeAddPlan,
 } from "./theme-add.js";
-import { addCommandFor, compareExactVersions, detectInstallCommand, workspaceRunCommand } from "@axis-ds/registry-core/project";
+import {
+  addCommandFor,
+  compareExactVersions,
+  dependencyInstallGuide,
+  detectInstallCommand,
+  workspaceRunCommand,
+  type DependencyInstallGuide,
+} from "@axis-ds/registry-core/project";
 import { CONTENT_PARENT_PATH_NOTE, TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
 import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
 
@@ -76,40 +83,70 @@ export function tokensInstallCommand(baseDir: string): string {
 export const TOKENS_INSTALL_COMMAND = addCommandFor("pnpm install", { [TOKENS_PACKAGE]: TOKENS_DEPENDENCY_RANGE });
 
 /**
+ * 대상 프로젝트의 tokens 선언 출처로 고른 설치 안내 방법(WI-0093, registry-core `dependencyInstallGuide`).
+ * 경계는 theme add 와 같아요(P1 Plug'n'Play · P2 앱 lockfile 이면 루트 선언 불인정). `addCommand` 는 `tokensInstallCommand(baseDir)` 와 같아요.
+ */
+export function tokensInstallGuide(baseDir: string): DependencyInstallGuide {
+  return dependencyInstallGuide(baseDir, TOKENS_PACKAGE, TOKENS_DEPENDENCY_RANGE);
+}
+
+/** 문자열(종전 호출)은 선언 출처를 모르는 `add` 갈래로 봅니다(설치 명령은 매니저 접두만 쓰므로 그 명령 자체를 넘겨요) */
+function asGuide(guide: string | DependencyInstallGuide): DependencyInstallGuide {
+  return typeof guide === "string" ? { kind: "add", installCommand: guide, addCommand: guide } : guide;
+}
+
+/** Plug'n'Play 에서 앱에 선언이 있을 때의 안내 한 줄(WI-0093 Q13, MCP `formatTokensStatusGuide` 와 같은 문장) */
+export function tokensPnpMessage(range?: string): string {
+  return `${TOKENS_PACKAGE}${range ? ` ${range}` : ""} 가 package.json 에 선언돼 있지만 Plug'n'Play 설치라 설치본을 판정하지 못해 브랜드를 읽을 수 없습니다.`;
+}
+
+/** 워크스페이스 루트 선언이 브랜드를 지원하지 않는 버전일 때의 안내(WI-0087 DEC-8 문구 그대로, WI-0093 Q16) */
+export const ROOT_TOKENS_UPGRADE_GUIDE = `워크스페이스 루트 package.json 의 ${TOKENS_PACKAGE} 선언을 ^${MIN_BRAND_TOKENS_VERSION} 이상으로 올리고 설치하세요.`;
+
+/**
  * `status` 가 `ok` 가 아닐 때의 안내. 빈 목록이 아니라 「측정을 못 했다」를 알립니다(plan 3장 5-3).
- * `installCommand` 는 `tokensInstallCommand(baseDir)` 로 고른 명령입니다(주지 않으면 lockfile 이 없을 때와 같은 pnpm).
+ * `guide` 는 `tokensInstallGuide(baseDir)` 로 고른 안내 방법이에요(WI-0093). 문자열을 주면 종전처럼 그 명령을 그대로 안내하고,
+ * 주지 않으면 lockfile 이 없을 때와 같은 pnpm 추가 명령이에요.
+ * - 선언 없음(`add`): 종전 그대로 추가 명령(`<pm> add "@axis-ds/tokens@^1.6.0"`)
+ * - 앱 선언 · pnpm · yarn 루트 선언(`install`): 미설치 · 빌드 전 재설치는 `<pm> install`. 미지원은 앱 선언이면 종전 추가 명령(범위를 올림),
+ *   루트 선언이면 WI-0087 DEC-8 문구(루트 선언을 올리고 설치)
+ * - npm 루트 선언(`install-at-root`): 「워크스페이스 루트에서 npm install」(WI-0093 Q15)
+ * - Plug'n'Play 앱 선언(`pnp`): 설치 명령 없이 판정하지 못했다는 한 줄(WI-0093 Q13)
  * 빌드 전의 워크스페이스 빌드 명령도 같은 매니저로 고릅니다(WI-0085, `workspaceRunCommand`. 종전에는 `pnpm --filter` 고정).
  */
 export function tokensStatusGuide(
   status: Exclude<TokensStatus, "ok">,
   version?: string,
-  installCommand: string = TOKENS_INSTALL_COMMAND
+  guide: string | DependencyInstallGuide = TOKENS_INSTALL_COMMAND
 ): string[] {
+  const g = asGuide(guide);
+  if (g.kind === "pnp") return [chalk.yellow(tokensPnpMessage(g.range))];
+  const install =
+    g.kind === "install-at-root"
+      ? `워크스페이스 루트에서 ${chalk.cyan(g.installCommand)}`
+      : chalk.cyan(g.kind === "install" ? g.installCommand : g.addCommand);
   switch (status) {
     case "not-installed":
-      return [
-        chalk.yellow(`${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`),
-        `  설치: ${chalk.cyan(installCommand)}`,
-      ];
+      return [chalk.yellow(`${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`), `  설치: ${install}`];
     case "unsupported":
       return [
         chalk.yellow(
           `${TOKENS_PACKAGE} ${version ?? "(버전 모름)"} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`
         ),
-        `  업그레이드: ${chalk.cyan(installCommand)}`,
+        g.source === "root" ? `  ${ROOT_TOKENS_UPGRADE_GUIDE}` : `  업그레이드: ${chalk.cyan(g.addCommand)}`,
       ];
     case "not-built":
       return [
         chalk.yellow(
           `${TOKENS_PACKAGE}${version ? ` ${version}` : ""} 는 있지만 빌드 산출물이 없어 브랜드를 읽을 수 없습니다.`
         ),
-        `  워크스페이스면 ${chalk.cyan(workspaceRunCommand(installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${chalk.cyan(installCommand)}`,
+        `  워크스페이스면 ${chalk.cyan(workspaceRunCommand(g.installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${install}`,
       ];
   }
 }
 
 /** `axis theme list` 출력 (FR-1). a11y 상태는 길 수 있어 info 에서만 냅니다(plan 6.2-5). */
-export function renderThemeList(result: BrandListResult, installCommand?: string): ThemeOutput {
+export function renderThemeList(result: BrandListResult, installCommand?: string | DependencyInstallGuide): ThemeOutput {
   if (result.status !== "ok") {
     return { lines: ["", ...tokensStatusGuide(result.status, result.version, installCommand), ""], exitCode: 1 };
   }
@@ -162,7 +199,11 @@ function tokenTable(brand: BrandDetail): string[] {
 }
 
 /** `axis theme info <brand>` 출력 (FR-3, 보정 내역은 U3 (A)) */
-export function renderThemeInfo(result: BrandGetResult, name: string, installCommand?: string): ThemeOutput {
+export function renderThemeInfo(
+  result: BrandGetResult,
+  name: string,
+  installCommand?: string | DependencyInstallGuide
+): ThemeOutput {
   if (result.status !== "ok") {
     return { lines: ["", ...tokensStatusGuide(result.status, result.version, installCommand), ""], exitCode: 1 };
   }
@@ -352,8 +393,16 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
       `  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음`
     );
     if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
+    // WI-0093 Q17: 루트 선언인데 설치본이 빌드 전이면 재설치 안내(theme list 의 빌드 전 안내와 같은 줄, 앱 package.json 에 쓰지 않으므로 install)
+    else if (plan.tokens.status === "not-built") {
+      lines.push(
+        `    워크스페이스면 ${chalk.cyan(workspaceRunCommand(plan.installCommand, TOKENS_PACKAGE, "build"))}, 아니면 재설치: ${chalk.cyan(plan.installCommand)}`
+      );
+    }
   } else if (dep?.action === "present") {
     lines.push(`  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 이미 있어 범위를 바꾸지 않음`);
+    // WI-0093 Q17(WI-0087 DEC-1 재오픈): 앱 선언인데 설치본이 없으면 선언대로 설치하는 명령(add 를 내면 범위가 다시 쓰여요)
+    if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
   } else if (dep?.action === "no-package-json") {
     lines.push(chalk.yellow(`  ! package.json 이 없어 의존성을 추가하지 않았습니다. 설치: ${dep.tokensAddCommand}`));
   }
@@ -475,7 +524,7 @@ export function registerThemeCommand(program: Command): void {
     .option("-d, --dir <path>", "대상 디렉토리")
     .action((options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
-      print(renderThemeList(listBrands(baseDir), tokensInstallCommand(baseDir)));
+      print(renderThemeList(listBrands(baseDir), tokensInstallGuide(baseDir)));
     });
 
   themeCmd
@@ -484,7 +533,7 @@ export function registerThemeCommand(program: Command): void {
     .option("-d, --dir <path>", "대상 디렉토리")
     .action((name: string, options: { dir?: string }) => {
       const baseDir = path.resolve(options.dir || ".");
-      print(renderThemeInfo(getBrand(baseDir, name), name, tokensInstallCommand(baseDir)));
+      print(renderThemeInfo(getBrand(baseDir, name), name, tokensInstallGuide(baseDir)));
     });
 
   themeCmd

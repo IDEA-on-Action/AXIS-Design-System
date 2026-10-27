@@ -8,7 +8,13 @@
  */
 
 import path from "node:path";
-import { addCommandFor, detectInstallCommand, workspaceRunCommand } from "@axis-ds/registry-core/project";
+import {
+  addCommandFor,
+  dependencyInstallGuide,
+  detectInstallCommand,
+  workspaceRunCommand,
+  type DependencyInstallGuide,
+} from "@axis-ds/registry-core/project";
 import {
   KEY_TOKENS,
   MIN_BRAND_TOKENS_VERSION,
@@ -60,6 +66,14 @@ export function tokensInstallCommandFor(targetDir?: string): string {
 }
 
 /**
+ * 대상 프로젝트의 tokens 선언 출처로 고른 설치 안내 방법(WI-0093, CLI `tokensInstallGuide` 와 같은 registry-core 헬퍼).
+ * 경계는 theme add 와 같아요(P1 Plug'n'Play · P2 앱 lockfile 이면 루트 선언 불인정).
+ */
+export function tokensInstallGuideFor(targetDir?: string): DependencyInstallGuide {
+  return dependencyInstallGuide(baseDirOf(targetDir), TOKENS_PACKAGE, `^${TOKENS_DEPENDENCY_MIN_VERSION}`);
+}
+
+/**
  * 설치된 브랜드 목록(FR-4, CLI FR-1 과 같은 목록). 코어 `listBrands` 결과를 그대로 돌려줍니다.
  */
 export async function handleListBrands(params: ListBrandsParams): Promise<ListBrandsResult> {
@@ -80,32 +94,42 @@ export async function handleGetBrand(params: GetBrandParams): Promise<GetBrandRe
 /**
  * `status` 가 `ok` 가 아닐 때의 안내(PRD FR-4 · Q5). 빈 목록이 아니라 「측정을 못 했다」를 알리며,
  * 도구 응답은 `isError` 없이 이 글을 돌려줍니다. 문장은 CLI `tokensStatusGuide` 와 같습니다.
- * `installCommand` 는 `tokensInstallCommandFor(targetDir)` 로 고른 명령이고(WI-0085), 주지 않으면 종전 pnpm 입니다.
+ * `installCommand` 는 `tokensInstallGuideFor(targetDir)` 로 고른 안내 방법이에요(WI-0093). 문자열을 주면 종전처럼 그 명령을 그대로
+ * 안내하고(WI-0085 `tokensInstallCommandFor`), 주지 않으면 종전 pnpm 입니다. 갈래별 문장은 CLI `tokensStatusGuide` 주석과 같아요.
  * 빌드 전의 워크스페이스 빌드 명령도 같은 매니저로 고릅니다(`workspaceRunCommand`).
  */
 export function formatTokensStatusGuide(
   status: Exclude<TokensStatus, "ok">,
   version?: string,
-  installCommand: string = TOKENS_INSTALL_COMMAND
+  installCommand: string | DependencyInstallGuide = TOKENS_INSTALL_COMMAND
 ): string {
+  const g: DependencyInstallGuide =
+    typeof installCommand === "string"
+      ? { kind: "add", installCommand, addCommand: installCommand }
+      : installCommand;
+  if (g.kind === "pnp") {
+    return `${TOKENS_PACKAGE}${g.range ? ` ${g.range}` : ""} 가 package.json 에 선언돼 있지만 Plug'n'Play 설치라 설치본을 판정하지 못해 브랜드를 읽을 수 없습니다.`;
+  }
+  const install =
+    g.kind === "install-at-root"
+      ? `워크스페이스 루트에서 \`${g.installCommand}\``
+      : `\`${g.kind === "install" ? g.installCommand : g.addCommand}\``;
   switch (status) {
     case "not-installed":
-      return [
-        `${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`,
-        "",
-        `- 설치: \`${installCommand}\``,
-      ].join("\n");
+      return [`${TOKENS_PACKAGE} 가 설치돼 있지 않아 브랜드를 읽을 수 없습니다.`, "", `- 설치: ${install}`].join("\n");
     case "unsupported":
       return [
         `${TOKENS_PACKAGE} ${version ?? "(버전 모름)"} 은 브랜드를 지원하지 않습니다(${MIN_BRAND_TOKENS_VERSION} 이상 필요).`,
         "",
-        `- 업그레이드: \`${installCommand}\``,
+        g.source === "root"
+          ? `- 워크스페이스 루트 package.json 의 ${TOKENS_PACKAGE} 선언을 ^${MIN_BRAND_TOKENS_VERSION} 이상으로 올리고 설치하세요.`
+          : `- 업그레이드: \`${g.addCommand}\``,
       ].join("\n");
     case "not-built":
       return [
         `${TOKENS_PACKAGE}${version ? ` ${version}` : ""} 는 있지만 빌드 산출물이 없어 브랜드를 읽을 수 없습니다.`,
         "",
-        `- 워크스페이스면 \`${workspaceRunCommand(installCommand, TOKENS_PACKAGE, "build")}\`, 아니면 재설치: \`${installCommand}\``,
+        `- 워크스페이스면 \`${workspaceRunCommand(g.installCommand, TOKENS_PACKAGE, "build")}\`, 아니면 재설치: ${install}`,
       ].join("\n");
   }
 }
@@ -114,7 +138,7 @@ export function formatTokensStatusGuide(
  * `axis.list_brands` 응답 글 (CLI `axis theme list` 와 같은 항목: 이름 · 설명 · 테마, 그리고 import 경로).
  * `installCommand` 는 미설치 · 미지원 · 빌드 전 안내에 쓰는 명령(`tokensInstallCommandFor(targetDir)`, 주지 않으면 종전 pnpm)
  */
-export function formatListBrandsResult(result: ListBrandsResult, installCommand?: string): string {
+export function formatListBrandsResult(result: ListBrandsResult, installCommand?: string | DependencyInstallGuide): string {
   const lines = ["## AXIS 브랜드\n"];
   if (result.status !== "ok") {
     lines.push(formatTokensStatusGuide(result.status, result.version, installCommand));
@@ -156,7 +180,11 @@ function tokenTable(brand: BrandDetail): string[] {
 }
 
 /** `axis.get_brand` 응답 글 (CLI `axis theme info` 와 같은 항목, 보정 내역은 U3 (A)). `installCommand` 는 `formatListBrandsResult` 와 같음 */
-export function formatGetBrandResult(result: GetBrandResult, name: string, installCommand?: string): string {
+export function formatGetBrandResult(
+  result: GetBrandResult,
+  name: string,
+  installCommand?: string | DependencyInstallGuide
+): string {
   if (result.status !== "ok") {
     return [`## 브랜드: ${name}\n`, formatTokensStatusGuide(result.status, result.version, installCommand)].join("\n");
   }
