@@ -11,7 +11,7 @@
   - Tailwind 3 CommonJS 의 `.default` 없는 preset require 에서 `@axis-ds/tokens` 가, 마크업 `data-brand` + `ThemeProvider` 구성에서 `@axis-ds/theme` 가 루트에만 있으면 「앱이 해석하지 못합니다(워크스페이스 루트 선언 <범위>)」 WARN 이에요.
   - Tailwind 3 애니메이션 플러그인 선언이 루트에만 있으면 animation 이 「애니메이션 플러그인 tailwindcss-animate 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다(…) … → 앱 package.json 에 tailwindcss-animate 를 선언하세요」 WARN 이에요(다른 PnP 문구와 같은 틀, 추가 결정 A1).
   - `@axis-ds/*` 가 루트에만 있으면 dependencies 가 「@axis-ds/ui-react 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요」 WARN 이에요(종료 코드 불변, 추가 결정 A3). 지금까지는 PASS 였어요(측정 M5 · M6 · M7).
-- `.pnp.cjs` 탐색은 `.git` 이 있는 층에서 멈춰요. 저장소 밖 상위에 남은 `.pnp.cjs` 때문에 node_modules 프로젝트를 PnP 로 보던 경우가 사라지고, 그런 프로젝트는 설치본 기준 판정을 다시 받아요(측정: refute-stray C 는 content FAIL 이 새로 나와 rc 0 → 1, 같은 레이아웃 대조군과 같은 결과). 이 판정은 init · theme add · add 도 함께 써서 같은 상황에서는 그쪽도 node_modules 기준으로 바뀌어요.
+- `.pnp.cjs` 탐색은 `.git` 이 있는 층에서 멈춰요. 저장소 밖 상위에 남은 `.pnp.cjs` 때문에 node_modules 프로젝트를 PnP 로 보던 경우가 사라지고, 그런 프로젝트는 설치본 기준 판정을 다시 받아요(측정: refute-stray C 는 content FAIL 이 새로 나와 rc 0 → 1, 같은 레이아웃 대조군과 같은 결과). 이 판정은 init · theme add · add 도 함께 써서 같은 상황에서는 그쪽도 node_modules 기준으로 바뀌어요. 할 일: 드러난 FAIL 항목을 출력 안내대로 고치고, 쓰지 않는 상위 `.pnp.cjs` 는 지워도 돼요.
 
 ## 바뀌지 않은 점
 
