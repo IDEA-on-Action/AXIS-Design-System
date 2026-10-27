@@ -14,18 +14,29 @@
  * 4. Plug'n'Play(`.pnp.cjs`)는 node_modules 가 없어 설치본을 읽지 않고 선언 기준으로 pass 하며, 그 사실을 문구에 남깁니다.
  * 5. 필수 · 권장 의존성은 앱 package.json 에 선언이 없으면 워크스페이스 루트(`findWorkspaceRoot`, `.git` 에서 중단) package.json 의
  *    선언도 인정하고, 문구 끝에 「워크스페이스 루트에 선언: …」을 붙입니다(WI-0081, 사용자 결정). 워크스페이스가 아닌 상위의 선언은
- *    인정하지 않습니다. `@axis-ds/*` 설치 확인 대상은 종전대로 앱 선언만 봅니다.
+ *    인정하지 않습니다.
  *    WI-0086: 이 판정은 project.ts 의 공용 헬퍼 `declaredDependency` 로 옮겼고, tailwind-core · init · add 가 같은 헬퍼를 씁니다.
+ * 6. WI-0094(사용자 결정 Q11 · Q19): `@axis-ds/*` 설치 확인 대상에 워크스페이스 루트 package.json 의 `@axis-ds/*` 선언(앱에 없는 것)도
+ *    넣습니다(이름 필터 없음, 앱 lockfile 이 있어도 무시하지 않음). 루트 출처 미설치는 「워크스페이스 루트에 선언돼 있지만 설치되지
+ *    않았습니다」로 따로 알리고, 「워크스페이스 루트에 선언: …」 표시에도 넣습니다. WARN 이라 종료 코드는 바뀌지 않습니다.
+ *    종전(WI-0081 1.3 · 배치 6c)에는 앱 선언만 봐서 루트 전용 · 미설치가 PASS 「N개 확인」이었습니다.
+ * 7. WI-0091(사용자 결정 Q1 · Q5): Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다. 필수 · 권장 의존성이 루트에만 있으면
+ *    미선언과 같은 심각도(필수 FAIL · 권장 WARN)로 내되 「워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못함」 문구를
+ *    씁니다. 루트에만 있는 `@axis-ds/*` 는 확인 대상에 넣지 않습니다(Plug'n'Play 는 설치본을 읽지 않으므로 대상 수만 늘어남).
+ *    추가 결정 A3: 대신 「<이름> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다」 WARN 으로 알립니다
+ *    (종전에는 알리지 않아 ui-react 만 루트에 둔 PnP 앱이 PASS 였음, 측정 M7). 종료 코드는 바뀌지 않습니다.
  */
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  PNP_ROOT_ONLY_NOTE,
   declaredDependency,
   detectInstallCommand,
   findInstalledPackage,
   isPlainObject,
   isPnpProject,
+  pnpRootOnlyDependency,
   resolveBaseDir,
   workspaceRootPackage,
 } from "../project.js";
@@ -68,30 +79,51 @@ export function checkDependencies(baseDirInput: string): DependenciesCheckResult
     return { name: "dependencies", severity: "fail", message: "package.json 을 읽지 못했습니다(JSON 확인)" };
   }
 
-  // 앱 선언이 우선이고, 앱에 없을 때만 워크스페이스 루트 선언을 봅니다(WI-0081, WI-0086 부터 공용 헬퍼 declaredDependency)
+  // 앱 선언이 우선이고, 앱에 없을 때만 워크스페이스 루트 선언을 봅니다(WI-0081, WI-0086 부터 공용 헬퍼 declaredDependency).
+  // WI-0091: Plug'n'Play 면 루트 선언을 인정하지 않고(appOnlyInPnp), 루트에만 있는 것은 전용 문구로 따로 알립니다.
   const rootPkg = workspaceRootPackage(baseDir) ?? null;
-  const declared = (d: string) => declaredDependency(baseDir, pkg, d, rootPkg);
+  const pnp = isPnpProject(baseDir);
+  const declared = (d: string) => declaredDependency(baseDir, pkg, d, rootPkg, { appOnlyInPnp: true });
+  const pnpRootOnly = (d: string) => pnpRootOnlyDependency(baseDir, pkg, d, rootPkg) !== undefined;
   const fromRoot = (d: string) => declared(d)?.source === "root";
-  const missingRequired = REQUIRED_DEPENDENCIES.filter((d) => declared(d) === undefined);
-  if (missingRequired.length > 0) {
-    return { name: "dependencies", severity: "fail", message: `필수 의존성 누락: ${missingRequired.join(", ")}` };
+  const missingRequired = REQUIRED_DEPENDENCIES.filter((d) => declared(d) === undefined && !pnpRootOnly(d));
+  const pnpRootRequired = REQUIRED_DEPENDENCIES.filter((d) => pnpRootOnly(d));
+  if (missingRequired.length > 0 || pnpRootRequired.length > 0) {
+    const fails: string[] = [];
+    if (missingRequired.length > 0) fails.push(`필수 의존성 누락: ${missingRequired.join(", ")}`);
+    if (pnpRootRequired.length > 0) fails.push(`필수 의존성 ${pnpRootRequired.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
+    return { name: "dependencies", severity: "fail", message: fails.join(" / ") };
   }
-  const missingRecommended = RECOMMENDED_DEPENDENCIES.filter((d) => declared(d) === undefined);
-  const rootDeclared = [...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => fromRoot(d));
+  const missingRecommended = RECOMMENDED_DEPENDENCIES.filter((d) => declared(d) === undefined && !pnpRootOnly(d));
+  const pnpRootRecommended = RECOMMENDED_DEPENDENCIES.filter((d) => pnpRootOnly(d));
+
+  // `@axis-ds/*` 설치 확인 대상: 앱 선언 다음 워크스페이스 루트 선언(WI-0094, 앱에 없는 것만). Plug'n'Play 면 루트는 보지 않습니다(WI-0091).
+  const appAxis = declaredAxisPackages(pkg);
+  const rootOnlyAxis = rootPkg !== null ? declaredAxisPackages(rootPkg).filter((d) => !appAxis.includes(d)) : [];
+  const rootAxis = pnp ? [] : rootOnlyAxis;
+  // 추가 결정 A3: Plug'n'Play 에서 루트에만 선언한 `@axis-ds/*` 는 대상에 넣지 않되, 필수 · 권장과 같은 전용 문구 WARN 으로 알립니다(종료 코드 불변)
+  const pnpRootAxis = pnp ? rootOnlyAxis : [];
+  const rootDeclared: string[] = [...[...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => fromRoot(d)), ...rootAxis];
   const rootNote = rootDeclared.length > 0 ? `워크스페이스 루트에 선언: ${rootDeclared.join(", ")}` : undefined;
 
-  // `@axis-ds/*` 설치 확인 대상은 종전대로 앱 선언만 봅니다(WI-0081 1.3 · 배치 6c 결정)
   const targets = [
     ...[...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => declared(d) !== undefined),
-    ...declaredAxisPackages(pkg),
+    ...appAxis,
+    ...rootAxis,
   ];
-  const pnp = isPnpProject(baseDir);
   const notInstalled = pnp ? [] : targets.filter((d) => findInstalledPackage(baseDir, d) === undefined);
+  const notInstalledRoot = notInstalled.filter((d) => rootAxis.includes(d));
+  const notInstalledOther = notInstalled.filter((d) => !rootAxis.includes(d));
 
   const problems: string[] = [];
   if (missingRecommended.length > 0) problems.push(`권장 의존성 누락: ${missingRecommended.join(", ")}`);
-  if (notInstalled.length > 0) {
-    problems.push(`선언됐지만 설치되지 않은 의존성: ${notInstalled.join(", ")} → ${detectInstallCommand(baseDir)}`);
+  if (pnpRootRecommended.length > 0) problems.push(`권장 의존성 ${pnpRootRecommended.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
+  if (pnpRootAxis.length > 0) problems.push(`${pnpRootAxis.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
+  if (notInstalledOther.length > 0) {
+    problems.push(`선언됐지만 설치되지 않은 의존성: ${notInstalledOther.join(", ")} → ${detectInstallCommand(baseDir)}`);
+  }
+  if (notInstalledRoot.length > 0) {
+    problems.push(`워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: ${notInstalledRoot.join(", ")} → ${detectInstallCommand(baseDir)}`);
   }
   if (problems.length > 0) {
     return { name: "dependencies", severity: "warn", message: problems.join(" / ") + (rootNote ? ` (${rootNote})` : "") };

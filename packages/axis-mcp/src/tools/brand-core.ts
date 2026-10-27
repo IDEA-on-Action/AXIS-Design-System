@@ -531,7 +531,12 @@ export function inspectBrandActivation(baseDir: string): BrandActivationCheck | 
   const location = findBrandActivation(baseDir);
   if (!location.markupWithProvider) return { brand, ...location };
   // WI-0068: 마크업 + ThemeProvider 구성은 설치본(없으면 선언) theme 버전으로 가릅니다
-  return { brand, ...location, theme: packageVersionGate(baseDir, readProjectPackageJson(baseDir), THEME_PACKAGE, THEME_MARKUP_BRAND_MIN_VERSION) };
+  // WI-0091: check 경로라 Plug'n'Play 면 루트에만 선언한 theme 를 「앱에서 해석되지 않음」(unresolved)으로 가립니다
+  return {
+    brand,
+    ...location,
+    theme: packageVersionGate(baseDir, readProjectPackageJson(baseDir), THEME_PACKAGE, THEME_MARKUP_BRAND_MIN_VERSION, { appOnlyInPnp: true }),
+  };
 }
 
 /** ThemeProvider 를 담는 패키지 */
