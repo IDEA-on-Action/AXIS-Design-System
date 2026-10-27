@@ -59,3 +59,22 @@
 | Y2(PnP 앱 선언, 캐시에서 빠져 빌드 실패) | PASS | PASS | 그대로. PnP 는 설치본을 읽지 않아 잡지 못해요(잔여) |
 
 빌드를 깨는 8건(S2 · S3 · S6 · S9 · P2 · P4 · P5 · H3)이 모두 PASS 에서 WARN 으로 바뀌었어요. 유령 설치 2건(S4 · H4)은 빌드가 성공하지만 Q9(선언 + 설치본)대로 WARN 이에요. CLI · MCP 줄 대조: 23 앱 × 수정 전 · 후 = 46 쌍, 278줄 모두 같음.
+
+## 4. 추가 결정 A2: 두 줄 규칙의 실제 빌드 근거 (2026-10-27)
+
+질문: CSS 에 `@import "tw-animate-css"` 와 `@plugin "tailwindcss-animate"` 가 함께 있을 때, 한 줄의 패키지만 해석되지 않아도 실제 빌드가 실패하나요? 실패하면 「모든 줄이 선언 · 설치돼야 PASS」 규칙이 맞아요.
+
+방법: `WI-0092/bin/mk-single.sh` 로 단일 앱을 만들고(`tw4base` 실설치본 복사, tailwindcss · @tailwindcss/cli 4.1.14, tw-animate-css 1.4.0, tailwindcss-animate 1.0.7) `app/globals.css` 를 세 줄(`@import "tailwindcss";` + 두 줄)로 바꾼 뒤, 앱 디렉터리에서 `node node_modules/@tailwindcss/cli/dist/index.mjs -i app/globals.css -o out.css` 를 돌렸어요(scratchpad `WI-0092/twoline/D1 ~ D6`).
+
+| fixture | 선언 | 설치본 | 빌드 rc | out.css |
+|---|---|---|---|---|
+| D1(양성 대조) | 둘 다 | 둘 다 | 0 | 있음(`.animate-in` 2 · `@keyframes enter` 3 · 9867 bytes) |
+| D2 | tw-animate-css | tw-animate-css | 1 「Can't resolve 'tailwindcss-animate'」 | 없음 |
+| D3 | tailwindcss-animate | tailwindcss-animate | 1 「Can't resolve 'tw-animate-css'」 | 없음 |
+| D4 | 없음 | 없음 | 1 「Can't resolve 'tw-animate-css'」 | 없음 |
+| D5 | 둘 다 | tw-animate-css 만 | 1 「Can't resolve 'tailwindcss-animate'」 | 없음 |
+| D6 | 둘 다 | tailwindcss-animate 만 | 1 「Can't resolve 'tw-animate-css'」 | 없음 |
+
+결론: 두 줄 중 하나라도 해석되지 않으면 빌드가 실패하고 출력 파일이 생기지 않아요(5/5). 양성 대조 D1 만 성공해서 측정 자체는 동작했어요. 그래서 규칙(모든 줄이 선언 · 설치돼야 PASS)을 바꾸지 않았고, 미결로 돌릴 것도 없어요. 「두 줄 다 있고 하나만 미설치 → 그 패키지만 안내」 테스트(2.2)가 이 규칙을 고정해요.
+
+범위: Tailwind 4.1.14 CLI 경로만 쟀어요. `@tailwindcss/postcss` · Vite 플러그인 경로는 이번에 재지 않았어요(조사 단계에서 한 줄 경우는 postcss 경로도 CLI 와 같았음).

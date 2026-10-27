@@ -2754,9 +2754,11 @@ describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 
         message: `tailwind.config.cjs에 AXIS preset 참조가 있지만 @axis-ds/tokens 가 ${PNP_NOTE}(워크스페이스 루트 선언 ^1.6.0) → 앱 package.json 에 @axis-ds/tokens 1.7.0 이상을 선언하세요`,
       });
       // ui-react 사용 판정은 루트 선언을 계속 인정(Q7), 플러그인 선언은 앱만(Q1)
-      expect(await item(a.app, "animation")).toMatchObject({
+      // 추가 결정 A1: TW3 PnP 루트 전용 플러그인은 다른 PnP 문구와 같은 틀
+      expect(await item(a.app, "animation")).toEqual({
+        name: "animation",
         severity: "warn",
-        message: expect.stringContaining(`(@axis-ds/ui-react 선언, tailwindcss-animate 가 ${PNP_NOTE})`),
+        message: `애니메이션 플러그인 tailwindcss-animate 가 ${PNP_NOTE}(@axis-ds/ui-react 선언): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 tailwindcss-animate 를 선언하세요`,
       });
       quietLog();
       expect((await runCheck(a.app)).fail).toBeGreaterThan(0);
@@ -2775,7 +2777,7 @@ describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 
       expect(await item(b.app, "animation")).toEqual({ name: "animation", severity: "pass", message: "tailwind.config.cjs의 plugins 에 tailwindcss-animate 가 있습니다" });
     });
 
-    it("권장만 루트 전용이면 WARN 전용 문구(필수는 앱 선언), 루트 @axis-ds 는 대상에 넣지 않음(Q1 · Q19)", async () => {
+    it("권장만 루트 전용이면 WARN 전용 문구(필수는 앱 선언), 루트 @axis-ds 는 대상에 넣지 않고 같은 전용 문구로 알림(Q1 · Q19 · A3)", async () => {
       const { app } = await pnpWs({
         rootDeps: { clsx: "^2.1.1", "tailwind-merge": "^2.6.0", "@axis-ds/ui-react": "^1.8.0" },
         appDeps: { tailwindcss: "^3.4.0" },
@@ -2783,7 +2785,45 @@ describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 
       expect(await item(app, "dependencies")).toEqual({
         name: "dependencies",
         severity: "warn",
-        message: `권장 의존성 clsx, tailwind-merge 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+        message: `권장 의존성 clsx, tailwind-merge 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요 / @axis-ds/ui-react 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+      });
+    });
+
+    it("추가 결정 A3(M7): PnP 에서 @axis-ds/* 만 루트 전용이면 전용 문구 WARN(종전 PASS), 종료 코드 불변, 앱 · 루트 둘 다면 알리지 않음", async () => {
+      const m7 = await pnpWs({
+        rootDeps: { "@axis-ds/ui-react": "1.8.2" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "1.8.2", "@axis-ds/theme": "1.8.2" },
+      });
+      expect(await item(m7.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: `@axis-ds/ui-react 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+      });
+      // 종료 코드 불변: dependencies 는 fail 이 아님(다른 항목의 fail 은 fixture 에 설정 파일이 없어서예요)
+      expect((await collectCheckResults(m7.app)).filter((r) => r.name === "dependencies" && r.severity === "fail")).toEqual([]);
+
+      // 양성 대조: 앱에도 선언하면 대상(앱 출처)이 되고 PnP 선언 기준 PASS
+      const both = await pnpWs({
+        rootDeps: { "@axis-ds/ui-react": "1.8.2" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "1.8.2", "@axis-ds/theme": "1.8.2", "@axis-ds/ui-react": "1.8.2" },
+      });
+      expect(await item(both.app, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "pass",
+        message: "필수 및 권장 의존성이 선언되어 있습니다 (Plug'n'Play 라 설치본은 확인하지 않음, 6개)",
+      });
+    });
+
+    it("추가 결정 A1: TW3 PnP 루트 전용 플러그인이 plugins 에도 없으면 같은 틀에 사유 · require 안내를 덧붙임", async () => {
+      const { app } = await pnpWs({
+        rootDeps: { "tailwindcss-animate": "^1.0.7" },
+        appDeps: { ...TRIO3, "@axis-ds/tokens": "^1.8.0", "@axis-ds/ui-react": "^1.8.0" },
+        files: { "tailwind.config.cjs": 'module.exports = { content: ["./app/**/*.{ts,tsx}"], presets: [require("@axis-ds/tokens/tailwind")] };\n' },
+      });
+      expect(await item(app, "animation")).toEqual({
+        name: "animation",
+        severity: "warn",
+        message: `애니메이션 플러그인 tailwindcss-animate 가 ${PNP_NOTE}(@axis-ds/ui-react 선언, tailwind.config.cjs plugins 에 없음): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 tailwindcss-animate 를 선언하세요 · plugins 에 require("tailwindcss-animate")`,
       });
     });
 

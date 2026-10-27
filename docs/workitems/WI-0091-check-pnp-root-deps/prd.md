@@ -33,6 +33,15 @@
 | Q7 | 버전 게이트(TW3 CJS preset 의 tokens 게이트 · brand.activation 의 theme 게이트)만 「앱에서 해석되지 않음」 전용 WARN 을 내요. 요구를 더하는 판정(TW4 B1 · content 대상 · animation 사용 판정 · 1.4.0 판정)은 현행 유지예요. 게이트가 돌지 않는 모양(ESM config · setBrand)의 공백은 잔여로 기록해요 |
 | Q8 | 실제 PnP 레이아웃(루트 선언 · 앱 미선언)을 고정한 fixture 를 새로 둬요. 기존 빈 `.pnp.cjs` 표지 테스트는 새 규칙의 기대로 바꿔요 |
 
+### 1.2.1 구현 후 추가 결정 (2026-10-27 사용자 확정, PR-A)
+
+| # | 결정 |
+|---|---|
+| A1 | 구현이 정한 출력 문구 5개(PnP 필수 · 권장 의존성, tokens · theme 게이트 안내, TW4 animation WARN, 「워크스페이스 루트 선언」 라벨)는 그대로 확정해요. 단 TW3 PnP 루트 전용 animation WARN 은 종전 「애니메이션 플러그인이 없습니다 → 설치 뒤 plugins 에 require」 틀을 쓰지 않고, 다른 PnP 문구와 같은 틀 「애니메이션 플러그인 tailwindcss-animate 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다(<사용 근거>) … → 앱 package.json 에 tailwindcss-animate 를 선언하세요」로 보정해요. plugins 배열에도 없으면 괄호에 그 사유를, 화살표 뒤에 「 · plugins 에 require("tailwindcss-animate")」를 덧붙여요(구현 세부) |
+| A2 | WI-0092 의 TW4 두 줄 규칙(모든 줄이 선언 · 설치돼야 PASS)은 유지하고 실제 Tailwind 4 빌드로 근거를 재요(WI-0092 testplan 4절) |
+| A3 | PnP 에서 워크스페이스 루트에만 선언한 `@axis-ds/*` 는 dependencies 항목에서 「<이름> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요」 WARN 으로 알려요(종료 코드 불변). 설치 확인 대상 수에는 넣지 않아요. M7(ui-react 만 루트 전용) 류 거짓 PASS 를 없애요 |
+| 공통 | PR-A · PR-B 를 모두 머지한 뒤 Version PR 하나로 함께 발행해요(cli 1.7.6 · mcp 1.4.5). 문서의 버전 표기는 이 번호예요 |
+
 ### 1.3 범위
 
 - 포함: registry-core `project.ts`(`isPnpProject` 의 `.git` 경계, `declaredDependency` 옵션, `pnpRootOnlyDependency` · `PNP_ROOT_ONLY_NOTE`), `dependencies-core.ts`(필수 · 권장 PnP 판정), `tailwind-core.ts`(버전 게이트 옵션 · `unresolved`, tokens CJS 게이트 문구, animation 플러그인 선언의 PnP 판정), cli · mcp `brand-core.ts`(theme 게이트에 옵션), cli `template-check.ts` · mcp `template.ts`(brand.activation `unresolved` 문구)
@@ -42,7 +51,8 @@
 
 - **AC1**: PnP 에서 루트에만 `tailwindcss` 가 있으면 dependencies FAIL 「필수 의존성 tailwindcss 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요」, 종료 코드 1. 권장만 루트 전용이면 같은 문구의 WARN
 - **AC2**: PnP 에서 CJS bare preset 의 `@axis-ds/tokens`, 마크업 `data-brand` + `ThemeProvider` 의 `@axis-ds/theme` 가 루트에만 있으면 「앱이 해석하지 못합니다(워크스페이스 루트 선언 <범위>)」 WARN. `packageVersionGate` 는 옵션이 없으면 종전 결과
-- **AC3**: PnP 에서 TW3 플러그인 `tailwindcss-animate` 가 루트에만 있으면 animation WARN 사유가 전용 문구. ui-react 사용 판정은 루트 선언을 계속 인정
+- **AC3**: PnP 에서 TW3 플러그인 `tailwindcss-animate` 가 루트에만 있으면 animation WARN 이 다른 PnP 문구와 같은 틀(A1). ui-react 사용 판정은 루트 선언을 계속 인정
+- **AC7**(A3): PnP 에서 `@axis-ds/*` 만 루트 전용이면 dependencies WARN 전용 문구(종전 PASS), 종료 코드 불변. 앱에도 선언하면 알리지 않음
 - **AC4**: Tailwind major 판정(`detectTailwind`)은 PnP 루트 선언으로도 TW4 분기(G)
 - **AC5**: `isPnpProject` 는 같은 층에 `.pnp.cjs` 가 있으면 참, 표지 없이 `.git` 이 나오면 거짓. 상위 `.pnp.cjs` 가 있는 node-modules 저장소(refute-stray C)는 같은 레이아웃 대조군(C-nm-root)과 같은 출력
 - **AC6**: 음성 대조: node-modules · npm · pnpm 의 루트 선언 인정, 앱 선언 PnP(B)는 바뀌지 않음. CLI · MCP 같은 문구

@@ -23,6 +23,8 @@
  * 7. WI-0091(사용자 결정 Q1 · Q5): Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다. 필수 · 권장 의존성이 루트에만 있으면
  *    미선언과 같은 심각도(필수 FAIL · 권장 WARN)로 내되 「워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못함」 문구를
  *    씁니다. 루트에만 있는 `@axis-ds/*` 는 확인 대상에 넣지 않습니다(Plug'n'Play 는 설치본을 읽지 않으므로 대상 수만 늘어남).
+ *    추가 결정 A3: 대신 「<이름> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다」 WARN 으로 알립니다
+ *    (종전에는 알리지 않아 ui-react 만 루트에 둔 PnP 앱이 PASS 였음, 측정 M7). 종료 코드는 바뀌지 않습니다.
  */
 
 import { readFileSync } from "node:fs";
@@ -97,7 +99,10 @@ export function checkDependencies(baseDirInput: string): DependenciesCheckResult
 
   // `@axis-ds/*` 설치 확인 대상: 앱 선언 다음 워크스페이스 루트 선언(WI-0094, 앱에 없는 것만). Plug'n'Play 면 루트는 보지 않습니다(WI-0091).
   const appAxis = declaredAxisPackages(pkg);
-  const rootAxis = rootPkg !== null && !pnp ? declaredAxisPackages(rootPkg).filter((d) => !appAxis.includes(d)) : [];
+  const rootOnlyAxis = rootPkg !== null ? declaredAxisPackages(rootPkg).filter((d) => !appAxis.includes(d)) : [];
+  const rootAxis = pnp ? [] : rootOnlyAxis;
+  // 추가 결정 A3: Plug'n'Play 에서 루트에만 선언한 `@axis-ds/*` 는 대상에 넣지 않되, 필수 · 권장과 같은 전용 문구 WARN 으로 알립니다(종료 코드 불변)
+  const pnpRootAxis = pnp ? rootOnlyAxis : [];
   const rootDeclared: string[] = [...[...REQUIRED_DEPENDENCIES, ...RECOMMENDED_DEPENDENCIES].filter((d) => fromRoot(d)), ...rootAxis];
   const rootNote = rootDeclared.length > 0 ? `워크스페이스 루트에 선언: ${rootDeclared.join(", ")}` : undefined;
 
@@ -113,6 +118,7 @@ export function checkDependencies(baseDirInput: string): DependenciesCheckResult
   const problems: string[] = [];
   if (missingRecommended.length > 0) problems.push(`권장 의존성 누락: ${missingRecommended.join(", ")}`);
   if (pnpRootRecommended.length > 0) problems.push(`권장 의존성 ${pnpRootRecommended.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
+  if (pnpRootAxis.length > 0) problems.push(`${pnpRootAxis.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
   if (notInstalledOther.length > 0) {
     problems.push(`선언됐지만 설치되지 않은 의존성: ${notInstalledOther.join(", ")} → ${detectInstallCommand(baseDir)}`);
   }

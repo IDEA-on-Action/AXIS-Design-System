@@ -5,6 +5,7 @@
 ## 결정
 - [x] Q9 · Q10 · Q12 (2026-10-27 사용자 결정), PnP 행은 WI-0091 Q1
 - [x] Q12 선측정: WI-0074 원 fixture 에 `tw-animate-css` 미설치 확인(npm 10.9.4 재현) → 기대 WARN
+- [x] 추가 결정 A2: 두 줄 규칙의 실제 Tailwind 4.1.14 빌드 근거 측정(한 줄 미해석 5/5 빌드 실패, testplan 4절)
 
 ## 구현
 - [x] `checkAnimationPlugin` TW4 줄별 패키지 · 선언 · 설치본 (AC1 ~ AC5)

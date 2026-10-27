@@ -95,3 +95,64 @@ CLI · MCP 줄 대조: 8 fixture × 수정 전 · 후 = 16 쌍, 138줄 모두 �
 | changeset | `pnpm check-changeset-mcp-tokens` | rc 0, registry-core 3파일 감지 → cli · mcp 올림 확인, 자체 테스트 19/19 |
 
 `pnpm build -- --force` 는 `--force` 가 패키지 스크립트로 넘어가 tokens 빌드가 실패해서(rc 1) turbo 를 직접 불렀어요. 빌드가 다시 만든 `apps/web/public/templates/*.json` 6개는 커밋 전에 되돌렸어요.
+
+## 6. 추가 결정 A1 · A3 반영 (2026-10-27, 커밋 b701524 위)
+
+### 6.1 테스트 수 (같은 worktree, turbo build `--force` 뒤)
+
+| 패키지 · 파일 | b701524 | 반영 뒤 | 바뀐 것 |
+|---|---|---|---|
+| cli 전체 | 929 / 929 | 931 / 931 (21 파일) | +2 |
+| cli `template-check.test.ts` | 197 | 199 | 기존 기대 변경 2건 + 새 2건 |
+| mcp 전체 | 184 / 184 | 185 / 185 (8 파일, tokens-sync 20 포함) | +1 |
+| mcp `template.test.ts` | 42 | 43 | 새 1건 |
+
+기존 기대 변경 2건(모두 이 describe 안, 새 규칙의 기대로 바꿈)
+
+| 테스트 | b701524 기대 | 반영 뒤 |
+|---|---|---|
+| A(TW3 루트 전용) animation | 「애니메이션 플러그인이 없습니다(…, tailwindcss-animate 가 <PnP 문구>) … → 설치 뒤 plugins 에 require」 부분 일치 | 전체 문구 일치: 「애니메이션 플러그인 tailwindcss-animate 가 <PnP 문구>(@axis-ds/ui-react 선언): … → 앱 package.json 에 tailwindcss-animate 를 선언하세요」(A1) |
+| 권장만 루트 전용(루트 ui-react 포함) | 권장 문구 하나 | 권장 문구 ` / ` 「@axis-ds/ui-react 가 <PnP 문구> → 앱 package.json 에 선언하세요」(A3) |
+
+새 테스트
+
+| 테스트 | 결정 |
+|---|---|
+| cli A3(M7 모양): `@axis-ds/ui-react` 만 루트 전용 → dependencies WARN 전용 문구, dependencies fail 0, 양성 대조(앱에도 선언) → PASS 「6개」 | A3 |
+| cli A1: TW3 루트 전용 플러그인 + plugins 배열에 없음 → 같은 틀 + 「tailwind.config.cjs plugins 에 없음」 · require 안내 | A1 |
+| mcp: 같은 fixture 에서 dependencies A3 문구 · animation A1 문구(CLI 와 바이트 같음) | A1 · A3 |
+
+### 6.2 변이 (적용 → cli template-check · mcp template 실행 → sha256 2/2 OK 로 원복)
+
+| 변이 | cli 빨강 | mcp 빨강 |
+|---|---|---|
+| MA1 A1 분기 제거(종전 TW3 틀로 돌아감) | 2 / 199 | 1 / 43 |
+| MA3 PnP 루트 `@axis-ds` 알림 제거(종전 침묵) | 2 / 199 | 1 / 43 |
+| M9 PnP 에서 루트 `@axis-ds` 를 대상에 넣음(재측정) | 2 / 199 | 1 / 43 |
+
+M9 는 3.3 절(1 / 197 · 0 / 42)보다 많이 잡혀요. 새 MCP 행이 PnP 루트 `@axis-ds` 를 다루기 때문이에요.
+
+### 6.3 실제 설치 fixture 재측정 (b701524 dist → 반영 뒤 dist, review-A 의 83개 앱 전체)
+
+83개 앱 중 바뀐 앱은 7개예요. 종료 코드 줄은 83개 모두 그대로예요.
+
+| fixture | b701524 | 반영 뒤 |
+|---|---|---|
+| A · D · E · M2(TW3 PnP 루트 전용 플러그인) | animation WARN 종전 틀 | animation WARN A1 틀(심각도 같음) |
+| M7(PnP, ui-react 만 루트 전용) | dependencies PASS 「5개」, 9/0/0 | dependencies WARN A3 문구, 8/1/0 |
+| M5(PnP, tokens 만 루트 전용) · M6(theme 만 루트 전용) | dependencies PASS 「5개」, 8/1/0 | dependencies WARN A3 문구, 7/2/0 |
+| R7 · real yarnpnp(PnP, tailwindcss 도 루트 전용) | dependencies FAIL | 같음. FAIL 이 먼저 return 돼 A3 WARN 은 나오지 않아요(권장 WARN 과 같은 동작) |
+
+CLI · MCP 줄 대조: 83 앱, 541줄(심각도 + 문구) 모두 같음.
+
+### 6.4 게이트 (반영 뒤, 캐시 우회)
+
+| 게이트 | 결과 |
+|---|---|
+| `pnpm exec turbo run build --force` | rc 0, 8/8, Cached 0 |
+| `pnpm exec turbo run type-check --force` | rc 0, 11/11, Cached 0 |
+| `pnpm exec turbo run lint --force` | rc 0, 7/7, Cached 0 |
+| cli · mcp `npx vitest run` | 931/931 · 185/185 |
+| `pnpm check-changeset-mcp-tokens` | rc 0, registry-core 3파일 → cli · mcp 올림 확인 |
+
+빌드가 다시 만든 `apps/web/public/templates/*.json` 6개는 커밋 전에 되돌렸어요.

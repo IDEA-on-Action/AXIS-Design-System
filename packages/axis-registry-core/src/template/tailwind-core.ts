@@ -1470,10 +1470,21 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
     return { name: "animation", severity: "pass", message: `${configFile}의 plugins 에 ${ANIMATION_PLUGIN_TAILWIND3} 가 있습니다` };
   }
   const cfg = configFile ?? "tailwind.config";
+  const configReason =
+    plugins === "dynamic" ? `${cfg} plugins 를 정적으로 다 읽지 못해 확인하지 못함` : plugins !== "found" ? `${cfg} plugins 에 없음` : undefined;
+  // 추가 결정 A1: Plug'n'Play 루트 전용 선언은 다른 PnP 문구와 같은 틀(「… 가 <PNP_ROOT_ONLY_NOTE> → 앱 package.json 에 선언하세요」)로 냅니다
+  if (pluginReason !== undefined && pnpRootOnlyDependency(baseDir, pkg, ANIMATION_PLUGIN_TAILWIND3) !== undefined) {
+    const extra = configReason !== undefined ? `, ${configReason}` : "";
+    const plug = configReason !== undefined ? ` · plugins 에 require("${ANIMATION_PLUGIN_TAILWIND3}")` : "";
+    return {
+      name: "animation",
+      severity: "warn",
+      message: `애니메이션 플러그인 ${ANIMATION_PLUGIN_TAILWIND3} 가 ${PNP_ROOT_ONLY_NOTE}(${by}${extra}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 ${ANIMATION_PLUGIN_TAILWIND3} 를 선언하세요${plug}`,
+    };
+  }
   const reasons: string[] = [];
   if (pluginReason !== undefined) reasons.push(pluginReason);
-  if (plugins === "dynamic") reasons.push(`${cfg} plugins 를 정적으로 다 읽지 못해 확인하지 못함`);
-  else if (plugins !== "found") reasons.push(`${cfg} plugins 에 없음`);
+  if (configReason !== undefined) reasons.push(configReason);
   return {
     name: "animation",
     severity: "warn",

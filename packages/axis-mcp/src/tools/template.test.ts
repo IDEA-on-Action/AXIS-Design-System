@@ -666,6 +666,24 @@ describe("handleCheckProject WI-0091 · 0094 · 0092 (CLI 와 같은 문구)", (
     });
   });
 
+  it("추가 결정 A3 · A1: PnP 루트 전용 @axis-ds → dependencies 전용 문구 WARN, TW3 루트 전용 플러그인 → animation 같은 틀", async () => {
+    const dir = await pnpApp(
+      { "@axis-ds/ui-react": "1.8.2", "tailwindcss-animate": "^1.0.7" },
+      { ...TRIO3, "@axis-ds/tokens": "1.8.2" },
+      { "tailwind.config.cjs": 'module.exports = { content: ["./app/**/*.{ts,tsx}"], plugins: [require("tailwindcss-animate")] };\n' }
+    );
+    expect(await item(dir, "dependencies")).toEqual({
+      name: "dependencies",
+      severity: "warn",
+      message: `@axis-ds/ui-react 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`,
+    });
+    expect(await item(dir, "animation")).toEqual({
+      name: "animation",
+      severity: "warn",
+      message: `애니메이션 플러그인 tailwindcss-animate 가 ${PNP_NOTE}(@axis-ds/ui-react 선언): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → 앱 package.json 에 tailwindcss-animate 를 선언하세요`,
+    });
+  });
+
   it("WI-0094: npm 워크스페이스 루트 전용 · 미설치 @axis-ds → WARN 루트 문구 · 출처 표시", async () => {
     await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], devDependencies: { "@axis-ds/ui-react": "^1.8.0" } });
     await fs.writeFile(path.join(tmp, "package-lock.json"), "{}");

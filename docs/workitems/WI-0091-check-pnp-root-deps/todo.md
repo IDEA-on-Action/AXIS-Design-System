@@ -4,6 +4,7 @@
 
 ## 결정
 - [x] Q1 · Q2 · Q3 · Q5 · Q6 · Q7 · Q8 (2026-10-27 사용자 결정)
+- [x] 구현 후 추가 결정 A1(TW3 PnP animation 문구 틀) · A3(PnP 루트 전용 `@axis-ds/*` WARN) 반영, 테스트 cli +2 · mcp +1, 변이 MA1 · MA3 빨강 (testplan 6절)
 
 ## 구현
 - [x] `isPnpProject` `.git` 경계 (AC5)

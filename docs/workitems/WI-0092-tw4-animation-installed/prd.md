@@ -23,6 +23,14 @@
 | Q10 | 「줄은 있는데 미설치」는 WARN(TW3 와 대칭, 종료 코드 불변). TW3 쪽 심각도는 바꾸지 않아요 |
 | Q12 | 결함 상태를 PASS 로 고정한 기존 기대(CLI tw4Ok · h-rootonly-ui, MCP h-rootonly-ui)는 WI-0074 원 실측 fixture 에 `tw-animate-css` 가 실제로 설치돼 있었는지 먼저 확인해요. 설치돼 있지 않았다면 기대를 WARN 으로 바꿔요. 근거를 testplan 에 남겨요. AC6 회귀 대조군(2553-2568)은 바뀌면 안 돼요 |
 
+### 1.2.1 구현 후 추가 결정 (2026-10-27 사용자 확정)
+
+| # | 결정 |
+|---|---|
+| A2 | TW4 CSS 에 두 줄(`@import "tw-animate-css"` · `@plugin "tailwindcss-animate"`)이 모두 있으면 모든 줄이 선언 · 설치돼야 PASS 예요(구현 유지). 근거(한 줄이 해석되지 않으면 실제 빌드가 실패하는지)를 실제 Tailwind 4 빌드로 재서 testplan 4절에 남겨요. 실빌드가 성공하면 규칙을 바꾸지 않고 미결로 돌려요 |
+| A1 · A3 | WI-0091 prd 1.2.1 참고(TW3 PnP animation 문구 틀, PnP 루트 전용 `@axis-ds/*` 알림) |
+| 공통 | cli 1.7.6 · mcp 1.4.5 로 PR-B 와 함께 발행해요 |
+
 ### 1.3 범위
 
 - 포함: registry-core `tailwind-core.ts` `checkAnimationPlugin` 의 TW4 분기(줄별 패키지 · 선언 · 설치본), 사유 생성 `pluginProblem`(TW3 와 공용)
