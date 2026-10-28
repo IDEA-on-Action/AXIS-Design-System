@@ -108,6 +108,7 @@ async function captureRunCheck(dir: string): Promise<string[]> {
  * - WI-0051(배치 3): dependencies 가 설치본도 봄. fixture 에 node_modules 가 없는 theme-only · app-init · src-app · brokenConfig 는
  *   「선언됐지만 설치되지 않은 의존성」이 붙고, allPass 는 빌더가 설치본 stub 을 써서 pass 문구만 바뀜
  * - WI-0070(배치 3): 자체 --background · --primary 만 있는 globals.css(theme-only · allPass)가 pass 에서 WARN(AXIS 근거 없음)
+ * - WI-0100a(Q35): app-init 은 globalCss 가 가리키는 ./src/app/globals.css 가 없어 globals.css 항목 끝에 「(globalCss ./src/app/globals.css 없음)」
  * 바뀌지 않은 프로젝트(emptyDir)는 기준선 그대로입니다(음성 대조).
  */
 const INTENDED: Partial<Record<BaselineName, (l: string[]) => string[]>> = {
@@ -123,7 +124,14 @@ const INTENDED: Partial<Record<BaselineName, (l: string[]) => string[]>> = {
     "  결과: 2 pass / 4 warn / 0 fail",
     l[8],
   ],
-  "app-init": (l) => [...l.slice(0, 5), "  WARN  권장 의존성 누락: clsx, tailwind-merge / 선언됐지만 설치되지 않은 의존성: tailwindcss → pnpm install", ...l.slice(6)],
+  // WI-0100a(Q35): app-init 의 globalCss(./src/app/globals.css)가 없어 globals.css 항목 끝에 brand 와 같은 표기가 붙음
+  "app-init": (l) => [
+    ...l.slice(0, 3),
+    `${l[3]} (globalCss ./src/app/globals.css 없음)`,
+    l[4],
+    "  WARN  권장 의존성 누락: clsx, tailwind-merge / 선언됐지만 설치되지 않은 의존성: tailwindcss → pnpm install",
+    ...l.slice(6),
+  ],
   "src-app": (l) => [...l.slice(0, 5), "  WARN  권장 의존성 누락: clsx, tailwind-merge / 선언됐지만 설치되지 않은 의존성: tailwindcss → pnpm install", ...l.slice(6)],
   brokenConfig: (l) => [...l.slice(0, 5), "  WARN  권장 의존성 누락: clsx, tailwind-merge / 선언됐지만 설치되지 않은 의존성: tailwindcss → pnpm install", ...l.slice(6)],
   allPass: (l) => [

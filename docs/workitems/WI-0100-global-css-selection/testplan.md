@@ -1,6 +1,6 @@
 # WI-0100: check 의 전역 CSS 파일 선택 테스트 계획
 
-> PRD: [prd.md](./prd.md) | 작성일: 2026-10-28 | 상태: 계획(결과 칸은 비어 있음)
+> PRD: [prd.md](./prd.md) | 작성일: 2026-10-28 | 상태: 0100a 측정 반영(2026-10-28, A1 · A1b · mono/app2 · mono/app2b 등), 0100b 행은 계획
 > 기준선은 저장소 dist 가 아니라 **npm 발행본 cli 1.7.6 · mcp 1.4.5** 예요(저장소 `packages/axis-cli/dist` 는 2026-10-25 빌드로 낡음, `pluginProblem` 0건). 「발행본」 열은 조사 · 반박 검증의 측정값이고, 「미측정」은 구현 첫 단계에서 재요.
 
 ## 1. fixture
@@ -18,7 +18,8 @@
 | C0 | 조사 | `app/globals.css`(tailwindcss + tokens 진입점), globalCss=`./app/globals.css` | AC11 | 5/0/0, rc 0 (측정) |
 | c0n | 검증 | C0 에서 globalCss 키 없음 | AC11 | 미측정(fixture 만 있음) |
 | R1 | 조사 · 검증 | C0 + 루트 `globals.css`=`body{margin:0}` | AC1 | WARN 2건, rc 0 (측정) |
-| A1 | 새로 | R1 + ui-react 선언 · 설치 + `tw-animate-css` 설치, `@import "tw-animate-css";` 는 `app/globals.css` | AC1 | 미측정(WARN 예상) |
+| A1 | 새로 | R1 + ui-react 선언 · 설치 + `tw-animate-css` 설치, `@import "tw-animate-css";` 는 `app/globals.css`(컴포넌트 `tailwind.css` 줄 없음) | AC1 | WARN 3건(TW4 `tailwind.config` · `globals.css` · animation), rc 0 (측정, 착수 측정 `WI-0100a/out/summary.tsv`) |
+| A1b | 새로(H3) | A1 + `app/globals.css` 에 `@import "@axis-ds/ui-react/tailwind.css";` | AC1 | A1 과 같은 WARN 3건, rc 0 (측정, 같은 표) |
 | R2 | 조사 · 검증 | `src/styles/globals.css` 만, globalCss 가 그 파일 | AC2 | WARN + FAIL, rc 1 (측정) |
 | R3 | 조사 · 검증 | `styles/app.css` 만, globalCss 가 그 파일 | AC2 | WARN + FAIL, rc 1 (측정) |
 | R4 / R4n | 조사 / 검증 | `app/globals.css`=`@import "tailwindcss"; @import "./axis.css";`, `app/axis.css`=tokens 진입점 / 빈 파일 | AC4 | 둘 다 같은 WARN 2건 (측정) |
@@ -30,7 +31,8 @@
 | I1 | 조사 · 검증 | config 없음, `src/styles/globals.css` 만 → `init -y` | AC2 · AC13 | init rc 0, check FAIL rc 1 (측정) |
 | I2 | 조사 · 검증 | config 없음, 루트 낡은 파일 + `app/globals.css` → `init -y` | AC13 | init 은 app 기록, check 는 루트 WARN 2건 (측정) |
 | mono/app1 | 검증 | `app1/axis.config.json` globalCss=`../shared/globals.css` · brand ontology, `shared/globals.css` 완전(tailwindcss · tokens 진입점 · ontology), `app1/package.json` 에 ui-react 선언 없음 · componentsDir 비어 있음(animation 항목 없음), 설치본은 `app1/node_modules` 에만 | AC6 · AC7 | CSS 2항목(TW4 `tailwind.config` WARN · `globals.css` FAIL) rc 1, brand PASS (측정) |
-| mono/app2 | 새로 | mono/app1 + `app2/package.json` 에 ui-react 선언 · 설치, `tw-animate-css` 설치, `shared/globals.css` 에 `@import "tw-animate-css";` | AC7 | 미측정(CSS 3항목 WARN + FAIL 예상, 추정) |
+| mono/app2 | 새로 | mono/app1 + `app2/package.json` 에 ui-react 선언 · 설치, `tw-animate-css` 설치, 밖 CSS(fixture 는 `shared2/globals.css`)에 `@import "tw-animate-css";`(컴포넌트 `tailwind.css` 줄 없음) | AC7 | TW4 `tailwind.config` WARN · `globals.css` FAIL · animation WARN, brand PASS, rc 1 (측정, 착수 측정 `WI-0100a/out/summary.tsv`) |
+| mono/app2b | 새로(H3) | mono/app2 + 밖 CSS(`shared2b/globals.css`)에 `@import "@axis-ds/ui-react/tailwind.css";` | AC7 | mono/app2 와 같음, rc 1 (측정, 같은 표) |
 | x2 | 검증 | globalCss=`./nope.css`, 루트 `globals.css` 완전 | AC3 | PASS, 표기 없음 (측정) |
 | x3 | 검증 | globalCss=`./nope.css`, CSS 없음 | AC3 · AC9 | FAIL rc 1 (측정) |
 | x4 | 검증 | TW3, `app/layout.tsx` 가 `import "@axis-ds/tokens/css"`, 루트 · app CSS 는 `body{margin:0}` | AC9 | PASS 「globals.css에 … (app/layout.tsx의 @axis-ds/tokens/css import)」 (측정) |
@@ -56,7 +58,8 @@ node $S/WI-0100-verify/scripts/mcp-call.mjs $NEW/axis-mcp/dist/index.js "$d"   #
 # init (I1 · I2): out=$(node <cli> init -y 2>&1); rc=$?  뒤 cat axis.config.json, 이어서 check
 ```
 
-- 판정 파일명 집합(AC6): 출력의 PASS · WARN · FAIL 줄에서 `([^ ]+\.css)에` 를 뽑아 `sort -u | wc -l`. 0 이면 계측 실패(줄이 안 잡힘)로 보고 원출력을 다시 봐요.
+- 판정 파일 집합(AC6, H4 정정): **각 항목 줄이 가리키는 판정 파일**의 집합 크기예요. CSS 판정 항목 줄(TW4 `tailwind.config` · `globals.css` · TW4 animation · brand import, 브랜드 켜기 코드 WARN 은 제외)마다 「<파일>에」의 파일(확장자를 가리지 않음, `package.json` 도 셈)을 하나 정하고, 「찾지 못했습니다 · 찾을 수 없습니다」면 「(없음)」, 둘 다 아니면 「식별 불가」로 따로 세요. 스크립트 `$S/WI-0100a/h4/judged.sh <출력 파일>`(출력 `items=<항목 수> set=<집합 크기> unidentified=<식별 불가 수>`). 항목 수가 0 이면 계측 실패로 보고 원출력을 다시 봐요.
+  - 정정 이유: 종전 정의(`([^ ]+\.css)에` 를 `sort -u | wc -l`)는 파일명이 없는 항목(「… 확인할 CSS 파일을 찾지 못했습니다」 · 「globals.css 파일을 찾을 수 없습니다」)과 `.css` 가 아닌 파일명(N1 brand 의 `package.json`)을 세지 못했어요. 같은 저장 출력에 두 정의를 적용한 값(발행본): R6 2 / 2, mono/app1 **1** / 2, N1 **1** / 2(종전 / 정정). 신판(WIP 3325190 빌드 출력)은 R6 · mono/app1 · mono/app2 · mono/app2b · N1 · N2 · R1 · A1 · A1b 모두 정정 지표 1, 식별 불가 0이에요. 발행본의 식별 불가는 파일명 없는 animation WARN(mono/app2 · mono/app2b · A1 · A1b 각 1건)이에요.
 - vitest: `pnpm --filter @axis-ds/cli test` · `pnpm --filter @axis-ds/mcp test`, 파일별 통과 수를 기준선과 나란히 적어요. mcp `registry/tokens-sync.test.ts` 는 빌드 전 0건 실행이라 빌드 뒤 수만 셈해요.
 - 품질 게이트: `pnpm turbo run build type-check lint --force`(캐시 우회).
 
@@ -76,7 +79,8 @@ node $S/WI-0100-verify/scripts/mcp-call.mjs $NEW/axis-mcp/dist/index.js "$d"   #
 |---|---|---|
 | C0 · c0n · x5 · R5c | 그 단계 구판과 바이트 동일 | 0 → 0 |
 | R1 · R8 | TW4 `tailwind.config` PASS(파일명 자리 `app/globals.css`, 0100a 시점 문구는 HEAD 틀 「Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다」, 0097 머지 뒤는 파일명 · 접미사만 단언) · globals.css PASS 「app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)」(globals 게이트가 붙은 뒤는 파일명 · 접미사만 단언) | 0 → 0 |
-| A1 | animation PASS, 파일명 자리 `app/globals.css`(0100a 시점 HEAD 틀 「app/globals.css에 애니메이션 플러그인이 있습니다」) | 0 → 0 |
+| A1 | animation PASS, 파일명 자리 `app/globals.css`(0100a 시점 HEAD 틀 「app/globals.css에 애니메이션 플러그인이 있습니다」) · `globals.css` PASS. TW4 `tailwind.config` 는 **B1 WARN 이 남아요**(「app/globals.css에 컴포넌트 스캔 경로(tailwind.css)가 없습니다」, ui-react 선언인데 컴포넌트 `tailwind.css` 줄이 없음, H3 정정) | 0 → 0 |
+| A1b | CSS 3항목 PASS(파일명 `app/globals.css`, TW4 `tailwind.config` 는 HEAD 틀 「Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다」) | 0 → 0 |
 | R2 · R3 · I1 | PASS 2건(파일명 `src/styles/globals.css` · `styles/app.css`), FAIL 0 | **1 → 0** |
 | R4 | PASS 2건, 근거 접미사 「(app/axis.css 의 import)」 형식 | 0 → 0 |
 | R4n | WARN 2건 그대로(파일명 `app/globals.css`) | 0 → 0 |
@@ -86,13 +90,14 @@ node $S/WI-0100-verify/scripts/mcp-call.mjs $NEW/axis-mcp/dist/index.js "$d"   #
 | R9 | WARN(`app/globals.css` 기준). rc 불변 | 0 → 0 |
 | I2 | config 의 `./app/globals.css` 와 판정 파일명 같음 | 0 → 0 |
 | mono/app1 | CSS 2항목(TW4 `tailwind.config` · `globals.css`)이 `../shared/globals.css` 로 PASS, animation 항목 없음(종전과 같음), brand PASS 그대로, 집합 1개 | **1 → 0** |
-| mono/app2 | CSS 3항목(animation 포함)이 `../shared/globals.css` 로 PASS, 집합 1개 | 미측정 → 0 |
+| mono/app2 | CSS 3항목(animation 포함)이 밖 파일(`../shared2/globals.css`)을 판정, `globals.css` · animation PASS, TW4 `tailwind.config` 는 **B1 WARN 이 남아요**(H3 정정), 집합 1개 | **1 → 0** |
+| mono/app2b | CSS 3항목 모두 `../shared2b/globals.css` 로 PASS, brand PASS, 집합 1개 | **1 → 0** |
 | x2 | PASS + 「(globalCss ./nope.css 없음)」 | 0 → 0 |
 | x3 | FAIL 「globals.css 파일을 찾을 수 없습니다 (globalCss ./nope.css 없음)」, TW4 항목 WARN 에도 표기 | 1 → 1 |
 | x4 | PASS 「app/globals.css에 AXIS CSS 변수가 있습니다 (app/layout.tsx의 @axis-ds/tokens/css import)」 | 0 → 0 |
 | E1 · E2 · E4 · E5 | WARN 그대로, 예외 · stderr 없음, 2초 안에 끝남 | 0 → 0 |
 | E3 | PASS(b 의 근거 인정), 무한 루프 없음 | 0 → 0 |
-| N1 | 세 항목 · brand 가 `app/globals.css`, `configuredRejected` 표기(brand 문구 전이, AC11 예외). `planThemeAdd` 는 `css-not-stylesheet` 그대로 | 0 → 0 |
+| N1 | 세 항목 · brand 가 `app/globals.css`, `configuredRejected` 표기 「 (globalCss ./package.json: .css 파일이 아님)」(Q36 확정, brand 문구 전이, AC11 예외), 집합 1개(발행본 2개). `planThemeAdd` 는 `css-not-stylesheet` 그대로 | 0 → 0 |
 | N2 | 세 항목 · brand 가 `app/globals.css`, 「(globalCss ./app 없음)」 표기. brand 문구는 발행본과 바이트 동일 | 0 → 0 |
 | G1 | PASS 아님(0097 게이트 문구) | 0 → 0 |
 | G2 | TW4 `tailwind.config` · `globals.css` 판정이 G2c 와 같음(게이트로 막지 않음, Q21). 미설치는 dependencies WARN | 0 → 0 |
