@@ -1,8 +1,8 @@
 # WI-0097: check 의 CSS import 해석 가능성 판정 테스트 계획
 
-> PRD: [prd.md](./prd.md) | 작성일: 2026-10-28 | 상태: 1부 측정(2026-10-28, 2절 Q22 · 4.1 · 4.2 중간 측정 · 5절 1부 변이, Q39 반영 재측정, 4.4 B1 문구 확정(Q43)). 1절의 「발행본」 열은 착수 조사 · 반박 검증의 **측정** 값이고, 2부(globals 게이트) 결과 칸은 0100a 머지 뒤 채워요
+> PRD: [prd.md](./prd.md) | 작성일: 2026-10-28 | 상태: 1부 측정(2026-10-28, 2절 Q22 · 4.1 · 4.2 중간 측정 · 5절 1부 변이, Q39 반영 재측정, 4.4 B1 문구 확정(Q43)) · 2부 측정(2026-10-28, 4.1 · 4.2 · 4.3 · 4.5 · 5절의 「2부」). 1절의 「발행본」 열은 착수 조사 · 반박 검증의 **측정** 값이에요
 > 조사 scratchpad(세션 임시 경로, 구현 때 사라질 수 있음): `/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/7a29a557-9ebc-48a8-a772-89e5ee57e773/scratchpad/` 아래 `WI-0097/`(조사, ui-react) · `WI-0097-verify/`(검증, agentic-ui). 이하 `$S` 로 줄여요
-> 비교 기준 두 축: ① 문제 재현(음성 대조)은 1절 「발행본 1.7.6」 측정값 ② 「수정 전후 불변」(AC7 · AC9 · AC12, 4.2)은 **WI-0100a 머지 직후 HEAD 빌드 사본** 대 수정본이에요. 0100a 의 `globalCss` 우선 변경이 한 diff 에 섞이지 않게 해요. 기준 커밋 SHA: 1부(0100a 와 겹치지 않는 부분, 2026-10-28)는 c0dcc14 빌드 사본으로 중간 측정했고(4절), 2부 착수 때 0100a 머지 직후 SHA 를 여기에 기록해요
+> 비교 기준 두 축: ① 문제 재현(음성 대조)은 1절 「발행본 1.7.6」 측정값 ② 「수정 전후 불변」(AC7 · AC9 · AC12, 4.2)은 **WI-0100a 머지 직후 HEAD 빌드 사본** 대 수정본이에요. 0100a 의 `globalCss` 우선 변경이 한 diff 에 섞이지 않게 해요. 기준 커밋 SHA: 1부(0100a 와 겹치지 않는 부분, 2026-10-28)는 c0dcc14 빌드 사본으로 중간 측정했고(4절), 2부는 **ac65811**(WI-0097 1부를 origin/main ce04f02 위로 옮긴 커밋. ce04f02 는 0100a 머지 293500e 위 문서 커밋)의 빌드 사본(`$S/WI-0097impl/part2/headbuild`, cli `index.js` sha256 앞 16자 133eb86b2c7bca51)으로 쟀어요
 
 ## 1. fixture
 
@@ -85,6 +85,19 @@
 - globals PASS 후보(cli 9건 · mcp 4건)는 1부에 globals 게이트가 없어 전이 0 이에요(2부에서 다시 봐요). 앱 선언 B1(cli `:917-941` · `:1118-1140` · `:1194`, mcp `:329` · `:358` · `:406`)과 TW4 진입점 PASS 는 전이 0 이에요
 - 새 테스트를 c0dcc14 소스(수정한 소스 4개만 HEAD 사본으로 바꿈, 테스트 파일은 새 것)에 돌리면 cli 24 빨강 · 280 초록, mcp 7 빨강 · 47 초록이에요. 빨강은 AC1 ~ AC5 행 · 헬퍼 · DEC-2 이전 행이고, 초록으로 남은 새 행은 회귀 가드(F2 · F7 · F8 · F6w · F13 · F14 · F12 · `@source` 가드)예요. 원복은 sha256 대조(4/4 OK)
 
+**2부(2026-10-28, 기준 ac65811)**: 기준선 수는 rebase 단계 측정(cli 21 파일 · 1002, mcp 9 파일 · 213)이에요.
+
+| 패키지 | 기준선(ac65811) | 2부 수정 뒤 | 새 테스트 | 기존 기대 변경 |
+|---|---|---|---|---|
+| cli 전체 | 1002 | 21 파일 · 1018 통과(rc 0) | +16(`template-check.test.ts` 「WI-0097」 안 「2부」 describe) | 0건. 설치 stub 보강 10건(아래) |
+| mcp 전체(빌드 뒤 실행) | 213 | 9 파일 · 217 통과(rc 0) | +4(「WI-0097 2부」 describe) | 0건. 설치 stub 보강 5건(아래) |
+
+- 2부 globals 게이트로 기존 테스트 cli 10건 · mcp 5건이 PASS → WARN 으로 바뀌었어요(수정본에서 실행해 확인). 모두 테스트 의도가 「import 를 근거로 인정 · 밖 파일을 읽음」이라 **설치 stub 보강 · 기대 불변**으로 처리했어요(tokens 설치본 stub `package.json` 만, 또는 설치본을 공통 상위로 옮김). 보강한 테스트는 ac65811 소스에서도 그대로 초록이에요(아래 빨강 확인 실행에서 260 통과에 포함)
+  - plan 4절 목록 안(globals PASS 후보): cli `:607`(css · shadcn · tailwind4 import 표기) · `:641`(변수 직접 정의 + import) · `:672`(WI-0070 레이아웃 JS import) · `:686`(Arial) · `:1040`(B2 globals pass), mcp `:258` · `:266` · `:469`. 줄 번호는 18d0357 기준이에요
+  - **plan 4절 목록 밖**(5 + 2건): cli T4-3 「일치 → pass, 기존 5항목과 합쳐 warn 0」 · WI-0042 「runCheck 는 개수를 돌려줌」 · WI-0065 D8 「FAIL 이 생기면 axis check 종료 코드 1」(셋 다 tokens 미선언 · 미설치 + tokens import 라 globals WARN), WI-0100a 「mono/app1」 · 「mono/app2」(0100a 가 plan 작성 뒤 더한 테스트, 설치본이 앱 아래에만 있어 Q37 WARN, WI-0100 plan 4-1 이 「0097 게이트가 WARN 으로 바꿀 대상」으로 적은 형태). mcp T4-4 「일치 → pass, summary warn 0」 · WI-0100a 「mono」. 기대는 바꾸지 않았고 stub 만 보강했어요(사용자 결정 Q49 로 승인)
+  - 목록 안인데 전이 0: cli `:215` · `:364` · `:1954` · `:1970`, mcp `:492`(tokens 가 앱 선언이거나 설치본이 있는 fixture)
+- 새 테스트를 ac65811 소스(고친 소스 2개 `project.ts` · `tailwind-core.ts` 만 HEAD 사본으로 바꿈, 테스트 파일은 새 것)에 돌리면 cli `template-check.test.ts` 270건 중 10 빨강 · 260 초록, mcp `template.test.ts` 63건 중 4 빨강 · 59 초록이에요. 빨강은 G1 · G5 · Arial 이음 · G7 · G7b · G4 · G3(PnP 미선언 WARN 부분) · Q37 앱 아래만 · Q37 컴포넌트 줄 · `outsideCssPackageResolution` 헬퍼, 초록으로 남은 새 행은 회귀 가드(G6 · `--axis-*` · G2 · Q37 호이스팅 · Q37 앱 안 파일 · Q37 미설치 · PnP)예요. 원복은 sha256 대조 2/2 OK(출력 `$S/WI-0097impl/part2/out/red-on-head-*.txt`)
+
 ### 4.2 fixture A/B (1절 전부, CLI · MCP)
 
 | id | 발행본 rc(음성 대조) | 0100a HEAD 사본 rc | 수정본 rc | 바뀐 항목 · 문구(0100a HEAD 사본 대비) | CLI = MCP(severity · message) |
@@ -101,6 +114,16 @@
 
 **theme add A/B(AC9, 1부)**: 같은 경로에 fixture 를 새로 만들어 c0dcc14 사본과 수정본으로 `axis theme add ontology --dir <app>` 를 돌리고 stdout+stderr · rc · 바뀐 파일 sha256 을 비교했어요(`scripts/themeab.sh`, 출력 `$S/WI-0097impl/themeab/out`). 10 레이아웃(root-notinst · root-inst-css · root-inst-nofile · root-inst-old · root-inst-unknown · pnp-root · applock-root · appdecl-notinst · mixed · root-notinst-withline) × 2 패키지 = 20개가 모두 같아요. Q39 반영 뒤 다시 빌드한 dist 로 다시 재도 「합계 20, 같음 20, 다름 0」이에요(2026-10-28, cli `index.js` sha256 앞 16자 c0dcc14 사본 37a47ceae6a0dc95 · 수정본 7551e7bfe2c3673e). DEC-2 의 세 문장(미설치 · 손상 · 1.4.0 미만/버전 모름)이 10개 출력에 실제로 나와 그 경로가 실행됐음을 확인했고, 두 dist 의 `index.js` sha256 은 달라요(비교 대상이 서로 다른 빌드)
 
+**2부 측정(2026-10-28, tailwind.config · globals.css 두 항목, 기준 ac65811 빌드 사본)**: 스크립트 `$S/WI-0097impl/part2/scripts/measure2.sh`, 출력 `$S/WI-0097impl/part2/out/measure2.txt`. 대상은 1부 F 계열 40개(`$S/WI-0097impl/fx`) + F6i 2개(applock-root-installed, 패키지마다) + G 계열 12개(`part2/fxg`: G1 · G2 · G3 · G3n(PnP 미선언) · G4 · G5 · G5i(G5 + 설치본) · G6 · G7 · G7npm · G7i(G7 + 설치본) · G7p2(P2)) + Q37 실빌드 fixture 5개(`part2/build/fx`, 4.3)예요.
+
+- 수행 증명: 「fixture 59, 바뀜 10, CLI rc 같음 59/59, CLI=MCP(수정본) 59/59, CLI=MCP(HEAD 사본) 59/59, MCP 호출 rc 0(양쪽) 59/59」. 두 항목 줄이 모두 비지 않을 때만 CLI=MCP 로 셌어요
+- 바뀐 10개: G1 · G3n · G4 · G5 · G7 · G7npm · G7p2(globals PASS → WARN), Q37 A · C · D(4.3). 문구는 4.5 와 같아요
+- 바뀌지 않은 49개: F 계열 40/40 · F6i 2/2(2부는 앱 안 B1 판정을 바꾸지 않음), G2(Q28) · G3(PnP 앱 선언) · G5i · G6(설치본 디렉터리) · G7i, Q37 B · E(호이스팅)
+- AC12: CLI rc 는 59/59 가 HEAD 사본과 수정본에서 같아요(G1 · G5 · G5i · G6 의 rc 1 은 Tailwind 3 설정 파일이 없는 FAIL 때문이고 양쪽 같음)
+- W1 저장소 `apps/web`(tokens `workspace:*` 앱 선언, 레이아웃 JS import): tokens dist 가 있을 때 · `packages/axis-tokens/dist` 를 잠시 옮겨 없앤 때 모두 globals PASS 「src/app/globals.css에 AXIS CSS 변수가 있습니다 (src/app/layout.tsx의 @axis-ds/tokens/css import)」로 HEAD 사본과 같아요. dist 는 sha256 대조로 원복했어요(출력 `part2/out/w1.txt`). check rc 1 은 이 WI 와 무관한 다른 FAIL 로 양쪽 같아요
+
+**theme add A/B(AC9, 2부)**: 1부와 같은 스크립트(`part2/scripts/themeab.sh`, fixture 생성은 1부 `scripts/mk.sh`)로 ac65811 사본과 2부 수정본을 비교했어요. 「합계 20, 같음 20, 다름 0」이고 DEC-2 문장이 10개 출력에 나와 그 경로가 실행됐어요. 두 dist 의 cli `index.js` sha256 앞 16자는 133eb86b2c7bca51(ac65811) · f21dee9561bf2d1e(수정본)로 달라요(출력 `part2/out/themeab.txt`)
+
 ### 4.3 실빌드 대조
 
 | 경우 | 줄 | rc |
@@ -108,6 +131,19 @@
 | F1 안내대로 설치 · 줄 추가 | 있음 | 기대 0 |
 | F9 그대로 | 있음 | 측정 1(조사 · 검증), 재확인 |
 | F11 그대로 | 있음 | 2절 결과 |
+
+**Q37 A/B(2부, 2026-10-28)**: WI-0100a 넘김 메모(WI-0100 plan 4-1)와 같은 방법으로, 앱의 `@tailwindcss/postcss` 를 `$S/WI-0100a/scripts/pcss.cjs` 로 직접 부르고 `from` 에 진입 CSS 절대경로를 줬어요(next build 아님). 설치본은 `$S/WI-0100a/build/mono/app1/node_modules` 의 실설치(tailwindcss · `@tailwindcss/postcss` 4.1.14, tokens 1.8.2)를 심볼릭 링크로 배치했고, ui-react 는 `$S/WI-0098/P3` 의 Yarn unplugged 실설치본 1.8.2 를 복사했어요. 각 fixture 는 `app1/`(앱, `globalCss: "../shared/globals.css"`) · `shared/globals.css`(`@import "tailwindcss"` · 토큰 진입점, D · E 는 `@axis-ds/ui-react/tailwind.css` 도)예요. 스크립트 `part2/scripts/q37build.sh`, 결과 `part2/build/build-result.txt`.
+
+| fixture | 설치본 위치 | 실빌드 rc(첫 오류) | ac65811 check | 수정본 check |
+|---|---|---|---|---|
+| A app-only | 모두 `app1/node_modules` | **1** `Can't resolve 'tailwindcss' in '…/shared'` | 두 항목 PASS | tailwind.config WARN(tailwindcss 줄) · globals WARN(토큰 줄) |
+| B hoisted | 모두 공통 상위 `node_modules` | **0**(28,382 B, `--axis-` 570줄) | PASS | PASS(바뀌지 않음) |
+| C tokens-app-only | tokens 만 `app1/node_modules`, 나머지 상위 | **1** `Can't resolve '@axis-ds/tokens/css/tailwind4'` | PASS | tailwind.config PASS(D4) · globals WARN |
+| D ui-app-only | ui-react 만 `app1/node_modules`, 나머지 상위 | **1** `Can't resolve '@axis-ds/ui-react/tailwind.css'` | PASS | tailwind.config WARN(컴포넌트 줄) · globals PASS |
+| E ui-hoisted | ui-react 도 상위 | **0**(72,095 B, `axis-button` 74줄) | PASS | PASS(바뀌지 않음) |
+
+- 판정: 실빌드 rc 1 인 3개는 수정본에서 모두 해당 줄 WARN 이고, rc 0 인 2개는 모두 PASS 예요(5/5 대응). ac65811 사본은 5개 모두 PASS(거짓 PASS 3개)예요. CLI rc 는 다섯 모두 0 으로 양쪽 같아요(종료 코드 불변)
+- 미측정: Plug'n'Play 의 밖 진입 파일(판정하지 않음, 종전 동작), 앱 위치에서 설치본을 찾지 못하는 앱 선언 + 밖 파일(Q28 이 앞서 판정하지 않음), next build 경유 빌드
 
 ### 4.4 B1 확정 문구 (사용자 결정 Q43, 2026-10-28)
 
@@ -134,6 +170,21 @@ TW4 B1 의 새 안내 문구 8개를 1부 구현 그대로 확정했어요(코�
 - `PNP_ROOT_ONLY_NOTE` 는 `packages/axis-registry-core/src/project.ts:219` 의 「워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다」, `TAILWIND4_MIN_AXIS_VERSION` 은 1.4.0 이에요. 줄 있음 1.4.0 미만(root-inst-old-withline)은 새 문구가 아니라 종전 버전 WARN 그대로라 8개에 들지 않아요
 - 설치 명령 구절(`componentInstallPhrase`)은 선언 출처를 따라요(위 측정은 pnpm 워크스페이스, pnp-root-nopnp 는 `yarn install`, npm 루트는 「워크스페이스 루트에서 npm install」. H4 잔여는 prd 5절)
 - 대조 기록(2026-10-28): 이 절의 표 행을 awk 로 뽑아 「코드 문자열」 칸을 `tailwind-core.ts` 에 `grep -F` 하니 8/8 일치, 「측정 출력」 칸 9개(M-4 는 2개)를 `measure-mod.txt` 의 `mod : WARN Tailwind 4: app/globals.css에 ` 접두와 붙여 `grep -F` 하니 9/9 일치예요. `head` 정의(`tailwind-core.ts:922`) · `PNP_ROOT_ONLY_NOTE`(`project.ts:219`) · `TAILWIND4_MIN_AXIS_VERSION = "1.4.0"`(`project.ts:546`)도 각 1건이에요. 음성 대조로 M-1 끝을 「않았어요」로 바꾼 문자열은 0건이었어요. `measure-mod.txt` 를 만든 수정본 cli `index.js` sha256 앞 16자 7551e7bfe2c3673e 는 이번에 다시 빌드한 dist 와 같아요(4.2 theme add A/B 와 같은 값)
+
+### 4.5 2부 새 문구 (확정, 사용자 결정 Q48)
+
+Q43 틀(「<spec> import 가 있지만 … 해석되지 않습니다 → …」)을 따라 썼어요. 2026-10-28 사용자 결정 Q48 로 확정했어요. 코드 문자열은 `packages/axis-registry-core/src/template/tailwind-core.ts` 의 템플릿 리터럴 그대로예요.
+
+| # | 항목 · 갈래 | 코드 문자열 | 측정 출력(fixture) |
+|---|---|---|---|
+| G-1 | globals · tokens 설치본 없음(루트 선언 · 미선언 · P2 · PnP 미선언) | `${spec} import 가 있지만 ${TOKENS_PACKAGE_NAME} 가 설치되지 않아 해석되지 않습니다 → 설치(${tokensInstallPhrase(baseDir)})` | `app/globals.css에 @axis-ds/tokens/css/tailwind4 import 가 있지만 @axis-ds/tokens 가 설치되지 않아 해석되지 않습니다 → 설치(pnpm install)`(G7) |
+| G-2 | globals · PnP 루트 전용 | `${spec} import 가 있지만 ${TOKENS_PACKAGE_NAME} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요` | `app/globals.css에 @axis-ds/tokens/css/tailwind4 import 가 있지만 @axis-ds/tokens 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요`(G4, Q43 P-2 와 같은 틀) |
+| G-3 | globals · 레이아웃 JS import 앞머리 | `${candidate}에 AXIS CSS 변수가 없고 ${layout.file}의 ${issue}` | `app/globals.css에 AXIS CSS 변수가 없고 app/layout.tsx의 @axis-ds/tokens/css import 가 있지만 @axis-ds/tokens 가 설치되지 않아 해석되지 않습니다 → 설치(pnpm add "@axis-ds/tokens@^1.4.0")`(G5) |
+| G-4 | 프로젝트 밖 진입 파일(Q37, tailwind.config 의 `tailwindcss` · 컴포넌트 줄, globals 의 토큰 줄) | `${spec} import 가 있지만 이 파일 위치에서 ${name} 를 찾지 못해 해석되지 않습니다(설치본이 앱 쪽 node_modules 에만 있음) → 이 파일의 상위 node_modules(워크스페이스 루트 등)에 설치하거나 globalCss 를 앱 안 파일로 바꾸세요` | `Tailwind 4: ../shared/globals.css에 tailwindcss import 가 있지만 이 파일 위치에서 tailwindcss 를 찾지 못해 해석되지 않습니다(설치본이 앱 쪽 node_modules 에만 있음) → …`(Q37 A) |
+
+- G-1 의 설치 구절(`tokensInstallPhrase`)은 선언 출처를 따라요: pnpm · yarn 루트 선언은 `<pm> install`, npm 루트 선언은 「워크스페이스 루트에서 npm install」(G7npm), 미선언 · P2 · PnP 미선언은 범위를 붙인 추가 명령 `<pm> add "@axis-ds/tokens@^1.4.0"`(G1 · G7p2 는 `npm install "@axis-ds/tokens@^1.4.0"`, G3n 은 `yarn add …`). 추가 명령의 범위 `^1.4.0`(`TAILWIND4_MIN_AXIS_VERSION`, `css/tailwind4` 가 처음 들어간 버전)은 이번에 새로 고른 값이에요
+- 틀 밖 요소(Q48 로 함께 확정): G-3 앞머리 「AXIS CSS 변수가 없고 <레이아웃>의」, G-4 의 괄호 설명과 해결 구절 전체, G-1 의 추가 명령 범위. Tailwind 3 에서 Arial 이 남으면 G-1 · G-3 뒤에 종전 「. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → …」를 그대로 이어요(새 문구 아님)
+- 대조: 위 「측정 출력」 칸은 `part2/out/measure2.txt` 의 수정본 줄(`mod  gl:` · `mod  tc:` 뒤)에서 옮겼어요
 
 ## 5. 변이 계획 (AC11)
 
@@ -174,6 +225,22 @@ TW4 B1 의 새 안내 문구 8개를 1부 구현 그대로 확정했어요(코�
 | M8 P2 갈래 제거 | 6 | 1 | F6 · F6w, theme add P2 기존 1건, 헬퍼 |
 | M10 파일이 있어도 해석 불가 | 8 | 2 | F2 · F13 가드, WI-0086 AC2(stub 보강 행), theme add 기존 1건 · 결론 대조 |
 | M11 PnP 앱 선언도 불인정(B1 쪽) | 3 | **0** | F8 가드(F2 · F7 · F8 묶음 행, 두 패키지), 헬퍼. pnp-appdecl-withline 은 이 변이에서도 PASS(미선언 + 줄 = 종전 판정)라 잡지 못하는 동치 행이에요. mcp 「WI-0097」 describe 에 PnP 앱 선언 행이 없어 0 이에요(G3 는 2부) |
+
+**2부 측정(2026-10-28)**: globals 게이트 · Q37 에 걸리는 변이를 넣었어요. 적용은 `part2/scripts/mut.py`(저장한 2부 수정본에서 문자열 1곳 치환, 1곳이 아니면 중단), 실행은 cli `template-check.test.ts` + `theme-add.test.ts`(344건) · mcp `template.test.ts`(63건), 원복은 매번 sha256 2/2 OK. 출력 `part2/out/mut/` · `part2/out/mut-summary.txt`.
+
+| 변이 | cli 빨강 | mcp 빨강 | 잡은 행(요약) |
+|---|---|---|---|
+| M4 globals tokens 게이트 제거 | 8 | 4 | G1 · G5 · Arial 이음 · G7 · G7b · G4 · G3(PnP 미선언) · Q37 앱 아래만 |
+| M6g 게이트를 앱 선언에도 적용(앱 선언도 설치본이 있어야 해석) | 5 | 1 | G2 · G3 · Q37 미설치 가드, `tokensCssResolution` 헬퍼, WI-0100a R8(PnP 앱 선언 PASS) |
+| M9 tokens 판정을 exports 대상 파일(`dist/css/index.css`) 존재로 | 11 | 5 | G6 · G5(설치본 PASS 쪽), 헬퍼, stub 보강한 기존 8건(cli) · 4건(mcp) |
+| M11g PnP 에서 tokens 앱 선언도 불인정 | 4 | **0** | G3 · Q37 PnP 가드, 헬퍼, WI-0100a R8. mcp 에 PnP 앱 선언 행이 없어 0 이에요 |
+| M12 tailwind.config TW4 진입점에도 tokens 게이트 | 21 | 7 | G7 · G4 의 tailwind.config PASS(D4 가드), 진입점 PASS 기존 테스트 다수 |
+| MQ37 밖 파일 기준을 앱 기준으로(`cssDir` 대신 `baseDir`) | 3 | 1 | Q37 앱 아래만 · Q37 컴포넌트 줄 · 헬퍼 |
+| MQ37d 밖 진입 파일 판별을 끔 | 2 | 1 | Q37 앱 아래만 · Q37 컴포넌트 줄 |
+| ML 레이아웃 JS import 폴백의 게이트 제거 | 1 | 1 | G5 |
+
+- G8(2026-10-28 문서 정정 때 더함, cli `template-check.test.ts` 「2부」 describe): `--axis-*` 직접 정의와 해석되지 않는 tokens import 가 같은 CSS 에 있으면 import 판정이 먼저라 globals WARN(루트 선언 · 미설치 TW4, 미선언 · 미설치 TW3 두 형태). 현재 코드에서 초록이고, 판정 순서를 뒤집는 변이 MO(직접 정의를 import 보다 먼저 봄, `$S/WI-0097impl/doc-fix/` 사본에서만 적용)에서 이 파일 271건 중 새로 빨강은 G8 1건이에요(사본 기준선 빨강 3건은 템플릿 디렉터리를 복사하지 않은 환경 탓이고 변이 전후 같음). 기존 「`--axis-*` 직접 정의는 게이트 밖」 가드는 이 변이를 잡지 못해요
+- M6 · M11 의 B1 쪽은 1부 표 그대로예요(2부는 B1 판정을 바꾸지 않음). M1 ~ M3 · M5a · M5b · M7 · M8 · M10 은 2부에서 다시 돌리지 않았어요
 
 ## 6. CLI · MCP 대조
 

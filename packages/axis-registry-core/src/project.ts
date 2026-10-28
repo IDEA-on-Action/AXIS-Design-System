@@ -682,6 +682,7 @@ export function componentCssResolvable(resolution: ComponentCssResolution): bool
 
 /**
  * `@axis-ds/tokens` 의 CSS 진입점(`css` · `css/tailwind4` 등)을 이 앱이 해석할 수 있는지(WI-0097, globals.css 게이트용).
+ * check 의 globals.css 항목이 tokens CSS import 근거와 루트 레이아웃 JS import 근거(WI-0100 D11)를 pass 로 인정하기 전에 봐요(2부).
  * - `app`: 앱 package.json 에 선언. 설치 여부와 상관없이 해석되는 것으로 봐요(사용자 결정 Q28, PnP · non-PnP 공통)
  * - `pnp-root-only`: Plug'n'Play 이고 워크스페이스 루트에만 선언(Q22)
  * - `installed`: Plug'n'Play 가 아니고 `findInstalledPackage` 로 설치본 디렉터리를 찾음(선언 위치와 상관없음, 해석의 정의는
@@ -710,6 +711,27 @@ export function tokensCssResolution(
   return declared?.source === "root"
     ? { kind: "not-installed", source: "root", range: declared.range }
     : { kind: "not-installed", source: "none" };
+}
+
+/**
+ * 프로젝트 밖 진입 CSS(`globalCss` 가 앱 밖, WI-0100a 사용자 결정 Q25)의 패키지 줄을 그 파일 위치 기준으로 해석할 수 있는지
+ * (WI-0097 2부, 사용자 결정 Q37). 빌드 도구(`@tailwindcss/postcss` 의 enhanced-resolve)는 `@import "<pkg>..."` 를 앱이 아니라
+ * 그 CSS 파일 디렉터리부터 상위 node_modules 로 풀어요(WI-0100a 실측: 설치본이 앱 아래에만 있으면 rc 1
+ * 「Can't resolve 'tailwindcss' in '<그 파일 디렉터리>'」, 상위로 호이스팅하면 rc 0. WI-0097 testplan 4.3 에서 다시 잼).
+ * - `unresolved`: 앱 위치에서는 설치본을 찾는데(`file` 을 주면 설치본 안의 그 파일까지) CSS 파일 위치에서는 찾지 못함
+ * - `resolved`: CSS 파일 위치에서도 찾음
+ * - `unknown`: 판정하지 않음(종전 동작). Plug'n'Play(설치본을 읽지 않음)와, 앱 위치에서도 설치본이 없는 경우예요
+ *   (미설치는 앱 기준 판정과 dependencies 항목이 알려요, 사용자 결정 Q21 · Q28)
+ * 선언은 보지 않아요(node_modules 탐색은 선언과 상관없이 풀림). 앱 기준 판정(`componentCssResolution` · `tokensCssResolution`)을
+ * 대신하지 않고 그 뒤에 더하는 판정이에요.
+ */
+export type OutsideCssResolution = "resolved" | "unresolved" | "unknown";
+
+export function outsideCssPackageResolution(baseDir: string, cssDir: string, name: string, file?: string): OutsideCssResolution {
+  if (isPnpProject(baseDir)) return "unknown";
+  const usable = (p: InstalledPackage | undefined) => p !== undefined && (file === undefined || isFile(path.join(p.dir, file)));
+  if (!usable(findInstalledPackage(baseDir, name))) return "unknown";
+  return usable(findInstalledPackage(cssDir, name)) ? "resolved" : "unresolved";
 }
 
 /** 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 theme add 가 넣지 않은 이유(WI-0087 DEC-2, WI-0097 에서 cli theme-add.ts 에서 옮김) */

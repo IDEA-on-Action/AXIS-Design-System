@@ -62,6 +62,7 @@
 | 같은 파일 TW4 PASS `:198` · `:368` · `:491` (3건) | TW4 PASS | 불변 추정 |
 | `packages/axis-cli/src/theme/theme-add.test.ts` 전부 | DEC-2 동작 | 불변(AC9, 헬퍼 이동만) |
 | (기존 테스트 아님, fixture 전이) root-inst-unknown-withline(ui-react · agentic-ui): 루트 선언 · 설치본 버전 모름 · `tailwind.css` 없음 + 줄 | tailwind.config **PASS → WARN**「import 가 있지만 설치본(버전 모름)에 tailwind.css 가 없어 해석되지 않습니다 → 1.4.0 이상으로 올리세요」 | **기대 변경(사유: 사용자 결정 Q39, 2026-10-28)**. 기존 테스트 중 이 조건을 단언한 것은 없어 기존 기대 변경 0, 새 행 F4uw(cli 2 · mcp 1). check 종료 코드는 0 그대로(fixture A/B 측정, testplan 4.2) |
+| (2부, plan 작성 뒤 확인) cli T4-3 · WI-0042 「runCheck 는 개수를 돌려줌」 · WI-0065 D8 · WI-0100a mono/app1 · mono/app2, mcp T4-4 · WI-0100a mono (7건) | globals PASS → WARN(tokens 미선언 · 미설치 import, 밖 진입 파일 Q37) | 기대 불변, fixture 에 tokens 설치 stub 추가 또는 설치본을 공통 상위로(사용자 결정 Q49) |
 
 ## 5. 바꾸지 않는 곳
 
