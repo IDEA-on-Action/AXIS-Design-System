@@ -19,6 +19,9 @@
  *   걸린 정의 이름을 표시하고, B1 은 그 패키지를 가리키는 `@source` 가 직접 있으면 내지 않습니다. import 중인 컴포넌트
  *   `tailwind.css` 의 패키지도 A4 와 같은 버전 조건을 봅니다.
  * - `checkGlobalsCss`: globals.css 항목(WI-0044 보정). 변수를 직접 정의하지 않아도 tokens CSS import 가 있으면 pass 입니다.
+ * - WI-0100a: 전역 CSS 를 읽는 3항목(Tailwind 4 의 tailwind.config · globals.css · Tailwind 4 의 animation)은 `selectCheckGlobalCss` 로 같은
+ *   파일을 고릅니다. `axis.config.json` 의 `globalCss`(실재하는 `.css` 일반 파일, 프로젝트 밖은 읽기만) 다음 `TAILWIND_CSS_CANDIDATES` 순이고,
+ *   `globalCss` 를 쓰지 못하면 표기를 붙입니다. 상대 `@import` 로 들여온 하위 파일은 아직 보지 않습니다(WI-0100b 몫).
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
  *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
@@ -42,10 +45,13 @@ import {
   compareExactVersions,
   declaredDependency,
   findInstalledPackage,
+  globalCssSelectionNote,
   hasDependency,
   isPnpProject,
   pnpRootOnlyDependency,
   resolveBaseDir,
+  selectGlobalCss,
+  type GlobalCssSelection,
 } from "../project.js";
 
 /**
@@ -256,7 +262,10 @@ export const TAILWIND_CONFIG_FILES = [
   "tailwind.config.cjs",
 ] as const;
 
-/** Tailwind 4 이상에서 `@import "tailwindcss"` 를 찾는 CSS(globals.css 항목과 같은 후보 · 순서) */
+/**
+ * check 의 CSS 판정 3항목(Tailwind 4 의 tailwind.config · globals.css · Tailwind 4 의 animation)이 `axis.config.json` 의
+ * `globalCss` 다음으로 보는 후보(앞에서부터, 루트 우선). 세 항목이 `selectCheckGlobalCss` 로 같은 파일을 고릅니다(WI-0100a).
+ */
 export const TAILWIND_CSS_CANDIDATES = [
   "globals.css",
   "app/globals.css",
@@ -340,22 +349,26 @@ export function findLayoutTokensCssImport(baseDirInput: string): { file: string;
 
 /**
  * globals.css 항목을 판정합니다(`axis check` · MCP `axis.check_project` 공용, WI-0044 보정 · WI-0070).
- * 후보(`TAILWIND_CSS_CANDIDATES`)에서 처음 찾은 파일 하나를 봅니다. pass 는 AXIS 근거가 있을 때만입니다.
+ * `selectCheckGlobalCss` 가 고른 파일 하나(`globalCss` 가 가리키는 실재 `.css` 파일, 없으면 `TAILWIND_CSS_CANDIDATES` 에서 처음 찾은 파일,
+ * WI-0100a)를 봅니다. `globalCss` 를 쓰지 못했으면 모든 심각도의 문구 끝에 「(globalCss <값> 없음)」류 표기를 붙입니다.
+ * pass 는 AXIS 근거가 있을 때만입니다.
  * 1. tokens CSS import(`findTokensCssImport`) → pass(import 로 인정했다는 것을 문구에 남김)
  * 2. `--axis-*` 변수 정의 → pass
- * 3. 루트 레이아웃 JS 의 tokens CSS import(`findLayoutTokensCssImport`) → pass(CSS 에는 근거가 없어도 같은 변수가 들어옴)
+ * 3. 루트 레이아웃 JS 의 tokens CSS import(`findLayoutTokensCssImport`) → pass(CSS 에는 근거가 없어도 같은 변수가 들어옴).
+ *    고른 파일에 1 · 2 의 근거가 없을 때만 보고, 문구의 파일명은 고른 파일입니다(WI-0100 D11).
  * 4. 자체 `--background` · `--primary` 만 있음 → warn「AXIS 토큰 미사용」. 종전에는 pass 였습니다(거짓 초록, WI-0070).
  *    템플릿 4종(자체 HSL)은 WI-0067 전까지 이 warn 입니다(2026-10-25 사용자 결정, 종료 코드는 그대로).
- * 5. 아무것도 없으면 warn, 후보가 하나도 없으면 fail(종전과 같음).
+ * 5. 아무것도 없으면 warn, 고를 파일이 하나도 없으면 fail(종전과 같음, 레이아웃 근거가 있어도 fail).
  * Tailwind 3 이하에서 pass 조건을 채워도 create-next-app 기본 body `font-family: Arial` 이 남아 있으면 warn 입니다
  * (Tailwind 4 는 같은 판정을 tailwind.config 항목 B2 에서 냅니다).
  */
 export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
   const baseDir = resolveBaseDir(baseDirInput);
-  for (const candidate of TAILWIND_CSS_CANDIDATES) {
-    const file = join(baseDir, candidate);
-    if (!existsSync(file)) continue;
-    const content = readFileSync(file, "utf8");
+  const selection = selectCheckGlobalCss(baseDir);
+  const note = globalCssSelectionNote(selection);
+  if (selection.path !== undefined && selection.rel !== undefined) {
+    const candidate = selection.rel;
+    const content = readFileSync(selection.path, "utf8");
     const css = stripCssComments(content);
     const imported = findTokensCssImport(content);
     let pass: string | undefined;
@@ -372,21 +385,21 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
         return {
           name: "globals.css",
           severity: "warn",
-          message: `${pass}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)`,
+          message: `${pass}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)${note}`,
         };
       }
-      return { name: "globals.css", severity: "pass", message: pass };
+      return { name: "globals.css", severity: "pass", message: `${pass}${note}` };
     }
     if (css.includes("--background") && css.includes("--primary")) {
       return {
         name: "globals.css",
         severity: "warn",
-        message: `${candidate}에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요`,
+        message: `${candidate}에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요${note}`,
       };
     }
-    return { name: "globals.css", severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다` };
+    return { name: "globals.css", severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다${note}` };
   }
-  return { name: "globals.css", severity: "fail", message: "globals.css 파일을 찾을 수 없습니다" };
+  return { name: "globals.css", severity: "fail", message: `globals.css 파일을 찾을 수 없습니다${note}` };
 }
 
 /** Tailwind 4 진입점(토큰 `css/tailwind4` · 컴포넌트 `tailwind.css`)이 처음 들어가는 AXIS 버전(WI-0044 D1, linked minor) */
@@ -850,7 +863,8 @@ function tailwind4Issues(
 
 /**
  * tailwind.config 항목을 판정합니다.
- * - Tailwind major 4 이상(`detectTailwind`): 설정 파일을 보지 않고 CSS 후보에서 처음 찾은 파일의 `@import "tailwindcss"` 를
+ * - Tailwind major 4 이상(`detectTailwind`): 설정 파일을 보지 않고 `selectCheckGlobalCss` 가 고른 파일(`globalCss` 다음 CSS 후보,
+ *   WI-0100a, globals.css 항목과 같은 파일 · 같은 표기)의 `@import "tailwindcss"` 를
  *   봅니다. 없거나 CSS 를 찾지 못하면 warn(CSS 가 없을 때의 fail 은 globals.css 항목이 냅니다, 문구는 종전과 같음).
  *   있으면 같은 파일에서 `tailwind4Issues` 를 모아 하나도 없을 때만 pass 입니다. 여럿이면 한 항목 안에서 우선순위 순서로
  *   ` / ` 로 잇고, 끝에 버전 안내(A1)를 한 번 붙입니다(C). 문제가 하나면 그 문구만 나옵니다.
@@ -865,15 +879,16 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
   const tailwind = detectTailwind(baseDir, pkg);
   if (tailwind.major !== undefined && tailwind.major >= 4) {
     const label = `Tailwind ${tailwind.major}`;
-    for (const candidate of TAILWIND_CSS_CANDIDATES) {
-      const file = join(baseDir, candidate);
-      if (!existsSync(file)) continue;
-      const css = readFileSync(file, "utf8");
+    const selection = selectCheckGlobalCss(baseDir);
+    const note = globalCssSelectionNote(selection);
+    if (selection.path !== undefined && selection.rel !== undefined) {
+      const candidate = selection.rel;
+      const css = readFileSync(selection.path, "utf8");
       if (!hasTailwindImport(css)) {
         return {
           name: "tailwind.config",
           severity: "warn",
-          message: `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다`,
+          message: `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다${note}`,
         };
       }
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
@@ -882,19 +897,19 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
         return {
           name: "tailwind.config",
           severity: "warn",
-          message: `${label}: ${candidate}에 ${issues.join(" / ")}${tailwind4VersionNote(versions)}`,
+          message: `${label}: ${candidate}에 ${issues.join(" / ")}${tailwind4VersionNote(versions)}${note}`,
         };
       }
       return {
         name: "tailwind.config",
         severity: "pass",
-        message: `${label}: ${candidate}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다`,
+        message: `${label}: ${candidate}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다${note}`,
       };
     }
     return {
       name: "tailwind.config",
       severity: "warn",
-      message: `${label}: @import "tailwindcss" 를 확인할 CSS 파일을 찾지 못했습니다`,
+      message: `${label}: @import "tailwindcss" 를 확인할 CSS 파일을 찾지 못했습니다${note}`,
     };
   }
 
@@ -954,6 +969,15 @@ function readAxisConfigLike(baseDir: string): Record<string, unknown> | undefine
   } catch {
     return undefined;
   }
+}
+
+/**
+ * check 의 CSS 판정 3항목이 읽을 전역 CSS(WI-0100a). `axis.config.json` 의 `globalCss`(실재하는 `.css` 일반 파일, 프로젝트 밖도
+ * 읽기만) 다음 `TAILWIND_CSS_CANDIDATES` 순입니다. `globalCss` 를 쓰지 못하면 그 사유를 담아 세 항목이 같은 표기를 붙입니다.
+ * config 가 없거나 `globalCss` 키가 없으면 종전처럼 후보에서 처음 찾은 파일입니다.
+ */
+function selectCheckGlobalCss(baseDir: string): GlobalCssSelection {
+  return selectGlobalCss(baseDir, readAxisConfigLike(baseDir)?.globalCss, TAILWIND_CSS_CANDIDATES, { requireStylesheet: true });
 }
 
 /**
@@ -1415,7 +1439,8 @@ export interface AnimationCheckResult {
  * 열고 닫는 애니메이션 33개 클래스가 0개 생성). ui-react 를 쓰지 않으면 `null`(항목을 더하지 않음).
  * - 사용 판정: package.json 에 `@axis-ds/ui-react` 선언, 또는 componentsDir 아래 파일에 `animate-in` · `animate-out` 클래스
  * - 플러그인 판정(Tailwind 3): `tailwindcss-animate` 선언 + 설정 파일에서 그 이름 참조(`require` · `import`)
- * - 플러그인 판정(Tailwind 4): CSS 후보 첫 파일에 `@import "tw-animate-css"` 또는 `@plugin "tailwindcss-animate"`.
+ * - 플러그인 판정(Tailwind 4): `selectCheckGlobalCss` 가 고른 파일(`globalCss` 다음 CSS 후보, WI-0100a)에 `@import "tw-animate-css"` 또는
+ *   `@plugin "tailwindcss-animate"`.
  *   WI-0092(사용자 결정 Q9 · Q10): 줄마다 그 줄이 가리키는 패키지의 선언(앱 다음 워크스페이스 루트, Plug'n'Play 는 앱만) + 설치본을
  *   봅니다. 있는 줄이 모두 선언 · 설치돼 있을 때만 pass 이고, 줄은 있는데 선언 · 설치가 없으면 WARN(Tailwind 3 와 같음, 종료 코드 불변).
  *   다른 이름의 패키지만 설치돼 있어도 pass 가 아닙니다. 종전에는 줄만 보고 pass 여서 빌드가 깨지는 미설치 앱도 초록이었습니다.
@@ -1440,8 +1465,10 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
     return undefined;
   };
   if (tailwind.major !== undefined && tailwind.major >= 4) {
-    const file = TAILWIND_CSS_CANDIDATES.find((c) => existsSync(join(baseDir, c)));
-    const css = file !== undefined ? stripCssComments(readFileSync(join(baseDir, file), "utf8")) : "";
+    const selection = selectCheckGlobalCss(baseDir);
+    const note = globalCssSelectionNote(selection);
+    const file = selection.rel;
+    const css = selection.path !== undefined ? stripCssComments(readFileSync(selection.path, "utf8")) : "";
     // 줄마다 그 줄이 가리키는 패키지(WI-0092)
     const lines: string[] = [];
     if (new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`).test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
@@ -1450,15 +1477,15 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
       return {
         name: "animation",
         severity: "warn",
-        message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";`,
+        message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";${note}`,
       };
     }
     const problems = lines.map((name) => ({ name, why: pluginProblem(name) })).filter((x) => x.why !== undefined);
-    if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다` };
+    if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다${note}` };
     return {
       name: "animation",
       severity: "warn",
-      message: `${file}의 애니메이션 플러그인을 쓸 수 없습니다(${by}, ${problems.map((x) => x.why).join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${problems.map((x) => x.name).join(" · ")} 를 package.json 에 선언 · 설치하세요`,
+      message: `${file}의 애니메이션 플러그인을 쓸 수 없습니다(${by}, ${problems.map((x) => x.why).join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${problems.map((x) => x.name).join(" · ")} 를 package.json 에 선언 · 설치하세요${note}`,
     };
   }
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));

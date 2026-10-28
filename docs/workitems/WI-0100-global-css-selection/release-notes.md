@@ -21,7 +21,7 @@
 
 ## 바뀌지 않은 점
 
-- globalCss 키가 없는 프로젝트는 종전 후보 순서 그대로예요(WI-0049 D6-범위). 후보 목록은 합치지 않았어요.
+- globalCss 키가 없는 프로젝트는 종전 후보 순서 그대로예요(WI-0049 D6-범위). 후보 목록은 합치지 않았어요. 예외 하나: 후보 이름과 같은 디렉터리(예: 루트 `globals.css/`)가 있으면 1.7.6 은 check 가 `EISDIR` 로 멈췄고(종료 코드 1, MCP 는 「오류: EISDIR」), 이제 그 후보를 건너뛰고 다음 후보를 판정해요(검증 fixture d-rootdir · verify-dirfx 실측, 후보 판정이 존재 확인에서 일반 파일 확인으로 바뀐 결과).
 - 하위 파일의 create-next-app 기본 정의 · Arial 은 판정하지 않아요(진입 파일만 봄).
 - 루트 레이아웃(`app/layout.tsx` 등)의 `import "@axis-ds/tokens/css"` 를 근거로 인정하는 규칙은 그대로예요. 파일명만 선택된 파일로 나와요.
 - `axis init` · `axis theme add` 의 동작과 출력은 바꾸지 않았어요. init 의 Tailwind 4 안내는 WI-0095 에서 다뤄요.

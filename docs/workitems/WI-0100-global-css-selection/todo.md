@@ -14,11 +14,11 @@
 - [ ] 실빌드 1회: TW4 · TW3 + Next 의 상대 `@import` 펼침, mono/app1 형태의 밖 진입 파일 패키지 import 해석 기준 (testplan 4절, AC4 · AC7)
 
 ## 구현 0100a (파일 선택, 펼침 없음)
-- [ ] registry-core `project.ts` 선택 헬퍼(globalCss 우선 · `configuredMissing` · `configuredRejected` · 밖 경로 읽기) (AC1 · AC3 · AC7 · AC8)
-- [ ] `checkGlobalsCss` · `checkTailwindSetup`(TW4) · `checkAnimationPlugin`(TW4) 가 헬퍼 사용, 표기 접미사 (AC1 · AC2 · AC3)
-- [ ] 레이아웃 폴백 위치 · FAIL 조건 유지 (AC9)
-- [ ] cli `brand-core.ts` `findGlobalCss` 래퍼(theme add 종전 규칙) · `inspectBrandImport` 헬퍼 사용, mcp 사본 `cp` (AC6 · AC8 · AC11)
-- [ ] brand `configuredRejected` 표기(cli `template-check.ts` · mcp `template.ts`) (AC8 · AC12)
+- [x] registry-core `project.ts` 선택 헬퍼(globalCss 우선 · `configuredMissing` · `configuredRejected` · 밖 경로 읽기) (AC1 · AC3 · AC7 · AC8) → `selectGlobalCss` · `globalCssSelectionNote` (2026-10-28, 새 테스트 R1 · R2 · mono · x2 · N1 · N2)
+- [x] `checkGlobalsCss` · `checkTailwindSetup`(TW4) · `checkAnimationPlugin`(TW4) 가 헬퍼 사용, 표기 접미사 (AC1 · AC2 · AC3) (2026-10-28, fixture 32개 재측정에서 R2 · R3 · I1 · mono/app1 · mono/app2 · mono/app2b rc 1 → 0, R1 · R8 WARN → PASS(rc 0 그대로))
+- [x] 레이아웃 폴백 위치 · FAIL 조건 유지 (AC9) (2026-10-28, x4 PASS 파일명만 `app/globals.css`, x3 FAIL · rc 1 그대로)
+- [x] cli `brand-core.ts` `findGlobalCss` 래퍼(theme add 종전 규칙) · `inspectBrandImport` 헬퍼 사용, mcp 사본 `cp` (AC6 · AC8 · AC11) (2026-10-28, A/B probe 의 `findGlobalCss` 전이 0건, `cmp` 동일)
+- [x] brand `configuredRejected` 표기(cli `template-check.ts` · mcp `template.ts`) (AC8 · AC12) (2026-10-28, N1 · CLI · MCP 항목 줄 32/32 같음. 표기 문구는 Master 확인 대기)
 
 ## 구현 0100b (WI-0097 머지 뒤)
 - [ ] 상대 `@import` 펼침 헬퍼(프로젝트 안 · 방문 집합 · 깊이 한도, 근거 · 진입 문자열 분리) (AC4 · AC5)

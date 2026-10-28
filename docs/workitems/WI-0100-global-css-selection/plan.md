@@ -82,6 +82,7 @@
 | `packages/axis-cli/src/theme/brand-core.test.ts:276-296` `findGlobalCss` | 전이 없음(래퍼가 종전 규칙) | AC11 |
 | `packages/axis-cli/src/theme/theme-add.test.ts:176` · `:310` · `:353` · `:368` | 전이 없음(theme add 바이트 불변) | AC7 · AC8 · AC11 |
 | 새 fixture N1 의 brand(globalCss=`./package.json`) | 종전 `package.json` 을 골라 판정 → 후보 `app/globals.css` + `configuredRejected` 표기. 기존 테스트에는 이 형태가 없어 기대 변경은 0, AC11 예외 목록에만 올림 | D10 |
+| (기존 테스트 없음) globalCss 키 없음 + 후보 이름의 디렉터리(루트 `globals.css/`) | CSS 3항목: 예외(`EISDIR`, check 중단) → 그 후보를 건너뛰고 다음 후보 판정. 기존 테스트에는 이 형태가 없어 기대 변경은 0, AC11 예외 목록에만 올림. 회귀 테스트 1건 추가(cli 「WI-0100a 전역 CSS 선택」) | 구현 검증에서 발견(후보 판정 `existsSync` → 일반 파일 확인), fixture d-rootdir · verify-dirfx 실측 |
 | 새 fixture N2 의 brand(globalCss=`./app`) | 전이 없음(종전 「(globalCss ./app 없음)」 그대로) | D10 |
 | 새 fixture K1 · K2(하위 파일의 `@axis-ds/ui-react/tailwind.css` import, 0100b) | K1: B1 누락 WARN → PASS 가능. K2: PASS 또는 B1 누락 WARN → 버전 확인 WARN(PASS → WARN 가능) | 코드 읽기(`tailwind-core.ts:827-847`), 추정 · 미측정 |
 
