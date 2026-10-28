@@ -141,10 +141,10 @@ node $S/WI-0100-verify/scripts/mcp-call.mjs $NEW/axis-mcp/dist/index.js "$d"   #
 
 | 항목 | 기준선 | 수정 뒤 | 비고 |
 |---|---|---|---|
-| cli 전체 · `template-check.test.ts` | | | |
-| mcp 전체 · `template.test.ts` · `brand-core.test.ts` | | | |
-| A/B probe 전이(plan 4절 목록 대비) | | | |
-| 실빌드(4절) | | | |
-| 0100b 기준선 SHA(WI-0097 머지 직후 HEAD) | | | 3절 단계별 기준선 |
-| 변이 M1 ~ M14 | | | |
+| cli 전체 · `template-check.test.ts` | 0100b 기준선 2d12ae2: 1036 · 284 | 1067 · 315 | 0100b 새 describe 「WI-0100b 상대 @import 펼침」 31건. 기존 테스트 기대 변경 0 |
+| mcp 전체 · `template.test.ts` · `brand-core.test.ts` | 0100b 기준선: 222 · 68 · 1 | 226 · 72 · 1 | 0100b 대표 4건(R4 · R4n · E3 · K1 · G2 · BR2) |
+| A/B probe 전이(plan 4절 목록 대비) | 0100b: head2.json(2554 항목) | 변경 0 (compared=2554 changed=0) | 양성 대조 mut2.json 은 16건을 잡음. 기존 테스트 코퍼스에 하위 import 가 근거인 형태가 없어 plan 4절 K1 · K2 행은 새 fixture 에서만 전이(K1 WARN → PASS, K2 · K2u WARN → WARN 문구 변경) |
+| 실빌드(4절) | 0100b 착수 측정(Master): `build/build4.tsv` · `build4b.tsv` · `next4.tsv` · `next3.tsv` | 재빌드 안 함 | 따옴표 상대 경로 펼침 · `url()` 미펼침 · layer/supports/media 에 토큰 진입점이면 빌드 실패 · 순환 빌드 실패(E3 · E3s) · 50 단계 성공 100 단계 실패 |
+| 0100b 기준선 SHA(WI-0097 머지 직후 HEAD) | `2d12ae2711689425ddaf6ca25f5077026ab7fe61` | fixture 53개: 25개 판정 변경 · 28개 바이트 동일, rc 53/53 같음(전부 0), CLI = MCP 53/53, 최대 165ms(E7) · stderr 0 | 3절 단계별 기준선. theme add 출력 · 파일 트리 51/51 기준선 빌드와 같음 |
+| 변이 M1 ~ M14 | | 0100b 몫 12종 모두 빨강: M2 펼침 끔 · M4a 방문 집합 제거(시간 초과 rc 124) · M4b 깊이 한도 제거 · M3 경계 제거 · M8 하위 줄 게이트 없음 · M13 하위 줄 엄격 게이트 · M5 결함에 근거 · M5b 근거에 진입 · M14 하위 컴포넌트 줄 제외 · 기준 디렉터리를 진입 파일로 · M9b brand 펼침 없음 · M11 접미사 끔 | 적용 뒤 sha256 대조로 원복 확인 |
 | 발행본 재측정(1.7.7 · 1.4.6) | | | |

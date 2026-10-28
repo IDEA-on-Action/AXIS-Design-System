@@ -22,7 +22,11 @@
  *   그 import 가 해석될 때만, 아래).
  * - WI-0100a: 전역 CSS 를 읽는 3항목(Tailwind 4 의 tailwind.config · globals.css · Tailwind 4 의 animation)은 `selectCheckGlobalCss` 로 같은
  *   파일을 고릅니다. `axis.config.json` 의 `globalCss`(실재하는 `.css` 일반 파일, 프로젝트 밖은 읽기만) 다음 `TAILWIND_CSS_CANDIDATES` 순이고,
- *   `globalCss` 를 쓰지 못하면 표기를 붙입니다. 상대 `@import` 로 들여온 하위 파일은 아직 보지 않습니다(WI-0100b 몫).
+ *   `globalCss` 를 쓰지 못하면 표기를 붙입니다.
+ * - WI-0100b: 세 항목과 brand 항목은 고른 파일이 상대 `@import`(`"./x.css"` · `'../x.css'`)로 들여온 프로젝트 안 하위 CSS 도 근거로 봅니다
+ *   (`expandGlobalCss`, 실경로 기준 프로젝트 안 · 방문 집합 · 깊이 `CSS_IMPORT_DEPTH_LIMIT`). 근거 줄은 펼친 근거 문자열에서, 결함 판정
+ *   (create-next-app 기본 정의 · Arial)은 진입 파일만 봅니다(D9). 하위 파일의 패키지 줄은 진입 파일과 같은 WI-0097 해석 게이트를 그 줄이 있는
+ *   파일 기준으로 거치고(D8 ①), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6, `cssImportViaNote`).
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
  *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
@@ -51,13 +55,14 @@
  *   패키지 줄(`tailwindcss` · 토큰 · 컴포넌트 `tailwind.css`)은 그 파일 위치에서 설치본이 보이는지도 봅니다(`outsideCssPackageResolution`).
  */
 
-import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import {
   PNP_ROOT_ONLY_NOTE,
   ROOT_LAYOUT_FILES,
   TAILWIND4_MIN_AXIS_VERSION,
   compareExactVersions,
+  cssImportViaNote,
   componentCssResolution,
   componentCssResolvable,
   declaredDependency,
@@ -337,6 +342,160 @@ export function findTokensCssImport(css: string): string | undefined {
   return TOKENS_CSS_IMPORT.exec(stripCssComments(css))?.[1];
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
+// WI-0100b: 전역 CSS 의 상대 @import 펼침 (「어느 파일을 읽나」. 패키지 경로 줄의 해석 판정은 WI-0097 헬퍼 몫)
+
+/**
+ * 펼침 깊이 한도(진입 파일 = 0, 진입 파일이 직접 import 한 파일 = 1). 이 깊이까지의 파일만 읽어요(WI-0100 PRD 「5 단계 안」 초안,
+ * 구현 뒤 Master 확인). 착수 실빌드(`@tailwindcss/postcss`)는 50 단계 사슬까지 펼쳤으므로 한도 안의 파일은 실제로도 들어와요.
+ */
+export const CSS_IMPORT_DEPTH_LIMIT = 5;
+
+/**
+ * 따라가는 상대 `@import`: 따옴표 문자열이 `./` · `../` 로 시작하는 것(`"./x.css"` · `'../x.css'`). 뒤의 `layer()` · `supports()` · media
+ * 조건은 보지 않고 무조건 들어오는 것으로 봐요(WI-0100 PRD 4절). `url(...)` 형태는 따라가지 않아요(착수 실빌드에서 Tailwind 4 · Next 가
+ * 펼치지 않고 그대로 남김, 구현 뒤 Master 확인). `"axis.css"` 처럼 `./` 가 없는 이름은 패키지 경로라 따라가지 않아요. 주석은 미리 지운 CSS 에 써요.
+ */
+const RELATIVE_CSS_IMPORT = /@import\s+(["'])(\.{1,2}\/[^"'\n]*)\1/g;
+
+/** `@import` 의 경로 문자열(`"..."` · `'...'` · `url("...")`). 패키지 경로 줄을 모을 때 써요 */
+const CSS_IMPORT_SPEC = /@import\s+(?:url\(\s*)?(["'])([^"'\n]+)\1/g;
+
+/** 패키지 경로 줄인지(상대 · 절대 경로 · `http:` 류 URL 이 아님) */
+function isPackageCssSpec(spec: string): boolean {
+  return !spec.startsWith("./") && !spec.startsWith("../") && !spec.startsWith("/") && !/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(spec);
+}
+
+/** 펼친 파일 하나 */
+export interface ExpandedCssFile {
+  /** 표시용 경로. 진입 파일은 고른 파일의 `rel` 그대로, 하위 파일은 실경로 기준 앱 상대 경로(`/` 구분) */
+  rel: string;
+  /** 실경로 */
+  path: string;
+  /** 주석을 지운 내용 */
+  css: string;
+  /** 진입 파일 = 0 */
+  depth: number;
+  /** 이 파일의 패키지 줄을 해석할 기준 디렉터리. 파일이 프로젝트 밖이면 그 디렉터리, 안이면 `undefined`(앱 기준, WI-0097 2부와 같은 규칙). 앱 안 하위 파일 디렉터리의 중첩 `node_modules` 는 보지 않아요(실빌드는 그 위치에서 풀어 그림자 설치본을 집을 수 있음, Master 확인 대기) */
+  cssDir?: string;
+}
+
+/** 패키지 경로 `@import` 줄 하나와 그 출처 파일 */
+export interface CssPackageLine {
+  spec: string;
+  /** 그 줄이 있는 파일(`ExpandedCssFile.rel`) */
+  file: string;
+  /** 출처 파일의 `cssDir` */
+  cssDir?: string;
+}
+
+/** `expandGlobalCss` 결과 */
+export interface ExpandedGlobalCss {
+  /** 진입 파일 내용 그대로. 결함 판정(create-next-app 기본 정의 · Arial)은 이것만 봐요(WI-0100 D9) */
+  entry: string;
+  /** 근거 문자열(「있어야 할 줄」 판정용). 방문한 파일의 주석을 지운 내용을 방문 순서로 이은 것이고, 하위 파일이 없으면 `entry` 그대로예요 */
+  evidence: string;
+  /** 방문한 파일(진입 파일이 맨 앞, 그다음 너비 우선) */
+  files: ExpandedCssFile[];
+  /** 방문한 파일들의 패키지 경로 `@import` 줄(나온 순서). 펼치지 않고 출처 파일과 함께 넘겨요(해석 판정은 WI-0097 헬퍼) */
+  packageLines: CssPackageLine[];
+}
+
+function regularFile(file: string): boolean {
+  try {
+    return statSync(file).isFile();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * 전역 CSS 의 상대 `@import` 를 따라가 근거 문자열을 만듭니다(WI-0100b, 사용자 결정 · 선례 D3 · D8 · D9). 파일을 쓰지 않아요.
+ * - 상대 경로(`RELATIVE_CSS_IMPORT`)만 따라가고, 경로는 import 한 파일의 실경로 디렉터리 기준으로 풀어요.
+ * - **프로젝트 안**(대상 실경로가 앱 실경로 아래)인 일반 파일만 읽어요. `../` 로 앱을 벗어나는 import · 앱 밖을 가리키는 심볼릭 링크 ·
+ *   없는 파일 · 디렉터리는 건너뛰어요. 진입 파일이 프로젝트 밖(`globalCss` 가 앱 밖, Q25)이어도 그 파일의 상대 import 는 같은 규칙이라
+ *   대상이 앱 안일 때만 읽어요(PRD 4절).
+ * - 방문 집합(실경로)으로 순환(a → b → a) · 자기 import 를 한 번만 읽고, `CSS_IMPORT_DEPTH_LIMIT` 보다 깊은 파일은 읽지 않아요.
+ * - 패키지 경로 줄은 펼치지 않고 `packageLines` 에 출처 파일과 함께 담아요.
+ * `entryCssDir` 는 진입 파일의 패키지 줄 기준 디렉터리(프로젝트 밖 진입 파일이면 그 디렉터리, `outsideCssDir`)예요.
+ */
+export function expandGlobalCss(
+  baseDirInput: string,
+  entryPath: string,
+  entryRel: string,
+  entryCssDir?: string
+): ExpandedGlobalCss {
+  const baseDir = resolveBaseDir(baseDirInput);
+  const entry = readFileSync(entryPath, "utf8");
+  let entryReal = entryPath;
+  try {
+    entryReal = realpathSync(entryPath);
+  } catch {
+    // 읽었으면 실경로도 풀려요. 못 풀면 적힌 경로로 방문 집합을 채워요
+  }
+  const files: ExpandedCssFile[] = [];
+  const packageLines: CssPackageLine[] = [];
+  const visited = new Set<string>([entryReal]);
+  const queue: Array<{ real: string; rel: string; raw: string; depth: number; cssDir?: string }> = [
+    { real: entryReal, rel: entryRel, raw: entry, depth: 0, cssDir: entryCssDir },
+  ];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    const css = stripCssComments(cur.raw);
+    const file: ExpandedCssFile = { rel: cur.rel, path: cur.real, css, depth: cur.depth };
+    if (cur.cssDir !== undefined) file.cssDir = cur.cssDir;
+    files.push(file);
+    for (const m of css.matchAll(CSS_IMPORT_SPEC)) {
+      if (!isPackageCssSpec(m[2])) continue;
+      const line: CssPackageLine = { spec: m[2], file: cur.rel };
+      if (cur.cssDir !== undefined) line.cssDir = cur.cssDir;
+      packageLines.push(line);
+    }
+    if (cur.depth >= CSS_IMPORT_DEPTH_LIMIT) continue;
+    for (const m of css.matchAll(RELATIVE_CSS_IMPORT)) {
+      const target = resolve(dirname(cur.real), m[2]);
+      if (!regularFile(target)) continue;
+      let real: string;
+      try {
+        real = realpathSync(target);
+      } catch {
+        continue;
+      }
+      if (visited.has(real)) continue;
+      const rel = relative(baseDir, real);
+      if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) continue;
+      let raw: string;
+      try {
+        raw = readFileSync(real, "utf8");
+      } catch {
+        continue;
+      }
+      visited.add(real);
+      queue.push({ real, rel: rel.split(sep).join("/"), raw, depth: cur.depth + 1 });
+    }
+  }
+  const evidence = files.length === 1 ? entry : files.map((f) => f.css).join("\n");
+  return { entry, evidence, files, packageLines };
+}
+
+/** 근거 줄이 처음 나온 파일(방문 순서). 없으면 `undefined` */
+function evidenceOrigin(expanded: ExpandedGlobalCss, test: (css: string) => boolean): ExpandedCssFile | undefined {
+  return expanded.files.find((f) => test(f.css));
+}
+
+/** 패키지 줄 `spec` 의 해석 기준 디렉터리(처음 나온 출처 파일 기준). 줄을 못 찾으면 진입 파일 기준(종전과 같음) */
+function packageLineCssDir(expanded: ExpandedGlobalCss, spec: string): string | undefined {
+  const line = expanded.packageLines.find((l) => l.spec === spec);
+  return line !== undefined ? line.cssDir : expanded.files[0]?.cssDir;
+}
+
+/** 근거를 준 하위 파일(진입 파일 제외, 중복 제거, 나온 순서)의 표시 경로. D6 접미사(`cssImportViaNote`)에 넘겨요 */
+function viaFiles(origins: ReadonlyArray<ExpandedCssFile | undefined>): string[] {
+  const out: string[] = [];
+  for (const o of origins) if (o !== undefined && o.depth > 0 && !out.includes(o.rel)) out.push(o.rel);
+  return out;
+}
+
 /** globals.css 항목. CLI · MCP 의 `CheckResult` 와 같은 모양입니다. */
 export interface GlobalsCssCheckResult {
   name: "globals.css";
@@ -426,7 +585,7 @@ function tokensCssUnresolvedIssue(
 /**
  * globals.css 항목을 판정합니다(`axis check` · MCP `axis.check_project` 공용, WI-0044 보정 · WI-0070).
  * `selectCheckGlobalCss` 가 고른 파일 하나(`globalCss` 가 가리키는 실재 `.css` 파일, 없으면 `TAILWIND_CSS_CANDIDATES` 에서 처음 찾은 파일,
- * WI-0100a)를 봅니다. `globalCss` 를 쓰지 못했으면 모든 심각도의 문구 끝에 「(globalCss <값> 없음)」류 표기를 붙입니다.
+ * WI-0100a)와 그 파일이 상대 `@import` 로 들여온 프로젝트 안 하위 파일(WI-0100b, 근거만, Arial 은 진입 파일만)을 봅니다. `globalCss` 를 쓰지 못했으면 모든 심각도의 문구 끝에 「(globalCss <값> 없음)」류 표기를 붙입니다.
  * pass 는 AXIS 근거가 있을 때만입니다.
  * 1. tokens CSS import(`findTokensCssImport`) → pass(import 로 인정했다는 것을 문구에 남김)
  * 2. `--axis-*` 변수 정의 → pass
@@ -446,19 +605,28 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
   const note = globalCssSelectionNote(selection);
   if (selection.path !== undefined && selection.rel !== undefined) {
     const candidate = selection.rel;
-    const content = readFileSync(selection.path, "utf8");
+    // WI-0100b: 근거(tokens CSS import · `--axis-*` 정의)는 상대 @import 를 펼친 근거 문자열에서, 결함(Arial · 자체 변수만)은 진입 파일만(D9)
+    const expanded = expandGlobalCss(baseDir, selection.path, candidate, outsideCssDir(selection));
+    const content = expanded.entry;
     const css = stripCssComments(content);
-    const imported = findTokensCssImport(content);
+    const imported = findTokensCssImport(expanded.evidence);
     const pkg = readPackageJson(baseDir);
     let pass: string | undefined;
     // WI-0097 2부: tokens 근거(CSS import · 레이아웃 JS import)는 이 앱에서 해석될 때만 pass 로 인정해요. `--axis-*` 직접 정의는 게이트 밖이에요
     let unresolved: string | undefined;
+    let via = "";
     if (imported !== undefined) {
-      const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, outsideCssDir(selection));
+      // 하위 파일의 줄도 진입 파일과 같은 게이트를 그 출처 파일의 기준 디렉터리로 거쳐요(D8 ①, Q21 · Q22 대칭)
+      const origin = evidenceOrigin(expanded, (f) => findTokensCssImport(f) === imported);
+      via = cssImportViaNote(viaFiles([origin]));
+      const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
       if (issue !== undefined) unresolved = `${candidate}에 ${issue}`;
       else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
-    } else if (AXIS_VARIABLE_DEFINITION.test(css)) pass = `${candidate}에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다`;
-    else {
+    } else if (AXIS_VARIABLE_DEFINITION.test(stripCssComments(expanded.evidence))) {
+      // 하위 파일이 없으면 evidence 는 진입 파일 원문이라 주석을 지우고 봐요(종전 판정과 같음)
+      via = cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => AXIS_VARIABLE_DEFINITION.test(f))]));
+      pass = `${candidate}에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다`;
+    } else {
       const layout = findLayoutTokensCssImport(baseDir);
       if (layout) {
         // 레이아웃은 앱 안 파일이라 앱 기준으로만 봐요(Q37 의 파일 위치 판정은 프로젝트 밖 CSS 몫)
@@ -475,10 +643,10 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
         return {
           name: "globals.css",
           severity: "warn",
-          message: `${head}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)${note}`,
+          message: `${head}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)${via}${note}`,
         };
       }
-      return { name: "globals.css", severity: pass !== undefined ? "pass" : "warn", message: `${head}${note}` };
+      return { name: "globals.css", severity: pass !== undefined ? "pass" : "warn", message: `${head}${via}${note}` };
     }
     if (css.includes("--background") && css.includes("--primary")) {
       return {
@@ -930,23 +1098,26 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  *   줄이 있으면 PASS 로 인정하지 않고 「import 가 있지만 해석되지 않음」 WARN 입니다(1.4.0 미만만 종전 5 그대로, 버전 모름은 Q39 로 WARN).
  *
  * `input`(WI-0097 · WI-0100b 합의): `entry` 는 진입 파일 자체의 내용으로 결함 판정(3 의 create-next-app 기본 정의)만 보고,
- * `evidence` 는 「있어야 할 줄」 판정(1 · 2 · 4 · 5)을 봅니다. 상대 `@import` 를 펼치기 전(WI-0100b 전)에는 둘이 같은 문자열입니다.
+ * `evidence` 는 「있어야 할 줄」 판정(1 · 2 · 4 · 5)을 봅니다. WI-0100b 부터 `evidence` 는 상대 `@import` 를 펼친 근거 문자열
+ * (`expandGlobalCss`)이고, 하위 파일이 없으면 둘이 같은 문자열입니다.
  *
- * `cssDir`(WI-0097 2부, 사용자 결정 Q37): 진입 파일이 프로젝트 밖(`globalCss` 가 앱 밖)이면 그 파일의 디렉터리예요. 그 파일의
- * `@import "tailwindcss"` 와 이미 있는 컴포넌트 `tailwind.css` 줄(5)은 앱 기준으로 해석되더라도 그 파일 위치에서 설치본을 찾지 못하면
- * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
+ * `input.cssDirOf`(WI-0097 2부, 사용자 결정 Q37 · WI-0100b): 패키지 줄이 프로젝트 밖 파일(`globalCss` 가 앱 밖)에 있으면 그 파일의 디렉터리예요.
+ * 그 줄(`@import "tailwindcss"` 와 이미 있는 컴포넌트 `tailwind.css` 줄(5))은 앱 기준으로 해석되더라도 그 파일 위치에서 설치본을 찾지 못하면
+ * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 하위 파일의 줄은 그 하위 파일 기준이고(D8 ①, 진입 파일과 같은 규칙),
+ * 펼침은 프로젝트 안 파일만 읽으므로 하위 파일 줄은 앱 기준이에요(하위 파일 디렉터리의 중첩 `node_modules` 는 보지 않음, Master 확인 대기). 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
  */
 function tailwind4Issues(
   input: Tailwind4CssInput,
   pkg: Record<string, unknown> | undefined,
   versions: AxisPackageVersionIssue[],
-  baseDir: string,
-  cssDir?: string
+  baseDir: string
 ): string[] {
   const { entry, evidence } = input;
+  const cssDirOf = input.cssDirOf ?? (() => undefined);
   const issues: string[] = [];
   // WI-0097 2부(Q37): 프로젝트 밖 진입 CSS 의 `@import "tailwindcss"` 는 그 파일 위치에서 풀려요. 앱 쪽에만 설치본이 있으면 빌드가 깨져요
-  if (cssDir !== undefined && outsideCssPackageResolution(baseDir, cssDir, "tailwindcss") === "unresolved") {
+  const tailwindDir = cssDirOf("tailwindcss");
+  if (tailwindDir !== undefined && outsideCssPackageResolution(baseDir, tailwindDir, "tailwindcss") === "unresolved") {
     issues.push(outsideCssUnresolvedIssue("tailwindcss", "tailwindcss"));
   }
   const hasEntry = hasTokensTailwind4Import(evidence);
@@ -975,8 +1146,9 @@ function tailwind4Issues(
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (!hasComponentTailwindImport(evidence, name)) continue;
     const unresolved = componentCssPresentIssue(baseDir, name, resolutions.get(name)!);
+    const componentDir = cssDirOf(`${name}/tailwind.css`);
     if (unresolved !== undefined) issues.push(unresolved);
-    else if (cssDir !== undefined && outsideCssPackageResolution(baseDir, cssDir, name, "tailwind.css") === "unresolved") {
+    else if (componentDir !== undefined && outsideCssPackageResolution(baseDir, componentDir, name, "tailwind.css") === "unresolved") {
       issues.push(outsideCssUnresolvedIssue(`${name}/tailwind.css`, name));
     } else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
   }
@@ -985,11 +1157,13 @@ function tailwind4Issues(
 
 /**
  * `tailwind4Issues` 입력(WI-0097, WI-0100b 와의 합의). `entry`: 진입 파일 내용(결함 판정용) · `evidence`: 근거 문자열(있어야 할 줄 판정용,
- * WI-0100b 가 상대 `@import` 를 펼친 내용을 넣을 자리). WI-0100b 전에는 호출지가 같은 문자열을 둘 다에 넣어요.
+ * 상대 `@import` 를 펼친 내용, `expandGlobalCss`) · `cssDirOf`: 패키지 줄(`tailwindcss` · `<pkg>/tailwind.css`)이 처음 나온 파일의 해석 기준
+ * 디렉터리(프로젝트 밖 파일이면 그 디렉터리, 안이면 `undefined`). 없으면 모든 줄을 앱 기준으로 봐요.
  */
 interface Tailwind4CssInput {
   entry: string;
   evidence: string;
+  cssDirOf?: (spec: string) => string | undefined;
 }
 
 /** 설치 · 다시 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」) */
@@ -1042,7 +1216,7 @@ function componentCssPresentIssue(baseDir: string, name: string, r: ComponentCss
 /**
  * tailwind.config 항목을 판정합니다.
  * - Tailwind major 4 이상(`detectTailwind`): 설정 파일을 보지 않고 `selectCheckGlobalCss` 가 고른 파일(`globalCss` 다음 CSS 후보,
- *   WI-0100a, globals.css 항목과 같은 파일 · 같은 표기)의 `@import "tailwindcss"` 를
+ *   WI-0100a, globals.css 항목과 같은 파일 · 같은 표기)와 그 파일이 상대 `@import` 로 들여온 하위 파일(WI-0100b, 근거만)의 `@import "tailwindcss"` 를
  *   봅니다. 없거나 CSS 를 찾지 못하면 warn(CSS 가 없을 때의 fail 은 globals.css 항목이 냅니다, 문구는 종전과 같음).
  *   있으면 같은 파일에서 `tailwind4Issues` 를 모아 하나도 없을 때만 pass 입니다. 여럿이면 한 항목 안에서 우선순위 순서로
  *   ` / ` 로 잇고, 끝에 버전 안내(A1)를 한 번 붙입니다(C). 문제가 하나면 그 문구만 나옵니다.
@@ -1061,27 +1235,44 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     const note = globalCssSelectionNote(selection);
     if (selection.path !== undefined && selection.rel !== undefined) {
       const candidate = selection.rel;
-      const css = readFileSync(selection.path, "utf8");
-      if (!hasTailwindImport(css)) {
+      // WI-0100b: 「있어야 할 줄」은 상대 @import 를 펼친 근거 문자열, 결함(B2)은 진입 파일만(D9)
+      const expanded = expandGlobalCss(baseDir, selection.path, candidate, outsideCssDir(selection));
+      if (!hasTailwindImport(expanded.evidence)) {
         return {
           name: "tailwind.config",
           severity: "warn",
           message: `${label}: ${candidate}에 @import "tailwindcss" 가 없습니다${note}`,
         };
       }
+      // 근거를 준 하위 파일(D6 접미사): tailwindcss · 토큰 진입점 · 컴포넌트 tailwind.css · 직접 @source 줄이 처음 나온 파일
+      const via = cssImportViaNote(
+        viaFiles([
+          evidenceOrigin(expanded, hasTailwindImport),
+          evidenceOrigin(expanded, hasTokensTailwind4Import),
+          ...TAILWIND4_COMPONENT_PACKAGES.flatMap((name) => [
+            evidenceOrigin(expanded, (f) => hasComponentTailwindImport(f, name)),
+            evidenceOrigin(expanded, (f) => hasComponentSource(f, name)),
+          ]),
+        ])
+      );
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
-      const issues = tailwind4Issues({ entry: css, evidence: css }, pkg, versions, baseDir, outsideCssDir(selection));
+      const issues = tailwind4Issues(
+        { entry: expanded.entry, evidence: expanded.evidence, cssDirOf: (spec) => packageLineCssDir(expanded, spec) },
+        pkg,
+        versions,
+        baseDir
+      );
       if (issues.length > 0) {
         return {
           name: "tailwind.config",
           severity: "warn",
-          message: `${label}: ${candidate}에 ${issues.join(" / ")}${tailwind4VersionNote(versions)}${note}`,
+          message: `${label}: ${candidate}에 ${issues.join(" / ")}${tailwind4VersionNote(versions)}${via}${note}`,
         };
       }
       return {
         name: "tailwind.config",
         severity: "pass",
-        message: `${label}: ${candidate}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다${note}`,
+        message: `${label}: ${candidate}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다${via}${note}`,
       };
     }
     return {
@@ -1762,7 +1953,8 @@ export interface AnimationCheckResult {
  * 열고 닫는 애니메이션 33개 클래스가 0개 생성). ui-react 를 쓰지 않으면 `null`(항목을 더하지 않음).
  * - 사용 판정: package.json 에 `@axis-ds/ui-react` 선언, 또는 componentsDir 아래 파일에 `animate-in` · `animate-out` 클래스
  * - 플러그인 판정(Tailwind 3): `tailwindcss-animate` 선언 + 설정 파일에서 그 이름 참조(`require` · `import`)
- * - 플러그인 판정(Tailwind 4): `selectCheckGlobalCss` 가 고른 파일(`globalCss` 다음 CSS 후보, WI-0100a)에 `@import "tw-animate-css"` 또는
+ * - 플러그인 판정(Tailwind 4): `selectCheckGlobalCss` 가 고른 파일(`globalCss` 다음 CSS 후보, WI-0100a)과 그 파일이 상대 `@import` 로 들여온
+ *   하위 파일(WI-0100b)에 `@import "tw-animate-css"` 또는
  *   `@plugin "tailwindcss-animate"`.
  *   WI-0092(사용자 결정 Q9 · Q10): 줄마다 그 줄이 가리키는 패키지의 선언(앱 다음 워크스페이스 루트, Plug'n'Play 는 앱만) + 설치본을
  *   봅니다. 있는 줄이 모두 선언 · 설치돼 있을 때만 pass 이고, 줄은 있는데 선언 · 설치가 없으면 WARN(Tailwind 3 와 같음, 종료 코드 불변).
@@ -1791,11 +1983,22 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
     const selection = selectCheckGlobalCss(baseDir);
     const note = globalCssSelectionNote(selection);
     const file = selection.rel;
-    const css = selection.path !== undefined ? stripCssComments(readFileSync(selection.path, "utf8")) : "";
+    // WI-0100b: 줄 판정은 상대 @import 를 펼친 근거 문자열(설치는 `pluginProblem` 이 게이트함)
+    const expanded =
+      selection.path !== undefined && selection.rel !== undefined
+        ? expandGlobalCss(baseDir, selection.path, selection.rel, outsideCssDir(selection))
+        : undefined;
+    const css = expanded !== undefined ? stripCssComments(expanded.evidence) : "";
     // 줄마다 그 줄이 가리키는 패키지(WI-0092)
+    const twAnimate = new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`);
+    const animatePlugin = new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`);
     const lines: string[] = [];
-    if (new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`).test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
-    if (new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`).test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND3);
+    if (twAnimate.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
+    if (animatePlugin.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND3);
+    const via =
+      expanded !== undefined
+        ? cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => twAnimate.test(f)), evidenceOrigin(expanded, (f) => animatePlugin.test(f))]))
+        : "";
     if (lines.length === 0) {
       return {
         name: "animation",
@@ -1804,11 +2007,11 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
       };
     }
     const problems = lines.map((name) => ({ name, why: pluginProblem(name) })).filter((x) => x.why !== undefined);
-    if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다${note}` };
+    if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다${via}${note}` };
     return {
       name: "animation",
       severity: "warn",
-      message: `${file}의 애니메이션 플러그인을 쓸 수 없습니다(${by}, ${problems.map((x) => x.why).join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${problems.map((x) => x.name).join(" · ")} 를 package.json 에 선언 · 설치하세요${note}`,
+      message: `${file}의 애니메이션 플러그인을 쓸 수 없습니다(${by}, ${problems.map((x) => x.why).join(" · ")}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않고 빌드가 실패할 수 있습니다 → ${problems.map((x) => x.name).join(" · ")} 를 package.json 에 선언 · 설치하세요${via}${note}`,
     };
   }
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));

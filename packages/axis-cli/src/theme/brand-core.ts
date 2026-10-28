@@ -11,7 +11,7 @@ import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { GLOBAL_CSS_CANDIDATES, ROOT_LAYOUT_FILES, selectGlobalCss } from "@axis-ds/registry-core/project";
-import { packageVersionGate, type PackageVersionGate } from "@axis-ds/registry-core/tailwind-core";
+import { expandGlobalCss, packageVersionGate, type PackageVersionGate } from "@axis-ds/registry-core/tailwind-core";
 
 /** 브랜드를 담는 패키지 이름 */
 export const TOKENS_PACKAGE = "@axis-ds/tokens";
@@ -276,8 +276,13 @@ export interface BrandImportCheck {
   configuredMissing?: string;
   /** `globalCss` 가 `.css` 가 아닌 일반 파일을 가리켜 버리고 후보로 넘어갔을 때 그 값(설정에 적힌 그대로, WI-0100 D10) */
   configuredRejected?: string;
-  /** CSS 안의 브랜드 import 이름(나온 순서, 중복 제거) */
+  /** CSS 안의 브랜드 import 이름(나온 순서, 중복 제거). 상대 `@import` 로 들여온 프로젝트 안 하위 파일까지 봅니다(WI-0100b) */
   imports: string[];
+  /**
+   * 판정에 쓴 브랜드 import 가 진입 파일이 아니라 하위 파일에 있을 때 그 파일들(앱 기준 상대 경로, 나온 순서, WI-0100b D6 접미사용).
+   * `match` 는 `brand` import 가 처음 나온 하위 파일, `other-brand` 는 브랜드 import 가 있는 하위 파일이에요. 진입 파일에 있으면 없음
+   */
+  importVia?: string[];
 }
 
 /**
@@ -286,7 +291,8 @@ export interface BrandImportCheck {
  * CSS 파일은 공유 코어 `selectGlobalCss`(`globalCss` → `GLOBAL_CSS_CANDIDATES`, theme add 와 같은 순서)로 고르되, check 경로라
  * `globalCss` 가 `.css` 가 아닌 일반 파일이면 버리고 후보로 넘어가 `configuredRejected` 를 담습니다(WI-0100 D10). theme add 는 그때
  * 후보로 넘어가지 않고 오류로 멈추며(`css-not-stylesheet`, 아무것도 쓰지 않음), check 는 후보 파일을 판정하고 버린 사유를 표기합니다.
- * 프로젝트 밖 `globalCss` 는 읽기만 합니다.
+ * 프로젝트 밖 `globalCss` 는 읽기만 합니다. 브랜드 import 는 고른 파일이 상대 `@import` 로 들여온 프로젝트 안 하위 파일에서도 찾습니다
+ * (WI-0100b `expandGlobalCss`, D5). 브랜드 import 는 WI-0097 해석 게이트 대상이 아니라 위치만 봅니다(D8 ②).
  */
 export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   const config = readBrandConfig(baseDir);
@@ -303,11 +309,22 @@ export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   }
 
   const cssFile = relative(root, location.path).split(sep).join("/");
-  const imports = [...new Set(findBrandImports(readFileSync(location.path, "utf8")))];
+  // WI-0100b(D5 · D8 ②): 상대 @import 를 펼친 근거에서 찾아요. 브랜드 import 는 WI-0097 해석 게이트 대상이 아니라 위치만 펼친 근거에서 봐요
+  const expanded = expandGlobalCss(root, location.path, cssFile);
+  const imports = [...new Set(findBrandImports(expanded.evidence))];
   let state: BrandImportState;
   if (imports.includes(brand)) state = "match";
   else if (imports.length === 0) state = "import-missing";
   else state = "other-brand";
+  const sub = expanded.files.filter((f) => f.depth > 0);
+  const via =
+    state === "match"
+      ? sub.filter((f) => findBrandImports(f.css).includes(brand)).slice(0, 1)
+      : state === "other-brand"
+        ? sub.filter((f) => findBrandImports(f.css).length > 0)
+        : [];
+  const entryHas = state === "match" && findBrandImports(expanded.files[0].css).includes(brand);
+  if (via.length > 0 && !entryHas) return { ...base, state, cssFile, imports, importVia: via.map((f) => f.rel) };
   return { ...base, state, cssFile, imports };
 }
 
