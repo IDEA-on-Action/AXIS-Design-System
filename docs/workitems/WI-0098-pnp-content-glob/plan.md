@@ -11,7 +11,7 @@
 | 같은 파일 :1245 · :1255 | `ContentTarget` · `TailwindContentInspection` | 선택 필드(가칭 `pnp?: { state: "noNodeModules" \| "unplugged" \| "rootOnly"; legacyCovered: boolean }`)를 더해요. PnP 가 아니면 필드를 만들지 않아 theme add · MCP 출력이 바이트 그대로예요(AC8) |
 | 같은 파일 :1281-1315 | `inspectTailwindContent` | 대상 선정(:1294-1298 `declaredRange`)은 그대로 두고 루트 전용 여부만 대상에 실어요. :1308-1312 에서 `covered` 는 표본 · 대체 표본으로만, `legacyCovered` 는 종전 표본으로 계산해요. 루트 전용 대상은 `covered` 가 늘 거짓이에요(Q22 「인정하지 않음」) |
 | 같은 파일 :1329-1354 | `checkTailwindContent` | 덮이지 않은 대상 중 PnP `legacyCovered` 참인 것은 WARN 쪽으로, 나머지는 종전 FAIL · WARN 규칙 그대로(C1 ~ C3). 목록 항목(:1340)은 PnP 대상이면 `label → "suggest"` 대신 이유를 쓰고(unplugged 는 glob 제안 유지), PnP 대상이 하나라도 있으면 안내 상수를 덧붙여요. :1342 `CONTENT_PARENT_PATH_NOTE` 판정은 그대로라 unplugged 제안에도 붙어요(C4). 루트 전용은 `PNP_ROOT_ONLY_NOTE` 틀(「<pkg> 가 <PNP_ROOT_ONLY_NOTE> → 앱 package.json 에 선언하세요」) |
-| 같은 파일 :1110-1114 옆 | 새 export 상수(가칭 `CONTENT_PNP_NOTE`) | 동적 형태 먼저 · unplugged 대안 안내(문구 초안은 testplan 3절). cli `theme/index.ts` 가 import 해요 |
+| 같은 파일 :1110-1114 옆 | 새 export 함수 `contentPnpNote(names)`(구현 초안의 상수 `CONTENT_PNP_NOTE` 를 사용자 결정 Q31 로 바꿈, 패키지 이름을 채움) | 동적 형태 먼저 · unplugged 대안 안내(문구 초안은 testplan 3절). cli `theme/index.ts` 가 import 해요 |
 | 같은 파일 :28-31 · :1141 · :1277-1279 | 주석 | 「PnP 면 종전 `node_modules/<pkg>`」 서술을 새 규칙으로 고치고 WI-0098 줄을 더해요 |
 | `packages/axis-registry-core/src/project.ts` :525-533 옆 | 새 헬퍼(가칭 `findPnpUnpluggedPackages(baseDir, name, range)`) | `.pnp.cjs` 가 있는 층(= `isPnpProject` 와 같은 탐색, `.git` 멈춤)의 `.yarn/unplugged/*/node_modules/<name>/package.json` 을 읽고 버전이 앱 선언 범위에 맞는 것만 돌려줘요(extra 4). 범위 판정은 registry-core 의 기존 버전 비교 헬퍼를 재사용해요(착수 때 이름 확정). `.pnp.cjs` 는 읽지 않아요(Q23) |
 | `packages/axis-registry-core/src/project.ts:205` | `pnpRootOnlyDependency` · `PNP_ROOT_ONLY_NOTE`(:217) | 변경 없이 재사용 |
@@ -84,6 +84,12 @@ WI-0095(#239)는 이 묶음 뒤예요. WI-0095 가 `theme-add.ts` · `theme/inde
 | `packages/axis-cli/src/template/template-check.test.ts:2213` | 「AC5: 설치본이 없거나 Plug'n'Play 면 종전 표본 …」 `contentItem("pnp", "local")` | PASS | WARN + PnP 이유 · 안내 상수(AC1) |
 | 같은 파일 :2212 | 같은 테스트 `contentItem("pnp", "up")` | `FAIL(LOCAL)`(제안 `./node_modules/...`) | FAIL 유지 · 제안 자리에 PnP 안내(AC3). 「루트 설치본을 읽지 않음」 불변식은 그대로(DEC-4) |
 | 같은 테스트 이름 · 주석 :2208-2211 | 「PnP 면 종전 표본」 | - | 새 규칙 서술로 바꿔요 |
+| `packages/axis-cli/src/template/template-check.test.ts:1887` | 파일 상수 `PARENT_NOTE`(WI-0080 · WI-0090 · WI-0098 블록의 상위 경로 안내 단언) | 「…기준으로 풀려요.」 | 「…기준으로 풀립니다.」(사유 Q47) |
+| `packages/axis-cli/src/theme/theme-add.test.ts:868` | 「호이스팅 모노레포: ui-react content 제안이 ../../node_modules 이고 cwd 기준 안내 1줄 …」 지역 상수 `PARENT_NOTE` | 「…풀려요.」 | 「…풀립니다.」(사유 Q47) |
+| `packages/axis-cli/src/theme/theme-add.test.ts:904` | describe 「WI-0098: Plug'n'Play 의 content 안내」 지역 상수 `PARENT_NOTE` | 「…풀려요.」 | 「…풀립니다.」(사유 Q47) |
+| `packages/axis-mcp/src/tools/template.test.ts:552` | describe 「handleCheckProject WI-0080: 호이스팅 Tailwind 3 앱의 content 표본 · 제안」 지역 상수 `PARENT_NOTE` | 「…풀려요.」 | 「…풀립니다.」(사유 Q47) |
+
+사유 Q47(2026-10-28 사용자 결정): `CONTENT_PARENT_PATH_NOTE` 를 합니다체로 맞춰 이 상수를 리터럴로 단언하던 위 4곳만 기대를 바꿨어요. severity · rc · 목록 문구 단언은 그대로예요. 5.2 의 비 PnP 회귀 가드 가운데 상위 경로 제안을 단언하는 행(WI-0080 MATRIX · WI-0090 · mcp WI-0080 블록 · theme-add :847-894)은 이 상수를 위 리터럴로 참조하므로, 상수 글자 말고는 기대가 바뀌지 않았어요.
 
 ### 5.2 바뀌지 않아야 하는 것 (점검 후보, 회귀 가드)
 

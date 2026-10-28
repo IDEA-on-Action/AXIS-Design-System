@@ -32,6 +32,9 @@
  *   init · theme add · template apply · axis add 도 같은 함수를 쓰므로 함께 바뀝니다(전이 표는 WI-0074 testplan).
  * - WI-0080: Tailwind 3 content 판정의 패키지 표본 · 제안도 `findInstalledPackage` 로 찾은 설치본 위치(baseDir 기준 상대 경로)를
  *   씁니다(호이스팅이면 `../../node_modules/<pkg>`). 덮음 판정은 `contentGlobCovers`(앞쪽 `../` 개수 비교 · 절대경로 비교)입니다.
+ * - WI-0098: Plug'n'Play 의 content 판정은 node_modules 표본을 덮음으로 보지 않습니다. unplugged 설치본(앱 선언 범위에 맞는 버전)만
+ *   표본으로 인정하고(`**` · `*` 가 `.yarn` 같은 점 세그먼트를 넘지 않는 glob 만, Q33), node_modules glob · 넓은 `./**` 는 WARN,
+ *   루트 전용 선언은 「앱 package.json 에 선언하세요」 안내입니다. 안내에는 덮지 않은 패키지 이름을 채웁니다(`contentPnpNote`, Q31).
  * - WI-0086: 의존성 선언 판정(Tailwind 버전 · 1.4.0 안내 · 버전 게이트 · Tailwind 4 컴포넌트 tailwind.css · content 대상 ·
  *   animation 의 ui-react 사용과 tailwindcss-animate 선언)은 project.ts 의 `declaredDependency`(앱 다음 워크스페이스 루트)로 봅니다.
  *   공개 함수는 진입부에서 `resolveBaseDir`(심볼릭 링크를 푼 실경로)로 기준 디렉터리를 한 번 맞추고, 찾은 설치본 디렉터리는 풀지 않습니다.
@@ -45,9 +48,11 @@ import {
   compareExactVersions,
   declaredDependency,
   findInstalledPackage,
+  findPnpUnpluggedPackages,
   globalCssSelectionNote,
   hasDependency,
   isPnpProject,
+  pnpProjectRoot,
   pnpRootOnlyDependency,
   resolveBaseDir,
   selectGlobalCss,
@@ -983,36 +988,50 @@ function selectCheckGlobalCss(baseDir: string): GlobalCssSelection {
 /**
  * content glob 하나를 정규식으로 바꿉니다(Tailwind 3 의 fast-glob 문법 가운데 `**` · `*` · `?` · `{a,b}` · `[...]`).
  * 앞의 `./` 는 지우고, 경로는 설정 파일 디렉터리(프로젝트 루트) 기준 상대 경로로 맞춥니다.
+ * `noDot` 이면(WI-0098, 사용자 결정 Q33) fast-glob 의 기본(`dot: false`)처럼 세그먼트 첫머리의 `*` · `**` · `?` · `[...]` 가 점으로 시작하는
+ * 세그먼트(`.yarn` 등)를 넘지 않아요. 점으로 시작하는 세그먼트는 glob 에 글자 그대로(`./.yarn/...`) 써야 맞아요. 기본값(`noDot` 없음)은 종전 정규식 그대로예요.
  */
-export function contentGlobToRegExp(glob: string): RegExp {
+export function contentGlobToRegExp(glob: string, opts: { noDot?: boolean } = {}): RegExp {
+  const noDot = opts.noDot === true;
   const g = glob.trim().replace(/^\.\//, "");
+  // noDot 에서 세그먼트 첫머리에 붙이는 「점으로 시작하지 않음」 조건(세그먼트 중간이면 빈 문자열)
+  const lead = (i: number) => (noDot && (i === 0 || g[i - 1] === "/") ? "(?!\\.)" : "");
   let re = "";
   for (let i = 0; i < g.length; i++) {
     const c = g[i];
     if (c === "*") {
       if (g[i + 1] === "*") {
         const slash = g[i + 2] === "/";
-        re += slash ? "(?:.*/)?" : ".*";
+        if (noDot) re += slash ? `(?:${lead(i)}[^/]*/(?:(?!\\.)[^/]*/)*)?` : `${lead(i)}[^/]*(?:/(?!\\.)[^/]*)*`;
+        else re += slash ? "(?:.*/)?" : ".*";
         i += slash ? 2 : 1;
-      } else re += "[^/]*";
-    } else if (c === "?") re += "[^/]";
+      } else re += `${lead(i)}[^/]*`;
+    } else if (c === "?") re += `${lead(i)}[^/]`;
     else if (c === "{") {
       const end = g.indexOf("}", i);
       if (end === -1) {
         re += "\\{";
         continue;
       }
+      const atStart = lead(i) !== "";
       re += `(?:${g
         .slice(i + 1, end)
         .split(",")
-        .map((part) => part.replace(/[.+^$()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*"))
+        .map((part) => {
+          const body = part.replace(/[.+^$()|[\]\\]/g, "\\$&");
+          if (!noDot) return body.replace(/\*/g, "[^/]*");
+          // 갈래 첫머리(중괄호가 세그먼트 첫머리일 때) · 갈래 안 `/` 뒤의 `*` 도 점으로 시작하는 세그먼트를 넘지 않음
+          return body.replace(/(\/)?\*/g, (_m, slash: string | undefined, off: number) =>
+            slash !== undefined || (off === 0 && atStart) ? `${slash ?? ""}(?!\\.)[^/]*` : "[^/]*"
+          );
+        })
         .join("|")})`;
       i = end;
     } else if (c === "[") {
       const end = g.indexOf("]", i);
       if (end === -1) re += "\\[";
       else {
-        re += g.slice(i, end + 1);
+        re += lead(i) + g.slice(i, end + 1);
         i = end;
       }
     } else re += c.replace(/[.+^$()|\\]/g, "\\$&");
@@ -1100,15 +1119,15 @@ function realpathPosix(p: string): string | undefined {
 }
 
 /** 중괄호를 펼친 glob 갈래 하나가 표본을 덮는지(설명은 contentGlobCovers) */
-function contentGlobBranchCovers(glob: string, sample: string, baseDir: string): boolean {
+function contentGlobBranchCovers(glob: string, sample: string, baseDir: string, noDot: boolean): boolean {
   if (isAbsoluteGlob(glob)) {
-    const re = contentGlobToRegExp(glob.trim().replace(/\\/g, "/"));
+    const re = contentGlobToRegExp(glob.trim().replace(/\\/g, "/"), { noDot });
     const absSample = resolve(baseDir, sample);
     if (re.test(absSample.split(sep).join("/"))) return true;
     const real = realpathPosix(absSample);
     return real !== undefined && re.test(real);
   }
-  return leadingParentSegments(glob) === leadingParentSegments(sample) && contentGlobToRegExp(glob).test(sample);
+  return leadingParentSegments(glob) === leadingParentSegments(sample) && contentGlobToRegExp(glob, { noDot }).test(sample);
 }
 
 /**
@@ -1119,24 +1138,82 @@ function contentGlobBranchCovers(glob: string, sample: string, baseDir: string):
  *   fast-glob 의 `**` 는 `../` 를 넘지 않기 때문입니다(실측: 호이스팅 앱의 `./**` 는 ui-react 선택자 44/402).
  * - 절대경로 glob: `resolve(baseDir, sample)`(posix 로 맞춤)과, 그 실경로(심링크를 푼 경로)와 비교합니다(실측: 실제 설치 위치를
  *   가리키면 402/402, pnpm 기본 앱에서 `.pnpm` 스토어 실경로를 가리켜도 372/372).
+ * - `noDot`(WI-0098, 사용자 결정 Q33): PnP unplugged 표본(`.yarn/unplugged/...`)에만 씁니다. glob 의 `**` · `*` 가 점으로 시작하는
+ *   세그먼트를 넘지 않을 때만 덮음으로 봐요(fast-glob 기본 `dot: false`. 실측: PnP 루트 앱의 `./**\/*.{js,mjs}` 는 빌드 규칙 4,
+ *   `./.yarn/unplugged/*\/...` 는 429). 비 PnP 호출은 이 옵션을 넘기지 않아 종전 판정 그대로예요.
  * Tailwind 3 는 `relative: true` 가 없으면 content 를 빌드를 실행한 디렉터리(cwd) 기준으로 풀지만, 판정은 baseDir(앱 디렉터리)을
  * cwd 로 둡니다(D4: 판정에 반영하지 않고 상위 경로 제안에 `CONTENT_PARENT_PATH_NOTE` 를 붙임).
  */
-export function contentGlobCovers(glob: string, sample: string, baseDirInput: string): boolean {
+export function contentGlobCovers(glob: string, sample: string, baseDirInput: string, opts: { noDot?: boolean } = {}): boolean {
   // 표본은 실경로 기준 상대 경로라 절대 glob 비교의 기준도 실경로로 맞춥니다(WI-0086). 내부 호출자 inspectTailwindContent 는 진입부에서
   // 이미 실경로를 넘기므로 check 의 링크 판정(반박 검토 AC5 c1-abs 행)은 그쪽 덕분이고, 이 줄은 export 된 이 함수를 링크 경로로 직접 부를 때를
   // 맞춥니다(검토 후속 단위 테스트 「링크 baseDir 의 절대 glob」이 고정)
   const baseDir = resolveBaseDir(baseDirInput);
   const branches = expandBraces(glob.trim()) ?? [glob];
-  return branches.some((b) => contentGlobBranchCovers(b, sample, baseDir));
+  return branches.some((b) => contentGlobBranchCovers(b, sample, baseDir, opts.noDot === true));
 }
 
 /**
  * 상위 경로(`../`) content 제안에 붙이는 안내(WI-0080 D4). cli check · MCP check_project · theme add 가 같은 문자열을 씁니다.
+ * 문구는 다른 check 문구와 같은 합니다체입니다(WI-0098, 사용자 결정 Q47: 「풀려요」 → 「풀립니다」, 경로 · 코드 조각 · 의미는 그대로).
  * 실측: 호이스팅 앱의 `../../node_modules/...` 는 앱 cwd 빌드에서 402/402, 모노레포 루트 cwd 빌드에서 0, `relative: true` 면 둘 다 402.
  */
 export const CONTENT_PARENT_PATH_NOTE =
-  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀립니다. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+
+/**
+ * Plug'n'Play content 안내(WI-0098, 사용자 결정 Q23 · extra 3). 동적 `require.resolve` 형태를 먼저, unplugged 설정을 대안으로 안내합니다.
+ * cli check · MCP check_project · theme add 가 같은 함수를 씁니다. 패키지 이름은 넘긴 대상으로 채워요(사용자 결정 Q31). 둘 이상이면
+ * 동적 형태와 dependenciesMeta 항목을 패키지마다 `, ` 로 이어(content 배열 · JSON 객체에 그대로 붙여 넣을 수 있게) 나열합니다.
+ * 같은 이름은 한 번만 씁니다. 문구는 기존 check 문구와 같은 합니다체입니다(사용자 결정 Q44).
+ * `unplugged`(사용자 결정 Q45): unplugged 디렉터리가 이미 있는(`findPnpUnpluggedPackages` 로 찾은) 패키지 이름. 이 패키지는
+ * dependenciesMeta 설정 안내에서 빼고(정적 경로 제안은 목록 항목의 `→ "<제안>"` 에 남음), 모두 빠지면 설정 안내 문장을 내지 않습니다.
+ */
+export function contentPnpNote(names: string | readonly string[], unplugged: readonly string[] = []): string {
+  const list = [...new Set(typeof names === "string" ? [names] : names)];
+  const dyn = list.map((n) => `path.join(path.dirname(require.resolve("${n}")), "..", "dist/**/*.{js,mjs}")`).join(", ");
+  const needsSetup = list.filter((n) => !unplugged.includes(n));
+  const meta = needsSetup.map((n) => `"${n}": { "unplugged": true }`).join(", ");
+  const setup =
+    needsSetup.length > 0
+      ? ` 정적 경로를 쓰려면 package.json 의 dependenciesMeta 에 ${meta} 를 두고 yarn install 뒤 .yarn/unplugged 경로를 넣으세요`
+      : "";
+  return `Plug'n'Play 에는 node_modules 가 없습니다. content 에 ${dyn} 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다).${setup}`;
+}
+
+/** PnP 안내를 붙일 대상(루트 전용이 아닌 PnP 대상)의 이름들(WI-0098). 없으면 빈 목록 */
+export function contentPnpNoteTargets(targets: ReadonlyArray<Pick<ContentTarget, "label" | "pnp">>): string[] {
+  return targets.filter((t) => t.pnp !== undefined && t.pnp.state !== "rootOnly").map((t) => t.label);
+}
+
+/**
+ * 덮지 않은 대상의 PnP 안내(WI-0098). 루트 전용이 아닌 PnP 대상이 없으면 `undefined` 입니다. cli check · MCP check_project ·
+ * theme add 가 같은 함수를 씁니다. unplugged 대상은 설정 안내에서 뺍니다(사용자 결정 Q45).
+ */
+export function contentPnpNoteFor(targets: ReadonlyArray<Pick<ContentTarget, "label" | "pnp">>): string | undefined {
+  const names = contentPnpNoteTargets(targets);
+  if (names.length === 0) return undefined;
+  const unplugged = targets.filter((t) => t.pnp?.state === "unplugged").map((t) => t.label);
+  return contentPnpNote(names, unplugged);
+}
+
+/** PnP 루트 전용 선언 대상의 안내 끝말(WI-0098, 사용자 결정 Q22). 앞에 「<이름> 가 PNP_ROOT_ONLY_NOTE」를 붙여 씁니다. */
+export const CONTENT_PNP_ROOT_ONLY_ACTION = "앱 package.json 에 선언하세요";
+
+/** 기본 PnP(unplugged 없음) 대상의 이유(WI-0098). 앞에 패키지 이름을 붙여 씁니다. */
+export const CONTENT_PNP_NO_NODE_MODULES = "Plug'n'Play 라 node_modules 경로가 없음";
+
+/**
+ * content 목록 항목 하나(WI-0098 에서 나눔). PnP 가 아니면 종전 문자열 그대로입니다.
+ * - 기본 PnP: 「<이름>(Plug'n'Play 라 node_modules 경로가 없음)」(제안 glob 없음)
+ * - 루트 전용: 「<이름> 가 <PNP_ROOT_ONLY_NOTE> → 앱 package.json 에 선언하세요」(경로 제안 · 동적 형태 안내 없음)
+ * - unplugged: 종전과 같은 「<이름> → "<제안>"」(제안은 unplugged 상대 glob)
+ */
+function contentTargetText(t: ContentTarget): string {
+  if (t.pnp?.state === "noNodeModules") return `${t.label}(${CONTENT_PNP_NO_NODE_MODULES})`;
+  if (t.pnp?.state === "rootOnly") return `${t.label} 가 ${PNP_ROOT_ONLY_NOTE} → ${CONTENT_PNP_ROOT_ONLY_ACTION}`;
+  return `${t.label} → "${t.suggest}"${t.note === undefined ? "" : ` (${t.note})`}`;
+}
 
 /** baseDir 기준 상대 디렉터리(posix). 다른 드라이브(Windows)처럼 상대 경로로 못 바꾸거나 baseDir 자신이면 `undefined`. */
 function relDirOf(baseDir: string, dir: string): string | undefined {
@@ -1161,19 +1238,57 @@ function packageVersion(dir: string): string | undefined {
   }
 }
 
+/** Plug'n'Play 에서 패키지 content 대상의 상태(WI-0098). PnP 가 아니면 이 필드를 만들지 않습니다. */
+export type PnpContentState = "noNodeModules" | "unplugged" | "rootOnly";
+
+interface PackageContentTarget {
+  sample: string;
+  suggest: string;
+  alternates: string[];
+  others: Array<{ sample: string; note: string }>;
+  /** PnP 일 때만. `legacySample` 은 종전 표본 `node_modules/<pkg>/dist/index.js`(「종전 덮음」 판별 전용, 덮음 인정에는 쓰지 않음) */
+  pnp?: { state: PnpContentState; legacySample: string };
+}
+
 /**
- * 패키지 content 대상의 표본 · 제안(WI-0080). 설치본을 못 찾거나 PnP 면 종전 `node_modules/<pkg>` 입니다.
+ * Plug'n'Play 의 패키지 content 대상(WI-0098, 사용자 결정 Q22 · Q23 · Q29). node_modules 가 없으므로 종전 표본은 덮음 인정에 쓰지 않습니다.
+ * - 루트 전용 선언(`pnpRootOnlyDependency`): 표본 · 제안이 없고 덮음으로 보지 않습니다(Q22 「권하지도 인정하지도 않음」).
+ * - unplugged 설치본(`findPnpUnpluggedPackages`, 앱 선언 범위에 맞는 버전만): 표본은 그 디렉터리(baseDir 기준 상대) `dist/index.js`,
+ *   나머지 맞는 디렉터리는 대체 표본, 제안은 `<PnP 루트 상대>/.yarn/unplugged/*\/node_modules/<pkg>/dist/**\/*.{js,mjs}` 입니다(Q29).
+ * - 그 밖(기본 PnP): 덮일 수 있는 표본도 제안 glob 도 없습니다(Q23, zip · `__virtual__` 경로는 판독하지 않음).
+ */
+function pnpPackageContentTarget(baseDir: string, name: string, pkg: Record<string, unknown> | undefined): PackageContentTarget {
+  const legacySample = `node_modules/${name}/dist/index.js`;
+  const none = { sample: "", suggest: "", alternates: [], others: [] };
+  if (pnpRootOnlyDependency(baseDir, pkg, name) !== undefined) return { ...none, pnp: { state: "rootOnly", legacySample } };
+  const range = pkg === undefined ? undefined : hasDependency(pkg, name);
+  const rels = (range === undefined ? [] : findPnpUnpluggedPackages(baseDir, name, range))
+    .map((d) => relDirOf(baseDir, d))
+    .filter((r): r is string => r !== undefined);
+  const root = pnpProjectRoot(baseDir);
+  if (rels.length === 0 || root === undefined) return { ...none, pnp: { state: "noNodeModules", legacySample } };
+  const rootRel = relDirOf(baseDir, root);
+  return {
+    sample: `${rels[0]}/dist/index.js`,
+    suggest: `${rootRel === undefined ? "." : rootRel}/.yarn/unplugged/*/node_modules/${name}/dist/**/*.{js,mjs}`,
+    alternates: rels.slice(1).map((r) => `${r}/dist/index.js`),
+    others: [],
+    pnp: { state: "unplugged", legacySample },
+  };
+}
+
+/**
+ * 패키지 content 대상의 표본 · 제안(WI-0080). 설치본을 못 찾으면 종전 `node_modules/<pkg>` 입니다. Plug'n'Play 면
+ * `pnpPackageContentTarget`(WI-0098)으로 갑니다.
  * WI-0090: 표본 `sample`(찾은 설치본) 말고도 Tailwind 가 같은 파일을 스캔하게 되는 경로를 `alternates` 로 함께 돌려줍니다.
  * - 찾은 설치본의 실경로(pnpm 기본이면 `.pnpm` 스토어)를 baseDir 기준 상대 경로로 쓴 것
  * - 찾은 설치본보다 위의 `node_modules/<pkg>` 가운데 실경로가 같은 것(pnpm 기본에서 앱 · 루트가 같은 스토어에 링크)
  * 실경로가 다른 상위 설치본은 `others` 로 따로 돌려줍니다. 그 경로를 가리키면 Tailwind 는 다른 버전의 파일을 스캔합니다
  * (빌드 실측: 루트 1.8.1 · 앱 1.8.2 에서 선택자 426/427, Select placeholder 클래스 누락). 그래서 덮음으로 보지 않고 안내에만 씁니다.
  */
-function packageContentTarget(
-  baseDir: string,
-  name: string
-): { sample: string; suggest: string; alternates: string[]; others: Array<{ sample: string; note: string }> } {
-  const found = isPnpProject(baseDir) ? undefined : findInstalledPackage(baseDir, name);
+function packageContentTarget(baseDir: string, name: string, pkg: Record<string, unknown> | undefined): PackageContentTarget {
+  if (isPnpProject(baseDir)) return pnpPackageContentTarget(baseDir, name, pkg);
+  const found = findInstalledPackage(baseDir, name);
   const relDir = (found === undefined ? undefined : relDirOf(baseDir, found.dir)) ?? `node_modules/${name}`;
   const alternates: string[] = [];
   const others: Array<{ sample: string; note: string }> = [];
@@ -1197,7 +1312,7 @@ function packageContentTarget(
             theirs === undefined || ours === undefined ? "" : theirs === ours ? `(버전은 ${ours} 로 같음)` : `(${theirs}, 앱 ${ours})`;
           others.push({
             sample: `${rel}/dist/index.js`,
-            note: `상위 경로 ${rel} 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않아요`,
+            note: `상위 경로 ${rel} 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않습니다`,
           });
         }
       }
@@ -1274,6 +1389,12 @@ export interface ContentTarget {
   covered: boolean;
   /** 덮지 않을 때 붙이는 이유(실경로가 다른 상위 설치본을 가리키는 glob 이 있음, WI-0090) */
   note?: string;
+  /**
+   * Plug'n'Play 패키지 대상일 때만(WI-0098). PnP 가 아니면 이 필드가 없습니다(theme add · MCP 출력이 바이트 그대로).
+   * `legacyCovered` 는 종전 표본 `node_modules/<pkg>/dist/index.js` 를 덮는지(node_modules glob · 넓은 `./**`)이고, 덮음 인정에는 쓰지 않고
+   * severity(종전 덮음 → WARN, 사용자 결정 Q23 · 구현 해석 C1 ~ C3)에만 씁니다. `rootOnly` · `noNodeModules` 는 `sample` · `suggest` 가 빈 문자열입니다.
+   */
+  pnp?: { state: PnpContentState; legacyCovered: boolean };
 }
 
 export interface TailwindContentInspection {
@@ -1299,7 +1420,9 @@ function normalizeRel(p: string): string | undefined {
  * - 대상 1: `axis.config.json` 의 componentsDir(복사 설치 위치). 대표 파일 `<componentsDir>/button.tsx`
  * - 대상 2: package.json 에 선언된 `@axis-ds/ui-react` · `@axis-ds/agentic-ui`(npm 설치). 대표 파일은 `findInstalledPackage` 로 찾은
  *   설치본의 `dist/index.js`(baseDir 기준 상대 경로, 호이스팅이면 `../../node_modules/<pkg>/dist/index.js`, WI-0080). 설치본을
- *   찾지 못하거나(상위 어디에도 없음) Plug'n'Play 면 종전 `node_modules/<pkg>/dist/index.js` 입니다.
+ *   찾지 못하면(상위 어디에도 없음) 종전 `node_modules/<pkg>/dist/index.js` 입니다.
+ *   Plug'n'Play 면(WI-0098) unplugged 설치본만 표본으로 쓰고, 루트 전용 선언 · 기본 PnP 는 덮음으로 보지 않습니다(`pnpPackageContentTarget`).
+ *   종전 표본을 덮는지는 `pnp.legacyCovered` 로 따로 돌려줍니다.
  * glob 은 설정 파일이 있는 디렉터리(프로젝트 루트) 기준으로 맞춥니다(`contentGlobCovers`). 판정은 문자열 판독이라 실제 파일이 있는지는 보지 않습니다.
  */
 export function inspectTailwindContent(baseDirInput: string): TailwindContentInspection | null {
@@ -1310,7 +1433,13 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
   const configFile = TAILWIND_CONFIG_FILES.find((f) => existsSync(join(baseDir, f)));
   if (configFile === undefined) return null;
 
-  const targets: Array<Omit<ContentTarget, "covered" | "note"> & { alternates?: string[]; others?: Array<{ sample: string; note: string }> }> = [];
+  const targets: Array<
+    Omit<ContentTarget, "covered" | "note" | "pnp"> & {
+      alternates?: string[];
+      others?: Array<{ sample: string; note: string }>;
+      pnp?: { state: PnpContentState; legacySample: string };
+    }
+  > = [];
   const componentsDir = readAxisConfigLike(baseDir)?.componentsDir;
   const rel = typeof componentsDir === "string" ? normalizeRel(componentsDir) : undefined;
   if (rel !== undefined) {
@@ -1318,7 +1447,7 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
   }
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (declaredRange(baseDir, pkg, name) !== undefined) {
-      targets.push({ label: name, ...packageContentTarget(baseDir, name) });
+      targets.push({ label: name, ...packageContentTarget(baseDir, name, pkg) });
     }
   }
   if (targets.length === 0) return null;
@@ -1329,11 +1458,17 @@ export function inspectTailwindContent(baseDirInput: string): TailwindContentIns
     configFile,
     unreadable: read === undefined,
     dynamic: read?.dynamic ?? false,
-    targets: targets.map(({ alternates = [], others = [], ...t }) => {
+    targets: targets.map(({ alternates = [], others = [], pnp, ...t }) => {
       const covers = (sample: string) => globs.some((g) => contentGlobCovers(g, sample, baseDir));
-      const covered = [t.sample, ...alternates].some(covers);
+      // WI-0098: PnP 의 루트 전용 · 기본 PnP 는 덮일 수 있는 표본이 없습니다(종전 표본은 legacyCovered 판별에만)
+      const samples = pnp !== undefined && pnp.state !== "unplugged" ? [] : [t.sample, ...alternates];
+      // WI-0098(Q33): unplugged 표본은 `.yarn` 아래라 `**` · `*` 가 점 세그먼트를 넘지 않을 때만 덮음(PnP 루트 앱의 `./**` 거짓 PASS 방지)
+      const coversSample =
+        pnp?.state === "unplugged" ? (sample: string) => globs.some((g) => contentGlobCovers(g, sample, baseDir, { noDot: true })) : covers;
+      const covered = samples.some(coversSample);
       const note = covered ? undefined : others.find((o) => covers(o.sample))?.note;
-      return note === undefined ? { ...t, covered } : { ...t, covered, note };
+      const base = note === undefined ? { ...t, covered } : { ...t, covered, note };
+      return pnp === undefined ? base : { ...base, pnp: { state: pnp.state, legacyCovered: covers(pnp.legacySample) } };
     }),
   };
 }
@@ -1361,20 +1496,35 @@ export function checkTailwindContent(baseDir: string): ContentCheckResult | null
       message: `${r.configFile}의 content 가 ${r.targets.map((t) => t.label).join(" · ")} 를 덮습니다`,
     };
   }
-  const list = missing.map((t) => `${t.label} → "${t.suggest}"${t.note === undefined ? "" : ` (${t.note})`}`).join(" · ");
-  // WI-0080 D4: 상위 경로 제안이 있을 때만 cwd 기준 안내를 붙입니다(종전 문구는 바이트 그대로)
+  const list = missing.map(contentTargetText).join(" · ");
+  // WI-0080 D4: 상위 경로 제안이 있을 때만 cwd 기준 안내를 붙입니다(종전 문구는 바이트 그대로). PnP unplugged 제안에도 붙습니다(C4)
   const note = missing.some((t) => t.suggest.startsWith("../")) ? ` (${CONTENT_PARENT_PATH_NOTE})` : "";
+  // WI-0098: 덮지 않은 PnP 대상(루트 전용 제외)이 있으면 동적 형태 · unplugged 안내를 붙입니다. PnP 가 아니면 빈 문자열이라 종전 문구 그대로
+  const pnpText = contentPnpNoteFor(missing);
+  const pnpNote = pnpText === undefined ? "" : ` (${pnpText})`;
   if (r.unreadable || r.dynamic) {
     return {
       name: "tailwind.content",
       severity: "warn",
-      message: `${r.configFile}의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ${list}${note}`,
+      message: `${r.configFile}의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ${list}${note}${pnpNote}`,
+    };
+  }
+  // WI-0098(Q23 · C1 ~ C3): 덮지 않은 대상이 모두 종전 표본을 덮던 PnP 대상(node_modules glob · 넓은 ./**)이면 WARN 입니다(0 → 1 없음)
+  if (missing.every((t) => t.pnp?.legacyCovered === true)) {
+    const labels = missing.map((t) => t.label).join(" · ");
+    const details = missing.filter((t) => t.pnp?.state !== "noNodeModules").map(contentTargetText);
+    return {
+      name: "tailwind.content",
+      severity: "warn",
+      message:
+        `${r.configFile}의 content 가 Plug'n'Play 에서 스캔되지 않는 경로로 ${labels} 를 덮습니다(node_modules 경로 · ./** 는 스캔되지 않음)` +
+        `${details.length > 0 ? `: ${details.join(" · ")}` : ""}${note}${pnpNote}`,
     };
   }
   return {
     name: "tailwind.content",
     severity: "fail",
-    message: `${r.configFile}의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ${list}${note}`,
+    message: `${r.configFile}의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ${list}${note}${pnpNote}`,
   };
 }
 

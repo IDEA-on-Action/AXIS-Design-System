@@ -30,10 +30,17 @@ import {
   compareExactVersions,
   dependencyInstallGuide,
   detectInstallCommand,
+  PNP_ROOT_ONLY_NOTE,
   workspaceRunCommand,
   type DependencyInstallGuide,
 } from "@axis-ds/registry-core/project";
-import { CONTENT_PARENT_PATH_NOTE, TOKENS_TAILWIND3_CJS_REQUIRE, TOKENS_TAILWIND3_PRESET } from "@axis-ds/registry-core/tailwind-core";
+import {
+  CONTENT_PARENT_PATH_NOTE,
+  CONTENT_PNP_ROOT_ONLY_ACTION,
+  contentPnpNoteFor,
+  TOKENS_TAILWIND3_CJS_REQUIRE,
+  TOKENS_TAILWIND3_PRESET,
+} from "@axis-ds/registry-core/tailwind-core";
 import { THEME_MARKUP_BRAND_MIN_VERSION } from "./brand-core.js";
 
 /** CSS 에서 `@import "<spec>"` 줄이 시작하는 위치(작은따옴표 · `url()` 포함). 없으면 -1 */
@@ -455,14 +462,18 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
       );
     }
     for (const t of tw.contentMissing) {
-      lines.push(
-        chalk.yellow(
-          `  ! content 가 ${t.label} 를 덮지 ${tw.contentUnknown ? "않는 것으로 보입니다(정적 판독)" : "않습니다"}. 넣으세요: "${t.suggest}"`
-        )
-      );
+      const not = tw.contentUnknown ? "않는 것으로 보입니다(정적 판독)" : "않습니다";
+      // WI-0098: Plug'n'Play 의 기본 PnP · 루트 전용 대상은 ./node_modules 제안 대신 check 와 같은 판정의 안내를 냅니다(unplugged 는 제안 glob 유지)
+      if (t.pnp?.state === "noNodeModules") lines.push(chalk.yellow(`  ! content 가 ${t.label} 를 Plug'n'Play 에서 스캔되는 경로로 덮지 ${not}`));
+      else if (t.pnp?.state === "rootOnly") lines.push(chalk.yellow(`  ! ${t.label} 가 ${PNP_ROOT_ONLY_NOTE} → ${CONTENT_PNP_ROOT_ONLY_ACTION}`));
+      else lines.push(chalk.yellow(`  ! content 가 ${t.label} 를 덮지 ${not}. 넣으세요: "${t.suggest}"`));
     }
     // WI-0080 D4: 제안이 상위 경로(호이스팅 설치본)이면 check 와 같은 cwd 기준 안내를 한 줄 더합니다
     if (tw.contentMissing.some((t) => t.suggest.startsWith("../"))) lines.push(chalk.gray(`    ${CONTENT_PARENT_PATH_NOTE}`));
+    // WI-0098: 루트 전용이 아닌 PnP 대상이 있으면 check 와 같은 동적 형태 · unplugged 안내를 한 줄 더합니다
+    // 사용자 결정 Q45: unplugged 디렉터리가 이미 있는 패키지는 dependenciesMeta 설정 안내에서 뺍니다(check 와 같은 함수)
+    const pnpNote = contentPnpNoteFor(tw.contentMissing);
+    if (pnpNote !== undefined) lines.push(chalk.gray(`    ${pnpNote}`));
   }
 
   // 브랜드 켜기 안내(FR-2, Q1 · U10: 코드는 고치지 않음). WI-0065 D7: defaultBrand 대신 data-brand · setBrand 를 안내합니다

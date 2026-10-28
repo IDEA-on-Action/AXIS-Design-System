@@ -15,7 +15,7 @@ import {
   rangeLowerAtLeast,
   readTailwindContent,
 } from "./tailwind-core.js";
-import { isPnpProject } from "@axis-ds/registry-core/project";
+import { findPnpUnpluggedPackages, isPnpProject, versionSatisfiesRange } from "@axis-ds/registry-core/project";
 import { templateApplyWarnings } from "./template-apply.js";
 import { planUtilsDependencies, resolveInitAnswers, tailwind4GuideLines } from "../init/init.js";
 import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
@@ -2222,7 +2222,22 @@ describe("배치 3 ①: 설치본 기반 판정", () => {
  * MCP check_project · theme add)가 같은 문자열을 써요. 수정 전 소스에서 테스트가 판정 단언으로 빨개지도록 import 하지 않고 적어 둡니다.
  */
 const PARENT_NOTE =
-  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+  "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀립니다. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+/** WI-0098 PnP 안내(코어 상수를 import 하지 않고 리터럴로 고정, testplan 6절) */
+const WI0098_PNP_NOTE =
+  'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다). 정적 경로를 쓰려면 package.json 의 dependenciesMeta 에 "@axis-ds/ui-react": { "unplugged": true } 를 두고 yarn install 뒤 .yarn/unplugged 경로를 넣으세요';
+
+/** WI-0098(Q31) 덮지 않은 PnP 대상이 ui-react · agentic-ui 둘일 때: 동적 형태와 dependenciesMeta 항목을 패키지마다 나열 */
+const WI0098_PNP_NOTE_BOTH =
+  'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}"), path.join(path.dirname(require.resolve("@axis-ds/agentic-ui")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다). 정적 경로를 쓰려면 package.json 의 dependenciesMeta 에 "@axis-ds/ui-react": { "unplugged": true }, "@axis-ds/agentic-ui": { "unplugged": true } 를 두고 yarn install 뒤 .yarn/unplugged 경로를 넣으세요';
+
+/** WI-0098(Q45) 덮지 않은 PnP 대상이 모두 unplugged 디렉터리가 있으면: dependenciesMeta 설정 안내 문장이 없음(정적 경로 제안은 목록 항목에) */
+const WI0098_PNP_NOTE_UNPLUGGED =
+  'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다).';
+
+/** WI-0098(Q45) ui-react 만 unplugged 이고 agentic-ui 는 아닐 때: 동적 형태는 둘 다, 설정 안내는 agentic-ui 만 */
+const WI0098_PNP_NOTE_MIXED =
+  'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}"), path.join(path.dirname(require.resolve("@axis-ds/agentic-ui")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다). 정적 경로를 쓰려면 package.json 의 dependenciesMeta 에 "@axis-ds/agentic-ui": { "unplugged": true } 를 두고 yarn install 뒤 .yarn/unplugged 경로를 넣으세요';
 
 // WI-0074: detectTailwind · axisPackagesBelowTailwind4 의 설치본 판독을 findInstalledPackage(상위 디렉터리 탐색)로.
 // 브리프 측정(발행본 cli 1.6.2 · mcp 1.3.5, 실제 설치 픽스처 20개 앱 · 항목 70개)의 전이 표를 stub 설치본으로 고정합니다.
@@ -2543,12 +2558,26 @@ describe("WI-0080: Tailwind 3 content 의 패키지 표본 · 제안을 설치�
     expect((await contentItem("hoisted", "none"))?.message).toContain(`@axis-ds/ui-react → "${UP}"`);
   });
 
-  it("AC5: 설치본이 없거나 Plug'n'Play 면 종전 표본 node_modules/<pkg> · 제안 ./node_modules/<pkg> 를 씀", async () => {
+  it("AC5: 설치본이 없으면 종전 표본 node_modules/<pkg> · 제안 ./node_modules/<pkg> 를 쓰고, Plug'n'Play 는 node_modules 표본을 덮음으로 보지 않음(WI-0098)", async () => {
     expect(await contentItem("missing", "local")).toEqual(PASS);
     expect(await contentItem("missing", "none")).toEqual(FAIL(LOCAL));
-    // PnP: 루트에 남은 node_modules 설치본을 읽지 않음(isPnpProject 가드). 가드를 지우면 up 이 PASS 로 바뀌어 빨개짐
-    expect(await contentItem("pnp", "up")).toEqual(FAIL(LOCAL));
-    expect(await contentItem("pnp", "local")).toEqual(PASS);
+    // PnP: 루트에 남은 node_modules 설치본을 읽지 않음(isPnpProject 가드). 가드를 지우면 up 이 PASS 로 바뀌어 빨개짐.
+    // WI-0098(AC3 · C1): FAIL 은 유지하고 제안 자리에 ./node_modules 대신 PnP 안내
+    expect(await contentItem("pnp", "up")).toEqual({
+      name: "tailwind.content",
+      severity: "fail",
+      message:
+        "tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react(Plug'n'Play 라 node_modules 경로가 없음)" +
+        ` (${WI0098_PNP_NOTE})`,
+    });
+    // WI-0098(AC1): 종전 거짓 PASS 를 WARN 으로(0 → 0)
+    expect(await contentItem("pnp", "local")).toEqual({
+      name: "tailwind.content",
+      severity: "warn",
+      message:
+        "tailwind.config.ts의 content 가 Plug'n'Play 에서 스캔되지 않는 경로로 @axis-ds/ui-react 를 덮습니다(node_modules 경로 · ./** 는 스캔되지 않음)" +
+        ` (${WI0098_PNP_NOTE})`,
+    });
   });
 
   it("AC6: ** 는 ../ 세그먼트를 넘지 않음(hoisted 의 ./**/*.{js,mjs} 는 FAIL, 단일 프로젝트는 PASS 유지)", async () => {
@@ -2630,6 +2659,310 @@ describe("WI-0080: Tailwind 3 content 의 패키지 표본 · 제안을 설치�
   });
 });
 
+// WI-0098: Yarn Plug'n'Play 의 Tailwind 3 content 판정. 실설치 측정(Yarn 4.5.3 · Tailwind CLI 3.4.19, 발행본 1.7.6 · 1.4.5):
+// 기본 PnP 의 node_modules glob · ./** 는 빌드 4(패키지 glob 없음과 같음)인데 PASS, unplugged 상대 · 절대 glob 은 빌드 429(node-modules
+// 대조군과 바이트 같음)인데 FAIL, 루트 전용 선언의 동적 형태는 빌드 rc 1. 사용자 결정 Q22 · Q23 · Q29 와 구현 해석 C1 ~ C4(Q30)로
+// 「종전 덮음 → WARN · 종전 덮지 않음 → FAIL 유지 · unplugged(앱 범위에 맞는 버전) 인정 · 루트 전용은 앱 선언 안내」를 고정해요.
+// 스텁은 판정 입력(파일 존재 · 버전 · 선언 위치)만 재현하고, 빌드 정답은 testplan 4절 실설치 측정으로만 판정해요.
+describe("WI-0098: Yarn Plug'n'Play 의 Tailwind 3 content 판정", () => {
+  type Layout = "pnp" | "pnpUnplugged" | "pnpUnpluggedOther" | "pnpRootOnly";
+  type Variant = "nm" | "broad" | "none" | "dyn" | "unplugRel" | "unplugAbs";
+  const UI = "/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+  const NM = `./node_modules${UI}`;
+  const UNPLUG_REL = `../../.yarn/unplugged/*/node_modules${UI}`;
+  const BASE = '"./app/**/*.{ts,tsx}", "./components/ui/**/*.{ts,tsx}"';
+  const UNPLUG_DIR = "@axis-ds-ui-react-virtual-0000000000";
+
+  async function writeUnplugged(root: string, name: string, version: string, entry = UNPLUG_DIR) {
+    const dir = path.join(root, ".yarn", "unplugged", entry, "node_modules", ...name.split("/"));
+    await fs.outputJSON(path.join(dir, "package.json"), { name, version });
+    await fs.outputFile(path.join(dir, "dist", "index.js"), "");
+  }
+
+  /** WI-0080 의 app("pnp") 와 같은 바탕(루트 workspaces + 빈 .pnp.cjs + 루트 node_modules 스텁, 가드 불변식용) */
+  async function app(layout: Layout, extraAppDeps: Record<string, string> = {}): Promise<{ root: string; dir: string }> {
+    const root = await tempDir();
+    const dir = path.join(root, "apps", "web");
+    const rootOnly = layout === "pnpRootOnly";
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      workspaces: ["apps/*"],
+      ...(rootOnly ? { dependencies: { "@axis-ds/ui-react": "^1.8.0" } } : {}),
+    });
+    await writeInstalledStub(root, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    if (layout === "pnpUnplugged" || rootOnly) await writeUnplugged(root, "@axis-ds/ui-react", "1.8.1");
+    if (layout === "pnpUnpluggedOther") await writeUnplugged(root, "@axis-ds/ui-react", "1.7.0", "@axis-ds-ui-react-npm-1.7.0-0000000000");
+    await fs.outputJSON(path.join(dir, "package.json"), {
+      name: "web",
+      private: true,
+      dependencies: { ...(rootOnly ? {} : { "@axis-ds/ui-react": "^1.8.0" }), tailwindcss: "^3.4.0", ...extraAppDeps },
+    });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "components/ui" });
+    return { root, dir };
+  }
+  function contentOf(v: Variant, root: string): string {
+    switch (v) {
+      case "nm":
+        return `[${BASE}, "${NM}"]`;
+      case "broad":
+        return `[${BASE}, "./**/*.{js,mjs}"]`;
+      case "none":
+        return `[${BASE}]`;
+      case "dyn":
+        return `[${BASE}, path.join(ui, "dist/**/*.{js,mjs}")]`;
+      case "unplugRel":
+        return `[${BASE}, "${UNPLUG_REL}"]`;
+      case "unplugAbs":
+        return `[${BASE}, ${JSON.stringify(`${path.join(root, ".yarn", "unplugged", UNPLUG_DIR, "node_modules").split(path.sep).join("/")}${UI}`)}]`;
+    }
+  }
+  async function contentItem(layout: Layout, v: Variant) {
+    const { root, dir } = await app(layout);
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: ${contentOf(v, await fs.realpath(root))} };\n`);
+    return (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+  }
+
+  const PASS = {
+    name: "tailwind.content",
+    severity: "pass",
+    message: "tailwind.config.ts의 content 가 componentsDir(components/ui) · @axis-ds/ui-react 를 덮습니다",
+  };
+  const NO_NM = "@axis-ds/ui-react(Plug'n'Play 라 node_modules 경로가 없음)";
+  const ROOT_ONLY = "@axis-ds/ui-react 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요";
+  const UNPLUG_ITEM = `@axis-ds/ui-react → "${UNPLUG_REL}"`;
+  const LEGACY = "tailwind.config.ts의 content 가 Plug'n'Play 에서 스캔되지 않는 경로로 @axis-ds/ui-react 를 덮습니다(node_modules 경로 · ./** 는 스캔되지 않음)";
+  const FAILP = "tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): ";
+  const DYNP = "tailwind.config.ts의 content 를 정적으로 다 읽지 못해 확인하지 못했습니다: ";
+  const item = (severity: "pass" | "warn" | "fail", message: string) => ({ name: "tailwind.content", severity, message });
+  const P = ` (${WI0098_PNP_NOTE})`;
+  // 사용자 결정 Q45: unplugged 디렉터리가 이미 있는 대상은 설정 안내 없이 동적 형태만(정적 제안은 UNPLUG_ITEM)
+  const U = ` (${WI0098_PNP_NOTE_UNPLUGGED})`;
+  const PP = ` (${PARENT_NOTE})${U}`;
+
+  const MATRIX: Record<Layout, Record<Variant, unknown>> = {
+    // AC1 · AC2 · AC3: 종전 덮음(nm · broad) → WARN, 종전 덮지 않음 → FAIL 유지(C1), 동적 → WARN. 제안 ./node_modules 0건
+    pnp: {
+      nm: item("warn", LEGACY + P),
+      broad: item("warn", LEGACY + P),
+      none: item("fail", FAILP + NO_NM + P),
+      dyn: item("warn", DYNP + NO_NM + P),
+      unplugRel: item("fail", FAILP + NO_NM + P),
+      unplugAbs: item("fail", FAILP + NO_NM + P),
+    },
+    // AC4(Q29): unplugged 상대 · 절대 glob PASS(1 → 0). nm · broad 는 WARN(C2), none 은 unplugged 상대 제안 + cwd 안내(C4)
+    pnpUnplugged: {
+      nm: item("warn", `${LEGACY}: ${UNPLUG_ITEM}${PP}`),
+      broad: item("warn", `${LEGACY}: ${UNPLUG_ITEM}${PP}`),
+      none: item("fail", FAILP + UNPLUG_ITEM + PP),
+      // 사용자 결정 Q32(2026-10-28): unplugged PnP 의 dyn(실설치 Q3-dyn · P3-dyn, 빌드 429)은 WARN + unplugged 상대 glob + 상위 경로 안내 + PnP 안내로 확정
+      dyn: item("warn", DYNP + UNPLUG_ITEM + PP),
+      unplugRel: PASS,
+      unplugAbs: PASS,
+    },
+    // AC4 · extra 4: 앱 범위(^1.8.0) 밖 버전(1.7.0)의 unplugged 만 있으면 기본 PnP 와 같음
+    pnpUnpluggedOther: {
+      nm: item("warn", LEGACY + P),
+      broad: item("warn", LEGACY + P),
+      none: item("fail", FAILP + NO_NM + P),
+      dyn: item("warn", DYNP + NO_NM + P),
+      unplugRel: item("fail", FAILP + NO_NM + P),
+      unplugAbs: item("fail", FAILP + NO_NM + P),
+    },
+    // AC6(Q22 · C3): 루트 전용은 경로 제안 · 동적 형태 안내 · 덮음 인정 없음. unplugged 가 있어도 인정하지 않음(빌드 429 인 알려진 한계)
+    pnpRootOnly: {
+      nm: item("warn", `${LEGACY}: ${ROOT_ONLY}`),
+      broad: item("warn", `${LEGACY}: ${ROOT_ONLY}`),
+      none: item("fail", FAILP + ROOT_ONLY),
+      dyn: item("warn", DYNP + ROOT_ONLY),
+      unplugRel: item("fail", FAILP + ROOT_ONLY),
+      unplugAbs: item("fail", FAILP + ROOT_ONLY),
+    },
+  };
+
+  for (const layout of Object.keys(MATRIX) as Layout[]) {
+    it(`매트릭스(${layout}): severity · 문구`, async () => {
+      for (const v of Object.keys(MATRIX[layout]) as Variant[]) {
+        expect({ layout, v, item: await contentItem(layout, v) }).toEqual({ layout, v, item: MATRIX[layout][v] });
+      }
+    });
+  }
+
+  it("AC1: agentic-ui 도 같은 판정(node_modules glob 두 개 → WARN, 제안 0건)", async () => {
+    const { dir } = await app("pnp", { "@axis-ds/agentic-ui": "^1.8.0" });
+    await fs.outputFile(
+      path.join(dir, "tailwind.config.ts"),
+      `export default { content: [${BASE}, "${NM}", "./node_modules/@axis-ds/agentic-ui/dist/**/*.{js,mjs}"] };\n`
+    );
+    const got = (await collectCheckResults(dir)).find((r) => r.name === "tailwind.content");
+    expect(got).toEqual(
+      item(
+        "warn",
+        "tailwind.config.ts의 content 가 Plug'n'Play 에서 스캔되지 않는 경로로 @axis-ds/ui-react · @axis-ds/agentic-ui 를 덮습니다(node_modules 경로 · ./** 는 스캔되지 않음)" +
+          ` (${WI0098_PNP_NOTE_BOTH})`
+      )
+    );
+    expect(got?.message).not.toContain('"./node_modules');
+  });
+
+  it("AC6 양성 대조: 루트 · 앱 모두 선언하면 루트 전용 문구가 아니라 AC1 판정", async () => {
+    const { root, dir } = await app("pnp");
+    const rootPkg = await fs.readJSON(path.join(root, "package.json"));
+    await fs.writeJSON(path.join(root, "package.json"), { ...rootPkg, dependencies: { "@axis-ds/ui-react": "^1.8.0" } });
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: ${contentOf("nm", root)} };\n`);
+    expect((await collectCheckResults(dir)).find((r) => r.name === "tailwind.content")).toEqual(item("warn", LEGACY + P));
+  });
+
+  it("C1 · C2: 종전 덮음과 종전 덮지 않음이 섞이면 FAIL(0 → 1 없음은 종전 FAIL 행에만 해당)", async () => {
+    const { dir } = await app("pnp", { "@axis-ds/agentic-ui": "^1.8.0" });
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `export default { content: [${BASE}, "${NM}"] };\n`);
+    expect((await collectCheckResults(dir)).find((r) => r.name === "tailwind.content")).toEqual(
+      item("fail", `${FAILP}${NO_NM} · @axis-ds/agentic-ui(Plug'n'Play 라 node_modules 경로가 없음) (${WI0098_PNP_NOTE_BOTH})`)
+    );
+  });
+
+  it("unplugged 디렉터리가 앱 디렉터리 기준 PnP 루트에 있으면 제안은 ./.yarn/unplugged(상위 경로 안내 없음)", async () => {
+    const root = await tempDir();
+    await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputJSON(path.join(root, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputFile(path.join(root, "tailwind.config.js"), `module.exports = { content: ["./app/**/*.{ts,tsx}"] };\n`);
+    expect((await collectCheckResults(root)).find((r) => r.name === "tailwind.content")).toEqual(
+      item(
+        "fail",
+        `tailwind.config.js의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "./.yarn/unplugged/*/node_modules${UI}"${U}`
+      )
+    );
+    await fs.outputFile(path.join(root, "tailwind.config.js"), `module.exports = { content: ["./app/**/*.{ts,tsx}", "./.yarn/unplugged/*/node_modules${UI}"] };\n`);
+    expect((await collectCheckResults(root)).find((r) => r.name === "tailwind.content")?.severity).toBe("pass");
+  });
+
+  // WI-0098(사용자 결정 Q45): unplugged 디렉터리가 있는 패키지는 dependenciesMeta 설정 안내에서 빠지고, 없는 패키지만 나열해요
+  it("Q45: 일부만 unplugged 면 설정 안내에 unplugged 가 없는 패키지만, 모두 unplugged 면 설정 안내 문장 없음", async () => {
+    const root = await tempDir();
+    await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.8.1");
+    await fs.outputJSON(path.join(root, "package.json"), {
+      name: "web",
+      private: true,
+      dependencies: { "@axis-ds/ui-react": "^1.8.0", "@axis-ds/agentic-ui": "^1.8.0", tailwindcss: "^3.4.0" },
+    });
+    await fs.outputFile(path.join(root, "tailwind.config.js"), `module.exports = { content: ["./app/**/*.{ts,tsx}"] };\n`);
+    const got = (await collectCheckResults(root)).find((r) => r.name === "tailwind.content");
+    expect(got).toEqual(
+      item(
+        "fail",
+        `${FAILP.replace("tailwind.config.ts", "tailwind.config.js")}@axis-ds/ui-react → "./.yarn/unplugged/*/node_modules${UI}" · ` +
+          `@axis-ds/agentic-ui(Plug'n'Play 라 node_modules 경로가 없음) (${WI0098_PNP_NOTE_MIXED})`
+      )
+    );
+    expect(got?.message).not.toContain('"@axis-ds/ui-react": { "unplugged": true }');
+    // 둘 다 unplugged 면 설정 안내 문장이 없음(동적 형태는 둘 다)
+    await writeUnplugged(root, "@axis-ds/agentic-ui", "1.8.1");
+    const both = (await collectCheckResults(root)).find((r) => r.name === "tailwind.content");
+    expect(both?.severity).toBe("fail");
+    expect(both?.message).toContain('require.resolve("@axis-ds/agentic-ui")');
+    expect(both?.message).not.toContain("dependenciesMeta");
+    expect(both?.message.endsWith("(정적으로 확인할 수 없어 WARN 으로 남습니다).)")).toBe(true);
+  });
+
+  // WI-0098(사용자 결정 Q33): 앱이 PnP 루트 자신이고 unplugged 가 있으면 표본이 ./.yarn/unplugged/... 라 넓은 ./** 가 문자열로는 덮지만,
+  // fast-glob 기본(dot: false)은 .yarn 을 넘지 않아 빌드는 규칙 4(실측 S1-broad, none 과 바이트 같음, 1.7.6 · 수정 전 신판 모두 PASS).
+  // unplugged 표본은 ** · * 가 점으로 시작하는 세그먼트를 넘지 않을 때만 덮음으로 봐요(S1-unplugRel · S1-yarnstar 는 빌드 429 · 435 라 PASS 유지)
+  it("Q33: PnP 루트 앱의 넓은 ./** 는 .yarn/unplugged 표본을 덮지 않음(WARN), .yarn 을 글자로 쓴 glob 은 PASS", async () => {
+    const root = await tempDir();
+    await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.8.2");
+    await fs.outputJSON(path.join(root, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    const real = (await fs.realpath(root)).split(path.sep).join("/");
+    const at = async (glob: string) => {
+      await fs.outputFile(path.join(root, "tailwind.config.ts"), `export default { content: ["./app/**/*.{ts,tsx}", ${JSON.stringify(glob)}] };\n`);
+      return (await collectCheckResults(root)).find((r) => r.name === "tailwind.content");
+    };
+    const warn = item("warn", `${LEGACY}: @axis-ds/ui-react → "./.yarn/unplugged/*/node_modules${UI}"${U}`);
+    const pass = item("pass", "tailwind.config.ts의 content 가 @axis-ds/ui-react 를 덮습니다");
+    const rows: Array<[string, unknown]> = [
+      ["./**/*.{js,mjs}", warn],
+      ["**/*.{js,mjs}", warn],
+      ["./*/**/*.{js,mjs}", warn],
+      ["./{*,app}/**/*.{js,mjs}", warn],
+      [`${real}/**/*.{js,mjs}`, warn],
+      ["./.yarn/**/*.{js,mjs}", pass],
+      [`./.yarn/unplugged/*/node_modules${UI}`, pass],
+      ["./{.yarn,app}/**/*.{js,mjs}", pass],
+      [`${real}/.yarn/unplugged/*/node_modules${UI}`, pass],
+    ];
+    for (const [glob, want] of rows) expect({ glob, got: await at(glob) }).toEqual({ glob, got: want });
+  });
+
+  it("Q33 음성 대조: noDot 은 PnP unplugged 표본에만(비 PnP 단일 프로젝트의 ./** 는 종전 PASS, 정규식 기본값은 종전과 같음)", async () => {
+    const root = await tempDir();
+    await fs.ensureDir(path.join(root, ".git"));
+    await writeInstalledStub(root, "@axis-ds/ui-react", "1.8.2");
+    await fs.outputJSON(path.join(root, "package.json"), { name: "web", private: true, dependencies: { "@axis-ds/ui-react": "^1.8.0", tailwindcss: "^3.4.0" } });
+    await fs.outputFile(path.join(root, "tailwind.config.ts"), `export default { content: ["./app/**/*.{ts,tsx}", "./**/*.{js,mjs}"] };\n`);
+    expect((await collectCheckResults(root)).find((r) => r.name === "tailwind.content")).toEqual(
+      item("pass", "tailwind.config.ts의 content 가 @axis-ds/ui-react 를 덮습니다")
+    );
+    const s = ".yarn/unplugged/x/node_modules/@axis-ds/ui-react/dist/index.js";
+    expect(contentGlobToRegExp("./**/*.{js,mjs}").test(s)).toBe(true);
+    expect(contentGlobToRegExp("./**/*.{js,mjs}", { noDot: true }).test(s)).toBe(false);
+    expect(contentGlobToRegExp("./**/*.{js,mjs}").source).toBe(contentGlobToRegExp("./**/*.{js,mjs}", {}).source);
+    expect(contentGlobToRegExp("./**/*.{js,mjs}", { noDot: true }).test("node_modules/@axis-ds/ui-react/dist/index.js")).toBe(true);
+  });
+
+  it("findPnpUnpluggedPackages: 앱 범위에 맞는 버전만 이름순으로, PnP 가 아니거나 범위를 읽지 못하면 빈 목록", async () => {
+    const root = await tempDir();
+    await fs.outputFile(path.join(root, ".pnp.cjs"), "");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.8.2", "b-1.8.2");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.7.0", "a-1.7.0");
+    await writeUnplugged(root, "@axis-ds/ui-react", "1.8.1", "c-1.8.1");
+    const dir = path.join(root, "apps", "web");
+    await fs.ensureDir(dir);
+    const real = await fs.realpath(root);
+    const at = (entry: string) => path.join(real, ".yarn", "unplugged", entry, "node_modules", "@axis-ds", "ui-react");
+    expect(findPnpUnpluggedPackages(dir, "@axis-ds/ui-react", "^1.8.0")).toEqual([at("b-1.8.2"), at("c-1.8.1")]);
+    expect(findPnpUnpluggedPackages(dir, "@axis-ds/ui-react", "~1.7.0")).toEqual([at("a-1.7.0")]);
+    expect(findPnpUnpluggedPackages(dir, "@axis-ds/ui-react", "workspace:*")).toEqual([]);
+    expect(findPnpUnpluggedPackages(dir, "@axis-ds/agentic-ui", "^1.8.0")).toEqual([]);
+    // 음성 대조: .pnp.cjs 가 없으면(.git 에서 멈춤) 찾지 않음
+    const plain = await tempDir();
+    await fs.ensureDir(path.join(plain, ".git"));
+    await writeUnplugged(plain, "@axis-ds/ui-react", "1.8.2");
+    expect(findPnpUnpluggedPackages(plain, "@axis-ds/ui-react", "^1.8.0")).toEqual([]);
+  });
+
+  it("versionSatisfiesRange: npm 범위 형태 · prerelease · 판정 불가", () => {
+    const cases: Array<[string, string, boolean | undefined]> = [
+      ["1.8.1", "^1.8.0", true],
+      ["2.0.0", "^1.8.0", false],
+      ["1.7.9", "^1.8.0", false],
+      ["0.2.5", "^0.2.0", true],
+      ["0.3.0", "^0.2.0", false],
+      ["1.8.9", "~1.8.0", true],
+      ["1.9.0", "~1.8.0", false],
+      ["1.8.2", "1.8.2", true],
+      ["1.8.3", "=1.8.2", false],
+      ["1.9.0", "1.x", true],
+      ["2.0.0", "1.x", false],
+      ["1.8.0", "1.8", true],
+      ["5.0.0", "*", true],
+      ["1.8.0", ">=1.8.0 <2", true],
+      ["2.0.0", ">=1.8.0 <2", false],
+      ["1.9.0", "1.8.0 - 1.9", true],
+      ["1.10.0", "1.8.0 - 1.9", false],
+      ["3.0.0", "^1.8.0 || ^3.0.0", true],
+      ["1.9.0-beta.1", "^1.8.0", false],
+      ["1.9.0-beta.1", "^1.9.0-beta.0", true],
+      ["1.8.1", "workspace:*", undefined],
+      ["1.8.1", "catalog:", undefined],
+      ["1.8.1", "latest", undefined],
+    ];
+    for (const [v, r, want] of cases) expect({ v, r, got: versionSatisfiesRange(v, r) }).toEqual({ v, r, got: want });
+  });
+});
+
 // WI-0090: pnpm 기본 레이아웃에서 앱 · 루트가 모두 ui-react 를 선언하면 앱 node_modules 링크가 표본이라, 같은 스토어를 가리키는 루트 링크
 // (`../../node_modules/...`)나 스토어 실경로를 상대 경로로 쓴 glob 이 거짓 FAIL 이었어요. 빌드 실측(Tailwind 3.4.19 CLI 앱 cwd, ui-react 1.8.2):
 // 두 변형 모두 앱 경로 변형과 바이트 같은 CSS(선택자 427). 루트가 다른 버전(1.8.1)이면 루트 링크 변형은 426 으로 Select placeholder 클래스가
@@ -2651,7 +2984,7 @@ describe("WI-0090: 앱 설치본과 실경로가 같은 상위 설치본 · 스�
     message: `tailwind.config.ts의 content 가 컴포넌트 경로를 덮지 않습니다(클래스가 생성되지 않음): @axis-ds/ui-react → "${LOCAL}"${extra}`,
   });
   const OTHER = (versions: string) =>
-    ` (상위 경로 ../../node_modules/@axis-ds/ui-react 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않아요)`;
+    ` (상위 경로 ../../node_modules/@axis-ds/ui-react 는 앱이 쓰는 설치본과 다른 설치본${versions}이라 덮음으로 보지 않습니다)`;
 
   async function store(root: string, v: string): Promise<string> {
     const dir = path.join(root, ...STORE(v).split("/"));

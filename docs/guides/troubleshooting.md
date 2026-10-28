@@ -131,6 +131,8 @@ module.exports = {
 }
 ```
 
+Yarn Plug'n'Play(`.pnp.cjs`)에는 `node_modules` 가 없어 위의 `./node_modules/...` 경로가 스캔되지 않아요. `const path = require("path")` 뒤 `path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}")` 처럼 실제 위치를 넣거나, `package.json` 의 `dependenciesMeta` 에 `"@axis-ds/ui-react": { "unplugged": true }` 를 두고 `yarn install` 뒤 `.yarn/unplugged/*/node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}` 를 넣으세요(모노레포 앱이면 앞에 `../../` 같은 상위 경로). 패키지는 앱 `package.json` 에 선언해야 해요.
+
 **애니메이션 (Tailwind 3)**: Dialog · Popover · Select 등이 애니메이션 없이 열리고 닫히면 `tailwindcss-animate` 를 설치하고 `plugins: [require('tailwindcss-animate')]` 로 넣습니다(`animate-in` · `fade-in-0` 류). Accordion · Progress `indeterminate` 의 keyframes 는 `@axis-ds/tokens/tailwind` preset 이 정의하므로 preset 을 `presets` 에 넣으면 됩니다. preset 을 쓰지 않으면 `import { axisKeyframes, axisAnimation } from '@axis-ds/tokens/tailwind'` 를 `theme.extend.keyframes` · `theme.extend.animation` 에 넣습니다.
 
 **복사 설치(`axis add` · shadcn 레지스트리)**: 레지스트리 항목의 `dependencies` 에는 애니메이션 플러그인이 들어 있지 않습니다. 플러그인 이름이 Tailwind 3 · 4 에 따라 다르고 설정 줄도 함께 넣어야 해서 패키지 설치만으로는 해결되지 않기 때문입니다. 위 Tailwind 3 · Tailwind 4 안내대로 직접 넣습니다.
