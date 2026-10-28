@@ -865,7 +865,7 @@ describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () 
   // WI-0080: 세 번째 호출지(theme add 안내)도 check 와 같은 제안 · 안내를 씀. 호이스팅은 루트 설치본 기준 ../../node_modules
   it("호이스팅 모노레포: ui-react content 제안이 ../../node_modules 이고 cwd 기준 안내 1줄, 앱 node_modules 에 있으면(음성 대조) 종전 ./node_modules", async () => {
     const PARENT_NOTE =
-      "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀려요. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+      "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀립니다. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
     const stub = (dir: string, name: string, version: string) =>
       fs.outputJSON(path.join(dir, "node_modules", ...name.split("/"), "package.json"), { name, version });
     const outFor = async (layout: "hoisted" | "isolated") => {
@@ -893,6 +893,87 @@ describe("WI-0065 D7: Tailwind 3 설정 안내(파일은 고치지 않음)", () 
     const isolated = await outFor("isolated");
     expect(isolated).toContain('content 가 @axis-ds/ui-react 를 덮지 않습니다. 넣으세요: "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"');
     expect(isolated).not.toContain(PARENT_NOTE);
+  });
+
+  // WI-0098(AC7): Plug'n'Play Tailwind 3 앱에서 theme add 의 content 안내도 check 와 같은 판정 · 같은 안내 상수를 씀.
+  // 실설치 측정(발행본 1.7.6): TA1-nm 은 content 안내 0줄(거짓 침묵), TA1-none 은 「넣으세요: "./node_modules/..."」
+  describe("WI-0098: Plug'n'Play 의 content 안내", () => {
+    const PNP_NOTE =
+      'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다). 정적 경로를 쓰려면 package.json 의 dependenciesMeta 에 "@axis-ds/ui-react": { "unplugged": true } 를 두고 yarn install 뒤 .yarn/unplugged 경로를 넣으세요';
+    const PARENT_NOTE =
+      "상위 경로는 Tailwind 3 가 빌드를 실행한 디렉터리 기준으로 풀립니다. 모노레포 루트 등 앱 디렉터리 밖에서 빌드하면 content: { relative: true, files: [...] } 로 설정 파일 기준으로 바꾸세요";
+    // 사용자 결정 Q45: unplugged 디렉터리가 이미 있으면 dependenciesMeta 설정 안내 없이 동적 형태만(정적 제안은 「넣으세요」 줄)
+    const PNP_NOTE_UNPLUGGED =
+      'Plug\'n\'Play 에는 node_modules 가 없습니다. content 에 path.join(path.dirname(require.resolve("@axis-ds/ui-react")), "..", "dist/**/*.{js,mjs}") 처럼 실제 위치를 넣으세요(정적으로 확인할 수 없어 WARN 으로 남습니다).';
+    const NM = "./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}";
+    const PNP_LINE = "! content 가 @axis-ds/ui-react 를 Plug'n'Play 에서 스캔되는 경로로 덮지 않습니다";
+    const ROOT_ONLY_LINE = "! @axis-ds/ui-react 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요";
+
+    const outFor = async (content: string[], o: { rootOnly?: boolean; unplugged?: boolean } = {}) => {
+      const root = await project({ tokens: "1.3", layout: "empty" });
+      await fs.writeJSON(path.join(root, "package.json"), {
+        name: "root",
+        private: true,
+        workspaces: ["apps/*"],
+        ...(o.rootOnly ? { dependencies: { "@axis-ds/ui-react": "^1.8.0" } } : {}),
+      });
+      await fs.writeFile(path.join(root, ".pnp.cjs"), "");
+      if (o.unplugged) {
+        const dir = path.join(root, ".yarn", "unplugged", "@axis-ds-ui-react-virtual-0000000000", "node_modules", "@axis-ds", "ui-react");
+        await fs.outputJSON(path.join(dir, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.1" });
+        await fs.outputFile(path.join(dir, "dist", "index.js"), "");
+      }
+      const app = path.join(root, "apps", "web");
+      await fs.outputJSON(path.join(app, "package.json"), {
+        name: "web",
+        private: true,
+        dependencies: { "@axis-ds/tokens": "^1.3.0", ...(o.rootOnly ? {} : { "@axis-ds/ui-react": "^1.8.0" }), tailwindcss: "^3.4.0" },
+      });
+      await fs.outputJSON(path.join(app, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+      await fs.outputFile(path.join(app, "app", "globals.css"), "@tailwind base;\n");
+      await fs.outputFile(
+        path.join(app, "tailwind.config.ts"),
+        `import axisPreset from "@axis-ds/tokens/tailwind";\nexport default { presets: [axisPreset], content: ${JSON.stringify(["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", ...content])} };\n`
+      );
+      const r = await runAdd(["sample", "-d", app]);
+      return r;
+    };
+
+    it("nm: 종전 침묵 대신 PnP 안내 줄 + 안내 상수 줄, ./node_modules 제안 0건, 종료 코드 0", async () => {
+      const { out, exitCode } = await outFor([NM]);
+      expect(out).toContain(PNP_LINE);
+      expect(out).toContain(`    ${PNP_NOTE}`);
+      expect(out).not.toContain("넣으세요: \"./node_modules");
+      expect(out).not.toContain(PARENT_NOTE);
+      expect(exitCode).toBe(0);
+    });
+
+    it("none: 「넣으세요: ./node_modules」 대신 PnP 안내", async () => {
+      const { out } = await outFor([]);
+      expect(out).toContain(PNP_LINE);
+      expect(out).toContain(`    ${PNP_NOTE}`);
+      expect(out).not.toContain("넣으세요: \"./node_modules");
+    });
+
+    it("루트 전용 선언: 앱 선언 안내만(경로 제안 · 동적 형태 안내 없음)", async () => {
+      for (const content of [[NM], []]) {
+        const { out } = await outFor(content, { rootOnly: true });
+        expect(out).toContain(ROOT_ONLY_LINE);
+        expect(out).not.toContain(PNP_NOTE);
+        expect(out).not.toContain("넣으세요: \"");
+      }
+    });
+
+    it("unplugged: none 은 unplugged 상대 glob 제안 + cwd 안내 + 안내 상수, unplugged glob 이 있으면 안내 없음", async () => {
+      const none = (await outFor([], { unplugged: true })).out;
+      expect(none).toContain('content 가 @axis-ds/ui-react 를 덮지 않습니다. 넣으세요: "../../.yarn/unplugged/*/node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"');
+      expect(none).toContain(PARENT_NOTE);
+      expect(none.split("\n").some((l) => l.endsWith(`    ${PNP_NOTE_UNPLUGGED}`))).toBe(true);
+      expect(none).not.toContain("dependenciesMeta");
+      const rel = (await outFor(["../../.yarn/unplugged/*/node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}"], { unplugged: true })).out;
+      expect(rel).not.toContain("content 가 @axis-ds/ui-react");
+      expect(rel).not.toContain(PNP_NOTE_UNPLUGGED);
+    });
   });
 });
 

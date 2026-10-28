@@ -4,7 +4,7 @@
  * add(설치 코어) · init · theme add 가 함께 씁니다.
  */
 
-import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import path from "node:path";
 
 /**
@@ -589,14 +589,183 @@ export function findInstalledPackage(baseDirInput: string, name: string): Instal
  * 종전에는 저장소 밖 상위에 남은 `.pnp.cjs` 때문에 node-modules 프로젝트를 Plug'n'Play 로 잘못 판정했습니다.
  */
 export function isPnpProject(baseDirInput: string): boolean {
+  return pnpProjectRoot(baseDirInput) !== undefined;
+}
+
+/**
+ * Plug'n'Play 표지(`.pnp.cjs` · `.pnp.js`)가 있는 디렉터리(실경로). `isPnpProject` 와 같은 탐색(같은 층은 표지 먼저, 표지 없이 `.git` 이
+ * 나오면 멈춤)이고, 표지를 찾지 못하면 `undefined` 입니다. WI-0098 에서 unplugged 설치본 탐색의 기준으로 쓰려고 나눴어요.
+ */
+export function pnpProjectRoot(baseDirInput: string): string | undefined {
   let dir = resolveBaseDir(baseDirInput);
   for (;;) {
-    if (isFile(path.join(dir, ".pnp.cjs")) || isFile(path.join(dir, ".pnp.js"))) return true;
-    if (existsSync(path.join(dir, ".git"))) return false;
+    if (isFile(path.join(dir, ".pnp.cjs")) || isFile(path.join(dir, ".pnp.js"))) return dir;
+    if (existsSync(path.join(dir, ".git"))) return undefined;
     const parent = path.dirname(dir);
-    if (parent === dir) return false;
+    if (parent === dir) return undefined;
     dir = parent;
   }
+}
+
+/**
+ * Plug'n'Play 에서 unplugged 로 풀린 설치본 가운데 버전이 `range` 에 맞는 것(WI-0098, 사용자 결정 Q29 · extra 4).
+ * `pnpProjectRoot` 의 `.yarn/unplugged/<디렉터리>/node_modules/<name>/package.json` 을 읽고, version 이 `range` 를 만족하는 패키지
+ * 디렉터리(절대 경로)를 이름순으로 돌려줘요. `.pnp.cjs` 는 읽지 않아요(사용자 결정 Q23). 범위를 읽지 못하면(`workspace:` · `catalog:` ·
+ * git · 파일 경로 등) 맞는지 알 수 없으므로 아무것도 돌려주지 않아요(덮음 인정 쪽으로 가지 않는 보수적 기본값).
+ * `.yarnrc.yml` 의 `pnpUnpluggedFolder` 로 위치를 바꾼 프로젝트는 찾지 못해요(prd 7절 잔여 오차).
+ */
+export function findPnpUnpluggedPackages(baseDirInput: string, name: string, range: string): string[] {
+  const root = pnpProjectRoot(baseDirInput);
+  if (root === undefined) return [];
+  const unplugged = path.join(root, ".yarn", "unplugged");
+  let entries: string[];
+  try {
+    entries = readdirSync(unplugged).sort();
+  } catch {
+    return [];
+  }
+  const found: string[] = [];
+  for (const entry of entries) {
+    const pkgDir = path.join(unplugged, entry, "node_modules", ...name.split("/"));
+    let version: string | undefined;
+    try {
+      const parsed: unknown = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf8"));
+      version = isPlainObject(parsed) && parsed.name === name ? exactVersionOf(parsed.version) : undefined;
+    } catch {
+      version = undefined;
+    }
+    if (version !== undefined && versionSatisfiesRange(version, range) === true) found.push(pkgDir);
+  }
+  return found;
+}
+
+/** 버전 한 자리 묶음(`1` · `1.8` · `1.8.x` · `1.8.2` · `1.8.2-beta.1`). 빠지거나 와일드카드인 자리는 `undefined` */
+interface PartialVersion {
+  major?: number;
+  minor?: number;
+  patch?: number;
+  pre?: string;
+}
+
+function parsePartialVersion(token: string): PartialVersion | undefined {
+  const m = /^v?(\d+|[xX*])(?:\.(\d+|[xX*]))?(?:\.(\d+|[xX*]))?(?:-([0-9A-Za-z.-]+))?(?:\+[0-9A-Za-z.-]+)?$/.exec(token.trim());
+  if (!m) return undefined;
+  const num = (s: string | undefined) => (s === undefined || /^[xX*]$/.test(s) ? undefined : Number(s));
+  const major = num(m[1]);
+  const minor = major === undefined ? undefined : num(m[2]);
+  const patch = minor === undefined ? undefined : num(m[3]);
+  return { major, minor, patch, pre: patch === undefined ? undefined : m[4] };
+}
+
+/** `[하한(포함), 상한(제외)]` 꼴의 비교. 상한은 core 만 봐요(`<2.0.0-0` 과 같음). `undefined` 쪽은 열려 있어요. */
+interface VersionInterval {
+  min?: { v: string; inclusive: boolean };
+  max?: { v: string; inclusive: boolean; coreOnly?: boolean };
+  /** 이 범위가 prerelease 를 허용하는 core(`1.8.2-beta.1` 같은 비교자가 있을 때) */
+  preCores: string[];
+}
+
+function coreOf(v: string): string {
+  return v.replace(/^v/, "").replace(/[-+].*$/, "");
+}
+
+/** 단순 비교자 하나 · `^` · `~` · X 범위를 구간으로 바꿔요. 읽지 못하면 `undefined` */
+function intervalsOfToken(token: string): VersionInterval[] | undefined {
+  const t = token.trim();
+  if (t === "" || t === "*" || /^[xX]$/.test(t)) return [{ preCores: [] }];
+  const op = /^(\^|~>?|>=|<=|>|<|=)?\s*(.+)$/.exec(t);
+  if (!op) return undefined;
+  const p = parsePartialVersion(op[2]);
+  if (!p) return undefined;
+  const full = (maj: number, min: number, pat: number, pre?: string) => `${maj}.${min}.${pat}${pre ? `-${pre}` : ""}`;
+  const preCores = p.pre !== undefined ? [full(p.major ?? 0, p.minor ?? 0, p.patch ?? 0)] : [];
+  const lower = full(p.major ?? 0, p.minor ?? 0, p.patch ?? 0, p.pre);
+  const kind = op[1] ?? "";
+  if (p.major === undefined) return kind === "" || kind === "=" || kind === ">=" ? [{ preCores }] : undefined;
+  // 부분 버전의 다음 경계(`1.8` → 1.9.0, `1` → 2.0.0)
+  const next =
+    p.minor === undefined ? full(p.major + 1, 0, 0) : p.patch === undefined ? full(p.major, p.minor + 1, 0) : undefined;
+  switch (kind) {
+    case "":
+    case "=":
+      return [next === undefined ? { min: { v: lower, inclusive: true }, max: { v: lower, inclusive: true }, preCores } : { min: { v: lower, inclusive: true }, max: { v: next, inclusive: false, coreOnly: true }, preCores }];
+    case ">=":
+      return [{ min: { v: lower, inclusive: true }, preCores }];
+    case ">":
+      return [next === undefined ? { min: { v: lower, inclusive: false }, preCores } : { min: { v: next, inclusive: true }, preCores }];
+    case "<":
+      return [{ max: { v: lower, inclusive: false, coreOnly: p.pre === undefined }, preCores }];
+    case "<=":
+      return [next === undefined ? { max: { v: lower, inclusive: true }, preCores } : { max: { v: next, inclusive: false, coreOnly: true }, preCores }];
+    case "~":
+    case "~>": {
+      const upper = p.minor === undefined ? full(p.major + 1, 0, 0) : full(p.major, p.minor + 1, 0);
+      return [{ min: { v: lower, inclusive: true }, max: { v: upper, inclusive: false, coreOnly: true }, preCores }];
+    }
+    case "^": {
+      const upper =
+        p.major > 0 || p.minor === undefined
+          ? full(p.major + 1, 0, 0)
+          : p.minor > 0 || p.patch === undefined
+            ? full(0, p.minor + 1, 0)
+            : full(0, 0, p.patch + 1);
+      return [{ min: { v: lower, inclusive: true }, max: { v: upper, inclusive: false, coreOnly: true }, preCores }];
+    }
+  }
+  return undefined;
+}
+
+function satisfiesInterval(version: string, iv: VersionInterval): boolean | undefined {
+  if (iv.min !== undefined) {
+    const c = compareExactVersions(version, iv.min.v);
+    if (c === undefined) return undefined;
+    if (c < 0 || (c === 0 && !iv.min.inclusive)) return false;
+  }
+  if (iv.max !== undefined) {
+    const c = iv.max.coreOnly ? compareExactVersions(coreOf(version), coreOf(iv.max.v)) : compareExactVersions(version, iv.max.v);
+    if (c === undefined) return undefined;
+    if (c > 0 || (c === 0 && !iv.max.inclusive)) return false;
+  }
+  return true;
+}
+
+/**
+ * 정확한 버전이 선언 범위를 만족하는지(WI-0098, unplugged 설치본 고르기 전용). 받는 형태: 정확한 버전 · `=` · `^` · `~` · X 범위
+ * (`1.x` · `1.8` · `*`) · 비교자 집합(`>=1.8.0 <2`) · 하이픈 범위(`1.8.0 - 1.9.0`) · `||`. prerelease 버전은 같은 core 의 prerelease
+ * 비교자가 있는 범위에서만 맞아요(npm semver 와 같은 규칙). 그 밖의 형태(`workspace:` · `catalog:` · `npm:` · `latest` · git · 파일)는
+ * `undefined`(판정 불가)예요. 버전 비교는 `compareExactVersions`(prerelease 끼리는 순서를 보지 않음)를 써요.
+ */
+export function versionSatisfiesRange(version: string, range: string): boolean | undefined {
+  if (exactVersionOf(version) === undefined) return undefined;
+  const alternatives = range.trim().split("||");
+  let unknown = false;
+  for (const alt of alternatives) {
+    const a = alt.trim();
+    let intervals: VersionInterval[] | undefined;
+    const hyphen = /^(\S+)\s+-\s+(\S+)$/.exec(a);
+    if (hyphen) {
+      const lo = intervalsOfToken(`>=${hyphen[1]}`);
+      const hi = intervalsOfToken(`<=${hyphen[2]}`);
+      intervals = lo && hi ? [...lo, ...hi] : undefined;
+    } else {
+      const tokens = a === "" ? [""] : a.replace(/(>=|<=|>|<|=|\^|~>?)\s+/g, "$1").split(/\s+/);
+      const parts = tokens.map(intervalsOfToken);
+      intervals = parts.every((x) => x !== undefined) ? parts.flat() : undefined;
+    }
+    if (intervals === undefined) {
+      unknown = true;
+      continue;
+    }
+    const pre = /-/.test(version.replace(/\+.*$/, ""));
+    if (pre && !intervals.some((iv) => iv.preCores.includes(coreOf(version)))) continue;
+    const results = intervals.map((iv) => satisfiesInterval(version, iv));
+    if (results.some((x) => x === undefined)) {
+      unknown = true;
+      continue;
+    }
+    if (results.every((x) => x === true)) return true;
+  }
+  return unknown ? undefined : false;
 }
 
 /**
