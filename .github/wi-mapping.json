@@ -708,7 +708,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEHIsQ",
       "lastSyncedAt": "2026-10-28T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0103",
+      "slug": "export-aware-package-resolution",
+      "issueNumber": 254,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhEVEIo",
+      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-28T00:00:00.000Z"
+  "updatedAt": "2026-10-29T00:00:00.000Z"
 }
