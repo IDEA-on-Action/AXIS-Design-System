@@ -97,8 +97,9 @@
 | 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 순서 2) |
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 병렬) |
 | 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
-| 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 순서 1 · 3) |
+| 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | 🔄 진행(2026-10-28, 0100a #250 머지 · 0100b 대기) |
 | 113 | Tailwind 3 preset 을 ESM · .ts 설정에서 쓰면 tokens 미선언 · 미설치여도 check 가 PASS(WI-0097 조사에서 발견, 사용자 결정 Q26) | WI-0101 (#248) | P18 | P3 | ⏳ |
+| 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | ⏳ |
 
 ### 완료
 

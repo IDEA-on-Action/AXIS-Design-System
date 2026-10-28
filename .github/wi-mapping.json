@@ -700,6 +700,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEEi28",
       "lastSyncedAt": "2026-10-28T00:00:00.000Z",
       "lastStatus": "⏳"
+    },
+    {
+      "wiId": "WI-0102",
+      "slug": "pnp-component-source-scan",
+      "issueNumber": 249,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhEHIsQ",
+      "lastSyncedAt": "2026-10-28T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-28T00:00:00.000Z"
