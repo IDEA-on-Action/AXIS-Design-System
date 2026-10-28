@@ -16,7 +16,6 @@ import {
   type TokensStatus,
 } from "./brand-core.js";
 import {
-  COMPONENT_TAILWIND_CSS_MIN_VERSION,
   THEME_MIN_VERSION,
   THEME_PACKAGE,
   TOKENS_DEPENDENCY_RANGE,
@@ -27,7 +26,7 @@ import {
 } from "./theme-add.js";
 import {
   addCommandFor,
-  compareExactVersions,
+  deferredComponentImportReason,
   dependencyInstallGuide,
   detectInstallCommand,
   PNP_ROOT_ONLY_NOTE,
@@ -373,22 +372,9 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     );
   }
   // WI-0087 DEC-2: 루트에만 선언된 컴포넌트 패키지의 tailwind.css 는 설치본에 파일이 있을 때만 넣고, 넣지 않았으면 이유를 한 줄씩 알립니다
+  // 문장(미설치 · 설치 손상 · 1.4.0 미만 세 갈래)은 registry-core `deferredComponentImportReason` 에 있고(WI-0097), 접두 · 색만 여기서 붙입니다
   for (const d of css?.deferredComponentImports ?? []) {
-    const line = `@import "${d.name}/tailwind.css";`;
-    // 1.4.0 이상인데 파일이 없으면 올릴 버전 문제가 아니라 설치가 손상된 것이라 다시 설치를 안내합니다
-    const current =
-      d.installedVersion !== undefined &&
-      d.installedVersion !== "?" &&
-      (compareExactVersions(d.installedVersion, COMPONENT_TAILWIND_CSS_MIN_VERSION) ?? -1) >= 0;
-    lines.push(
-      chalk.yellow(
-        d.installedVersion === undefined
-          ? `  ! ${d.name} 가 워크스페이스 루트에 선언됐지만 설치되지 않아 ${line} 를 넣지 않았습니다. 설치(${plan.installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
-          : current
-            ? `  ! 워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion})에 tailwind.css 가 없어 ${line} 를 넣지 않았습니다. 설치가 손상됐을 수 있으니 다시 설치(${plan.installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
-            : `  ! 워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion === "?" ? "버전 모름" : d.installedVersion})에 tailwind.css 가 없어(${COMPONENT_TAILWIND_CSS_MIN_VERSION} 부터 제공) ${line} 를 넣지 않았습니다. ${COMPONENT_TAILWIND_CSS_MIN_VERSION} 이상으로 올린 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
-      )
-    );
+    lines.push(chalk.yellow(`  ! ${deferredComponentImportReason(d, plan.installCommand)}`));
   }
   if (css && css.otherBrands.length > 0) {
     lines.push(

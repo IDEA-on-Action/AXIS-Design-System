@@ -174,6 +174,8 @@ export function workspaceRootPackage(baseDirInput: string): Record<string, unkno
  * - `options.appOnlyInPnp`(WI-0091): Plug'n'Play(`isPnpProject`)면 루트 선언을 인정하지 않고 앱 선언만 봅니다. PnP 에서 앱 issuer 는
  *   자기 package.json 에 없는 패키지를 해석하지 못하기 때문입니다(Yarn 4.5.3 실측, `pnpFallbackMode: all` 은 예외인데 잔여 오차로 둠).
  *   `axis check` · MCP `axis.check_project` 의 판정만 켭니다(사용자 결정 Q2). init · theme add · add · template apply 는 종전대로입니다.
+ *   Tailwind 4 컴포넌트 `tailwind.css` 판정(check 의 B1 · theme add 의 DEC-2)은 이 옵션이 아니라 `componentCssResolution` 이
+ *   PnP 루트 전용을 따로 갈라요(WI-0097, CSS `@import` 도 앱 issuer 에서 rc 1 「Can't resolve」인 것을 Yarn 4.5.3 · `@tailwindcss/cli` 4.1.14 로 실측).
  */
 export function declaredDependency(
   baseDir: string,
@@ -605,6 +607,157 @@ export function pnpProjectRoot(baseDirInput: string): string | undefined {
     if (parent === dir) return undefined;
     dir = parent;
   }
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// CSS import 해석 상태 (WI-0097: check 의 Tailwind 4 B1 · theme add 의 WI-0087 DEC-2 공용)
+
+/**
+ * Tailwind 4 진입점(토큰 `css/tailwind4` · 컴포넌트 `tailwind.css`)이 처음 들어가는 AXIS 버전(WI-0044 D1, linked minor).
+ * WI-0097 에서 tailwind-core `TAILWIND4_MIN_AXIS_VERSION` 과 cli theme-add `COMPONENT_TAILWIND_CSS_MIN_VERSION`(값이 같은 사본)을
+ * 하나로 합쳐 이곳에 뒀어요. 두 이름은 각각 다시 내보내요.
+ */
+export const TAILWIND4_MIN_AXIS_VERSION = "1.4.0";
+
+/** 컴포넌트 패키지가 `tailwind.css` 를 배포하기 시작한 버전(ui-react · agentic-ui CHANGELOG 1.4.0). `TAILWIND4_MIN_AXIS_VERSION` 과 같은 값 */
+export const COMPONENT_TAILWIND_CSS_MIN_VERSION = TAILWIND4_MIN_AXIS_VERSION;
+
+/**
+ * 컴포넌트 패키지(`@axis-ds/ui-react` · `@axis-ds/agentic-ui`)의 `<name>/tailwind.css` 를 이 앱이 해석할 수 있는지(WI-0097).
+ * 판정 순서(앞에서 정해지면 끝). 갈래는 PRD 1.4 표와 같고, 설치본은 파일 존재를 먼저 보고 버전은 파일이 없을 때만 봐요(사용자 결정 Q42):
+ * - `undeclared`: 앱 package.json 이 없거나 앱 · 워크스페이스 루트 어디에도 선언이 없음
+ * - `app`: 앱 package.json 에 선언(사용자 결정 Q21). 설치 여부와 상관없이 해석되는 것으로 봐요. 미설치는 dependencies 항목이 알려요.
+ *   Plug'n'Play 에서도 같아요(PnP 는 설치본을 읽지 않음)
+ * - `pnp-root-only`: Plug'n'Play 이고 워크스페이스 루트에만 선언(`pnpRootOnlyDependency`, Q22). 앱 issuer 가 해석하지 못해요
+ *   (Yarn 4.5.3 · `@tailwindcss/cli` 4.1.14 실빌드 rc 1 `Can't resolve`, WI-0097 testplan 2절)
+ * - `app-lockfile`: 앱 디렉터리 자체에 lockfile 이 있어(P2) 루트 선언을 이 앱의 선언으로 보지 않음(`rootDeclarationsAllowed`)
+ * - `root-not-installed`: 루트에만 선언했고 `findInstalledPackage` 로 설치본을 찾지 못함
+ * - `root-ok`: 루트 선언이고 설치본 디렉터리에 `tailwind.css` 파일이 있음(해석의 정의는 파일 존재, 버전은 보지 않음)
+ * - `root-old`: 루트 선언 · 설치본에 파일이 없고 설치본 버전이 1.4.0 미만이거나 읽지 못함(`installedVersion: "?"`)
+ * - `root-missing-file`: 루트 선언 · 설치본이 1.4.0 이상인데 파일이 없음(설치 손상)
+ * `range` 는 루트 선언 범위예요. 쓰기 쪽(theme add)과 판정 쪽(check · MCP)이 같은 결론을 내도록 이 함수 하나를 써요.
+ */
+export type ComponentCssResolution =
+  | { kind: "undeclared" }
+  | { kind: "app"; range: string }
+  | { kind: "pnp-root-only"; range: string }
+  | { kind: "app-lockfile"; range: string }
+  | { kind: "root-not-installed"; range: string }
+  | { kind: "root-ok"; range: string; installedVersion?: string }
+  | { kind: "root-old"; range: string; installedVersion: string }
+  | { kind: "root-missing-file"; range: string; installedVersion: string };
+
+export function componentCssResolution(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  name: string
+): ComponentCssResolution {
+  if (pkg === undefined) return { kind: "undeclared" };
+  const own = hasDependency(pkg, name);
+  if (own !== undefined) return { kind: "app", range: own };
+  const pnpRoot = pnpRootOnlyDependency(baseDir, pkg, name);
+  if (pnpRoot !== undefined) return { kind: "pnp-root-only", range: pnpRoot.range };
+  const declared = declaredDependency(baseDir, pkg, name);
+  if (declared?.source !== "root") return { kind: "undeclared" };
+  if (!rootDeclarationsAllowed(baseDir, pkg)) return { kind: "app-lockfile", range: declared.range };
+  const installed = findInstalledPackage(baseDir, name);
+  if (installed === undefined) return { kind: "root-not-installed", range: declared.range };
+  if (isFile(path.join(installed.dir, "tailwind.css"))) {
+    return installed.version !== undefined
+      ? { kind: "root-ok", range: declared.range, installedVersion: installed.version }
+      : { kind: "root-ok", range: declared.range };
+  }
+  const installedVersion = installed.version ?? "?";
+  const current =
+    installedVersion !== "?" && (compareExactVersions(installedVersion, COMPONENT_TAILWIND_CSS_MIN_VERSION) ?? -1) >= 0;
+  return current
+    ? { kind: "root-missing-file", range: declared.range, installedVersion }
+    : { kind: "root-old", range: declared.range, installedVersion };
+}
+
+/** `componentCssResolution` 이 이 앱에서 `<name>/tailwind.css` 가 해석된다고 보는지(`app` · `root-ok`) */
+export function componentCssResolvable(resolution: ComponentCssResolution): boolean {
+  return resolution.kind === "app" || resolution.kind === "root-ok";
+}
+
+/**
+ * `@axis-ds/tokens` 의 CSS 진입점(`css` · `css/tailwind4` 등)을 이 앱이 해석할 수 있는지(WI-0097, globals.css 게이트용).
+ * check 의 globals.css 항목이 tokens CSS import 근거와 루트 레이아웃 JS import 근거(WI-0100 D11)를 pass 로 인정하기 전에 봐요(2부).
+ * - `app`: 앱 package.json 에 선언. 설치 여부와 상관없이 해석되는 것으로 봐요(사용자 결정 Q28, PnP · non-PnP 공통)
+ * - `pnp-root-only`: Plug'n'Play 이고 워크스페이스 루트에만 선언(Q22)
+ * - `installed`: Plug'n'Play 가 아니고 `findInstalledPackage` 로 설치본 디렉터리를 찾음(선언 위치와 상관없음, 해석의 정의는
+ *   패키지 디렉터리 존재. exports 대상 파일은 보지 않음: dist 없는 workspace 링크에서 거짓 WARN 을 막으려고)
+ * - `not-installed`: 그 밖. `source: "root"` 는 루트 선언을 이 앱의 선언으로 인정할 수 있는데(`rootDeclarationsAllowed`) 설치본이 없음,
+ *   `source: "none"` 은 미선언(P2 의 루트 선언 · PnP 의 앱 미선언 포함)
+ */
+export type TokensCssResolution =
+  | { kind: "app"; range: string }
+  | { kind: "pnp-root-only"; range: string }
+  | { kind: "installed" }
+  | { kind: "not-installed"; source: "root"; range: string }
+  | { kind: "not-installed"; source: "none" };
+
+export function tokensCssResolution(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  name = "@axis-ds/tokens"
+): TokensCssResolution {
+  const own = pkg !== undefined ? hasDependency(pkg, name) : undefined;
+  if (own !== undefined) return { kind: "app", range: own };
+  const pnpRoot = pnpRootOnlyDependency(baseDir, pkg, name);
+  if (pnpRoot !== undefined) return { kind: "pnp-root-only", range: pnpRoot.range };
+  if (!isPnpProject(baseDir) && findInstalledPackage(baseDir, name) !== undefined) return { kind: "installed" };
+  const declared = rootDeclarationsAllowed(baseDir, pkg) ? declaredDependency(baseDir, pkg, name) : undefined;
+  return declared?.source === "root"
+    ? { kind: "not-installed", source: "root", range: declared.range }
+    : { kind: "not-installed", source: "none" };
+}
+
+/**
+ * 프로젝트 밖 진입 CSS(`globalCss` 가 앱 밖, WI-0100a 사용자 결정 Q25)의 패키지 줄을 그 파일 위치 기준으로 해석할 수 있는지
+ * (WI-0097 2부, 사용자 결정 Q37). 빌드 도구(`@tailwindcss/postcss` 의 enhanced-resolve)는 `@import "<pkg>..."` 를 앱이 아니라
+ * 그 CSS 파일 디렉터리부터 상위 node_modules 로 풀어요(WI-0100a 실측: 설치본이 앱 아래에만 있으면 rc 1
+ * 「Can't resolve 'tailwindcss' in '<그 파일 디렉터리>'」, 상위로 호이스팅하면 rc 0. WI-0097 testplan 4.3 에서 다시 잼).
+ * - `unresolved`: 앱 위치에서는 설치본을 찾는데(`file` 을 주면 설치본 안의 그 파일까지) CSS 파일 위치에서는 찾지 못함
+ * - `resolved`: CSS 파일 위치에서도 찾음
+ * - `unknown`: 판정하지 않음(종전 동작). Plug'n'Play(설치본을 읽지 않음)와, 앱 위치에서도 설치본이 없는 경우예요
+ *   (미설치는 앱 기준 판정과 dependencies 항목이 알려요, 사용자 결정 Q21 · Q28)
+ * 선언은 보지 않아요(node_modules 탐색은 선언과 상관없이 풀림). 앱 기준 판정(`componentCssResolution` · `tokensCssResolution`)을
+ * 대신하지 않고 그 뒤에 더하는 판정이에요.
+ */
+export type OutsideCssResolution = "resolved" | "unresolved" | "unknown";
+
+export function outsideCssPackageResolution(baseDir: string, cssDir: string, name: string, file?: string): OutsideCssResolution {
+  if (isPnpProject(baseDir)) return "unknown";
+  const usable = (p: InstalledPackage | undefined) => p !== undefined && (file === undefined || isFile(path.join(p.dir, file)));
+  if (!usable(findInstalledPackage(baseDir, name))) return "unknown";
+  return usable(findInstalledPackage(cssDir, name)) ? "resolved" : "unresolved";
+}
+
+/** 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 theme add 가 넣지 않은 이유(WI-0087 DEC-2, WI-0097 에서 cli theme-add.ts 에서 옮김) */
+export interface DeferredComponentImport {
+  name: string;
+  /** 설치본 버전(설치본은 있지만 `tailwind.css` 가 없을 때). 미설치면 없음. 설치본 버전을 읽지 못하면 `"?"` */
+  installedVersion?: string;
+}
+
+/**
+ * theme add 가 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유 한 문장(WI-0087 DEC-2, WI-0097 에서 cli theme/index.ts 에서 옮김).
+ * cli 가 앞에 `  ! ` 를 붙이고 노란색으로 찍어요(접두 · 색은 cli 몫). 세 갈래:
+ * 미설치 · 1.4.0 이상인데 파일 없음(설치 손상, 다시 설치) · 1.4.0 미만 또는 버전 모름(올림).
+ */
+export function deferredComponentImportReason(d: DeferredComponentImport, installCommand: string): string {
+  const line = `@import "${d.name}/tailwind.css";`;
+  // 1.4.0 이상인데 파일이 없으면 올릴 버전 문제가 아니라 설치가 손상된 것이라 다시 설치를 안내합니다
+  const current =
+    d.installedVersion !== undefined &&
+    d.installedVersion !== "?" &&
+    (compareExactVersions(d.installedVersion, COMPONENT_TAILWIND_CSS_MIN_VERSION) ?? -1) >= 0;
+  return d.installedVersion === undefined
+    ? `${d.name} 가 워크스페이스 루트에 선언됐지만 설치되지 않아 ${line} 를 넣지 않았습니다. 설치(${installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+    : current
+      ? `워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion})에 tailwind.css 가 없어 ${line} 를 넣지 않았습니다. 설치가 손상됐을 수 있으니 다시 설치(${installCommand}) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+      : `워크스페이스 루트에 선언된 ${d.name} 의 설치본(${d.installedVersion === "?" ? "버전 모름" : d.installedVersion})에 tailwind.css 가 없어(${COMPONENT_TAILWIND_CSS_MIN_VERSION} 부터 제공) ${line} 를 넣지 않았습니다. ${COMPONENT_TAILWIND_CSS_MIN_VERSION} 이상으로 올린 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`;
 }
 
 /**

@@ -14,11 +14,25 @@ import {
   packageVersionGate,
   rangeLowerAtLeast,
   readTailwindContent,
+  TAILWIND4_MIN_AXIS_VERSION,
 } from "./tailwind-core.js";
-import { findPnpUnpluggedPackages, isPnpProject, versionSatisfiesRange } from "@axis-ds/registry-core/project";
+import {
+  COMPONENT_TAILWIND_CSS_MIN_VERSION,
+  componentCssResolution,
+  deferredComponentImportReason,
+  findPnpUnpluggedPackages,
+  isPnpProject,
+  outsideCssPackageResolution,
+  tokensCssResolution,
+  versionSatisfiesRange,
+} from "@axis-ds/registry-core/project";
 import { templateApplyWarnings } from "./template-apply.js";
 import { planUtilsDependencies, resolveInitAnswers, tailwind4GuideLines } from "../init/init.js";
-import { applyThemeAdd, planThemeAdd } from "../theme/theme-add.js";
+import {
+  applyThemeAdd,
+  COMPONENT_TAILWIND_CSS_MIN_VERSION as CLI_COMPONENT_TAILWIND_CSS_MIN_VERSION,
+  planThemeAdd,
+} from "../theme/theme-add.js";
 import { makeProject } from "../theme/test-helpers.js";
 import type { CheckResult } from "./types.js";
 
@@ -287,6 +301,8 @@ describe("T4-3 (AC4): brand 와 import 대조", () => {
       '@import "@axis-ds/tokens/css";\n@import "@axis-ds/tokens/css/brands/sample";\n:root{--background:0;--primary:0;}\n'
     );
     // 브랜드를 켜는 코드(data-brand)와 preset 이 있어야 warn 0 입니다(WI-0065 D8). globals.css 는 AXIS 근거(tokens CSS import)가 필요합니다(WI-0070)
+    // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+    await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.2");
     await fs.writeFile(path.join(dir, "tailwind.config.ts"), 'import axis from "@axis-ds/tokens/tailwind";\nhsl(var(--x))');
     await fs.writeFile(path.join(dir, "app/layout.tsx"), '<html lang="ko" data-brand="sample">');
     const results = await collectCheckResults(dir);
@@ -603,6 +619,9 @@ describe("WI-0100a 전역 CSS 선택", () => {
     const root = await tempDir();
     const dir = path.join(root, "app1");
     await app(dir, 4);
+    // WI-0097 2부(사용자 결정 Q37): 밖 파일의 패키지 줄은 그 파일 위치에서 풀리므로 설치본 stub 을 공통 상위(root/node_modules)로 호이스팅해요
+    // (WI-0100a 실빌드의 mono-hoist 형태 rc 0. 앱 아래에만 두는 형태는 WI-0097 describe 「Q37」 행에서 WARN 으로 봐요). 기대는 그대로예요
+    await fs.move(path.join(dir, "node_modules"), path.join(root, "node_modules"));
     await fs.outputFile(path.join(root, "shared/globals.css"), `${GOOD4}@import "@axis-ds/tokens/css/brands/ontology";\n`);
     await config(dir, { globalCss: "../shared/globals.css", brand: "ontology" });
     const results = await collectCheckResults(dir);
@@ -621,6 +640,9 @@ describe("WI-0100a 전역 CSS 선택", () => {
     const root = await tempDir();
     const dir = path.join(root, "app2");
     await app(dir, 4, { ui: true });
+    // WI-0097 2부(사용자 결정 Q37): 밖 파일의 패키지 줄은 그 파일 위치에서 풀리므로 설치본 stub 을 공통 상위(root/node_modules)로 호이스팅해요
+    // (WI-0100a 실빌드의 mono-hoist 형태 rc 0. 앱 아래에만 두는 형태는 WI-0097 describe 「Q37」 행에서 WARN 으로 봐요). 기대는 그대로예요
+    await fs.move(path.join(dir, "node_modules"), path.join(root, "node_modules"));
     await fs.outputFile(
       path.join(root, "shared/globals.css"),
       `${GOOD4}@import "@axis-ds/ui-react/tailwind.css";\n@import "@axis-ds/tokens/css/brands/ontology";\n@import "tw-animate-css";\n`
@@ -834,6 +856,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
 
   it("runCheck 는 개수를 돌려줌", async () => {
     const dir = await project({ "src/app/globals.css": `@import "tailwindcss";\n${TOKENS_LINE}` }, { tailwindcss: "^4" });
+    // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+    await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.2");
     vi.spyOn(console, "log").mockImplementation(() => {});
     // WI-0044 보정: 토큰 진입점 import 로 globals.css 도 pass(종전 1 pass / 3 warn)
     expect(await runCheck(dir)).toEqual({ pass: 2, warn: 2, fail: 1 });
@@ -937,6 +961,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
           `@import "${spec}" layer(base);`,
         ]) {
           const dir = await project({ "src/app/globals.css": `@import "tailwindcss";\n${line}\n` }, { tailwindcss: "^4" });
+          // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+          await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.2");
           expect({ line, item: await globalsItem(dir) }).toEqual({
             line,
             item: {
@@ -973,6 +999,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
         { "globals.css": `${TOKENS_LINE}\n:root{--background:0 0% 100%;--primary:0 0% 0%;}` },
         { tailwindcss: "^4" }
       );
+      // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+      await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.2");
       expect(await globalsItem(dir)).toEqual({
         name: "globals.css",
         severity: "pass",
@@ -992,6 +1020,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
         },
         { tailwindcss: "^3.4.17" }
       );
+      // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+      await writeInstalledStub(layoutJs, "@axis-ds/tokens", "1.8.2");
       const layoutCommented = await project(
         { "app/globals.css": "body{}", "src/app/layout.tsx": '// import "@axis-ds/tokens/css";\nimport "./globals.css";' },
         { tailwindcss: "^3.4.17" }
@@ -1017,6 +1047,8 @@ describe("WI-0042: Tailwind 구성 항목과 종료 코드", () => {
       const tw3 = await project({ "app/globals.css": css }, { tailwindcss: "^3.4.17" });
       const tw3Clean = await project({ "app/globals.css": css.replace(/body \{[\s\S]*\}/, "") }, { tailwindcss: "^3.4.17" });
       const tw4 = await project({ "app/globals.css": `@import "tailwindcss";\n${TOKENS_LINE}\nbody { font-family: Arial, Helvetica, sans-serif; }` }, { tailwindcss: "^4" });
+      // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+      for (const d of [tw3, tw3Clean, tw4]) await writeInstalledStub(d, "@axis-ds/tokens", "1.8.2");
       expect(await globalsItem(tw3)).toEqual({
         name: "globals.css",
         severity: "warn",
@@ -1372,6 +1404,8 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
     it("globals.css 항목은 그대로 pass(B2 는 tailwind 항목에만 붙임)", async () => {
       const cna = await fs.readFile(CNA_GLOBALS_FILE, "utf8");
       const dir = await project({ "app/globals.css": cna.replace(TW, `${TW}\n${TOKENS_LINE}`) }, { tailwindcss: "^4" });
+      // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+      await writeInstalledStub(dir, "@axis-ds/tokens", "1.8.2");
       expect((await collectCheckResults(dir)).find((r) => r.name === "globals.css")).toEqual({
         name: "globals.css",
         severity: "pass",
@@ -1920,6 +1954,8 @@ describe("WI-0065 D8: content · 브랜드 켜기 · 애니메이션 항목", ()
     );
     // WI-0051: dependencies 는 설치본도 봄
     for (const name of ["tailwindcss", "clsx", "tailwind-merge"]) await installStub(dir, name);
+    // WI-0097 2부: tokens CSS import 는 이 앱에서 해석될 때만 pass 라 tokens 설치본 stub 을 둬요(테스트 의도는 import 인정, 기대 불변)
+    await installStub(dir, "@axis-ds/tokens", "1.8.2");
     vi.spyOn(console, "log").mockImplementation(() => {});
     expect(await runCheck(dir)).toEqual({ pass: 5, warn: 0, fail: 1 });
   });
@@ -3246,6 +3282,9 @@ describe("WI-0086: 루트 선언 인정 일관화 · 심링크 baseDir", () => {
       installed: { tailwindcss: "4.3.3", "@axis-ds/tokens": "1.8.1", "@axis-ds/ui-react": "1.8.1", "tw-animate-css": "1.4.0" },
       files: { "app/globals.css": '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n' },
     });
+    // WI-0097: 루트 선언 B1 은 설치본에 tailwind.css 파일이 있을 때만 줄을 권해요. 이 테스트의 의도(루트 선언 인정)를 지키려고
+    // 1.8.1 설치본 stub 에 실제 배포본처럼 tailwind.css 를 둬요(기대 불변, plan 4절 「stub 보강」)
+    await fs.outputFile(path.join(app, "../../node_modules/@axis-ds/ui-react/tailwind.css"), '@source "./dist";\n');
     expect(await item(app, "tailwind.config")).toEqual({
       name: "tailwind.config",
       severity: "warn",
@@ -3715,6 +3754,437 @@ describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 
       const results = await collectCheckResults(dir);
       expect(results.find((r) => r.name === "animation")?.severity).toBe("warn");
       expect(results.filter((r) => r.name === "animation" && r.severity === "fail")).toEqual([]);
+    });
+  });
+});
+
+// WI-0097 1부 (사용자 결정 Q21 · Q22 · Q28, PRD 1.4 표). 2026-10-28.
+// - Tailwind 4 B1(컴포넌트 tailwind.css)을 「선언됐는가」가 아니라 「이 앱에서 해석되는가」로 판정해요(registry-core `componentCssResolution`,
+//   theme add 의 WI-0087 DEC-2 와 같은 함수). 해석되지 않는 루트 선언은 줄을 바로 권하지 않고, 이미 있는 줄은 PASS 로 인정하지 않아요.
+// - 근거 실빌드(Q22, testplan 2절): Yarn 4.5.3 PnP 루트 전용 선언의 CSS @import 는 `@tailwindcss/cli` 4.1.14 에서 rc 1 「Can't resolve」,
+//   앱에도 선언하면 rc 0. 루트에만 선언 · 미설치인 npm 워크스페이스의 줄도 rc 1(조사 실빌드).
+// - 앱 선언(Q21)은 설치 여부와 상관없이 종전 그대로예요(회귀 가드). globals.css 의 tokens 게이트는 2부(WI-0100a 위)에서 붙여요.
+describe("WI-0097: CSS import 해석 가능성(Tailwind 4 B1 양방향 · 해석 상태 헬퍼 · DEC-2 공용)", () => {
+  const PREFIX = "Tailwind 4: app/globals.css에 ";
+  const PASS = { name: "tailwind.config", severity: "pass", message: 'Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다' };
+  const PNP_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
+  const line = (p: string) => `@import "${p}/tailwind.css";`;
+  const warn = (message: string) => ({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${message}` });
+  const item = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "tailwind.config");
+  const appPkg = async (app: string) => (await fs.readJSON(path.join(app, "package.json"))) as Record<string, unknown>;
+
+  /** 설치본 stub: version 이 없으면 package.json 에 version 필드를 두지 않음(「버전 모름」), css 면 tailwind.css 를 둠 */
+  interface Inst {
+    version?: string;
+    css?: boolean;
+  }
+  async function installStub(root: string, name: string, inst: Inst) {
+    const dir = path.join(root, "node_modules", ...name.split("/"));
+    await fs.outputJSON(path.join(dir, "package.json"), inst.version !== undefined ? { name, version: inst.version } : { name });
+    if (inst.css) await fs.outputFile(path.join(dir, "tailwind.css"), '@source "./dist";\n');
+  }
+
+  /**
+   * 워크스페이스 루트(workspaces · .git) + apps/web(Tailwind 4, tokens 앱 선언, 토큰 진입점 import). non-PnP 는 루트 node_modules 에
+   * tailwindcss · tokens 설치본 stub 을 두고 `installed` 를 더해요. PnP 는 WI-0091 `pnpWs` 와 같은 표지(yarn.lock · .yarnrc.yml · .pnp.cjs,
+   * node_modules 없음)예요. `lines` 는 진입점 뒤에 붙일 CSS 줄이에요.
+   */
+  async function ws97(o: {
+    rootDeps?: Record<string, string>;
+    appDeps?: Record<string, string>;
+    installed?: Record<string, Inst>;
+    lines?: string[];
+    pnp?: boolean;
+    appLock?: boolean;
+    rootLock?: string;
+  }) {
+    const root = await fs.realpath(await tempDir());
+    await fs.ensureDir(path.join(root, ".git"));
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      workspaces: ["apps/*"],
+      ...(o.pnp ? { packageManager: "yarn@4.5.3" } : {}),
+      dependencies: o.rootDeps ?? {},
+    });
+    if (o.pnp) {
+      await fs.writeFile(path.join(root, "yarn.lock"), "__metadata:\n  version: 8\n");
+      await fs.writeFile(path.join(root, ".yarnrc.yml"), "nodeLinker: pnp\n");
+      await fs.writeFile(path.join(root, ".pnp.cjs"), '#!/usr/bin/env node\n"use strict";\n');
+    } else {
+      await installStub(root, "tailwindcss", { version: "4.1.0" });
+      await installStub(root, "@axis-ds/tokens", { version: "1.8.2" });
+      for (const [name, inst] of Object.entries(o.installed ?? {})) await installStub(root, name, inst);
+    }
+    if (o.rootLock) await fs.writeFile(path.join(root, o.rootLock), "{}");
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), {
+      name: "web",
+      dependencies: { tailwindcss: "^4.1.0", "@axis-ds/tokens": "^1.8.2", ...(o.appDeps ?? {}) },
+    });
+    if (o.appLock) await fs.writeFile(path.join(app, "package-lock.json"), "{}");
+    await fs.outputJSON(path.join(app, "axis.config.json"), {});
+    await fs.outputFile(
+      path.join(app, "app/globals.css"),
+      ['@import "tailwindcss";', '@import "@axis-ds/tokens/css/tailwind4";', ...(o.lines ?? [])].join("\n") + "\n"
+    );
+    return { root, app };
+  }
+
+  for (const p of ["@axis-ds/ui-react", "@axis-ds/agentic-ui"] as const) {
+    const root = { [p]: "^1.8.2" };
+    describe(`${p}: 줄 없음 방향(AC1 ~ AC4)`, () => {
+      it("F1 루트 선언 · 미설치: 줄을 바로 권하지 않고 설치를 먼저 안내(npm 루트 lockfile 이면 「워크스페이스 루트에서 npm install」)", async () => {
+        const { app } = await ws97({ rootDeps: root });
+        expect(await item(app)).toEqual(warn(`${p} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(pnpm install) 뒤 ${line(p)}`));
+        const npm = await ws97({ rootDeps: root, rootLock: "package-lock.json" });
+        expect(await item(npm.app)).toEqual(
+          warn(`${p} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(워크스페이스 루트에서 npm install) 뒤 ${line(p)}`)
+        );
+      });
+      it("F3 루트 선언 · 1.8.2 설치본에 tailwind.css 없음: 다시 설치 안내", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2" } } });
+        expect(await item(app)).toEqual(
+          warn(`워크스페이스 루트에 선언된 ${p} 의 설치본(1.8.2)에 tailwind.css 가 없습니다(설치가 손상됐을 수 있음) → 다시 설치(pnpm install) 뒤 ${line(p)}`)
+        );
+      });
+      it("F4 루트 선언 · 설치본 1.3.0: 1.4.0 이상 올림 안내(M5b: 다시 설치 안내가 아님), 끝의 버전 안내는 종전 그대로", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: { version: "1.3.0" } } });
+        expect(await item(app)).toEqual(
+          warn(
+            `워크스페이스 루트에 선언된 ${p} 의 설치본(1.3.0)에 tailwind.css 가 없습니다(1.4.0 부터 제공) → 1.4.0 이상으로 올린 뒤 ${line(p)} (1.4.0 이상 필요: ${p} 설치본 1.3.0)`
+          )
+        );
+      });
+      it("F4u 루트 선언 · 설치본 버전 모름(version 없음): 「버전 모름」 표기 올림 안내", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: {} } });
+        expect(await item(app)).toEqual(
+          warn(`워크스페이스 루트에 선언된 ${p} 의 설치본(버전 모름)에 tailwind.css 가 없습니다(1.4.0 부터 제공) → 1.4.0 이상으로 올린 뒤 ${line(p)}`)
+        );
+      });
+      it("F5 Plug'n'Play 루트 전용: PNP_ROOT_ONLY_NOTE 안내(M5a: 설치 안내가 아님), F5c .pnp.cjs 를 치우면 F1 갈래(양성 대조)", async () => {
+        const pnp = await ws97({ pnp: true, rootDeps: root });
+        expect(await item(pnp.app)).toEqual(warn(`${p} 가 ${PNP_NOTE} → 앱 package.json 에 선언한 뒤 ${line(p)}`));
+        await fs.remove(path.join(pnp.root, ".pnp.cjs"));
+        expect(await item(pnp.app)).toEqual(warn(`${p} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(yarn install) 뒤 ${line(p)}`));
+      });
+      it("F6 앱 lockfile(P2) + 루트 선언: 그 패키지를 요구하지 않음(PASS)", async () => {
+        const { app } = await ws97({ rootDeps: root, appLock: true });
+        expect(await item(app)).toEqual(PASS);
+      });
+      it("F6i 앱 lockfile(P2) + 루트 선언 + 설치본에 tailwind.css 있음: P2 경계가 설치본 확인보다 먼저라 줄을 권하지 않음(PASS)", async () => {
+        const { app } = await ws97({ rootDeps: root, appLock: true, installed: { [p]: { version: "1.8.2", css: true } } });
+        expect(await item(app)).toEqual(PASS);
+      });
+      it("회귀 가드 F2 · F7 · F8: 루트 선언 · 파일 있음, 앱 선언 · 미설치, PnP 앱 선언은 종전 B1 줄 안내(바이트 같음)", async () => {
+        const b1 = warn(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${line(p)}`);
+        expect(await item((await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2", css: true } } })).app)).toEqual(b1);
+        expect(await item((await ws97({ appDeps: root })).app)).toEqual(b1);
+        expect(await item((await ws97({ pnp: true, appDeps: root })).app)).toEqual(b1);
+      });
+      it("회귀 가드: 그 패키지를 가리키는 @source 가 직접 있으면 루트 선언 · 미설치여도 문제를 만들지 않음(종전)", async () => {
+        const { app } = await ws97({ rootDeps: root, lines: [`@source "../../node_modules/${p}/dist";`] });
+        expect(await item(app)).toEqual(PASS);
+      });
+    });
+
+    describe(`${p}: 줄 있음 방향(AC5)`, () => {
+      const withLine = [line(p)];
+      it("F9 루트 선언 · 미설치 + 줄: PASS 가 아니라 해석 불가 WARN", async () => {
+        const { app } = await ws97({ rootDeps: root, lines: withLine });
+        expect(await item(app)).toEqual(warn(`${p}/tailwind.css import 가 있지만 ${p} 가 설치되지 않아 해석되지 않습니다 → 설치(pnpm install)`));
+      });
+      it("F10 루트 선언 · 1.8.2 파일 없음 + 줄: 해석 불가 WARN(다시 설치)", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2" } }, lines: withLine });
+        expect(await item(app)).toEqual(
+          warn(`${p}/tailwind.css import 가 있지만 ${p} 설치본(1.8.2)에 tailwind.css 가 없어 해석되지 않습니다 → 다시 설치(pnpm install)`)
+        );
+      });
+      it("F11 PnP 루트 전용 + 줄: PnP 틀 WARN", async () => {
+        const { app } = await ws97({ pnp: true, rootDeps: root, lines: withLine });
+        expect(await item(app)).toEqual(warn(`${p}/tailwind.css import 가 있지만 ${p} 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`));
+      });
+      it("F12 설치본 1.3.0 + 줄: 종전 버전 WARN 그대로", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: { version: "1.3.0" } }, lines: withLine });
+        expect(await item(app)).toEqual(warn(`${p}/tailwind.css import 가 있지만 ${p} 버전 확인이 필요합니다 (1.4.0 이상 필요: ${p} 설치본 1.3.0)`));
+      });
+      it("F4uw 설치본 버전 모름(version 없음) · 파일 없음 + 줄: 종전 PASS 가 아니라 해석 불가 WARN(사용자 결정 Q39)", async () => {
+        const { app } = await ws97({ rootDeps: root, installed: { [p]: {} }, lines: withLine });
+        expect(await item(app)).toEqual(warn(`${p}/tailwind.css import 가 있지만 ${p} 설치본(버전 모름)에 tailwind.css 가 없어 해석되지 않습니다 → 1.4.0 이상으로 올리세요`));
+      });
+      it("회귀 가드 F6w · F13 · F14: P2 루트 선언 + 줄, 루트 선언 · 파일 있음 + 줄, 앱 선언 · 미설치 + 줄은 PASS(종전)", async () => {
+        expect(await item((await ws97({ rootDeps: root, appLock: true, lines: withLine })).app)).toEqual(PASS);
+        expect(await item((await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2", css: true } }, lines: withLine })).app)).toEqual(PASS);
+        expect(await item((await ws97({ appDeps: root, lines: withLine })).app)).toEqual(PASS);
+        expect(await item((await ws97({ pnp: true, appDeps: root, lines: withLine })).app)).toEqual(PASS);
+      });
+    });
+  }
+
+  describe("F15 두 패키지가 섞임(AC5)", () => {
+    const UI = "@axis-ds/ui-react";
+    const AG = "@axis-ds/agentic-ui";
+    const mixed = (lines: string[]) =>
+      ws97({ appDeps: { [UI]: "^1.8.2" }, rootDeps: { [AG]: "^1.8.2" }, installed: { [UI]: { version: "1.8.2", css: true } }, lines });
+    it("ui-react 줄 있음 + agentic-ui 루트 미설치: agentic-ui 만 알림(줄 없음 · 줄 있음)", async () => {
+      expect(await item((await mixed([line(UI)])).app)).toEqual(
+        warn(`${AG} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(pnpm install) 뒤 ${line(AG)}`)
+      );
+      expect(await item((await mixed([line(UI), line(AG)])).app)).toEqual(
+        warn(`${AG}/tailwind.css import 가 있지만 ${AG} 가 설치되지 않아 해석되지 않습니다 → 설치(pnpm install)`)
+      );
+    });
+    it("두 줄 모두 없음: 해석되는 쪽은 종전 B1 묶음, 해석되지 않는 쪽은 그 뒤에 ` / ` 로 이음", async () => {
+      expect(await item((await mixed([])).app)).toEqual(
+        warn(
+          `컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${line(UI)} / ${AG} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(pnpm install) 뒤 ${line(AG)}`
+        )
+      );
+    });
+  });
+
+  describe("해석 상태 헬퍼(registry-core project.ts)", () => {
+    const UI = "@axis-ds/ui-react";
+    it("componentCssResolution: PRD 1.4 표의 갈래와 앱 선언 · 미선언", async () => {
+      const cases: Array<[string, Parameters<typeof ws97>[0], unknown]> = [
+        ["app", { appDeps: { [UI]: "^1.8.2" } }, { kind: "app", range: "^1.8.2" }],
+        ["pnp-app", { pnp: true, appDeps: { [UI]: "^1.8.2" } }, { kind: "app", range: "^1.8.2" }],
+        ["undeclared", {}, { kind: "undeclared" }],
+        ["pnp-root-only", { pnp: true, rootDeps: { [UI]: "^1.8.2" } }, { kind: "pnp-root-only", range: "^1.8.2" }],
+        ["app-lockfile", { appLock: true, rootDeps: { [UI]: "^1.8.2" } }, { kind: "app-lockfile", range: "^1.8.2" }],
+        ["root-not-installed", { rootDeps: { [UI]: "^1.8.2" } }, { kind: "root-not-installed", range: "^1.8.2" }],
+        ["root-ok", { rootDeps: { [UI]: "^1.8.2" }, installed: { [UI]: { version: "1.8.2", css: true } } }, { kind: "root-ok", range: "^1.8.2", installedVersion: "1.8.2" }],
+        // 해석의 정의는 파일 존재예요(DEC-2 와 같음). 버전은 종전 버전 판정이 따로 봐요
+        ["root-ok-old-with-file", { rootDeps: { [UI]: "^1.3.0" }, installed: { [UI]: { version: "1.3.0", css: true } } }, { kind: "root-ok", range: "^1.3.0", installedVersion: "1.3.0" }],
+        ["root-old", { rootDeps: { [UI]: "^1.3.0" }, installed: { [UI]: { version: "1.3.0" } } }, { kind: "root-old", range: "^1.3.0", installedVersion: "1.3.0" }],
+        ["root-old-unknown", { rootDeps: { [UI]: "^1.8.2" }, installed: { [UI]: {} } }, { kind: "root-old", range: "^1.8.2", installedVersion: "?" }],
+        ["root-missing-file", { rootDeps: { [UI]: "^1.8.2" }, installed: { [UI]: { version: "1.8.2" } } }, { kind: "root-missing-file", range: "^1.8.2", installedVersion: "1.8.2" }],
+      ];
+      for (const [label, opts, expected] of cases) {
+        const { app } = await ws97(opts);
+        expect({ label, r: componentCssResolution(app, await appPkg(app), UI) }).toEqual({ label, r: expected });
+      }
+      expect(componentCssResolution(await tempDir(), undefined, UI)).toEqual({ kind: "undeclared" });
+    });
+
+    it("tokensCssResolution: 앱 선언은 미설치여도 해석됨(Q28), 루트 · 미선언은 설치본 디렉터리로, PnP 루트 전용은 불인정", async () => {
+      const T = "@axis-ds/tokens";
+      const at = async (opts: Parameters<typeof ws97>[0], appDeps: Record<string, string> = {}) => {
+        const { root, app } = await ws97(opts);
+        // ws97 은 tokens 를 앱에 선언 · 루트에 설치하므로, 이 테스트는 앱 선언과 설치본을 직접 고쳐요
+        await fs.outputJSON(path.join(app, "package.json"), { name: "web", dependencies: { tailwindcss: "^4.1.0", ...appDeps } });
+        return { root, app };
+      };
+      const cases: Array<[string, Parameters<typeof ws97>[0], Record<string, string>, boolean, unknown]> = [
+        ["app-notinst", {}, { [T]: "^1.8.2" }, true, { kind: "app", range: "^1.8.2" }],
+        ["pnp-app", { pnp: true }, { [T]: "^1.8.2" }, false, { kind: "app", range: "^1.8.2" }],
+        ["pnp-root-only", { pnp: true, rootDeps: { [T]: "^1.8.2" } }, {}, false, { kind: "pnp-root-only", range: "^1.8.2" }],
+        ["pnp-undeclared", { pnp: true }, {}, false, { kind: "not-installed", source: "none" }],
+        ["undeclared-installed", {}, {}, false, { kind: "installed" }],
+        ["root-installed", { rootDeps: { [T]: "^1.8.2" } }, {}, false, { kind: "installed" }],
+        ["root-notinst", { rootDeps: { [T]: "^1.8.2" } }, {}, true, { kind: "not-installed", source: "root", range: "^1.8.2" }],
+        ["undeclared-notinst", {}, {}, true, { kind: "not-installed", source: "none" }],
+        ["applock-root-notinst", { appLock: true, rootDeps: { [T]: "^1.8.2" } }, {}, true, { kind: "not-installed", source: "none" }],
+      ];
+      for (const [label, opts, appDeps, removeInstalled, expected] of cases) {
+        const { root, app } = await at(opts, appDeps);
+        if (removeInstalled) await fs.remove(path.join(root, "node_modules", "@axis-ds", "tokens"));
+        expect({ label, r: tokensCssResolution(app, await appPkg(app)) }).toEqual({ label, r: expected });
+      }
+    });
+
+    it("DEC-2 이전: 1.4.0 상수가 하나로 합쳐졌고(종전 두 이름 모두 같은 값), 미루는 이유 문장 세 갈래", () => {
+      expect([TAILWIND4_MIN_AXIS_VERSION, COMPONENT_TAILWIND_CSS_MIN_VERSION, CLI_COMPONENT_TAILWIND_CSS_MIN_VERSION]).toEqual(["1.4.0", "1.4.0", "1.4.0"]);
+      const L = line(UI);
+      expect(deferredComponentImportReason({ name: UI }, "pnpm install")).toBe(
+        `${UI} 가 워크스페이스 루트에 선언됐지만 설치되지 않아 ${L} 를 넣지 않았습니다. 설치(pnpm install) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+      );
+      expect(deferredComponentImportReason({ name: UI, installedVersion: "1.8.1" }, "npm install")).toBe(
+        `워크스페이스 루트에 선언된 ${UI} 의 설치본(1.8.1)에 tailwind.css 가 없어 ${L} 를 넣지 않았습니다. 설치가 손상됐을 수 있으니 다시 설치(npm install) 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+      );
+      expect(deferredComponentImportReason({ name: UI, installedVersion: "?" }, "pnpm install")).toBe(
+        `워크스페이스 루트에 선언된 ${UI} 의 설치본(버전 모름)에 tailwind.css 가 없어(1.4.0 부터 제공) ${L} 를 넣지 않았습니다. 1.4.0 이상으로 올린 뒤 theme add 를 다시 실행하거나 직접 넣으세요.`
+      );
+    });
+  });
+
+  // 2부(0100a 머지 뒤, 사용자 결정 Q28 · Q37): globals.css tokens 해석 게이트 · 프로젝트 밖 진입 파일의 패키지 줄
+  describe("2부: globals.css tokens 해석 게이트(G 계열, Q28) · 프로젝트 밖 진입 파일(Q37)", () => {
+    const T = "@axis-ds/tokens";
+    const E = "@axis-ds/tokens/css/tailwind4";
+    const items = async (dir: string) => Object.fromEntries((await collectCheckResults(dir)).map((r) => [r.name, r]));
+    const gPass = (file: string, spec: string) => ({ name: "globals.css", severity: "pass", message: `${file}에 AXIS CSS 변수가 있습니다 (${spec} import)` });
+    const gWarn = (message: string) => ({ name: "globals.css", severity: "warn", message });
+    const notInst = (spec: string, phrase: string) => `${spec} import 가 있지만 ${T} 가 설치되지 않아 해석되지 않습니다 → 설치(${phrase})`;
+    const ADD = 'pnpm add "@axis-ds/tokens@^1.4.0"';
+    const OUT = (spec: string, name: string) =>
+      `${spec} import 가 있지만 이 파일 위치에서 ${name} 를 찾지 못해 해석되지 않습니다(설치본이 앱 쪽 node_modules 에만 있음) → 이 파일의 상위 node_modules(워크스페이스 루트 등)에 설치하거나 globalCss 를 앱 안 파일로 바꾸세요`;
+
+    /** `ws97` 위에서 tokens 선언 위치(app · root · none)와 설치본 유무만 바꿔요(Tailwind 4, app/globals.css 에 tailwindcss · 토큰 진입점) */
+    async function gws(o: { tokens: "app" | "root" | "none"; installed: boolean; pnp?: boolean; rootLock?: string; appLock?: boolean }) {
+      const { root, app } = await ws97({ pnp: o.pnp, rootDeps: o.tokens === "root" ? { [T]: "^1.8.2" } : {}, rootLock: o.rootLock, appLock: o.appLock });
+      await fs.outputJSON(path.join(app, "package.json"), { name: "web", dependencies: { tailwindcss: "^4.1.0", ...(o.tokens === "app" ? { [T]: "^1.8.2" } : {}) } });
+      if (!o.installed) await fs.remove(path.join(root, "node_modules", "@axis-ds", "tokens"));
+      return { root, app };
+    }
+
+    /** Tailwind 3 단일 앱(lockfile 없음 → pnpm), tokens 미선언. `installed` 면 tokens 설치본 stub(package.json 만, dist 없음) */
+    async function tw3(files: Record<string, string>, installed: boolean) {
+      const dir = await fs.realpath(await tempDir());
+      await fs.outputJSON(path.join(dir, "package.json"), { dependencies: { tailwindcss: "^3.4.17" } });
+      for (const [rel, text] of Object.entries(files)) await fs.outputFile(path.join(dir, rel), text);
+      if (installed) await writeInstalledStub(dir, T, "1.8.2");
+      return dir;
+    }
+
+    it("G1 Tailwind 3 · tokens 미선언 · 미설치 + @import \"@axis-ds/tokens/css\": globals WARN(설치 안내는 범위를 붙인 추가 명령)", async () => {
+      const dir = await tw3({ "app/globals.css": '@import "@axis-ds/tokens/css";\n' }, false);
+      expect((await items(dir))["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst("@axis-ds/tokens/css", ADD)}`));
+    });
+
+    it("G6 회귀 가드: 미선언이어도 설치본 디렉터리(package.json 만, exports 대상 파일 없음)가 있으면 PASS(M9)", async () => {
+      const dir = await tw3({ "app/globals.css": '@import "@axis-ds/tokens/css";\n' }, true);
+      expect((await items(dir))["globals.css"]).toEqual(gPass("app/globals.css", "@axis-ds/tokens/css"));
+    });
+
+    it("G5 레이아웃 JS import · 미선언 · 미설치: globals WARN(레이아웃 폴백도 같은 게이트), 설치본이 있으면 종전 PASS", async () => {
+      const files = { "app/globals.css": ":root{--background:0;--primary:0;}\n", "app/layout.tsx": 'import "@axis-ds/tokens/css";\nimport "./globals.css";\n' };
+      expect((await items(await tw3(files, false)))["globals.css"]).toEqual(
+        gWarn(`app/globals.css에 AXIS CSS 변수가 없고 app/layout.tsx의 ${notInst("@axis-ds/tokens/css", ADD)}`)
+      );
+      expect((await items(await tw3(files, true)))["globals.css"]).toEqual({
+        name: "globals.css",
+        severity: "pass",
+        message: "app/globals.css에 AXIS CSS 변수가 있습니다 (app/layout.tsx의 @axis-ds/tokens/css import)",
+      });
+    });
+
+    it("Tailwind 3 · 해석 불가 + create-next-app 기본 body Arial: 해석 불가 문구 뒤에 종전 Arial 안내를 이어 붙임", async () => {
+      const dir = await tw3({ "app/globals.css": '@import "@axis-ds/tokens/css";\nbody {\n  font-family: Arial, Helvetica, sans-serif;\n}\n' }, false);
+      expect((await items(dir))["globals.css"]).toEqual(
+        gWarn(
+          `app/globals.css에 ${notInst("@axis-ds/tokens/css", ADD)}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)`
+        )
+      );
+    });
+
+    it("회귀 가드: --axis-* 직접 정의는 게이트 밖(미선언 · 미설치여도 종전 PASS)", async () => {
+      const dir = await tw3({ "app/globals.css": ":root{--axis-color-primary:#2563eb;}\n" }, false);
+      expect((await items(dir))["globals.css"]).toEqual({ name: "globals.css", severity: "pass", message: "app/globals.css에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다" });
+    });
+
+    it("G8 --axis-* 직접 정의 + 해석되지 않는 tokens import 가 함께 있으면 import 판정이 먼저라 WARN(루트 선언 · 미설치, 미선언 · 미설치)", async () => {
+      const { app } = await gws({ tokens: "root", installed: false });
+      await fs.outputFile(path.join(app, "app/globals.css"), `@import "tailwindcss";\n@import "${E}";\n:root { --axis-primary: #2563eb; }\n`);
+      expect((await items(app))["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst(E, "pnpm install")}`));
+      const dir = await tw3({ "app/globals.css": '@import "@axis-ds/tokens/css";\n:root { --axis-primary: #2563eb; }\n' }, false);
+      expect((await items(dir))["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst("@axis-ds/tokens/css", ADD)}`));
+    });
+
+    it("G7 루트 선언 · 미설치: globals WARN(설치 안내는 선언 출처를 따름), tailwind.config 의 TW4 PASS 는 그대로(D4 · M12)", async () => {
+      const r = await items((await gws({ tokens: "root", installed: false })).app);
+      expect(r["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst(E, "pnpm install")}`));
+      expect(r["tailwind.config"]).toEqual(PASS);
+      const npm = await items((await gws({ tokens: "root", installed: false, rootLock: "package-lock.json" })).app);
+      expect(npm["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst(E, "워크스페이스 루트에서 npm install")}`));
+    });
+
+    it("G7b 앱 lockfile(P2) + 루트 선언 · 미설치: 루트 선언을 인정하지 않아 미선언과 같은 추가 명령 안내", async () => {
+      const r = await items((await gws({ tokens: "root", installed: false, appLock: true })).app);
+      expect(r["globals.css"]).toEqual(gWarn(`app/globals.css에 ${notInst(E, 'npm install "@axis-ds/tokens@^1.4.0"')}`));
+    });
+
+    it("G2 회귀 가드(Q28): tokens 앱 선언 · 미설치는 globals · tailwind.config 모두 종전 PASS(M6)", async () => {
+      const r = await items((await gws({ tokens: "app", installed: false })).app);
+      expect(r["globals.css"]).toEqual(gPass("app/globals.css", E));
+      expect(r["tailwind.config"]).toEqual(PASS);
+    });
+
+    it("G4 PnP 루트 전용: globals 는 PNP_ROOT_ONLY_NOTE 틀 WARN, tailwind.config 는 PASS 그대로(D4 · M12)", async () => {
+      const r = await items((await gws({ tokens: "root", installed: false, pnp: true })).app);
+      expect(r["globals.css"]).toEqual(gWarn(`app/globals.css에 ${E} import 가 있지만 ${T} 가 ${PNP_NOTE} → 앱 package.json 에 선언하세요`));
+      expect(r["tailwind.config"]).toEqual(PASS);
+    });
+
+    it("G3 회귀 가드: PnP 앱 선언은 globals PASS(M11), PnP 미선언은 추가 명령 안내 WARN", async () => {
+      expect((await items((await gws({ tokens: "app", installed: false, pnp: true })).app))["globals.css"]).toEqual(gPass("app/globals.css", E));
+      expect((await items((await gws({ tokens: "none", installed: false, pnp: true })).app))["globals.css"]).toEqual(
+        gWarn(`app/globals.css에 ${notInst(E, 'yarn add "@axis-ds/tokens@^1.4.0"')}`)
+      );
+    });
+
+    /**
+     * Q37 모양(WI-0100a 실빌드 mono/app1 · mono-hoist): root/app1 이 앱, root/shared/globals.css 가 globalCss(앱 밖). `place` 는 패키지마다
+     * 설치본 stub 을 둘 곳(`app`: app1/node_modules, `root`: root/node_modules 로 호이스팅, `none`: 없음). ui-react 설치본은 tailwind.css 를 가져요.
+     */
+    async function mono(o: { place: Record<string, "app" | "root" | "none">; ui?: boolean; globalCss?: string; pnp?: boolean }) {
+      const root = await fs.realpath(await tempDir());
+      const app = path.join(root, "app1");
+      await fs.ensureDir(path.join(app, ".git"));
+      const deps: Record<string, string> = { tailwindcss: "^4.1.14", [T]: "^1.8.2", ...(o.ui ? { "@axis-ds/ui-react": "^1.8.2" } : {}) };
+      await fs.outputJSON(path.join(app, "package.json"), { name: "app1", private: true, dependencies: deps });
+      if (o.pnp) await fs.outputFile(path.join(app, ".pnp.cjs"), "");
+      const versions: Record<string, string> = { tailwindcss: "4.1.14", [T]: "1.8.2", "@axis-ds/ui-react": "1.8.2" };
+      for (const [name, where] of Object.entries(o.place)) {
+        if (where === "none") continue;
+        await installStub(where === "app" ? app : root, name, { version: versions[name], css: name === "@axis-ds/ui-react" });
+      }
+      const css = ['@import "tailwindcss";', `@import "${E}";`, ...(o.ui ? [line("@axis-ds/ui-react")] : [])].join("\n") + "\n";
+      await fs.outputFile(path.join(root, "shared/globals.css"), css);
+      await fs.outputFile(path.join(app, "app/globals.css"), css);
+      await fs.outputJSON(path.join(app, "axis.config.json"), { globalCss: o.globalCss ?? "../shared/globals.css" });
+      return app;
+    }
+    const SH = "../shared/globals.css";
+    const twPass = (file: string) => ({ name: "tailwind.config", severity: "pass", message: `Tailwind 4: ${file}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다` });
+    const twWarn = (file: string, ...issues: string[]) => ({ name: "tailwind.config", severity: "warn", message: `Tailwind 4: ${file}에 ${issues.join(" / ")}` });
+    const ALL_APP = { tailwindcss: "app", [T]: "app" } as const;
+
+    it("Q37 설치본이 앱 아래에만 있음(실빌드 rc 1 형태): 밖 파일의 tailwindcss · 토큰 줄을 그 파일 위치 기준으로 WARN", async () => {
+      const r = await items(await mono({ place: ALL_APP }));
+      expect(r["tailwind.config"]).toEqual(twWarn(SH, OUT("tailwindcss", "tailwindcss")));
+      expect(r["globals.css"]).toEqual(gWarn(`${SH}에 ${OUT(E, T)}`));
+    });
+
+    it("Q37 상위로 호이스팅(실빌드 rc 0 형태): 두 항목 PASS(양성 대조)", async () => {
+      const r = await items(await mono({ place: { tailwindcss: "root", [T]: "root" } }));
+      expect(r["tailwind.config"]).toEqual(twPass(SH));
+      expect(r["globals.css"]).toEqual(gPass(SH, E));
+    });
+
+    it("Q37 컴포넌트 tailwind.css 줄: tailwindcss · tokens 는 호이스팅, ui-react 만 앱 아래면 그 줄만 WARN(앱 기준으로는 해석되는 앱 선언)", async () => {
+      const r = await items(await mono({ ui: true, place: { tailwindcss: "root", [T]: "root", "@axis-ds/ui-react": "app" } }));
+      expect(r["tailwind.config"]).toEqual(twWarn(SH, OUT("@axis-ds/ui-react/tailwind.css", "@axis-ds/ui-react")));
+      expect(r["globals.css"]).toEqual(gPass(SH, E));
+      const all = await items(await mono({ ui: true, place: { ...ALL_APP, "@axis-ds/ui-react": "app" } }));
+      expect(all["tailwind.config"]).toEqual(twWarn(SH, OUT("tailwindcss", "tailwindcss"), OUT("@axis-ds/ui-react/tailwind.css", "@axis-ds/ui-react")));
+    });
+
+    it("Q37 회귀 가드: 같은 설치 배치라도 globalCss 가 앱 안 파일이면 앱 기준 그대로 PASS", async () => {
+      const r = await items(await mono({ ui: true, place: { ...ALL_APP, "@axis-ds/ui-react": "app" }, globalCss: "./app/globals.css" }));
+      expect(r["tailwind.config"]).toEqual(twPass("app/globals.css"));
+      expect(r["globals.css"]).toEqual(gPass("app/globals.css", E));
+    });
+
+    it("Q37 회귀 가드: 어디에도 설치본이 없는 앱 선언(Q28 이 앞섬)과 Plug'n'Play(설치본을 읽지 않음)는 판정하지 않음(종전 PASS)", async () => {
+      const none = await items(await mono({ place: { tailwindcss: "none", [T]: "none" } }));
+      expect(none["tailwind.config"]).toEqual(twPass(SH));
+      expect(none["globals.css"]).toEqual(gPass(SH, E));
+      const pnp = await items(await mono({ place: { tailwindcss: "none", [T]: "none" }, pnp: true }));
+      expect(pnp["tailwind.config"]).toEqual(twPass(SH));
+      expect(pnp["globals.css"]).toEqual(gPass(SH, E));
+    });
+
+    it("outsideCssPackageResolution: 앱에서 찾고 파일 위치에서 못 찾으면 unresolved, 앱에서도 없거나 PnP 면 unknown, file 인자는 설치본 안의 파일까지 봄", async () => {
+      const app = await mono({ ui: true, place: { tailwindcss: "app", [T]: "root", "@axis-ds/ui-react": "root" } });
+      const shared = path.join(path.dirname(app), "shared");
+      expect(outsideCssPackageResolution(app, shared, "tailwindcss")).toBe("unresolved");
+      expect(outsideCssPackageResolution(app, shared, T)).toBe("resolved");
+      expect(outsideCssPackageResolution(app, shared, "@axis-ds/ui-react", "tailwind.css")).toBe("resolved");
+      expect(outsideCssPackageResolution(app, shared, "@axis-ds/ui-react", "nope.css")).toBe("unknown");
+      expect(outsideCssPackageResolution(app, shared, "@axis-ds/agentic-ui")).toBe("unknown");
+      await fs.outputFile(path.join(app, ".pnp.cjs"), "");
+      expect(outsideCssPackageResolution(app, shared, "tailwindcss")).toBe("unknown");
     });
   });
 });

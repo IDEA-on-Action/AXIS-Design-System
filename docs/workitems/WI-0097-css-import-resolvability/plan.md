@@ -17,7 +17,7 @@
 | `packages/axis-registry-core/src/project.ts` (`:178-213` 옆) | 새 헬퍼 2개(이름은 구현 때 확정). ① 컴포넌트 `tailwind.css` 해석 상태: `app` · `pnp-root-only` · `app-lockfile`(P2) · `root-not-installed` · `root-old`(설치본 버전) · `root-missing-file` · `root-ok` · `undeclared`. `declaredDependency` · `pnpRootOnlyDependency`(`:206-213`) · `hasAppLockfile` · `findInstalledPackage`(`:498-519`) · `isFile` 를 조합 ② tokens CSS 해석 상태: 앱 선언이면 설치 여부와 상관없이 해석됨으로 봄(Q28, PnP · non-PnP 공통), PnP 루트 전용이면 `pnp-root-only`, non-PnP 는 그 밖에 `findInstalledPackage` 디렉터리가 있으면 해석됨, 그 밖(루트 선언 · 미설치, 미선언 · 미설치, PnP 앱 미선언)은 해석 안 됨 | 0097 |
 | 같은 파일 또는 registry-core 새 모듈 | DEC-2 미루는 이유 문구 함수(`theme/index.ts:367-385` 의 세 갈래 문장)와 1.4.0 상수 이전. cli 쪽 접두(`  ! `) · `chalk` 는 cli 에 남김 | 0097 |
 | `packages/axis-registry-core/src/template/tailwind-core.ts:393` `TAILWIND4_MIN_AXIS_VERSION` | `theme-add.ts:115` `COMPONENT_TAILWIND_CSS_MIN_VERSION` 과 하나로(값 `"1.4.0"` 같음) | 0097 |
-| `tailwind-core.ts:818-850` `tailwind4Issues` | B1 줄 없음 방향 `:826-835`: `declaredRange` 대신 ①의 상태로 갈래(prd 1.4 표). 줄 있음 방향 `:843-849`: 해석 불가 WARN 추가, 1.3.0 은 종전 문구. 입력 `css` 는 WI-0100b 뒤 펼친 문자열이 될 수 있음(근거 문자열 · 진입 문자열을 나눠 받는 모양은 0100b 가 정함) | 0097 단독 |
+| `tailwind-core.ts:818-850` `tailwind4Issues` | B1 줄 없음 방향 `:826-835`: `declaredRange` 대신 ①의 상태로 갈래(prd 1.4 표). 줄 있음 방향 `:843-849`: 해석 불가 WARN 추가, 1.3.0 은 종전 문구. 입력 `css` 는 WI-0100b 뒤 펼친 문자열이 될 수 있음. **1부 구현(합의안)**: 입력을 `{ entry, evidence }` 로 받아요. `entry` 는 결함 판정(B2 create-next-app 기본 정의)만, `evidence` 는 있어야 할 줄 판정(토큰 진입점 · B1 · 버전)을 봐요. 1부 호출지는 `{ entry: css, evidence: css }`. 0100b 는 펼친 근거를 `evidence` 에 넣고, 출처 파일 표기가 필요하면 선택 필드를 더해요 | 0097 단독 |
 | `tailwind-core.ts:862-899` `checkTailwindSetup` TW4 | 루프(`:868`)는 0100a 가 교체. pass 문구 `:891-895` 는 바꾸지 않음(D4) | 루프 0100 · 문구 0097 |
 | `tailwind-core.ts:297-305` · `:324-338` | 정규식은 0100 이 소유, 이 WI 는 찾은 spec 을 ②로 넘기기만 함 | 정규식 0100 · 해석 0097 |
 | `tailwind-core.ts:353-389` `checkGlobalsCss` | 뼈대(후보 루프 `:355`, 레이아웃 폴백 위치 `:364-366`)는 0100a 가 먼저 옮김. 이 WI 는 pass 를 내기 직전에 ② 게이트를 붙임(import 갈래 · 레이아웃 JS 갈래 둘 다, `--axis-*` 직접 정의 갈래는 게이트 없음) | 뼈대 0100 · 게이트 0097 |
@@ -41,6 +41,7 @@
 | 5 | B1 두 방향 · globals 게이트, 주석 | `template-check.test.ts` 블록(0100 `:230-347`, 0098 `:2129-2214`) |
 | 6 | 테스트 · A/B probe · 변이 · fixture 재측정 · 게이트 | - |
 | 7 | README · 가이드 · changeset | README `:109`(0100) · `:115`(0098) |
+| 2부(0100a 머지 뒤) | Q37(WI-0100a 에서 넘어옴): 프로젝트 밖 진입 파일(`globalCss` 가 앱 밖)의 패키지 줄은 **그 파일 위치 기준**으로 ① · ② 해석 게이트를 돌려 해석되지 않으면 WARN. 1부에서는 구현하지 않음 | `checkGlobalsCss` · `checkTailwindSetup` 의 진입 파일 선택(0100a) |
 | 이후 | WI-0100b 가 펼친 근거를 ① · ② 로 넘기게 함. WI-0098 은 이 WI 뒤 rebase(`theme/index.ts:455-465`) | 머리 주석 `:1-33` 은 마지막에 머지하는 쪽이 전체를 다시 읽음 |
 
 - 0097 을 0100a 보다 먼저 하면 0100 이 게이트를 다시 써야 해서 순서를 지켜요(경계 보고서 2절)
@@ -52,14 +53,16 @@
 
 | 파일:줄 | 내용 | 분류(추정) |
 |---|---|---|
-| `packages/axis-cli/src/template/template-check.test.ts:2572-2586` | 루트 ui-react 1.8.1 「설치본」 stub(`:2496-2504` install, npm 은 `writeInstalledStub` `:67-69` 로 package.json 만), 기대는 B1 줄 안내 | **바뀜 확실**(검증 확인: 파일 없음 → 손상 갈래). stub 에 `tailwind.css` 를 넣어 기대 유지할지, 손상 갈래 기대로 바꿀지 결정해 testplan 에 사유 기록 |
-| 같은 파일 `:917-941`(B1 describe 3건) · `:1118-1140`(C 합침 2건) · `:1194`(B1 상수) | 앱 선언 `project()` fixture | 불변(Q21, 앱 선언은 게이트 밖). 회귀 가드로 남김 |
+| `packages/axis-cli/src/template/template-check.test.ts:2572-2586` | 루트 ui-react 1.8.1 「설치본」 stub(`:2496-2504` install, npm 은 `writeInstalledStub` `:67-69` 로 package.json 만), 기대는 B1 줄 안내 | **바뀜 확실**(검증 확인: 파일 없음 → 손상 갈래). **확정(1부, 2026-10-28): stub 보강 · 기대 불변**. 수정본에서 실제로 손상 갈래로 바뀌는 것을 확인했고, 테스트 의도가 「루트 선언 인정」이라 설치본 stub 에 `tailwind.css` 를 뒀어요(testplan 4.1) |
+| 같은 파일 `:917-941`(B1 describe 3건) · `:1118-1140`(C 합침 2건) · `:1194`(B1 상수) | 앱 선언 `project()` fixture | 불변(Q21, 앱 선언은 게이트 밖). 회귀 가드로 남김. **1부 측정: 전이 0** |
 | 같은 파일 globals PASS 기대 `:215` · `:364` · `:607` · `:641` · `:672` · `:686` · `:1040` · `:1954` · `:1970` (9건) | tokens import · 레이아웃 JS import 로 globals PASS | **뒤집힐 후보**(tokens 선언 위치 · 설치 stub 여부 미확인, 앱 선언이면 Q28 로 불변). 의도가 「import 인정」이면 stub 보강 · 기대 불변 |
 | 같은 파일 TW4 진입점 PASS `:437` · `:531` · `:804` · `:1193` · `:1953` (5건) | tailwind.config TW4 PASS | 불변 추정(D4). 단 같은 fixture 에 루트 선언 컴포넌트 줄이 있으면 AC5 로 바뀜 |
 | `packages/axis-mcp/src/tools/template.test.ts:329` · `:358` · `:406` | 앱 선언 B1 | 불변(Q21) |
 | 같은 파일 globals PASS `:258` · `:266` · `:469` · `:492` (4건) | globals PASS | 뒤집힐 후보, cli 와 같은 처리 |
 | 같은 파일 TW4 PASS `:198` · `:368` · `:491` (3건) | TW4 PASS | 불변 추정 |
 | `packages/axis-cli/src/theme/theme-add.test.ts` 전부 | DEC-2 동작 | 불변(AC9, 헬퍼 이동만) |
+| (기존 테스트 아님, fixture 전이) root-inst-unknown-withline(ui-react · agentic-ui): 루트 선언 · 설치본 버전 모름 · `tailwind.css` 없음 + 줄 | tailwind.config **PASS → WARN**「import 가 있지만 설치본(버전 모름)에 tailwind.css 가 없어 해석되지 않습니다 → 1.4.0 이상으로 올리세요」 | **기대 변경(사유: 사용자 결정 Q39, 2026-10-28)**. 기존 테스트 중 이 조건을 단언한 것은 없어 기존 기대 변경 0, 새 행 F4uw(cli 2 · mcp 1). check 종료 코드는 0 그대로(fixture A/B 측정, testplan 4.2) |
+| (2부, plan 작성 뒤 확인) cli T4-3 · WI-0042 「runCheck 는 개수를 돌려줌」 · WI-0065 D8 · WI-0100a mono/app1 · mono/app2, mcp T4-4 · WI-0100a mono (7건) | globals PASS → WARN(tokens 미선언 · 미설치 import, 밖 진입 파일 Q37) | 기대 불변, fixture 에 tokens 설치 stub 추가 또는 설치본을 공통 상위로(사용자 결정 Q49) |
 
 ## 5. 바꾸지 않는 곳
 
