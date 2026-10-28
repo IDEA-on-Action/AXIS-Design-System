@@ -76,14 +76,29 @@
 | `packages/axis-cli/src/template/template-check.test.ts:356` 「탐색은 FR-2 순서 … 기존 globals.css 항목은 루트 우선 그대로」 | `results[2]` 가 루트 PASS → `app/globals.css` 자체 변수 WARN. 제목의 「루트 우선 그대로」도 바뀜 | 코드 읽기(D1, R9 부류) |
 | 같은 파일 `:347` 「globalCss 가 없는 파일 … 다른 후보도 없음」 | brand 만 단언. globals.css FAIL 에 표기가 붙지만 단언 밖이면 기대 불변 | 착수 때 확인 |
 | 같은 파일 `:368` · `:386` app-init(globalCss `./src/app/globals.css` 없음) | `results[5]` · `[6]` 만 단언. 세 항목에 표기가 붙지만 단언 밖이면 기대 불변 | 착수 때 확인 |
+| 같은 파일 T4-1 「app-init: runCheck 출력이 정정 전과 줄 단위로 같음(의도한 변경 제외)」(`INTENDED["app-init"]`, 0100a 브랜치 `:127-134`) | globals.css 줄 끝에 「 (globalCss ./src/app/globals.css 없음)」. 기대 기준선(`INTENDED`)에 그 한 줄을 반영 | **사유: Q35**(사용자 결정, 2026-10-28). 동결 기준선 fixture 의 globalCss 가 없는 파일이라 AC3 표기가 붙음 |
+| 같은 파일 T4-1 「app-init: collectCheckResults 의 이름 · severity · 문구가 기대 출력 줄과 같음」 | 위와 같은 한 줄(같은 `INTENDED` 를 씀) | **사유: Q35** |
 | 같은 파일 `:62` · `:230-347` (globalCss=`./app/globals.css` + 같은 파일) | 전이 없음(첫 후보와 같은 파일) | 회귀 가드 |
 | `packages/axis-mcp/src/tools/template.test.ts:150` · `:162` (globalCss `./src/app/globals.css` 없음) | brand 만 단언, 표기는 단언 밖 | 착수 때 확인 |
 | `template.test.ts:41` (globalCss=`./globals.css` + 루트 파일) | 전이 없음 | 회귀 가드 |
 | `packages/axis-cli/src/theme/brand-core.test.ts:276-296` `findGlobalCss` | 전이 없음(래퍼가 종전 규칙) | AC11 |
 | `packages/axis-cli/src/theme/theme-add.test.ts:176` · `:310` · `:353` · `:368` | 전이 없음(theme add 바이트 불변) | AC7 · AC8 · AC11 |
 | 새 fixture N1 의 brand(globalCss=`./package.json`) | 종전 `package.json` 을 골라 판정 → 후보 `app/globals.css` + `configuredRejected` 표기. 기존 테스트에는 이 형태가 없어 기대 변경은 0, AC11 예외 목록에만 올림 | D10 |
+| (기존 테스트 없음) globalCss 키 없음 + 후보 이름의 디렉터리(루트 `globals.css/`) | CSS 3항목: 예외(`EISDIR`, check 중단) → 그 후보를 건너뛰고 다음 후보 판정. 기존 테스트에는 이 형태가 없어 기대 변경은 0, AC11 예외 목록에만 올림. 회귀 테스트 1건 추가(cli 「WI-0100a 전역 CSS 선택」) | 구현 검증에서 발견(후보 판정 `existsSync` → 일반 파일 확인), fixture d-rootdir · verify-dirfx 실측 |
 | 새 fixture N2 의 brand(globalCss=`./app`) | 전이 없음(종전 「(globalCss ./app 없음)」 그대로) | D10 |
 | 새 fixture K1 · K2(하위 파일의 `@axis-ds/ui-react/tailwind.css` import, 0100b) | K1: B1 누락 WARN → PASS 가능. K2: PASS 또는 B1 누락 WARN → 버전 확인 WARN(PASS → WARN 가능) | 코드 읽기(`tailwind-core.ts:827-847`), 추정 · 미측정 |
+
+## 4-1. WI-0097 넘김 메모 (Q37)
+
+프로젝트 밖 진입 파일(Q25)의 패키지 import 가 그 파일 위치 기준으로 해석되지 않을 때의 거짓 PASS 는 WI-0097 2부의 해석 게이트가 WARN 으로 처리해요. 0100a 코드는 바꾸지 않아요. WI-0097 이 이어받을 측정:
+
+| 형태 | 실빌드 결과 | 0100a check |
+|---|---|---|
+| mono/app1 형태: 앱 `app1/` 의 globalCss=`../shared/globals.css`, shared CSS 가 `@axis-ds/tokens/css/tailwind4` · brands 를 import, 설치본은 `app1/node_modules` 에만(`shared/node_modules` 없음) | 빌드 실패(패키지 import 를 `shared/` 기준으로 풂) | PASS(거짓 PASS, 0097 게이트가 WARN 으로 바꿀 대상) |
+| 같은 CSS, 설치본을 상위(`mono/node_modules`)로 호이스팅 | 빌드 성공 | PASS |
+
+- 출처: 0100a 착수 측정의 실빌드(작업 디렉터리 `$S/WI-0100a/build/mono` · `build/mono-hoist`, 산출 CSS 는 양성 대조군(진입 CSS 가 앱 안)의 `build/out-inside.css` 와 호이스팅 경우의 `build/out-hoist.css` 이고, 실패한 밖 진입 파일 경우는 산출물이 없어요. 측정 조건은 next build 가 아니라 앱의 `@tailwindcss/postcss` 를 `scripts/pcss.cjs` 로 직접 부른 것이에요. WI-0097 2부도 같은 방법으로 A/B 해요). 이 문서를 고친 단계에서 다시 빌드하지 않았어요(넘김용 기록).
+- 게이트가 볼 기준: 패키지 줄의 해석 기준 디렉터리는 앱(baseDir)이 아니라 **진입 CSS 파일이 있는 디렉터리**예요. 0097 은 밖 진입 파일에서 이 기준으로 해석을 판정해 위 첫 행을 WARN, 둘째 행을 PASS 로 가르는지 A/B 로 확인해요.
 
 ## 5. 구현 단계
 

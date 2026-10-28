@@ -368,7 +368,10 @@ export function workspaceRunCommand(installCommand: string, pkg: string, script:
 
 /**
  * 전역 CSS 후보(앞에서부터, WI-0049 D6 · WI-0065). `axis init` 의 globalCss 탐색, `axis theme add` 의 import 대상,
- * `axis check` · MCP `axis.check_project` 의 brand 항목이 이 한 목록을 씁니다(종전에는 init 기본값 · brand-core 사본이 따로 있었음).
+ * `axis check` · MCP `axis.check_project` 의 brand 항목이 이 목록을 씁니다(종전에는 init 기본값 · brand-core 사본이 따로 있었음).
+ * theme add · brand 항목은 `axis.config.json` 의 `globalCss` 를 먼저 보고 이 목록으로 넘어갑니다(`selectGlobalCss`).
+ * check 의 CSS 판정 3항목(Tailwind 4 의 tailwind.config · globals.css · Tailwind 4 의 animation)은 같은 `selectGlobalCss` 에
+ * 다른 후보 목록(`TAILWIND_CSS_CANDIDATES`, 루트 우선)을 넘깁니다. 두 목록은 합치지 않습니다(WI-0100 D2).
  * create-next-app 구조(`app/` · `src/app/`)를 먼저 보고, pages 라우터 관례(`styles/`), 루트 순입니다.
  */
 export const GLOBAL_CSS_CANDIDATES = [
@@ -406,6 +409,69 @@ function isDirectory(dir: string): boolean {
 /** 후보 가운데 실제로 있는 첫 파일(`baseDir` 기준 상대 경로, `/` 구분). 없으면 `undefined`. */
 export function findFirstFile(baseDir: string, candidates: readonly string[]): string | undefined {
   return candidates.find((c) => isFile(path.join(baseDir, c)));
+}
+
+/** `selectGlobalCss` 결과 */
+export interface GlobalCssSelection {
+  /** 고른 CSS 파일의 절대 경로(`baseDir` 와 같은 기준으로 푼 경로, 심볼릭 링크는 풀지 않음). 후보가 모두 없으면 없음 */
+  path?: string;
+  /** 고른 파일의 `baseDir` 기준 상대 경로(`/` 구분). 후보에서 고르면 후보 문자열 그대로, 프로젝트 밖이면 `../shared/globals.css` 처럼 */
+  rel?: string;
+  /** `globalCss` 가 가리키는데 일반 파일이 아닐 때(없음 · 디렉터리) 그 값(설정에 적힌 그대로) */
+  configuredMissing?: string;
+  /** `requireStylesheet` 에서 `globalCss` 가 `.css` 가 아닌 일반 파일을 가리켜 버렸을 때 그 값(설정에 적힌 그대로, WI-0100 D10) */
+  configuredRejected?: string;
+}
+
+export interface SelectGlobalCssOptions {
+  /**
+   * `globalCss` 가 가리키는 일반 파일이 `.css` 가 아니면(대소문자 무시, `package.json` 등) 버리고 후보로 넘어갑니다(WI-0100 D10).
+   * check 경로(`axis check` · MCP `axis.check_project` 의 CSS 3항목 · brand)만 켭니다. theme add 는 끄고 쓰기 직전에
+   * `css-not-stylesheet` 로 거절합니다(종전 규칙). 확장자는 적힌 경로로 봅니다(심볼릭 링크를 풀지 않음).
+   */
+  requireStylesheet?: boolean;
+}
+
+/**
+ * 전역 CSS 파일 하나를 고릅니다(WI-0100a, 종전 brand-core `findGlobalCss` 규칙을 공유 코어로 옮김). 파일을 쓰지 않습니다.
+ * 1. `configured`(`axis.config.json` 의 `globalCss`)가 비지 않은 문자열이고 `baseDir` 기준으로 푼 경로가 일반 파일이면 그 파일.
+ *    프로젝트 밖(`../shared/globals.css` · 절대경로)도 읽기만 하므로 거절하지 않습니다(사용자 결정 Q25, 쓰기 거절은 theme add 몫).
+ *    파일이 없거나 디렉터리면 `configuredMissing`, `requireStylesheet` 에서 `.css` 가 아니면 `configuredRejected` 를 담고 2 로 갑니다.
+ * 2. `candidates` 를 앞에서부터 보고 처음 있는 일반 파일. 키가 없거나 문자열이 아니면 1 을 건너뜁니다(종전 후보 순서 그대로).
+ * 상대 `@import` 로 들여온 하위 파일은 여기서 보지 않습니다(WI-0100b).
+ */
+export function selectGlobalCss(
+  baseDir: string,
+  configured: unknown,
+  candidates: readonly string[],
+  options: SelectGlobalCssOptions = {}
+): GlobalCssSelection {
+  const result: GlobalCssSelection = {};
+  if (typeof configured === "string" && configured.trim() !== "") {
+    const file = path.resolve(baseDir, configured);
+    if (!isFile(file)) result.configuredMissing = configured;
+    else if (options.requireStylesheet && path.extname(file).toLowerCase() !== ".css") result.configuredRejected = configured;
+    else return { path: file, rel: path.relative(baseDir, file).split(path.sep).join("/") };
+  }
+  for (const candidate of candidates) {
+    const file = path.join(baseDir, candidate);
+    if (isFile(file)) {
+      result.path = file;
+      result.rel = candidate;
+      break;
+    }
+  }
+  return result;
+}
+
+/**
+ * `selectGlobalCss` 가 `globalCss` 를 쓰지 못했을 때 check 문구 끝에 붙이는 표기(앞에 공백 포함). 썼으면 빈 문자열입니다.
+ * 「(globalCss <값> 없음)」은 종전 brand 항목과 같은 문구이고, CSS 3항목에도 모든 심각도에 붙입니다(WI-0100a).
+ */
+export function globalCssSelectionNote(selection: Pick<GlobalCssSelection, "configuredMissing" | "configuredRejected">): string {
+  if (selection.configuredMissing !== undefined) return ` (globalCss ${selection.configuredMissing} 없음)`;
+  if (selection.configuredRejected !== undefined) return ` (globalCss ${selection.configuredRejected}: .css 파일이 아님)`;
+  return "";
 }
 
 /** init 이 기록할 경로를 어떻게 정했는지(안내 문구용) */

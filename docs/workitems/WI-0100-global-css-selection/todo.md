@@ -3,22 +3,27 @@
 > PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #244 | 상태: 🔄 착수(2026-10-28)
 
 ## 결정
-- [ ] 사용자 결정 Q24 · Q25 · Q27 반영 확인, 선례 D1 ~ D12 를 PRD 1.2 표대로 적용 (AC1 ~ AC14)
-- [ ] 구현 세부 확정: 표기를 세 항목 모든 심각도에 붙임 · D10 표기 문구 · 펼침 깊이 한도(구현 뒤 Master 확인) (AC3 · AC5 · AC8)
+- [ ] 사용자 결정 Q24 · Q25 · Q27 · Q35 · Q36 · Q37 · Q38 반영 확인, 선례 D1 ~ D12 를 PRD 1.2 표대로 적용 (AC1 ~ AC14)
+- [x] 구현 세부 확정: 표기를 세 항목 모든 심각도 + brand 에 붙임 · D10 표기 문구 「 (globalCss <값> 없음)」 · 「 (globalCss <값>: .css 파일이 아님)」, 항목 문구 맨 끝 (AC3 · AC8) (2026-10-28, 사용자 결정 Q36)
+- [ ] 펼침 깊이 한도 확정(0100b 구현 뒤 Master 확인) (AC5)
+- [x] T4-1 app-init 2건 기대 기준선에 globals.css 표기 한 줄 반영, plan 4절 목록 추가 (AC11) (2026-10-28, 사용자 결정 Q35, cli vitest 966/966)
+- [x] 프로젝트 밖 진입 파일 패키지 import 의 파일 위치 기준 해석: **WI-0097 2부로 이관(Q37)**, 0100a 코드 불변, 넘길 측정은 plan 4-1절 (AC7)
+- [x] 심볼릭 링크 앱 + 밖 상대 globalCss 의 brand · CSS 기준 차이는 잔여(Q38, prd 4절 · release-notes 한계)
+- [x] 착수 측정 넘김 H3(A1 · mono/app2 의 B1 WARN 잔존 → testplan 기대 정정, A1b · mono/app2b 추가) · H4(AC6 지표를 「각 항목 줄이 가리키는 판정 파일」로 정정, N1 발행본 1 → 2) 문서 반영 (AC1 · AC6 · AC7) (2026-10-28)
 - [ ] WI-0097 과 `tailwind4Issues` 인자 모양(진입 문자열 · 근거 문자열) 합의 (AC10)
 
 ## 착수 측정
 - [ ] 바뀔 기존 테스트 목록 고정(plan 4절), A/B probe 로 전이 전수 기록 (AC11)
 - [ ] 새 fixture A1 · E1~E5 · N1 · N2 의 발행본 출력 재현(음성 대조, plan 5절 1단계와 같은 집합) (AC1 · AC5 · AC8)
 - [ ] 0100b 착수 때 기준선 SHA(WI-0097 머지 직후 HEAD) 기록, 새 fixture mono/app2 · G1 · G2 · G3 · K1 · K2 의 그 기준선 출력 재현 (AC7 · AC10 · AC11)
-- [ ] 실빌드 1회: TW4 · TW3 + Next 의 상대 `@import` 펼침, mono/app1 형태의 밖 진입 파일 패키지 import 해석 기준 (testplan 4절, AC4 · AC7)
+- [ ] 실빌드 1회: TW4 · TW3 + Next 의 상대 `@import` 펼침, mono/app1 형태의 밖 진입 파일 패키지 import 해석 기준 (testplan 4절, AC4 · AC7). mono/app1 형태 결과(앱 아래에만 → 빌드 실패, 상위 호이스팅 → 성공)는 WI-0097 2부로 이관(Q37, plan 4-1절)
 
 ## 구현 0100a (파일 선택, 펼침 없음)
-- [ ] registry-core `project.ts` 선택 헬퍼(globalCss 우선 · `configuredMissing` · `configuredRejected` · 밖 경로 읽기) (AC1 · AC3 · AC7 · AC8)
-- [ ] `checkGlobalsCss` · `checkTailwindSetup`(TW4) · `checkAnimationPlugin`(TW4) 가 헬퍼 사용, 표기 접미사 (AC1 · AC2 · AC3)
-- [ ] 레이아웃 폴백 위치 · FAIL 조건 유지 (AC9)
-- [ ] cli `brand-core.ts` `findGlobalCss` 래퍼(theme add 종전 규칙) · `inspectBrandImport` 헬퍼 사용, mcp 사본 `cp` (AC6 · AC8 · AC11)
-- [ ] brand `configuredRejected` 표기(cli `template-check.ts` · mcp `template.ts`) (AC8 · AC12)
+- [x] registry-core `project.ts` 선택 헬퍼(globalCss 우선 · `configuredMissing` · `configuredRejected` · 밖 경로 읽기) (AC1 · AC3 · AC7 · AC8) → `selectGlobalCss` · `globalCssSelectionNote` (2026-10-28, 새 테스트 R1 · R2 · mono · x2 · N1 · N2)
+- [x] `checkGlobalsCss` · `checkTailwindSetup`(TW4) · `checkAnimationPlugin`(TW4) 가 헬퍼 사용, 표기 접미사 (AC1 · AC2 · AC3) (2026-10-28, fixture 32개 재측정에서 R2 · R3 · I1 · mono/app1 · mono/app2 · mono/app2b rc 1 → 0, R1 · R8 WARN → PASS(rc 0 그대로))
+- [x] 레이아웃 폴백 위치 · FAIL 조건 유지 (AC9) (2026-10-28, x4 PASS 파일명만 `app/globals.css`, x3 FAIL · rc 1 그대로)
+- [x] cli `brand-core.ts` `findGlobalCss` 래퍼(theme add 종전 규칙) · `inspectBrandImport` 헬퍼 사용, mcp 사본 `cp` (AC6 · AC8 · AC11) (2026-10-28, A/B probe 의 `findGlobalCss` 전이 0건, `cmp` 동일)
+- [x] brand `configuredRejected` 표기(cli `template-check.ts` · mcp `template.ts`) (AC8 · AC12) (2026-10-28, N1 · CLI · MCP 항목 줄 32/32 같음. 표기 문구 확정 Q36)
 
 ## 구현 0100b (WI-0097 머지 뒤)
 - [ ] 상대 `@import` 펼침 헬퍼(프로젝트 안 · 방문 집합 · 깊이 한도, 근거 · 진입 문자열 분리) (AC4 · AC5)

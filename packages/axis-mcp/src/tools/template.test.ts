@@ -711,3 +711,79 @@ describe("handleCheckProject WI-0091 · 0094 · 0092 (CLI 와 같은 문구)", (
     expect(await item(tmp, "animation")).toEqual({ name: "animation", severity: "pass", message: "app/globals.css에 애니메이션 플러그인이 있습니다" });
   });
 });
+
+// WI-0100a: CSS 판정 3항목이 globalCss 를 먼저 보고 brand 와 같은 파일을 판정(CLI template-check.test.ts 「WI-0100a 전역 CSS 선택」과 같은 문구)
+describe("handleCheckProject WI-0100a 전역 CSS 선택 (CLI 와 같은 문구)", () => {
+  const GOOD4 = '@import "tailwindcss";\n@import "@axis-ds/tokens/css/tailwind4";\n';
+  const TW4_DEPS = { "@axis-ds/tokens": "^1.8.2", clsx: "^2.1.1", "tailwind-merge": "^3.3.1", tailwindcss: "^4.1.14" };
+
+  async function app(dir: string) {
+    await fs.ensureDir(path.join(dir, ".git"));
+    await fs.outputFile(path.join(dir, "lib/utils.ts"), 'export function cn(...a: string[]) { return a.join(" "); }\n');
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: TW4_DEPS });
+    for (const [name, range] of Object.entries(TW4_DEPS)) await writeInstalledStub(dir, name, range.slice(1));
+  }
+
+  async function items(dir: string) {
+    return Object.fromEntries((await handleCheckProject({ targetDir: dir })).results.map((r) => [r.name, r]));
+  }
+
+  const TW4_PASS = (file: string, note = "") => ({
+    name: "tailwind.config",
+    severity: "pass",
+    message: `Tailwind 4: ${file}에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다${note}`,
+  });
+  const GLOBALS_PASS = (file: string, note = "") => ({
+    name: "globals.css",
+    severity: "pass",
+    message: `${file}에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)${note}`,
+  });
+
+  it("R1: 루트 낡은 globals.css 대신 globalCss 의 app/globals.css 로 PASS 2건", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), GOOD4);
+    await fs.outputFile(path.join(tmp, "globals.css"), "body{margin:0}\n");
+    await fs.outputJSON(path.join(tmp, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+    const r = await items(tmp);
+    expect(r["tailwind.config"]).toEqual(TW4_PASS("app/globals.css"));
+    expect(r["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css"));
+  });
+
+  it("R2: 후보 밖 src/styles/globals.css 를 globalCss 로 지정하면 FAIL 0", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "src/styles/globals.css"), GOOD4);
+    await fs.outputJSON(path.join(tmp, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./src/styles/globals.css" });
+    const { results, summary } = await handleCheckProject({ targetDir: tmp });
+    const r = Object.fromEntries(results.map((x) => [x.name, x]));
+    expect(r["tailwind.config"]).toEqual(TW4_PASS("src/styles/globals.css"));
+    expect(r["globals.css"]).toEqual(GLOBALS_PASS("src/styles/globals.css"));
+    expect(summary.fail).toBe(0);
+  });
+
+  it("mono: 프로젝트 밖 globalCss 를 읽기만 해서 CSS 2항목 PASS, brand 와 같은 파일", async () => {
+    const dir = path.join(tmp, "app1");
+    await app(dir);
+    await fs.outputFile(path.join(tmp, "shared/globals.css"), `${GOOD4}@import "@axis-ds/tokens/css/brands/ontology";\n`);
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "../shared/globals.css", brand: "ontology" });
+    const { results, summary } = await handleCheckProject({ targetDir: dir });
+    const r = Object.fromEntries(results.map((x) => [x.name, x]));
+    expect(r["tailwind.config"]).toEqual(TW4_PASS("../shared/globals.css"));
+    expect(r["globals.css"]).toEqual(GLOBALS_PASS("../shared/globals.css"));
+    expect(r.brand).toEqual({ name: "brand", severity: "pass", message: 'brand "ontology" import 가 ../shared/globals.css에 있습니다' });
+    expect(summary.fail).toBe(0);
+  });
+
+  it("x2 · N1: globalCss 를 쓰지 못하면 표기(없음 · .css 아님), brand 도 같은 표기", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${GOOD4}@import "@axis-ds/tokens/css/brands/ontology";\n`);
+    await fs.outputJSON(path.join(tmp, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./nope.css" });
+    expect((await items(tmp))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", " (globalCss ./nope.css 없음)"));
+
+    await fs.outputJSON(path.join(tmp, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./package.json", brand: "ontology" });
+    const note = " (globalCss ./package.json: .css 파일이 아님)";
+    const r = await items(tmp);
+    expect(r["tailwind.config"]).toEqual(TW4_PASS("app/globals.css", note));
+    expect(r["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", note));
+    expect(r.brand).toEqual({ name: "brand", severity: "pass", message: `brand "ontology" import 가 app/globals.css에 있습니다${note}` });
+  });
+});

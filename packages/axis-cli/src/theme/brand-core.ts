@@ -10,7 +10,7 @@
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
-import { GLOBAL_CSS_CANDIDATES, ROOT_LAYOUT_FILES } from "@axis-ds/registry-core/project";
+import { GLOBAL_CSS_CANDIDATES, ROOT_LAYOUT_FILES, selectGlobalCss } from "@axis-ds/registry-core/project";
 import { packageVersionGate, type PackageVersionGate } from "@axis-ds/registry-core/tailwind-core";
 
 /** 브랜드를 담는 패키지 이름 */
@@ -209,28 +209,20 @@ function isFile(file: string): boolean {
 }
 
 /**
- * 브랜드 import 를 넣거나 검사할 CSS 파일을 찾습니다(PRD FR-2 · A1, plan 4.1 U14 (A)).
+ * 브랜드 import 를 넣을 CSS 파일을 찾습니다(PRD FR-2 · A1, plan 4.1 U14 (A)). `axis theme add` 가 씁니다.
+ * 공유 코어 `selectGlobalCss`(WI-0100a) 위의 얇은 래퍼이고 규칙은 종전 그대로입니다.
  * 후보는 `config.globalCss` → `GLOBAL_CSS_CANDIDATES`(`app/globals.css` → `src/app/globals.css` → `styles/globals.css` →
  * `src/styles/globals.css` → 루트 `globals.css`) 순이고,
  * `globalCss` 는 키가 없을 때와 키가 가리키는 파일이 없을 때 모두 다음 후보로 넘어갑니다.
  * 파일이 없을 때는 `configuredMissing` 에 그 값을 담아 호출한 쪽이 경고하게 합니다.
+ * `.css` 가 아닌 파일 · 프로젝트 밖 파일도 그대로 돌려주고, theme add 가 쓰기 직전에 거절합니다(`css-not-stylesheet` ·
+ * `css-outside-project`). check 의 brand 항목은 이 함수가 아니라 `selectGlobalCss` 를 `.css` 확인을 켜고 부릅니다(`inspectBrandImport`).
  */
 export function findGlobalCss(baseDir: string, config: BrandConfigLike | null | undefined): GlobalCssLocation {
-  const root = resolve(baseDir);
+  const selection = selectGlobalCss(resolve(baseDir), config?.globalCss, GLOBAL_CSS_CANDIDATES);
   const result: GlobalCssLocation = {};
-  const configured = config?.globalCss;
-  if (typeof configured === "string" && configured.trim() !== "") {
-    const file = resolve(root, configured);
-    if (isFile(file)) return { path: file };
-    result.configuredMissing = configured;
-  }
-  for (const candidate of GLOBAL_CSS_CANDIDATES) {
-    const file = join(root, candidate);
-    if (isFile(file)) {
-      result.path = file;
-      break;
-    }
-  }
+  if (selection.configuredMissing !== undefined) result.configuredMissing = selection.configuredMissing;
+  if (selection.path !== undefined) result.path = selection.path;
   return result;
 }
 
@@ -280,8 +272,10 @@ export interface BrandImportCheck {
   state: BrandImportState;
   /** 검사한 CSS 파일(`baseDir` 기준 상대 경로, `/` 구분). `css-missing` 이면 없음 */
   cssFile?: string;
-  /** `globalCss` 가 가리키는 파일이 없을 때 그 값(설정에 적힌 그대로) */
+  /** `globalCss` 가 가리키는 파일이 없을 때(디렉터리 포함) 그 값(설정에 적힌 그대로) */
   configuredMissing?: string;
+  /** `globalCss` 가 `.css` 가 아닌 일반 파일을 가리켜 버리고 후보로 넘어갔을 때 그 값(설정에 적힌 그대로, WI-0100 D10) */
+  configuredRejected?: string;
   /** CSS 안의 브랜드 import 이름(나온 순서, 중복 제거) */
   imports: string[];
 }
@@ -289,7 +283,10 @@ export interface BrandImportCheck {
 /**
  * `axis.config.json` 의 `brand` 와 CSS 의 브랜드 import 를 대조합니다(FR-5).
  * config 가 없거나 읽을 수 없거나 `brand` 가 비어 있으면 `null` 이고, 검사기는 결과를 추가하지 않습니다(기존 출력 불변).
- * CSS 파일은 `findGlobalCss`(FR-2 순서)로 고르므로 `axis theme add` 가 실제로 쓴 파일을 봅니다.
+ * CSS 파일은 공유 코어 `selectGlobalCss`(`globalCss` → `GLOBAL_CSS_CANDIDATES`, theme add 와 같은 순서)로 고르되, check 경로라
+ * `globalCss` 가 `.css` 가 아닌 일반 파일이면 버리고 후보로 넘어가 `configuredRejected` 를 담습니다(WI-0100 D10). theme add 는 그때
+ * 후보로 넘어가지 않고 오류로 멈추며(`css-not-stylesheet`, 아무것도 쓰지 않음), check 는 후보 파일을 판정하고 버린 사유를 표기합니다.
+ * 프로젝트 밖 `globalCss` 는 읽기만 합니다.
  */
 export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   const config = readBrandConfig(baseDir);
@@ -297,9 +294,10 @@ export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   if (typeof brand !== "string" || brand.trim() === "") return null;
 
   const root = resolve(baseDir);
-  const location = findGlobalCss(root, config);
-  const base: Pick<BrandImportCheck, "brand" | "configuredMissing"> = { brand };
+  const location = selectGlobalCss(root, config?.globalCss, GLOBAL_CSS_CANDIDATES, { requireStylesheet: true });
+  const base: Pick<BrandImportCheck, "brand" | "configuredMissing" | "configuredRejected"> = { brand };
   if (location.configuredMissing !== undefined) base.configuredMissing = location.configuredMissing;
+  if (location.configuredRejected !== undefined) base.configuredRejected = location.configuredRejected;
   if (!location.path) {
     return { ...base, state: "css-missing", imports: [] };
   }

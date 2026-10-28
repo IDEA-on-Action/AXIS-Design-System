@@ -11,7 +11,7 @@ import {
   type BrandImportCheck,
 } from "../theme/brand-core.js";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
-import { PNP_ROOT_ONLY_NOTE } from "@axis-ds/registry-core/project";
+import { PNP_ROOT_ONLY_NOTE, globalCssSelectionNote } from "@axis-ds/registry-core/project";
 import { checkAnimationPlugin, checkGlobalsCss, checkTailwindContent, checkTailwindSetup, versionGateLabel } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
@@ -178,7 +178,8 @@ export function checkBrand(baseDir: string): CheckResult | null {
 /** 코어 검사 결과를 check 항목으로 바꿉니다. */
 export function brandCheckResult(check: BrandImportCheck): CheckResult {
   const { brand } = check;
-  const suffix = check.configuredMissing !== undefined ? ` (globalCss ${check.configuredMissing} 없음)` : "";
+  // 「(globalCss <값> 없음)」 · .css 아닌 파일을 버린 표기(WI-0100 D10). CSS 3항목과 같은 공유 코어 문구입니다
+  const suffix = globalCssSelectionNote(check);
   switch (check.state) {
     case "match":
       return {
