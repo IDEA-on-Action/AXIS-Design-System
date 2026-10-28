@@ -292,7 +292,8 @@ export interface BrandImportCheck {
  * `globalCss` 가 `.css` 가 아닌 일반 파일이면 버리고 후보로 넘어가 `configuredRejected` 를 담습니다(WI-0100 D10). theme add 는 그때
  * 후보로 넘어가지 않고 오류로 멈추며(`css-not-stylesheet`, 아무것도 쓰지 않음), check 는 후보 파일을 판정하고 버린 사유를 표기합니다.
  * 프로젝트 밖 `globalCss` 는 읽기만 합니다. 브랜드 import 는 고른 파일이 상대 `@import` 로 들여온 프로젝트 안 하위 파일에서도 찾습니다
- * (WI-0100b `expandGlobalCss`, D5). 브랜드 import 는 WI-0097 해석 게이트 대상이 아니라 위치만 봅니다(D8 ②).
+ * (WI-0100b `expandGlobalCss`, D5, 상대 `@import` 가 순환하면 진입 파일만 봄, 사용자 결정 Q52). 브랜드 import 는 WI-0097 해석 게이트 대상이
+ * 아니라 위치만 봅니다(D8 ②).
  */
 export function inspectBrandImport(baseDir: string): BrandImportCheck | null {
   const config = readBrandConfig(baseDir);

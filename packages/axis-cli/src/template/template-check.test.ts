@@ -8,7 +8,9 @@ import {
   axisPackagesBelowTailwind4,
   contentGlobCovers,
   contentGlobToRegExp,
+  CSS_IMPORT_CYCLE_DEPTH_LIMIT,
   CSS_IMPORT_DEPTH_LIMIT,
+  cssImportCycleIssue,
   detectTailwind,
   expandGlobalCss,
   findCreateNextAppDefaults,
@@ -878,22 +880,63 @@ describe("WI-0100b 상대 @import 펼침", () => {
     expect(r["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css"));
   });
 
+  // 실빌드(scratchpad WI-0100b/q50/build-q56.tsv)가 펼친 형태. n1 · n2 · n3 은 사용자 결정 Q56, n4 · n5 는 조건이 없는 꼴(Q51 의 대조)
   it.each([
-    ["f1 작은따옴표", "@import './axis.css';", "app/axis.css"],
-    ["f4 layer()", '@import "./axis.css" layer(base);', "app/axis.css"],
-    ["f5 supports()", '@import "./axis.css" supports(display: grid);', "app/axis.css"],
-    ["f6 media", '@import "./axis.css" screen;', "app/axis.css"],
-    ["f10 한 줄에 두 import", '@import "./axis.css";', "app/axis.css"],
-  ])("형태 %s: 따라가서 PASS 2건", async (_label, line, from) => {
+    ["f1 작은따옴표", "@import './axis.css';", "app/axis.css", "app/axis.css"],
+    ["f10 한 줄에 두 import", '@import "./axis.css";', "app/axis.css", "app/axis.css"],
+    ["n1 공백 없음 (Q56)", '@import"./axis.css";', "app/axis.css", "app/axis.css"],
+    ["n2 확장자 없음 (Q56)", '@import "./axis";', "app/axis.css", "app/axis.css"],
+    ["n2e .css 를 한 번 더 붙임 (Q56)", '@import "./axis.css";', "app/axis.css.css", "app/axis.css.css"],
+    ["n3 작은따옴표가 든 이름 (Q56)", '@import "./it\'s.css";', "app/it's.css", "app/it's.css"],
+    ["n3b 큰따옴표가 든 이름 (Q56)", "@import './say\"hi.css';", 'app/say"hi.css', 'app/say"hi.css'],
+    ["n4 세미콜론 없는 마지막 줄", '@import "./axis.css"', "app/axis.css", "app/axis.css"],
+    ["n5 세미콜론 앞 공백", '@import "./axis.css" ;', "app/axis.css", "app/axis.css"],
+  ])("형태 %s: 따라가서 PASS 2건", async (_label, line, sub, from) => {
     const dir = await tempDir();
     await app(dir, 4);
     // f10 은 tailwindcss 줄과 같은 줄에 둠
     const entry = _label.startsWith("f10") ? `${TW} ${line}\n` : `${TW}\n${line}\n`;
-    await files(dir, { "app/globals.css": entry, "app/axis.css": `${TOK}\n` });
+    await files(dir, { "app/globals.css": entry, [sub]: `${TOK}\n` });
     await config(dir);
     const r = await items(dir);
     expect(r["tailwind.config"]).toEqual(TW4_PASS("app/globals.css", via(from)));
     expect(r["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via(from)));
+  });
+
+  it("n2b · n2c (Q56): 확장자 없는 이름은 적힌 이름의 파일이 먼저이고(빈 axis 가 있으면 axis.css 를 보지 않음), 없을 때만 .css 를 붙임", async () => {
+    const both = await r4Like('@import "./axis";');
+    await fs.outputFile(path.join(both, "app/axis"), "");
+    const rb = await items(both);
+    expect(rb["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    expect(rb["globals.css"]).toEqual(GLOBALS_NONE);
+    const bare = await tempDir();
+    await app(bare, 4);
+    await files(bare, { "app/globals.css": `${TW}\n@import "./axis";\n`, "app/axis": `${TOK}\n` });
+    await config(bare);
+    expect((await items(bare))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/axis")));
+  });
+
+  it("n2d · n2f: 디렉터리(index.css · package.json style)는 따라가지 않음(펼치기 전과 같은 WARN)", async () => {
+    for (const [rel, extra] of [
+      ["app/axis/index.css", {}],
+      ["app/axis/main.css", { "app/axis/package.json": '{"style":"main.css"}' }],
+    ] as const) {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, { "app/globals.css": `${TW}\n@import "./axis";\n`, [rel]: `${TOK}\n`, ...extra });
+      await config(dir);
+      expect((await items(dir))["globals.css"]).toEqual(GLOBALS_NONE);
+    }
+  });
+
+  it("z4c: 끝이 / 인 경로(\"./axis/\")는 axis.css 가 있어도 따라가지 않음(실빌드 Can't resolve, 펼치기 전과 같은 WARN)", async () => {
+    const dir = await tempDir();
+    await app(dir, 4);
+    await files(dir, { "app/globals.css": `${TW}\n@import "./axis/";\n`, "app/axis.css": `${TOK}\n` });
+    await config(dir);
+    const r = await items(dir);
+    expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    expect(r["globals.css"]).toEqual(GLOBALS_NONE);
   });
 
   it("f9: 프로젝트 안의 ../ (app/globals.css → styles/axis.css) 도 따라감", async () => {
@@ -907,9 +950,16 @@ describe("WI-0100b 상대 @import 펼침", () => {
   });
 
   // url() 은 착수 실빌드에서 Tailwind 4 · Next 모두 펼치지 않음(산출 CSS 에 @import 가 그대로 남음), 「./」 없는 이름은 패키지 경로(Can't resolve)
+  // url() 은 사용자 결정 Q50, 조건이 붙은 import 는 사용자 결정 Q51(실빌드: 토큰 진입점을 조건 안에 두면 「@custom-variant cannot be nested」)
   it.each([
-    ["f2 url(\"./axis.css\")", '@import url("./axis.css");'],
-    ["f3 url(./axis.css)", "@import url(./axis.css);"],
+    ["f2 url(\"./axis.css\") (Q50)", '@import url("./axis.css");'],
+    ["f3 url(./axis.css) (Q50)", "@import url(./axis.css);"],
+    ["f4 layer() (Q51)", '@import "./axis.css" layer(base);'],
+    ["f5 supports() (Q51)", '@import "./axis.css" supports(display: grid);'],
+    ["f6 media (Q51)", '@import "./axis.css" screen;'],
+    ["l2 작은따옴표 + supports() (Q51)", "@import './axis.css' supports(display: grid);"],
+    ["l3 media 조건식 (Q51)", '@import "./axis.css" screen and (min-width: 1px);'],
+    ["n1b 공백 없음 + layer() (Q51 · Q56)", '@import"./axis.css"layer(base);'],
     ["f7 주석 안", '/* @import "./axis.css"; */'],
     ["f8 ./ 없는 이름", '@import "axis.css";'],
   ])("형태 %s: 따라가지 않아 WARN 2건 그대로", async (_label, line) => {
@@ -953,26 +1003,97 @@ describe("WI-0100b 상대 @import 펼침", () => {
       expect(ri["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("styles/axis.css")));
     });
 
-    it("E3: 순환 a → b → a 는 한 번씩만 읽고 b 의 근거를 인정(무한 루프 없음), 자기 import(E3s)도 끝남", async () => {
+    // 사용자 결정 Q59: 진입 파일만으로 판정한 문구(`head`) 뒤에 「 / 」와 순환 문구, 진입 파일이 PASS 여도 WARN.
+    // Q60 ①: 순환에 든 파일이 하나(자기 자신 import)면 「<파일> 이 자기 자신을 @import 해 …」
+    const NONE_HEAD = "app/globals.css에 AXIS CSS 변수가 없습니다";
+    const PASS_HEAD = "app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import)";
+    const CYCLE = (head: string, files: string[], suffix = "") => ({
+      name: "globals.css",
+      severity: "warn",
+      message:
+        files.length === 1
+          ? `${head} / ${files[0]} 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요${suffix}`
+          : `${head} / ${files.join(" · ")} 이 서로 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요${suffix}`,
+    });
+
+    // 사용자 결정 Q52: 실빌드가 「Exceeded maximum recursion depth」로 실패(scratchpad WI-0100b/q50/build-q56.tsv c1 ~ c4)하므로 globals.css 항목만
+    // 순환 WARN 을 내고, 순환 뒤의 근거는 인정하지 않아 다른 항목은 진입 파일만으로 판정해요(종료 코드 0 그대로)
+    it("E3 (Q52): 순환 a → b → a 는 globals.css 순환 WARN, b 의 근거는 인정하지 않아 tailwind.config 는 진입 파일만으로 WARN", async () => {
       const dir = await tempDir();
       await app(dir, 4);
       await files(dir, { "app/globals.css": `${TW}\n@import "./b.css";\n`, "app/b.css": `@import "./globals.css";\n${TOK}\n` });
       await config(dir);
       const r = await items(dir);
-      expect(r["tailwind.config"]).toEqual(TW4_PASS("app/globals.css", via("app/b.css")));
-      expect(r["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/b.css")));
+      expect(r["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/globals.css", "app/b.css"]));
+      expect(r["globals.css"].message).toBe(`${NONE_HEAD} / ${cssImportCycleIssue(["app/globals.css", "app/b.css"])}`);
+      expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
       const e = expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css");
-      expect(e.files.map((f) => [f.rel, f.depth])).toEqual([
-        ["app/globals.css", 0],
-        ["app/b.css", 1],
-      ]);
+      expect(e.cycle).toEqual(["app/globals.css", "app/b.css"]);
+      expect(e.files.map((f) => [f.rel, f.depth])).toEqual([["app/globals.css", 0]]);
+      expect(e.evidence).toBe(e.entry);
+      expect(e.packageLines.map((l) => l.spec)).toEqual(["tailwindcss"]);
+      // 순환 WARN 은 fail 이 아니라 종료 코드 0 그대로
+      expect(Object.values(r).some((x) => x.severity === "fail")).toBe(false);
+    });
 
+    it("E3s (Q52 · Q59 · Q60 ①): 자기 import 도 순환 WARN(자기 자신 문구), 진입 파일이 PASS 여도 WARN, tailwind.config 는 PASS 그대로(순환 문구 없음)", async () => {
       const self = await tempDir();
       await app(self, 4);
       await files(self, { "app/globals.css": `${GOOD4}@import "./globals.css";\n` });
       await config(self);
-      expect(expandGlobalCss(self, path.join(self, "app/globals.css"), "app/globals.css").files).toHaveLength(1);
-      expect((await items(self))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css"));
+      expect(expandGlobalCss(self, path.join(self, "app/globals.css"), "app/globals.css").cycle).toEqual(["app/globals.css"]);
+      const r = await items(self);
+      expect(r["globals.css"]).toEqual(CYCLE(PASS_HEAD, ["app/globals.css"]));
+      expect(r["globals.css"].message).toBe(
+        `${PASS_HEAD} / app/globals.css 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요`
+      );
+      expect(r["tailwind.config"]).toEqual(TW4_PASS("app/globals.css"));
+    });
+
+    it("c3 · c4 (Q52): 진입 파일이 끼지 않은 순환(b → c → b)과 형제 사이 순환(진입 → b · c, b ↔ c)도 순환", async () => {
+      const c3 = await tempDir();
+      await app(c3, 4);
+      await files(c3, {
+        "app/globals.css": `${TW}\n@import "./b.css";\n`,
+        "app/b.css": `@import "./c.css";\n${TOK}\n`,
+        "app/c.css": '@import "./b.css";\n',
+      });
+      await config(c3);
+      expect((await items(c3))["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/b.css", "app/c.css"]));
+
+      const c4 = await tempDir();
+      await app(c4, 4);
+      await files(c4, {
+        "app/globals.css": `${TW}\n@import "./b.css";\n@import "./c.css";\n`,
+        "app/b.css": '@import "./c.css";\n',
+        "app/c.css": `@import "./b.css";\n${TOK}\n`,
+      });
+      await config(c4);
+      const r = await items(c4);
+      expect(r["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/b.css", "app/c.css"]));
+      expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    });
+
+    it("dia (Q52 대조): 같은 파일을 두 갈래로 들여오는 다이아몬드는 순환이 아니라 PASS(실빌드 rc 0)", async () => {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, {
+        "app/globals.css": `${TW}\n@import "./b.css";\n@import "./c.css";\n`,
+        "app/b.css": '@import "./d.css";\n',
+        "app/c.css": '@import "./d.css";\n',
+        "app/d.css": `${TOK}\n`,
+      });
+      await config(dir);
+      expect(expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css").cycle).toBeUndefined();
+      expect((await items(dir))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/d.css")));
+    });
+
+    it("Q52 · globalCss 표기: 순환 WARN 에도 「(globalCss <값> 없음)」 표기가 끝에 붙음", async () => {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, { "app/globals.css": `${TW}\n@import "./b.css";\n`, "app/b.css": `@import "./globals.css";\n${TOK}\n` });
+      await config(dir, { globalCss: "./app/missing.css" });
+      expect((await items(dir))["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/globals.css", "app/b.css"], " (globalCss ./app/missing.css 없음)"));
     });
 
     /** 진입 파일 → d1 → … → d<depth>, 마지막 파일에 토큰 진입점 */
@@ -986,8 +1107,9 @@ describe("WI-0100b 상대 @import 펼침", () => {
       return dir;
     }
 
-    it(`E4: 깊이 한도(${CSS_IMPORT_DEPTH_LIMIT}) 안의 근거는 인정, 한도 + 1 단계의 근거는 불인정`, async () => {
-      expect(CSS_IMPORT_DEPTH_LIMIT).toBe(5);
+    // 사용자 결정 Q53: 32 단계는 따라가고 33 단계는 펼치기 전과 같은 WARN(실빌드는 ch32 · ch33 모두 rc 0, 33 의 WARN 은 결정의 대가)
+    it(`E4 (Q53): 깊이 한도(${CSS_IMPORT_DEPTH_LIMIT}) 안의 근거는 인정, 한도 + 1 단계의 근거는 불인정`, async () => {
+      expect(CSS_IMPORT_DEPTH_LIMIT).toBe(32);
       const ok = await items(await chain(CSS_IMPORT_DEPTH_LIMIT));
       expect(ok["tailwind.config"]).toEqual(TW4_PASS("app/globals.css", via(`app/d${CSS_IMPORT_DEPTH_LIMIT}.css`)));
       expect(ok["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via(`app/d${CSS_IMPORT_DEPTH_LIMIT}.css`)));
@@ -996,7 +1118,15 @@ describe("WI-0100b 상대 @import 펼침", () => {
       expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
       expect(r["globals.css"]).toEqual(GLOBALS_NONE);
       const e = expandGlobalCss(over, path.join(over, "app/globals.css"), "app/globals.css");
-      expect(e.files.map((f) => f.depth)).toEqual([0, 1, 2, 3, 4, 5]);
+      expect(e.files.map((f) => f.depth)).toEqual(Array.from({ length: CSS_IMPORT_DEPTH_LIMIT + 1 }, (_, i) => i));
+    });
+
+    it("E4c (Q52 · Q53): 한도 깊이의 파일이 조상을 다시 import 하는 순환도 찾음", async () => {
+      const dir = await chain(CSS_IMPORT_DEPTH_LIMIT);
+      await fs.outputFile(path.join(dir, `app/d${CSS_IMPORT_DEPTH_LIMIT}.css`), `@import "./d1.css";\n${TOK}\n`);
+      const e = expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css");
+      expect(e.cycle).toEqual(Array.from({ length: CSS_IMPORT_DEPTH_LIMIT }, (_, i) => `app/d${i + 1}.css`));
+      expect((await items(dir))["globals.css"].message).toContain("이 서로 @import 해 빌드가 순환으로 실패합니다");
     });
 
     it("E5 · E6: 없는 파일 · 디렉터리를 import 하면 건너뜀(예외 없음)", async () => {
@@ -1015,17 +1145,133 @@ describe("WI-0100b 상대 @import 펼침", () => {
       }
     });
 
-    it("E7: 하위 파일 40개가 서로를 모두 import 해도 파일마다 한 번만 읽고 끝남", async () => {
+    it("E7: 하위 파일 40개가 뒤의 파일을 모두 import 해도(순환 없음) 파일마다 한 번만 읽고 끝남, E7c: 서로를 모두 import 하면 순환", async () => {
       const dir = await tempDir();
       await app(dir, 4);
-      const all = Array.from({ length: 40 }, (_, i) => `@import "./m${i + 1}.css";`).join("\n");
-      const map: Record<string, string> = { "app/globals.css": `${TW}\n${all}\n` };
-      for (let i = 1; i <= 40; i++) map[`app/m${i}.css`] = i === 40 ? `${all}\n${TOK}\n` : `${all}\n`;
+      const imports = (from: number) => Array.from({ length: 40 - from }, (_, i) => `@import "./m${from + i + 1}.css";`).join("\n");
+      const map: Record<string, string> = { "app/globals.css": `${TW}\n${imports(0)}\n` };
+      for (let i = 1; i <= 40; i++) map[`app/m${i}.css`] = i === 40 ? `${TOK}\n` : `${imports(i)}\n`;
       await files(dir, map);
       await config(dir);
       const e = expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css");
       expect(e.files).toHaveLength(41);
+      expect(e.cycle).toBeUndefined();
       expect((await items(dir))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/m40.css")));
+
+      const all = Array.from({ length: 40 }, (_, i) => `@import "./m${i + 1}.css";`).join("\n");
+      for (let i = 1; i <= 40; i++) await fs.outputFile(path.join(dir, `app/m${i}.css`), i === 40 ? `${all}\n${TOK}\n` : `${all}\n`);
+      expect(expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css").cycle).toEqual(["app/m1.css"]);
+      expect((await items(dir))["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/m1.css"]));
+    });
+
+    /** 진입 파일 → d1 → … → d<n>, d<tok> 에 토큰 진입점, d<n> 이 `back` 을 import(없으면 순환 없음). 0100b q50-verify fx.sh 의 chain 과 같은 모양 */
+    async function ring(n: number, tok: number, back?: string) {
+      const dir = await tempDir();
+      await app(dir, 4);
+      const map: Record<string, string> = { "app/globals.css": `${TW}\n@import "./d1.css";\n` };
+      for (let i = 1; i <= n; i++) {
+        const lines: string[] = [];
+        if (i === tok) lines.push(TOK);
+        if (i < n) lines.push(`@import "./d${i + 1}.css";`);
+        else if (back !== undefined) lines.push(`@import "${back}";`);
+        map[`app/d${i}.css`] = lines.length > 0 ? `${lines.join("\n")}\n` : "";
+      }
+      await files(dir, map);
+      await config(dir);
+      return dir;
+    }
+    const ds = (from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => `app/d${from + i}.css`);
+
+    // 사용자 결정 Q57: 순환은 Tailwind 4 재귀 한도(100 단계, dist/lib.js 의 t>100)까지 읽어 찾음. 실빌드(scratchpad WI-0100b/q50-verify-correctness/build.tsv)는
+    // z2 · z2b · z2d 모두 「Exceeded maximum recursion depth」 rc 1, 대조 z2n(순환 없는 40 단계) rc 0
+    it(`z2 · z2b · z2d (Q57): 근거 한도(${CSS_IMPORT_DEPTH_LIMIT}) 밖에서 닫히는 순환도 찾아 globals.css WARN, 근거는 진입 파일만`, async () => {
+      expect(CSS_IMPORT_CYCLE_DEPTH_LIMIT).toBe(100);
+      const z2 = await ring(40, 5, "./d1.css");
+      const e2 = expandGlobalCss(z2, path.join(z2, "app/globals.css"), "app/globals.css");
+      expect(e2.cycle).toEqual(ds(1, 40));
+      expect(e2.files.map((f) => f.rel)).toEqual(["app/globals.css"]);
+      expect(e2.evidence).toBe(e2.entry);
+      const r2 = await items(z2);
+      expect(r2["globals.css"]).toEqual(CYCLE(NONE_HEAD, ds(1, 40)));
+      expect(r2["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+
+      const z2b = await ring(33, 5, "./d1.css");
+      expect((await items(z2b))["globals.css"]).toEqual(CYCLE(NONE_HEAD, ds(1, 33)));
+
+      const z2d = await ring(33, 5, "./globals.css");
+      const r2d = await items(z2d);
+      expect(r2d["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/globals.css", ...ds(1, 33)]));
+      expect(r2d["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    });
+
+    // 한도 값은 상수가 아니라 실빌드 한도(100)를 직접 적어 고정해요(상수를 바꾸는 변이가 이 테스트를 빨갛게 하도록)
+    it("Q57 경계: 100 단계 파일이 조상을 import 하면 순환, 101 단계 파일에서 닫히는 순환은 읽지 않아 종전 판정", async () => {
+      const at = await ring(100, 5, "./d1.css");
+      expect(expandGlobalCss(at, path.join(at, "app/globals.css"), "app/globals.css").cycle).toEqual(ds(1, 100));
+      const over = await ring(101, 5, "./d1.css");
+      const e = expandGlobalCss(over, path.join(over, "app/globals.css"), "app/globals.css");
+      expect(e.cycle).toBeUndefined();
+      expect((await items(over))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/d5.css")));
+    });
+
+    it("z2n (Q57 대조 · Q53): 순환 없는 40 단계 사슬은 32 단계까지만 근거, 33 단계 이후 파일의 줄은 근거 · packageLines 에 없음", async () => {
+      const ok = await ring(40, 5);
+      const e = expandGlobalCss(ok, path.join(ok, "app/globals.css"), "app/globals.css");
+      expect(e.cycle).toBeUndefined();
+      expect(e.files.map((f) => f.depth)).toEqual(Array.from({ length: CSS_IMPORT_DEPTH_LIMIT + 1 }, (_, i) => i));
+      expect((await items(ok))["globals.css"]).toEqual(GLOBALS_PASS("app/globals.css", via("app/d5.css")));
+
+      const deep = await ring(40, CSS_IMPORT_DEPTH_LIMIT + 1);
+      const ed = expandGlobalCss(deep, path.join(deep, "app/globals.css"), "app/globals.css");
+      expect(ed.cycle).toBeUndefined();
+      expect(ed.packageLines.map((l) => l.spec)).toEqual(["tailwindcss"]);
+      const r = await items(deep);
+      expect(r["globals.css"]).toEqual(GLOBALS_NONE);
+      expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    });
+
+    // 사용자 결정 Q57: layer() · supports() · media 가 붙은 상대 import 도 순환 판정 간선(실빌드 z3a · z3b · z3c · z3e rc 1). 근거로는 여전히 따라가지 않음(Q51)
+    it.each([
+      ["z3b layer()", '@import "./globals.css" layer(base);'],
+      ["z3c media", '@import "./globals.css" screen;'],
+    ])("%s (Q57): 조건 붙은 import 가 진입 파일로 돌아가는 순환", async (_label, back) => {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, { "app/globals.css": `${TW}\n@import "./b.css";\n`, "app/b.css": `${TOK}\n${back}\n` });
+      await config(dir);
+      const r = await items(dir);
+      expect(r["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/globals.css", "app/b.css"]));
+      expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    });
+
+    it("z3e (Q57 · Q60 ①): 하위 파일이 supports() 조건으로 자기 자신을 import 해도 순환(자기 자신 문구)", async () => {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, {
+        "app/globals.css": `${TW}\n@import "./b.css";\n`,
+        "app/b.css": `${TOK}\n@import "./b.css" supports(display:grid);\n`,
+      });
+      await config(dir);
+      expect(expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css").cycle).toEqual(["app/b.css"]);
+      const r = await items(dir);
+      expect(r["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/b.css"]));
+      expect(r["globals.css"].message).toContain("app/b.css 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다");
+      expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+    });
+
+    it("z3a (Q57): 조건 import 로만 닿는 파일도 순환 판정을 위해 읽고, 순환이 없으면 그 파일의 줄은 근거 · packageLines 에 없음(Q51)", async () => {
+      const dir = await tempDir();
+      await app(dir, 4);
+      await files(dir, { "app/globals.css": `${TW}\n@import "./b.css" layer(base);\n`, "app/b.css": `${TOK}\n@import "./globals.css";\n` });
+      await config(dir);
+      expect((await items(dir))["globals.css"]).toEqual(CYCLE(NONE_HEAD, ["app/globals.css", "app/b.css"]));
+
+      await fs.outputFile(path.join(dir, "app/b.css"), `${TOK}\n`);
+      const e = expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css");
+      expect(e.cycle).toBeUndefined();
+      expect(e.files.map((f) => f.rel)).toEqual(["app/globals.css"]);
+      expect(e.packageLines.map((l) => l.spec)).toEqual(["tailwindcss"]);
+      expect((await items(dir))["globals.css"]).toEqual(GLOBALS_NONE);
     });
   });
 
@@ -1229,6 +1475,50 @@ describe("WI-0100b 상대 @import 펼침", () => {
       const d = await items(dir);
       expect(d["tailwind.config"].severity).toBe("warn");
       expect(d["tailwind.config"].message).toContain("이 파일 위치에서 @axis-ds/ui-react 를 찾지 못해 해석되지 않습니다");
+    });
+  });
+
+  // 사용자 결정 Q54: 하위 파일의 패키지 줄은 그 파일 디렉터리 기준으로 해석 여부를 봐요(빌드 도구가 그 위치부터 풀어 중첩 node_modules 를 먼저 봄).
+  // 실빌드(scratchpad WI-0100b/q50/build-q54.tsv): s5 그림자 ui-react 1.3.0(exports 에 ./tailwind.css 없음)이 막아 rc 1, s3c 그림자 없음 rc 0
+  describe("하위 파일 디렉터리의 중첩 node_modules (Q54)", () => {
+    async function nested(shadow: "exports" | "file" | "none") {
+      const dir = await tempDir();
+      await app(dir, 4, { ui: true });
+      await stub(dir, "@axis-ds/ui-react", "1.8.2", true);
+      await files(dir, {
+        "app/globals.css": `${GOOD4}@import "./vendor/components.css";\n@import "tw-animate-css";\n`,
+        "app/vendor/components.css": `${UI_LINE}\n`,
+      });
+      const pkgDir = path.join(dir, "app/vendor/node_modules/@axis-ds/ui-react");
+      if (shadow === "exports") await fs.outputJSON(path.join(pkgDir, "package.json"), { name: "@axis-ds/ui-react", version: "1.3.0", exports: { ".": "./dist/index.js" } });
+      if (shadow === "file") {
+        await fs.outputJSON(path.join(pkgDir, "package.json"), { name: "@axis-ds/ui-react", version: "1.3.0" });
+        await fs.outputFile(path.join(pkgDir, "tailwind.css"), '@source "./dist";\n');
+      }
+      await config(dir);
+      return (await items(dir))["tailwind.config"];
+    }
+
+    it("s5: 하위 파일 위치의 그림자 설치본에 tailwind.css 가 없으면 진입 파일 밖 줄과 같은 해석 불가 WARN(앱 기준으로는 해석됨)", async () => {
+      const r = await nested("exports");
+      expect(r.severity).toBe("warn");
+      expect(r.message).toContain(
+        "@axis-ds/ui-react/tailwind.css import 가 있지만 이 파일 위치에서 @axis-ds/ui-react 를 찾지 못해 해석되지 않습니다"
+      );
+      expect(r.message.endsWith(via("app/vendor/components.css"))).toBe(true);
+    });
+
+    it("s3c · s6 (Q54 대조): 그림자가 없거나 그림자에 tailwind.css 가 있으면 PASS", async () => {
+      expect(await nested("none")).toEqual(TW4_PASS("app/globals.css", via("app/vendor/components.css")));
+      expect(await nested("file")).toEqual(TW4_PASS("app/globals.css", via("app/vendor/components.css")));
+    });
+
+    it("expandGlobalCss: 하위 파일의 cssDir 는 그 파일 디렉터리, 앱 안 진입 파일은 undefined(WI-0097 그대로)", async () => {
+      const dir = await tempDir();
+      await files(dir, { "app/globals.css": `${TW}\n@import "./vendor/axis.css";\n`, "app/vendor/axis.css": `${TOK}\n` });
+      const e = expandGlobalCss(dir, path.join(dir, "app/globals.css"), "app/globals.css");
+      expect(e.files.map((f) => f.cssDir)).toEqual([undefined, await fs.realpath(path.join(dir, "app/vendor"))]);
+      expect(e.packageLines.find((l) => l.spec === "@axis-ds/tokens/css/tailwind4")?.cssDir).toBe(await fs.realpath(path.join(dir, "app/vendor")));
     });
   });
 

@@ -5,7 +5,9 @@
 ## 결정
 - [ ] 사용자 결정 Q24 · Q25 · Q27 · Q35 · Q36 · Q37 · Q38 반영 확인, 선례 D1 ~ D12 를 PRD 1.2 표대로 적용 (AC1 ~ AC14)
 - [x] 구현 세부 확정: 표기를 세 항목 모든 심각도 + brand 에 붙임 · D10 표기 문구 「 (globalCss <값> 없음)」 · 「 (globalCss <값>: .css 파일이 아님)」, 항목 문구 맨 끝 (AC3 · AC8) (2026-10-28, 사용자 결정 Q36)
-- [ ] 펼침 깊이 한도 확정(0100b 구현 뒤 Master 확인) (AC5)
+- [x] 펼침 깊이 한도 확정(0100b 구현 뒤 Master 확인) (AC5) (2026-10-29, 사용자 결정 Q53: 32, 32 단계 따라감 · 33 단계 WARN)
+- [x] 0100b 사용자 결정 Q50 ~ Q56 반영: url() 미추적 확정 · 조건부 상대 import 제외 · 순환 WARN(globals.css) · 깊이 32 · 하위 파일 디렉터리 기준 해석 · D6 접미사 확정 · 공백 없음 · 확장자 없음 · 다른 따옴표 형태 추적 (AC4 · AC5 · AC10) (2026-10-29, 실빌드 대응표 testplan 4-1절)
+- [x] 0100b 사용자 결정 Q57 ~ Q60 반영: 순환 판정만 넓힘(조건 import 간선 · 100 단계, 근거 범위 그대로) · 그림자 설치본은 WI-0103(#254) 로 분리(문서만) · 순환 문구를 진입 파일 판정 뒤 「 / 」로(진입 PASS 여도 WARN) · 자기 자신 import 문구 · 대칭 따옴표는 Q56 포함 · Tailwind 3 조건 import 한계 README (AC5) (2026-10-29, 실빌드 대응표 testplan 4-2절, 변이 9종 빨강)
 - [x] T4-1 app-init 2건 기대 기준선에 globals.css 표기 한 줄 반영, plan 4절 목록 추가 (AC11) (2026-10-28, 사용자 결정 Q35, cli vitest 966/966)
 - [x] 프로젝트 밖 진입 파일 패키지 import 의 파일 위치 기준 해석: **WI-0097 2부로 이관(Q37)**, 0100a 코드 불변, 넘길 측정은 plan 4-1절 (AC7)
 - [x] 심볼릭 링크 앱 + 밖 상대 globalCss 의 brand · CSS 기준 차이는 잔여(Q38, prd 4절 · release-notes 한계)
@@ -26,7 +28,7 @@
 - [x] brand `configuredRejected` 표기(cli `template-check.ts` · mcp `template.ts`) (AC8 · AC12) (2026-10-28, N1 · CLI · MCP 항목 줄 32/32 같음. 표기 문구 확정 Q36)
 
 ## 구현 0100b (WI-0097 머지 뒤)
-- [x] 상대 `@import` 펼침 헬퍼(프로젝트 안 · 방문 집합 · 깊이 한도, 근거 · 진입 문자열 분리) (AC4 · AC5) → `expandGlobalCss` · `CSS_IMPORT_DEPTH_LIMIT`(5, 초안) (2026-10-28, E1 ~ E7 · f1 ~ f10 fixture 기준선 대비 측정, 최대 165ms · stderr 0)
+- [x] 상대 `@import` 펼침 헬퍼(프로젝트 안 · 방문 집합 · 깊이 한도, 근거 · 진입 문자열 분리) (AC4 · AC5) → `expandGlobalCss` · `CSS_IMPORT_DEPTH_LIMIT`(5, 초안 → 32, Q53) · 순환 판정 `cycle` · `cssImportCycleIssue`(Q52) · `resolveRelativeCssImport`(Q56) (2026-10-28, E1 ~ E7 · f1 ~ f10 fixture 기준선 대비 측정, 최대 165ms · stderr 0. 2026-10-29 Q50 ~ Q56 fixture 31개 추가 측정)
 - [x] 세 항목 · brand 가 근거 문자열 사용, 결함 판정은 진입 문자열 (AC4 · AC10) (2026-10-28, R4 · R5 · R5p · T3s PASS, x5 · T3x5 PASS 그대로, T3a 는 진입 파일 Arial WARN)
 - [x] 펼친 게이트 대상 줄은 WI-0097 해석 게이트 경유(진입 파일과 같은 판정, Q21 · Q22), 브랜드 import 는 게이트 비대상 (AC10) (2026-10-28, G1 · G2 · G3 · K1 · K2 · K2u 가 대조 fixture 와 접미사만 다름, BR2 PASS = BR2c)
 - [x] D6 접미사 「(<하위 파일> 의 import)」 (AC4) (2026-10-28, `cssImportViaNote`, 하위 파일 없으면 빈 문자열이라 기존 테스트 코퍼스 전이 0)
@@ -36,10 +38,10 @@
 - [ ] docstring · 주석 `tailwind-core.ts:1-33`(머리 주석 globals 서술) · `:259` · `:343` · `:853`, `project.ts:370-372`, `brand-core.ts:211-217` · `:290-292`(cli · mcp 사본), 범위 서술 전 트리 grep (AC14)
 
 ## 테스트
-- [ ] cli `template-check.test.ts` 새 describe 「WI-0100 전역 CSS 선택」(testplan 1절 fixture) (AC1 ~ AC10 · AC13) (0100b 몫: describe 「WI-0100b 상대 @import 펼침」 31건, 2026-10-28)
-- [ ] mcp `template.test.ts` 대표 4건(R1 · R2 · R4 · mono) (AC12) (0100b 몫: R4 · E3 · K1 · G2/BR2 4건, 2026-10-28)
+- [ ] cli `template-check.test.ts` 새 describe 「WI-0100 전역 CSS 선택」(testplan 1절 fixture) (AC1 ~ AC10 · AC13) (0100b 몫: describe 「WI-0100b 상대 @import 펼침」 31건, 2026-10-28 → Q50 ~ Q56 반영 52건, 2026-10-29)
+- [ ] mcp `template.test.ts` 대표 4건(R1 · R2 · R4 · mono) (AC12) (0100b 몫: R4 · E3 · K1 · G2/BR2 4건, 2026-10-28 → E3 을 Q52 로 바꾸고 Q51 · Q56 1건 추가 5건, 2026-10-29)
 - [ ] 새 테스트를 HEAD 소스에 돌려 빨강 확인, 회귀 가드는 초록 확인 (AC1 ~ AC11) (0100b 몫: 기준선 2d12ae2 사본에서 cli 22 빨강 · 9 초록(회귀 가드), mcp 4 빨강)
-- [ ] 변이 M1 ~ M14 각각 빨강 (testplan 5절) (0100b 몫 12종 모두 빨강, testplan 7절)
+- [ ] 변이 M1 ~ M14 각각 빨강 (testplan 5절) (0100b 몫 12종 모두 빨강, testplan 7절. Q50 ~ Q56 을 되돌리는 변이 14종 cli 모두 빨강, 2026-10-29)
 - [ ] 발행본 · 수정본 dist 로 전 fixture 재측정, rc 는 `out=$(...); rc=$?` (AC2 · AC7 · AC13)
 - [ ] CLI · MCP 줄 대조 diff 0 (AC12)
 - [ ] `pnpm turbo run build type-check lint --force`, cli · mcp vitest (AC11)

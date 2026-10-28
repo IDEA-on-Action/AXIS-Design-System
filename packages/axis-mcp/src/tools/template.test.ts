@@ -927,11 +927,88 @@ describe("handleCheckProject WI-0100b 상대 @import 펼침 (CLI 와 같은 문�
     expect(n["globals.css"]).toEqual({ name: "globals.css", severity: "warn", message: "app/globals.css에 AXIS CSS 변수가 없습니다" });
   });
 
-  it("E3: 순환 a → b → a 도 끝나고 b 의 근거를 인정", async () => {
+  it("E3 (Q52): 순환 a → b → a 는 globals.css 만 순환 WARN, b 의 근거는 인정하지 않음", async () => {
     await app(tmp);
     await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n@import "./b.css";\n`);
     await fs.outputFile(path.join(tmp, "app/b.css"), `@import "./globals.css";\n${TOK}\n`);
-    expect((await items(tmp))["globals.css"]).toEqual(GLOBALS_PASS(via("app/b.css")));
+    const r = await items(tmp);
+    expect(r["globals.css"]).toEqual({
+      name: "globals.css",
+      severity: "warn",
+      message:
+        "app/globals.css에 AXIS CSS 변수가 없습니다 / app/globals.css · app/b.css 이 서로 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요",
+    });
+    expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+  });
+
+  const NONE_HEAD = "app/globals.css에 AXIS CSS 변수가 없습니다";
+  const TW4_NO_TOKENS = {
+    name: "tailwind.config",
+    severity: "warn",
+    message: 'Tailwind 4: app/globals.css에 AXIS 토큰 진입점이 없습니다 → @import "@axis-ds/tokens/css/tailwind4";',
+  };
+  const MUTUAL = (files: string[]) => `${files.join(" · ")} 이 서로 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요`;
+  const SELF = (file: string) => `${file} 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요`;
+
+  it("Q59 · Q60 ①: 진입 파일이 PASS 인 자기 import 순환은 PASS 문구 / 자기 자신 문구로 WARN, tailwind.config 는 PASS 그대로", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n${TOK}\n@import "./globals.css";\n`);
+    const r = await items(tmp);
+    expect(r["globals.css"]).toEqual({
+      name: "globals.css",
+      severity: "warn",
+      message: `app/globals.css에 AXIS CSS 변수가 있습니다 (@axis-ds/tokens/css/tailwind4 import) / ${SELF("app/globals.css")}`,
+    });
+    expect(r["tailwind.config"]).toEqual(TW4_PASS());
+  });
+
+  it("z2 (Q57): 근거 한도 밖(40 단계)에서 닫히는 순환도 globals.css WARN, z2n 대조(순환 없음)는 d5 근거로 PASS", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n@import "./d1.css";\n`);
+    for (let i = 1; i <= 40; i++) {
+      const lines = [i === 5 ? TOK : "", i < 40 ? `@import "./d${i + 1}.css";` : '@import "./d1.css";'].filter((l) => l !== "");
+      await fs.outputFile(path.join(tmp, `app/d${i}.css`), `${lines.join("\n")}\n`);
+    }
+    const ds = Array.from({ length: 40 }, (_, i) => `app/d${i + 1}.css`);
+    const r = await items(tmp);
+    expect(r["globals.css"]).toEqual({ name: "globals.css", severity: "warn", message: `${NONE_HEAD} / ${MUTUAL(ds)}` });
+    expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+
+    await fs.outputFile(path.join(tmp, "app/d40.css"), "");
+    expect((await items(tmp))["globals.css"]).toEqual(GLOBALS_PASS(via("app/d5.css")));
+  });
+
+  it("z3b · z3e (Q57): 조건 붙은 상대 import 도 순환 간선(layer() 로 진입 파일, supports() 로 자기 자신)", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n@import "./b.css";\n`);
+    await fs.outputFile(path.join(tmp, "app/b.css"), `${TOK}\n@import "./globals.css" layer(base);\n`);
+    expect((await items(tmp))["globals.css"]).toEqual({
+      name: "globals.css",
+      severity: "warn",
+      message: `${NONE_HEAD} / ${MUTUAL(["app/globals.css", "app/b.css"])}`,
+    });
+    await fs.outputFile(path.join(tmp, "app/b.css"), `${TOK}\n@import "./b.css" supports(display:grid);\n`);
+    const r = await items(tmp);
+    expect(r["globals.css"]).toEqual({ name: "globals.css", severity: "warn", message: `${NONE_HEAD} / ${SELF("app/b.css")}` });
+    expect(r["tailwind.config"]).toEqual(TW4_NO_TOKENS);
+  });
+
+  it("Q51 · Q56: layer() 가 붙은 상대 import 는 따라가지 않고, 공백 없는 · 확장자 없는 import 는 따라감", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/axis.css"), `${TOK}\n`);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n@import "./axis.css" layer(base);\n`);
+    expect((await items(tmp))["globals.css"]).toEqual({ name: "globals.css", severity: "warn", message: "app/globals.css에 AXIS CSS 변수가 없습니다" });
+    for (const line of ['@import"./axis.css";', '@import "./axis";']) {
+      await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n${line}\n`);
+      expect((await items(tmp))["globals.css"]).toEqual(GLOBALS_PASS(via("app/axis.css")));
+    }
+  });
+
+  it("z4c: 끝이 / 인 상대 import(\"./axis/\")는 axis.css 가 있어도 따라가지 않음(CLI 와 같은 WARN)", async () => {
+    await app(tmp);
+    await fs.outputFile(path.join(tmp, "app/axis.css"), `${TOK}\n`);
+    await fs.outputFile(path.join(tmp, "app/globals.css"), `${TW}\n@import "./axis/";\n`);
+    expect((await items(tmp))["globals.css"]).toEqual({ name: "globals.css", severity: "warn", message: "app/globals.css에 AXIS CSS 변수가 없습니다" });
   });
 
   it("K1: 하위 파일의 컴포넌트 tailwind.css 줄로 B1 이 풀려 PASS", async () => {

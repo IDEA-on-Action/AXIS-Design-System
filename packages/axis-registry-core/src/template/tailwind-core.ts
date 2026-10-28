@@ -23,10 +23,13 @@
  * - WI-0100a: 전역 CSS 를 읽는 3항목(Tailwind 4 의 tailwind.config · globals.css · Tailwind 4 의 animation)은 `selectCheckGlobalCss` 로 같은
  *   파일을 고릅니다. `axis.config.json` 의 `globalCss`(실재하는 `.css` 일반 파일, 프로젝트 밖은 읽기만) 다음 `TAILWIND_CSS_CANDIDATES` 순이고,
  *   `globalCss` 를 쓰지 못하면 표기를 붙입니다.
- * - WI-0100b: 세 항목과 brand 항목은 고른 파일이 상대 `@import`(`"./x.css"` · `'../x.css'`)로 들여온 프로젝트 안 하위 CSS 도 근거로 봅니다
- *   (`expandGlobalCss`, 실경로 기준 프로젝트 안 · 방문 집합 · 깊이 `CSS_IMPORT_DEPTH_LIMIT`). 근거 줄은 펼친 근거 문자열에서, 결함 판정
+ * - WI-0100b: 세 항목과 brand 항목은 고른 파일이 조건 없는 상대 `@import`(`"./x.css"` · `'../x.css'` · `@import"./x.css"` · `"./x"`,
+ *   `url()` · `layer()` · `supports()` · media 조건은 제외, 사용자 결정 Q50 · Q51 · Q56)로 들여온 프로젝트 안 하위 CSS 도 근거로 봅니다
+ *   (`expandGlobalCss`, 실경로 기준 프로젝트 안 · 방문 집합 · 깊이 `CSS_IMPORT_DEPTH_LIMIT` 32, Q53). 근거 줄은 펼친 근거 문자열에서, 결함 판정
  *   (create-next-app 기본 정의 · Arial)은 진입 파일만 봅니다(D9). 하위 파일의 패키지 줄은 진입 파일과 같은 WI-0097 해석 게이트를 그 줄이 있는
- *   파일 기준으로 거치고(D8 ①), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6, `cssImportViaNote`).
+ *   파일의 디렉터리 기준으로 거치고(D8 ①, Q54), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6 · Q55,
+ *   `cssImportViaNote`). 상대 `@import` 가 순환하면 globals.css 항목이 진입 파일만의 판정 문구 뒤에 「 / 」로 순환 문구를 붙여 WARN 을 내고
+ *   모든 항목이 진입 파일만 근거로 봅니다(Q52 · Q59). 순환은 조건 붙은 상대 import 까지 넣어 Tailwind 4 재귀 한도 100 단계까지 찾아요(Q57).
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
  *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
@@ -346,17 +349,48 @@ export function findTokensCssImport(css: string): string | undefined {
 // WI-0100b: 전역 CSS 의 상대 @import 펼침 (「어느 파일을 읽나」. 패키지 경로 줄의 해석 판정은 WI-0097 헬퍼 몫)
 
 /**
- * 펼침 깊이 한도(진입 파일 = 0, 진입 파일이 직접 import 한 파일 = 1). 이 깊이까지의 파일만 읽어요(WI-0100 PRD 「5 단계 안」 초안,
- * 구현 뒤 Master 확인). 착수 실빌드(`@tailwindcss/postcss`)는 50 단계 사슬까지 펼쳤으므로 한도 안의 파일은 실제로도 들어와요.
+ * 펼침 깊이 한도(진입 파일 = 0, 진입 파일이 직접 import 한 파일 = 1). 이 깊이까지의 파일만 읽고 더 깊은 파일은 읽지 않아요(사용자 결정 Q53:
+ * 32 단계는 따라가고 33 단계의 근거는 펼치기 전과 같이 인정하지 않음). 실빌드(`@tailwindcss/postcss` 4.1.14)는 51 단계 사슬까지 펼쳤으므로
+ * 한도 안의 파일은 실제로도 들어와요(33 단계 사슬은 실빌드가 펼치지만 check 는 WARN, 결정의 대가).
  */
-export const CSS_IMPORT_DEPTH_LIMIT = 5;
+export const CSS_IMPORT_DEPTH_LIMIT = 32;
 
 /**
- * 따라가는 상대 `@import`: 따옴표 문자열이 `./` · `../` 로 시작하는 것(`"./x.css"` · `'../x.css'`). 뒤의 `layer()` · `supports()` · media
- * 조건은 보지 않고 무조건 들어오는 것으로 봐요(WI-0100 PRD 4절). `url(...)` 형태는 따라가지 않아요(착수 실빌드에서 Tailwind 4 · Next 가
- * 펼치지 않고 그대로 남김, 구현 뒤 Master 확인). `"axis.css"` 처럼 `./` 가 없는 이름은 패키지 경로라 따라가지 않아요. 주석은 미리 지운 CSS 에 써요.
+ * 순환 판정용 읽기 깊이 한도(사용자 결정 Q57). Tailwind 4 실빌드(`tailwindcss` dist/lib.js 의 `if(t>100)throw … Exceeded maximum recursion depth`)의
+ * 재귀 한도와 같은 100 단계까지 읽어, 근거 한도(`CSS_IMPORT_DEPTH_LIMIT`) 밖에서 닫히는 순환도 찾아요. 이 한도까지 읽은 파일은 순환 판정에만 쓰고
+ * 근거 · `packageLines` 에는 넣지 않아요(근거 범위는 Q51 · Q53 그대로).
  */
-const RELATIVE_CSS_IMPORT = /@import\s+(["'])(\.{1,2}\/[^"'\n]*)\1/g;
+export const CSS_IMPORT_CYCLE_DEPTH_LIMIT = 100;
+
+/**
+ * 따라가는 상대 `@import`: 따옴표 문자열이 `./` · `../` 로 시작하는 것. Tailwind 4 실빌드가 펼치는 형태를 따라요(사용자 결정 Q56):
+ * `"./x.css"` · `'../x.css'`, `@import` 와 따옴표 사이 공백 없음(`@import"./x.css"`), 다른 종류의 따옴표가 든 이름(`"./it's.css"`).
+ * 캡처: 1 = 큰따옴표 안 경로, 2 = 작은따옴표 안 경로, 3 = 경로 뒤부터 `;` · `{` · `}` 앞까지(소비하지 않는 앞보기).
+ * - 3 에 공백 말고 다른 것이 있으면(`layer()` · `supports()` · media 조건) 따라가지 않아요(사용자 결정 Q51, `isConditionalCssImport`).
+ *   실빌드에서 토큰 진입점을 그 조건 안에 두면 「`@custom-variant` cannot be nested」로 실패하므로 근거로 인정하지 않아요.
+ * - `url(...)` 형태는 따라가지 않아요(사용자 결정 Q50, 실빌드에서 Tailwind 4 · Next 가 펼치지 않고 그대로 남김).
+ * - `"axis.css"` 처럼 `./` 가 없는 이름은 패키지 경로라 따라가지 않아요. 주석은 미리 지운 CSS 에 써요.
+ */
+const RELATIVE_CSS_IMPORT = /@import\s*(?:"(\.{1,2}\/[^"\n]*)"|'(\.{1,2}\/[^'\n]*)')(?=([^;{}]*))/g;
+
+/** 상대 `@import` 뒤에 조건(`layer()` · `supports()` · media)이 붙었는지(`RELATIVE_CSS_IMPORT` 캡처 3, 사용자 결정 Q51) */
+function isConditionalCssImport(tail: string | undefined): boolean {
+  return tail !== undefined && tail.trim() !== "";
+}
+
+/**
+ * 상대 `@import` 경로가 가리키는 파일(사용자 결정 Q56, Tailwind 4 실빌드로 확인한 규칙). 적힌 경로의 일반 파일이 먼저이고, 없으면 끝에 `.css` 를
+ * 붙인 일반 파일이에요(`"./axis"` → `axis.css`, 확장자 없는 `axis` 파일이 함께 있으면 실빌드도 `axis` 를 씀). 디렉터리(`index.css` ·
+ * `package.json` 의 `style`)는 따라가지 않아요. 끝이 `/` 인 경로(`"./axis/"`)도 실빌드가 디렉터리로만 풀어(「Can't resolve './axis/'」) 따라가지 않아요
+ * (`resolve` 가 끝 슬래시를 지워 `axis.css` 로 맞아떨어지지 않게). 없으면 `undefined`.
+ */
+function resolveRelativeCssImport(fromDir: string, spec: string): string | undefined {
+  if (spec.endsWith("/")) return undefined;
+  const target = resolve(fromDir, spec);
+  if (regularFile(target)) return target;
+  if (regularFile(`${target}.css`)) return `${target}.css`;
+  return undefined;
+}
 
 /** `@import` 의 경로 문자열(`"..."` · `'...'` · `url("...")`). 패키지 경로 줄을 모을 때 써요 */
 const CSS_IMPORT_SPEC = /@import\s+(?:url\(\s*)?(["'])([^"'\n]+)\1/g;
@@ -376,7 +410,10 @@ export interface ExpandedCssFile {
   css: string;
   /** 진입 파일 = 0 */
   depth: number;
-  /** 이 파일의 패키지 줄을 해석할 기준 디렉터리. 파일이 프로젝트 밖이면 그 디렉터리, 안이면 `undefined`(앱 기준, WI-0097 2부와 같은 규칙). 앱 안 하위 파일 디렉터리의 중첩 `node_modules` 는 보지 않아요(실빌드는 그 위치에서 풀어 그림자 설치본을 집을 수 있음, Master 확인 대기) */
+  /**
+   * 이 파일의 패키지 줄을 해석할 기준 디렉터리. 진입 파일은 WI-0097 2부 규칙 그대로(프로젝트 밖이면 그 디렉터리, 안이면 `undefined` = 앱 기준)이고,
+   * 하위 파일은 그 파일의 디렉터리예요(사용자 결정 Q54: 빌드 도구가 그 줄을 그 파일 위치부터 풀므로 하위 디렉터리의 중첩 `node_modules` 도 반영)
+   */
   cssDir?: string;
 }
 
@@ -399,6 +436,47 @@ export interface ExpandedGlobalCss {
   files: ExpandedCssFile[];
   /** 방문한 파일들의 패키지 경로 `@import` 줄(나온 순서). 펼치지 않고 출처 파일과 함께 넘겨요(해석 판정은 WI-0097 헬퍼) */
   packageLines: CssPackageLine[];
+  /**
+   * 상대 `@import` 가 순환하면(어떤 파일이 import 사슬의 조상 · 자기 자신을 다시 import) 처음 찾은 순환에 든 파일의 표시 경로(순환 순서,
+   * 사용자 결정 Q52). 순환은 조건 붙은 import 까지 넣어 100 단계까지 찾아요(사용자 결정 Q57). 이때 실빌드가 「Exceeded maximum recursion depth」로 실패하므로 `evidence` · `files` · `packageLines` 는 진입 파일만이에요
+   * (순환 뒤의 근거를 인정하지 않음). 같은 파일을 두 갈래로 들여오는 것(다이아몬드)은 실빌드가 성공하므로 순환이 아니에요. 순환이 없으면 없음
+   */
+  cycle?: string[];
+}
+
+/**
+ * 상대 `@import` 순환 문제 문구(사용자 결정 Q52). globals.css 항목만 이 문구를 내요(다른 항목에 중복하지 않음).
+ * 순환에 든 파일이 하나(자기 자신을 import)면 「자기 자신을 @import」 문구예요(사용자 결정 Q60 ①)
+ */
+export function cssImportCycleIssue(files: readonly string[]): string {
+  if (files.length === 1) return `${files[0]} 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요`;
+  return `${files.join(" · ")} 이 서로 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요`;
+}
+
+/** `edges`(실경로 → 실경로 목록, import 순서) 에서 `start` 부터 깊이 우선으로 처음 만난 순환(순환 순서의 실경로). 없으면 `undefined` */
+function findImportCycle(start: string, edges: ReadonlyMap<string, readonly string[]>): string[] | undefined {
+  const state = new Map<string, "open" | "done">();
+  const trail: string[] = [start];
+  const stack: Array<{ node: string; next: number }> = [{ node: start, next: 0 }];
+  state.set(start, "open");
+  while (stack.length > 0) {
+    const top = stack[stack.length - 1];
+    const out = edges.get(top.node) ?? [];
+    if (top.next >= out.length) {
+      state.set(top.node, "done");
+      stack.pop();
+      trail.pop();
+      continue;
+    }
+    const to = out[top.next++];
+    const s = state.get(to);
+    if (s === "open") return trail.slice(trail.indexOf(to));
+    if (s === "done") continue;
+    state.set(to, "open");
+    trail.push(to);
+    stack.push({ node: to, next: 0 });
+  }
+  return undefined;
 }
 
 function regularFile(file: string): boolean {
@@ -411,12 +489,16 @@ function regularFile(file: string): boolean {
 
 /**
  * 전역 CSS 의 상대 `@import` 를 따라가 근거 문자열을 만듭니다(WI-0100b, 사용자 결정 · 선례 D3 · D8 · D9). 파일을 쓰지 않아요.
- * - 상대 경로(`RELATIVE_CSS_IMPORT`)만 따라가고, 경로는 import 한 파일의 실경로 디렉터리 기준으로 풀어요.
+ * - 조건 없는 상대 경로(`RELATIVE_CSS_IMPORT`, Q50 · Q51 · Q56)만 따라가고, 경로는 import 한 파일의 실경로 디렉터리 기준으로
+ *   `resolveRelativeCssImport` 로 풀어요(적힌 이름 다음 `.css` 를 붙인 이름).
  * - **프로젝트 안**(대상 실경로가 앱 실경로 아래)인 일반 파일만 읽어요. `../` 로 앱을 벗어나는 import · 앱 밖을 가리키는 심볼릭 링크 ·
  *   없는 파일 · 디렉터리는 건너뛰어요. 진입 파일이 프로젝트 밖(`globalCss` 가 앱 밖, Q25)이어도 그 파일의 상대 import 는 같은 규칙이라
  *   대상이 앱 안일 때만 읽어요(PRD 4절).
- * - 방문 집합(실경로)으로 순환(a → b → a) · 자기 import 를 한 번만 읽고, `CSS_IMPORT_DEPTH_LIMIT` 보다 깊은 파일은 읽지 않아요.
- * - 패키지 경로 줄은 펼치지 않고 `packageLines` 에 출처 파일과 함께 담아요.
+ * - 방문 집합(실경로)으로 같은 파일은 한 번만 읽고, 근거는 `CSS_IMPORT_DEPTH_LIMIT`(32, Q53) 보다 깊은 파일에서 찾지 않아요.
+ * - 순환은 따로 걸어 찾아요(사용자 결정 Q57): 조건 붙은 상대 import 도 간선에 넣고 `CSS_IMPORT_CYCLE_DEPTH_LIMIT`(100, Tailwind 4 재귀 한도)까지
+ *   읽어요. 이렇게 읽은 파일(33 단계 이후 · 조건 import 로만 닿는 파일)은 순환 판정에만 쓰고 근거 · `packageLines` 에는 넣지 않아요.
+ *   순환이 있으면 진입 파일만 돌려주며 `cycle` 을 채워요(Q52).
+ * - 패키지 경로 줄은 펼치지 않고 `packageLines` 에 출처 파일과 그 파일의 해석 기준 디렉터리(하위 파일은 그 파일 디렉터리, Q54)와 함께 담아요.
  * `entryCssDir` 는 진입 파일의 패키지 줄 기준 디렉터리(프로젝트 밖 진입 파일이면 그 디렉터리, `outsideCssDir`)예요.
  */
 export function expandGlobalCss(
@@ -433,49 +515,110 @@ export function expandGlobalCss(
   } catch {
     // 읽었으면 실경로도 풀려요. 못 풀면 적힌 경로로 방문 집합을 채워요
   }
+  // 두 번 걷는 동안 같은 파일을 다시 읽지 않도록 내용을 모아 둬요(실경로 → 원문)
+  const raws = new Map<string, string>([[entryReal, entry]]);
   const files: ExpandedCssFile[] = [];
   const packageLines: CssPackageLine[] = [];
-  const visited = new Set<string>([entryReal]);
-  const queue: Array<{ real: string; rel: string; raw: string; depth: number; cssDir?: string }> = [
-    { real: entryReal, rel: entryRel, raw: entry, depth: 0, cssDir: entryCssDir },
-  ];
-  while (queue.length > 0) {
-    const cur = queue.shift()!;
-    const css = stripCssComments(cur.raw);
-    const file: ExpandedCssFile = { rel: cur.rel, path: cur.real, css, depth: cur.depth };
-    if (cur.cssDir !== undefined) file.cssDir = cur.cssDir;
+  const evidenceWalk = walkRelativeCssImports(baseDir, entryReal, raws, CSS_IMPORT_DEPTH_LIMIT, false);
+  const relOfReal = new Map<string, string>([[entryReal, entryRel]]);
+  for (const node of evidenceWalk.order) {
+    const isEntry = node.real === entryReal;
+    const rel = isEntry ? entryRel : node.rel;
+    const css = stripCssComments(raws.get(node.real) ?? "");
+    const file: ExpandedCssFile = { rel, path: node.real, css, depth: node.depth };
+    const cssDir = isEntry ? entryCssDir : dirname(node.real);
+    if (cssDir !== undefined) file.cssDir = cssDir;
     files.push(file);
+    relOfReal.set(node.real, rel);
     for (const m of css.matchAll(CSS_IMPORT_SPEC)) {
       if (!isPackageCssSpec(m[2])) continue;
-      const line: CssPackageLine = { spec: m[2], file: cur.rel };
-      if (cur.cssDir !== undefined) line.cssDir = cur.cssDir;
+      const line: CssPackageLine = { spec: m[2], file: rel };
+      if (cssDir !== undefined) line.cssDir = cssDir;
       packageLines.push(line);
     }
-    if (cur.depth >= CSS_IMPORT_DEPTH_LIMIT) continue;
+  }
+  // 순환 판정(Q52 · Q57)은 따로 걸어요: 조건 붙은 상대 import 도 간선에 넣고 Tailwind 4 재귀 한도(100 단계)까지 읽어요. 근거 범위는 위 그대로예요
+  const cycleWalk = walkRelativeCssImports(baseDir, entryReal, raws, CSS_IMPORT_CYCLE_DEPTH_LIMIT, true);
+  const cycle = findImportCycle(entryReal, cycleWalk.edges);
+  if (cycle !== undefined) {
+    // 순환이 있으면 실빌드가 실패하므로 하위 파일의 근거를 인정하지 않아요(Q52). 진입 파일만 남겨 펼치기 전과 같은 판정이 돼요
+    for (const node of cycleWalk.order) if (!relOfReal.has(node.real)) relOfReal.set(node.real, node.rel);
+    const head = files[0];
+    return {
+      entry,
+      evidence: entry,
+      files: [head],
+      packageLines: packageLines.filter((l) => l.file === head.rel),
+      cycle: cycle.map((p) => relOfReal.get(p) ?? p),
+    };
+  }
+  const evidence = files.length === 1 ? entry : files.map((f) => f.css).join("\n");
+  return { entry, evidence, files, packageLines };
+}
+
+/** `walkRelativeCssImports` 가 방문한 파일 하나(실경로 · 앱 상대 표시 경로 · 깊이) */
+interface CssImportWalkNode {
+  real: string;
+  rel: string;
+  depth: number;
+}
+
+/**
+ * `entryReal` 부터 상대 `@import` 를 너비 우선으로 따라가요(방문 집합 = 실경로, 같은 파일은 한 번만). `expandGlobalCss` 의 두 걸음
+ * (근거: 조건 없는 import · 32 단계, 순환: 조건 import 포함 · 100 단계, 사용자 결정 Q53 · Q57)이 같이 써요.
+ * - `includeConditional` 이 거짓이면 조건(`layer()` · `supports()` · media)이 붙은 import 는 따라가지 않아요(Q51).
+ * - 프로젝트 안(실경로가 앱 실경로 아래)인 일반 파일만 새로 읽어요. 이미 방문한 파일로 가는 import 는 깊이 · 위치와 무관하게 간선으로 남겨요.
+ * - `limit` 깊이의 파일은 이미 방문한 파일로 가는 간선만 남기고 새 파일은 읽지 않아요.
+ * `raws` 는 읽은 원문 캐시(실경로 → 원문)로, 진입 파일은 미리 넣어 둬요.
+ */
+function walkRelativeCssImports(
+  baseDir: string,
+  entryReal: string,
+  raws: Map<string, string>,
+  limit: number,
+  includeConditional: boolean
+): { order: CssImportWalkNode[]; edges: Map<string, string[]> } {
+  const order: CssImportWalkNode[] = [];
+  const edges = new Map<string, string[]>();
+  const visited = new Set<string>([entryReal]);
+  const queue: CssImportWalkNode[] = [{ real: entryReal, rel: "", depth: 0 }];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    order.push(cur);
+    const css = stripCssComments(raws.get(cur.real) ?? "");
+    const out: string[] = [];
+    edges.set(cur.real, out);
     for (const m of css.matchAll(RELATIVE_CSS_IMPORT)) {
-      const target = resolve(dirname(cur.real), m[2]);
-      if (!regularFile(target)) continue;
+      if (!includeConditional && isConditionalCssImport(m[3])) continue;
+      const target = resolveRelativeCssImport(dirname(cur.real), m[1] ?? m[2]);
+      if (target === undefined) continue;
       let real: string;
       try {
         real = realpathSync(target);
       } catch {
         continue;
       }
-      if (visited.has(real)) continue;
-      const rel = relative(baseDir, real);
-      if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) continue;
-      let raw: string;
-      try {
-        raw = readFileSync(real, "utf8");
-      } catch {
+      if (visited.has(real)) {
+        out.push(real);
         continue;
       }
+      // 한도 깊이의 파일은 이미 읽은 파일로 가는 import(순환 판정)만 보고 새 파일은 읽지 않아요(BFS 라 한도 안의 파일은 이미 방문 집합에 있음)
+      if (cur.depth >= limit) continue;
+      const rel = relative(baseDir, real);
+      if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) continue;
+      if (!raws.has(real)) {
+        try {
+          raws.set(real, readFileSync(real, "utf8"));
+        } catch {
+          continue;
+        }
+      }
       visited.add(real);
-      queue.push({ real, rel: rel.split(sep).join("/"), raw, depth: cur.depth + 1 });
+      out.push(real);
+      queue.push({ real, rel: rel.split(sep).join("/"), depth: cur.depth + 1 });
     }
   }
-  const evidence = files.length === 1 ? entry : files.map((f) => f.css).join("\n");
-  return { entry, evidence, files, packageLines };
+  return { order, edges };
 }
 
 /** 근거 줄이 처음 나온 파일(방문 순서). 없으면 `undefined` */
@@ -596,6 +739,8 @@ function tokensCssUnresolvedIssue(
  * 4. 자체 `--background` · `--primary` 만 있음 → warn「AXIS 토큰 미사용」. 종전에는 pass 였습니다(거짓 초록, WI-0070).
  *    템플릿 4종(자체 HSL)은 WI-0067 전까지 이 warn 입니다(2026-10-25 사용자 결정, 종료 코드는 그대로).
  * 5. 아무것도 없으면 warn, 고를 파일이 하나도 없으면 fail(종전과 같음, 레이아웃 근거가 있어도 fail).
+ * 상대 `@import` 가 순환하면(`expandGlobalCss` 의 `cycle`) 진입 파일만으로 위 1 ~ 5 를 판정한 문구 뒤에 「 / 」와 순환 문구를 붙이고, 진입 파일이
+ * pass 여도 warn 입니다(사용자 결정 Q59).
  * Tailwind 3 이하에서 pass 조건을 채워도 create-next-app 기본 body `font-family: Arial` 이 남아 있으면 warn 입니다
  * (Tailwind 4 는 같은 판정을 tailwind.config 항목 B2 에서 냅니다).
  */
@@ -607,57 +752,71 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
     const candidate = selection.rel;
     // WI-0100b: 근거(tokens CSS import · `--axis-*` 정의)는 상대 @import 를 펼친 근거 문자열에서, 결함(Arial · 자체 변수만)은 진입 파일만(D9)
     const expanded = expandGlobalCss(baseDir, selection.path, candidate, outsideCssDir(selection));
-    const content = expanded.entry;
-    const css = stripCssComments(content);
-    const imported = findTokensCssImport(expanded.evidence);
-    const pkg = readPackageJson(baseDir);
-    let pass: string | undefined;
-    // WI-0097 2부: tokens 근거(CSS import · 레이아웃 JS import)는 이 앱에서 해석될 때만 pass 로 인정해요. `--axis-*` 직접 정의는 게이트 밖이에요
-    let unresolved: string | undefined;
-    let via = "";
-    if (imported !== undefined) {
-      // 하위 파일의 줄도 진입 파일과 같은 게이트를 그 출처 파일의 기준 디렉터리로 거쳐요(D8 ①, Q21 · Q22 대칭)
-      const origin = evidenceOrigin(expanded, (f) => findTokensCssImport(f) === imported);
-      via = cssImportViaNote(viaFiles([origin]));
-      const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
-      if (issue !== undefined) unresolved = `${candidate}에 ${issue}`;
-      else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
-    } else if (AXIS_VARIABLE_DEFINITION.test(stripCssComments(expanded.evidence))) {
-      // 하위 파일이 없으면 evidence 는 진입 파일 원문이라 주석을 지우고 봐요(종전 판정과 같음)
-      via = cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => AXIS_VARIABLE_DEFINITION.test(f))]));
-      pass = `${candidate}에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다`;
-    } else {
-      const layout = findLayoutTokensCssImport(baseDir);
-      if (layout) {
-        // 레이아웃은 앱 안 파일이라 앱 기준으로만 봐요(Q37 의 파일 위치 판정은 프로젝트 밖 CSS 몫)
-        const issue = tokensCssUnresolvedIssue(baseDir, pkg, layout.spec);
-        if (issue !== undefined) unresolved = `${candidate}에 AXIS CSS 변수가 없고 ${layout.file}의 ${issue}`;
-        else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${layout.file}의 ${layout.spec} import)`;
-      }
+    const judged = judgeGlobalsCss(baseDir, selection, candidate, expanded);
+    // 사용자 결정 Q52 · Q59: 상대 @import 가 순환하면 실빌드가 실패하므로 이 항목만 그 문제를 알려요. 진입 파일만으로 판정한 문구 뒤에 「 / 」로
+    // 순환 문구를 붙이고, 진입 파일이 PASS 여도 항목은 WARN 이에요(종료 코드 그대로, 다른 항목은 진입 파일만 근거로 판정하고 순환 문구는 없음)
+    if (expanded.cycle !== undefined) {
+      return { name: "globals.css", severity: "warn", message: `${judged.message} / ${cssImportCycleIssue(expanded.cycle)}${note}` };
     }
-    const head = pass ?? unresolved;
-    if (head !== undefined) {
-      const tailwind = detectTailwind(baseDir, pkg);
-      const tailwind4 = tailwind.major !== undefined && tailwind.major >= 4;
-      if (!tailwind4 && findCreateNextAppDefaults(content).some((d) => d.includes("font-family: Arial"))) {
-        return {
-          name: "globals.css",
-          severity: "warn",
-          message: `${head}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)${via}${note}`,
-        };
-      }
-      return { name: "globals.css", severity: pass !== undefined ? "pass" : "warn", message: `${head}${via}${note}` };
-    }
-    if (css.includes("--background") && css.includes("--primary")) {
-      return {
-        name: "globals.css",
-        severity: "warn",
-        message: `${candidate}에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요${note}`,
-      };
-    }
-    return { name: "globals.css", severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다${note}` };
+    return { name: "globals.css", severity: judged.severity, message: `${judged.message}${note}` };
   }
   return { name: "globals.css", severity: "fail", message: `globals.css 파일을 찾을 수 없습니다${note}` };
+}
+
+/** `checkGlobalsCss` 의 고른 파일 판정(문구 끝의 globalCss 표기는 부르는 쪽이 붙여요). 순환이면 `expanded` 가 진입 파일만이라 진입 파일만의 판정이에요 */
+function judgeGlobalsCss(
+  baseDir: string,
+  selection: GlobalCssSelection,
+  candidate: string,
+  expanded: ExpandedGlobalCss
+): { severity: "pass" | "warn"; message: string } {
+  const content = expanded.entry;
+  const css = stripCssComments(content);
+  const imported = findTokensCssImport(expanded.evidence);
+  const pkg = readPackageJson(baseDir);
+  let pass: string | undefined;
+  // WI-0097 2부: tokens 근거(CSS import · 레이아웃 JS import)는 이 앱에서 해석될 때만 pass 로 인정해요. `--axis-*` 직접 정의는 게이트 밖이에요
+  let unresolved: string | undefined;
+  let via = "";
+  if (imported !== undefined) {
+    // 하위 파일의 줄도 진입 파일과 같은 게이트를 그 출처 파일의 기준 디렉터리로 거쳐요(D8 ①, Q21 · Q22 대칭)
+    const origin = evidenceOrigin(expanded, (f) => findTokensCssImport(f) === imported);
+    via = cssImportViaNote(viaFiles([origin]));
+    const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
+    if (issue !== undefined) unresolved = `${candidate}에 ${issue}`;
+    else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
+  } else if (AXIS_VARIABLE_DEFINITION.test(stripCssComments(expanded.evidence))) {
+    // 하위 파일이 없으면 evidence 는 진입 파일 원문이라 주석을 지우고 봐요(종전 판정과 같음)
+    via = cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => AXIS_VARIABLE_DEFINITION.test(f))]));
+    pass = `${candidate}에 AXIS CSS 변수(--axis-*)가 정의되어 있습니다`;
+  } else {
+    const layout = findLayoutTokensCssImport(baseDir);
+    if (layout) {
+      // 레이아웃은 앱 안 파일이라 앱 기준으로만 봐요(Q37 의 파일 위치 판정은 프로젝트 밖 CSS 몫)
+      const issue = tokensCssUnresolvedIssue(baseDir, pkg, layout.spec);
+      if (issue !== undefined) unresolved = `${candidate}에 AXIS CSS 변수가 없고 ${layout.file}의 ${issue}`;
+      else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${layout.file}의 ${layout.spec} import)`;
+    }
+  }
+  const head = pass ?? unresolved;
+  if (head !== undefined) {
+    const tailwind = detectTailwind(baseDir, pkg);
+    const tailwind4 = tailwind.major !== undefined && tailwind.major >= 4;
+    if (!tailwind4 && findCreateNextAppDefaults(content).some((d) => d.includes("font-family: Arial"))) {
+      return {
+        severity: "warn",
+        message: `${head}. 다만 create-next-app 기본 body font-family: Arial 이 남아 있습니다 → 지우세요(AXIS 글꼴 대신 Arial 이 적용됨)${via}`,
+      };
+    }
+    return { severity: pass !== undefined ? "pass" : "warn", message: `${head}${via}` };
+  }
+  if (css.includes("--background") && css.includes("--primary")) {
+    return {
+      severity: "warn",
+      message: `${candidate}에 자체 CSS 변수(--background · --primary)만 있고 AXIS 토큰이 없습니다 → @axis-ds/tokens CSS 를 import 하세요`,
+    };
+  }
+  return { severity: "warn", message: `${candidate}에 AXIS CSS 변수가 없습니다` };
 }
 
 /**
@@ -1103,8 +1262,8 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  *
  * `input.cssDirOf`(WI-0097 2부, 사용자 결정 Q37 · WI-0100b): 패키지 줄이 프로젝트 밖 파일(`globalCss` 가 앱 밖)에 있으면 그 파일의 디렉터리예요.
  * 그 줄(`@import "tailwindcss"` 와 이미 있는 컴포넌트 `tailwind.css` 줄(5))은 앱 기준으로 해석되더라도 그 파일 위치에서 설치본을 찾지 못하면
- * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 하위 파일의 줄은 그 하위 파일 기준이고(D8 ①, 진입 파일과 같은 규칙),
- * 펼침은 프로젝트 안 파일만 읽으므로 하위 파일 줄은 앱 기준이에요(하위 파일 디렉터리의 중첩 `node_modules` 는 보지 않음, Master 확인 대기). 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
+ * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 하위 파일의 줄은 그 하위 파일의 디렉터리 기준이라
+ * (D8 ①, 사용자 결정 Q54) 그 디렉터리의 중첩 `node_modules` 도 반영해요. 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
  */
 function tailwind4Issues(
   input: Tailwind4CssInput,
@@ -1158,7 +1317,7 @@ function tailwind4Issues(
 /**
  * `tailwind4Issues` 입력(WI-0097, WI-0100b 와의 합의). `entry`: 진입 파일 내용(결함 판정용) · `evidence`: 근거 문자열(있어야 할 줄 판정용,
  * 상대 `@import` 를 펼친 내용, `expandGlobalCss`) · `cssDirOf`: 패키지 줄(`tailwindcss` · `<pkg>/tailwind.css`)이 처음 나온 파일의 해석 기준
- * 디렉터리(프로젝트 밖 파일이면 그 디렉터리, 안이면 `undefined`). 없으면 모든 줄을 앱 기준으로 봐요.
+ * 디렉터리(진입 파일은 프로젝트 밖이면 그 디렉터리 · 안이면 `undefined`, 하위 파일은 그 파일 디렉터리, Q54). 없으면 모든 줄을 앱 기준으로 봐요.
  */
 interface Tailwind4CssInput {
   entry: string;
