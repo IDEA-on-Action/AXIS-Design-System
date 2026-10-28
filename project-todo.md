@@ -94,10 +94,11 @@
 | 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ |
 | 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | ⏳ |
-| 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ⏳ |
-| 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ⏳ |
+| 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 순서 2) |
+| 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 병렬) |
 | 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
-| 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ⏳ |
+| 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | 🔄 진행(2026-10-28, 착수 · 순서 1 · 3) |
+| 113 | Tailwind 3 preset 을 ESM · .ts 설정에서 쓰면 tokens 미선언 · 미설치여도 check 가 PASS(WI-0097 조사에서 발견, 사용자 결정 Q26) | WI-0101 (#248) | P18 | P3 | ⏳ |
 
 ### 완료
 
