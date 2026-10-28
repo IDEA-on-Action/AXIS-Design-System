@@ -5,19 +5,21 @@
  * 설치 명령은 실행하지 않고 안내만 합니다(U6). 같은 브랜드로 다시 실행하면 쓸 파일이 0개입니다(멱등).
  */
 
-import { accessSync, constants, existsSync, readFileSync, realpathSync, statSync, unlinkSync, writeFileSync } from "node:fs";
+import { accessSync, constants, existsSync, readFileSync, realpathSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { AXIS_CONFIG_FILE } from "../config/axis-config.js";
 import {
+  COMPONENT_TAILWIND_CSS_MIN_VERSION,
   addCommandFor,
+  componentCssResolution,
   declaredDependency,
   dependencyInstallGuide,
   detectInstallCommand,
-  findInstalledPackage,
   hasDependency,
   isPlainObject,
   rootDeclarationsAllowed,
   workspaceRootPackage,
+  type DeferredComponentImport,
   type DependencyInstallGuide,
 } from "@axis-ds/registry-core/project";
 import {
@@ -104,15 +106,9 @@ export interface CssStep {
   deferredComponentImports?: DeferredComponentImport[];
 }
 
-/** 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유(WI-0087 DEC-2) */
-export interface DeferredComponentImport {
-  name: string;
-  /** 설치본 버전(설치본은 있지만 `tailwind.css` 가 없을 때). 미설치면 없음. 설치본 버전을 읽지 못하면 `"?"` */
-  installedVersion?: string;
-}
-
-/** 컴포넌트 패키지가 `tailwind.css` 를 배포하기 시작한 버전(ui-react · agentic-ui CHANGELOG 1.4.0) */
-export const COMPONENT_TAILWIND_CSS_MIN_VERSION = "1.4.0";
+// 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유(WI-0087 DEC-2)의 판정 · 형식 · 1.4.0 상수는 check 와 같은 결론을 내도록
+// registry-core(`componentCssResolution` · `DeferredComponentImport` · `COMPONENT_TAILWIND_CSS_MIN_VERSION`)로 옮겼습니다(WI-0097). 종전 이름은 그대로 내보냅니다
+export { COMPONENT_TAILWIND_CSS_MIN_VERSION, type DeferredComponentImport };
 
 /** Tailwind 3 설정 안내(WI-0065 D7: 파일은 고치지 않고 감지 결과로 안내, check 가 판정) */
 export interface TailwindConfigStep {
@@ -296,15 +292,6 @@ export function realPathInside(baseDir: string, file: string): { inside: boolean
   return { inside, realPath };
 }
 
-/** 파일이 있고 일반 파일인지(심볼릭 링크는 따라감) */
-function isFile(file: string): boolean {
-  try {
-    return statSync(file).isFile();
-  } catch {
-    return false;
-  }
-}
-
 /** 실제 경로(심볼릭 링크를 따라간 경로)가 `.css` 파일인지 봅니다. */
 function isStylesheet(realPath: string): boolean {
   return path.extname(realPath).toLowerCase() === ".css";
@@ -389,7 +376,8 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   }
 
   // WI-0087: 의존성 선언은 앱 package.json 다음 워크스페이스 루트 package.json 으로 판정합니다(쓰기는 계속 앱 파일로만).
-  // 루트 package.json 은 여기서 한 번 읽어 컴포넌트 tailwind.css · tokens · theme 세 판정이 같이 씁니다(detectTailwind 는 따로 읽음).
+  // 루트 package.json 은 여기서 한 번 읽어 tokens · theme 두 판정이 같이 씁니다(detectTailwind 와 컴포넌트 tailwind.css 판정
+  // `componentCssResolution` 은 따로 읽음, WI-0097).
   // Plug'n'Play(P1)이거나 앱 디렉터리 자체에 lockfile 이 있으면(P2, 워크스페이스 멤버가 아닌 독립 앱) 루트 선언을 인정하지 않고 종전처럼 앱 선언만 봅니다.
   // 판정과 lockfile 목록은 registry-core `rootDeclarationsAllowed` · `APP_LOCKFILES` 에 있어요(WI-0093 Q14, theme list · info · MCP 와 공용)
   const rootPkg = rootDeclarationsAllowed(baseDir, pkg) ? (workspaceRootPackage(baseDir) ?? null) : null;
@@ -403,18 +391,15 @@ export function planThemeAdd(baseDirInput: string, brand: string): ThemeAddPlan 
   const deferredComponentImports: DeferredComponentImport[] = [];
   if (tailwind4 && pkg !== undefined) {
     for (const n of TAILWIND4_COMPONENT_PACKAGES) {
-      // 앱 선언은 종전대로 설치 여부와 상관없이 넣습니다
-      if (hasDependency(pkg, n) !== undefined) {
-        componentImports.push(n);
-        continue;
-      }
-      // WI-0087 DEC-2: 루트에만 선언했으면 설치본에 tailwind.css 파일이 실제로 있을 때만 넣습니다(없는 줄은 빌드를 Can't resolve 로 깸)
-      if (declaredDependency(baseDir, pkg, n, rootPkg)?.source !== "root") continue;
-      const installed = findInstalledPackage(baseDir, n);
-      if (installed !== undefined && isFile(path.join(installed.dir, "tailwind.css"))) {
-        componentImports.push(n);
-      } else {
-        deferredComponentImports.push(installed === undefined ? { name: n } : { name: n, installedVersion: installed.version ?? "?" });
+      // 판정은 check 의 B1 과 같은 registry-core `componentCssResolution` 입니다(WI-0097).
+      // 앱 선언(`app`)은 종전대로 설치 여부와 상관없이 넣습니다. WI-0087 DEC-2: 루트에만 선언했으면 설치본에 tailwind.css 파일이
+      // 실제로 있을 때(`root-ok`)만 넣습니다(없는 줄은 빌드를 Can't resolve 로 깸). Plug'n'Play(P1) · 앱 lockfile(P2)의 루트 선언과
+      // 미선언은 종전처럼 넣지도 알리지도 않습니다
+      const r = componentCssResolution(baseDir, pkg, n);
+      if (r.kind === "app" || r.kind === "root-ok") componentImports.push(n);
+      else if (r.kind === "root-not-installed") deferredComponentImports.push({ name: n });
+      else if (r.kind === "root-old" || r.kind === "root-missing-file") {
+        deferredComponentImports.push({ name: n, installedVersion: r.installedVersion });
       }
     }
   }

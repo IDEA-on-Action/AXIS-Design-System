@@ -44,6 +44,7 @@ import {
   TOKENS_DEPENDENCY_RANGE,
 } from "./theme-add.js";
 import { makeProject, type MakeProjectOptions } from "./test-helpers.js";
+import { collectCheckResults } from "../template/template-check.js";
 
 const IMPORT_SAMPLE = '@import "@axis-ds/tokens/css/brands/sample";';
 /** WI-0065 D7: Tailwind 3 에서 브랜드 앞에 넣는 기본 토큰 CSS 두 줄(variables → shadcn) */
@@ -1276,5 +1277,26 @@ describe("WI-0087: theme add 가 워크스페이스 루트 선언을 인정(판�
     const ownOut = (await runAdd(["sample", "-d", own])).out;
     expect(ownOut).toContain('업그레이드: pnpm add "@axis-ds/tokens@^1.6.0"');
     expect(ownOut).not.toContain(ROOT_UPGRADE);
+  });
+
+  // WI-0097 (AC4 · AC9): theme add 의 DEC-2 판정을 registry-core `componentCssResolution` 으로 옮긴 뒤에도, 같은 레이아웃에서
+  // theme add 가 컴포넌트 줄을 넣는지와 check 가 그 줄을 바로 권하는지(B1 묶음)가 같은 결론이에요(P2 · PnP 루트 전용은 둘 다 아님)
+  it("WI-0097: 같은 레이아웃에서 theme add 의 컴포넌트 줄 추가와 check 의 B1 줄 안내가 같은 결론", async () => {
+    const B1 = `컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${UI_LINE}`;
+    const layouts: Array<{ label: string; o: WsOptions; adds: boolean }> = [
+      { label: "root-notinst", o: { rootDeps: { "@axis-ds/ui-react": "^1.8.1" } }, adds: false },
+      { label: "root-inst-css", o: { rootDeps: { "@axis-ds/ui-react": "^1.8.1" }, installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: true } } }, adds: true },
+      { label: "root-inst-nofile", o: { rootDeps: { "@axis-ds/ui-react": "^1.8.1" }, installed: { "@axis-ds/ui-react": { version: "1.8.1", tailwindCss: false } } }, adds: false },
+      { label: "root-inst-old", o: { rootDeps: { "@axis-ds/ui-react": "^1.3.0" }, installed: { "@axis-ds/ui-react": { version: "1.3.2", tailwindCss: false } } }, adds: false },
+      { label: "pnp-root", o: { pnp: true, rootDeps: { "@axis-ds/ui-react": "^1.8.1" } }, adds: false },
+      { label: "applock-root", o: { appLock: "package-lock.json", rootDeps: { "@axis-ds/ui-react": "^1.8.1" } }, adds: false },
+      { label: "appdecl-notinst", o: { appDeps: { "@axis-ds/ui-react": "^1.8.1" } }, adds: true },
+    ];
+    for (const { label, o, adds } of layouts) {
+      const app = await wsApp({ kind: "npm", tokens: "1.3", tailwind: 4, ...o });
+      const themeAdds = planThemeAdd(app, "sample").css?.requiredBaseImports.includes("@axis-ds/ui-react/tailwind.css") ?? false;
+      const setup = (await collectCheckResults(app)).find((r) => r.name === "tailwind.config");
+      expect({ label, themeAdds, checkRecommendsLine: setup?.message.includes(B1) ?? false }).toEqual({ label, themeAdds: adds, checkRecommendsLine: adds });
+    }
   });
 });

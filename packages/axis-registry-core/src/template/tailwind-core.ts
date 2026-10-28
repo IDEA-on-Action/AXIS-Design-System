@@ -38,6 +38,12 @@
  * - WI-0086: 의존성 선언 판정(Tailwind 버전 · 1.4.0 안내 · 버전 게이트 · Tailwind 4 컴포넌트 tailwind.css · content 대상 ·
  *   animation 의 ui-react 사용과 tailwindcss-animate 선언)은 project.ts 의 `declaredDependency`(앱 다음 워크스페이스 루트)로 봅니다.
  *   공개 함수는 진입부에서 `resolveBaseDir`(심볼릭 링크를 푼 실경로)로 기준 디렉터리를 한 번 맞추고, 찾은 설치본 디렉터리는 풀지 않습니다.
+ * - WI-0097(사용자 결정 Q21 · Q22): Tailwind 4 B1 은 선언 여부가 아니라 `<pkg>/tailwind.css` 가 이 앱에서 해석되는지로 봅니다
+ *   (project.ts `componentCssResolution`, theme add 의 WI-0087 DEC-2 와 같은 함수). 해석되지 않는 루트 선언(Plug'n'Play 루트 전용 ·
+ *   미설치 · 설치본에 파일 없음)은 줄을 바로 권하지 않고, 이미 있는 줄은 PASS 로 인정하지 않습니다. 단 줄이 있을 때 설치본이
+ *   1.4.0 미만이면(root-old) 종전 버전 판정(버전 WARN)을 따르고, 버전을 읽을 수 없고 파일도 없으면 해석 불가 WARN 입니다(사용자 결정 Q39).
+ *   앱 선언은 종전 그대로입니다.
+ *   위 보정 2차 · 3차의 「선언된 ui-react · agentic-ui」는 이 판정으로 좁혀졌어요. globals.css 의 tokens 해석 게이트는 WI-0097 2부 몫입니다.
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync } from "node:fs";
@@ -45,8 +51,12 @@ import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } 
 import {
   PNP_ROOT_ONLY_NOTE,
   ROOT_LAYOUT_FILES,
+  TAILWIND4_MIN_AXIS_VERSION,
   compareExactVersions,
+  componentCssResolution,
+  componentCssResolvable,
   declaredDependency,
+  dependencyInstallGuide,
   findInstalledPackage,
   findPnpUnpluggedPackages,
   globalCssSelectionNote,
@@ -56,6 +66,7 @@ import {
   pnpRootOnlyDependency,
   resolveBaseDir,
   selectGlobalCss,
+  type ComponentCssResolution,
   type GlobalCssSelection,
 } from "../project.js";
 
@@ -69,8 +80,9 @@ function declaredRange(baseDir: string, pkg: Record<string, unknown> | undefined
 
 /**
  * check 판정 전용 선언 범위(WI-0091, 사용자 결정 Q1 · Q2). Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다.
- * 거짓 PASS 를 만드는 판정(버전 게이트 · 애니메이션 플러그인 선언)만 씁니다. Tailwind major 판정 · B1 · content 대상 · 1.4.0 안내 ·
- * animation 의 ui-react 사용 판정은 종전대로 `declaredRange` 입니다(사용자 결정 Q6 · Q7).
+ * 거짓 PASS 를 만드는 판정(버전 게이트 · 애니메이션 플러그인 선언)만 씁니다. Tailwind major 판정 · content 대상 · 1.4.0 안내 ·
+ * animation 의 ui-react 사용 판정은 종전대로 `declaredRange` 입니다(사용자 결정 Q6 · Q7). B1(Tailwind 4 컴포넌트 tailwind.css)은
+ * WI-0097(사용자 결정 Q22 가 Q7 을 다시 엶)부터 이 함수도 `declaredRange` 도 아니고 project.ts `componentCssResolution`(해석 상태)으로 봅니다.
  */
 function declaredRangeForCheck(baseDir: string, pkg: Record<string, unknown> | undefined, name: string): string | undefined {
   return declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true })?.range;
@@ -407,8 +419,11 @@ export function checkGlobalsCss(baseDirInput: string): GlobalsCssCheckResult {
   return { name: "globals.css", severity: "fail", message: `globals.css 파일을 찾을 수 없습니다${note}` };
 }
 
-/** Tailwind 4 진입점(토큰 `css/tailwind4` · 컴포넌트 `tailwind.css`)이 처음 들어가는 AXIS 버전(WI-0044 D1, linked minor) */
-export const TAILWIND4_MIN_AXIS_VERSION = "1.4.0";
+/**
+ * Tailwind 4 진입점(토큰 `css/tailwind4` · 컴포넌트 `tailwind.css`)이 처음 들어가는 AXIS 버전(WI-0044 D1, linked minor).
+ * 원본은 project.ts 예요(WI-0097 에서 cli theme-add 의 `COMPONENT_TAILWIND_CSS_MIN_VERSION` 사본과 합침). 종전 이름으로 다시 내보내요.
+ */
+export { TAILWIND4_MIN_AXIS_VERSION };
 
 /** Tailwind 4 연동에 1.4.0 이상이 필요한 AXIS 패키지 */
 export const TAILWIND4_AXIS_PACKAGES = ["@axis-ds/tokens", "@axis-ds/ui-react", "@axis-ds/agentic-ui"] as const;
@@ -832,38 +847,112 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  *    `tailwind.css` 는 1.4.0 부터 있으므로 init 이 세 패키지를 모두 안내하는 것과 대칭입니다. 직접 `@source` 로 스캔하면
  *    `tailwind.css` 가 필요 없으므로 이 항목을 만들지 않습니다(버전 안내는 다른 문제가 있을 때 끝에 붙음).
  * 버전 안내(`tailwind4VersionNote`)는 문제 목록이 아니라 WARN 문구 끝에 한 번 붙습니다.
+ *
+ * WI-0097(사용자 결정 Q21 · Q22): 2 와 5 는 「선언됐는가」가 아니라 「이 앱에서 `<pkg>/tailwind.css` 가 해석되는가」로 봅니다
+ * (registry-core `componentCssResolution`, theme add 의 WI-0087 DEC-2 와 같은 판정). 같은 패키지에는 한 갈래만 씁니다.
+ * - 앱 선언(`app`)과 설치본에 파일이 있는 루트 선언(`root-ok`)은 종전 그대로입니다(줄 없음 → 2 의 묶음, 줄 있음 → 5).
+ * - 미선언 · 앱 lockfile(P2)의 루트 선언은 요구하지 않고, 줄이 있으면 종전 5 만 봅니다.
+ * - 해석되지 않는 루트 선언(Plug'n'Play 루트 전용 · 미설치 · 1.4.0 미만이나 버전 모름 · 1.4.0 이상인데 파일 없음)은 줄 없음이면
+ *   줄을 바로 권하지 않고 먼저 할 일(앱에 선언 · 설치 · 올림 · 다시 설치)을 패키지마다 한 문제로 2 의 묶음 뒤에 잇습니다.
+ *   줄이 있으면 PASS 로 인정하지 않고 「import 가 있지만 해석되지 않음」 WARN 입니다(1.4.0 미만만 종전 5 그대로, 버전 모름은 Q39 로 WARN).
+ *
+ * `input`(WI-0097 · WI-0100b 합의): `entry` 는 진입 파일 자체의 내용으로 결함 판정(3 의 create-next-app 기본 정의)만 보고,
+ * `evidence` 는 「있어야 할 줄」 판정(1 · 2 · 4 · 5)을 봅니다. 상대 `@import` 를 펼치기 전(WI-0100b 전)에는 둘이 같은 문자열입니다.
  */
 function tailwind4Issues(
-  css: string,
+  input: Tailwind4CssInput,
   pkg: Record<string, unknown> | undefined,
   versions: AxisPackageVersionIssue[],
   baseDir: string
 ): string[] {
+  const { entry, evidence } = input;
   const issues: string[] = [];
-  const hasEntry = hasTokensTailwind4Import(css);
+  const hasEntry = hasTokensTailwind4Import(evidence);
   if (!hasEntry) issues.push(`AXIS 토큰 진입점이 없습니다 → ${TOKENS_TAILWIND4_IMPORT_LINE}`);
-  const missing = TAILWIND4_COMPONENT_PACKAGES.filter(
-    (name) =>
-      declaredRange(baseDir, pkg, name) !== undefined &&
-      !hasComponentTailwindImport(css, name) &&
-      !hasComponentSource(css, name)
-  );
+  const resolutions = new Map(TAILWIND4_COMPONENT_PACKAGES.map((name) => [name, componentCssResolution(baseDir, pkg, name)] as const));
+  const missing: string[] = [];
+  const unresolvedMissing: string[] = [];
+  for (const name of TAILWIND4_COMPONENT_PACKAGES) {
+    const r = resolutions.get(name)!;
+    if (r.kind === "undeclared" || r.kind === "app-lockfile") continue;
+    if (hasComponentTailwindImport(evidence, name) || hasComponentSource(evidence, name)) continue;
+    if (componentCssResolvable(r)) missing.push(name);
+    else unresolvedMissing.push(componentCssMissingIssue(baseDir, name, r));
+  }
   if (missing.length > 0) {
     issues.push(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${missing.map(componentTailwindImportLine).join(" ")}`);
   }
+  issues.push(...unresolvedMissing);
   if (hasEntry) {
-    const defaults = findCreateNextAppDefaults(css);
+    const defaults = findCreateNextAppDefaults(entry);
     if (defaults.length > 0) issues.push(`create-next-app 기본 정의가 남아 있습니다(${defaults.join(" · ")}) → 지우세요`);
     if (versions.some((v) => v.name === TAILWIND4_AXIS_PACKAGES[0])) {
       issues.push(`AXIS 토큰 진입점이 있지만 ${TAILWIND4_AXIS_PACKAGES[0]} 버전 확인이 필요합니다`);
     }
   }
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
-    if (hasComponentTailwindImport(css, name) && versions.some((v) => v.name === name)) {
-      issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
-    }
+    if (!hasComponentTailwindImport(evidence, name)) continue;
+    const unresolved = componentCssPresentIssue(baseDir, name, resolutions.get(name)!);
+    if (unresolved !== undefined) issues.push(unresolved);
+    else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
   }
   return issues;
+}
+
+/**
+ * `tailwind4Issues` 입력(WI-0097, WI-0100b 와의 합의). `entry`: 진입 파일 내용(결함 판정용) · `evidence`: 근거 문자열(있어야 할 줄 판정용,
+ * WI-0100b 가 상대 `@import` 를 펼친 내용을 넣을 자리). WI-0100b 전에는 호출지가 같은 문자열을 둘 다에 넣어요.
+ */
+interface Tailwind4CssInput {
+  entry: string;
+  evidence: string;
+}
+
+/** 설치 · 다시 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」) */
+function componentInstallPhrase(baseDir: string, name: string, range: string): string {
+  const g = dependencyInstallGuide(baseDir, name, range);
+  return g.kind === "install-at-root" ? `워크스페이스 루트에서 ${g.installCommand}` : g.installCommand;
+}
+
+/** 해석되지 않는 루트 선언 패키지의 줄 없음 방향 문제(WI-0097 PRD 1.4 표 1 · 3 · 4 · 5번, 문구 확정 Q43) */
+function componentCssMissingIssue(baseDir: string, name: string, r: ComponentCssResolution): string {
+  const line = componentTailwindImportLine(name);
+  switch (r.kind) {
+    case "pnp-root-only":
+      return `${name} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언한 뒤 ${line}`;
+    case "root-not-installed":
+      return `${name} 가 워크스페이스 루트에 선언됐지만 설치되지 않았습니다 → 설치(${componentInstallPhrase(baseDir, name, r.range)}) 뒤 ${line}`;
+    case "root-old":
+      return `워크스페이스 루트에 선언된 ${name} 의 설치본(${r.installedVersion === "?" ? "버전 모름" : r.installedVersion})에 tailwind.css 가 없습니다(${TAILWIND4_MIN_AXIS_VERSION} 부터 제공) → ${TAILWIND4_MIN_AXIS_VERSION} 이상으로 올린 뒤 ${line}`;
+    case "root-missing-file":
+      return `워크스페이스 루트에 선언된 ${name} 의 설치본(${r.installedVersion})에 tailwind.css 가 없습니다(설치가 손상됐을 수 있음) → 다시 설치(${componentInstallPhrase(baseDir, name, r.range)}) 뒤 ${line}`;
+    default:
+      return line;
+  }
+}
+
+/**
+ * 줄이 이미 있는데 해석되지 않는 루트 선언 패키지의 문제(WI-0097 PRD 1.4 표 줄 있음 방향, 문구 확정 Q43). 해석되거나 판정하지 않는
+ * 갈래(앱 선언 · 미선언 · P2 · 파일 있음)와 1.4.0 미만(종전 버전 판정 그대로)은 `undefined` 입니다. 버전 모름 · 파일 없음은 해석 불가 WARN 이에요
+ * (사용자 결정 Q39, 종전에는 버전 판정이 범위만 보고 PASS 였어요).
+ */
+function componentCssPresentIssue(baseDir: string, name: string, r: ComponentCssResolution): string | undefined {
+  const head = `${name}/tailwind.css import 가 있지만`;
+  switch (r.kind) {
+    case "pnp-root-only":
+      return `${head} ${name} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`;
+    case "root-not-installed":
+      return `${head} ${name} 가 설치되지 않아 해석되지 않습니다 → 설치(${componentInstallPhrase(baseDir, name, r.range)})`;
+    case "root-missing-file":
+      return `${head} ${name} 설치본(${r.installedVersion})에 tailwind.css 가 없어 해석되지 않습니다 → 다시 설치(${componentInstallPhrase(baseDir, name, r.range)})`;
+    case "root-old":
+      // 1.4.0 미만은 종전 버전 WARN(호출지)이 알리고, 버전 모름은 버전 판정이 범위만 보고 통과시키므로 여기서 알려요(Q39)
+      return r.installedVersion === "?"
+        ? `${head} ${name} 설치본(버전 모름)에 tailwind.css 가 없어 해석되지 않습니다 → ${TAILWIND4_MIN_AXIS_VERSION} 이상으로 올리세요`
+        : undefined;
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -897,7 +986,7 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
         };
       }
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
-      const issues = tailwind4Issues(css, pkg, versions, baseDir);
+      const issues = tailwind4Issues({ entry: css, evidence: css }, pkg, versions, baseDir);
       if (issues.length > 0) {
         return {
           name: "tailwind.config",
