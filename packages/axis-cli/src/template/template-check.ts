@@ -11,7 +11,7 @@ import {
   type BrandImportCheck,
 } from "../theme/brand-core.js";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
-import { PNP_ROOT_ONLY_NOTE, globalCssSelectionNote } from "@axis-ds/registry-core/project";
+import { PNP_ROOT_ONLY_NOTE, cssImportViaNote, globalCssSelectionNote } from "@axis-ds/registry-core/project";
 import { checkAnimationPlugin, checkGlobalsCss, checkTailwindContent, checkTailwindSetup, versionGateLabel } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
@@ -180,12 +180,14 @@ export function brandCheckResult(check: BrandImportCheck): CheckResult {
   const { brand } = check;
   // 「(globalCss <값> 없음)」 · .css 아닌 파일을 버린 표기(WI-0100 D10). CSS 3항목과 같은 공유 코어 문구입니다
   const suffix = globalCssSelectionNote(check);
+  // WI-0100b(D6): 브랜드 import 를 상대 @import 로 들여온 하위 파일에서 찾았으면 그 출처(「(app/brand.css 의 import)」)를 표기 앞에 붙여요
+  const via = cssImportViaNote(check.importVia);
   switch (check.state) {
     case "match":
       return {
         name: "brand",
         severity: "pass",
-        message: `brand "${brand}" import 가 ${check.cssFile}에 있습니다${suffix}`,
+        message: `brand "${brand}" import 가 ${check.cssFile}에 있습니다${via}${suffix}`,
       };
     case "css-missing":
       return {
@@ -203,7 +205,7 @@ export function brandCheckResult(check: BrandImportCheck): CheckResult {
       return {
         name: "brand",
         severity: "warn",
-        message: `brand "${brand}" 와 import(${check.imports.join(", ")})가 다릅니다${suffix}`,
+        message: `brand "${brand}" 와 import(${check.imports.join(", ")})가 다릅니다${via}${suffix}`,
       };
   }
 }

@@ -440,7 +440,7 @@ export interface SelectGlobalCssOptions {
  *    프로젝트 밖(`../shared/globals.css` · 절대경로)도 읽기만 하므로 거절하지 않습니다(사용자 결정 Q25, 쓰기 거절은 theme add 몫).
  *    파일이 없거나 디렉터리면 `configuredMissing`, `requireStylesheet` 에서 `.css` 가 아니면 `configuredRejected` 를 담고 2 로 갑니다.
  * 2. `candidates` 를 앞에서부터 보고 처음 있는 일반 파일. 키가 없거나 문자열이 아니면 1 을 건너뜁니다(종전 후보 순서 그대로).
- * 상대 `@import` 로 들여온 하위 파일은 여기서 보지 않습니다(WI-0100b).
+ * 고르기만 하고 내용은 읽지 않습니다. 고른 파일이 상대 `@import` 로 들여온 하위 파일은 check 쪽이 tailwind-core `expandGlobalCss` 로 펼쳐 봅니다(WI-0100b).
  */
 export function selectGlobalCss(
   baseDir: string,
@@ -474,6 +474,15 @@ export function globalCssSelectionNote(selection: Pick<GlobalCssSelection, "conf
   if (selection.configuredMissing !== undefined) return ` (globalCss ${selection.configuredMissing} 없음)`;
   if (selection.configuredRejected !== undefined) return ` (globalCss ${selection.configuredRejected}: .css 파일이 아님)`;
   return "";
+}
+
+/**
+ * 근거를 전역 CSS 가 상대 `@import` 로 들여온 하위 파일에서 찾았을 때 check 문구 끝(「(globalCss …)」 표기 앞)에 붙이는 출처
+ * 「 (app/axis.css 의 import)」(WI-0100b, 선례 D6. 앞에 공백 포함). 여럿이면 ` · ` 로 잇고, 하위 파일이 없으면 빈 문자열이라 종전 문구 그대로예요.
+ * 세 CSS 항목(tailwind-core)과 brand 항목(cli · mcp 호출지)이 같은 문구를 써요.
+ */
+export function cssImportViaNote(files: readonly string[] | undefined): string {
+  return files !== undefined && files.length > 0 ? ` (${files.join(" · ")} 의 import)` : "";
 }
 
 /** init 이 기록할 경로를 어떻게 정했는지(안내 문구용) */
