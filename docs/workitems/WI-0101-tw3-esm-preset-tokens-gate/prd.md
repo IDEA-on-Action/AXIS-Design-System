@@ -1,6 +1,6 @@
 # WI-0101: check 가 Tailwind 3 preset 의 tokens 를 「이 앱에서 해석되는가」로 판정함(ESM · `.ts` 포함) PRD
 
-> 작성일: 2026-10-29 | 버전: v0.1 | 작성자: Sinclair Seo | WI: WI-0101 | GitHub: #248 | 우선순위: P3 | 상태: Draft (사용자 결정 Q61 ~ Q69 대기)
+> 작성일: 2026-10-29 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0101 | GitHub: #248 | 우선순위: P3 | 상태: Approved (2026-10-29 사용자 결정 Q61 ~ Q69, 모두 권장안)
 > 기준: `main` e103d43 (linked 1.8.2 · cli 1.7.7 · mcp 1.4.6 발행됨. 발행 커밋 1e8da06 뒤 `git log 1e8da06..HEAD -- packages/` 0줄, 같은 범위 전체 커밋은 2건이라 조회 자체는 동작함. 발행본과 소스가 같음)
 > 표기: **측정**(착수 측정에서 실행해 얻은 값) · **추정**(실행하지 않음) · **미측정**(재야 하지만 아직 재지 않음)
 
@@ -26,13 +26,13 @@ Tailwind 3 의 `tailwind.config` 항목은 설정 파일에 `@axis-ds/tokens/tai
 - MCP `axis.check_project` 는 63칸 모두 CLI 와 심각도 · 문구가 같아요(측정). 같은 코어 함수를 번들해요(cli `template-check.ts:41`, mcp `tools/template.ts:412`)
 - 정정 1: Issue 는 「ESM import 모양이라 게이트가 돌지 않는다」로 적었지만, 실제 공백은 **모양과 상관없는 해석 가능성**이에요. CJS bare 도 tokens 를 선언만 하고 설치하지 않으면 PASS 예요(A-none · R-none). CJS `.default` 는 미선언 · 미설치여도 PASS 예요
 - 정정 2: 버전 게이트를 ESM 으로 넓히는 것은 답이 아니에요. ESM `.mjs` · ESM 문법 `.js` · `.ts` · `.mjs` 의 `require` · CJS `.default` 는 tokens 1.6.2 에서도 preset 이 들어와요(`.bg-primary` 1, 3상태 × 5형태 = 15칸 측정). `tailwind-core.ts:1168-1170` 주석의 「jiti interop 이 `.default` 를 꺼내 줌(실측)」을 이번에 다시 확인했어요
-- WI-0091 Q7 의 잔여(「게이트가 돌지 않는 모양(Tailwind 3 ESM · `.ts` 설정의 preset)에서는 tokens 가 루트 전용이어도 알리지 않음」, WI-0091 release-notes 잔여 절)는 이 표의 부분집합이에요(PnP 루트 전용 칸은 미측정, 5절)
+- WI-0091 Q7 의 잔여(「게이트가 돌지 않는 모양(Tailwind 3 ESM · `.ts` 설정의 preset)에서는 tokens 가 루트 전용이어도 알리지 않음」, WI-0091 release-notes 잔여 절)는 이 표의 부분집합이에요(PnP 루트 전용 칸은 착수 때 재지 않았고 Q69 착수 게이트에서 실빌드로 쟀어요, testplan 3.3)
 
 ### 1.2 결정
 
-#### 사용자 결정 (대기, 권장안은 아래 6절)
+#### 사용자 결정 (2026-10-29: 권장안, Q61 ~ Q69 모두. 선택지와 근거는 6절)
 
-| # | 질문 | 권장안 | 이 WI 에서 |
+| # | 질문 | 사용자 결정 2026-10-29: 권장안 | 이 WI 에서 |
 |---|---|---|---|
 | Q61 | 해석 게이트를 어느 모양에 걸까요 | preset 참조(`hasTokensPresetReference`)가 있는 모든 모양 | AC1 · AC2 |
 | Q62 | 앱 선언 · 미설치(A-none)를 막을까요 | 막지 않음(Q21 · Q28 대칭, dependencies 가 이미 알림) | AC4 |
@@ -43,6 +43,14 @@ Tailwind 3 의 `tailwind.config` 항목은 설정 파일에 `@axis-ds/tokens/tai
 | Q67 | PASS 가 WARN 이 되는 기존 테스트를 어떻게 할까요 | 기대 불변, fixture 에 tokens 앱 선언을 더함(Q49 대칭) | AC8 |
 | Q68 | 「해석된다」의 정의 | 설치본 패키지 디렉터리 존재(`tokensCssResolution` 그대로) | AC2 · AC4 |
 | Q69 | PnP 루트 전용 ESM preset 실빌드를 착수 게이트로 둘까요 | 예, 구현 첫 단계에서 1회(Q22 와 같은 방식) | AC6 |
+
+#### 추가 결정 (구현 중 생김, 권장안으로 진행, 사용자 확인 대기)
+
+| # | 질문 | 선택지 | 진행한 안(권장) | 근거 |
+|---|---|---|---|---|
+| Q61a | 미선언 · 미설치일 때 설치 안내의 추가 명령 범위 | ① `^1.7.0`(CJS bare 의 버전 게이트 하한) ② `^1.4.0`(globals.css 게이트와 같음) ③ 범위 없음 | ① | 첫 발행 1.1.0 · 1.6.2 · 1.8.2 가 `./tailwind` 를 내보내(확인한 셋, 나머지 버전은 미확인) ESM 은 버전과 상관없이 되지만, 같은 프로젝트가 CommonJS bare 로 바꿔도 다시 WARN 이 나지 않는 범위예요. globals 게이트 문구(`^1.4.0`)와는 범위만 달라요 |
+| Q61b | 새 WARN 문구 2종(「… preset 참조가 있지만 @axis-ds/tokens 가 설치되지 않아 해석되지 않습니다 → 설치(…)」 · PnP 루트 전용 「…(워크스페이스 루트 선언 …) → 앱 package.json 에 @axis-ds/tokens 를 선언하세요」)을 구현 그대로 확정할까요 | ① 구현 그대로 ② 고침 | ① | 같은 항목의 WI-0091 · WI-0072 문구 머리(「<파일>에 AXIS preset 참조가 있지만」)와 globals 게이트 G-1 꼬리(「설치되지 않아 해석되지 않습니다 → 설치(…)」)를 이었어요. WI-0097 Q43 · Q48 선례로 확정은 사용자 몫이에요 |
+| Q65a | 루트에 1.7.0 미만으로 선언 · 미설치 · CommonJS bare 일 때, 설치 안내에 1.7.0 을 함께 적을까요 | ① 적지 않음(Q65 대로 설치만 안내) ② 「설치(…) · 1.7.0 이상」을 덧붙임 | ① | Q65 는 해석 불가를 먼저 알리기로 했어요. 설치 뒤에는 종전 버전 WARN 이 이어서 나와 두 단계로 고치게 돼요(문서 반박 검증 발견 7, changeset 에 적음). ②는 문구 분기가 하나 늘어요 |
 
 #### 선례 · 코드로 정한 항목 (사용자 결정이 아님)
 
@@ -65,7 +73,7 @@ preset 참조가 있을 때 아래를 앞에서부터 봐요. 정해지면 끝�
 
 | # | `tokensCssResolution` | 판정 | 측정 칸(testplan 2절) |
 |---|---|---|---|
-| 1 | `pnp-root-only` | WARN `PNP_ROOT_ONLY_NOTE` 계열(모든 모양. CJS bare 는 지금도 같은 뜻의 WARN) | 미측정(Q69) |
+| 1 | `pnp-root-only` | WARN `PNP_ROOT_ONLY_NOTE` 계열(모든 모양. CJS bare 는 지금도 같은 뜻의 WARN) | Q69 착수 게이트 실빌드: Yarn 4.5.3 PnP 루트 전용 ESM `.mjs` · `.ts` rc 1, 앱에도 선언하면 rc 0(testplan 3.3) |
 | 2 | `not-installed`(`source: "root"`) | WARN 설치 안내(워크스페이스 루트 선언) | R-none 7칸 |
 | 3 | `not-installed`(`source: "none"`) | WARN 설치 안내(범위를 붙인 추가 명령) | U-none 7칸 |
 | 4 | `app` · `installed` | 종전 판정(CJS bare 면 버전 게이트, 아니면 PASS) | A-* · R-inst* · U-inst* 42칸 |
@@ -77,9 +85,9 @@ preset 참조가 있을 때 아래를 앞에서부터 봐요. 정해지면 끝�
 | AC1 | ESM `.mjs` · ESM 문법 `.js` · `.ts` · `.mjs` 의 `require` · CJS `.default` 에서 미선언 · 미설치면 tailwind.config 가 WARN 이에요(발행본 PASS) | U-none 5칸 PASS · 실빌드 rc 1 |
 | AC2 | 같은 5형태 + CJS bare 2형태에서 루트 선언 · 미설치면 WARN 이에요(발행본 PASS) | R-none 7칸 PASS · rc 1 |
 | AC3 | CJS bare 2형태의 미선언 · 미설치는 「버전을 확인하지 못했습니다」 대신 해석 불가 WARN 이에요(WARN → WARN, 문구만 바뀜) | U-none CJS bare 2칸 |
-| AC4 | 앱 선언 · 미설치(A-none 7칸)는 발행본과 바이트가 같아요(Q62 권장안일 때. Q62 가 「막음」이면 AC1 과 같은 WARN) | A-none 7칸 PASS, dependencies WARN 이 이미 있음 |
+| AC4 | 앱 선언 · 미설치(A-none 7칸)는 발행본과 바이트가 같아요(Q62 결정) | A-none 7칸 PASS, dependencies WARN 이 이미 있음 |
 | AC5 | 설치본이 있으면(앱 · 루트 · 미선언 × 1.8.2 · 1.6.2, 42칸) 발행본과 바이트가 같아요. CJS bare × 1.6.2 의 버전 WARN 도 그대로예요 | 42칸 실빌드와 check 대응(1.6.2 CJS bare 만 `.bg-primary` 0) |
-| AC6 | PnP 루트 전용이면 모든 모양에서 `PNP_ROOT_ONLY_NOTE` 계열 WARN 이에요. CJS bare 는 종전 문구 그대로예요 | 미측정(Q69 착수 게이트에서 실빌드 rc 를 재고 나서 확정) |
+| AC6 | PnP 루트 전용이면 모든 모양에서 `PNP_ROOT_ONLY_NOTE` 계열 WARN 이에요. CJS bare 는 종전 문구 그대로예요 | Q69 착수 게이트 측정(testplan 3.3, 루트 전용 rc 1 · 앱 선언 rc 0) |
 | AC7 | CLI 와 MCP 가 2절 fixture 전부에서 같은 심각도 · 문구예요 | 발행본 63/63 같음 |
 | AC8 | 기존 테스트의 목적(preset 모양 판독 · 주석 제외 · 버전 경계)을 지키고, 바뀐 기대는 plan 4절 목록에 든 것만이에요 | plan 4절 |
 | AC9 | 변이: 새 게이트를 끄면(U-none · R-none 을 PASS 로) 새 테스트가 빨개지고, 게이트를 「앱 선언도 막음」으로 바꾸면 A-none 회귀 가드가 빨개져요 | testplan 4절 |
@@ -100,13 +108,13 @@ preset 참조가 있을 때 아래를 앞에서부터 봐요. 정해지면 끝�
 
 ## 5. 잔여 오차
 
-- PnP 루트 전용 · PnP 앱 미선언 칸은 실빌드를 재지 않았어요(미측정, Q69)
-- 앱 lockfile(P2) + 루트 선언 칸은 재지 않았어요. `tokensCssResolution` 이 P2 의 루트 선언을 미선언으로 보므로 3번 갈래가 돼요(추정)
+- PnP 루트 전용은 Q69 착수 게이트로 실빌드했어요(rc 1). PnP 앱 미선언(어디에도 선언 없음) 칸은 실빌드하지 않았어요(미측정)
+- 앱 lockfile(P2) + 루트 선언 · 미설치는 3번 갈래(미선언과 같음, 안내는 앱 lockfile 의 매니저)예요(측정, testplan 3.2)
 - `.ts` 에서 tsconfig `paths` 별칭 · 다른 파일 re-export 로 preset 을 받는 모양은 참조를 찾지 못해 종전 「preset 없음」 WARN 이에요(Q66 권장안이면 범위 밖)
 - 설치본 디렉터리는 있는데 `dist/tailwind-preset.*` 가 없는 손상 설치는 PASS 로 남아요(Q68 권장안)
 - Next.js 실제 빌드 · Windows 는 재지 않았어요
 
-## 6. 결정 항목 상세 (호출한 쪽에서 사용자 확인 필요)
+## 6. 결정 항목 상세 (2026-10-29 사용자 결정: 모두 권장안)
 
 | # | 질문 | 선택지 | 권장안 | 근거 |
 |---|---|---|---|---|
