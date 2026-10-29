@@ -30,6 +30,11 @@
  *   파일의 디렉터리 기준으로 거치고(D8 ①, Q54), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6 · Q55,
  *   `cssImportViaNote`). 상대 `@import` 가 순환하면 globals.css 항목이 진입 파일만의 판정 문구 뒤에 「 / 」로 순환 문구를 붙여 WARN 을 내고
  *   모든 항목이 진입 파일만 근거로 봅니다(Q52 · Q59). 순환은 조건 붙은 상대 import 까지 넣어 Tailwind 4 재귀 한도 100 단계까지 찾아요(Q57).
+ * - WI-0103(사용자 결정 Q70 ~ Q79): Tailwind 4 에서 앱 안 CSS(진입 파일 포함)의 tokens 줄 · 컴포넌트 `tailwind.css` 줄은 그 파일 위치부터
+ *   exports 를 보는 해석기(project.ts `resolveCssPackageImport`, Tailwind 4 의 enhanced-resolve 와 같은 순서 · 조건 `style` · `default`)로 풀어요.
+ *   위 「하위 파일은 그 디렉터리 기준」(Q54)의 판정이 「처음 만난 설치본의 파일 · 디렉터리 존재」에서 「그 설치본의 exports 로 풀리는가」로 바뀌었고,
+ *   앱 기준 설치본과 실경로가 다른 중첩 설치본(그림자)이 막으면 원인 문구로 WARN 이에요(`packageLineShadowIssue`). 프로젝트 밖 진입 파일(Q37) ·
+ *   `tailwindcss` 줄 · 레이아웃 JS import · 브랜드 · Tailwind 3 은 종전이에요.
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
  *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
@@ -68,6 +73,7 @@ import {
   cssImportViaNote,
   componentCssResolution,
   componentCssResolvable,
+  cssPackageLineResolution,
   declaredDependency,
   dependencyInstallGuide,
   findInstalledPackage,
@@ -711,7 +717,8 @@ function tokensCssUnresolvedIssue(
   baseDir: string,
   pkg: Record<string, unknown> | undefined,
   spec: string,
-  cssDir?: string
+  cssDir?: string,
+  lineIssue?: () => string | undefined
 ): string | undefined {
   const r = tokensCssResolution(baseDir, pkg, TOKENS_PACKAGE_NAME);
   const head = `${spec} import 가 있지만`;
@@ -722,7 +729,59 @@ function tokensCssUnresolvedIssue(
   if (cssDir !== undefined && outsideCssPackageResolution(baseDir, cssDir, TOKENS_PACKAGE_NAME) === "unresolved") {
     return outsideCssUnresolvedIssue(spec, TOKENS_PACKAGE_NAME);
   }
-  return undefined;
+  // WI-0103: 앱 안 파일의 줄은 그 파일 위치에서 exports 를 보는 해석기로 풀어요(그림자 · z5, Tailwind 4 만)
+  return lineIssue?.();
+}
+
+/** 패키지 경로(`@scope/name/...`)의 패키지 이름 */
+function packageNameOfSpec(spec: string): string {
+  const parts = spec.split("/");
+  return parts.slice(0, spec.startsWith("@") ? 2 : 1).join("/");
+}
+
+/** 앱 기준 상대 표시 경로(`/` 구분) */
+function displayRel(baseDir: string, p: string): string {
+  return relative(baseDir, p).split(sep).join("/");
+}
+
+/**
+ * 앱 안 CSS 파일(`origin`)의 패키지 줄 `spec` 이 그 파일 위치에서 해석되지 않을 때의 문제(WI-0103, 사용자 결정 Q72 · Q73 · Q74 · Q76).
+ * 해석되거나 판정하지 않으면 `undefined` 예요. 프로젝트 밖 진입 파일은 부르는 쪽이 종전 Q37 판정으로 보내요.
+ * 문구는 원인별 3갈래(그림자 미노출 · 그림자 대상 파일 없음 · 이 위치에서 안 보임)이고 앞머리 「<spec> import 가 있지만」 틀은 WI-0097 과 같아요.
+ */
+function packageLineShadowIssue(
+  baseDir: string,
+  expanded: ExpandedGlobalCss,
+  origin: ExpandedCssFile,
+  spec: string
+): string | undefined {
+  const name = packageNameOfSpec(spec);
+  const lineDir = dirname(origin.path);
+  const others: string[] = [];
+  for (const f of expanded.files) {
+    const d = dirname(f.path);
+    if (d !== lineDir && !others.includes(d)) others.push(d);
+  }
+  const r = cssPackageLineResolution(baseDir, lineDir, spec, others);
+  const head = `${spec} import 가 있지만 이 파일 위치에서`;
+  switch (r.kind) {
+    case "ok":
+      return undefined;
+    case "shadow-not-exported":
+      return `${head} 먼저 잡히는 ${displayRel(baseDir, r.pkgDir)}(${r.version ?? "버전 모름"})가 ${r.subpath} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 ${TAILWIND4_MIN_AXIS_VERSION} 이상으로 맞추세요`;
+    case "shadow-target-missing":
+      return `${head} 먼저 잡히는 ${displayRel(baseDir, r.pkgDir)}(${r.version ?? "버전 모름"})에 내보낸 파일(${r.target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
+    case "not-visible": {
+      const there = expanded.files.find((f) => dirname(f.path) === r.fromDir);
+      const move = there !== undefined ? `이 줄을 ${there.rel} 로 옮기세요` : "이 줄을 그 위치의 CSS 파일로 옮기세요";
+      return `${head} ${name} 를 찾지 못해 해석되지 않습니다(설치본이 ${displayRel(baseDir, r.pkgDir)} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 ${move}`;
+    }
+  }
+}
+
+/** 출처 파일이 프로젝트 밖 진입 파일인지(종전 Q37 판정으로 보냄, WI-0103) */
+function isOutsideEntry(origin: ExpandedCssFile): boolean {
+  return origin.depth === 0 && origin.cssDir !== undefined;
 }
 
 /**
@@ -782,7 +841,14 @@ function judgeGlobalsCss(
     // 하위 파일의 줄도 진입 파일과 같은 게이트를 그 출처 파일의 기준 디렉터리로 거쳐요(D8 ①, Q21 · Q22 대칭)
     const origin = evidenceOrigin(expanded, (f) => findTokensCssImport(f) === imported);
     via = cssImportViaNote(viaFiles([origin]));
-    const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
+    // WI-0103(Q73 · Q79): Tailwind 4 에서 앱 안 파일(진입 파일 포함)의 줄은 그 파일 위치에서 exports 를 보는 해석기로, 밖 진입 파일 · Tailwind 3 은 종전
+    const tailwind4 = (detectTailwind(baseDir, pkg).major ?? 0) >= 4;
+    const issue =
+      tailwind4 && origin !== undefined && !isOutsideEntry(origin)
+        ? tokensCssUnresolvedIssue(baseDir, pkg, imported, undefined, () =>
+            packageLineShadowIssue(baseDir, expanded, origin, imported)
+          )
+        : tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
     if (issue !== undefined) unresolved = `${candidate}에 ${issue}`;
     else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
   } else if (AXIS_VARIABLE_DEFINITION.test(stripCssComments(expanded.evidence))) {
@@ -1264,6 +1330,8 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  * 그 줄(`@import "tailwindcss"` 와 이미 있는 컴포넌트 `tailwind.css` 줄(5))은 앱 기준으로 해석되더라도 그 파일 위치에서 설치본을 찾지 못하면
  * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 하위 파일의 줄은 그 하위 파일의 디렉터리 기준이라
  * (D8 ①, 사용자 결정 Q54) 그 디렉터리의 중첩 `node_modules` 도 반영해요. 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
+ * WI-0103: 컴포넌트 줄(5)이 앱 안 파일(진입 파일 포함)에 있으면 `input.lineIssue`(exports 를 보는 해석기)가 위 `cssDirOf` 판정을 대신해요.
+ * `tailwindcss` 줄은 종전 `cssDirOf` 판정 그대로예요(Q78).
  */
 function tailwind4Issues(
   input: Tailwind4CssInput,
@@ -1305,11 +1373,23 @@ function tailwind4Issues(
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (!hasComponentTailwindImport(evidence, name)) continue;
     const unresolved = componentCssPresentIssue(baseDir, name, resolutions.get(name)!);
-    const componentDir = cssDirOf(`${name}/tailwind.css`);
-    if (unresolved !== undefined) issues.push(unresolved);
-    else if (componentDir !== undefined && outsideCssPackageResolution(baseDir, componentDir, name, "tailwind.css") === "unresolved") {
-      issues.push(outsideCssUnresolvedIssue(`${name}/tailwind.css`, name));
-    } else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
+    const spec = `${name}/tailwind.css`;
+    if (unresolved !== undefined) {
+      issues.push(unresolved);
+      continue;
+    }
+    // WI-0103: 앱 안 파일의 줄은 exports 를 보는 해석기(`lineIssue`), 그 밖(밖 진입 파일 · 줄을 못 찾음)은 종전 Q37 · Q54 판정
+    const shadow = input.lineIssue === undefined ? false : input.lineIssue(spec);
+    let lineProblem: string | undefined;
+    if (shadow !== false) lineProblem = shadow;
+    else {
+      const componentDir = cssDirOf(spec);
+      if (componentDir !== undefined && outsideCssPackageResolution(baseDir, componentDir, name, "tailwind.css") === "unresolved") {
+        lineProblem = outsideCssUnresolvedIssue(spec, name);
+      }
+    }
+    if (lineProblem !== undefined) issues.push(lineProblem);
+    else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
   }
   return issues;
 }
@@ -1323,6 +1403,11 @@ interface Tailwind4CssInput {
   entry: string;
   evidence: string;
   cssDirOf?: (spec: string) => string | undefined;
+  /**
+   * WI-0103: 컴포넌트 `tailwind.css` 줄이 앱 안 파일에 있으면 그 파일 위치에서 exports 를 보는 해석기로 본 문제(없으면 `undefined`).
+   * `false` 면 종전 판정(`cssDirOf` 의 Q37 · Q54)으로 보내요(프로젝트 밖 진입 파일 · 줄을 못 찾음). 없으면 모두 종전이에요
+   */
+  lineIssue?: (spec: string) => string | undefined | false;
 }
 
 /** 설치 · 다시 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」) */
@@ -1416,7 +1501,17 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
       );
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
       const issues = tailwind4Issues(
-        { entry: expanded.entry, evidence: expanded.evidence, cssDirOf: (spec) => packageLineCssDir(expanded, spec) },
+        {
+          entry: expanded.entry,
+          evidence: expanded.evidence,
+          cssDirOf: (spec) => packageLineCssDir(expanded, spec),
+          lineIssue: (spec) => {
+            const line = expanded.packageLines.find((l) => l.spec === spec);
+            const origin = line !== undefined ? expanded.files.find((f) => f.rel === line.file) : undefined;
+            if (origin === undefined || isOutsideEntry(origin)) return false;
+            return packageLineShadowIssue(baseDir, expanded, origin, spec);
+          },
+        },
         pkg,
         versions,
         baseDir
