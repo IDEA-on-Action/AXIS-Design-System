@@ -30,7 +30,8 @@
  *   파일의 디렉터리 기준으로 거치고(D8 ①, Q54), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6 · Q55,
  *   `cssImportViaNote`). 상대 `@import` 가 순환하면 globals.css 항목이 진입 파일만의 판정 문구 뒤에 「 / 」로 순환 문구를 붙여 WARN 을 내고
  *   모든 항목이 진입 파일만 근거로 봅니다(Q52 · Q59). 순환은 조건 붙은 상대 import 까지 넣어 Tailwind 4 재귀 한도 100 단계까지 찾아요(Q57).
- * - WI-0103(사용자 결정 Q70 ~ Q79): Tailwind 4 에서 앱 안 CSS(진입 파일 포함)의 tokens 줄 · 컴포넌트 `tailwind.css` 줄은 그 파일 위치부터
+ * - WI-0103(사용자 결정 Q70 ~ Q79): Tailwind 4 에서 앱 안 CSS(진입 파일 포함)의 tokens CSS import 줄(`@axis-ds/tokens/css` · `css/shadcn` ·
+ *   `css/tailwind4`) · 컴포넌트 `tailwind.css` 줄은 그 파일 위치부터
  *   exports 를 보는 해석기(project.ts `resolveCssPackageImport`, Tailwind 4 의 enhanced-resolve 와 같은 순서 · 조건 `style` · `default`)로 풀어요.
  *   위 「하위 파일은 그 디렉터리 기준」(Q54)의 판정이 「처음 만난 설치본의 파일 · 디렉터리 존재」에서 「그 설치본의 exports 로 풀리는가」로 바뀌었고,
  *   앱 기준 설치본과 실경로가 다른 중첩 설치본(그림자)이 막으면 원인 문구로 WARN 이에요(`packageLineShadowIssue`). 프로젝트 밖 진입 파일(Q37) ·
@@ -418,7 +419,9 @@ export interface ExpandedCssFile {
   depth: number;
   /**
    * 이 파일의 패키지 줄을 해석할 기준 디렉터리. 진입 파일은 WI-0097 2부 규칙 그대로(프로젝트 밖이면 그 디렉터리, 안이면 `undefined` = 앱 기준)이고,
-   * 하위 파일은 그 파일의 디렉터리예요(사용자 결정 Q54: 빌드 도구가 그 줄을 그 파일 위치부터 풀므로 하위 디렉터리의 중첩 `node_modules` 도 반영)
+   * 하위 파일은 그 파일의 디렉터리예요(사용자 결정 Q54: 빌드 도구가 그 줄을 그 파일 위치부터 풀므로 하위 디렉터리의 중첩 `node_modules` 도 반영).
+   * WI-0103 부터 Tailwind 4 의 tokens · 컴포넌트 줄은 이 값 대신 `path` 의 디렉터리에서 exports 해석기로 보고, 이 값은 `tailwindcss` 줄 · 프로젝트 밖
+   * 진입 파일 · Tailwind 3 판정에만 써요
    */
   cssDir?: string;
 }
@@ -712,6 +715,8 @@ function tokensInstallPhrase(baseDir: string): string {
  * - 앱 기준(`tokensCssResolution`): 앱 선언은 미설치여도 해석됨(Q28), non-PnP 는 설치본 디렉터리가 있으면 해석됨(선언 위치와 상관없음),
  *   PnP 루트 전용 · 루트 선언 미설치 · 미선언 미설치(PnP 의 앱 미선언 포함)는 해석 불가예요
  * - `cssDir`(프로젝트 밖 진입 CSS 의 디렉터리)를 주면, 앱 기준으로 해석되는 경우에도 그 파일 위치에서 설치본을 찾지 못하면 해석 불가예요(Q37)
+ * - `lineIssue`(WI-0103): 앱 기준으로 해석되고 `cssDir` 판정도 통과하면 마지막으로 부르는 판정이에요. Tailwind 4 의 앱 안 파일 줄을 그 파일 위치에서
+ *   exports 해석기로 본 문제(`packageLineShadowIssue`)를 넘겨요
  */
 function tokensCssUnresolvedIssue(
   baseDir: string,
@@ -757,23 +762,26 @@ function packageLineShadowIssue(
 ): string | undefined {
   const name = packageNameOfSpec(spec);
   const lineDir = dirname(origin.path);
-  const others: string[] = [];
-  for (const f of expanded.files) {
-    const d = dirname(f.path);
-    if (d !== lineDir && !others.includes(d)) others.push(d);
-  }
+  // 다른 파일 디렉터리 목록(z5 판정용)은 필요할 때만 만들고, 파일이 많아도 선형이게 Set 으로 모아요(반박 검증 R2)
+  const others = () => [...new Set(expanded.files.map((f) => dirname(f.path)))].filter((d) => d !== lineDir);
   const r = cssPackageLineResolution(baseDir, lineDir, spec, others);
-  const head = `${spec} import 가 있지만 이 파일 위치에서`;
+  // 「이 파일」이 앞머리의 진입 파일로 읽히지 않게 「그 줄이 있는 파일」이라고 적어요(줄이 하위 파일이면 끝의 출처 접미사가 그 파일, 반박 검증 1-b)
+  const head = `${spec} import 가 있지만 그 줄이 있는 파일 위치에서`;
+  const label = (pkgDir: string, version: string | undefined) => `${displayRel(baseDir, pkgDir)}(${version ?? "버전 모름"})`;
   switch (r.kind) {
     case "ok":
       return undefined;
-    case "shadow-not-exported":
-      return `${head} 먼저 잡히는 ${displayRel(baseDir, r.pkgDir)}(${r.version ?? "버전 모름"})가 ${r.subpath} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 ${TAILWIND4_MIN_AXIS_VERSION} 이상으로 맞추세요`;
+    case "shadow-not-exported": {
+      // 이미 1.4.0 이상인데 미노출이면(조건 불일치 등) 올리라고 하지 않고 다시 설치를 권해요(반박 검증 1-a)
+      const current = r.version !== undefined && (compareExactVersions(r.version, TAILWIND4_MIN_AXIS_VERSION) ?? -1) >= 0;
+      const todo = current ? "다시 설치하세요" : `${TAILWIND4_MIN_AXIS_VERSION} 이상으로 맞추세요`;
+      return `${head} 먼저 잡히는 ${label(r.pkgDir, r.version)}가 ${r.subpath} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 ${todo}`;
+    }
     case "shadow-target-missing":
-      return `${head} 먼저 잡히는 ${displayRel(baseDir, r.pkgDir)}(${r.version ?? "버전 모름"})에 내보낸 파일(${r.target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
+      return `${head} 먼저 잡히는 ${label(r.pkgDir, r.version)}에 내보낸 파일(${r.target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
     case "not-visible": {
       const there = expanded.files.find((f) => dirname(f.path) === r.fromDir);
-      const move = there !== undefined ? `이 줄을 ${there.rel} 로 옮기세요` : "이 줄을 그 위치의 CSS 파일로 옮기세요";
+      const move = there !== undefined ? `이 줄(${origin.rel})을 ${there.rel} 로 옮기세요` : `이 줄(${origin.rel})을 그 위치의 CSS 파일로 옮기세요`;
       return `${head} ${name} 를 찾지 못해 해석되지 않습니다(설치본이 ${displayRel(baseDir, r.pkgDir)} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 ${move}`;
     }
   }
@@ -794,7 +802,8 @@ function isOutsideEntry(origin: ExpandedCssFile): boolean {
  * 3. 루트 레이아웃 JS 의 tokens CSS import(`findLayoutTokensCssImport`) → pass(CSS 에는 근거가 없어도 같은 변수가 들어옴).
  *    고른 파일에 1 · 2 의 근거가 없을 때만 보고, 문구의 파일명은 고른 파일입니다(WI-0100 D11).
  *    WI-0097 2부: 1 · 3 의 import 는 이 앱에서 해석될 때만 pass 이고, 해석되지 않으면 「<spec> import 가 있지만 … 해석되지 않습니다」 warn 이에요
- *    (`tokensCssUnresolvedIssue`. 앱 선언은 미설치여도 pass 그대로(Q28), 프로젝트 밖 진입 CSS 는 그 파일 위치 기준도 봄(Q37)). 2 는 게이트 밖이에요.
+ *    (`tokensCssUnresolvedIssue`. 앱 선언은 미설치여도 pass 그대로(Q28), 프로젝트 밖 진입 CSS 는 그 파일 위치 기준도 봄(Q37), Tailwind 4 의 앱 안 파일 줄은 그 파일 위치에서
+ *    exports 해석기로 봄(WI-0103)). 2 는 게이트 밖이에요.
  * 4. 자체 `--background` · `--primary` 만 있음 → warn「AXIS 토큰 미사용」. 종전에는 pass 였습니다(거짓 초록, WI-0070).
  *    템플릿 4종(자체 HSL)은 WI-0067 전까지 이 warn 입니다(2026-10-25 사용자 결정, 종료 코드는 그대로).
  * 5. 아무것도 없으면 warn, 고를 파일이 하나도 없으면 fail(종전과 같음, 레이아웃 근거가 있어도 fail).
@@ -1378,7 +1387,7 @@ function tailwind4Issues(
       issues.push(unresolved);
       continue;
     }
-    // WI-0103: 앱 안 파일의 줄은 exports 를 보는 해석기(`lineIssue`), 그 밖(밖 진입 파일 · 줄을 못 찾음)은 종전 Q37 · Q54 판정
+    // WI-0103: 앱 안 파일의 줄은 exports 를 보는 해석기(`lineIssue`), 그 밖(밖 진입 파일 · 줄을 못 찾음)은 종전 Q37(`cssDirOf`) 판정
     const shadow = input.lineIssue === undefined ? false : input.lineIssue(spec);
     let lineProblem: string | undefined;
     if (shadow !== false) lineProblem = shadow;
@@ -1405,7 +1414,7 @@ interface Tailwind4CssInput {
   cssDirOf?: (spec: string) => string | undefined;
   /**
    * WI-0103: 컴포넌트 `tailwind.css` 줄이 앱 안 파일에 있으면 그 파일 위치에서 exports 를 보는 해석기로 본 문제(없으면 `undefined`).
-   * `false` 면 종전 판정(`cssDirOf` 의 Q37 · Q54)으로 보내요(프로젝트 밖 진입 파일 · 줄을 못 찾음). 없으면 모두 종전이에요
+   * `false` 면 종전 Q37(`cssDirOf`) 판정으로 보내요(프로젝트 밖 진입 파일 · 줄을 못 찾음). 없으면 모두 종전이에요
    */
   lineIssue?: (spec: string) => string | undefined | false;
 }

@@ -1506,7 +1506,7 @@ describe("WI-0100b 상대 @import 펼침", () => {
       expect(r.severity).toBe("warn");
       // WI-0103(사용자 결정 Q76): 종전 「이 파일 위치에서 … 를 찾지 못해 … globalCss 를 앱 안 파일로 바꾸세요」(Q37 문구) 대신 그림자 원인 문구
       expect(r.message).toContain(
-        "@axis-ds/ui-react/tailwind.css import 가 있지만 이 파일 위치에서 먼저 잡히는 app/vendor/node_modules/@axis-ds/ui-react(1.3.0)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다"
+        "@axis-ds/ui-react/tailwind.css import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/vendor/node_modules/@axis-ds/ui-react(1.3.0)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다"
       );
       expect(r.message).not.toContain("globalCss 를 앱 안 파일로 바꾸세요");
       expect(r.message.endsWith(via("app/vendor/components.css"))).toBe(true);
@@ -5136,9 +5136,9 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
   }
 
   const notExported = (spec: string, at: string, ver: string, sub: string, name: string) =>
-    `${spec} import 가 있지만 이 파일 위치에서 먼저 잡히는 ${at}(${ver})가 ${sub} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 1.4.0 이상으로 맞추세요`;
+    `${spec} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 ${at}(${ver})가 ${sub} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 1.4.0 이상으로 맞추세요`;
   const targetMissing = (spec: string, at: string, ver: string, target: string, name: string) =>
-    `${spec} import 가 있지만 이 파일 위치에서 먼저 잡히는 ${at}(${ver})에 내보낸 파일(${target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
+    `${spec} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 ${at}(${ver})에 내보낸 파일(${target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
   const TOK_SPEC = "@axis-ds/tokens/css/tailwind4";
   const UI_SPEC = "@axis-ds/ui-react/tailwind.css";
 
@@ -5178,6 +5178,28 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
       expect(await at({ "./css/*": "./dist/*.css" })).toBe("unknown");
       expect(await at({ "./css/": "./dist/" })).toBe("unknown");
       expect(resolveCssPackageImport(dir, "@axis-ds/tokens").kind).toBe("unknown"); // subpath 없음
+    });
+
+    it("반박 검증 보정: 거짓 값 exports 는 exports 없음 · 대상에도 .css · index.css · 조건 안 null 은 미노출(실빌드와 같음)", async () => {
+      const dir = await tempDir();
+      const pd = path.join(dir, "node_modules/@axis-ds/tokens");
+      const at = async (exportsField: unknown) => {
+        await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/tokens", version: "1.2.0", exports: exportsField });
+        return resolveCssPackageImport(dir, TOK_SPEC).kind;
+      };
+      // c01 · c02 · c03b: null · false · "" 는 exports 없음으로 보고 맨 경로 파일을 써요(실빌드 rc 0)
+      await fs.outputFile(path.join(pd, "css/tailwind4.css"), MARK);
+      for (const v of [null, false, ""]) expect(await at(v)).toBe("resolved");
+      await fs.remove(path.join(pd, "css"));
+      // 파일이 없으면 건너뛰어 상위로(여기서는 상위가 없어 not-found, 실빌드는 상위 설치본으로 감)
+      expect(await at(null)).toBe("not-found");
+      // c07 · c08: 대상 "./dist/t" 에 t.css, "./dist/tw" 에 tw/index.css
+      await fs.outputFile(path.join(pd, "dist/t.css"), MARK);
+      expect(await at({ "./css/tailwind4": "./dist/t" })).toBe("resolved");
+      await fs.outputFile(path.join(pd, "dist/tw/index.css"), MARK);
+      expect(await at({ "./css/tailwind4": "./dist/tw" })).toBe("resolved");
+      // c22: 맞는 조건 style 의 값이 null 이면 뒤의 default 로 넘어가지 않고 미노출(실빌드 rc 1)
+      expect(await at({ "./css/tailwind4": { style: null, default: "./dist/t.css" } })).toBe("not-exported");
     });
 
     it("cssPackageLineResolution: 앱 기준 설치본과 실경로가 같으면 대상 파일이 없어도 ok(Q72), Plug'n'Play 는 ok", async () => {
@@ -5250,11 +5272,22 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
       expect(ex0.message).toContain(notExported(UI_SPEC, "app/vendor/node_modules/@axis-ds/ui-react", "1.3.0", "./tailwind.css", "@axis-ds/ui-react"));
       expect(em.message + ex0.message).not.toContain("globalCss");
     });
+    it("미노출 그림자가 이미 1.4.0 이상이거나(조건 불일치) 버전을 못 읽으면 할 일이 다름(반박 검증 1-a)", async () => {
+      const dir = await app({ ui: true });
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n@import "./vendor/sub.css";\n`, "app/vendor/sub.css": `${UI_LINE}\n` });
+      const pd = path.join(dir, "app/vendor/node_modules/@axis-ds/ui-react");
+      await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.2", exports: { "./tailwind.css": { import: "./tailwind.css" } } });
+      await fs.outputFile(path.join(pd, "tailwind.css"), MARK);
+      const cur = (await items(dir))["tailwind.config"].message;
+      expect(cur).toContain("app/vendor/node_modules/@axis-ds/ui-react(1.8.2)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 @axis-ds/ui-react 를 지우거나 다시 설치하세요");
+      await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/ui-react", exports: { ".": "./dist/index.js" } });
+      expect((await items(dir))["tailwind.config"].message).toContain("@axis-ds/ui-react(버전 모름)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 @axis-ds/ui-react 를 지우거나 1.4.0 이상으로 맞추세요");
+    });
     for (const s of ["em", "ex", "ex0", "ci"] as const) {
       it(`ui-P2-${s}: 진입 파일 줄도 그 파일 위치에서 풀어 WARN(Q73), 출처 접미사 없음`, async () => {
         const r = (await uiCell("P2", s))["tailwind.config"];
         expect(r.severity).toBe("warn");
-        expect(r.message).toContain(`app/globals.css에 ${UI_SPEC} import 가 있지만 이 파일 위치에서 먼저 잡히는 app/node_modules/@axis-ds/ui-react(1.3.0)`);
+        expect(r.message).toContain(`app/globals.css에 ${UI_SPEC} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/node_modules/@axis-ds/ui-react(1.3.0)`);
         expect(r.message).not.toContain("의 import)");
       });
     }
@@ -5279,7 +5312,7 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
       expect(await z5("z5")).toEqual({
         name: "globals.css",
         severity: "warn",
-        message: `src/app/globals.css에 ${TOK_SPEC} import 가 있지만 이 파일 위치에서 @axis-ds/tokens 를 찾지 못해 해석되지 않습니다(설치본이 src/app/node_modules/@axis-ds/tokens 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄을 src/app/globals.css 로 옮기세요${via("src/styles/axis.css")}`,
+        message: `src/app/globals.css에 ${TOK_SPEC} import 가 있지만 그 줄이 있는 파일 위치에서 @axis-ds/tokens 를 찾지 못해 해석되지 않습니다(설치본이 src/app/node_modules/@axis-ds/tokens 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄(src/styles/axis.css)을 src/app/globals.css 로 옮기세요${via("src/styles/axis.css")}`,
       });
     });
     it("z5c · z5r: 줄 위치에서 보이면 PASS(대조)", async () => {
@@ -5299,6 +5332,19 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
       const r = await items(dir);
       expect(r["globals.css"].severity).toBe("pass");
       expect(r["tailwind.config"].message).toContain("버전 확인이 필요합니다");
+    });
+    it("앱 기준 설치본이 stub(exports · 파일 없음)이고 앱 위에 낡은 설치본이 있으면 그림자가 아니라 종전 PASS(반박 검증 R1)", async () => {
+      const root = await tempDir();
+      const dir = path.join(root, "app");
+      await fs.ensureDir(dir);
+      await fs.ensureDir(path.join(dir, ".git"));
+      await fs.outputFile(path.join(dir, "lib/utils.ts"), 'export function cn(...a: string[]) { return a.join(" "); }\n');
+      await fs.outputJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: { "@axis-ds/tokens": "^1.8.2", clsx: "^2.1.1", "tailwind-merge": "^3.3.1", tailwindcss: "^4.1.14" } });
+      for (const [n, v] of [["clsx", "2.1.1"], ["tailwind-merge", "3.3.1"], ["tailwindcss", "4.1.14"], ["@axis-ds/tokens", "1.8.2"]]) await writeInstalledStub(dir, n, v);
+      await shadow(path.join(root, "node_modules"), "@axis-ds/tokens", "ex0");
+      await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n` });
+      expect((await items(dir))["globals.css"].severity).toBe("pass");
     });
     it("Tailwind 3: 하위 파일 쪽 tokens 그림자(미노출)는 종전 PASS(Q79)", async () => {
       const dir = await app({ tw: 3 });

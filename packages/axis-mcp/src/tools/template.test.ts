@@ -1238,7 +1238,7 @@ describe("handleCheckProject WI-0103: 중첩 설치본(그림자) · exports (CL
     expect((await items(tmp))["globals.css"]).toEqual({
       name: "globals.css",
       severity: "warn",
-      message: `app/globals.css에 ${E} import 가 있지만 이 파일 위치에서 먼저 잡히는 app/vendor/node_modules/${T}(1.2.0)가 ./css/tailwind4 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${T} 를 지우거나 1.4.0 이상으로 맞추세요 (app/vendor/sub.css 의 import)`,
+      message: `app/globals.css에 ${E} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/vendor/node_modules/${T}(1.2.0)가 ./css/tailwind4 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${T} 를 지우거나 1.4.0 이상으로 맞추세요 (app/vendor/sub.css 의 import)`,
     });
   });
 
@@ -1252,7 +1252,7 @@ describe("handleCheckProject WI-0103: 중첩 설치본(그림자) · exports (CL
     await old("app", "@axis-ds/ui-react", "1.3.0", { exports: { ".": "./dist/index.js" } });
     const r = (await items(tmp))["tailwind.config"];
     expect(r.severity).toBe("warn");
-    expect(r.message).toContain(`${U} import 가 있지만 이 파일 위치에서 먼저 잡히는 app/node_modules/@axis-ds/ui-react(1.3.0)가 ./tailwind.css 를 내보내지 않아`);
+    expect(r.message).toContain(`${U} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/node_modules/@axis-ds/ui-react(1.3.0)가 ./tailwind.css 를 내보내지 않아`);
   });
 
   it("z5: 설치본이 진입 파일 쪽 중첩 node_modules 에만 있으면 하위 파일 줄 WARN", async () => {
@@ -1265,6 +1265,6 @@ describe("handleCheckProject WI-0103: 중첩 설치본(그림자) · exports (CL
     await fs.outputFile(path.join(tmp, "src/app/node_modules", T, "dist/css/tailwind4.css"), ":root{--axis-x:1}\n");
     const r = (await items(tmp))["globals.css"];
     expect(r.severity).toBe("warn");
-    expect(r.message).toContain(`(설치본이 src/app/node_modules/${T} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄을 src/app/globals.css 로 옮기세요`);
+    expect(r.message).toContain(`(설치본이 src/app/node_modules/${T} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄(src/styles/axis.css)을 src/app/globals.css 로 옮기세요`);
   });
 });
