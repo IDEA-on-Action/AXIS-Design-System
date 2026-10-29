@@ -1,5 +1,58 @@
 # @axis-ds/cli
 
+## 1.7.7
+
+### Patch Changes
+
+- e2701fe: `axis check` · MCP `axis.check_project` 의 Tailwind 4 컴포넌트 `tailwind.css` 판정이 「선언됐는가」가 아니라 「이 앱에서 해석되는가」를 봐요(WI-0097). 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같고, `axis theme add` 도 같은 판정 함수를 써서 같은 레이아웃에서 두 명령의 결론이 같아요. 종료 코드는 바뀌지 않아요(새 판정은 모두 WARN).
+  - 워크스페이스 루트에만 선언한 `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 가 설치되지 않았거나 설치본에 `tailwind.css` 가 없으면, `@import "<패키지>/tailwind.css";` 를 바로 권하지 않고 먼저 할 일(설치 · 1.4.0 이상으로 올림 · 다시 설치)을 알려요. 지금까지는 그 줄을 권해서 따르면 빌드가 `Can't resolve` 로 깨졌어요.
+  - Yarn Plug'n'Play 에서 루트에만 선언했으면 「워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언한 뒤 …」 WARN 이에요(Yarn 4.5.3 · `@tailwindcss/cli` 4.1.14 실빌드에서 루트 전용 CSS `@import` 가 rc 1 이고 앱에도 선언하면 rc 0).
+  - 루트에만 선언한 패키지가 설치되지 않았거나, 설치본이 1.4.0 이상인데 `tailwind.css` 가 없거나, Plug'n'Play 에서 루트에만 선언했을 때 그 줄이 이미 있으면 PASS 가 아니라 「import 가 있지만 … 해석되지 않습니다」 WARN 이에요(지금까지는 PASS 였어요). 「N pass / M warn」 집계가 달라질 수 있어요. 설치본이 1.4.0 미만이면 종전과 같은 버전 확인 WARN 이에요. 설치본 버전을 읽을 수 없고 `tailwind.css` 도 없으면 종전 PASS 가 아니라 해석 불가 WARN 이에요.
+  - 앱 디렉터리에 lockfile 이 따로 있는 앱(워크스페이스 멤버가 아닌 독립 앱)은 루트 선언 컴포넌트 패키지의 `tailwind.css` 를 요구하지 않아요(`theme add` 와 같은 경계).
+  - 앱 `package.json` 에 선언한 컴포넌트 패키지는 설치 여부와 상관없이 종전과 같아요(미설치는 dependencies 항목이 알려요).
+  - globals.css 항목도 tokens 근거(`@axis-ds/tokens/css` · `css/shadcn` · `css/tailwind4` import, 루트 레이아웃의 `import "@axis-ds/tokens/css"`)를 이 앱에서 해석될 때만 PASS 로 인정해요. 앱 `package.json` 에 `@axis-ds/tokens` 를 선언했으면 설치 여부와 상관없이 종전 PASS 이고(미설치는 dependencies 항목이 알려요), 선언이 없거나 루트에만 선언했어도 설치본 디렉터리가 있으면 PASS 예요. `--axis-*` 변수를 직접 정의한 CSS 는 이 판정을 거치지 않아요. 단, 해석되지 않는 tokens import 가 함께 있으면 import 판정을 따라 WARN 이에요.
+  - 프로젝트 밖 전역 CSS(`axis.config.json` 의 `globalCss` 가 앱 밖, 예: `../shared/globals.css`)는 그 파일 안의 `@import "tailwindcss"` · 토큰 진입점 · 컴포넌트 `tailwind.css` 줄을 그 파일 위치 기준으로도 봐요. 빌드 도구가 그 줄을 CSS 파일 위치부터 상위 `node_modules` 로 풀어서, 설치본이 앱 아래에만 있으면 빌드가 `Can't resolve` 로 실패해요(공통 상위로 호이스팅하면 성공). 앱에서는 설치본을 찾는데 그 파일 위치에서는 찾지 못하면 「import 가 있지만 이 파일 위치에서 <패키지> 를 찾지 못해 해석되지 않습니다」 WARN 이에요. Plug'n'Play 이거나 앱 위치에서 설치본을 찾지 못하면 이 판정을 하지 않아요.
+  - 이 두 판정으로 PASS 가 WARN 으로 바뀌는 경우(종료 코드는 그대로이고, 「N pass / M warn」 집계와 「권장 항목을 확인하세요」 출력이 달라져요):
+    - globals.css: tokens 미선언이고 설치본도 없는데 tokens CSS import 나 루트 레이아웃의 tokens import 가 있는 앱
+    - globals.css: tokens 를 워크스페이스 루트에만 선언했고 설치본이 없는 앱(npm 루트면 「워크스페이스 루트에서 npm install」 안내), 앱 디렉터리에 lockfile 이 따로 있어 루트 선언을 인정하지 않는 앱
+    - globals.css: Yarn Plug'n'Play 에서 tokens 를 루트에만 선언했거나 어디에도 선언하지 않은 앱
+    - tailwind.config · globals.css: 프로젝트 밖 `globalCss` 파일의 `tailwindcss` · tokens · 컴포넌트 패키지 설치본이 앱 쪽 `node_modules` 에만 있는 모노레포
+
+- be61b74: `axis check` · MCP `axis.check_project` · `axis theme add` 가 Yarn Plug'n'Play 의 Tailwind 3 `content` 를 실제 빌드와 맞게 판정 · 안내해요(WI-0098). 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같아요.
+
+  **업데이트 뒤 `axis check` 종료 코드가 1 에서 0 으로 바뀔 수 있어요.** unplugged 를 설정한 Plug'n'Play 프로젝트(`dependenciesMeta` 의 `unplugged: true`)에서 `content` 가 `.yarn/unplugged/*/node_modules/<패키지>` 를 가리키는 glob(상대 · 절대)으로 컴포넌트 패키지를 덮으면 지금까지는 FAIL 이었는데 이제 PASS 예요(실제 빌드에서 클래스가 정상으로 생성되는 경우). 앱 `package.json` 의 선언 범위에 맞는 버전의 unplugged 디렉터리만 인정해요. 종료 코드가 0 에서 1 로 바뀌는 경우는 없어요.
+  - Plug'n'Play(`.pnp.cjs`)에서 `content` 가 `./node_modules/@axis-ds/ui-react/dist/**/*.{js,mjs}`(agentic-ui 도 같음)나 넓은 `./**/*.{js,mjs}` 로만 컴포넌트 패키지를 덮으면 `tailwind.content` 가 PASS 에서 **WARN** 으로 바뀌어요. Plug'n'Play 에는 node_modules 가 없어 그 경로는 스캔되지 않고 컴포넌트 클래스가 생성되지 않았어요. Tailwind 의 `**` · `*` 는 `.yarn` 처럼 점으로 시작하는 디렉터리를 넘지 않아서, 앱이 Plug'n'Play 루트이고 unplugged 를 설정했어도 `./**` 는 WARN 이에요(unplugged 경로는 `.yarn` 을 글자 그대로 쓴 glob 만 인정). 종료 코드는 0 그대로예요.
+  - Plug'n'Play 에서 패키지 경로가 없으면 FAIL 은 그대로이고, `./node_modules/...` 를 권하던 제안 대신 `require.resolve` 로 실제 위치를 넣는 동적 형태(정적으로 확인할 수 없어 WARN)를 먼저, unplugged 설정을 대안으로 안내해요. 안내에는 덮지 않은 패키지 이름이 들어가서 그대로 복사해 쓸 수 있어요. unplugged 를 설정한 프로젝트에서는 `.yarn/unplugged/*/node_modules/<패키지>/dist/**/*.{js,mjs}` 를 제안하고, 이미 unplugged 디렉터리가 있는 패키지는 `dependenciesMeta` 설정 안내를 빼요.
+  - Plug'n'Play 에서 컴포넌트 패키지를 워크스페이스 루트에만 선언한 앱은 경로를 안내 · 인정하지 않고 「<패키지> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다 → 앱 package.json 에 선언하세요」를 내요. severity 는 종전과 같은 방향이에요(종전 PASS 는 WARN, 종전 FAIL 은 FAIL).
+  - `axis theme add` 는 Plug'n'Play 에서 `./node_modules` glob 만 있을 때 content 안내를 내지 않던 것을 고쳐 check 와 같은 안내를 내요. 종료 코드는 0 그대로예요.
+  - 상위 경로 안내 문구의 어미가 바뀌어요(「…풀려요」 → 「…풀립니다」, 종료 코드 · 판정 불변). `../` 로 시작하는 content 제안 뒤에 붙는 안내로, check · MCP · theme add 가 같은 문구를 써요. 상위 경로 설치본이 앱이 쓰는 설치본과 달라 덮음으로 보지 않을 때 목록 항목에 붙는 안내도 「…보지 않아요」 → 「…보지 않습니다」로 바뀌어요.
+  - Plug'n'Play 가 아닌 레이아웃(npm · pnpm · Yarn node-modules · 단일 프로젝트)의 판정 · 종료 코드는 바뀌지 않고, 문구 · theme add 출력도 위 두 상위 경로 안내의 어미 말고는 그대로예요.
+
+- 293500e: `axis check` · MCP `axis.check_project` 에서 전역 CSS 를 읽는 세 항목(Tailwind 4 의 `tailwind.config` · `globals.css` · Tailwind 4 의 `animation`)이 `axis.config.json` 의 `globalCss` 를 먼저 봐요(WI-0100a). 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같아요.
+
+  **업데이트 뒤 `axis check` 종료 코드가 1 에서 0 으로 바뀔 수 있어요.** 아래 두 경우는 지금까지 `globals.css 파일을 찾을 수 없습니다` FAIL(종료 코드 1)이었는데 이제 `globalCss` 가 가리키는 파일을 판정해요.
+  1. CSS 를 고정 후보(`globals.css` · `app/globals.css` · `src/app/globals.css` · `src/globals.css` · `styles/globals.css`) 밖에 두고 `globalCss` 로 가리킨 프로젝트(예: `axis init` 이 기록한 `./src/styles/globals.css`, `./styles/app.css`).
+  2. `globalCss` 가 프로젝트 밖 파일(예: 모노레포의 `../shared/globals.css`)을 가리키는 프로젝트. check 는 그 파일을 읽기만 하고, `axis theme add` 는 종전대로 밖 파일에 쓰지 않아요.
+  - `globalCss` 가 가리키는 파일이 있고 `.css` 이면 그 파일을 판정해요. 없으면 종전 후보 순서 그대로예요. 루트에 낡은 `globals.css` 가 있어 `brand` 항목(`app/globals.css`)과 다른 파일을 판정하던 경우가 사라져요(WARN 에서 PASS 로 바뀔 수 있어요).
+  - 반대로 루트 `globals.css` 에 내용이 있고 `globalCss` 가 가리키는 파일은 비어 있으면 PASS 에서 WARN 으로 바뀌어요(종료 코드는 그대로). `globalCss` 를 실제로 쓰는 파일로 고치면 사라져요.
+  - `globalCss` 를 쓰지 못하면 종전 후보로 넘어가고 세 항목 문구 끝에 이유를 붙여요. 없는 파일 · 디렉터리는 `(globalCss ./nope.css 없음)`(지금까지 `brand` 항목만 쓰던 표기), `.css` 가 아닌 파일은 `(globalCss ./package.json: .css 파일이 아님)` 이에요. `brand` 항목도 `.css` 가 아닌 파일을 버리고 후보를 판정해요(지금까지는 그 파일을 읽었어요).
+  - `globalCss` 키가 없는 프로젝트의 출력은 바뀌지 않아요. 고를 CSS 가 하나도 없으면 종전처럼 `globals.css` FAIL 이에요. 예외는 후보 이름과 같은 디렉터리(예: 루트 `globals.css/`)가 있는 프로젝트 하나예요. 지금까지는 check 가 `EISDIR` 로 멈췄는데(종료 코드 1) 이제 그 후보를 건너뛰고 다음 후보를 판정해요.
+
+- cdc7a71: `axis check` · MCP `axis.check_project` 가 전역 CSS 의 상대 경로 `@import`(`@import "./axis.css";` 등)로 들여온 프로젝트 안 CSS 의 근거 줄도 인정해요(WI-0100b). 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같아요.
+  - **check 종료 코드가 1 에서 0 으로 바뀔 수 있는 경우**: 없어요. 이 변경이 바꾸는 판정은 PASS · WARN 사이뿐이고 FAIL 조건(고를 CSS 파일이 하나도 없음)은 그대로예요(착수 fixture 53개를 기준선 2d12ae2 빌드와 나란히 돌려 종료 코드가 모두 같음). 0 에서 1 로 바뀌는 경우도 없어요.
+  - **PASS 가 WARN 으로 바뀔 수 있는 경우**(종료 코드는 그대로이고 「N pass / M warn」 집계가 달라져요):
+    - 하위 파일의 `@axis-ds/ui-react/tailwind.css` · `@axis-ds/agentic-ui/tailwind.css` import 가 이제 버전 판정에 들어가요. 진입 파일에서 그 패키지를 `@source` 로 직접 가리켜 PASS 였는데 하위 파일의 import 가 1.4.0 미만 설치본을 가리키면 「import 가 있지만 … 버전 확인이 필요합니다」 WARN 이에요.
+    - 진입 파일이 `--axis-*` 변수를 직접 정의해 globals.css 가 PASS 였는데, 하위 파일에 이 앱에서 해석되지 않는 tokens CSS import 가 있으면 진입 파일에 그 줄이 있을 때와 같이 import 판정을 따라 WARN 이에요.
+    - 상대 import 가 순환하는 프로젝트(자기 import · 조건 붙은 import 로 닫히는 순환 · 32단계 밖에서 닫히는 순환 포함)는 진입 파일에 근거가 있어 globals.css 가 PASS 였어도 이제 globals.css 가 WARN 이에요(진입 파일 판정 문구 뒤에 「 / 」와 순환 문구).
+  - WARN 이 PASS 로 바뀌는 경우: 토큰 진입점 · tokens CSS import · `@import "tailwindcss"` · 컴포넌트 `tailwind.css` · `tw-animate-css` · `@plugin "tailwindcss-animate"` · 브랜드 import 를 하위 파일에 둔 프로젝트. 문구 끝(`globalCss` 표기 앞)에 「(app/axis.css 의 import)」처럼 출처가 붙어요. 하위 파일이 없으면 문구는 종전 바이트 그대로예요.
+  - 하위 파일의 패키지 경로 줄은 진입 파일에 같은 줄이 있을 때와 같은 해석 판정(WI-0097)을 그 하위 파일의 디렉터리 기준으로 거쳐요. 그 디렉터리의 중첩 `node_modules` 에 `tailwind.css` 가 없는 컴포넌트 설치본이 있으면 PASS 가 아니라 「이 파일 위치에서 … 해석되지 않습니다」 WARN 이에요. 워크스페이스 루트에만 선언하고 설치하지 않은 tokens 를 하위 파일에서 import 하면 PASS 가 아니라 「import 가 있지만 … 해석되지 않습니다」 WARN 이에요. 앱 `package.json` 에 선언했으면 설치 여부와 상관없이 막지 않아요. 브랜드 import 는 종전대로 이 판정 없이 위치만 봐요.
+  - 알려진 한계(WI-0103 에서 다뤄요): 하위 파일 디렉터리의 중첩 `node_modules` 는 첫 위치의 설치본만 봐요. `exports` 가 없고 파일도 없는 그림자는 실빌드가 건너뛰어 상위 설치본으로 푸는데 check 는 해석 불가 WARN 이고, `exports` 가 경로를 막는 tokens 그림자 · 내용이 다른 그림자는 check 가 PASS 예요. 이 경우 WARN 문구는 프로젝트 밖 CSS 용 안내(「설치본이 앱 쪽 node_modules 에만 있음 → … globalCss 를 앱 안 파일로 바꾸세요」)를 그대로 써서 상황과 맞지 않아요.
+  - 따라가는 범위: 따옴표 안 `./` · `../` 경로이고 대상 실경로가 프로젝트 안인 일반 파일만이에요. 공백 없는 `@import"./axis.css"` · 다른 따옴표가 든 이름 `"./it's.css"` 도 따라가고, 확장자 없는 `"./axis"` 는 적힌 이름의 파일이 먼저이고 없으면 `axis.css` 를 봐요(Tailwind 4 와 같은 규칙). 진입 파일에서 32단계까지 읽고 같은 파일은 한 번만 읽어요. 프로젝트 밖으로 나가는 경로 · 밖을 가리키는 심볼릭 링크 · 없는 파일 · 디렉터리 · `url(...)` 형태 · `layer()` · `supports()` · media 조건이 붙은 import · `./` 없는 이름은 따라가지 않고, 프로젝트 밖 전역 CSS 가 다시 밖 파일을 import 해도 읽지 않아요.
+  - 상대 import 가 순환하면(a → b → a · 자기 import, 실제 빌드가 「Exceeded maximum recursion depth」로 실패) globals.css 항목은 진입 파일만으로 판정한 문구 뒤에 「 / 」로 순환 문구를 붙여 WARN 을 내요(예: 「app/globals.css에 AXIS CSS 변수가 없습니다 / app/globals.css · app/b.css 이 서로 @import 해 빌드가 순환으로 실패합니다 → 순환하는 @import 를 없애세요」). 진입 파일이 PASS 였어도 항목은 WARN 이고, 순환에 든 파일이 하나(자기 자신 import)면 「app/globals.css 이 자기 자신을 @import 해 빌드가 순환으로 실패합니다 → …」예요. 종료 코드는 그대로이고, 이때는 하위 파일의 근거를 인정하지 않아 모든 항목이 진입 파일만으로 판정해요(순환 문구는 globals.css 항목에만).
+  - 순환은 근거보다 넓게 찾아요: `layer()` · `supports()` · media 조건이 붙은 상대 import 도 순환 판정에 넣고(조건 import 로만 닿는 파일도 순환을 찾으려고 읽음), Tailwind 4 의 재귀 한도와 같은 100단계까지 읽어요(32단계 밖에서 닫히는 순환도 찾음). 근거로 인정하는 범위는 그대로예요(조건 붙은 import 제외 · 32단계까지).
+  - create-next-app 기본 정의 · `font-family: Arial` 같은 결함은 진입 파일에서만 판정해요(하위 파일의 결함은 종전처럼 보지 않음).
+  - `axis theme add` 의 동작과 출력은 바뀌지 않아요.
+
 ## 1.7.6
 
 ### Patch Changes
