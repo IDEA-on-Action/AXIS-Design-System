@@ -666,16 +666,16 @@
       "slug": "css-import-resolvability",
       "issueNumber": 241,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhD3BMc",
-      "lastSyncedAt": "2026-10-28T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0098",
       "slug": "pnp-content-glob",
       "issueNumber": 242,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhD3BQw",
-      "lastSyncedAt": "2026-10-28T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0099",
@@ -690,8 +690,8 @@
       "slug": "global-css-selection",
       "issueNumber": 244,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhD3BcE",
-      "lastSyncedAt": "2026-10-28T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0101",

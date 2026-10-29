@@ -1,8 +1,8 @@
 # WI-0098: Yarn PnP 의 Tailwind 3 content 판정 릴리스 노트
 
-> **초안 · 미발행**(2026-10-28 작성, 같은 날 구현 뒤 재측정 반영). 구판 수치는 발행본 1.7.6 · 1.4.5, 신판 수치는 worktree 빌드(cli · mcp dist)로 같은 실설치 fixture 51행을 다시 잰 값이에요. 안내 문구는 사용자 결정 Q44 · Q45 · Q47(2026-10-28)로 확정했어요
+> **발행**(2026-10-29, cli 1.7.7 · mcp 1.4.6). 2026-10-28 작성, 같은 날 구현 뒤 재측정 반영. 구판 수치는 발행본 1.7.6 · 1.4.5, 신판 수치는 worktree 빌드(cli · mcp dist)로 같은 실설치 fixture 51행을 다시 잰 값이에요. 안내 문구는 사용자 결정 Q44 · Q45 · Q47(2026-10-28)로 확정했어요
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch | GitHub: #242
-> 발행 예정: WI-0097(#241) · WI-0100(#244)과 Version PR 하나로 cli 1.7.7 · mcp 1.4.6. linked 4패키지(tokens · theme · ui-react · agentic-ui)는 1.8.2 그대로예요
+> 발행: 2026-10-29, WI-0097(#241) · WI-0100(#244)과 Version PR #251(머지 1e8da06) 하나로 cli 1.7.7 · mcp 1.4.6, publish run 40811479954, provenance 2/2(둘 다 slsa provenance v1). 이 WI 는 #252(be61b74)로 머지했어요. linked 4패키지(tokens · theme · ui-react · agentic-ui)는 1.8.2 그대로예요
 
 ## 바뀐 점
 
@@ -36,6 +36,10 @@
 - Tailwind 4 의 content 판정은 이 변경과 무관해요(WI-0097).
 - `.pnp.cjs` 를 찾는 규칙(`.git` 에서 멈춤)은 그대로예요.
 - `axis init` 의 안내는 바꾸지 않았어요(WI-0095).
+
+## 발행본 재측정 (2026-10-29)
+
+발행본 dist 를 main 1e8da06 로컬 빌드와 비교하니 코드 파일은 바이트가 같았어요(cli 46 · mcp 36개 파일). 다른 것은 `dist/registry/index.json` · `registry.json` 의 version 필드뿐이에요(로컬 1.5.0 은 커밋된 `apps/web/public/r/index.json` 사본이고, 발행본 1.8.2 는 CI 가 레지스트리를 다시 만든 값이라 pages.dev `/r/index.json` 과 같아요). 발행본 CLI `axis check` 와 MCP `axis.check_project` 의 판정 줄은 이 WI 의 PnP 앱 fixture 21개에서 모두 같았고 출력이 빈 것은 0개예요. 1.7.6 발행본 대비 판정 줄이 바뀐 것은 PnP 앱 21/21 이에요(세 WI 를 합치면 바뀐 fixture 91개).
 
 ## 잔여 · 알려진 한계
 

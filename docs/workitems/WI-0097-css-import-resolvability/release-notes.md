@@ -1,8 +1,8 @@
 # WI-0097: check 의 CSS import 해석 가능성 판정 릴리스 노트
 
-> **초안 · 미발행**(2026-10-28 작성, 1부 · 2부 수정본 측정 반영). B1 문구는 사용자 결정 Q43 으로 확정, 2부 새 문구(globals.css · 프로젝트 밖 진입 파일)는 Master 확인 전이에요([testplan 4.5](./testplan.md))
+> **발행**(2026-10-29, cli 1.7.7 · mcp 1.4.6). 2026-10-28 작성, 1부 · 2부 수정본 측정 반영. B1 문구는 사용자 결정 Q43, 2부 새 문구(globals.css · 프로젝트 밖 진입 파일)는 사용자 결정 Q48 로 확정했어요([testplan 4.4 · 4.5](./testplan.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch | GitHub: #241
-> 발행(예정): WI-0098 · WI-0100 과 한 발행으로 cli 1.7.7 · mcp 1.4.6. linked 4패키지(tokens · theme · ui-react · agentic-ui)는 1.8.2 그대로예요
+> 발행: 2026-10-29, WI-0098 · WI-0100 과 Version PR #251(머지 1e8da06) 하나로 cli 1.7.7 · mcp 1.4.6, publish run 40811479954, provenance 2/2(둘 다 slsa provenance v1). 이 WI 는 #253(e2701fe)로 머지했어요. linked 4패키지(tokens · theme · ui-react · agentic-ui)는 1.8.2 그대로예요
 
 ## 바뀐 점
 
@@ -28,6 +28,10 @@
 - 앱 `package.json` 에 `@axis-ds/tokens` 를 선언했으면 설치하지 않았어도 globals.css 는 종전처럼 PASS 예요(사용자 결정 Q28). 미설치는 dependencies 항목이 알려요.
 - Tailwind 4 의 tailwind.config PASS(토큰 진입점)는 그대로이고, tokens 해석 불가는 globals.css 에서만 알려요.
 - `axis init` 의 Tailwind 4 안내는 이번에 바꾸지 않았어요(사용자 결정 Q24, WI-0095).
+
+## 발행본 재측정 (2026-10-29)
+
+발행본 dist 를 main 1e8da06 로컬 빌드와 비교하니 코드 파일은 바이트가 같았어요(cli 46 · mcp 36개 파일). 다른 것은 `dist/registry/index.json` · `registry.json` 의 version 필드뿐이에요(로컬 1.5.0 은 커밋된 `apps/web/public/r/index.json` 사본이고, 발행본 1.8.2 는 CI 가 레지스트리를 다시 만든 값이라 pages.dev `/r/index.json` 과 같아요). 발행본 CLI `axis check` 와 MCP `axis.check_project` 의 판정 줄은 이 WI · WI-0100 계열 fixture 153개에서 모두 같았고 출력이 빈 것은 0개예요. 1.7.6 발행본 대비 판정 줄이 바뀐 fixture 는 이 WI 계열 4개예요(WI-0100 계열 66 · WI-0098 PnP 앱 21 과 합쳐 91개). 이 재측정은 판정 줄 대조이고, fixture 별 종료 코드 표(testplan 4.2)는 따로 채우지 않았어요.
 
 ## 잔여 · 알려진 한계
 

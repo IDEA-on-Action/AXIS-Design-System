@@ -1,6 +1,6 @@
 # WI-0098: Yarn PnP 의 Tailwind 3 content 판정 TODO
 
-> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #242 | 상태: 🔄 착수(2026-10-28)
+> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트 계획: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #242 | 상태: ✅ 완료(2026-10-29, cli 1.7.7 · mcp 1.4.6)
 > 같은 발행: WI-0097(#241) · WI-0100(#244), cli 1.7.7 · mcp 1.4.6 patch. 이 WI 는 별도 worktree 에서 병렬로 하고 WI-0097 머지 뒤 rebase 해요(plan.md 3절)
 
 ## 결정
@@ -42,10 +42,10 @@
 - [x] CLI · MCP 줄 대조 불일치 0 + 비교기 양성 대조 (AC9)
 - [x] Q31 · Q33 테스트 · 변이 · A/B, 실설치 재측정(51행 + S1 8행 + theme add 12개), AC5 복사 측정 (AC4 · AC5 · AC10)
 - [x] Q44 · Q45 테스트(cli `Q45` 1건 · mcp `Q45` 1건, 기존 리터럴 합니다체 · unplugged 행 기대 갱신) · 변이(조건 제거 cli 5 · mcp 2, theme add 만 무시 cli 1, 해요체 되돌림 cli 13 · mcp 3), 실설치 51행 + theme add 12개 재측정 · 비 PnP 31건 바이트 불변 (AC5 · AC7 · AC8 · AC9 · AC10)
-- [ ] turbo build · type-check · lint `--force`(Cached 0), cli · mcp `npx vitest run` (AC8)
+- [x] turbo build · type-check · lint `--force`(Cached 0), cli · mcp `npx vitest run` (AC8) (2026-10-29, 이 WI 단독으로는 돌리지 않았고, 0098 머지 뒤 main 위에서 만든 #255 의 `turbo run build type-check lint --force`(registry-core · cli · mcp) Cached 0 rc 0 · vitest cli 1096 · mcp 231 로 갈음)
 
 ## 릴리스
 - [x] changeset `.changeset/wi-0098-pnp-content-glob.md`(`@axis-ds/cli` patch + `@axis-ds/mcp` patch, 1 → 0 경우 · 0 → 1 없음 · PASS → WARN 형태 명시) (AC12)
 - [x] `pnpm check-changeset-mcp-tokens` rc 0, 이 PR 자기 changeset 확인 (AC12)
-- [ ] release-notes.md 를 측정값으로 갱신하고 「미발행」 표기를 발행 정보로 바꿈 (AC12)
-- [ ] PR · 머지 · 발행(Master, WI-0097 · WI-0100 과 Version PR 하나)
+- [x] release-notes.md 를 측정값으로 갱신하고 「미발행」 표기를 발행 정보로 바꿈 (AC12) (2026-10-29, 발행 정보와 발행본 재측정 단락 반영)
+- [x] PR · 머지 · 발행(Master, WI-0097 · WI-0100 과 Version PR 하나) (2026-10-29, PR #252 머지 be61b74 · Version PR #251 머지 1e8da06 · publish run 40811479954 success, cli 1.7.7 · mcp 1.4.6 발행 · provenance 2/2, linked 4패키지 1.8.2 그대로)
