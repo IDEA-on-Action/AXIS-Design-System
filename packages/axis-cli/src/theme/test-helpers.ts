@@ -48,6 +48,16 @@ async function copyTokensPackage(fixture: Exclude<TokensFixture, "none">, dest: 
   }
 }
 
+/**
+ * 같은 경로의 `node_modules/@axis-ds/tokens` 를 다른 fixture 로 갈아 끼웁니다(WI-0089: 같은 프로세스에서 tokens 상태를 바꾸는 테스트).
+ * 기존 디렉터리는 지우고 새로 복사하며, `none` 이면 지우기만 합니다.
+ */
+export async function installTokens(dir: string, fixture: TokensFixture): Promise<void> {
+  const dest = path.join(dir, "node_modules", "@axis-ds", "tokens");
+  await fs.remove(dest);
+  if (fixture !== "none") await copyTokensPackage(fixture, dest);
+}
+
 /** theme-only 템플릿 JSON(기본은 동결 사본)의 files[] 를 그대로 펼치고 `initTemplate` 형태의 config 를 씁니다. */
 async function writeThemeOnly(dir: string, templateFile = THEME_ONLY_TEMPLATE) {
   const template = (await fs.readJSON(templateFile)) as {

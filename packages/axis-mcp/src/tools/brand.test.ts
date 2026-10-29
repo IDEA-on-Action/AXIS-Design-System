@@ -11,7 +11,9 @@ import {
   TOKENS_INSTALL_COMMAND,
   tokensInstallCommandFor,
   tokensInstallGuideFor,
+  STALE_TOKENS_NOTE,
 } from "./brand.js";
+import { setIsolatedResolveFactoryForTest } from "./brand-core.js";
 
 // WI-0028 P5 (T5-2 · T5-4 · T5-5): MCP 브랜드 도구.
 // fixture 원본은 CLI 의 `packages/axis-cli/test/fixtures/theme` 를 그대로 씁니다(plan 6.1). 원본에서는
@@ -327,4 +329,59 @@ describe("WI-0093: 설치 안내가 선언 출처를 따름(CLI theme list · in
       expect({ label, cliLine }).toEqual({ label, cliLine: expected.replace(/`/g, "") });
     });
   }
+});
+
+describe("WI-0089: 같은 서버 세션에서 tokens 가 바뀌면 다음 호출이 새 상태를 따름", () => {
+  afterEach(() => setIsolatedResolveFactoryForTest(null));
+
+  /** 같은 경로의 tokens 를 다른 fixture 로 갈아 끼움(`project` 와 같은 복사 방식) */
+  async function swap(dir: string, tokens: TokensFixture): Promise<void> {
+    const dest = path.join(dir, "node_modules", "@axis-ds", "tokens");
+    await fs.remove(dest);
+    if (tokens === "none") return;
+    await fs.copy(path.join(FIXTURES, `tokens-${tokens}`, "pkg"), dest);
+    if (await fs.pathExists(path.join(dest, "_dist"))) await fs.move(path.join(dest, "_dist"), path.join(dest, "dist"));
+  }
+
+  it("미지원 1.2 → 빌드 전 1.3: list_brands · get_brand 응답이 빌드 전 안내(같은 경로를 처음 본 응답과 같은 글)", async () => {
+    const dir = await project("1.2");
+    expect((await handleListBrands({ targetDir: dir })).status).toBe("unsupported");
+    await swap(dir, "1.3-unbuilt");
+    const fresh = await project("1.3-unbuilt");
+    const norm = (t: string, d: string) => t.split(d).join("<D>");
+    const list = await handleListBrands({ targetDir: dir });
+    const get = await handleGetBrand({ name: "sample", targetDir: dir });
+    expect(list.status).toBe("not-built");
+    expect(norm(formatListBrandsResult(list), dir)).toBe(norm(formatListBrandsResult(await handleListBrands({ targetDir: fresh })), fresh));
+    expect(norm(formatGetBrandResult(get, "sample"), dir)).toBe(
+      norm(formatGetBrandResult(await handleGetBrand({ name: "sample", targetDir: fresh }), "sample"), fresh)
+    );
+  });
+
+  it("정상 1.3 → 미지원 1.2: 미지원 안내", async () => {
+    const dir = await project("1.3");
+    expect((await handleListBrands({ targetDir: dir })).status).toBe("ok");
+    await swap(dir, "1.2");
+    expect(await handleGetBrand({ name: "sample", targetDir: dir })).toEqual({
+      status: "unsupported",
+      version: "1.2.1",
+      brand: null,
+      available: [],
+    });
+  });
+
+  it("격리 해석을 못 하면 종전 판정에 재시작 안내 한 줄을 붙임(Q83), stale 가 없으면 안내 없음", async () => {
+    const dir = await project("1.2");
+    expect(formatListBrandsResult(await handleListBrands({ targetDir: dir }))).not.toContain(STALE_TOKENS_NOTE);
+    await swap(dir, "1.3");
+    setIsolatedResolveFactoryForTest(() => {
+      throw new Error("worker 를 만들 수 없음(테스트 주입)");
+    });
+    const list = await handleListBrands({ targetDir: dir });
+    const get = await handleGetBrand({ name: "sample", targetDir: dir });
+    expect(list.stale).toBe(true);
+    expect(formatListBrandsResult(list).endsWith(`\n\n${STALE_TOKENS_NOTE}`)).toBe(true);
+    expect(formatGetBrandResult(get, "sample").endsWith(`\n\n${STALE_TOKENS_NOTE}`)).toBe(true);
+    expect(formatListBrandsResult({ ...list, stale: undefined })).not.toContain(STALE_TOKENS_NOTE);
+  });
 });

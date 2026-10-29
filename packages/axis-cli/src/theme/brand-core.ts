@@ -7,9 +7,11 @@
  * 출력 문자열은 만들지 않고 구조화된 값만 돌려줍니다. 전역 CSS 후보는 init 과 같이 쓰려고 공유 코어에 둡니다(WI-0065).
  */
 
+import { createHash } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve, sep } from "node:path";
+import { MessageChannel, Worker, receiveMessageOnPort } from "node:worker_threads";
 import { GLOBAL_CSS_CANDIDATES, ROOT_LAYOUT_FILES, selectGlobalCss } from "@axis-ds/registry-core/project";
 import { expandGlobalCss, packageVersionGate, type PackageVersionGate } from "@axis-ds/registry-core/tailwind-core";
 
@@ -63,6 +65,8 @@ export interface TokensResolution {
   version?: string;
   /** 브랜드 목록 파일 절대 경로 (`ok` 일 때만) */
   indexPath?: string;
+  /** 같은 프로세스에서 package.json 이 바뀌었는데 새 내용을 다시 읽지 못해 이전 판독 기준일 수 있음(WI-0089 Q83, 그럴 때만 있음) */
+  stale?: true;
 }
 
 /** `dist/brands/index.json` 항목 (tokens 1.3.0 공개 API) */
@@ -111,6 +115,8 @@ export interface BrandListResult {
   status: TokensStatus;
   version?: string;
   brands: BrandSummary[];
+  /** `TokensResolution.stale` 와 같음(WI-0089 Q83, 그럴 때만 있음) */
+  stale?: true;
 }
 
 export interface BrandGetResult {
@@ -120,6 +126,8 @@ export interface BrandGetResult {
   brand: BrandDetail | null;
   /** 설치된 브랜드 이름(이름순) */
   available: string[];
+  /** `TokensResolution.stale` 와 같음(WI-0089 Q83, 그럴 때만 있음) */
+  stale?: true;
 }
 
 function readJsonFile(file: string): unknown {
@@ -132,14 +140,20 @@ function errorCode(err: unknown): string | undefined {
     : undefined;
 }
 
-/** `<baseDir>` 에서 위로 올라가며 `node_modules/@axis-ds/tokens/package.json` 을 찾습니다(심볼릭 링크는 그대로 따라감). */
-function findTokensPackageJson(baseDir: string): string | undefined {
+/**
+ * `<baseDir>` 에서 위로 올라가며 `node_modules/@axis-ds/tokens/package.json` 을 찾습니다(심볼릭 링크는 그대로 따라감).
+ * 본 후보 경로들도 함께 돌려줍니다(WI-0089). 찾았으면 `candidates` 의 마지막이 `found` 이고, 그 앞의 후보는 모두 없는 경로입니다.
+ * Node 의 패키지 탐색도 같은 순서로 이 경로들을 읽습니다.
+ */
+function tokensPackageJsonCandidates(baseDir: string): { found?: string; candidates: string[] } {
+  const candidates: string[] = [];
   let dir = resolve(baseDir);
   for (;;) {
     const candidate = join(dir, "node_modules", TOKENS_PACKAGE, "package.json");
-    if (existsSync(candidate)) return candidate;
+    candidates.push(candidate);
+    if (existsSync(candidate)) return { found: candidate, candidates };
     const parent = dirname(dir);
-    if (parent === dir) return undefined;
+    if (parent === dir) return { candidates };
     dir = parent;
   }
 }
@@ -153,27 +167,296 @@ function tokensSpecifier(subpath: string): string {
   return `${TOKENS_PACKAGE}/${subpath.replace(/^\.\//, "")}`;
 }
 
+/*
+ * WI-0089: 같은 프로세스에서 tokens package.json 이 바뀐 뒤의 해석
+ *
+ * Node 는 `require.resolve` 가 처음 읽은 package.json(`exports` 등)을 프로세스가 끝날 때까지 기억하고, 지우는 공개 API 가 없습니다.
+ * 그래서 오래 사는 MCP 서버에서 tokens 를 바꾸면(업그레이드 · 다운그레이드 · 브랜드 추가 · 중첩 설치본 제거) 첫 판독의 `exports` 로
+ * 계속 판정했습니다. 후보 경로별로 「Node 해석이 그 경로를 처음 볼 때의 상태(내용 sha256 또는 없음)」를 기록해 두고(사용자 결정 Q81),
+ * 이번 후보들의 상태가 기록과 하나라도 다르면 그 판정의 해석을 Worker 스레드에서 합니다(Q80 방식 B). Worker 는 자기 환경의 캐시를
+ * 따로 가져 새 내용을 읽습니다.
+ * - 처음 보는 경로 · 상태가 같은 경로는 종전 그대로 `createRequire().resolve` 입니다. CLI 는 명령마다 새 프로세스라 늘 이 갈래입니다
+ * - 기록한 내용과 Node 가 실제로 읽은 내용이 다를 수 있는 경합(설치 도중의 호출)은 해석 직후 다시 읽어 가리고, 달라졌으면 그 경로를
+ *   「알 수 없음」으로 표시해 격리 해석으로 다시 판정합니다
+ * - 호출지가 동기 함수라(CLI `theme list` · `theme info` · `theme add`) Worker 응답을 `Atomics.wait` 로 기다립니다
+ * - Worker 를 만들 수 없거나 응답이 없으면 종전 Node 해석으로 판정하고 결과에 `stale: true` 를 답니다(Q83). 그 뒤로 이 프로세스에서는
+ *   Worker 를 다시 만들지 않습니다(호출마다 대기 한도만큼 멈추지 않게). MCP 는 재시작 안내를 붙입니다
+ */
+
+/** tokens package.json 후보 경로 → Node 해석이 그 경로를 처음 볼 때의 상태(내용 sha256 · `ABSENT` · `UNKNOWN`) */
+const nodeSeenStates = new Map<string, string>();
+/** 후보 경로에 파일이 없었음 */
+const ABSENT = "absent";
+/** 기록과 Node 판독이 어긋났을 수 있음(경합). 어떤 상태와도 같지 않습니다 */
+const UNKNOWN = "unknown";
+
+/** 격리 해석이 한 번 실패하면 이 프로세스에서는 다시 만들지 않습니다 */
+let isolationDisabled = false;
+
+/** 격리 해석 통계(테스트 · 측정용). `workers` 는 만든 Worker 수, `resolves` 는 Worker 로 해석한 지정자 수, `fallbacks` 는 Node 해석으로 돌아간 판정 수 */
+const isolatedStats = { workers: 0, resolves: 0, fallbacks: 0 };
+
+/** Worker 응답을 기다리는 한도(ms). 넘으면 Node 해석으로 돌아갑니다 */
+const ISOLATED_RESOLVE_TIMEOUT_MS = 5_000;
+
+/** 지정자 하나를 해석해 절대 경로를 돌려주거나, Node 와 같은 `code` 를 단 오류를 던지는 해석기 */
+export interface IsolatedResolveSession {
+  resolve(spec: string): string;
+  close(): void;
+}
+
+/** 격리 해석 세션을 만드는 함수. `from` 은 `createRequire` 에 넘길 파일 경로입니다 */
+export type IsolatedResolveFactory = (from: string) => IsolatedResolveSession;
+
+const ISOLATED_RESOLVE_SOURCE = `
+const { workerData } = require("node:worker_threads");
+const { createRequire } = require("node:module");
+const { port, signal, from } = workerData;
+const req = createRequire(from);
+port.on("message", (spec) => {
+  let reply;
+  try {
+    reply = { path: req.resolve(spec) };
+  } catch (err) {
+    const code = err && typeof err === "object" && "code" in err ? String(err.code) : undefined;
+    reply = { code, message: err && err.message ? String(err.message) : String(err) };
+  }
+  port.postMessage(reply);
+  Atomics.store(signal, 0, 1);
+  Atomics.notify(signal, 0);
+});
+`;
+
+/** 격리 해석이 응답하지 못함(해석 결과가 아니라 Worker 자체의 실패) */
+export class IsolationFailure extends Error {}
+
+function createWorkerResolveSession(from: string, source: string, timeoutMs: number): IsolatedResolveSession {
+  const { port1, port2 } = new MessageChannel();
+  const signal = new Int32Array(new SharedArrayBuffer(4));
+  const worker = new Worker(source, {
+    eval: true,
+    workerData: { port: port2, signal, from },
+    transferList: [port2],
+  });
+  // Worker 의 비동기 오류(시작 실패 · 메모리 부족 등)가 처리되지 않은 'error' 로 올라가 프로세스를 끝내지 않게 합니다.
+  // 실패는 신호 대기의 시간 초과로 압니다
+  worker.on("error", () => {});
+  worker.unref();
+  return {
+    resolve(spec) {
+      Atomics.store(signal, 0, 0);
+      port1.postMessage(spec);
+      const waited = Atomics.wait(signal, 0, 0, timeoutMs);
+      const received = receiveMessageOnPort(port1);
+      if (waited === "timed-out" || !received) throw new IsolationFailure("격리 해석이 응답하지 않았습니다");
+      const reply = received.message as { path?: string; code?: string; message?: string };
+      if (typeof reply.path === "string") return reply.path;
+      throw Object.assign(new Error(reply.message ?? spec), reply.code === undefined ? {} : { code: reply.code });
+    },
+    close() {
+      port1.close();
+      void worker.terminate();
+    },
+  };
+}
+
+function workerResolveSession(from: string): IsolatedResolveSession {
+  return createWorkerResolveSession(from, ISOLATED_RESOLVE_SOURCE, ISOLATED_RESOLVE_TIMEOUT_MS);
+}
+
+/** 테스트 전용: Worker 소스 · 대기 한도를 바꾼 세션(비동기 실패 · 시간 초과 주입) */
+export function workerResolveSessionForTest(from: string, source: string, timeoutMs: number): IsolatedResolveSession {
+  return createWorkerResolveSession(from, source, timeoutMs);
+}
+
+let isolatedFactory: IsolatedResolveFactory = workerResolveSession;
+
+/**
+ * 테스트 전용: 격리 해석 세션 생성기를 바꿉니다(`null` 이면 기본 Worker). 실패 주입(Q83 폴백)에 씁니다.
+ * 부를 때마다 「격리 해석 끔」 래치도 풉니다
+ */
+export function setIsolatedResolveFactoryForTest(factory: IsolatedResolveFactory | null): void {
+  isolatedFactory = factory ?? workerResolveSession;
+  isolationDisabled = false;
+}
+
+/** 격리 해석 통계의 사본(테스트 · 측정용) */
+export function isolatedResolveStats(): { workers: number; resolves: number; fallbacks: number } {
+  return { ...isolatedStats };
+}
+
+function sha256(text: string): string {
+  return createHash("sha256").update(text).digest("hex");
+}
+
+/** 한 번의 판정(목록 · 상세) 동안 tokens 지정자를 해석하는 해석기. 끝나면 `close` 합니다 */
+interface TokensResolver {
+  resolve(spec: string): string;
+  /** 바뀐 내용을 격리 해석하지 못해 종전 Node 해석으로 판정했는지(Q83) */
+  readonly stale: boolean;
+  /** Node 해석 직후 package.json 이 기록과 달라 격리 해석으로 다시 판정했는지(경합). 쓴 쪽은 version 을 다시 읽습니다 */
+  readonly raced: boolean;
+  close(): void;
+}
+
+function openTokensResolver(baseDir: string, candidates: string[], pkgJson: string, pkgText: string): TokensResolver {
+  const nodeRequire = projectRequire(baseDir);
+  const key = sha256(pkgText);
+  const current = candidates.map((c) => (c === pkgJson ? key : ABSENT));
+  const changed = candidates.some((c, i) => {
+    const seen = nodeSeenStates.get(c);
+    return seen !== undefined && seen !== current[i];
+  });
+
+  let mode: "node" | "isolated" = changed ? "isolated" : "node";
+  if (mode === "node") {
+    candidates.forEach((c, i) => {
+      if (!nodeSeenStates.has(c)) nodeSeenStates.set(c, current[i]);
+    });
+  }
+
+  let session: IsolatedResolveSession | null = null;
+  let stale = false;
+  let raced = false;
+  let postChecked = false;
+  const markStale = () => {
+    if (!stale) isolatedStats.fallbacks += 1;
+    stale = true;
+  };
+  const fallBack = () => {
+    markStale();
+    isolationDisabled = true;
+    session?.close();
+    session = null;
+  };
+  const startIsolation = () => {
+    if (isolationDisabled) {
+      markStale();
+      return;
+    }
+    try {
+      session = isolatedFactory(join(resolve(baseDir), "package.json"));
+      isolatedStats.workers += 1;
+    } catch {
+      fallBack();
+    }
+  };
+  if (mode === "isolated") startIsolation();
+
+  const isolatedResolve = (spec: string): string => {
+    if (session) {
+      try {
+        const resolved = session.resolve(spec);
+        isolatedStats.resolves += 1;
+        return resolved;
+      } catch (err) {
+        if (!(err instanceof IsolationFailure)) {
+          isolatedStats.resolves += 1;
+          throw err;
+        }
+        fallBack();
+      }
+    }
+    return nodeRequire.resolve(spec);
+  };
+
+  return {
+    resolve(spec) {
+      if (mode === "isolated") return isolatedResolve(spec);
+      let resolved: string | undefined;
+      let failure: unknown;
+      let failed = false;
+      try {
+        resolved = nodeRequire.resolve(spec);
+      } catch (err) {
+        failed = true;
+        failure = err;
+      }
+      if (!postChecked) {
+        postChecked = true;
+        let after: string;
+        try {
+          after = sha256(readFileSync(pkgJson, "utf8"));
+        } catch {
+          after = UNKNOWN;
+        }
+        if (after !== key) {
+          // 기록한 뒤 Node 가 읽기 전에 바뀌었을 수 있습니다. Node 가 무엇을 기억했는지 모르므로 이 경로는 늘 격리 해석합니다
+          nodeSeenStates.set(pkgJson, UNKNOWN);
+          raced = true;
+          mode = "isolated";
+          startIsolation();
+          return isolatedResolve(spec);
+        }
+      }
+      if (failed) throw failure;
+      return resolved as string;
+    },
+    get stale() {
+      return stale;
+    },
+    get raced() {
+      return raced;
+    },
+    close() {
+      session?.close();
+      session = null;
+    },
+  };
+}
+
+interface OpenedTokens {
+  resolution: TokensResolution;
+  /** package.json 을 찾았을 때만 있습니다. 쓴 쪽이 `close` 합니다 */
+  resolver?: TokensResolver;
+}
+
+function readVersion(pkgText: string): string | undefined {
+  const pkg = JSON.parse(pkgText) as { version?: unknown };
+  return typeof pkg.version === "string" ? pkg.version : undefined;
+}
+
+function openTokens(baseDir: string): OpenedTokens {
+  const { found: pkgJson, candidates } = tokensPackageJsonCandidates(baseDir);
+  if (!pkgJson) return { resolution: { status: "not-installed" } };
+
+  const pkgText = readFileSync(pkgJson, "utf8");
+  let version = readVersion(pkgText);
+
+  const resolver = openTokensResolver(baseDir, candidates, pkgJson, pkgText);
+  const finish = (status: TokensStatus, indexPath?: string): OpenedTokens => {
+    if (resolver.raced) {
+      try {
+        version = readVersion(readFileSync(pkgJson, "utf8"));
+      } catch {
+        // 다시 읽을 수 없으면 처음 읽은 값을 둡니다
+      }
+    }
+    const resolution: TokensResolution = indexPath === undefined ? { status, version } : { status, version, indexPath };
+    return { resolution: resolver.stale ? { ...resolution, stale: true } : resolution, resolver };
+  };
+  try {
+    const indexPath = resolver.resolve(tokensSpecifier("./brands"));
+    return finish("ok", indexPath);
+  } catch (err) {
+    const code = errorCode(err);
+    if (code === "ERR_PACKAGE_PATH_NOT_EXPORTED") return finish("unsupported");
+    if (code === "MODULE_NOT_FOUND") return finish("not-built");
+    resolver.close();
+    throw err;
+  }
+}
+
 /**
  * 대상 프로젝트의 `@axis-ds/tokens` 상태를 판정합니다(plan 3장 5).
  * 설치 여부는 파일을 직접 찾아 보고, exports 해석은 찾았을 때만 합니다.
  * `MODULE_NOT_FOUND` 하나로 「미설치」를 판정하지 않습니다(빌드 전 링크도 같은 코드를 냄).
+ * 같은 프로세스에서 package.json 이 바뀌었으면 격리 해석으로 새 내용을 봅니다(WI-0089, 위 주석).
  */
 export function resolveTokens(baseDir: string): TokensResolution {
-  const pkgJson = findTokensPackageJson(baseDir);
-  if (!pkgJson) return { status: "not-installed" };
-
-  const pkg = readJsonFile(pkgJson) as { version?: unknown };
-  const version = typeof pkg.version === "string" ? pkg.version : undefined;
-
-  try {
-    const indexPath = projectRequire(baseDir).resolve(tokensSpecifier("./brands"));
-    return { status: "ok", version, indexPath };
-  } catch (err) {
-    const code = errorCode(err);
-    if (code === "ERR_PACKAGE_PATH_NOT_EXPORTED") return { status: "unsupported", version };
-    if (code === "MODULE_NOT_FOUND") return { status: "not-built", version };
-    throw err;
-  }
+  const { resolution, resolver } = openTokens(baseDir);
+  resolver?.close();
+  return resolution;
 }
 
 /** index 항목에서 CSS import 경로를 만듭니다. FR-2 · FR-4 · FR-5 가 같은 함수를 씁니다. */
@@ -346,8 +629,8 @@ function readBrandIndex(indexPath: string): BrandIndexEntry[] {
   return data.brands as BrandIndexEntry[];
 }
 
-function readSummary(baseDir: string, entry: BrandIndexEntry): BrandSummary {
-  const metaPath = projectRequire(baseDir).resolve(tokensSpecifier(entry.meta));
+function readSummary(resolver: TokensResolver, entry: BrandIndexEntry): BrandSummary {
+  const metaPath = resolver.resolve(tokensSpecifier(entry.meta));
   const meta = readJsonFile(metaPath) as {
     description?: unknown;
     themes?: unknown;
@@ -368,19 +651,37 @@ function readSummary(baseDir: string, entry: BrandIndexEntry): BrandSummary {
  * 순서는 index 순서(이름순)를 그대로 따릅니다. `status` 가 `ok` 가 아니면 빈 목록이 아니라 「측정 못 함」입니다.
  */
 export function listBrands(baseDir: string): BrandListResult {
-  const tokens = resolveTokens(baseDir);
-  if (tokens.status !== "ok" || !tokens.indexPath) {
+  const { resolution: tokens, resolver } = openTokens(baseDir);
+  try {
+    return withStaleOf(resolver, listBrandsWith(tokens, resolver));
+  } finally {
+    resolver?.close();
+  }
+}
+
+function listBrandsWith(tokens: TokensResolution, resolver: TokensResolver | undefined): BrandListResult {
+  if (tokens.status !== "ok" || !tokens.indexPath || !resolver) {
     return { status: tokens.status, version: tokens.version, brands: [] };
   }
   const entries = readBrandIndex(tokens.indexPath);
-  let brands: BrandSummary[];
-  try {
-    brands = entries.map((entry) => readSummary(baseDir, entry));
-  } catch (err) {
-    if (isMissingBuildFile(err)) return { status: "not-built", version: tokens.version, brands: [] };
-    throw err;
+  const brands: BrandSummary[] = [];
+  for (const entry of entries) {
+    try {
+      brands.push(readSummary(resolver, entry));
+    } catch (err) {
+      if (isMissingBuildFile(err)) return { status: "not-built", version: tokens.version, brands: [] };
+      // WI-0089 Q83: 종전 Node 해석(낡은 exports)으로 판정하는 중이면 새로 생긴 브랜드는 exports 에 없다고 나옵니다.
+      // 도구 오류로 끝내지 않고 그 항목만 빼며, 결과의 stale 표시가 재시작을 안내합니다
+      if (resolver.stale && errorCode(err) === "ERR_PACKAGE_PATH_NOT_EXPORTED") continue;
+      throw err;
+    }
   }
   return { status: "ok", version: tokens.version, brands };
+}
+
+/** 판정 중 한 번이라도 종전 Node 해석으로 돌아갔으면 결과에 `stale: true` 를 답니다(WI-0089 Q83). 아니면 결과를 그대로 돌려줍니다 */
+function withStaleOf<T extends object>(resolver: TokensResolver | undefined, result: T): T {
+  return resolver?.stale ? { ...result, stale: true } : result;
 }
 
 function stripComments(css: string): string {
@@ -572,8 +873,16 @@ function readProjectPackageJson(baseDir: string): Record<string, unknown> | unde
  * 브랜드 하나의 상세(FR-3 · FR-4). 없는 이름이면 `brand: null` 과 설치된 이름 목록을 돌려줍니다.
  */
 export function getBrand(baseDir: string, name: string): BrandGetResult {
-  const tokens = resolveTokens(baseDir);
-  if (tokens.status !== "ok" || !tokens.indexPath) {
+  const { resolution: tokens, resolver } = openTokens(baseDir);
+  try {
+    return withStaleOf(resolver, getBrandWith(tokens, resolver, name));
+  } finally {
+    resolver?.close();
+  }
+}
+
+function getBrandWith(tokens: TokensResolution, resolver: TokensResolver | undefined, name: string): BrandGetResult {
+  if (tokens.status !== "ok" || !tokens.indexPath || !resolver) {
     return { status: tokens.status, version: tokens.version, brand: null, available: [] };
   }
   const entries = readBrandIndex(tokens.indexPath);
@@ -586,11 +895,15 @@ export function getBrand(baseDir: string, name: string): BrandGetResult {
   let summary: BrandSummary;
   let parsed: BrandTokens;
   try {
-    summary = readSummary(baseDir, entry);
-    const cssPath = projectRequire(baseDir).resolve(summary.importPath);
+    summary = readSummary(resolver, entry);
+    const cssPath = resolver.resolve(summary.importPath);
     parsed = parseBrandCss(readFileSync(cssPath, "utf8"), name);
   } catch (err) {
     if (isMissingBuildFile(err)) return { status: "not-built", version: tokens.version, brand: null, available: [] };
+    // WI-0089 Q83: 낡은 exports 로 판정하는 중이면 새 브랜드를 읽을 수 없습니다. 도구 오류 대신 「없는 이름」과 stale 표시로 돌려줍니다
+    if (resolver.stale && errorCode(err) === "ERR_PACKAGE_PATH_NOT_EXPORTED") {
+      return { status: "ok", version: tokens.version, brand: null, available: available.filter((n) => n !== name) };
+    }
     throw err;
   }
 
