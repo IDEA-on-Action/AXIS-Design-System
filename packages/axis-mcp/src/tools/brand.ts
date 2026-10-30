@@ -135,10 +135,24 @@ export function formatTokensStatusGuide(
 }
 
 /**
+ * 같은 MCP 서버 세션에서 tokens package.json 이 바뀌었는데 새 내용을 다시 읽지 못했을 때(결과의 `stale`, WI-0089 사용자 결정 Q83) 응답 끝에 붙이는 안내.
+ * CLI 는 명령마다 새 프로세스라 이 상태가 생기지 않아 CLI 에는 같은 문장이 없습니다.
+ */
+export const STALE_TOKENS_NOTE = `- 주의: 이 MCP 서버가 ${TOKENS_PACKAGE} 를 처음 읽은 뒤 내용이 바뀌었는데 새 상태를 다시 읽지 못했습니다. 위 결과는 이전 설치 기준일 수 있으니 MCP 서버를 다시 시작하세요.`;
+
+function withStaleNote(text: string, result: { stale?: true }): string {
+  return result.stale ? `${text}\n\n${STALE_TOKENS_NOTE}` : text;
+}
+
+/**
  * `axis.list_brands` 응답 글 (CLI `axis theme list` 와 같은 항목: 이름 · 설명 · 테마, 그리고 import 경로).
  * `installCommand` 는 미설치 · 미지원 · 빌드 전 안내에 쓰는 명령(`tokensInstallCommandFor(targetDir)`, 주지 않으면 종전 pnpm)
  */
 export function formatListBrandsResult(result: ListBrandsResult, installCommand?: string | DependencyInstallGuide): string {
+  return withStaleNote(listBrandsText(result, installCommand), result);
+}
+
+function listBrandsText(result: ListBrandsResult, installCommand?: string | DependencyInstallGuide): string {
   const lines = ["## AXIS 브랜드\n"];
   if (result.status !== "ok") {
     lines.push(formatTokensStatusGuide(result.status, result.version, installCommand));
@@ -185,6 +199,10 @@ export function formatGetBrandResult(
   name: string,
   installCommand?: string | DependencyInstallGuide
 ): string {
+  return withStaleNote(getBrandText(result, name, installCommand), result);
+}
+
+function getBrandText(result: GetBrandResult, name: string, installCommand?: string | DependencyInstallGuide): string {
   if (result.status !== "ok") {
     return [`## 브랜드: ${name}\n`, formatTokensStatusGuide(result.status, result.version, installCommand)].join("\n");
   }
