@@ -504,6 +504,8 @@ export function planFiles(layout: InstallLayout, items: RegistryItem[]): { files
  * package.json 에 없는 dependencies(이름 순). clsx · tailwind-merge 는 init 과 같은 범위를 붙입니다.
  * WI-0086: 앱 package.json 다음 워크스페이스 루트 package.json 의 선언도 「있음」으로 봅니다(`declaredDependency`, axis check 의
  * dependencies 항목 · init 과 같은 경계). 안내 명령은 앱에서 실행하는 그대로이고, package.json 은 쓰지 않습니다.
+ * WI-0095: Plug'n'Play 면 루트 선언을 인정하지 않습니다(`appOnlyInPnp`, axis check · init 과 같은 경계). 루트에만 있는 의존성은 앱 issuer 가
+ * 해석하지 못해 컴포넌트 import 가 실패하므로 미선언과 같게 추가 명령에 넣어요(cli `axis add` · MCP `axis.install_component` 공용).
  */
 export function missingDependencies(root: string, items: RegistryItem[]): { specs: Record<string, string | undefined>; installCommand: string } {
   const installCommand = detectInstallCommand(root);
@@ -521,7 +523,7 @@ export function missingDependencies(root: string, items: RegistryItem[]): { spec
   for (const item of items) {
     for (const dep of item.dependencies) {
       const name = dependencyName(dep);
-      if (declaredDependency(root, pkg, name, rootPkg) !== undefined) continue;
+      if (declaredDependency(root, pkg, name, rootPkg, { appOnlyInPnp: true }) !== undefined) continue;
       if (name in specs) continue;
       const explicit = dep.length > name.length ? dep.slice(name.length + 1) : undefined;
       specs[name] = explicit ?? (ranges as Record<string, string>)[name];

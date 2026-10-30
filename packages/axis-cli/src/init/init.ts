@@ -52,6 +52,8 @@ import {
   findInstalledPackage,
   installCommandPhrase,
   isPnpProject,
+  PNP_ROOT_ONLY_NOTE,
+  pnpRootOnlyDependency,
   projectFileExists,
 } from "@axis-ds/registry-core/project";
 
@@ -227,7 +229,9 @@ export async function resolveInitAnswers(baseDirInput: string, tailwind4?: boole
  * - 애니메이션 줄이 있으면 줄마다 그 줄이 가리키는 패키지로 판정합니다(check 의 WI-0092 판정 그대로). 모두 쓸 수 있으면 침묵, 아니면
  *   check 와 같은 사유와 설치 명령을 냅니다. 다른 이름의 패키지만 설치된 경우(S9)는 줄을 그 패키지로 바꾸는 대안도 덧붙입니다.
  * - 줄이 없는데 패키지가 선언 · 설치돼 있으면(종전 침묵) 줄을 넣으라고 안내합니다. 선언 · 미설치와 미선언은 종전 ③ · ① 그대로예요.
- * - CSS 파일을 고르지 못하면 종전 판정 그대로예요(Q143). Plug'n'Play 에서 줄의 패키지가 루트에만 선언된 경우도 종전 그대로 둡니다(WI-0095 범위).
+ * - CSS 파일을 고르지 못하면 종전 판정 그대로예요(Q143).
+ * - WI-0095(Q144 후속): Plug'n'Play 에서 줄의 패키지가 워크스페이스 루트에만 선언된 경우도 같은 줄 판정을 써서 check 와 같은 사유
+ *   (「<이름> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다」)와 앱에 추가하는 명령을 냅니다.
  */
 export function animationGuideLine(
   pkg: Record<string, unknown> | undefined,
@@ -252,7 +256,7 @@ export function animationGuideLine(
     // WI-0099: check 와 같은 전역 CSS 의 줄 판정. 고른 파일이 없으면(`file` 없음) 아래 종전 판정
     const css = tailwind4 && pkg !== undefined ? inspectTailwind4Animation(baseDir, pkg) : undefined;
     const cssFile = css?.file !== undefined ? `${css.file}${css.via}` : undefined;
-    if (css !== undefined && cssFile !== undefined && css.lines.length > 0 && !css.problems.some((p) => p.kind === "pnpRootOnly")) {
+    if (css !== undefined && cssFile !== undefined && css.lines.length > 0) {
       if (css.problems.length === 0) return undefined;
       return tailwind4AnimationProblemLine(cssFile, css.lines, css.problems, installCommand, candidates.filter(usable));
     }
@@ -284,6 +288,17 @@ export function animationGuideLine(
   const add = `${addCommandFor(installCommand, {}).trimEnd()} ${name}`;
   const where = tailwind4 ? `전역 CSS 에 @import "${name}"; 를 넣으세요` : `tailwind.config 의 plugins 에 require("${name}") 를 넣으세요`;
   return `애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. ${add} 뒤 ${where}.`;
+}
+
+/**
+ * WI-0095: Plug'n'Play 에서 `tailwindcss` 가 워크스페이스 루트에만 선언됐을 때의 init 안내 한 줄(아니면 `undefined`). 문구는 axis check 의
+ * dependencies FAIL(WI-0091 Q5)과 같아요. Tailwind 3 · 4 분기(`detectTailwind`)는 루트 선언을 계속 인정하므로(WI-0091 Q6) init 은 그 분기로
+ * 설정을 쓰고, 앱이 tailwindcss 를 해석하지 못한다는 사실만 알립니다. init 은 tailwindcss 를 package.json 에 쓰지 않아요.
+ */
+export function pnpRootOnlyTailwindLine(baseDir: string, pkg: Record<string, unknown> | undefined): string | undefined {
+  return pnpRootOnlyDependency(baseDir, pkg, "tailwindcss") !== undefined
+    ? `! 필수 의존성 tailwindcss 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`
+    : undefined;
 }
 
 /** Tailwind 4 전역 CSS 의 애니메이션 줄(`tw-animate-css` 는 `@import`, `tailwindcss-animate` 는 `@plugin`, WI-0087 DEC-6 와 같은 대응) */
@@ -382,17 +397,26 @@ export function tailwind4GuideLines(
   globalCss: string,
   baseDir?: string
 ): string[] {
-  // 선언 판정은 axis check 와 같은 경계(앱 다음 워크스페이스 루트, `declaredDependency`). `baseDir` 가 없으면 종전처럼 앱 선언만 봅니다(WI-0086 검토 후속)
+  // 선언 판정은 axis check 와 같은 경계(앱 다음 워크스페이스 루트, `declaredDependency`). `baseDir` 가 없으면 종전처럼 앱 선언만 봅니다(WI-0086 검토 후속).
+  // WI-0095: Plug'n'Play 면 루트 선언을 인정하지 않고(`appOnlyInPnp`, check 의 dependencies · B1 과 같은 경계), 루트에만 있는 것은 따로 알립니다
   const declared = (name: string) =>
-    pkg !== undefined && (baseDir !== undefined ? declaredDependency(baseDir, pkg, name) : hasDependency(pkg, name)) !== undefined;
+    pkg !== undefined &&
+    (baseDir !== undefined ? declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true }) : hasDependency(pkg, name)) !==
+      undefined;
+  const pnpRootOnly = (name: string) => baseDir !== undefined && pnpRootOnlyDependency(baseDir, pkg, name) !== undefined;
   const used = TAILWIND4_COMPONENT_PACKAGES.filter((name) => declared(name));
+  const rootOnlyComponents = TAILWIND4_COMPONENT_PACKAGES.filter((name) => pnpRootOnly(name));
   const lines = [
     `Tailwind 4: 전역 CSS(${globalCss}) 맨 위에 다음 줄을 넣으세요(파일은 고치지 않았습니다).`,
     '  @import "tailwindcss";',
     `  ${TOKENS_TAILWIND4_IMPORT_LINE}`,
     ...used.map((name) => `  ${componentTailwindImportLine(name)}`),
   ];
-  if (used.length === 0) {
+  // WI-0095: 루트 전용 컴포넌트 패키지는 줄을 내지 않고(앱에서 Can't resolve) check 의 B1 과 같은 문구로 앱 선언을 먼저 안내합니다
+  for (const name of rootOnlyComponents) {
+    lines.push(`  ! ${name} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언한 뒤 ${componentTailwindImportLine(name)}`);
+  }
+  if (used.length === 0 && rootOnlyComponents.length === 0) {
     lines.push(
       `  npm 패키지 컴포넌트를 쓰면 그 패키지의 tailwind.css 도 넣으세요(예: @import "${TAILWIND4_COMPONENT_PACKAGES[0]}/tailwind.css";).`
     );
@@ -400,7 +424,9 @@ export function tailwind4GuideLines(
   lines.push(TAILWIND4_CONFLICT_LINE);
   if (!declared(TOKENS_PACKAGE)) {
     const add = addCommandFor(installCommand, { [TOKENS_PACKAGE]: `^${TAILWIND4_TOKENS_VERSION}` });
-    lines.push(`  ${TOKENS_PACKAGE} 설치: ${add}`);
+    // WI-0095: Plug'n'Play 루트 전용이면 미선언과 같은 명령에 사유를 붙입니다(check 의 dependencies WARN 과 같은 사유)
+    const why = pnpRootOnly(TOKENS_PACKAGE) ? `(${PNP_ROOT_ONLY_NOTE})` : "";
+    lines.push(`  ${TOKENS_PACKAGE} 설치${why}: ${add}`);
   }
   // 선언된 AXIS 패키지의 1.4.0 조건(axis check 의 버전 안내와 같은 함수 · 판정, A1 · 보정 3차 설치본 우선)
   const versions = axisPackagesBelowTailwind4(pkg, baseDir);
@@ -457,6 +483,11 @@ export interface UtilsDependencyPlan {
    * 앱 package.json 에 다시 쓰지 않음).
    */
   present: { name: string; range: string; source?: "app" | "root" }[];
+  /**
+   * WI-0095: Plug'n'Play 에서 워크스페이스 루트에만 선언돼 앱이 해석하지 못하는 것(`added` 에 들어감). 루트 선언은 앱 issuer 에서
+   * 해석되지 않아 「이미 있음」으로 보지 않고 앱 package.json 에 더합니다(axis check 의 `appOnlyInPnp` 와 같은 경계)
+   */
+  pnpRootOnly: string[];
   /** `unwritable` 의 이유 */
   reason?: string;
   /** lockfile 로 고른 설치 명령(예: `pnpm install`) */
@@ -483,6 +514,7 @@ export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan
     action: "no-package-json",
     added: [],
     present: [],
+    pnpRootOnly: [],
     ranges: ranges0,
     tailwind: tailwind0,
     installCommand,
@@ -529,10 +561,14 @@ export function planUtilsDependencies(baseDirInput: string): UtilsDependencyPlan
   const missing: Record<string, string> = {};
   // WI-0086: 앱 선언 다음 워크스페이스 루트 선언(axis check 의 dependencies 항목과 같은 헬퍼 · 경계)도 「이미 있음」으로 봅니다.
   // 쓰기는 계속 앱 package.json 에만 하고, 루트 선언은 앱으로 옮기지 않습니다.
+  // WI-0095: Plug'n'Play 면 루트 선언을 인정하지 않고(`appOnlyInPnp`) 미선언과 같게 앱 package.json 에 더합니다(범위도 미선언과 같음)
   for (const [name, range] of Object.entries(plan.ranges)) {
-    const declared = declaredDependency(baseDir, pkg, name);
+    const declared = declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true });
     if (declared !== undefined) plan.present.push({ name, range: declared.range, source: declared.source });
-    else missing[name] = range;
+    else {
+      missing[name] = range;
+      if (pnpRootOnlyDependency(baseDir, pkg, name) !== undefined) plan.pnpRootOnly.push(name);
+    }
   }
   plan.added = Object.keys(missing);
   plan.addCommand = addCommandFor(installCommand, plan.added.length > 0 ? missing : plan.ranges);
@@ -624,6 +660,8 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   if (plan.action === "add") {
     const addedText = plan.added.map((n) => `${n}@${plan.ranges[n]}`).join(", ");
     log(chalk.green(`✓ package.json dependencies 에 추가: ${addedText}`));
+    // WI-0095: Plug'n'Play 루트 전용이라 더한 것은 그 사유를 알립니다(check 의 dependencies 와 같은 사유)
+    if (plan.pnpRootOnly.length > 0) log(chalk.gray(`  ${plan.pnpRootOnly.join(", ")} 는 ${PNP_ROOT_ONLY_NOTE}`));
     if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}${rootNote}`));
     if (plan.added.includes("tailwind-merge")) logBasis();
     log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${installText}`));
@@ -992,6 +1030,9 @@ export async function runInit(
     return;
   }
   reportDependencies(plan, log);
+  // WI-0095: Plug'n'Play 에서 tailwindcss 가 워크스페이스 루트에만 있으면 axis check 의 dependencies FAIL 과 같은 사유를 미리 알립니다
+  const tailwindRootOnly = pnpRootOnlyTailwindLine(baseDir, readPackageJsonSafe(baseDir));
+  if (tailwindRootOnly !== undefined) log(chalk.yellow(`  ${tailwindRootOnly}`));
 
   // 애니메이션 플러그인 안내 한 줄(WI-0065 D8). 선언 · 설치돼 있으면 내지 않고, 선언만 있으면 설치 안내를 냅니다(WI-0087: 워크스페이스 루트 선언 · 설치본을 봄)
   const animation = animationGuideLine(readPackageJsonSafe(baseDir), tailwind4, plan.installCommand, baseDir);

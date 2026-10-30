@@ -41,7 +41,7 @@ Claude Desktop 또는 기타 MCP 호환 클라이언트에서 설정:
 - 이름은 레지스트리 이름 그대로입니다. Agentic UI 는 `agentic-` 접두를 붙입니다(예: `agentic-run-progress`). 의존 항목(`utils` · `agentic-a11y-labels`)은 함께 설치됩니다.
 - `targetDir` 는 이미 있는 프로젝트 루트입니다(상대 경로는 서버의 현재 디렉터리 기준). `axis.config.json` 이 있으면 그 `componentsDir` · `agenticDir` 에, 없으면 `components/ui` · `components/agentic` 에 설치하고 그 사실을 알립니다. 프로젝트 밖으로 나가는 경로는 아무것도 쓰지 않고 실패합니다.
 - 내용이 다른 기존 파일은 덮어쓰지 않고 건너뛰며 응답 첫머리에 건너뛴 수를 적습니다. `overwrite: true` 일 때만 덮어씁니다.
-- 의존성은 설치하지 않고 lockfile 에 맞는 명령(`pnpm add` · `npm install` · `yarn add`)만 안내합니다. lockfile 이 없으면 `package.json` 의 `packageManager` 를 봅니다(1.4.2 부터). `axis.apply_template` 의 「필요한 의존성」 · `axis.list_brands` · `axis.get_brand` 의 설치 안내도 1.4.2 부터 같은 방식으로 `targetDir` 의 매니저를 따릅니다(1.4.1 까지는 `pnpm` 고정).
+- 의존성은 설치하지 않고 lockfile 에 맞는 명령(`pnpm add` · `npm install` · `yarn add`)만 안내합니다. 워크스페이스 루트 `package.json` 에 선언된 의존성은 안내하지 않고, 1.4.8 다음 patch 부터(WI-0095) Yarn Plug'n'Play 에서는 루트에만 선언한 의존성도 앱이 해석하지 못하므로 안내 명령에 넣습니다(CLI `axis add` 와 같음). lockfile 이 없으면 `package.json` 의 `packageManager` 를 봅니다(1.4.2 부터). `axis.apply_template` 의 「필요한 의존성」 · `axis.list_brands` · `axis.get_brand` 의 설치 안내도 1.4.2 부터 같은 방식으로 `targetDir` 의 매니저를 따릅니다(1.4.1 까지는 `pnpm` 고정).
 - `axis.apply_template` 은 `targetDir` 에 이미 있는 `package.json` · `axis.config.json`(템플릿 루트의 것)을 덮어쓰지 않고 CLI `axis template apply` 와 같은 규칙으로 합칩니다(WI-0088). `packageManager` 등 사용자 필드가 남고, 결과의 파일 목록에 「합치기」로 표시합니다. 파일을 쓰는 도중 실패하면 건드린 파일을 되돌리고 오류로 응답합니다. 템플릿 경로가 `targetDir` 밖(절대 경로 · `..` · 밖을 가리키는 심볼릭 링크 경유)이면 `axis.apply_template` · `axis.diff_template` 은 아무 파일도 쓰거나 읽지 않고 오류로 응답합니다.
 
 ## 토큰 도구

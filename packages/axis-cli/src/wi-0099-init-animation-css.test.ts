@@ -220,10 +220,11 @@ describe("WI-0099: 종전 동작을 지키는 칸(음성 대조)", () => {
     expect(await initAnimation(await fx({ css: false }))).toBe(LEGACY("npm install"));
   });
 
-  it("PnP 루트에만 선언 · 줄 twa(WI-0095 범위): 종전 ① 줄 그대로, check 는 루트 전용 사유 WARN", async () => {
+  it("PnP 루트에만 선언 · 줄 twa: WI-0095 부터 check 와 같은 루트 전용 사유(WI-0099 에서는 종전 ① 줄로 남겼던 칸)", async () => {
     const app = await fx({ pnp: true, decl: "root", lines: [TWA], installed: [TWA] });
-    expect(await initAnimation(app)).toBe(LEGACY("yarn add"));
-    expect(checkAnimationPlugin(app)?.message).toContain("워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다");
+    const why = `${TWA} 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다`;
+    expect(await initAnimation(app)).toBe(cannot(why, `설치하세요: yarn add ${TWA}`));
+    expect(checkAnimationPlugin(app)?.message).toContain(why);
   });
 
   it("CSS 를 고르지 못하는 직접 호출(설정 · CSS 없음)은 WI-0087 판정 그대로: 두 이름이 선언되면 tw-animate-css 우선(DEC-6)", async () => {
