@@ -30,9 +30,16 @@
  *   파일의 디렉터리 기준으로 거치고(D8 ①, Q54), 근거를 하위 파일에서 찾으면 문구 끝에 「(app/axis.css 의 import)」를 붙입니다(D6 · Q55,
  *   `cssImportViaNote`). 상대 `@import` 가 순환하면 globals.css 항목이 진입 파일만의 판정 문구 뒤에 「 / 」로 순환 문구를 붙여 WARN 을 내고
  *   모든 항목이 진입 파일만 근거로 봅니다(Q52 · Q59). 순환은 조건 붙은 상대 import 까지 넣어 Tailwind 4 재귀 한도 100 단계까지 찾아요(Q57).
+ * - WI-0103(사용자 결정 Q70 ~ Q79): Tailwind 4 에서 앱 안 CSS(진입 파일 포함)의 tokens CSS import 줄(`@axis-ds/tokens/css` · `css/shadcn` ·
+ *   `css/tailwind4`) · 컴포넌트 `tailwind.css` 줄은 그 파일 위치부터
+ *   exports 를 보는 해석기(project.ts `resolveCssPackageImport`, Tailwind 4 의 enhanced-resolve 와 같은 순서 · 조건 `style` · `default`)로 풀어요.
+ *   위 「하위 파일은 그 디렉터리 기준」(Q54)의 판정이 「처음 만난 설치본의 파일 · 디렉터리 존재」에서 「그 설치본의 exports 로 풀리는가」로 바뀌었고,
+ *   앱 기준 설치본과 실경로가 다른 중첩 설치본(그림자)이 막으면 원인 문구로 WARN 이에요(`packageLineShadowIssue`). 프로젝트 밖 진입 파일(Q37) ·
+ *   `tailwindcss` 줄 · 레이아웃 JS import · 브랜드 · Tailwind 3 은 종전이에요.
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
- *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
+ *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다
+ *   (WI-0101 부터 그 앞에 모든 모양의 tokens 해석 판정이 있어요, 아래).
  *   설치본은 `findInstalledPackage`(상위 디렉터리 탐색, project.ts) 하나로 읽습니다.
  * - WI-0074: `detectTailwind` · `axisPackagesBelowTailwind4` 도 같은 `findInstalledPackage` 로 읽습니다(종전에는 `<baseDir>/node_modules`
  *   한 층만 읽어 호이스팅 모노레포에서 설치본을 못 찾고 선언으로 떨어졌습니다. WI-0051 PRD D4 에서 남겼던 것을 해소).
@@ -56,6 +63,10 @@
  *   (project.ts `tokensCssResolution`. 앱 선언은 미설치여도 pass, 설치본 디렉터리가 있으면 pass, 루트 선언 미설치 · 미선언 미설치 · PnP 루트
  *   전용은 warn). 위 배치 3 의 「tokens CSS import 가 있으면 pass」는 이 조건으로 좁혀졌어요. 프로젝트 밖 진입 CSS(`globalCss` 가 앱 밖)의
  *   패키지 줄(`tailwindcss` · 토큰 · 컴포넌트 `tailwind.css`)은 그 파일 위치에서 설치본이 보이는지도 봅니다(`outsideCssPackageResolution`).
+ * - WI-0101(사용자 결정 Q61 ~ Q68): Tailwind 3 preset 참조는 모양(CommonJS require · `.default` · ESM import · `.ts`)과 상관없이
+ *   tokens 가 이 앱에서 해석될 때만 pass 입니다(globals.css 와 같은 `tokensCssResolution`, `presetTokensUnresolvedMessage`). 루트 선언 미설치 ·
+ *   미선언 미설치 · PnP 루트 전용은 warn, 앱 선언은 미설치여도 종전 판정이에요. 위 배치 3 의 「Tailwind 3 preset 은 CommonJS 형태 + 설치본
+ *   tokens 버전으로 판정」은 버전 판정(CommonJS bare 만, Q64)의 범위이고, 해석 판정은 그 앞에서 모든 모양에 걸려요.
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
@@ -68,6 +79,7 @@ import {
   cssImportViaNote,
   componentCssResolution,
   componentCssResolvable,
+  cssPackageLineResolution,
   declaredDependency,
   dependencyInstallGuide,
   findInstalledPackage,
@@ -412,7 +424,9 @@ export interface ExpandedCssFile {
   depth: number;
   /**
    * 이 파일의 패키지 줄을 해석할 기준 디렉터리. 진입 파일은 WI-0097 2부 규칙 그대로(프로젝트 밖이면 그 디렉터리, 안이면 `undefined` = 앱 기준)이고,
-   * 하위 파일은 그 파일의 디렉터리예요(사용자 결정 Q54: 빌드 도구가 그 줄을 그 파일 위치부터 풀므로 하위 디렉터리의 중첩 `node_modules` 도 반영)
+   * 하위 파일은 그 파일의 디렉터리예요(사용자 결정 Q54: 빌드 도구가 그 줄을 그 파일 위치부터 풀므로 하위 디렉터리의 중첩 `node_modules` 도 반영).
+   * WI-0103 부터 Tailwind 4 의 tokens · 컴포넌트 줄은 이 값 대신 `path` 의 디렉터리에서 exports 해석기로 보고, 이 값은 `tailwindcss` 줄 · 프로젝트 밖
+   * 진입 파일 · Tailwind 3 판정에만 써요
    */
   cssDir?: string;
 }
@@ -694,9 +708,12 @@ function outsideCssUnresolvedIssue(spec: string, name: string): string {
   return `${spec} import 가 있지만 이 파일 위치에서 ${name} 를 찾지 못해 해석되지 않습니다(설치본이 앱 쪽 node_modules 에만 있음) → 이 파일의 상위 node_modules(워크스페이스 루트 등)에 설치하거나 globalCss 를 앱 안 파일로 바꾸세요`;
 }
 
-/** tokens 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」, 선언 없음은 범위를 붙인 추가 명령) */
-function tokensInstallPhrase(baseDir: string): string {
-  const g = dependencyInstallGuide(baseDir, TOKENS_PACKAGE_NAME, `^${TAILWIND4_MIN_AXIS_VERSION}`);
+/**
+ * tokens 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」, 선언 없음은 범위를 붙인 추가 명령).
+ * 추가 명령의 범위는 globals.css 게이트가 `^1.4.0`(`css/tailwind4` 가 처음 들어간 버전, Q48), Tailwind 3 preset 게이트가 `^1.7.0`(WI-0101)이에요.
+ */
+function tokensInstallPhrase(baseDir: string, range = `^${TAILWIND4_MIN_AXIS_VERSION}`): string {
+  const g = dependencyInstallGuide(baseDir, TOKENS_PACKAGE_NAME, range);
   if (g.kind === "install-at-root") return `워크스페이스 루트에서 ${g.installCommand}`;
   return g.kind === "install" ? g.installCommand : g.addCommand;
 }
@@ -706,12 +723,15 @@ function tokensInstallPhrase(baseDir: string): string {
  * - 앱 기준(`tokensCssResolution`): 앱 선언은 미설치여도 해석됨(Q28), non-PnP 는 설치본 디렉터리가 있으면 해석됨(선언 위치와 상관없음),
  *   PnP 루트 전용 · 루트 선언 미설치 · 미선언 미설치(PnP 의 앱 미선언 포함)는 해석 불가예요
  * - `cssDir`(프로젝트 밖 진입 CSS 의 디렉터리)를 주면, 앱 기준으로 해석되는 경우에도 그 파일 위치에서 설치본을 찾지 못하면 해석 불가예요(Q37)
+ * - `lineIssue`(WI-0103): 앱 기준으로 해석되고 `cssDir` 판정도 통과하면 마지막으로 부르는 판정이에요. Tailwind 4 의 앱 안 파일 줄을 그 파일 위치에서
+ *   exports 해석기로 본 문제(`packageLineShadowIssue`)를 넘겨요
  */
 function tokensCssUnresolvedIssue(
   baseDir: string,
   pkg: Record<string, unknown> | undefined,
   spec: string,
-  cssDir?: string
+  cssDir?: string,
+  lineIssue?: () => string | undefined
 ): string | undefined {
   const r = tokensCssResolution(baseDir, pkg, TOKENS_PACKAGE_NAME);
   const head = `${spec} import 가 있지만`;
@@ -722,7 +742,62 @@ function tokensCssUnresolvedIssue(
   if (cssDir !== undefined && outsideCssPackageResolution(baseDir, cssDir, TOKENS_PACKAGE_NAME) === "unresolved") {
     return outsideCssUnresolvedIssue(spec, TOKENS_PACKAGE_NAME);
   }
-  return undefined;
+  // WI-0103: 앱 안 파일의 줄은 그 파일 위치에서 exports 를 보는 해석기로 풀어요(그림자 · z5, Tailwind 4 만)
+  return lineIssue?.();
+}
+
+/** 패키지 경로(`@scope/name/...`)의 패키지 이름 */
+function packageNameOfSpec(spec: string): string {
+  const parts = spec.split("/");
+  return parts.slice(0, spec.startsWith("@") ? 2 : 1).join("/");
+}
+
+/** 앱 기준 상대 표시 경로(`/` 구분) */
+function displayRel(baseDir: string, p: string): string {
+  return relative(baseDir, p).split(sep).join("/");
+}
+
+/**
+ * 앱 안 CSS 파일(`origin`)의 패키지 줄 `spec` 이 그 파일 위치에서 해석되지 않을 때의 문제(WI-0103, 사용자 결정 Q72 · Q73 · Q74 · Q76).
+ * 해석되거나 판정하지 않으면 `undefined` 예요. 프로젝트 밖 진입 파일은 부르는 쪽이 종전 Q37 판정으로 보내요.
+ * 문구는 원인별 3갈래(그림자 미노출 · 그림자 대상 파일 없음 · 이 위치에서 안 보임)이고 앞머리 「<spec> import 가 있지만」 틀은 WI-0097 과 같아요.
+ */
+function packageLineShadowIssue(
+  baseDir: string,
+  expanded: ExpandedGlobalCss,
+  origin: ExpandedCssFile,
+  spec: string
+): string | undefined {
+  const name = packageNameOfSpec(spec);
+  const lineDir = dirname(origin.path);
+  // 다른 파일 디렉터리 목록(z5 판정용)은 필요할 때만 만들고, 파일이 많아도 선형이게 Set 으로 모아요(반박 검증 R2)
+  const others = () => [...new Set(expanded.files.map((f) => dirname(f.path)))].filter((d) => d !== lineDir);
+  const r = cssPackageLineResolution(baseDir, lineDir, spec, others);
+  // 「이 파일」이 앞머리의 진입 파일로 읽히지 않게 「그 줄이 있는 파일」이라고 적어요(줄이 하위 파일이면 끝의 출처 접미사가 그 파일, 반박 검증 1-b)
+  const head = `${spec} import 가 있지만 그 줄이 있는 파일 위치에서`;
+  const label = (pkgDir: string, version: string | undefined) => `${displayRel(baseDir, pkgDir)}(${version ?? "버전 모름"})`;
+  switch (r.kind) {
+    case "ok":
+      return undefined;
+    case "shadow-not-exported": {
+      // 이미 1.4.0 이상인데 미노출이면(조건 불일치 등) 올리라고 하지 않고 다시 설치를 권해요(반박 검증 1-a)
+      const current = r.version !== undefined && (compareExactVersions(r.version, TAILWIND4_MIN_AXIS_VERSION) ?? -1) >= 0;
+      const todo = current ? "다시 설치하세요" : `${TAILWIND4_MIN_AXIS_VERSION} 이상으로 맞추세요`;
+      return `${head} 먼저 잡히는 ${label(r.pkgDir, r.version)}가 ${r.subpath} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 ${todo}`;
+    }
+    case "shadow-target-missing":
+      return `${head} 먼저 잡히는 ${label(r.pkgDir, r.version)}에 내보낸 파일(${r.target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
+    case "not-visible": {
+      const there = expanded.files.find((f) => dirname(f.path) === r.fromDir);
+      const move = there !== undefined ? `이 줄(${origin.rel})을 ${there.rel} 로 옮기세요` : `이 줄(${origin.rel})을 그 위치의 CSS 파일로 옮기세요`;
+      return `${head} ${name} 를 찾지 못해 해석되지 않습니다(설치본이 ${displayRel(baseDir, r.pkgDir)} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 ${move}`;
+    }
+  }
+}
+
+/** 출처 파일이 프로젝트 밖 진입 파일인지(종전 Q37 판정으로 보냄, WI-0103) */
+function isOutsideEntry(origin: ExpandedCssFile): boolean {
+  return origin.depth === 0 && origin.cssDir !== undefined;
 }
 
 /**
@@ -735,7 +810,8 @@ function tokensCssUnresolvedIssue(
  * 3. 루트 레이아웃 JS 의 tokens CSS import(`findLayoutTokensCssImport`) → pass(CSS 에는 근거가 없어도 같은 변수가 들어옴).
  *    고른 파일에 1 · 2 의 근거가 없을 때만 보고, 문구의 파일명은 고른 파일입니다(WI-0100 D11).
  *    WI-0097 2부: 1 · 3 의 import 는 이 앱에서 해석될 때만 pass 이고, 해석되지 않으면 「<spec> import 가 있지만 … 해석되지 않습니다」 warn 이에요
- *    (`tokensCssUnresolvedIssue`. 앱 선언은 미설치여도 pass 그대로(Q28), 프로젝트 밖 진입 CSS 는 그 파일 위치 기준도 봄(Q37)). 2 는 게이트 밖이에요.
+ *    (`tokensCssUnresolvedIssue`. 앱 선언은 미설치여도 pass 그대로(Q28), 프로젝트 밖 진입 CSS 는 그 파일 위치 기준도 봄(Q37), Tailwind 4 의 앱 안 파일 줄은 그 파일 위치에서
+ *    exports 해석기로 봄(WI-0103)). 2 는 게이트 밖이에요.
  * 4. 자체 `--background` · `--primary` 만 있음 → warn「AXIS 토큰 미사용」. 종전에는 pass 였습니다(거짓 초록, WI-0070).
  *    템플릿 4종(자체 HSL)은 WI-0067 전까지 이 warn 입니다(2026-10-25 사용자 결정, 종료 코드는 그대로).
  * 5. 아무것도 없으면 warn, 고를 파일이 하나도 없으면 fail(종전과 같음, 레이아웃 근거가 있어도 fail).
@@ -782,7 +858,14 @@ function judgeGlobalsCss(
     // 하위 파일의 줄도 진입 파일과 같은 게이트를 그 출처 파일의 기준 디렉터리로 거쳐요(D8 ①, Q21 · Q22 대칭)
     const origin = evidenceOrigin(expanded, (f) => findTokensCssImport(f) === imported);
     via = cssImportViaNote(viaFiles([origin]));
-    const issue = tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
+    // WI-0103(Q73 · Q79): Tailwind 4 에서 앱 안 파일(진입 파일 포함)의 줄은 그 파일 위치에서 exports 를 보는 해석기로, 밖 진입 파일 · Tailwind 3 은 종전
+    const tailwind4 = (detectTailwind(baseDir, pkg).major ?? 0) >= 4;
+    const issue =
+      tailwind4 && origin !== undefined && !isOutsideEntry(origin)
+        ? tokensCssUnresolvedIssue(baseDir, pkg, imported, undefined, () =>
+            packageLineShadowIssue(baseDir, expanded, origin, imported)
+          )
+        : tokensCssUnresolvedIssue(baseDir, pkg, imported, origin !== undefined ? origin.cssDir : outsideCssDir(selection));
     if (issue !== undefined) unresolved = `${candidate}에 ${issue}`;
     else pass = `${candidate}에 AXIS CSS 변수가 있습니다 (${imported} import)`;
   } else if (AXIS_VARIABLE_DEFINITION.test(stripCssComments(expanded.evidence))) {
@@ -1173,6 +1256,33 @@ function isCommonJsConfig(file: string, source: string): boolean {
   return extname(file) === ".cjs" || /\bmodule\.exports\b/.test(source);
 }
 
+/**
+ * Tailwind 3 설정의 preset 참조가 이 앱에서 해석되지 않는 이유(WI-0101, 사용자 결정 Q61 ~ Q65 · Q68). 해석되면 `undefined` 예요.
+ * 판정은 globals.css tokens 게이트와 같은 `tokensCssResolution` 이라 같은 레이아웃에서 두 항목의 결론이 같아요.
+ * - `app`(앱 선언, 미설치 포함, Q62) · `installed`(Plug'n'Play 가 아니고 설치본 디렉터리가 있음, Q68) → `undefined`(종전 판정으로 감)
+ * - `not-installed`(루트 선언 · 미설치(Q63), 미선언 · 미설치(Q61)) → 설치 안내. CommonJS bare 여도 버전 문구보다 먼저예요(Q65)
+ * - `pnp-root-only` → PnP 전용 문구. CommonJS bare 는 `packageVersionGate` 의 `unresolved` 갈래가 종전 문구(1.7.0 이상 선언 안내)를
+ *   그대로 내도록 여기서는 넘겨요(WI-0091 Q7)
+ * 모양을 가리지 않는 이유: Tailwind 3.4.19 실빌드에서 미설치는 7형태 모두 `Cannot find module` rc 1 이었어요(WI-0101 testplan 2.2).
+ * 버전(1.7.0)은 CommonJS bare 만 보는 종전 판정 그대로예요(Q64, 1.6.2 에서 preset 이 빠지는 형태는 그것뿐).
+ */
+function presetTokensUnresolvedMessage(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  file: string,
+  bareCjs: boolean
+): string | undefined {
+  const r = tokensCssResolution(baseDir, pkg, TOKENS_PACKAGE_NAME);
+  const head = `${file}에 AXIS preset 참조가 있지만 ${TOKENS_PACKAGE_NAME} 가`;
+  if (r.kind === "not-installed") {
+    return `${head} 설치되지 않아 해석되지 않습니다 → 설치(${tokensInstallPhrase(baseDir, `^${TOKENS_CJS_PRESET_FIXED_VERSION}`)})`;
+  }
+  if (r.kind === "pnp-root-only" && !bareCjs) {
+    return `${head} ${PNP_ROOT_ONLY_NOTE}(워크스페이스 루트 선언 ${r.range}) → 앱 package.json 에 ${TOKENS_PACKAGE_NAME} 를 선언하세요`;
+  }
+  return undefined;
+}
+
 /** 패키지 버전 조건 판정 결과(설치본 우선, 다음 선언 하한, 다음 판정 불가) */
 export interface PackageVersionGate {
   /**
@@ -1264,6 +1374,8 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  * 그 줄(`@import "tailwindcss"` 와 이미 있는 컴포넌트 `tailwind.css` 줄(5))은 앱 기준으로 해석되더라도 그 파일 위치에서 설치본을 찾지 못하면
  * 해석 불가 WARN 이에요(`outsideCssPackageResolution`, 맨 앞 · 5 자리). 하위 파일의 줄은 그 하위 파일의 디렉터리 기준이라
  * (D8 ①, 사용자 결정 Q54) 그 디렉터리의 중첩 `node_modules` 도 반영해요. 토큰 진입점(1)은 globals.css 항목이 알려요(D4, tailwind.config 는 그대로).
+ * WI-0103: 컴포넌트 줄(5)이 앱 안 파일(진입 파일 포함)에 있으면 `input.lineIssue`(exports 를 보는 해석기)가 위 `cssDirOf` 판정을 대신해요.
+ * `tailwindcss` 줄은 종전 `cssDirOf` 판정 그대로예요(Q78).
  */
 function tailwind4Issues(
   input: Tailwind4CssInput,
@@ -1305,11 +1417,23 @@ function tailwind4Issues(
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (!hasComponentTailwindImport(evidence, name)) continue;
     const unresolved = componentCssPresentIssue(baseDir, name, resolutions.get(name)!);
-    const componentDir = cssDirOf(`${name}/tailwind.css`);
-    if (unresolved !== undefined) issues.push(unresolved);
-    else if (componentDir !== undefined && outsideCssPackageResolution(baseDir, componentDir, name, "tailwind.css") === "unresolved") {
-      issues.push(outsideCssUnresolvedIssue(`${name}/tailwind.css`, name));
-    } else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
+    const spec = `${name}/tailwind.css`;
+    if (unresolved !== undefined) {
+      issues.push(unresolved);
+      continue;
+    }
+    // WI-0103: 앱 안 파일의 줄은 exports 를 보는 해석기(`lineIssue`), 그 밖(밖 진입 파일 · 줄을 못 찾음)은 종전 Q37(`cssDirOf`) 판정
+    const shadow = input.lineIssue === undefined ? false : input.lineIssue(spec);
+    let lineProblem: string | undefined;
+    if (shadow !== false) lineProblem = shadow;
+    else {
+      const componentDir = cssDirOf(spec);
+      if (componentDir !== undefined && outsideCssPackageResolution(baseDir, componentDir, name, "tailwind.css") === "unresolved") {
+        lineProblem = outsideCssUnresolvedIssue(spec, name);
+      }
+    }
+    if (lineProblem !== undefined) issues.push(lineProblem);
+    else if (versions.some((v) => v.name === name)) issues.push(`${name}/tailwind.css import 가 있지만 ${name} 버전 확인이 필요합니다`);
   }
   return issues;
 }
@@ -1323,6 +1447,11 @@ interface Tailwind4CssInput {
   entry: string;
   evidence: string;
   cssDirOf?: (spec: string) => string | undefined;
+  /**
+   * WI-0103: 컴포넌트 `tailwind.css` 줄이 앱 안 파일에 있으면 그 파일 위치에서 exports 를 보는 해석기로 본 문제(없으면 `undefined`).
+   * `false` 면 종전 Q37(`cssDirOf`) 판정으로 보내요(프로젝트 밖 진입 파일 · 줄을 못 찾음). 없으면 모두 종전이에요
+   */
+  lineIssue?: (spec: string) => string | undefined | false;
 }
 
 /** 설치 · 다시 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」) */
@@ -1382,7 +1511,8 @@ function componentCssPresentIssue(baseDir: string, name: string, r: ComponentCss
  * - 3 이하 · 판정 불가: 종전 규칙. `.ts` 는 AXIS 토큰 설정 여부(pass · warn), `.js` · `.mjs` · `.cjs` 는 warn(TypeScript 권장),
  *   없으면 fail. 여기에 B3: 설정 파일에 `@axis-ds/tokens/tailwind` preset 참조(require · import, 주석 제외)가 있으면
  *   `(@axis-ds/tokens/tailwind preset)` 을 붙인 pass 입니다. `.ts` 가 종전 기준(`--background` · `hsl(var(`)으로 pass 면
- *   종전 문구 그대로입니다.
+ *   종전 문구 그대로입니다. preset 참조가 있어도 ① tokens 가 이 앱에서 해석되지 않으면 warn(WI-0101, 모든 모양)
+ *   ② CommonJS bare require 이고 tokens 가 1.7.0 미만이거나 버전을 알 수 없으면 warn(WI-0072 · WI-0091) 이고, ①이 먼저예요.
  */
 export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
   const baseDir = resolveBaseDir(baseDirInput);
@@ -1416,7 +1546,17 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
       );
       const versions = axisPackagesBelowTailwind4(pkg, baseDir);
       const issues = tailwind4Issues(
-        { entry: expanded.entry, evidence: expanded.evidence, cssDirOf: (spec) => packageLineCssDir(expanded, spec) },
+        {
+          entry: expanded.entry,
+          evidence: expanded.evidence,
+          cssDirOf: (spec) => packageLineCssDir(expanded, spec),
+          lineIssue: (spec) => {
+            const line = expanded.packageLines.find((l) => l.spec === spec);
+            const origin = line !== undefined ? expanded.files.find((f) => f.rel === line.file) : undefined;
+            if (origin === undefined || isOutsideEntry(origin)) return false;
+            return packageLineShadowIssue(baseDir, expanded, origin, spec);
+          },
+        },
         pkg,
         versions,
         baseDir
@@ -1448,9 +1588,13 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     if (!existsSync(path)) continue;
     const content = readFileSync(path, "utf8");
     if (hasTokensPresetReference(content)) {
-      // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
       const code = stripJsComments(content);
-      if (isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code)) {
+      const bareCjs = isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code);
+      // WI-0101: preset 의 모양(require · import · .ts)과 상관없이 tokens 가 이 앱에서 해석될 때만 아래 판정으로 갑니다
+      const unresolved = presetTokensUnresolvedMessage(baseDir, pkg, file, bareCjs);
+      if (unresolved !== undefined) return { name: "tailwind.config", severity: "warn", message: unresolved };
+      // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
+      if (bareCjs) {
         const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION, { appOnlyInPnp: true });
         if (gate.status === "unresolved") {
           // WI-0091(사용자 결정 Q7): 루트에만 선언한 tokens 는 Plug'n'Play 에서 앱이 require 하지 못해 preset 이 들어오지 않습니다

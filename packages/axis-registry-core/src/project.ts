@@ -733,6 +733,9 @@ export function tokensCssResolution(
  *   (미설치는 앱 기준 판정과 dependencies 항목이 알려요, 사용자 결정 Q21 · Q28)
  * 선언은 보지 않아요(node_modules 탐색은 선언과 상관없이 풀림). 앱 기준 판정(`componentCssResolution` · `tokensCssResolution`)을
  * 대신하지 않고 그 뒤에 더하는 판정이에요.
+ * WI-0103 부터 check 는 이 함수를 프로젝트 밖 진입 파일의 줄, `@import "tailwindcss"` 줄(Q78), Tailwind 3 에만 써요. Tailwind 4 의 앱 안 CSS 의
+ * tokens · 컴포넌트 줄은 exports 를 보는 `cssPackageLineResolution` 이 판정해요(이 함수는 처음 만난 설치본의 디렉터리(`file` 없음) · 파일 존재만
+ * 봐서 그림자를 실빌드와 다르게 판정해요).
  */
 export type OutsideCssResolution = "resolved" | "unresolved" | "unknown";
 
@@ -741,6 +744,205 @@ export function outsideCssPackageResolution(baseDir: string, cssDir: string, nam
   const usable = (p: InstalledPackage | undefined) => p !== undefined && (file === undefined || isFile(path.join(p.dir, file)));
   if (!usable(findInstalledPackage(baseDir, name))) return "unknown";
   return usable(findInstalledPackage(cssDir, name)) ? "resolved" : "unresolved";
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// exports 를 보는 패키지 CSS import 해석 (WI-0103: 중첩 설치본(그림자) · Tailwind 4 해석기와 같은 순서)
+
+/**
+ * 패키지 CSS import(`<name>/<subpath>`)를 Tailwind 4 의 CSS 해석기처럼 푼 결과(WI-0103, 사용자 결정 Q70 · Q71).
+ * - `resolved`: 그 설치본에서 파일로 풀림(`pkgDir` 는 실경로가 아니라 `<실경로 조상>/node_modules/<name>`)
+ * - `not-exported`: 처음 잡힌 설치본에 `exports` 가 있는데 subpath 를 내보내지 않음(조건 `style` · `default` 가 맞지 않음 포함).
+ *   해석기는 여기서 멈추고 실패해요(상위 설치본으로 가지 않음)
+ * - `target-missing`: `exports` 가 subpath 를 내보내는데 대상 파일이 없음(역시 멈추고 실패)
+ * - `not-found`: 루트까지 올라가도 풀리지 않음
+ * - `unknown`: 이 모델이 다루지 않는 모양(패턴 키 `*` · 폴더 매핑 · subpath 없는 이름 · 대상에 `*` · 대상이 `./` 로 시작하지 않음). 판정하지 않는 쪽으로 돌려요
+ */
+export type CssPackageImportResolution =
+  | { kind: "resolved"; pkgDir: string; file: string }
+  | { kind: "not-exported"; pkgDir: string; subpath: string; version?: string }
+  | { kind: "target-missing"; pkgDir: string; subpath: string; target: string; version?: string }
+  | { kind: "not-found" }
+  | { kind: "unknown" };
+
+/** Tailwind 4 CSS 해석기가 맞는 것으로 보는 조건(`@tailwindcss/node` 4.1.14 `conditionNames: ["style"]` + enhanced-resolve 가 늘 더하는 `default`, Q70) */
+const CSS_EXPORT_CONDITIONS = new Set(["style", "default"]);
+
+/** `@scope/name/rest` · `name/rest` 를 이름과 나머지로. 이름이 아니면 `undefined` */
+function splitPackageSpec(spec: string): { name: string; rest: string } | undefined {
+  const parts = spec.split("/");
+  const n = spec.startsWith("@") ? 2 : 1;
+  if (parts.length < n || parts.slice(0, n).some((p) => p === "" || p === "." || p === "..")) return undefined;
+  return { name: parts.slice(0, n).join("/"), rest: parts.slice(n).join("/") };
+}
+
+/** `exports` 대상 값 하나를 조건으로 풀어요. 풀리지 않으면(맞는 조건이 없거나 맞는 조건의 값이 `null`) `undefined`(미노출) */
+function resolveExportTarget(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) {
+    for (const v of value) {
+      const r = resolveExportTarget(v);
+      if (r !== undefined) return r;
+    }
+    return undefined;
+  }
+  if (isPlainObject(value)) {
+    // 키 순서대로 처음 맞는 조건(Node 규격과 같음). 맞는 조건의 값이 `null` 이면 거기서 미노출로 끝나요(다음 키로 넘어가지 않음,
+    // 반박 검증 c22: `{ style: null, default: "./x.css" }` 는 실빌드 rc 1)
+    for (const [key, v] of Object.entries(value)) {
+      if (!CSS_EXPORT_CONDITIONS.has(key)) continue;
+      if (v === null) return undefined;
+      const r = resolveExportTarget(v);
+      if (r !== undefined) return r;
+    }
+  }
+  return undefined;
+}
+
+/** 해석기가 파일 경로 하나에 대해 보는 후보(적힌 이름 · `.css` 를 붙인 이름 · 디렉터리의 `index.css`, `extensions: [".css"]` 와 같음) */
+function cssFileCandidates(p: string): string[] {
+  return [p, `${p}.css`, path.join(p, "index.css")];
+}
+
+/**
+ * `exports` 필드로 subpath(`./css/tailwind4`)를 풀어요. 대상 상대 경로, 미노출이면 `undefined`, 다루지 않는 모양이면 `"?"`.
+ * 문자열 · 배열 · 조건 객체(키가 `.` 로 시작하지 않음)는 `"."` 만 가진 것으로 봐요.
+ */
+function exportsTarget(exportsField: unknown, subpath: string): string | undefined | "?" {
+  const map: Record<string, unknown> =
+    isPlainObject(exportsField) && Object.keys(exportsField).some((k) => k.startsWith("."))
+      ? exportsField
+      : { ".": exportsField };
+  if (Object.prototype.hasOwnProperty.call(map, subpath)) {
+    const t = resolveExportTarget(map[subpath]);
+    if (t === undefined) return undefined;
+    return t.includes("*") || !t.startsWith("./") ? "?" : t;
+  }
+  // 패턴 키 · 폴더 매핑은 이 모델이 다루지 않아요(발행된 AXIS 패키지에 없음, WI-0103 testplan 2.4)
+  if (Object.keys(map).some((k) => k.includes("*") || (k.endsWith("/") && subpath.startsWith(k)))) return "?";
+  return undefined;
+}
+
+/**
+ * 패키지 CSS import 를 `fromDir`(그 줄이 있는 CSS 파일의 디렉터리)부터 Tailwind 4 해석기처럼 풀어요(WI-0103 plan 1절).
+ * 위로 올라가며 `node_modules/<name>` 디렉터리를 찾고, `package.json` 의 `exports` 가 있으면 그 설치본에서 끝나요(미노출 · 대상 파일
+ * 없음이면 실패). `exports` 가 없거나(거짓 값 포함) `package.json` 이 없으면 `<subpath>` · `<subpath>.css` · `<subpath>/index.css` 파일이 있을 때만 그 설치본에서 풀리고,
+ * 없으면 건너뛰고 상위로 가요(Q71, 착수 측정 n0 · np0). Plug'n'Play 는 부르는 쪽이 먼저 가려요.
+ */
+export function resolveCssPackageImport(fromDir: string, spec: string): CssPackageImportResolution {
+  const parsed = splitPackageSpec(spec);
+  if (parsed === undefined || parsed.rest === "") return { kind: "unknown" };
+  const subpath = `./${parsed.rest}`;
+  let dir = resolveBaseDir(fromDir);
+  for (;;) {
+    const pkgDir = path.join(dir, "node_modules", ...parsed.name.split("/"));
+    if (isDirectory(pkgDir)) {
+      let manifest: Record<string, unknown> | undefined;
+      try {
+        const raw: unknown = JSON.parse(readFileSync(path.join(pkgDir, "package.json"), "utf8"));
+        manifest = isPlainObject(raw) ? raw : undefined;
+      } catch {
+        manifest = undefined;
+      }
+      // `exports` 가 거짓 값(`null` · `false` · `""`)이면 해석기는 exports 없음으로 봐요(반박 검증 c01 ~ c03b, enhanced-resolve `exportsField ? … : null`)
+      if (manifest !== undefined && manifest.exports) {
+        const version = exactVersionOf(manifest.version);
+        const target = exportsTarget(manifest.exports, subpath);
+        if (target === "?") return { kind: "unknown" };
+        if (target === undefined) {
+          return version !== undefined ? { kind: "not-exported", pkgDir, subpath, version } : { kind: "not-exported", pkgDir, subpath };
+        }
+        // 대상에도 `.css` 확장자 · 디렉터리 `index.css` 를 붙여 봐요(반박 검증 c07 · c08)
+        const file = cssFileCandidates(path.join(pkgDir, target)).find(isFile);
+        if (file !== undefined) return { kind: "resolved", pkgDir, file };
+        return version !== undefined
+          ? { kind: "target-missing", pkgDir, subpath, target, version }
+          : { kind: "target-missing", pkgDir, subpath, target };
+      }
+      const bare = cssFileCandidates(path.join(pkgDir, parsed.rest)).find(isFile);
+      if (bare !== undefined) return { kind: "resolved", pkgDir, file: bare };
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) return { kind: "not-found" };
+    dir = parent;
+  }
+}
+
+/** `<base>/node_modules/<name>` 의 `<base>` 실경로 */
+function installBase(pkgDir: string, name: string): string {
+  let base = pkgDir;
+  for (let i = 0; i < name.split("/").length + 1; i++) base = path.dirname(base);
+  try {
+    return realpathSync(base);
+  } catch {
+    return path.resolve(base);
+  }
+}
+
+/** `hit` 설치본이 놓인 디렉터리가 `app` 설치본이 놓인 디렉터리의 조상인지(둘 다 `<base>/node_modules/<name>` 형태) */
+function isAncestorInstall(hit: string, app: string, name: string): boolean {
+  const h = installBase(hit, name);
+  const a = installBase(app, name);
+  return a !== h && a.startsWith(h.endsWith(path.sep) ? h : h + path.sep);
+}
+
+/** 두 디렉터리가 같은 실경로인지(풀지 못하면 적힌 경로로 비교) */
+function sameRealDir(a: string, b: string): boolean {
+  const real = (p: string) => {
+    try {
+      return realpathSync(p);
+    } catch {
+      return path.resolve(p);
+    }
+  };
+  return real(a) === real(b);
+}
+
+/**
+ * 프로젝트 안 CSS 파일의 패키지 줄이 그 파일 위치에서 해석되는지(WI-0103, 사용자 결정 Q72 · Q73 · Q74). check 의 tokens 줄 · 컴포넌트
+ * `tailwind.css` 줄이 앱 기준 판정(`tokensCssResolution` · `componentCssResolution`) 뒤에 더해서 봐요. 프로젝트 밖 진입 파일은
+ * 종전 `outsideCssPackageResolution` 을 그대로 써요(Q37).
+ * - `ok`: 해석됨, 또는 판정하지 않음(Plug'n'Play · 다루지 않는 모양 · 어디에서도 설치본을 찾지 못함(Q28) · 잡힌 설치본이 앱 기준 설치본과 같음(Q72) ·
+ *   앱 기준 설치본이 있는데 풀리지 않음. 마지막은 앱 안 파일이 앱 기준 설치본을 늘 지나가므로 그 설치본에 exports 도 파일도 없을 때뿐이고(손상 · stub),
+ *   종전에도 판정하지 않았어요)
+ * - `shadow-not-exported` · `shadow-target-missing`: 줄 위치에서 먼저 잡히는 설치본이 앱 기준 설치본과 실경로가 다르고(그림자) 실빌드가 실패하는 모양
+ * - `not-visible`: 앱 기준 설치본은 없고 줄 위치에서도 풀리지 않는데 `otherDirs`(같은 전역 CSS 의 다른 파일 디렉터리) 가운데 하나에서는 풀림(z5, Q74)
+ */
+export type CssPackageLineResolution =
+  | { kind: "ok" }
+  | { kind: "shadow-not-exported"; pkgDir: string; subpath: string; version?: string }
+  | { kind: "shadow-target-missing"; pkgDir: string; subpath: string; target: string; version?: string }
+  | { kind: "not-visible"; pkgDir: string; fromDir: string };
+
+export function cssPackageLineResolution(
+  baseDir: string,
+  lineDir: string,
+  spec: string,
+  otherDirs: readonly string[] | (() => readonly string[]) = []
+): CssPackageLineResolution {
+  if (isPnpProject(baseDir)) return { kind: "ok" };
+  const parsed = splitPackageSpec(spec);
+  if (parsed === undefined) return { kind: "ok" };
+  const r = resolveCssPackageImport(lineDir, spec);
+  if (r.kind === "resolved" || r.kind === "unknown") return { kind: "ok" };
+  const app = findInstalledPackage(baseDir, parsed.name);
+  if (r.kind === "not-exported" || r.kind === "target-missing") {
+    // 앱 기준 설치본 자체면 종전(1.4.0 미만은 버전 확인 WARN 이 알리고, dist 를 아직 빌드하지 않은 workspace 링크를 막지 않음, Q72)
+    if (app !== undefined && sameRealDir(app.dir, r.pkgDir)) return { kind: "ok" };
+    // 잡힌 설치본이 앱 기준 설치본보다 위(조상)에 있으면, 앱 기준 설치본에 exports 도 파일도 없어 해석기가 건너뛴 것이에요(손상 · stub).
+    // 중첩 설치본(그림자)이 아니라서 종전처럼 판정하지 않아요(반박 검증 R1: 앱 stub + 위쪽 낡은 설치본 · dist 미빌드 링크)
+    if (app !== undefined && isAncestorInstall(r.pkgDir, app.dir, parsed.name)) return { kind: "ok" };
+    return r.kind === "not-exported"
+      ? { ...r, kind: "shadow-not-exported" }
+      : { ...r, kind: "shadow-target-missing" };
+  }
+  if (app !== undefined) return { kind: "ok" };
+  // 다른 파일 디렉터리 목록은 z5 판정에만 쓰므로 여기까지 왔을 때만 만들어요(반박 검증 R2)
+  for (const other of typeof otherDirs === "function" ? otherDirs() : otherDirs) {
+    const o = resolveCssPackageImport(other, spec);
+    if (o.kind === "resolved") return { kind: "not-visible", pkgDir: o.pkgDir, fromDir: resolveBaseDir(other) };
+  }
+  return { kind: "ok" };
 }
 
 /** 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 theme add 가 넣지 않은 이유(WI-0087 DEC-2, WI-0097 에서 cli theme-add.ts 에서 옮김) */
