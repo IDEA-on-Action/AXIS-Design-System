@@ -29,6 +29,7 @@ import {
   deferredComponentImportReason,
   dependencyInstallGuide,
   detectInstallCommand,
+  installCommandPhrase,
   PNP_ROOT_ONLY_NOTE,
   workspaceRunCommand,
   type DependencyInstallGuide,
@@ -116,6 +117,12 @@ export const ROOT_TOKENS_UPGRADE_GUIDE = `워크스페이스 루트 package.json
 function installPhrase(g: DependencyInstallGuide): string {
   if (g.kind === "install-at-root") return `워크스페이스 루트에서 ${chalk.cyan(g.installCommand)}`;
   return chalk.cyan(g.kind === "install" ? g.installCommand : g.addCommand);
+}
+
+/** 루트 선언 패키지의 설치 구절(WI-0096). npm 이면 「워크스페이스 루트에서 npm install」, 아니면 설치 명령 그대로. 명령만 청록색이에요 */
+function rootInstallPhrase(installCommand: string): string {
+  const phrase = installCommandPhrase(installCommand, true);
+  return phrase === installCommand ? chalk.cyan(installCommand) : `워크스페이스 루트에서 ${chalk.cyan(installCommand)}`;
 }
 
 /** 빌드 전 tokens 의 빌드 · 재설치 안내 줄 본문(theme list · info 와 theme add 가 같은 문장, WI-0093 B2 · B3) */
@@ -373,8 +380,9 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
   }
   // WI-0087 DEC-2: 루트에만 선언된 컴포넌트 패키지의 tailwind.css 는 설치본에 파일이 있을 때만 넣고, 넣지 않았으면 이유를 한 줄씩 알립니다
   // 문장(미설치 · 설치 손상 · 1.4.0 미만 세 갈래)은 registry-core `deferredComponentImportReason` 에 있고(WI-0097), 접두 · 색만 여기서 붙입니다
+  // WI-0096: 여기 오는 패키지는 모두 루트 선언이라 npm 이면 「워크스페이스 루트에서 npm install」(앱 디렉터리의 npm install 은 루트 선언을 설치하지 않음)
   for (const d of css?.deferredComponentImports ?? []) {
-    lines.push(chalk.yellow(`  ! ${deferredComponentImportReason(d, plan.installCommand)}`));
+    lines.push(chalk.yellow(`  ! ${deferredComponentImportReason(d, installCommandPhrase(plan.installCommand, true))}`));
   }
   if (css && css.otherBrands.length > 0) {
     lines.push(
@@ -399,8 +407,8 @@ export function renderThemeAdd(plan: ThemeAddPlan, written: string[]): ThemeOutp
     lines.push(
       `  ${chalk.gray("-")} package.json: ${TOKENS_PACKAGE} ${dep.declaredRange} 가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음`
     );
-    // 루트 선언 미설치 줄은 종전 그대로 앱 디렉터리 명령이에요(npm 루트 위치 문구는 WI-0096)
-    if (plan.tokens.status === "not-installed") lines.push(`    설치: ${chalk.cyan(plan.installCommand)}`);
+    // WI-0096: 루트 선언 미설치 줄은 npm 이면 「워크스페이스 루트에서 npm install」(theme list · 재설치 줄과 같은 구절), pnpm · yarn 은 종전 그대로
+    if (plan.tokens.status === "not-installed") lines.push(`    설치: ${rootInstallPhrase(plan.installCommand)}`);
     // WI-0093 Q17 · B2: 루트 선언인데 설치본이 빌드 전이면 재설치 안내(theme list 의 빌드 전 안내와 같은 줄, npm 루트 선언이면 「워크스페이스 루트에서 npm install」)
     else if (plan.tokens.status === "not-built") lines.push(`    ${rebuildGuide(tokensGuide)}`);
   } else if (dep?.action === "present") {

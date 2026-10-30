@@ -53,6 +53,7 @@ import prompts from "prompts";
 import { applyTemplate, initTemplate } from "./template-apply.js";
 import { fetchTemplateIndex } from "./registry-client.js";
 import { registerTemplateCommand } from "./index.js";
+import { detectInstallCommand } from "@axis-ds/registry-core/project";
 
 const promptsSpy = prompts as unknown as ReturnType<typeof vi.fn>;
 // eslint-disable-next-line no-control-regex
@@ -379,5 +380,51 @@ describe("WI-0085 template apply · init 의 설치 안내가 대상 디렉터�
     await fs.outputFile(path.join(cwd, "package-lock.json"), "");
     await initTemplate("fixture", { dir: path.join(root, "new"), interactive: false });
     expect(nextLines()).toEqual(["pnpm install", "pnpm dev"]);
+  });
+});
+
+describe("WI-0088 template apply · init 이 사용자 package.json 을 합침", () => {
+  const USER = { name: "my-app", version: "2.3.4", packageManager: "yarn@4.5.0", workspaces: ["apps/*"], scripts: { test: "vitest" } };
+
+  it("apply -y: packageManager · name · version · workspaces · 사용자 스크립트가 남음, 다음 명령도 yarn", async () => {
+    const dir = await inTmp();
+    await fs.outputJSON(path.join(dir, "package.json"), USER, { spaces: 2 });
+    expect(await applyTemplate("fixture", { interactive: false, yes: true })).toBe(true);
+    expect(rc()).toBe(0);
+    // 픽스처 템플릿 package.json 은 name 만 있어 사용자 값이 이김
+    expect(await fs.readJSON(path.join(dir, "package.json"))).toEqual(USER);
+    expect(detectInstallCommand(dir)).toBe("yarn install");
+    expect(out).toContain("  package.json: 기존 필드를 두고 템플릿 키를 합침");
+  });
+
+  it("충돌 목록에 합치는 파일을 따로 표시(-y 없음 · 비대화형은 종전처럼 rc 1 · 바이트 그대로)", async () => {
+    const dir = await inTmp();
+    await fs.outputJSON(path.join(dir, "package.json"), USER, { spaces: 2 });
+    await fs.outputFile(path.join(dir, "app", "page.tsx"), "// 사용자\n");
+    const before = await snapshot(dir);
+    expect(await applyTemplate("fixture", { interactive: false })).toBe(false);
+    expect(rc()).toBe(1);
+    expect(await snapshot(dir)).toEqual(before);
+    expect(out).toContain("  - package.json (기존 필드를 두고 템플릿 키를 합침)");
+    expect(out).toContain("  - app/page.tsx");
+  });
+
+  it("--dry-run: 합치기 · 생성 표시, 파일 그대로", async () => {
+    const dir = await inTmp();
+    await fs.outputJSON(path.join(dir, "package.json"), USER, { spaces: 2 });
+    const before = await snapshot(dir);
+    expect(await applyTemplate("fixture", { interactive: false, dryRun: true })).toBe(false);
+    expect(await snapshot(dir)).toEqual(before);
+    expect(out.some((l) => l.startsWith("  합치기 ") && l.endsWith("package.json (기존 필드를 두고 템플릿 키를 합침)"))).toBe(true);
+    expect(out.some((l) => l.startsWith("  생성 ") && l.endsWith(path.join("app", "page.tsx")))).toBe(true);
+  });
+
+  it("init -y 로 비어 있지 않은 디렉터리: package.json 을 합치고 packageManager 가 남음, 다음 단계도 yarn", async () => {
+    const dir = await inTmp();
+    await fs.outputJSON(path.join(dir, "app", "package.json"), USER, { spaces: 2 });
+    await initTemplate("fixture", { dir: "app", interactive: false, yes: true });
+    expect(rc()).toBe(0);
+    expect((await fs.readJSON(path.join(dir, "app", "package.json"))).packageManager).toBe("yarn@4.5.0");
+    expect(out).toContain("  yarn install");
   });
 });

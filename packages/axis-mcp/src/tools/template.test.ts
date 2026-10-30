@@ -709,7 +709,57 @@ describe("handleCheckProject WI-0091 · 0094 · 0092 (CLI 와 같은 문구)", (
     expect(await item(dir, "dependencies")).toEqual({
       name: "dependencies",
       severity: "warn",
-      message: "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → npm install (워크스페이스 루트에 선언: @axis-ds/ui-react)",
+      // WI-0096: npm 은 앱 디렉터리의 npm install 이 루트 선언을 설치하지 않아 「워크스페이스 루트에서 npm install」(종전 「→ npm install」)
+      message:
+        "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → 워크스페이스 루트에서 npm install (워크스페이스 루트에 선언: @axis-ds/ui-react)",
+    });
+  });
+
+  // WI-0096: 미설치 안내의 설치 위치(CLI axis check 와 같은 코어 checkDependencies, 같은 문구)
+  describe("WI-0096: npm 워크스페이스 루트 선언 미설치는 「워크스페이스 루트에서 npm install」", () => {
+    const LOCKS: Record<"npm" | "pnpm" | "yarn", [string, string][]> = {
+      npm: [["package-lock.json", "{}"]],
+      pnpm: [["pnpm-lock.yaml", ""], ["pnpm-workspace.yaml", 'packages:\n  - "apps/*"\n']],
+      yarn: [["yarn.lock", ""]],
+    };
+    async function wsApp(pm: "npm" | "pnpm" | "yarn", rootDeps: Record<string, string>, appDeps: Record<string, string>) {
+      await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], dependencies: rootDeps });
+      for (const [f, text] of LOCKS[pm]) await fs.writeFile(path.join(tmp, f), text);
+      const dir = path.join(tmp, "apps", "web");
+      await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: appDeps });
+      return dir;
+    }
+    const ROOT_ALL = { ...TRIO3, "@axis-ds/ui-react": "^1.8.0" };
+    const rootMessage = (phrase: string) =>
+      `선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → ${phrase} / 워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → ${phrase} (워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge, @axis-ds/ui-react)`;
+
+    it("루트 선언 · 미설치: npm 만 루트 위치 문구, pnpm · yarn 은 종전 그대로(음성 대조)", async () => {
+      const cases: ["npm" | "pnpm" | "yarn", string][] = [
+        ["npm", "워크스페이스 루트에서 npm install"],
+        ["pnpm", "pnpm install"],
+        ["yarn", "yarn install"],
+      ];
+      for (const [pm, phrase] of cases) {
+        await fs.emptyDir(tmp);
+        const dir = await wsApp(pm, ROOT_ALL, {});
+        expect({ pm, r: await item(dir, "dependencies") }).toEqual({ pm, r: { name: "dependencies", severity: "warn", message: rootMessage(phrase) } });
+      }
+    });
+
+    it("npm 앱 선언 · 미설치는 종전 「→ npm install」, 앱 · 루트 섞이면 루트 위치 문구", async () => {
+      const own = await wsApp("npm", {}, ROOT_ALL);
+      expect(await item(own, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge, @axis-ds/ui-react → npm install",
+      });
+      await fs.emptyDir(tmp);
+      const mixed = await wsApp("npm", { clsx: "^2.1.1" }, { tailwindcss: "^3.4.0", "tailwind-merge": "^2.6.0" });
+      expect(await item(mixed, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → 워크스페이스 루트에서 npm install (워크스페이스 루트에 선언: clsx)",
+      });
     });
   });
 
@@ -1371,5 +1421,37 @@ describe("handleCheckProject WI-0104: Tailwind 3 preset · tokens 줄의 exports
         expect(r.severity).toBe("pass");
       }
     }
+  });
+});
+
+// WI-0102: Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지가 .yarn/cache zip 안에만 있으면 tailwind.css 의 @source "./dist" 가 스캔되지 않아요.
+// CLI check 와 같은 registry-core 판정(pnpComponentSourceHidden)이라 같은 문구예요
+describe("handleCheckProject WI-0102: Plug'n'Play zip 안의 컴포넌트 tailwind.css (CLI 와 같은 문구)", () => {
+  const UI = "@axis-ds/ui-react";
+  const ZIP = `Plug'n'Play 에서 @source "./dist" 가 .yarn/cache zip 안을 가리켜 컴포넌트 클래스가 생성되지 않습니다`;
+  const SETUP = `Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json 의 dependenciesMeta 에 "${UI}": { "unplugged": true } 를 두고 yarn install`;
+  const PREFIX = "Tailwind 4: app/globals.css에 ";
+  const item = async (dir: string) => (await handleCheckProject({ targetDir: dir })).results.find((r) => r.name === "tailwind.config");
+  async function pnpApp(lines: string[]) {
+    await fs.ensureDir(path.join(tmp, ".git"));
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, packageManager: "yarn@4.5.3", workspaces: ["apps/*"] });
+    await fs.writeFile(path.join(tmp, "yarn.lock"), "");
+    await fs.writeFile(path.join(tmp, ".yarnrc.yml"), "nodeLinker: pnp\n");
+    await fs.writeFile(path.join(tmp, ".pnp.cjs"), "");
+    const dir = path.join(tmp, "apps", "web");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", dependencies: { tailwindcss: "4.1.14", "@axis-ds/tokens": "1.8.2", [UI]: "1.8.2" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), {});
+    await fs.outputFile(path.join(dir, "app/globals.css"), ['@import "tailwindcss";', '@import "@axis-ds/tokens/css/tailwind4";', ...lines].join("\n") + "\n");
+    return dir;
+  }
+
+  it("줄 없음: unplugged 설정 안내, 줄 있음: 종전 PASS 가 아니라 WARN, unplugged 설치본이 생기면 종전 판정", async () => {
+    const line = `@import "${UI}/tailwind.css";`;
+    expect(await item(await pnpApp([]))).toEqual({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${UI} 의 tailwind.css 는 ${ZIP} → ${SETUP} 뒤 ${line}` });
+    const dir = await pnpApp([line]);
+    expect(await item(dir)).toEqual({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${UI}/tailwind.css import 가 있지만 ${ZIP} → ${SETUP} 하세요` });
+    const pkgDir = path.join(tmp, ".yarn", "unplugged", "@axis-ds-ui-react-virtual-0000000000", "node_modules", "@axis-ds", "ui-react");
+    await fs.outputJSON(path.join(pkgDir, "package.json"), { name: UI, version: "1.8.2" });
+    expect(await item(dir)).toEqual({ name: "tailwind.config", severity: "pass", message: `${PREFIX}@import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다` });
   });
 });

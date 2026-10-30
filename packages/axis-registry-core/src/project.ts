@@ -300,6 +300,17 @@ export function dependencyInstallGuide(baseDirInput: string, name: string, range
   };
 }
 
+/**
+ * 설치 명령을 실행할 위치까지 담은 안내 구절(WI-0096). npm 이고 안내 대상에 워크스페이스 루트 선언이 하나라도 있으면(`rootDeclared`)
+ * 「워크스페이스 루트에서 npm install」, 아니면 `installCommand` 그대로예요. 문구는 WI-0093 Q15(`install-at-root`)와 같아요.
+ * npm 7.24.2 · 8.19.4 · 9.9.4 · 10.9.4 실측에서 앱 디렉터리의 `npm install` 은 루트에만 선언한 패키지를 설치하지 않았고
+ * (npm 8 이상은 `--include-workspace-root` 를 붙이면 설치, npm 7 은 붙여도 설치 안 함), 루트에서 실행하면 네 버전 모두 루트 · 앱 선언을 함께 설치했어요.
+ * pnpm 9.15.4 · yarn 1.22.22 는 앱 디렉터리에서도 루트 선언을 설치해서 그대로예요. theme add · init · check dependencies 가 같이 써요.
+ */
+export function installCommandPhrase(installCommand: string, rootDeclared: boolean): string {
+  return rootDeclared && packageManagerOf(installCommand) === "npm" ? `워크스페이스 루트에서 ${installCommand}` : installCommand;
+}
+
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -636,7 +647,8 @@ export const COMPONENT_TAILWIND_CSS_MIN_VERSION = TAILWIND4_MIN_AXIS_VERSION;
  * 판정 순서(앞에서 정해지면 끝). 갈래는 PRD 1.4 표와 같고, 설치본은 파일 존재를 먼저 보고 버전은 파일이 없을 때만 봐요(사용자 결정 Q42):
  * - `undeclared`: 앱 package.json 이 없거나 앱 · 워크스페이스 루트 어디에도 선언이 없음
  * - `app`: 앱 package.json 에 선언(사용자 결정 Q21). 설치 여부와 상관없이 해석되는 것으로 봐요. 미설치는 dependencies 항목이 알려요.
- *   Plug'n'Play 에서도 같아요(PnP 는 설치본을 읽지 않음)
+ *   Plug'n'Play 에서도 같아요(PnP 는 설치본을 읽지 않음). 해석과 스캔은 달라서, PnP zip 안이라 `@source` 가 스캔되지 않는 경우는
+ *   `pnpComponentSourceHidden`(WI-0102)이 따로 봐요
  * - `pnp-root-only`: Plug'n'Play 이고 워크스페이스 루트에만 선언(`pnpRootOnlyDependency`, Q22). 앱 issuer 가 해석하지 못해요
  *   (Yarn 4.5.3 · `@tailwindcss/cli` 4.1.14 실빌드 rc 1 `Can't resolve`, WI-0097 testplan 2절)
  * - `app-lockfile`: 앱 디렉터리 자체에 lockfile 이 있어(P2) 루트 선언을 이 앱의 선언으로 보지 않음(`rootDeclarationsAllowed`)
@@ -1024,6 +1036,7 @@ export interface DeferredComponentImport {
  * theme add 가 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유 한 문장(WI-0087 DEC-2, WI-0097 에서 cli theme/index.ts 에서 옮김).
  * cli 가 앞에 `  ! ` 를 붙이고 노란색으로 찍어요(접두 · 색은 cli 몫). 세 갈래:
  * 미설치 · 1.4.0 이상인데 파일 없음(설치 손상, 다시 설치) · 1.4.0 미만 또는 버전 모름(올림).
+ * `installCommand` 는 괄호 안에 그대로 넣는 설치 구절이에요. cli 는 `installCommandPhrase(…, true)` 를 넘겨 npm 이면 「워크스페이스 루트에서 npm install」이에요(WI-0096).
  */
 export function deferredComponentImportReason(d: DeferredComponentImport, installCommand: string): string {
   const line = `@import "${d.name}/tailwind.css";`;
@@ -1069,6 +1082,34 @@ export function findPnpUnpluggedPackages(baseDirInput: string, name: string, ran
     if (version !== undefined && versionSatisfiesRange(version, range) === true) found.push(pkgDir);
   }
   return found;
+}
+
+/** 설치본이 Yarn 캐시 zip 이 아니라 실제 디렉터리에 놓이는 의존성 범위(워크스페이스 · 링크) */
+const PNP_REAL_DIR_RANGE = /^(?:workspace|portal|link):/;
+
+/**
+ * Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지(`range` 는 앱 선언 범위)의 `tailwind.css` 가 Tailwind 4 스캐너에 보이지 않는지(WI-0102).
+ * PnP 는 패키지를 `.yarn/cache` 의 zip 으로 두고, `<pkg>/tailwind.css` 의 `@source "./dist"` 는 그 zip 안 경로로 풀려요. Tailwind 4 스캐너는
+ * 실제 디렉터리만 읽어서 import 는 해석되지만(rc 0) 컴포넌트 클래스가 하나도 생성되지 않아요(Yarn 4.5.3 · `@tailwindcss/cli` ·
+ * `@tailwindcss/postcss` 4.1.14 실빌드, Yarn 4.18.1 · 4.3.3 도 같음, WI-0102 testplan 2절). 루트 package.json 의 `dependenciesMeta`
+ * `unplugged` 로 풀면 node_modules 설치와 바이트가 같은 산출물이 나와요.
+ * - PnP 가 아니거나 `workspace:` · `portal:` · `link:` 범위(설치본이 실제 디렉터리)면 `false`
+ * - `findPnpUnpluggedPackages` 가 범위에 맞는 unplugged 설치본을 찾으면 `false`. 범위를 읽지 못하면(`npm:` 별칭 · `file:` · git 등)
+ *   버전을 보지 않고 이름만 맞는 unplugged 설치본을 찾아요
+ * - 그 밖은 `true`(zip 안에만 있음). `.pnp.cjs` 와 zip 은 읽지 않고, `pnpUnpluggedFolder` 로 위치를 바꾼 프로젝트는 unplugged 를
+ *   찾지 못해 `true` 예요(WI-0098 과 같은 잔여 오차)
+ */
+export function pnpComponentSourceHidden(baseDirInput: string, name: string, range: string): boolean {
+  if (!isPnpProject(baseDirInput)) return false;
+  const r = range.trim();
+  if (PNP_REAL_DIR_RANGE.test(r)) return false;
+  const probe = versionSatisfiesRange("0.0.0", r) === undefined ? "*" : r;
+  return findPnpUnpluggedPackages(baseDirInput, name, probe).length === 0;
+}
+
+/** Plug'n'Play 에서 컴포넌트 패키지를 unplugged 로 풀라는 설정 안내(WI-0102). check 의 Tailwind 4 두 방향이 같은 구절을 써요 */
+export function pnpUnplugSetupPhrase(name: string): string {
+  return `Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json 의 dependenciesMeta 에 "${name}": { "unplugged": true } 를 두고 yarn install`;
 }
 
 /** 버전 한 자리 묶음(`1` · `1.8` · `1.8.x` · `1.8.2` · `1.8.2-beta.1`). 빠지거나 와일드카드인 자리는 `undefined` */

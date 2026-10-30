@@ -22,6 +22,12 @@ import {
   versionGateLabel,
 } from "@axis-ds/registry-core/tailwind-core";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
+import {
+  planTemplateFiles,
+  resolveTemplatePath,
+  writeTemplateFiles,
+  type TemplateFileAction,
+} from "@axis-ds/registry-core/apply-files";
 import { PNP_ROOT_ONLY_NOTE, addCommandFor, cssImportViaNote, detectInstallCommand, globalCssSelectionNote } from "@axis-ds/registry-core/project";
 import { AXIS_SITE_URL } from "../site.js";
 
@@ -143,7 +149,8 @@ export interface ApplyTemplateParams {
 export interface ApplyTemplateResult {
   success: boolean;
   templateName: string;
-  files: { path: string; action: "created" | "overwritten" }[];
+  /** WI-0088: `merged` 는 기존 package.json · axis.config.json 과 합친 파일, `note` 는 JSON 으로 읽을 수 없어 덮어쓴 경우 등의 알림 */
+  files: { path: string; action: TemplateFileAction; note?: string }[];
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
   dryRun: boolean;
@@ -224,27 +231,21 @@ export async function handleApplyTemplate(
   const baseDir = path.resolve(params.targetDir);
   // 의존성 안내의 매니저는 템플릿 파일(package.json 포함)을 쓰기 전의 프로젝트로 고릅니다(WI-0085, CLI template apply 와 같음)
   const installCommand = detectInstallCommand(baseDir);
-  const files: ApplyTemplateResult["files"] = [];
-
-  for (const file of detail.files) {
-    const dest = path.join(baseDir, file.path);
-    const exists = await fs.pathExists(dest);
-
-    if (!params.dryRun) {
-      await fs.ensureDir(path.dirname(dest));
-      await fs.writeFile(dest, file.content);
-    }
-
-    files.push({
-      path: file.path,
-      action: exists ? "overwritten" : "created",
-    });
-  }
+  // WI-0088: 쓸 내용은 CLI 와 같은 코어로 정합니다(package.json · axis.config.json 은 기존 파일과 합침). 쓰는 도중 실패하면
+  // 코어가 건드린 파일을 되돌리고 TemplateApplyError 를 던지며, 도구 등록부가 오류 응답으로 돌려줍니다
+  // Q107: 템플릿 경로 · postInstall 대상이 targetDir 밖이면 아무것도 읽거나 쓰지 않고 TemplatePathError(CLI 와 같은 문구)
+  const plan = planTemplateFiles(baseDir, detail.files, (detail.postInstall ?? []).map((p) => p.file));
+  if (!params.dryRun) writeTemplateFiles(plan);
+  const files: ApplyTemplateResult["files"] = plan.map((item) => ({
+    path: item.path,
+    action: item.action,
+    ...(item.note ? { note: item.note } : {}),
+  }));
 
   // postInstall 패치 (dry-run이 아닌 경우만)
   if (!params.dryRun && detail.postInstall?.length) {
     for (const patch of detail.postInstall) {
-      const target = path.join(baseDir, patch.file);
+      const target = resolveTemplatePath(baseDir, patch.file);
       if (!(await fs.pathExists(target))) continue;
 
       if (patch.type === "replace" && patch.search && patch.value) {
@@ -281,8 +282,10 @@ export async function handleDiffTemplate(
   const baseDir = path.resolve(params.targetDir || ".");
   const entries: DiffEntry[] = [];
 
-  for (const file of detail.files) {
-    const localPath = path.join(baseDir, file.path);
+  // WI-0088 Q107: 템플릿 경로가 targetDir 밖이면 아무것도 읽지 않고 TemplatePathError(CLI template diff 와 같은 문구)
+  const localPaths = detail.files.map((file) => resolveTemplatePath(baseDir, file.path));
+  for (const [i, file] of detail.files.entries()) {
+    const localPath = localPaths[i];
 
     if (!(await fs.pathExists(localPath))) {
       entries.push({ path: file.path, status: "added" });
@@ -539,9 +542,16 @@ export function formatApplyTemplateResult(result: ApplyTemplateResult): string {
 
   if (result.files.length > 0) {
     lines.push("### 파일", "");
+    // WI-0088: 합친 파일은 CLI 와 같은 뜻의 「합치기」로 표시합니다
+    const label: Record<TemplateFileAction, string> = {
+      created: "생성",
+      overwritten: "덮어쓰기",
+      merged: "합치기: 기존 필드를 두고 템플릿 키를 합침",
+    };
     for (const f of result.files) {
       const icon = f.action === "created" ? "+" : "~";
-      lines.push(`- ${icon} ${f.path} (${f.action === "created" ? "생성" : "덮어쓰기"})`);
+      lines.push(`- ${icon} ${f.path} (${label[f.action]})`);
+      if (f.note) lines.push(`  - ! ${f.note}`);
     }
   }
 

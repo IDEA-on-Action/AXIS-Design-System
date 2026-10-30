@@ -724,6 +724,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEvtnw",
       "lastSyncedAt": "2026-10-30T00:00:00.000Z",
       "lastStatus": "🔄"
+    },
+    {
+      "wiId": "WI-0105",
+      "slug": "prefer-unplugged",
+      "issueNumber": 265,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhEyf4g",
+      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
   "updatedAt": "2026-10-30T00:00:00.000Z"
