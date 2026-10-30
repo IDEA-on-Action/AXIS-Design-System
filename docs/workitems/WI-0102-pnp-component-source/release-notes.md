@@ -1,5 +1,7 @@
 # WI-0102: Plug'n'Play 에서 컴포넌트 클래스가 생성되지 않는 경우를 check 가 알림 릴리스 노트
 
+> **발행**(2026-10-31, npm cli 1.7.9 · mcp 1.4.8, Version PR #266 · publish run 41135645387, provenance 2/2). 이 문서의 결정은 2026-10-30 사용자가 모두 확정했어요(아래 「확인 대기」 표기는 작성 당시 상태예요).
+
 > 미발행(2026-10-30 작성, 수정본 측정 반영). 사용자 결정 Q120 ~ Q125 는 대기 중이고 권장안 (a) 로 구현했어요([prd 7절](./prd.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(registry-core 변경) | GitHub: #249 | linked 4패키지(tokens · theme · ui-react · agentic-ui)는 바뀌지 않아요
 

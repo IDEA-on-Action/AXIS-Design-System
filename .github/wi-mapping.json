@@ -594,8 +594,8 @@
       "slug": "template-apply-preserve-pm",
       "issueNumber": 223,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNRk",
-      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-31T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0089",
@@ -658,8 +658,8 @@
       "slug": "npm-root-install-location",
       "issueNumber": 240,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhD3BHg",
-      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-31T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0097",
@@ -706,8 +706,8 @@
       "slug": "pnp-component-source-scan",
       "issueNumber": 249,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEHIsQ",
-      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-31T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0103",
@@ -722,8 +722,8 @@
       "slug": "tw3-preset-exports-gate",
       "issueNumber": 260,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEvtnw",
-      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-31T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0105",
@@ -734,5 +734,5 @@
       "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-30T00:00:00.000Z"
+  "updatedAt": "2026-10-31T00:00:00.000Z"
 }

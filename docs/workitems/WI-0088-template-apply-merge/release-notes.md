@@ -1,5 +1,7 @@
 # WI-0088: template apply · MCP apply_template 이 사용자 package.json 을 합침 릴리스 노트
 
+> **발행**(2026-10-31, npm cli 1.7.9 · mcp 1.4.8, Version PR #266 · publish run 41135645387, provenance 2/2). 이 문서의 결정은 2026-10-30 사용자가 모두 확정했어요(아래 「확인 대기」 표기는 작성 당시 상태예요).
+
 > 2026-10-30 작성(수정본 측정 반영). 결정 Q100 ~ Q107 은 권장안으로 진행했고 사용자 확인 대기예요([prd 7절](./prd.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(registry-core 변경) | GitHub: #223 | linked 4패키지(tokens · theme · ui-react · agentic-ui)는 바뀌지 않아요
 

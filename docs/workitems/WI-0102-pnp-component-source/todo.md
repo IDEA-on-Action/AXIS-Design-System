@@ -31,4 +31,4 @@
 ## 릴리스
 - [x] changeset `@axis-ds/cli` patch + `@axis-ds/mcp` patch, `pnpm check-changeset-mcp-tokens` rc 0 (AC9)
 - [x] release-notes.md
-- [ ] PR 리뷰 · 머지 · 발행 (Master)
+- [x] PR 리뷰 · 머지 · 발행(Master) (#263 머지 5b1dc8a, Version PR #266 으로 cli 1.7.9 · mcp 1.4.8 발행, 2026-10-31)

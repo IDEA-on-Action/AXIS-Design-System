@@ -1,5 +1,7 @@
 # WI-0104: check 가 Tailwind 3 preset · tokens 줄을 설치본의 exports 로 봄 릴리스 노트
 
+> **발행**(2026-10-31, npm cli 1.7.9 · mcp 1.4.8, Version PR #266 · publish run 41135645387, provenance 2/2). 이 문서의 결정은 2026-10-30 사용자가 모두 확정했어요(아래 「확인 대기」 표기는 작성 당시 상태예요).
+
 > 2026-10-30 작성(수정본 측정 반영). Q130 ~ Q137 은 권장안으로 진행했고 사용자 확인 대기예요([prd 6절](./prd.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(registry-core 변경) | GitHub: #260 | linked 4패키지(tokens · theme · ui-react · agentic-ui)는 바뀌지 않아요
 
