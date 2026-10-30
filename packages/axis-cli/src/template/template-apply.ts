@@ -12,6 +12,7 @@ import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js"
 import { detectTailwind, tailwindMajorFromRange } from "./tailwind-core.js";
 import { addCommandFor, detectInstallCommand, runScriptCommand } from "@axis-ds/registry-core/project";
 import {
+  TemplatePathError,
   planTemplateFiles,
   writeTemplateFiles,
   type TemplateFilePlan,
@@ -114,8 +115,17 @@ export async function applyTemplate(
     console.log(chalk.yellow(`! ${w}`));
   }
 
-  // 쓸 내용을 먼저 정합니다(WI-0088: package.json · axis.config.json 은 기존 파일과 합침, 쓰기 전에 모두 계산)
-  const plan = planTemplateFiles(baseDir, detail.files);
+  // 쓸 내용을 먼저 정합니다(WI-0088: package.json · axis.config.json 은 기존 파일과 합침, 쓰기 전에 모두 계산).
+  // 템플릿 경로 · postInstall 대상이 대상 디렉터리 밖이면 아무것도 쓰지 않고 rc 1(Q107)
+  let plan: TemplateFilePlan[];
+  try {
+    plan = planTemplateFiles(baseDir, detail.files, (detail.postInstall ?? []).map((p) => p.file));
+  } catch (err) {
+    if (!(err instanceof TemplatePathError)) throw err;
+    console.error(chalk.red(err.message));
+    process.exitCode = 1;
+    return false;
+  }
   const conflicts = plan.filter((p) => p.action !== "created");
 
   if (conflicts.length > 0 && !options.yes && !options.dryRun) {

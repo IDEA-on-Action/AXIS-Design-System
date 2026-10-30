@@ -1,6 +1,6 @@
 # WI-0088: template apply · MCP apply_template 이 사용자 package.json 을 덮어쓰지 않고 합침 PRD
 
-> 작성일: 2026-10-30 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0088 | GitHub: #223 | 우선순위: P3 | 상태: 구현 · 검증 완료, 결정 Q100 ~ Q106 은 **권장안으로 진행, 사용자 확인 대기**
+> 작성일: 2026-10-30 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0088 | GitHub: #223 | 우선순위: P3 | 상태: 구현 · 검증 완료, 결정 Q100 ~ Q107 은 **권장안으로 진행, 사용자 확인 대기**(Q107 경로 탈출 방어는 2026-10-30 Master 요청으로 추가)
 > 기준: `main` e32275e (linked 1.8.2 · cli 1.7.8 · mcp 1.4.7 발행됨). 착수 측정은 e32275e 소스로 빌드한 cli · mcp dist 로 했어요
 > 출처: 배치 6c 검토(WI-0085 D6, 2026-10-26)에서 분리. axis.config.json 덮어쓰기는 WI-0027 AC9 · project-todo 「ontology 테마 완료」 메모가 이 WI 범위로 넘겼어요
 > 표기: **측정**(이번에 실행해 얻은 값) · **추정**(실행하지 않음) · **미측정**(재야 하지만 아직 재지 않음)
@@ -30,7 +30,7 @@
 
 #### 사용자 결정 대기 (권장안으로 진행)
 
-Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 진행, 사용자 확인 대기**예요. 다른 선택지로 바꾸면 plan 2절의 해당 함수만 바뀌어요.
+Q100 ~ Q107 은 모두 7절 권장안으로 구현했어요. **권장안으로 진행, 사용자 확인 대기**예요. 다른 선택지로 바꾸면 plan 2절의 해당 함수만 바뀌어요.
 
 | # | 진행한 권장안 |
 |---|---|
@@ -41,6 +41,7 @@ Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 �
 | Q104 | 합친 파일은 「합치기」로 표시(CLI 충돌 목록 · `--dry-run` · 쓰기 뒤 한 줄, MCP `action: "merged"`) |
 | Q105 | `scripts` · 의존성 4맵은 키 단위로 합치고 같은 키는 템플릿 값 |
 | Q106 | 쓸 내용을 먼저 모두 정하고, 쓰는 도중 실패하면 건드린 파일을 되돌림. init 은 그때 멈춤 |
+| Q107 | 템플릿 경로(files[].path · postInstall[].file)가 대상 디렉터리 밖(절대 경로 · `..` · 심볼릭 링크 경유)이면 어떤 파일도 쓰거나 읽기 전에 오류로 중단(보안 수정) |
 
 #### 선례 · 이어받는 결정
 
@@ -60,7 +61,8 @@ Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 �
 2. CLI `applyTemplate`(apply · init 공용)과 MCP `handleApplyTemplate` 이 이 코어를 써요(CLI = MCP 를 구조로 보장)
 3. 「합치기」 표시와 JSON 으로 읽을 수 없는 파일 알림(Q101 · Q104)
 4. 쓰기 도중 실패 되돌림, init 중단(Q106)
-5. cli · mcp README 한 줄씩, changeset cli · mcp patch
+5. **경로 탈출 방어(Q107, 보안 수정)**: 템플릿 `files[].path` · `postInstall[].file` 은 원격 레지스트리 JSON 에서 와요(`AXIS_TEMPLATE_URL` 로 바꿀 수 있음). main 은 CLI · MCP 모두 `path.join(baseDir, file.path)` 그대로라 오염된 레지스트리가 프로젝트 밖에 쓰거나 읽을 수 있었어요(이 WI 의 되돌리기 삭제도 같은 경로를 씀). `resolveTemplatePath` 하나로 CLI apply · init · diff · postInstall, MCP apply_template · diff_template 의 경로를 모두 검증해요
+6. cli · mcp README 한 줄씩, changeset cli · mcp patch
 
 ### 2.2 하지 않는 것
 
@@ -91,6 +93,7 @@ Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 �
 | AC9 | 쓰기 도중 실패하면 건드린 파일이 원래 바이트로 돌아오고 새 파일 · 새 디렉터리가 지워지며, CLI rc 1 · MCP 오류 · init 은 axis.config.json · 다음 단계 없음 | 실패 주입 테스트 | Q106 |
 | AC10 | CLI = MCP: 측정 35쌍이 같은 결과, 같은 픽스처에서 쓴 package.json 바이트가 같아요 | 측정 · MCP 테스트 | - |
 | AC11 | 새 테스트는 호출지를 HEAD 로 되돌리면 빨강, 코어 변이 모두 빨강, 기존 테스트 기대는 바뀌지 않아요. registry-core · cli · mcp build · type-check · lint · test(`--force`) 통과 | testplan 5 · 6절 | - |
+| AC13 | 템플릿 경로 `../escape.txt` · 절대 경로 · `a/../../escape` · 디렉터리 심볼릭 링크 경유 · 파일 심볼릭 링크 · 끊긴 링크 · 밖을 가리키는 postInstall 대상에서 CLI apply(`-y` · `--dry-run`) · init · diff, MCP apply_template(dryRun 포함) · diff_template 이 rc 1 · 오류로 끝나고, 대상 디렉터리 밖에 파일이 생기지 않으며 안쪽 파일도 하나도 바뀌지 않아요(정상 파일을 앞에 둬 부분 적용이 없음을 확인). CLI · MCP 오류 문구가 같아요. 저장소의 실제 템플릿 5개는 그대로 적용돼요(70칸 재측정 결과가 Q107 전과 바이트 같음) | testplan 7절 | Q107 |
 | AC12 | changeset `@axis-ds/cli` patch + `@axis-ds/mcp` patch, `pnpm check-changeset-mcp-tokens` rc 0 | - | - |
 
 ## 4. 미측정 · 위험
@@ -112,9 +115,9 @@ Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 �
 - scratchpad `S=/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/4ae00ed9-0062-46ea-b36b-1f1bfaf43fe2/scratchpad/WI-0088`(세션 임시 경로)
 - 측정 스크립트 `$S/measure.mjs`(로컬 HTTP 로 `apps/web/public/templates` 를 `AXIS_TEMPLATE_URL` 에 주고, CLI 는 `node <cli>/index.js template apply <t> --dir <d> -y`, MCP 는 stdio `axis.apply_template`, 뒤이어 CLI `check --dir <d>`), 요약 `$S/summary.mjs`
 - 수정 전: `$S/out-base/all.tsv` · 칸별 출력 `<템플릿>.<픽스처>.<cli|mcp>.txt`. 수정 후: `$S/out-fix/`
-- 변이: `$S/mutate.mjs` → `$S/mutate.tsv`
+- 변이: `$S/mutate.mjs` → `$S/mutate.tsv`, 경로 검증 변이 `$S/guard-mutate.mjs` → `$S/guard-mutate.tsv`, Q107 뒤 재측정 `$S/out-guard/`
 
-## 7. 사용자 결정 항목 (Q100 ~ Q106, 권장안으로 진행, 사용자 확인 대기)
+## 7. 사용자 결정 항목 (Q100 ~ Q107, 권장안으로 진행, 사용자 확인 대기)
 
 | # | 질문 | 선택지 | 권장안 | 근거 |
 |---|---|---|---|---|
@@ -124,4 +127,5 @@ Q100 ~ Q106 은 모두 7절 권장안으로 구현했어요. **권장안으로 �
 | Q103 | 템플릿 axis.config.json(ontology-console)이 기존 axis.config.json 을 만날 때 | (a) 키 단위로 합침, 같은 키는 템플릿 값, 사용자에게만 있는 키는 남김 (b) 같은 키도 사용자 값 (c) 이 WI 범위 밖(종전 덮어쓰기) | (a) | 측정: 종전에는 `registry` 같은 사용자 전용 키가 사라져요. 같은 키(tailwindConfig · globalCss · brand)는 템플릿이 쓴 파일과 `<html data-brand="ontology">` 를 가리켜 (b) 로 두면 check 가 다른 파일 · 브랜드를 봐요. 대가는 componentsDir(2.3) |
 | Q104 | 합친 파일을 어떻게 보일까요 | (a) 「합치기」로 따로 표시(CLI 충돌 목록 「(기존 필드를 두고 템플릿 키를 합침)」 · `--dry-run` · 쓰기 뒤 한 줄, MCP `action: "merged"` · 「합치기: …」) (b) 종전처럼 「덮어쓰기」 | (a) | 사용자가 package.json 이 지워지지 않는다는 것을 확인하고 `-y` 를 고를 수 있어요. MCP 결과 객체의 `action` 에 새 값 `merged` 가 생기는 것은 응답 형식 변화예요(도구 응답은 포매팅된 텍스트라 영향은 작다고 봐요, 추정) |
 | Q105 | `scripts` · `dependencies` · `devDependencies` · `peerDependencies` · `optionalDependencies` 의 같은 키 | (a) 템플릿 값(사용자에게만 있는 키는 남김) (b) 사용자 값 (c) 맵 전체를 사용자 값 | (a) | 템플릿 코드는 그 범위(예: react ^19 · tailwindcss ^3.4)를 전제로 하고, 「필요한 의존성」 명령도 템플릿 범위를 설치해요. 종전 동작(템플릿 값)과도 같아요. (b) 는 선언과 설치 명령이 어긋나요 |
+| Q107 | 템플릿 경로가 대상 디렉터리 밖을 가리킬 때(보안 리뷰 지적, Master 요청) | (a) 쓰기 · 읽기 · 삭제 전에 모든 경로를 한 함수로 검증하고 하나라도 밖이면 아무것도 건드리지 않고 오류(절대 경로 · `..` · 실경로가 밖인 심볼릭 링크 · 끊긴 링크 · 빈 경로 거부) (b) 밖을 가리키는 파일만 건너뛰고 나머지 적용 (c) 어휘 검사만(심볼릭 링크는 보지 않음) | (a) | (b) 는 오염된 템플릿을 부분 적용해 결과를 예측하기 어려워요. (c) 는 프로젝트 안 링크를 거친 쓰기를 못 막아요. 저장소 템플릿 5개의 경로는 모두 안쪽이라 정상 사용에는 영향이 없어요(측정 70칸 결과 바이트 같음). 안쪽을 가리키는 링크는 허용해요 |
 | Q106 | 이슈의 「rollback 테스트」 범위 | (a) 쓸 내용을 먼저 모두 정하고, 쓰는 도중 실패하면 건드린 파일을 원래대로 · 새 파일과 새 빈 디렉터리 삭제, CLI rc 1 · MCP 오류, init 은 멈춤(실패 주입 테스트) (b) 계산만 먼저 하고 되돌리기는 하지 않음 (c) package.json 백업 파일을 남김 | (a) | 합치기는 사용자 파일을 다시 쓰므로 중간 실패 때 반쯤 바뀐 프로젝트가 남지 않아야 해요. theme add 가 같은 방식이에요(`theme-add-rollback.test.ts`). (c) 는 파일이 늘어나 사용자가 지워야 해요 |

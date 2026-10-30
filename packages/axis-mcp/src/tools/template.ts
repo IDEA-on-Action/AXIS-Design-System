@@ -22,7 +22,12 @@ import {
   versionGateLabel,
 } from "@axis-ds/registry-core/tailwind-core";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
-import { planTemplateFiles, writeTemplateFiles, type TemplateFileAction } from "@axis-ds/registry-core/apply-files";
+import {
+  planTemplateFiles,
+  resolveTemplatePath,
+  writeTemplateFiles,
+  type TemplateFileAction,
+} from "@axis-ds/registry-core/apply-files";
 import { PNP_ROOT_ONLY_NOTE, addCommandFor, cssImportViaNote, detectInstallCommand, globalCssSelectionNote } from "@axis-ds/registry-core/project";
 import { AXIS_SITE_URL } from "../site.js";
 
@@ -228,7 +233,8 @@ export async function handleApplyTemplate(
   const installCommand = detectInstallCommand(baseDir);
   // WI-0088: 쓸 내용은 CLI 와 같은 코어로 정합니다(package.json · axis.config.json 은 기존 파일과 합침). 쓰는 도중 실패하면
   // 코어가 건드린 파일을 되돌리고 TemplateApplyError 를 던지며, 도구 등록부가 오류 응답으로 돌려줍니다
-  const plan = planTemplateFiles(baseDir, detail.files);
+  // Q107: 템플릿 경로 · postInstall 대상이 targetDir 밖이면 아무것도 읽거나 쓰지 않고 TemplatePathError(CLI 와 같은 문구)
+  const plan = planTemplateFiles(baseDir, detail.files, (detail.postInstall ?? []).map((p) => p.file));
   if (!params.dryRun) writeTemplateFiles(plan);
   const files: ApplyTemplateResult["files"] = plan.map((item) => ({
     path: item.path,
@@ -239,7 +245,7 @@ export async function handleApplyTemplate(
   // postInstall 패치 (dry-run이 아닌 경우만)
   if (!params.dryRun && detail.postInstall?.length) {
     for (const patch of detail.postInstall) {
-      const target = path.join(baseDir, patch.file);
+      const target = resolveTemplatePath(baseDir, patch.file);
       if (!(await fs.pathExists(target))) continue;
 
       if (patch.type === "replace" && patch.search && patch.value) {
@@ -276,8 +282,10 @@ export async function handleDiffTemplate(
   const baseDir = path.resolve(params.targetDir || ".");
   const entries: DiffEntry[] = [];
 
-  for (const file of detail.files) {
-    const localPath = path.join(baseDir, file.path);
+  // WI-0088 Q107: 템플릿 경로가 targetDir 밖이면 아무것도 읽지 않고 TemplatePathError(CLI template diff 와 같은 문구)
+  const localPaths = detail.files.map((file) => resolveTemplatePath(baseDir, file.path));
+  for (const [i, file] of detail.files.entries()) {
+    const localPath = localPaths[i];
 
     if (!(await fs.pathExists(localPath))) {
       entries.push({ path: file.path, status: "added" });

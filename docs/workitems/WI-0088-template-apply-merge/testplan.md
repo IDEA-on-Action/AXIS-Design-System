@@ -1,6 +1,6 @@
 # WI-0088: template apply 의 package.json 합치기 테스트 계획
 
-> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 작성일: 2026-10-30 | 상태: 착수 측정(2절) · 구현 결과(3 ~ 6절) 반영, 기대값은 Q100 ~ Q106 권장안 기준
+> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 작성일: 2026-10-30 | 상태: 착수 측정(2절) · 구현 결과(3 ~ 6절) · 경로 탈출 방어(7절) 반영, 기대값은 Q100 ~ Q107 권장안 기준
 > 기준선: 착수 직전 HEAD e32275e 소스로 빌드한 cli · mcp dist(측정 뒤 scratchpad `$S/base/` 로 옮김)
 > `S=/tmp/claude-1000/-home-sinclair-work-idea-on-action-AXIS-Design-System/4ae00ed9-0062-46ea-b36b-1f1bfaf43fe2/scratchpad/WI-0088`(세션 임시 경로)
 
@@ -85,5 +85,35 @@
 
 | 명령 | 결과 |
 |---|---|
-| `pnpm turbo run build type-check lint test --filter=@axis-ds/registry-core --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | rc 0, Tasks 11 successful · **Cached 0**, cli 23 파일 · **1184 passed**, mcp 9 파일 · **242 passed** |
+| `pnpm turbo run build type-check lint test --filter=@axis-ds/registry-core --filter=@axis-ds/cli --filter=@axis-ds/mcp --force` | rc 0, Tasks 11 successful · **Cached 0**, cli 23 파일 · **1184 passed**, mcp 9 파일 · **242 passed**(Q107 전, Q107 뒤는 7.3절) |
 | `pnpm check-changeset-mcp-tokens` | rc 0, 「통과(registry-core → cli · mcp)」, 스크립트 자체 테스트 19/19 |
+
+## 7. 경로 탈출 방어 (Q107, 2026-10-30 Master 요청)
+
+### 7.1 테스트
+
+| 파일 | 내용 |
+|---|---|
+| cli `src/template/template-path-guard.test.ts`(12) | `resolveTemplatePath` 거부 6경우(`../escape.txt` · 절대 경로 · `a/../../escape` · 디렉터리 링크 경유 · 파일 링크 · 끊긴 링크)의 문구와 빈 경로 · `.` · `C:\\evil.txt` · NUL, 안쪽 경로 통과(안쪽 링크 · 아직 없는 대상 디렉터리 포함). apply `-y` 6경우마다 rc 1 · false, 대상 · 밖 · 상위 디렉터리 스냅샷 그대로(정상 파일 2개를 앞에 둬 부분 적용 없음 확인), `--dry-run` 도 rc 1, postInstall 대상이 밖이면 템플릿 파일도 쓰지 않음, init 은 아무것도 쓰지 않고 다음 단계 없음, diff 는 rc 1 · 결과 없음. 저장소 실제 템플릿 5개는 모든 경로가 통과하고 빈 디렉터리에 바이트 그대로 |
+| mcp `src/tools/template-path-guard.test.ts`(4) | apply_template 5경우 × dryRun 두 가지가 CLI 와 같은 문구로 실패, 대상 · 밖 스냅샷 그대로, postInstall 대상이 밖이면 쓰지 않음, diff_template 링크 경유 거부, 양성 대조(안쪽 경로는 적용) |
+
+### 7.2 음성 대조 (`$S/guard-mutate.mjs`, 원복 sha256 4파일 같음)
+
+| 변이 | cli(12) | mcp(4) | 판정 |
+|---|---|---|---|
+| G1 검증 전체 제거(join 만, = main 과 같은 판정) | 6 failed | 3 failed | 빨강 |
+| G2 심볼릭 링크 실경로 검사 제거 | 3 failed | 2 failed | 빨강 |
+| G3 상위 디렉터리 검사 제거 | 2 failed | 2 failed | 빨강 |
+| G4 계획이 postInstall 경로를 검증 안 함 | 1 failed | 1 failed | 빨강 |
+| G5 계획이 쓰기 전에 검증하지 않음 | 3 failed | 1 failed | 빨강 |
+| G6 CLI diff 검증 없음 | 1 failed | 0 | 빨강 |
+| G7 MCP diff 검증 없음 | 0 | 1 failed | 빨강 |
+| G8 MCP apply 가 postInstall 경로를 넘기지 않음 | 0 | 1 failed | 빨강 |
+| G9 CLI apply 가 postInstall 경로를 넘기지 않음 | 1 failed | 0 | 빨강 |
+
+9/9 빨강이에요. G1 에서 초록으로 남는 cli 6개는 정상 템플릿 5개와 안쪽 경로 통과 테스트예요(검증이 없어도 통과해야 맞음).
+
+### 7.3 정상 템플릿 영향
+
+- Q107 을 넣은 `--force` 빌드로 2 · 3절의 70칸을 다시 재고 `$S/out-fix/all.tsv` 와 `cmp` 했어요: rc 0(바이트 같음)
+- `pnpm turbo run build type-check lint test --filter=@axis-ds/registry-core --filter=@axis-ds/cli --filter=@axis-ds/mcp --force`: rc 0, Tasks 11 · Cached 0, cli 24 파일 · **1196 passed**, mcp 10 파일 · **246 passed**

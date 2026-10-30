@@ -22,10 +22,82 @@
  * 6. 그 밖의 파일은 종전처럼 덮어씁니다(`overwritten`)
  * 7. 쓰기는 모든 내용을 먼저 정한 뒤 하고, 쓰는 도중 실패하면 이미 쓴 파일을 원래 내용으로 되돌리고(새로 만든 파일 · 빈 디렉터리는 지움)
  *    `TemplateApplyError` 를 던집니다(Q106)
+ * 8. 템플릿 경로(files[].path · postInstall[].file)는 쓰거나 읽기 전에 모두 `resolveTemplatePath` 로 검증하고, 하나라도 대상 디렉터리
+ *    밖(절대 경로 · `..` · 심볼릭 링크 경유)이면 아무 파일도 건드리지 않고 `TemplatePathError` 를 던집니다(Q107, 보안 수정)
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmdirSync, unlinkSync, writeFileSync } from "node:fs";
 import path from "node:path";
+
+// --- 경로 탈출 방어 (WI-0088 Q107) ---
+//
+// 템플릿 `files[].path` · `postInstall[].file` 은 원격 레지스트리 JSON 에서 옵니다(AXIS_TEMPLATE_URL 로 바꿀 수 있음). 그래서 오염된
+// 레지스트리가 `../../x` · 절대 경로 · 프로젝트 안 심볼릭 링크를 거쳐 대상 디렉터리 밖에 쓰거나(되돌리기의 삭제 포함) 읽을 수 있었습니다
+// (main 의 CLI · MCP 모두 `path.join(baseDir, file.path)` 그대로 씀). 템플릿 경로로 파일을 다루는 모든 호출지(CLI apply · init · diff ·
+// postInstall, MCP apply_template · diff_template)는 이 검증을 거치고, apply 는 **어떤 파일도 쓰기 전에** 모든 경로를 검증합니다.
+
+/** 템플릿 경로가 대상 디렉터리 밖을 가리킬 때 던지는 오류(CLI · MCP 가 같은 문구를 씀) */
+export class TemplatePathError extends Error {
+  constructor(
+    readonly relPath: string,
+    readonly reason: string
+  ) {
+    super(`템플릿 경로 '${relPath}' 가 대상 디렉터리 밖을 가리켜(${reason}) 중단했습니다. 아무 파일도 바꾸지 않았습니다`);
+    this.name = "TemplatePathError";
+  }
+}
+
+/** 있는 가장 가까운 조상까지 realpath 로 풀고 나머지(아직 없는 부분)를 붙입니다. 끊긴 심볼릭 링크는 풀 수 없어 undefined */
+function realpathOfExisting(p: string): string | undefined {
+  const rest: string[] = [];
+  let cur = p;
+  for (;;) {
+    try {
+      lstatSync(cur);
+      break;
+    } catch {
+      const parent = path.dirname(cur);
+      if (parent === cur) break;
+      rest.unshift(path.basename(cur));
+      cur = parent;
+    }
+  }
+  try {
+    return path.join(realpathSync(cur), ...rest);
+  } catch {
+    return undefined;
+  }
+}
+
+function isInside(root: string, target: string): boolean {
+  const rel = path.relative(root, target);
+  return rel !== "" && !rel.startsWith("..") && !path.isAbsolute(rel);
+}
+
+/**
+ * 템플릿 상대 경로를 대상 디렉터리 안의 절대 경로로 바꿉니다. 절대 경로 · 상위로 나가는 경로 · 대상 디렉터리 자체 · 실경로(심볼릭 링크를
+ * 따라간 위치)가 대상 디렉터리 실경로 밖이면 `TemplatePathError` 를 던집니다.
+ */
+export function resolveTemplatePath(baseDir: string, relPath: string): string {
+  if (typeof relPath !== "string" || relPath === "" || relPath.includes("\0")) {
+    throw new TemplatePathError(String(relPath), "빈 경로 또는 잘못된 문자");
+  }
+  if (path.isAbsolute(relPath) || path.win32.isAbsolute(relPath)) throw new TemplatePathError(relPath, "절대 경로");
+  const base = path.resolve(baseDir);
+  const dest = path.resolve(base, relPath);
+  if (!isInside(base, dest)) throw new TemplatePathError(relPath, "상위 디렉터리로 나감");
+  const baseReal = realpathOfExisting(base);
+  const destReal = realpathOfExisting(dest);
+  if (!baseReal || !destReal || !isInside(baseReal, destReal)) {
+    throw new TemplatePathError(relPath, "심볼릭 링크가 대상 디렉터리 밖을 가리킴");
+  }
+  return dest;
+}
+
+/** 여러 템플릿 경로를 한꺼번에 검증합니다(하나라도 밖이면 그 경로로 오류). 쓰기 전에 부릅니다 */
+export function assertTemplatePaths(baseDir: string, relPaths: readonly string[]): void {
+  for (const p of relPaths) resolveTemplatePath(baseDir, p);
+}
 
 export type TemplateFileAction = "created" | "overwritten" | "merged";
 
@@ -146,10 +218,20 @@ export function planTemplateFileContent(
   return { action: "merged", content: serializeLike(before, merger(user, template)) };
 }
 
-/** 대상 디렉터리에 쓸 템플릿 파일 계획(파일을 쓰지 않음, dry-run · 충돌 목록에도 씀) */
-export function planTemplateFiles(baseDir: string, files: readonly TemplateFileInput[]): TemplateFilePlan[] {
-  return files.map((file) => {
-    const dest = path.join(baseDir, file.path);
+/**
+ * 대상 디렉터리에 쓸 템플릿 파일 계획(파일을 쓰지 않음, dry-run · 충돌 목록에도 씀).
+ * 모든 경로를 먼저 검증하고(Q107), 하나라도 대상 디렉터리 밖이면 아무것도 읽지 않고 `TemplatePathError` 를 던집니다.
+ * `extraPaths` 는 같은 기준으로 함께 검증할 경로(postInstall 의 `file`)입니다.
+ */
+export function planTemplateFiles(
+  baseDir: string,
+  files: readonly TemplateFileInput[],
+  extraPaths: readonly string[] = []
+): TemplateFilePlan[] {
+  const dests = files.map((file) => resolveTemplatePath(baseDir, file.path));
+  assertTemplatePaths(baseDir, extraPaths);
+  return files.map((file, i) => {
+    const dest = dests[i];
     const before = existsSync(dest) ? readFileSync(dest, "utf8") : undefined;
     return { path: file.path, dest, before, ...planTemplateFileContent(file.path, file.content, before) };
   });
