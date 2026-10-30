@@ -18,8 +18,8 @@
 - [x] Q84 changeset: mcp · cli patch (AC10) → 같음
 - [x] Q85 Node 20 · 24 측정: 구현 검증 때 (testplan 4.7) → 같음
 - [x] 격리 해석의 동기화 방식 (plan 3절 3, 사용자 결정 아님) (AC10) → Worker + `Atomics.wait` 동기 대기, 이유는 testplan 4.1
-- [ ] Q86 바뀐 뒤 호출마다 Worker 비용을 그대로 둘지 (prd 6절) (남음: 권장안 ① 그대로로 구현, 확인 대기)
-- [ ] Q87 폴백 중 새 브랜드 표시 (prd 6절) (남음: 권장안 ① 목록에서 빼고 상세는 없는 이름 + stale 로 구현, 확인 대기)
+- [x] Q86 바뀐 뒤 호출마다 Worker 비용을 그대로 둘지 (prd 6절) (2026-10-30 권장안 ① 그대로 둠으로 확정)
+- [x] Q87 폴백 중 새 브랜드 표시 (prd 6절) (2026-10-30 권장안 ① 목록에서 빼고 상세는 없는 이름 + stale 로 확정)
 
 ## 구현
 - [x] 원본 `axis-cli/src/theme/brand-core.ts` 의 Node 해석 세 곳을 해석기 하나(`openTokensResolver`)로 모음, 오류 코드 분류 불변 (AC1 ~ AC4 · AC6) → 하네스 고친 칸 20/20 · 가드 152/152(testplan 4.3)
