@@ -716,7 +716,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEVEIo",
       "lastSyncedAt": "2026-10-29T00:00:00.000Z",
       "lastStatus": "🔄"
+    },
+    {
+      "wiId": "WI-0104",
+      "slug": "tw3-preset-exports-gate",
+      "issueNumber": 260,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhEvtnw",
+      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
+      "lastStatus": "⏳"
     }
   ],
-  "updatedAt": "2026-10-29T00:00:00.000Z"
+  "updatedAt": "2026-10-30T00:00:00.000Z"
 }

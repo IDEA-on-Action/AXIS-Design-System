@@ -101,6 +101,7 @@
 | 113 | Tailwind 3 preset 을 ESM · .ts 설정에서 쓰면 tokens 미선언 · 미설치여도 check 가 PASS(WI-0097 조사에서 발견, 사용자 결정 Q26) | WI-0101 (#248) | P18 | P3 | 🔄 |
 | 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | ⏳ |
 | 115 | check 의 패키지 해석이 exports 를 보지 않아 중첩 node_modules 그림자 설치본에서 실빌드와 어긋남(WI-0100b 검증에서 발견, 사용자 결정 Q58) | WI-0103 (#254) | P18 | P3 | 🔄 |
+| 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | ⏳ |
 
 ### 완료
 
