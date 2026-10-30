@@ -1367,6 +1367,63 @@ describe("handleCheckProject WI-0103: 중첩 설치본(그림자) · exports (CL
   });
 });
 
+// WI-0104 (권장안, 사용자 확인 대기 Q130 ~ Q137): Tailwind 3 preset · Tailwind 3 tokens 줄을 exports 로 봄. CLI template-check.test.ts 「WI-0104」 describe 의
+// 대표 행과 같은 fixture 모양 · 같은 문구예요.
+describe("handleCheckProject WI-0104: Tailwind 3 preset · tokens 줄의 exports (CLI 와 같은 문구)", () => {
+  const T = "@axis-ds/tokens";
+  const P = `${T}/tailwind`;
+  const ESM = { file: "tailwind.config.mjs", src: `import axisPreset from "${P}";\nexport default { presets: [axisPreset] };\n` };
+  const BARE = { file: "tailwind.config.cjs", src: `module.exports = { presets: [require("${P}")] };\n` };
+  const results = async (dir: string) => Object.fromEntries((await handleCheckProject({ targetDir: dir })).results.map((r) => [r.name, r]));
+  const notExported = (file: string) =>
+    `${file}에 AXIS preset 참조가 있지만 먼저 잡히는 node_modules/@axis-ds/tokens(1.8.2)가 ./tailwind 를 내보내지 않아 해석되지 않습니다 → 그 node_modules 의 ${T} 를 지우거나 다시 설치하세요`;
+
+  async function app(sub: string, form: { file: string; src: string }, tailwindExport: unknown) {
+    const dir = path.join(tmp, sub);
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", dependencies: { tailwindcss: "^3.4.19", [T]: "^1.8.2" } });
+    await fs.outputFile(path.join(dir, form.file), form.src);
+    const exp: Record<string, unknown> = { "./css": "./dist/css/variables.css" };
+    if (tailwindExport !== undefined) exp["./tailwind"] = tailwindExport;
+    await fs.outputJSON(path.join(dir, "node_modules", T, "package.json"), { name: T, version: "1.8.2", exports: exp });
+    await fs.outputFile(path.join(dir, "node_modules", T, "dist/tailwind-preset.js"), "module.exports = {};\n");
+    await fs.outputFile(path.join(dir, "node_modules", T, "dist/tailwind-preset.mjs"), "export default {};\n");
+    return dir;
+  }
+
+  it("exports 에 ./tailwind 가 없으면 ESM · CommonJS bare 모두 WARN, import 조건만이면 CommonJS 만 WARN, 정상 모양은 PASS", async () => {
+    for (const [i, f] of [ESM, BARE].entries()) {
+      expect((await results(await app(`n${i}`, f, undefined)))["tailwind.config"]).toEqual({ name: "tailwind.config", severity: "warn", message: notExported(f.file) });
+      expect((await results(await app(`ok${i}`, f, { require: "./dist/tailwind-preset.js", import: "./dist/tailwind-preset.mjs" })))["tailwind.config"].severity).toBe("pass");
+    }
+    expect((await results(await app("ci0", ESM, { import: "./dist/tailwind-preset.mjs" })))["tailwind.config"].severity).toBe("pass");
+    expect((await results(await app("ci1", BARE, { import: "./dist/tailwind-preset.mjs" })))["tailwind.config"]).toEqual({
+      name: "tailwind.config",
+      severity: "warn",
+      message: notExported(BARE.file),
+    });
+  });
+
+  it("Tailwind 3 globals.css: 하위 파일 쪽 그림자가 ./css 를 내보내지 않으면 WARN, 대상 파일만 없으면 PASS", async () => {
+    for (const s of ["ex", "em"] as const) {
+      const dir = await app(`g-${s}`, { file: "tailwind.config.js", src: `module.exports = { presets: [require("${P}").default] };\n` }, { require: "./dist/tailwind-preset.js" });
+      await fs.outputFile(path.join(dir, "src/app/globals.css"), '@import "../styles/axis.css";\n@tailwind base;\n');
+      await fs.outputFile(path.join(dir, "src/styles/axis.css"), `@import "${T}/css";\n`);
+      const nm = path.join(dir, "src/styles/node_modules", T);
+      await fs.outputJSON(path.join(nm, "package.json"), { name: T, version: "1.8.2", exports: s === "ex" ? { "./tailwind": "./dist/tailwind-preset.js" } : { "./css": "./dist/css/variables.css" } });
+      const r = (await results(dir))["globals.css"];
+      if (s === "ex") {
+        expect(r).toEqual({
+          name: "globals.css",
+          severity: "warn",
+          message: `src/app/globals.css에 ${T}/css import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 src/styles/node_modules/${T}(1.8.2)가 ./css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${T} 를 지우거나 다시 설치하세요 (src/styles/axis.css 의 import)`,
+        });
+      } else {
+        expect(r.severity).toBe("pass");
+      }
+    }
+  });
+});
+
 // WI-0102: Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지가 .yarn/cache zip 안에만 있으면 tailwind.css 의 @source "./dist" 가 스캔되지 않아요.
 // CLI check 와 같은 registry-core 판정(pnpComponentSourceHidden)이라 같은 문구예요
 describe("handleCheckProject WI-0102: Plug'n'Play zip 안의 컴포넌트 tailwind.css (CLI 와 같은 문구)", () => {
