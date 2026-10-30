@@ -8,7 +8,7 @@
 - [x] 원인 위치 확인 (plan 1절) → `tailwind-core.ts:1453` 의 게이트 조건, `:1194-1220` 선언 하한 `ok`
 - [x] 사용자 결정 Q61 ~ Q69 를 prd 1.2 표에 기록하고 상태를 Approved 로 (전부) → 2026-10-29 모두 권장안, prd 머리 · 1.2 표 · 6절 머리
 - [x] 결정이 권장안과 다르면 prd 1.4 · 2절, plan 2 · 4절을 다시 씀 → 모두 권장안이라 해당 없음. 조건부 서술(AC4 · AC6 · 1.4 표 1번)만 결정 · 측정 값으로 고침
-- [ ] 추가 결정 Q61a(설치 안내 범위 `^1.7.0`) · Q61b(새 문구 2종 확정) · Q65a(루트 1.7.0 미만 · bare 의 안내에 1.7.0 덧붙임 여부)를 사용자에게 확인 (prd 1.2 「추가 결정」, 구현은 권장안으로 진행함)
+- [x] 추가 결정 Q61a(설치 안내 범위 `^1.7.0`) · Q61b(새 문구 2종 확정) · Q65a(루트 1.7.0 미만 · bare 의 안내에 1.7.0 덧붙임 여부)를 사용자에게 확인 (prd 1.2 「추가 결정」, 2026-10-30 세 건 모두 권장안으로 확정)
 
 ## 구현
 - [x] 착수 게이트(Q69): PnP 루트 전용 ESM `.mjs` · `.ts` 실빌드 1회씩, rc · 오류 문구를 testplan 3.3 에 기록. rc 0 이면 중단 · 보고 (AC6) → 루트 전용 rc 1 ×2(2회 재현), 앱 선언 rc 0. 게이트 통과
@@ -17,7 +17,7 @@
 - [x] `tailwind-core.ts` Tailwind 3 루프에 `tokensCssResolution` 게이트(prd 1.4 표 1 ~ 3번) (AC1 · AC2 · AC6) → `presetTokensUnresolvedMessage`, 변이 M1 · M2 · M6 빨강
 - [x] U-none CJS bare 의 버전 문구를 해석 불가 문구로(Q65) (AC3) → AC3 테스트 · 변이 M4 빨강
 - [x] 앱 선언 · 설치본 있음은 종전 흐름 그대로 (AC4 · AC5) → 91칸 A/B 에서 해당 칸 diff 0, 변이 M3 · M5 빨강
-- [ ] 새 문구 확정(구현 그대로 확정할지 사용자 확인, WI-0097 Q43 · Q48 선례) (AC1 ~ AC3 · AC6) → 추가 결정 Q61b 대기. 문구는 testplan 3.4
+- [x] 새 문구 확정(구현 그대로 확정할지 사용자 확인, WI-0097 Q43 · Q48 선례) (AC1 ~ AC3 · AC6) → 추가 결정 Q61b 구현 그대로 확정(2026-10-30). 문구는 testplan 3.4
 - [x] 기존 테스트 처리: plan 4절 후보를 실행으로 확정하고 「stub 보강」 · 「기대 변경」 · 「불변」으로 분류 (AC8) → cli 5 · mcp 1(보강 5 · 기대 변경 1), 보강분은 HEAD 판정 소스에서도 초록
 - [x] 주석 `tailwind-core.ts:34-35` · `:1168-1170` · `:1381-1385`, README `:110-111` 갱신, 범위 서술 grep 대조 (AC10) → 머리 주석 35행 · WI-0101 단락 · `checkTailwindSetup` docstring · 새 함수 docstring, README 110 · 111 · 새 단락, 반박 검증이 찾은 `docs/guides/theme-customization.md:355` 도 고침(`isCommonJsConfig` 주석은 여전히 맞아 그대로)
 - [x] changeset: `@axis-ds/cli` patch · `@axis-ds/mcp` patch, `pnpm check-changeset-mcp-tokens` 통과 → rc 0, mcp 줄을 지운 음성 대조 rc 1

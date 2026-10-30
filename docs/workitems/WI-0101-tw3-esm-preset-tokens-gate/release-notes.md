@@ -1,6 +1,6 @@
 # WI-0101: Tailwind 3 preset 의 tokens 해석 게이트 릴리스 노트
 
-> **미발행**(2026-10-29 작성, 수정본 측정 · 반박 검증 보정 반영, [testplan 3 ~ 5절](./testplan.md)). 새 문구 · 설치 안내 범위는 구현 그대로이고 사용자 확정 전이에요(추가 결정 Q61a · Q61b · Q65a)
+> **미발행**(2026-10-29 작성, 수정본 측정 · 반박 검증 보정 반영, [testplan 3 ~ 5절](./testplan.md)). 새 문구 · 설치 안내 범위는 구현 그대로 2026-10-30 사용자가 확정했어요(추가 결정 Q61a · Q61b · Q65a)
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch | GitHub: #248 | linked 4패키지(tokens · theme · ui-react · agentic-ui)는 올리지 않아요
 
 ## 바뀐 점

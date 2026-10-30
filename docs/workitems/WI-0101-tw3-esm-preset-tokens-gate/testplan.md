@@ -142,7 +142,7 @@ dependencies 줄은 `esm-mjs` 한 형태로 쟀어요. 다른 형태는 dependen
 
 rc 1 이라 게이트 통과(구현 진행). prd 1.4 표 1번의 근거예요.
 
-### 3.4 새 문구 (구현 그대로, 확정은 추가 결정 Q61b)
+### 3.4 새 문구 (구현 그대로, 추가 결정 Q61b 로 2026-10-30 확정)
 
 | 갈래 | 문구(코드 `presetTokensUnresolvedMessage`) |
 |---|---|
