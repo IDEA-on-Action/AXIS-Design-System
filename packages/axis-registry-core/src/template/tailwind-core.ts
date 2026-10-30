@@ -117,15 +117,13 @@ function declaredRange(baseDir: string, pkg: Record<string, unknown> | undefined
   return declaredDependency(baseDir, pkg, name)?.range;
 }
 
-/**
- * check 판정 전용 선언 범위(WI-0091, 사용자 결정 Q1 · Q2). Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다.
- * 거짓 PASS 를 만드는 판정(버전 게이트 · 애니메이션 플러그인 선언)만 씁니다. Tailwind major 판정 · content 대상 · 1.4.0 안내 ·
- * animation 의 ui-react 사용 판정은 종전대로 `declaredRange` 입니다(사용자 결정 Q6 · Q7). B1(Tailwind 4 컴포넌트 tailwind.css)은
- * WI-0097(사용자 결정 Q22 가 Q7 을 다시 엶)부터 이 함수도 `declaredRange` 도 아니고 project.ts `componentCssResolution`(해석 상태)으로 봅니다.
+/*
+ * check 판정 전용 선언(WI-0091, 사용자 결정 Q1 · Q2): Plug'n'Play 면 루트 선언을 인정하지 않고 앱 선언만 봅니다
+ * (`declaredDependency(..., { appOnlyInPnp: true })`). 남은 사용처는 애니메이션 플러그인 선언(`animationPluginProblem`)뿐이라
+ * WI-0099 에서 지역 함수 `declaredRangeForCheck` 를 그 함수 안으로 합쳤어요(선언 위치도 함께 돌려주려고). Tailwind major 판정 · content 대상 ·
+ * 1.4.0 안내 · animation 의 ui-react 사용 판정은 종전대로 `declaredRange` 입니다(사용자 결정 Q6 · Q7). B1(Tailwind 4 컴포넌트 tailwind.css)은
+ * WI-0097(사용자 결정 Q22 가 Q7 을 다시 엶)부터 project.ts `componentCssResolution`(해석 상태)으로 봅니다.
  */
-function declaredRangeForCheck(baseDir: string, pkg: Record<string, unknown> | undefined, name: string): string | undefined {
-  return declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true })?.range;
-}
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -2316,6 +2314,86 @@ export interface AnimationCheckResult {
 }
 
 /**
+ * 애니메이션 플러그인 패키지 하나가 쓸 수 없는 사유(WI-0092 의 check 내부 `pluginProblem` 을 WI-0099 에서 init 과 함께 쓰려고 꺼냈어요).
+ * 문제가 없으면 `undefined` 예요. `why` 는 check 문구 괄호 안의 사유 그대로예요.
+ * - `undeclared`: 선언 없음(Plug'n'Play 면 앱 선언만 인정, 루트에만 있으면 `pnpRootOnly`)
+ * - `notInstalled`: 선언은 있는데 설치본이 없음(Plug'n'Play 는 설치본을 읽지 않으므로 이 사유가 없음, WI-0070 규칙). `root` 는 선언 위치예요
+ */
+export interface AnimationPluginProblem {
+  name: string;
+  kind: "undeclared" | "pnpRootOnly" | "notInstalled";
+  why: string;
+  /** `notInstalled` 일 때 워크스페이스 루트 선언이면 `true` */
+  root?: boolean;
+}
+
+export function animationPluginProblem(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  name: string,
+  pnp: boolean
+): AnimationPluginProblem | undefined {
+  const declared = declaredDependency(baseDir, pkg, name, undefined, { appOnlyInPnp: true });
+  if (declared === undefined) {
+    return pnpRootOnlyDependency(baseDir, pkg, name) !== undefined
+      ? { name, kind: "pnpRootOnly", why: `${name} 가 ${PNP_ROOT_ONLY_NOTE}` }
+      : { name, kind: "undeclared", why: `${name} 선언 없음` };
+  }
+  if (!pnp && findInstalledPackage(baseDir, name) === undefined) {
+    return { name, kind: "notInstalled", why: `${name} 미설치(선언만 있음)`, root: declared.source === "root" };
+  }
+  return undefined;
+}
+
+/** Tailwind 4 전역 CSS 의 애니메이션 줄 판정 결과(WI-0099, check · init 공용) */
+export interface Tailwind4AnimationInspection {
+  /** check 와 같은 규칙으로 고른 전역 CSS(`selectCheckGlobalCss`, WI-0100a) */
+  selection: GlobalCssSelection;
+  /** 고른 파일의 상대 경로(고른 파일이 없으면 없음) */
+  file?: string;
+  /** 「(globalCss … 없음)」 표기(앞 공백 포함, 없으면 빈 문자열) */
+  note: string;
+  /** 「(… 의 import)」 출처(앞 공백 포함, 없으면 빈 문자열) */
+  via: string;
+  /** CSS 에 있는 애니메이션 줄이 가리키는 패키지(`tw-animate-css` · `tailwindcss-animate` 순) */
+  lines: string[];
+  /** `lines` 가운데 쓸 수 없는 패키지와 사유 */
+  problems: AnimationPluginProblem[];
+}
+
+/**
+ * Tailwind 4 의 애니메이션 줄(`@import "tw-animate-css"` · `@plugin "tailwindcss-animate"`)과 줄마다 그 줄이 가리키는 패키지의 선언 · 설치본을
+ * 봅니다(WI-0092 · WI-0100b 규칙 그대로). WI-0099 에서 check 내부 코드를 꺼내 init 의 애니메이션 안내도 같은 판정을 쓰게 했어요.
+ */
+export function inspectTailwind4Animation(baseDirInput: string, pkgInput?: Record<string, unknown>): Tailwind4AnimationInspection {
+  const baseDir = resolveBaseDir(baseDirInput);
+  const pkg = pkgInput ?? readPackageJson(baseDir);
+  const pnp = isPnpProject(baseDir);
+  const selection = selectCheckGlobalCss(baseDir);
+  const note = globalCssSelectionNote(selection);
+  // WI-0100b: 줄 판정은 상대 @import 를 펼친 근거 문자열(설치는 `animationPluginProblem` 이 게이트함)
+  const expanded =
+    selection.path !== undefined && selection.rel !== undefined
+      ? expandGlobalCss(baseDir, selection.path, selection.rel, outsideCssDir(selection))
+      : undefined;
+  const css = expanded !== undefined ? stripCssComments(expanded.evidence) : "";
+  // 줄마다 그 줄이 가리키는 패키지(WI-0092)
+  const twAnimate = new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`);
+  const animatePlugin = new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`);
+  const lines: string[] = [];
+  if (twAnimate.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
+  if (animatePlugin.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND3);
+  const via =
+    expanded !== undefined
+      ? cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => twAnimate.test(f)), evidenceOrigin(expanded, (f) => animatePlugin.test(f))]))
+      : "";
+  const problems = lines
+    .map((name) => animationPluginProblem(baseDir, pkg, name, pnp))
+    .filter((p): p is AnimationPluginProblem => p !== undefined);
+  return { selection, file: selection.rel, note, via, lines, problems };
+}
+
+/**
  * ui-react 를 쓰는데 애니메이션 플러그인이 없으면 WARN 입니다(WI-0065 D8, WI-0046 측정: 플러그인이 없으면 Dialog · Select 등의
  * 열고 닫는 애니메이션 33개 클래스가 0개 생성). ui-react 를 쓰지 않으면 `null`(항목을 더하지 않음).
  * - 사용 판정: package.json 에 `@axis-ds/ui-react` 선언, 또는 componentsDir 아래 파일에 `animate-in` · `animate-out` 클래스
@@ -2338,34 +2416,9 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
   const by = declared ? "@axis-ds/ui-react 선언" : "componentsDir 의 animate-in 류 클래스";
   const tailwind = detectTailwind(baseDir, pkg);
   const pnp = isPnpProject(baseDir);
-  /** 플러그인 패키지 하나의 선언 · 설치 사유(문제 없으면 `undefined`). Plug'n'Play 는 설치본을 읽지 않고 앱 선언으로 봅니다(WI-0070 규칙). */
-  const pluginProblem = (name: string): string | undefined => {
-    if (declaredRangeForCheck(baseDir, pkg, name) === undefined) {
-      return pnpRootOnlyDependency(baseDir, pkg, name) !== undefined ? `${name} 가 ${PNP_ROOT_ONLY_NOTE}` : `${name} 선언 없음`;
-    }
-    if (!pnp && findInstalledPackage(baseDir, name) === undefined) return `${name} 미설치(선언만 있음)`;
-    return undefined;
-  };
   if (tailwind.major !== undefined && tailwind.major >= 4) {
-    const selection = selectCheckGlobalCss(baseDir);
-    const note = globalCssSelectionNote(selection);
-    const file = selection.rel;
-    // WI-0100b: 줄 판정은 상대 @import 를 펼친 근거 문자열(설치는 `pluginProblem` 이 게이트함)
-    const expanded =
-      selection.path !== undefined && selection.rel !== undefined
-        ? expandGlobalCss(baseDir, selection.path, selection.rel, outsideCssDir(selection))
-        : undefined;
-    const css = expanded !== undefined ? stripCssComments(expanded.evidence) : "";
-    // 줄마다 그 줄이 가리키는 패키지(WI-0092)
-    const twAnimate = new RegExp(`@import\\s+(?:url\\(\\s*)?["']${ANIMATION_PLUGIN_TAILWIND4}["']`);
-    const animatePlugin = new RegExp(`@plugin\\s+["']${ANIMATION_PLUGIN_TAILWIND3}["']`);
-    const lines: string[] = [];
-    if (twAnimate.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND4);
-    if (animatePlugin.test(css)) lines.push(ANIMATION_PLUGIN_TAILWIND3);
-    const via =
-      expanded !== undefined
-        ? cssImportViaNote(viaFiles([evidenceOrigin(expanded, (f) => twAnimate.test(f)), evidenceOrigin(expanded, (f) => animatePlugin.test(f))]))
-        : "";
+    // WI-0099: 줄 · 패키지 판정은 init 과 같은 `inspectTailwind4Animation` 이에요(문구 · 판정은 종전 그대로)
+    const { file, note, via, lines, problems } = inspectTailwind4Animation(baseDir, pkg);
     if (lines.length === 0) {
       return {
         name: "animation",
@@ -2373,7 +2426,6 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
         message: `애니메이션 플러그인이 없습니다(${by}): Dialog · Select 등의 열고 닫는 애니메이션이 동작하지 않습니다 → ${ANIMATION_PLUGIN_TAILWIND4} 설치 뒤 @import "${ANIMATION_PLUGIN_TAILWIND4}";${note}`,
       };
     }
-    const problems = lines.map((name) => ({ name, why: pluginProblem(name) })).filter((x) => x.why !== undefined);
     if (problems.length === 0) return { name: "animation", severity: "pass", message: `${file}에 애니메이션 플러그인이 있습니다${via}${note}` };
     return {
       name: "animation",
@@ -2385,7 +2437,7 @@ export function checkAnimationPlugin(baseDirInput: string): AnimationCheckResult
   const source = configFile !== undefined ? stripJsComments(readFileSync(join(baseDir, configFile), "utf8")) : "";
   const plugins = configFile !== undefined ? readAnimationPluginUse(source) : "absent";
   // WI-0070: 「미설치」는 선언이 아니라 설치본으로 봅니다(Plug'n'Play 는 선언 기준). WI-0091: Plug'n'Play 의 선언은 앱 선언만 봅니다.
-  const pluginReason = pluginProblem(ANIMATION_PLUGIN_TAILWIND3);
+  const pluginReason = animationPluginProblem(baseDir, pkg, ANIMATION_PLUGIN_TAILWIND3, pnp)?.why;
   if (plugins === "found" && pluginReason === undefined) {
     return { name: "animation", severity: "pass", message: `${configFile}의 plugins 에 ${ANIMATION_PLUGIN_TAILWIND3} 가 있습니다` };
   }

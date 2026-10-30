@@ -36,10 +36,12 @@ import {
   axisPackagesBelowTailwind4,
   componentTailwindImportLine,
   detectTailwind,
+  inspectTailwind4Animation,
   rangeLowerAtLeast,
   TAILWIND4_COMPONENT_PACKAGES,
   TAILWIND4_MIN_AXIS_VERSION,
   TOKENS_TAILWIND4_IMPORT_LINE,
+  type AnimationPluginProblem,
   type TailwindDetection,
 } from "../template/tailwind-core.js";
 import { CLSX_RANGE, TAILWIND_MERGE_RANGES, selectUtilsDependencies } from "@axis-ds/registry-core/utils-deps";
@@ -219,6 +221,13 @@ export async function resolveInitAnswers(baseDirInput: string, tailwind4?: boole
  * - ① 선언 없음: 종전 줄 ② 선언 + 설치: 침묵 ③ 선언 · 미설치: 「(워크스페이스 루트에) 선언돼 있지만 설치되지 않았습니다」와 설치 명령.
  * - Yarn PnP(`isPnpProject`)면 루트 선언은 앱에서 해석되지 않으므로 인정하지 않고(앱 선언만), 설치본을 판정할 수 없으니 선언이 있으면 종전처럼 침묵합니다.
  * `baseDir` 가 없으면 종전 판정(앱 선언만, 두 이름 중 하나라도 있으면 침묵)입니다.
+ *
+ * WI-0099(Q140 ~ Q144, 권장안으로 진행): Tailwind 4 이고 `baseDir` 가 있으면 먼저 axis check 와 같은 전역 CSS(`inspectTailwind4Animation`,
+ * axis.config.json 의 globalCss 다음 후보)를 읽습니다.
+ * - 애니메이션 줄이 있으면 줄마다 그 줄이 가리키는 패키지로 판정합니다(check 의 WI-0092 판정 그대로). 모두 쓸 수 있으면 침묵, 아니면
+ *   check 와 같은 사유와 설치 명령을 냅니다. 다른 이름의 패키지만 설치된 경우(S9)는 줄을 그 패키지로 바꾸는 대안도 덧붙입니다.
+ * - 줄이 없는데 패키지가 선언 · 설치돼 있으면(종전 침묵) 줄을 넣으라고 안내합니다. 선언 · 미설치와 미선언은 종전 ③ · ① 그대로예요.
+ * - CSS 파일을 고르지 못하면 종전 판정 그대로예요(Q143). Plug'n'Play 에서 줄의 패키지가 루트에만 선언된 경우도 종전 그대로 둡니다(WI-0095 범위).
  */
 export function animationGuideLine(
   pkg: Record<string, unknown> | undefined,
@@ -227,6 +236,10 @@ export function animationGuideLine(
   baseDir?: string
 ): string | undefined {
   const name = tailwind4 ? ANIMATION_PLUGIN_TAILWIND4 : ANIMATION_PLUGIN_TAILWIND3;
+  const setupOf = (candidate: string) =>
+    !tailwind4
+      ? `tailwind.config 의 plugins 에 require("${candidate}") 를 넣으세요`
+      : `전역 CSS 에 ${tailwind4AnimationLine(candidate)} 를 넣으세요`;
   if (baseDir !== undefined) {
     const pnp = isPnpProject(baseDir);
     const candidates = tailwind4 ? [ANIMATION_PLUGIN_TAILWIND4, ANIMATION_PLUGIN_TAILWIND3] : [ANIMATION_PLUGIN_TAILWIND3];
@@ -235,18 +248,27 @@ export function animationGuideLine(
       if (pnp) return hasDependency(pkg, n) !== undefined ? ({ source: "app" } as const) : undefined;
       return declaredDependency(baseDir, pkg, n);
     };
+    const usable = (n: string) => declaredOf(n) !== undefined && (pnp || findInstalledPackage(baseDir, n) !== undefined);
+    // WI-0099: check 와 같은 전역 CSS 의 줄 판정. 고른 파일이 없으면(`file` 없음) 아래 종전 판정
+    const css = tailwind4 && pkg !== undefined ? inspectTailwind4Animation(baseDir, pkg) : undefined;
+    const cssFile = css?.file !== undefined ? `${css.file}${css.via}` : undefined;
+    if (css !== undefined && cssFile !== undefined && css.lines.length > 0 && !css.problems.some((p) => p.kind === "pnpRootOnly")) {
+      if (css.problems.length === 0) return undefined;
+      return tailwind4AnimationProblemLine(cssFile, css.lines, css.problems, installCommand, candidates.filter(usable));
+    }
     for (const candidate of candidates) {
       const declared = declaredOf(candidate);
       if (declared === undefined) continue;
-      // ② 선언 + 설치(PnP 는 설치본을 판정할 수 없어 종전처럼 침묵)
-      if (pnp || findInstalledPackage(baseDir, candidate) !== undefined) return undefined;
+      if (pnp || findInstalledPackage(baseDir, candidate) !== undefined) {
+        // WI-0099(Q142): CSS 를 읽었는데 줄이 없으면 줄을 넣으라고 안내(check 는 WARN). 그 밖은 ② 선언 + 설치 → 침묵
+        if (css !== undefined && cssFile !== undefined && css.lines.length === 0) {
+          return `애니메이션: ${candidate} 는 ${pnp ? "선언" : "설치"}돼 있지만 ${cssFile}에 애니메이션 줄이 없습니다. ${setupOf(candidate)}.`;
+        }
+        return undefined;
+      }
       // ③ 선언 · 미설치
       const declaredWhere = declared.source === "root" ? "워크스페이스 루트에 " : "";
-      const setup = !tailwind4
-        ? `tailwind.config 의 plugins 에 require("${candidate}") 를 넣으세요`
-        : candidate === ANIMATION_PLUGIN_TAILWIND4
-          ? `전역 CSS 에 @import "${candidate}"; 를 넣으세요`
-          : `전역 CSS 에 @plugin "${candidate}"; 를 넣으세요`;
+      const setup = setupOf(candidate);
       // WI-0096: npm 루트 선언이면 「워크스페이스 루트에서 npm install」(앱 디렉터리의 npm install 은 루트 선언을 설치하지 않음)
       const install = installCommandPhrase(installCommand, declared.source === "root");
       return `애니메이션: ${candidate} 는 ${declaredWhere}선언돼 있지만 설치되지 않았습니다. ${install} 뒤 ${setup}.`;
@@ -262,6 +284,42 @@ export function animationGuideLine(
   const add = `${addCommandFor(installCommand, {}).trimEnd()} ${name}`;
   const where = tailwind4 ? `전역 CSS 에 @import "${name}"; 를 넣으세요` : `tailwind.config 의 plugins 에 require("${name}") 를 넣으세요`;
   return `애니메이션: Dialog · Select 등의 열고 닫는 애니메이션(animate-in 류)은 플러그인이 필요합니다. ${add} 뒤 ${where}.`;
+}
+
+/** Tailwind 4 전역 CSS 의 애니메이션 줄(`tw-animate-css` 는 `@import`, `tailwindcss-animate` 는 `@plugin`, WI-0087 DEC-6 와 같은 대응) */
+function tailwind4AnimationLine(name: string): string {
+  return name === ANIMATION_PLUGIN_TAILWIND4 ? `@import "${name}";` : `@plugin "${name}";`;
+}
+
+/**
+ * WI-0099(Q141): 전역 CSS 의 애니메이션 줄이 가리키는 패키지를 쓸 수 없을 때의 init 안내 한 줄. 사유는 axis check 와 같은 문자열(`why`)이에요.
+ * - 미선언(다른 이름만 설치된 S9 포함): `<추가 명령> <이름>` · 선언 · 미설치: 설치 명령(npm 루트 선언이면 「워크스페이스 루트에서 npm install」, WI-0096)
+ * - 줄이 가리키지 않는 다른 이름이 이미 선언 · 설치돼 있으면 그 패키지를 쓰는 대안(줄을 바꾸거나, 그 줄이 이미 있으면 문제 줄을 지움)을 앞에 둬요
+ * - 명령을 복사하기 쉽게 줄 끝은 명령 그대로예요(마침표 없음, 다른 init 「설치:」 줄과 같음)
+ */
+function tailwind4AnimationProblemLine(
+  cssFile: string,
+  lines: readonly string[],
+  problems: readonly AnimationPluginProblem[],
+  installCommand: string,
+  usable: readonly string[]
+): string {
+  const commands: string[] = [];
+  const undeclared = problems.filter((p) => p.kind !== "notInstalled").map((p) => p.name);
+  if (undeclared.length > 0) commands.push(`${addCommandFor(installCommand, {}).trimEnd()} ${undeclared.join(" ")}`);
+  const notInstalled = problems.filter((p) => p.kind === "notInstalled");
+  if (notInstalled.length > 0) commands.push(installCommandPhrase(installCommand, notInstalled.some((p) => p.root === true)));
+  const why = problems.map((p) => p.why).join(" · ");
+  const problemLines = problems.map((p) => tailwind4AnimationLine(p.name)).join(" · ");
+  const other = usable.find((n) => !problems.some((p) => p.name === n));
+  const install = `설치하세요: ${commands.join(" · ")}`;
+  const action =
+    other === undefined
+      ? install
+      : lines.includes(other)
+        ? `이미 설치된 ${other} 만 쓰려면 ${problemLines} 줄을 지우고, 아니면 ${install}`
+        : `이미 설치된 ${other} 를 쓰려면 ${problemLines} 줄을 ${tailwind4AnimationLine(other)} 로 바꾸고, 아니면 ${install}`;
+  return `애니메이션: ${cssFile}의 애니메이션 줄을 쓸 수 없습니다(${why}). ${action}`;
 }
 
 /** 컴포넌트 추가 안내(D2: 우리 패키지 이름 `@axis-ds/cli`) */
