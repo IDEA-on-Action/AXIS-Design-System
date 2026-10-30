@@ -90,10 +90,10 @@
 | 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ✅ 2026-10-28 (#246, cli 1.7.6 · mcp 1.4.5) |
 | 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
-| 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ |
+| 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ 배치 11(0099 뒤) |
 | 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ✅ 2026-10-29 (#253, cli 1.7.7 · mcp 1.4.6) |
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ✅ 2026-10-29 (#252, cli 1.7.7 · mcp 1.4.6) |
-| 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
+| 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | 🔄 배치 11 |
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
 | 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ⏳ 다음 linked 발행 |
 
