@@ -85,20 +85,20 @@
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ✅ 2026-10-27 (#233, cli 1.7.5) |
-| 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ 배치 10 |
+| 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | 🔄 배치 10 |
 | 102 | pnpm 기본 레이아웃에서 상위 설치본을 가리키는 content glob 을 check 가 거짓 FAIL(배치 6c 재측정에서 발견, 종전부터) | WI-0090 (#227) | P18 | P3 | ✅ 2026-10-26 (#230, cli 1.7.4 · mcp 1.4.4) |
 | 103 | check 가 Yarn PnP 에서 루트에만 선언한 패키지를 설치됨으로 판정(앱에서 해석 불가, WI-0087 브리프에서 발견) | WI-0091 (#234) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ✅ 2026-10-28 (#246, cli 1.7.6 · mcp 1.4.5) |
 | 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ |
-| 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | ⏳ 배치 10 |
+| 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | 🔄 배치 10 |
 | 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ✅ 2026-10-29 (#253, cli 1.7.7 · mcp 1.4.6) |
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ✅ 2026-10-29 (#252, cli 1.7.7 · mcp 1.4.6) |
 | 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
-| 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | ⏳ 배치 10 |
-| 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | ⏳ 배치 10 |
+| 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | 🔄 배치 10 |
+| 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | 🔄 배치 10 |
 
 ### 완료
 
