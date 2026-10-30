@@ -1,6 +1,6 @@
 # WI-0103: check 의 패키지 CSS import 를 exports · 중첩 설치본까지 보고 풂 릴리스 노트
 
-> **미발행**(2026-10-29 작성, 수정본 측정 반영). 사용자 결정 Q70 ~ Q79 는 모두 권장안이고, 구현 중 추가 결정 Q70a ~ Q70d 도 권장안으로 진행했어요([prd 8절](./prd.md))
+> **발행**(2026-10-30, npm cli 1.7.8 · mcp 1.4.7, Version PR #259 · publish run 41062612171, provenance 2/2). 아래는 2026-10-29 작성, 수정본 측정 반영). 사용자 결정 Q70 ~ Q79 는 모두 권장안이고, 구현 중 추가 결정 Q70a ~ Q70d 도 권장안으로 진행했어요([prd 8절](./prd.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(registry-core 변경) | GitHub: #254 | linked 4패키지(tokens · theme · ui-react · agentic-ui)는 바뀌지 않아요
 
 ## 바뀐 점

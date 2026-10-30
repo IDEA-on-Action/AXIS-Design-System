@@ -85,28 +85,28 @@
 | 97 | detectInstallCommand 를 거치지 않는 pnpm 고정 안내 정리 · packageManager 신호 검토(WI-0081 브리프에서 분리) | WI-0085 (#217) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 98 | tailwind-core 의 hasDependency 를 dependencies-core 와 합쳐 루트 선언 인정 일관화(WI-0081 검토에서 분리) | WI-0086 (#218) | P18 | P3 | ✅ 2026-10-26 (#225, cli 1.7.2 · mcp 1.4.2) |
 | 99 | theme add 가 워크스페이스 루트에 선언된 의존성을 앱 package.json 에 다시 씀(WI-0086 범위에서 분리, 쓰기 경로 rollback 범위) | WI-0087 (#222) | P18 | P3 | ✅ 2026-10-27 (#233, cli 1.7.5) |
-| 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ |
-| 101 | MCP 서버가 같은 세션에서 tokens 상태 변경 뒤에도 이전 판독을 응답함(WI-0085 측정에서 발견) | WI-0089 (#224) | P18 | P3 | 🔄 |
+| 100 | template apply · MCP apply_template 이 사용자 package.json 을 덮어써 packageManager 필드가 사라짐(WI-0085 검토에서 분리) | WI-0088 (#223) | P18 | P3 | ⏳ 배치 10 |
 | 102 | pnpm 기본 레이아웃에서 상위 설치본을 가리키는 content glob 을 check 가 거짓 FAIL(배치 6c 재측정에서 발견, 종전부터) | WI-0090 (#227) | P18 | P3 | ✅ 2026-10-26 (#230, cli 1.7.4 · mcp 1.4.4) |
 | 103 | check 가 Yarn PnP 에서 루트에만 선언한 패키지를 설치됨으로 판정(앱에서 해석 불가, WI-0087 브리프에서 발견) | WI-0091 (#234) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ✅ 2026-10-28 (#246, cli 1.7.6 · mcp 1.4.5) |
 | 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ |
-| 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | ⏳ |
+| 108 | npm 워크스페이스 루트 선언의 설치 위치 안내를 theme add · init · check 에 반영(WI-0093 조사에서 분리, 사용자 결정 Q15) | WI-0096 (#240) | P18 | P3 | ⏳ 배치 10 |
 | 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ✅ 2026-10-29 (#253, cli 1.7.7 · mcp 1.4.6) |
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ✅ 2026-10-29 (#252, cli 1.7.7 · mcp 1.4.6) |
 | 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ⏳ |
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
-| 113 | Tailwind 3 preset 을 ESM · .ts 설정에서 쓰면 tokens 미선언 · 미설치여도 check 가 PASS(WI-0097 조사에서 발견, 사용자 결정 Q26) | WI-0101 (#248) | P18 | P3 | 🔄 |
-| 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | ⏳ |
-| 115 | check 의 패키지 해석이 exports 를 보지 않아 중첩 node_modules 그림자 설치본에서 실빌드와 어긋남(WI-0100b 검증에서 발견, 사용자 결정 Q58) | WI-0103 (#254) | P18 | P3 | 🔄 |
-| 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | ⏳ |
+| 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | ⏳ 배치 10 |
+| 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | ⏳ 배치 10 |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 115 | check 의 패키지 CSS import 를 exports · 중첩 설치본(그림자)까지 보고 풂, npm cli v1.7.8 · mcp v1.4.7 릴리스 (#257 · Version PR #259) | #254 | P18 | 2026-10-30 |
+| 113 | Tailwind 3 preset 의 tokens 를 이 앱에서 해석될 때만 인정(CJS · ESM · .ts 모양 무관, 설치 안내 ^1.7.0), npm cli v1.7.8 · mcp v1.4.7 릴리스 (#256 · Version PR #259) | #248 | P18 | 2026-10-30 |
+| 101 | MCP 브랜드 도구가 같은 서버 세션의 tokens 변경을 따라감(내용 sha 감지 · Worker 격리 해석 · 폴백 stale 표시), npm cli v1.7.8 · mcp v1.4.7 릴리스 (#258 · Version PR #259) | #224 | P18 | 2026-10-30 |
 | 112 | check · init 의 전역 CSS 선택이 axis.config `globalCss` 를 먼저 씀(0100a) · 전역 CSS 의 상대 `@import` 를 펼쳐 근거로 인정 · 순환 WARN · 깊이 32(0100b), npm cli v1.7.7 · mcp v1.4.6 릴리스 (#250 · #255 · #251, publish run 40811479954, provenance 2/2) | WI-0100 (#244) | P18 | 2026-10-29 |
 | 109 | check 가 Tailwind 4 컴포넌트 `tailwind.css` 줄 · tokens CSS import 를 「이 앱에서 해석되는가」로 판정(해석되지 않는 줄은 안내 · 인정하지 않음), npm cli v1.7.7 · mcp v1.4.6 릴리스 (#253 · #251, publish run 40811479954, provenance 2/2) | WI-0097 (#241) | P18 | 2026-10-29 |
 | 110 | Yarn PnP 의 Tailwind 3 content 판정이 실제 빌드와 맞음(node_modules glob WARN · unplugged 실경로 인정) · theme add PnP 안내, npm cli v1.7.7 · mcp v1.4.6 릴리스 (#252 · #251, publish run 40811479954, provenance 2/2) | WI-0098 (#242) | P18 | 2026-10-29 |
@@ -440,6 +440,7 @@
 - 배치 6c 완료(2026-10-26): PR #225 머지 7d1915b(WI-0086 루트 선언 판정 일관화 · 실경로 기준, WI-0085 매니저별 안내 · lockfile 이 없으면 packageManager) · Release PR #226 머지 37b73d0, publish run 40271807118 success, npm cli 1.7.2 · mcp 1.4.2, provenance 2/2, linked 4패키지는 1.8.1 그대로. PR CI #225 15m7s · #226 14m7s. changeset 검사 push 모드 정착 확정: #225 main push run 40269191762 success, 기준 `github.event.before` e2a9725 · 바뀐 파일 43개 · registry-core 4개 · cli · mcp changeset 각 2개로 통과. 발행본 재측정 12항목 통과: WI-0086 85행 매트릭스 구현 산출물과 바이트 일치 · 링크 행 60/60(구판 37/60) · 루트 선언 TW3 앱 판정 6칸 x 3레이아웃이 실제 빌드 정답과 일치 · 루트 TW4 미설치 rc 1→0 · init · add · MCP install 루트 선언 재기록 0, WI-0085 15픽스처 x 11칸 구현 기대값과 cmp rc 0 · 매니저 오차 0/285(구판 171/285) · rc 변화 0, cli · mcp 불일치 0(각 WI testplan). 기준 파일과 다른 것 2건은 설명됨(init-after.json 은 첫 구현 산출물이라 I5 후속 2줄 차이, 정답 축 분모 402 vs PRD 388). 남은 것: pnpm 기본 앱 선언 c1-appdecl-up 의 content 거짓 FAIL 후보(신구 같음, 새 WI 여부 사용자 결정), 새 HOME corepack 의 pnpm 12 실경로 미측정, yarn 실제 설치 · npm 7 미만 · Corepack 탐색 미측정
 - check 판정 묶음 완료(2026-10-29): WI-0100a #250 머지 293500e · WI-0098 #252 머지 be61b74 · WI-0097 #253 머지 e2701fe · WI-0100b #255 머지 cdc7a71 · Version PR #251 머지 1e8da06, publish run 40811479954 success, npm cli 1.7.7 · mcp 1.4.6, provenance 2/2, linked 4패키지는 1.8.2 그대로. 발행본 재측정: 코드 dist 가 main 빌드와 바이트 같음(cli 46 · mcp 36개 파일, 다른 것은 CI 가 다시 만든 레지스트리 version 필드뿐), CLI = MCP 174/174(출력 빈 것 0), 1.7.6 대비 판정이 바뀐 fixture 91개(0100 계열 66 · 0097 4 · 0098 PnP 앱 21/21). 결정 Q21 ~ Q60 은 각 WI 문서. 후속 WI-0101 · 0102 · 0103 등록
 - 재계획(2026-10-29, `/ax:todo plan`, 사용자 결정): 배치 9(병렬) WI-0101 ∥ 0103 ∥ 0089 → 배치 10(병렬) WI-0088 ∥ 0096 ∥ 0102(원인 측정 · 범위 결정) → 배치 11(순차) WI-0099 → 0095. WI-0099 는 0096 과 animation 경로가 겹쳐 0096 머지 뒤, WI-0095 는 0088 · 0096 · 0099 가 고친 호출지 위에서 경계를 넓혀 마지막. WI-0084 는 Windows 실기 측정 대기로 보류. 배치마다 Version PR 하나(cli · mcp patch, 0102 가 ui-react 를 고치면 linked 동반). 배치 9 는 다음 세션에서 착수
+- 배치 9 완료(2026-10-30): WI-0103 #257 머지 c166b8a · WI-0101 #256 머지 6441a14(0103 과의 테스트 2파일 충돌을 병합 커밋으로 해소, 독립 검증 3관점 통과) · WI-0089 #258 머지 5860185 · Version PR #259 머지 2445270, publish run 41062612171 success, npm cli 1.7.8 · mcp 1.4.7(latest), provenance 2/2, linked 4패키지는 1.8.2 그대로. 결정 Q61a · Q61b · Q65a(0101) · Q86 · Q87(0089)는 모두 권장안 확정. 병합 검증에서 발견한 Tailwind 3 preset 의 exports 공백은 WI-0104(#260)로 등록하고 배치 10 에 추가(사용자 결정): 배치 10(병렬) WI-0088 ∥ 0096 ∥ 0102 ∥ 0104
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

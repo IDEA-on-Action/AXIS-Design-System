@@ -602,8 +602,8 @@
       "slug": "mcp-brand-cache-stale",
       "issueNumber": 224,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhDfNSk",
-      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0090",
@@ -698,8 +698,8 @@
       "slug": "tw3-esm-preset-tokens-gate",
       "issueNumber": 248,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEEi28",
-      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0102",
@@ -714,8 +714,8 @@
       "slug": "export-aware-package-resolution",
       "issueNumber": 254,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEVEIo",
-      "lastSyncedAt": "2026-10-29T00:00:00.000Z",
-      "lastStatus": "🔄"
+      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0104",

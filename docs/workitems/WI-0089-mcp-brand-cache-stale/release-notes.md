@@ -1,6 +1,6 @@
 # WI-0089: MCP 브랜드 도구의 tokens 판독 낡음 릴리스 노트
 
-> **미발행**(2026-10-29 작성). 반박 검증 보정 뒤 최종본 측정 반영([testplan 4절](./testplan.md)). 사용자 결정 Q80 ~ Q85 는 모두 권장안이에요([prd 1.4](./prd.md)). 진행 중 생긴 결정 후보 Q86 · Q87 은 권장안대로 구현해 두었고 확인을 기다려요([prd 6절](./prd.md))
+> **발행**(2026-10-30, npm cli 1.7.8 · mcp 1.4.7, Version PR #259 · publish run 41062612171, provenance 2/2). 아래는 2026-10-29 작성). 반박 검증 보정 뒤 최종본 측정 반영([testplan 4절](./testplan.md)). 사용자 결정 Q80 ~ Q85 는 모두 권장안이에요([prd 1.4](./prd.md)). 진행 중 생긴 결정 후보 Q86 · Q87 은 권장안대로 구현해 두었고 확인을 기다려요([prd 6절](./prd.md))
 > 대상: `@axis-ds/cli` patch · `@axis-ds/mcp` patch(`.changeset/wi-0089-mcp-brand-cache-stale.md`) | GitHub: #224
 
 ## 바뀐 점

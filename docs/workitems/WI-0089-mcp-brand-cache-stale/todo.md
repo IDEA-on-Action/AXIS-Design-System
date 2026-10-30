@@ -43,4 +43,4 @@
 ## 릴리스
 - [x] `.changeset/` mcp · cli patch, `pnpm check-changeset-mcp-tokens` rc 0 (AC10) → testplan 4.8
 - [x] release-notes.md → 미발행 상태로 작성
-- [ ] 발행 뒤 release-notes 머리말 · CLAUDE.md 버전 현행화 (남음: 발행 전)
+- [ ] 발행 뒤 release-notes 머리말 · CLAUDE.md 버전 현행화 (release-notes 는 2026-10-30 반영. CLAUDE.md 는 사용자의 미커밋 변경이 있어 보류)
