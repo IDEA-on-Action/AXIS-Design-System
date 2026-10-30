@@ -48,6 +48,7 @@ import {
   declaredDependency,
   detectProjectPaths,
   findInstalledPackage,
+  installCommandPhrase,
   isPnpProject,
   projectFileExists,
 } from "@axis-ds/registry-core/project";
@@ -246,7 +247,9 @@ export function animationGuideLine(
         : candidate === ANIMATION_PLUGIN_TAILWIND4
           ? `전역 CSS 에 @import "${candidate}"; 를 넣으세요`
           : `전역 CSS 에 @plugin "${candidate}"; 를 넣으세요`;
-      return `애니메이션: ${candidate} 는 ${declaredWhere}선언돼 있지만 설치되지 않았습니다. ${installCommand} 뒤 ${setup}.`;
+      // WI-0096: npm 루트 선언이면 「워크스페이스 루트에서 npm install」(앱 디렉터리의 npm install 은 루트 선언을 설치하지 않음)
+      const install = installCommandPhrase(installCommand, declared.source === "root");
+      return `애니메이션: ${candidate} 는 ${declaredWhere}선언돼 있지만 설치되지 않았습니다. ${install} 뒤 ${setup}.`;
     }
     // ① 선언 없음: 아래 종전 줄
   } else if (
@@ -549,6 +552,12 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
   const rootPresent = plan.present.filter((p) => p.source === "root").map((p) => p.name);
   const rootNote = rootPresent.length > 0 ? ` (워크스페이스 루트에 선언: ${rootPresent.join(", ")})` : "";
   const basis = `  tailwind-merge 범위 기준: ${describeTailwindBasis(plan.tailwind)}`;
+  // WI-0096: 이미 있는 의존성 가운데 루트 선언이 있으면 npm 은 「워크스페이스 루트에서 npm install」(루트에서 실행하면 앱 선언도 함께 설치됨)
+  const installPhrase = installCommandPhrase(plan.installCommand, rootPresent.length > 0);
+  const installText =
+    installPhrase === plan.installCommand
+      ? chalk.cyan(plan.installCommand)
+      : `워크스페이스 루트에서 ${chalk.cyan(plan.installCommand)}`;
   // 근거 줄과 그 판정의 경고 줄(F1)
   const logBasis = () => {
     log(chalk.gray(basis));
@@ -559,10 +568,10 @@ function reportDependencies(plan: UtilsDependencyPlan, log: Log) {
     log(chalk.green(`✓ package.json dependencies 에 추가: ${addedText}`));
     if (plan.present.length > 0) log(chalk.gray(`  이미 있음(버전 유지): ${presentText}${rootNote}`));
     if (plan.added.includes("tailwind-merge")) logBasis();
-    log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
+    log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${installText}`));
   } else if (plan.action === "present") {
     log(chalk.green(`✓ utils.ts 의존성이 package.json 에 이미 있습니다(버전 유지): ${presentText}${rootNote}`));
-    log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${chalk.cyan(plan.installCommand)}`));
+    log(chalk.yellow(`  설치는 실행하지 않았습니다. 설치: ${installText}`));
   } else if (plan.action === "no-package-json") {
     log(chalk.yellow("! package.json 이 없어 utils.ts 의존성(clsx, tailwind-merge)을 추가하지 않았습니다."));
     log(chalk.yellow(`  설치: ${chalk.cyan(plan.addCommand)}`));

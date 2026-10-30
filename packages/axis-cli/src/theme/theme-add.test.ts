@@ -1073,7 +1073,8 @@ describe("WI-0087: theme add 가 워크스페이스 루트 선언을 인정(판�
     const lines = out.split("\n");
     const at = lines.findIndex((l) => l.includes(ROOT_PRESENT));
     expect(at).toBeGreaterThan(-1);
-    expect(lines[at + 1]).toContain("설치: npm install");
+    // WI-0096: npm 루트 선언은 앱 디렉터리의 npm install 로 설치되지 않아 「워크스페이스 루트에서 npm install」(종전 「설치: npm install」)
+    expect(lines[at + 1]).toBe("    설치: 워크스페이스 루트에서 npm install");
     // 앱에 선언된 tokens(미설치)는 종전 present 문구 다음에 선언대로 설치하는 명령 줄(WI-0093 Q17 이 WI-0087 DEC-1 의 「설치 줄 없음」을 다시 정함).
     // 추가 명령(범위를 붙인 add)이 아니라 install 이에요(add 를 실행하면 앱 범위 ^1.8.0 이 다시 쓰여요)
     const own = await wsApp({ kind: "npm", tokens: "none", appDeps: { "@axis-ds/tokens": "^1.8.0" } });
