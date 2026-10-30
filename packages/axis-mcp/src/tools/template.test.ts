@@ -357,7 +357,8 @@ describe("handleCheckProject 보정 2차: A1 · A4 · B1 · B2 · B3 · C (CLI �
   });
 
   it("B3: Tailwind 3 tailwind.config.mjs 의 preset 참조 → pass", async () => {
-    await write({ "tailwind.config.mjs": "import axis from '@axis-ds/tokens/tailwind';\nexport default { presets: [axis] };" }, { tailwindcss: "^3.4.0" });
+    // WI-0101(사용자 결정 Q67): preset 은 tokens 가 해석될 때만 pass 라 tokens 를 앱에 선언해요
+    await write({ "tailwind.config.mjs": "import axis from '@axis-ds/tokens/tailwind';\nexport default { presets: [axis] };" }, { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.2" });
     expect(await item()).toEqual({
       name: "tailwind.config",
       severity: "pass",
@@ -1201,6 +1202,53 @@ describe("handleCheckProject WI-0097 2부: globals.css tokens 해석 게이트 �
     const hoisted = await items(app);
     expect(hoisted["tailwind.config"]).toEqual(twPass(SH));
     expect(hoisted["globals.css"]).toEqual(gPass(SH, E));
+  });
+});
+
+describe("handleCheckProject WI-0101: Tailwind 3 preset 의 tokens 해석 게이트 (CLI 와 같은 문구)", () => {
+  const T = "@axis-ds/tokens";
+  const P = `${T}/tailwind`;
+  const PNP_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
+  const item = async (dir: string) => (await handleCheckProject({ targetDir: dir })).results.find((r) => r.name === "tailwind.config");
+  const pass = (file: string) => ({ name: "tailwind.config", severity: "pass", message: `${file}에 AXIS 토큰이 설정되어 있습니다 (${P} preset)` });
+  const warn = (message: string) => ({ name: "tailwind.config", severity: "warn", message });
+  const notInst = (file: string, phrase: string) =>
+    `${file}에 AXIS preset 참조가 있지만 ${T} 가 설치되지 않아 해석되지 않습니다 → 설치(${phrase})`;
+  const ESM = { file: "tailwind.config.mjs", src: `import axisPreset from "${P}";\nexport default { presets: [axisPreset] };\n` };
+  const TS = { file: "tailwind.config.ts", src: `import axisPreset from "${P}";\nexport default { presets: [axisPreset] };\n` };
+  const BARE = { file: "tailwind.config.cjs", src: `module.exports = { presets: [require("${P}")] };\n` };
+
+  async function app(sub: string, form: { file: string; src: string }, deps: Record<string, string>) {
+    const dir = path.join(tmp, sub);
+    await fs.outputJSON(path.join(dir, "package.json"), { name: sub, dependencies: { tailwindcss: "^3.4.19", ...deps } });
+    await fs.outputFile(path.join(dir, form.file), form.src);
+    return dir;
+  }
+
+  it("미선언 · 미설치: ESM · .ts 는 PASS 에서 해석 불가 WARN, CommonJS bare 는 버전 문구 대신 같은 WARN", async () => {
+    for (const [i, f] of [ESM, TS, BARE].entries()) {
+      expect(await item(await app(`u${i}`, f, {}))).toEqual(warn(notInst(f.file, `pnpm add "${T}@^1.7.0"`)));
+    }
+  });
+
+  it("루트 선언 · 미설치는 WARN, 앱 선언 · 미설치는 PASS, 설치본 1.6.2 는 ESM PASS · CommonJS bare 버전 WARN", async () => {
+    await fs.outputJSON(path.join(tmp, "package.json"), { name: "mono", workspaces: ["apps/*"], dependencies: { [T]: "^1.8.2" } });
+    const root = await app("apps/web", ESM, {});
+    expect(await item(root)).toEqual(warn(notInst(ESM.file, "pnpm install")));
+    expect(await item(await app("apps/a", TS, { [T]: "^1.8.2" }))).toEqual(pass(TS.file));
+    await writeInstalledStub(tmp, T, "1.6.2");
+    expect(await item(root)).toEqual(pass(ESM.file));
+    expect(await item(await app("apps/b", BARE, {}))).toMatchObject({ severity: "warn", message: expect.stringContaining(`${T} 설치본 1.6.2 에서는 CommonJS`) });
+  });
+
+  it("Plug'n'Play 루트 전용: ESM 은 PnP 전용 WARN", async () => {
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", packageManager: "yarn@4.5.3", workspaces: ["apps/*"], dependencies: { [T]: "1.8.2" } });
+    await fs.writeFile(path.join(tmp, "yarn.lock"), "");
+    await fs.writeFile(path.join(tmp, ".pnp.cjs"), "");
+    const dir = await app("apps/web", ESM, {});
+    expect(await item(dir)).toEqual(
+      warn(`${ESM.file}에 AXIS preset 참조가 있지만 ${T} 가 ${PNP_NOTE}(워크스페이스 루트 선언 1.8.2) → 앱 package.json 에 ${T} 를 선언하세요`)
+    );
   });
 });
 

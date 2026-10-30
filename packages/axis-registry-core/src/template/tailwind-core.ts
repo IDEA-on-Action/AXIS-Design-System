@@ -38,7 +38,8 @@
  *   `tailwindcss` 줄 · 레이아웃 JS import · 브랜드 · Tailwind 3 은 종전이에요.
  * - `axisPackagesBelowTailwind4`: `axis init` 의 Tailwind 4 버전 안내와 위 WARN 이 같은 판정을 씁니다.
  * - 배치 3(WI-0070 · WI-0072): globals.css 는 AXIS 근거(tokens CSS import · `--axis-*` 정의 · 루트 레이아웃의 tokens CSS JS import)가
- *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다.
+ *   있을 때만 pass, animation 은 plugins 배열 판독, Tailwind 3 preset 은 CommonJS 형태 + 설치본 tokens 버전으로 판정합니다
+ *   (WI-0101 부터 그 앞에 모든 모양의 tokens 해석 판정이 있어요, 아래).
  *   설치본은 `findInstalledPackage`(상위 디렉터리 탐색, project.ts) 하나로 읽습니다.
  * - WI-0074: `detectTailwind` · `axisPackagesBelowTailwind4` 도 같은 `findInstalledPackage` 로 읽습니다(종전에는 `<baseDir>/node_modules`
  *   한 층만 읽어 호이스팅 모노레포에서 설치본을 못 찾고 선언으로 떨어졌습니다. WI-0051 PRD D4 에서 남겼던 것을 해소).
@@ -62,6 +63,10 @@
  *   (project.ts `tokensCssResolution`. 앱 선언은 미설치여도 pass, 설치본 디렉터리가 있으면 pass, 루트 선언 미설치 · 미선언 미설치 · PnP 루트
  *   전용은 warn). 위 배치 3 의 「tokens CSS import 가 있으면 pass」는 이 조건으로 좁혀졌어요. 프로젝트 밖 진입 CSS(`globalCss` 가 앱 밖)의
  *   패키지 줄(`tailwindcss` · 토큰 · 컴포넌트 `tailwind.css`)은 그 파일 위치에서 설치본이 보이는지도 봅니다(`outsideCssPackageResolution`).
+ * - WI-0101(사용자 결정 Q61 ~ Q68): Tailwind 3 preset 참조는 모양(CommonJS require · `.default` · ESM import · `.ts`)과 상관없이
+ *   tokens 가 이 앱에서 해석될 때만 pass 입니다(globals.css 와 같은 `tokensCssResolution`, `presetTokensUnresolvedMessage`). 루트 선언 미설치 ·
+ *   미선언 미설치 · PnP 루트 전용은 warn, 앱 선언은 미설치여도 종전 판정이에요. 위 배치 3 의 「Tailwind 3 preset 은 CommonJS 형태 + 설치본
+ *   tokens 버전으로 판정」은 버전 판정(CommonJS bare 만, Q64)의 범위이고, 해석 판정은 그 앞에서 모든 모양에 걸려요.
  */
 
 import { existsSync, lstatSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
@@ -703,9 +708,12 @@ function outsideCssUnresolvedIssue(spec: string, name: string): string {
   return `${spec} import 가 있지만 이 파일 위치에서 ${name} 를 찾지 못해 해석되지 않습니다(설치본이 앱 쪽 node_modules 에만 있음) → 이 파일의 상위 node_modules(워크스페이스 루트 등)에 설치하거나 globalCss 를 앱 안 파일로 바꾸세요`;
 }
 
-/** tokens 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」, 선언 없음은 범위를 붙인 추가 명령) */
-function tokensInstallPhrase(baseDir: string): string {
-  const g = dependencyInstallGuide(baseDir, TOKENS_PACKAGE_NAME, `^${TAILWIND4_MIN_AXIS_VERSION}`);
+/**
+ * tokens 설치 안내 구절(WI-0093 과 같은 출처 규칙: npm 루트 선언은 「워크스페이스 루트에서 npm install」, 선언 없음은 범위를 붙인 추가 명령).
+ * 추가 명령의 범위는 globals.css 게이트가 `^1.4.0`(`css/tailwind4` 가 처음 들어간 버전, Q48), Tailwind 3 preset 게이트가 `^1.7.0`(WI-0101)이에요.
+ */
+function tokensInstallPhrase(baseDir: string, range = `^${TAILWIND4_MIN_AXIS_VERSION}`): string {
+  const g = dependencyInstallGuide(baseDir, TOKENS_PACKAGE_NAME, range);
   if (g.kind === "install-at-root") return `워크스페이스 루트에서 ${g.installCommand}`;
   return g.kind === "install" ? g.installCommand : g.addCommand;
 }
@@ -1248,6 +1256,33 @@ function isCommonJsConfig(file: string, source: string): boolean {
   return extname(file) === ".cjs" || /\bmodule\.exports\b/.test(source);
 }
 
+/**
+ * Tailwind 3 설정의 preset 참조가 이 앱에서 해석되지 않는 이유(WI-0101, 사용자 결정 Q61 ~ Q65 · Q68). 해석되면 `undefined` 예요.
+ * 판정은 globals.css tokens 게이트와 같은 `tokensCssResolution` 이라 같은 레이아웃에서 두 항목의 결론이 같아요.
+ * - `app`(앱 선언, 미설치 포함, Q62) · `installed`(Plug'n'Play 가 아니고 설치본 디렉터리가 있음, Q68) → `undefined`(종전 판정으로 감)
+ * - `not-installed`(루트 선언 · 미설치(Q63), 미선언 · 미설치(Q61)) → 설치 안내. CommonJS bare 여도 버전 문구보다 먼저예요(Q65)
+ * - `pnp-root-only` → PnP 전용 문구. CommonJS bare 는 `packageVersionGate` 의 `unresolved` 갈래가 종전 문구(1.7.0 이상 선언 안내)를
+ *   그대로 내도록 여기서는 넘겨요(WI-0091 Q7)
+ * 모양을 가리지 않는 이유: Tailwind 3.4.19 실빌드에서 미설치는 7형태 모두 `Cannot find module` rc 1 이었어요(WI-0101 testplan 2.2).
+ * 버전(1.7.0)은 CommonJS bare 만 보는 종전 판정 그대로예요(Q64, 1.6.2 에서 preset 이 빠지는 형태는 그것뿐).
+ */
+function presetTokensUnresolvedMessage(
+  baseDir: string,
+  pkg: Record<string, unknown> | undefined,
+  file: string,
+  bareCjs: boolean
+): string | undefined {
+  const r = tokensCssResolution(baseDir, pkg, TOKENS_PACKAGE_NAME);
+  const head = `${file}에 AXIS preset 참조가 있지만 ${TOKENS_PACKAGE_NAME} 가`;
+  if (r.kind === "not-installed") {
+    return `${head} 설치되지 않아 해석되지 않습니다 → 설치(${tokensInstallPhrase(baseDir, `^${TOKENS_CJS_PRESET_FIXED_VERSION}`)})`;
+  }
+  if (r.kind === "pnp-root-only" && !bareCjs) {
+    return `${head} ${PNP_ROOT_ONLY_NOTE}(워크스페이스 루트 선언 ${r.range}) → 앱 package.json 에 ${TOKENS_PACKAGE_NAME} 를 선언하세요`;
+  }
+  return undefined;
+}
+
 /** 패키지 버전 조건 판정 결과(설치본 우선, 다음 선언 하한, 다음 판정 불가) */
 export interface PackageVersionGate {
   /**
@@ -1476,7 +1511,8 @@ function componentCssPresentIssue(baseDir: string, name: string, r: ComponentCss
  * - 3 이하 · 판정 불가: 종전 규칙. `.ts` 는 AXIS 토큰 설정 여부(pass · warn), `.js` · `.mjs` · `.cjs` 는 warn(TypeScript 권장),
  *   없으면 fail. 여기에 B3: 설정 파일에 `@axis-ds/tokens/tailwind` preset 참조(require · import, 주석 제외)가 있으면
  *   `(@axis-ds/tokens/tailwind preset)` 을 붙인 pass 입니다. `.ts` 가 종전 기준(`--background` · `hsl(var(`)으로 pass 면
- *   종전 문구 그대로입니다.
+ *   종전 문구 그대로입니다. preset 참조가 있어도 ① tokens 가 이 앱에서 해석되지 않으면 warn(WI-0101, 모든 모양)
+ *   ② CommonJS bare require 이고 tokens 가 1.7.0 미만이거나 버전을 알 수 없으면 warn(WI-0072 · WI-0091) 이고, ①이 먼저예요.
  */
 export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
   const baseDir = resolveBaseDir(baseDirInput);
@@ -1552,9 +1588,13 @@ export function checkTailwindSetup(baseDirInput: string): TailwindCheckResult {
     if (!existsSync(path)) continue;
     const content = readFileSync(path, "utf8");
     if (hasTokensPresetReference(content)) {
-      // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
       const code = stripJsComments(content);
-      if (isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code)) {
+      const bareCjs = isCommonJsConfig(file, code) && hasBareCjsPresetRequire(code);
+      // WI-0101: preset 의 모양(require · import · .ts)과 상관없이 tokens 가 이 앱에서 해석될 때만 아래 판정으로 갑니다
+      const unresolved = presetTokensUnresolvedMessage(baseDir, pkg, file, bareCjs);
+      if (unresolved !== undefined) return { name: "tailwind.config", severity: "warn", message: unresolved };
+      // WI-0072: CommonJS 설정의 bare require 는 tokens 1.7.0 미만에서 preset 이 통째로 빠집니다(1.1.0 부터의 결함)
+      if (bareCjs) {
         const gate = packageVersionGate(baseDir, pkg, "@axis-ds/tokens", TOKENS_CJS_PRESET_FIXED_VERSION, { appOnlyInPnp: true });
         if (gate.status === "unresolved") {
           // WI-0091(사용자 결정 Q7): 루트에만 선언한 tokens 는 Plug'n'Play 에서 앱이 require 하지 못해 preset 이 들어오지 않습니다

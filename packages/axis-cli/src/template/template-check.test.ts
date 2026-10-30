@@ -2269,7 +2269,8 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
         "export default { presets: [require('@axis-ds/tokens/tailwind')] };",
         'export default { presets: [(await import("@axis-ds/tokens/tailwind")).default] };',
       ]) {
-        const dir = await project({ "tailwind.config.ts": src }, { tailwindcss: "^3.4.0" });
+        // WI-0101(사용자 결정 Q67): preset 은 tokens 가 해석될 때만 pass 라 tokens 를 앱에 선언해요(이 테스트의 목적은 참조 모양 판독)
+        const dir = await project({ "tailwind.config.ts": src }, { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.2" });
         expect({ src, item: await tailwindItem(dir) }).toEqual({ src, item: PRESET("tailwind.config.ts") });
       }
     });
@@ -2302,7 +2303,7 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
       );
       const urlString = await project(
         { "tailwind.config.ts": 'const u = "https://example.com"; const p = require("@axis-ds/tokens/tailwind");\nexport default { presets: [p] };' },
-        { tailwindcss: "^3.4.0" }
+        { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.2" } // WI-0101 Q67: tokens 앱 선언(참조 판독 목적은 그대로)
       );
       const NO_PRESET = "tailwind.config.ts에 AXIS preset(@axis-ds/tokens/tailwind)이 없습니다 (presets 에 넣으세요)";
       expect((await tailwindItem(commented)).message).toBe(NO_PRESET);
@@ -2313,7 +2314,7 @@ describe("WI-0044 보정 2차: 버전 조건 · 컴포넌트 import · create-ne
     it("preset 과 자체 hsl(var()) 매핑이 함께 있으면 preset pass 문구(WI-0065 D8: 판정 근거는 preset)", async () => {
       const dir = await project(
         { "tailwind.config.ts": "import axis from '@axis-ds/tokens/tailwind';\nexport default { presets: [axis], theme: { extend: { colors: { x: 'hsl(var(--x))' } } } };" },
-        { tailwindcss: "^3.4.0" }
+        { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.8.2" } // WI-0101 Q67: tokens 앱 선언
       );
       expect(await tailwindItem(dir)).toEqual(PRESET("tailwind.config.ts"));
     });
@@ -3034,13 +3035,22 @@ describe("배치 3 ①: 설치본 기반 판정", () => {
       });
     });
 
-    it("설치본이 없으면 선언 하한으로, 둘 다 없으면 「확인하지 못했습니다」 WARN", async () => {
+    it("설치본이 없으면 선언 하한으로, 둘 다 없으면 해석 불가(WI-0101 Q65), 설치본 버전을 읽지 못하고 선언도 없으면 「확인하지 못했습니다」 WARN", async () => {
       const declared17 = await project({ "tailwind.config.cjs": BARE_CJS }, { devDependencies: { tailwindcss: "^3.4.17", "@axis-ds/tokens": "^1.7.0" } });
       const declared16 = await project({ "tailwind.config.cjs": BARE_CJS }, { devDependencies: { tailwindcss: "^3.4.17", "@axis-ds/tokens": "^1.6.0" } });
       const none = await project({ "tailwind.config.cjs": BARE_CJS }, { devDependencies: { tailwindcss: "^3.4.17" } });
+      const unknownInstalled = await project({ "tailwind.config.cjs": BARE_CJS }, { devDependencies: { tailwindcss: "^3.4.17" } });
+      await fs.outputJSON(path.join(unknownInstalled, "node_modules", "@axis-ds", "tokens", "package.json"), { name: "@axis-ds/tokens" });
       expect(await item(declared17, "tailwind.config")).toMatchObject({ severity: "pass" });
       expect(await item(declared16, "tailwind.config")).toEqual({ name: "tailwind.config", severity: "warn", message: WARN_BELOW("tailwind.config.cjs", "선언 ^1.6.0") });
-      expect(await item(none, "tailwind.config")).toMatchObject({
+      // WI-0101(사용자 결정 Q65): 미선언 · 미설치는 버전 문구보다 해석 불가가 먼저예요(기대 변경)
+      expect(await item(none, "tailwind.config")).toEqual({
+        name: "tailwind.config",
+        severity: "warn",
+        message: 'tailwind.config.cjs에 AXIS preset 참조가 있지만 @axis-ds/tokens 가 설치되지 않아 해석되지 않습니다 → 설치(pnpm add "@axis-ds/tokens@^1.7.0")',
+      });
+      // 「확인하지 못했습니다」 갈래는 설치본 디렉터리는 있는데 version 을 읽지 못할 때 남아요(표기 「설치본 · 선언 없음」은 종전 그대로)
+      expect(await item(unknownInstalled, "tailwind.config")).toMatchObject({
         severity: "warn",
         message: expect.stringContaining("@axis-ds/tokens 버전을 확인하지 못했습니다(설치본 · 선언 없음)"),
       });
@@ -4163,6 +4173,8 @@ describe("WI-0086: 루트 선언 인정 일관화 · 심링크 baseDir", () => {
       rootDeps: { tailwindcss: "^3.4.0", "@axis-ds/tokens": "^1.6.0" },
       files: { "tailwind.config.js": 'module.exports = { presets: [require("@axis-ds/tokens/tailwind")], content: ["./app/**/*.{ts,tsx}"] };\n' },
     });
+    // WI-0101(사용자 결정 Q63 · Q67): 루트 선언 · 미설치는 해석 불가가 먼저라, 「선언」 근거를 보려고 version 없는 설치본 디렉터리를 둬요
+    await fs.outputJSON(path.join(tw3.root, "node_modules", "@axis-ds", "tokens", "package.json"), { name: "@axis-ds/tokens" });
     expect((await item(tw3.app, "tailwind.config"))?.message).toContain("@axis-ds/tokens 선언 ^1.6.0 에서는 CommonJS 의 require");
   });
 
@@ -5028,6 +5040,163 @@ describe("WI-0097: CSS import 해석 가능성(Tailwind 4 B1 양방향 · 해석
       await fs.outputFile(path.join(app, ".pnp.cjs"), "");
       expect(outsideCssPackageResolution(app, shared, "tailwindcss")).toBe("unknown");
     });
+  });
+});
+
+describe("WI-0101: Tailwind 3 preset 의 tokens 해석 게이트(모든 모양, 사용자 결정 Q61 ~ Q69)", () => {
+  const T = "@axis-ds/tokens";
+  const P = `${T}/tailwind`;
+  const PNP_NOTE = "워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다";
+  const item = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "tailwind.config");
+  const pass = (file: string) => ({ name: "tailwind.config", severity: "pass", message: `${file}에 AXIS 토큰이 설정되어 있습니다 (${P} preset)` });
+  const warn = (message: string) => ({ name: "tailwind.config", severity: "warn", message });
+  const notInst = (file: string, phrase: string) =>
+    `${file}에 AXIS preset 참조가 있지만 ${T} 가 설치되지 않아 해석되지 않습니다 → 설치(${phrase})`;
+  const pnpRoot = (file: string, range: string) =>
+    `${file}에 AXIS preset 참조가 있지만 ${T} 가 ${PNP_NOTE}(워크스페이스 루트 선언 ${range}) → 앱 package.json 에 ${T} 를 선언하세요`;
+  const belowCjs = (file: string, label: string) =>
+    `${file}에 AXIS preset 참조가 있지만 ${T} ${label} 에서는 CommonJS 의 require("${P}") 가 preset 이 아니라 { default } 를 돌려줘 색 · keyframes 가 적용되지 않습니다 → require("${P}").default 로 바꾸거나 ${T} 1.7.0 이상`;
+  const ADD = `pnpm add "${T}@^1.7.0"`;
+  const C = 'content: ["./src/**/*.{ts,tsx}"]';
+
+  /** 착수 측정(testplan 1절)과 같은 7형태. bare 는 지금도 버전 게이트가 도는 CommonJS bare require */
+  const FORMS: { id: string; file: string; src: string; bare: boolean }[] = [
+    { id: "cjs-bare-js", file: "tailwind.config.js", src: `module.exports = { ${C}, presets: [require("${P}")] };\n`, bare: true },
+    { id: "cjs-bare-cjs", file: "tailwind.config.cjs", src: `module.exports = { ${C}, presets: [require("${P}")] };\n`, bare: true },
+    { id: "cjs-default-js", file: "tailwind.config.js", src: `module.exports = { ${C}, presets: [require("${P}").default] };\n`, bare: false },
+    { id: "esm-mjs", file: "tailwind.config.mjs", src: `import axisPreset from "${P}";\n\nexport default { ${C}, presets: [axisPreset] };\n`, bare: false },
+    { id: "esm-js", file: "tailwind.config.js", src: `import axisPreset from "${P}";\n\nexport default { ${C}, presets: [axisPreset] };\n`, bare: false },
+    {
+      id: "ts",
+      file: "tailwind.config.ts",
+      src: `import type { Config } from "tailwindcss";\nimport axisPreset from "${P}";\n\nexport default { ${C}, presets: [axisPreset] } satisfies Config;\n`,
+      bare: false,
+    },
+    { id: "mjs-require", file: "tailwind.config.mjs", src: `export default { ${C}, presets: [require("${P}")] };\n`, bare: false },
+  ];
+  type Form = (typeof FORMS)[number];
+
+  /** 단일 앱(lockfile 없음 → pnpm). tokens 선언 여부와 설치본 버전 */
+  async function single(form: Form, o: { declare: boolean; installed?: string; range?: string }) {
+    const dir = await fs.realpath(await tempDir());
+    const deps: Record<string, string> = { tailwindcss: "^3.4.19" };
+    if (o.declare) deps[T] = o.range ?? "^1.8.2";
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: deps });
+    await fs.outputFile(path.join(dir, form.file), form.src);
+    if (o.installed) await writeInstalledStub(dir, T, o.installed);
+    return dir;
+  }
+
+  /** npm 워크스페이스(앱 lockfile 없음), tokens 는 루트에만 선언. `npmLock` 이면 루트 package-lock.json(설치 안내가 npm 이 됨) */
+  async function mono(form: Form, o: { installed?: string; range?: string; npmLock?: boolean }) {
+    const root = await fs.realpath(await tempDir());
+    await fs.outputJSON(path.join(root, "package.json"), { name: "mono", private: true, workspaces: ["apps/*"], dependencies: { [T]: o.range ?? "^1.8.2" } });
+    if (o.npmLock) await fs.outputJSON(path.join(root, "package-lock.json"), { lockfileVersion: 3 });
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), { name: "web", private: true, devDependencies: { tailwindcss: "^3.4.19" } });
+    await fs.outputFile(path.join(app, form.file), form.src);
+    if (o.installed) await writeInstalledStub(root, T, o.installed);
+    return app;
+  }
+
+  /** Yarn PnP 레이아웃(.pnp.cjs 표지, node_modules 없음). tokens 선언 위치 */
+  async function pnp(form: Form, tokens: "root" | "app" | "none") {
+    const root = await fs.realpath(await tempDir());
+    await fs.writeJSON(path.join(root, "package.json"), {
+      name: "root",
+      private: true,
+      packageManager: "yarn@4.5.3",
+      workspaces: ["apps/*"],
+      dependencies: tokens === "root" ? { [T]: "1.8.2" } : {},
+    });
+    await fs.writeFile(path.join(root, "yarn.lock"), "__metadata:\n  version: 8\n");
+    await fs.writeFile(path.join(root, ".yarnrc.yml"), "nodeLinker: pnp\n");
+    await fs.writeFile(path.join(root, ".pnp.cjs"), '#!/usr/bin/env node\n"use strict";\n');
+    const app = path.join(root, "apps", "web");
+    await fs.outputJSON(path.join(app, "package.json"), {
+      name: "web",
+      private: true,
+      dependencies: { tailwindcss: "3.4.19", ...(tokens === "app" ? { [T]: "1.8.2" } : {}) },
+    });
+    await fs.outputFile(path.join(app, form.file), form.src);
+    return app;
+  }
+
+  const NON_BARE = FORMS.filter((f) => !f.bare);
+  const BARE = FORMS.filter((f) => f.bare);
+
+  it("AC1: 미선언 · 미설치(U-none)의 ESM · .ts · .default · .mjs require 5형태 → 해석 불가 WARN(범위를 붙인 추가 명령)", async () => {
+    for (const f of NON_BARE) {
+      const dir = await single(f, { declare: false });
+      expect({ id: f.id, item: await item(dir) }).toEqual({ id: f.id, item: warn(notInst(f.file, ADD)) });
+    }
+  });
+
+  it("AC2: 루트 선언 · 미설치(R-none) 7형태 → 해석 불가 WARN(lockfile 없으면 pnpm install, npm lockfile 이면 워크스페이스 루트에서 npm install)", async () => {
+    for (const f of FORMS) {
+      const app = await mono(f, {});
+      expect({ id: f.id, item: await item(app) }).toEqual({ id: f.id, item: warn(notInst(f.file, "pnpm install")) });
+      const npmApp = await mono(f, { npmLock: true });
+      expect({ id: f.id, item: await item(npmApp) }).toEqual({ id: f.id, item: warn(notInst(f.file, "워크스페이스 루트에서 npm install")) });
+    }
+  });
+
+  it("AC3: 미선언 · 미설치의 CommonJS bare 2형태는 「버전을 확인하지 못했습니다」가 아니라 해석 불가 WARN(Q65)", async () => {
+    for (const f of BARE) {
+      const dir = await single(f, { declare: false });
+      const got = await item(dir);
+      expect({ id: f.id, item: got }).toEqual({ id: f.id, item: warn(notInst(f.file, ADD)) });
+      expect(got?.message).not.toContain("버전을 확인하지 못했습니다");
+    }
+  });
+
+  it("AC4: 앱 선언 · 미설치(A-none) 7형태는 종전 PASS 그대로(Q62, 미설치는 dependencies 가 알림)", async () => {
+    for (const f of FORMS) {
+      const dir = await single(f, { declare: true });
+      expect({ id: f.id, item: await item(dir) }).toEqual({ id: f.id, item: pass(f.file) });
+      expect((await collectCheckResults(dir)).find((r) => r.name === "dependencies")?.message).toMatch(/선언됐지만 설치되지 않은 의존성: [^→]*@axis-ds\/tokens/);
+    }
+  });
+
+  it("AC5: 설치본이 있으면(앱 · 루트 · 미선언 × 1.8.2 · 1.6.2) 종전 판정 그대로, CommonJS bare × 1.6.2 만 버전 WARN", async () => {
+    for (const f of FORMS) {
+      for (const v of ["1.8.2", "1.6.2"]) {
+        const expected = f.bare && v === "1.6.2" ? warn(belowCjs(f.file, `설치본 ${v}`)) : pass(f.file);
+        const app = await single(f, { declare: true, installed: v, range: `^${v}` });
+        const root = await mono(f, { installed: v, range: `^${v}` });
+        const none = await single(f, { declare: false, installed: v });
+        expect({ id: f.id, v, app: await item(app), root: await item(root), none: await item(none) }).toEqual({
+          id: f.id,
+          v,
+          app: expected,
+          root: expected,
+          none: expected,
+        });
+      }
+    }
+  });
+
+  it("AC6: Plug'n'Play 루트 전용은 5형태가 PnP 전용 WARN, CommonJS bare 는 종전 문구, 앱 선언은 PASS, 어디에도 없으면 yarn add 안내", async () => {
+    for (const f of NON_BARE) {
+      expect({ id: f.id, item: await item(await pnp(f, "root")) }).toEqual({ id: f.id, item: warn(pnpRoot(f.file, "1.8.2")) });
+    }
+    for (const f of BARE) {
+      expect({ id: f.id, item: await item(await pnp(f, "root")) }).toEqual({
+        id: f.id,
+        item: warn(`${f.file}에 AXIS preset 참조가 있지만 ${T} 가 ${PNP_NOTE}(워크스페이스 루트 선언 1.8.2) → 앱 package.json 에 ${T} 1.7.0 이상을 선언하세요`),
+      });
+    }
+    for (const f of FORMS) {
+      expect({ id: f.id, item: await item(await pnp(f, "app")) }).toEqual({ id: f.id, item: pass(f.file) });
+      expect({ id: f.id, item: await item(await pnp(f, "none")) }).toEqual({ id: f.id, item: warn(notInst(f.file, `yarn add "${T}@^1.7.0"`)) });
+    }
+  });
+
+  it("주석 안의 preset 참조는 종전대로 「preset 없음」(게이트를 타지 않음)", async () => {
+    const dir = await fs.realpath(await tempDir());
+    await fs.outputJSON(path.join(dir, "package.json"), { dependencies: { tailwindcss: "^3.4.19" } });
+    await fs.outputFile(path.join(dir, "tailwind.config.ts"), `// import axisPreset from "${P}";\nexport default {};\n`);
+    expect(await item(dir)).toEqual(warn(`tailwind.config.ts에 AXIS preset(${P})이 없습니다 (presets 에 넣으세요)`));
   });
 });
 
