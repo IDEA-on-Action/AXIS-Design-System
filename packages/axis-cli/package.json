@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/cli",
-  "version": "1.7.8",
+  "version": "1.7.9",
   "type": "module",
   "description": "AXIS Design System - CLI for adding components (shadcn compatible)",
   "publishConfig": {

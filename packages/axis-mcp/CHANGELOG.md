@@ -1,5 +1,42 @@
 # @axis-ds/mcp
 
+## 1.4.8
+
+### Patch Changes
+
+- 9c9f223: WI-0088: `axis template apply` · `template init` · MCP `axis.apply_template` 이 기존 package.json 을 덮어쓰지 않고 합쳐요. 템플릿 경로의 디렉터리 탈출도 막아요(보안 수정).
+  - 주의(합쳐도 바뀌는 값): 「덮어쓰지 않는다」는 사용자에게만 있는 필드가 남는다는 뜻이에요. 양쪽에 같은 이름이 있는 `scripts` · 의존성 4맵의 키와 axis.config.json 의 키는 **템플릿 값으로 바뀌어요**. 예를 들어 `dependencies.react` 를 `18.3.1` 로 고정해 두었으면 apply 뒤 템플릿 범위(예: `^19`)로 바뀌고, 같은 이름의 `scripts.build` 도 템플릿 명령이 돼요. JSON 으로 읽을 수 없는 package.json(주석 · 깨진 JSON)과 하위 경로의 package.json 은 종전처럼 통째로 덮어써요. 값을 지키려면 apply 전에 `axis template diff` 나 `--dry-run` 으로 「합치기」 대상을 확인하고, apply 뒤 버전 관리 diff 에서 되돌려 주세요
+  - 보안 수정: 템플릿의 `files[].path` · `postInstall[].file` 이 대상 디렉터리 밖(절대 경로, `../x` · `a/../../x` 처럼 상위로 나가는 경로, 프로젝트 안 심볼릭 링크를 거쳐 밖으로 나가는 경로)을 가리키면 `template apply` · `init` · `diff` 와 MCP `axis.apply_template` · `axis.diff_template` 이 어떤 파일도 쓰거나 읽기 전에 「템플릿 경로 '<경로>' 가 대상 디렉터리 밖을 가리켜(<원인>) 중단했습니다. 아무 파일도 바꾸지 않았습니다」로 멈춰요(CLI rc 1, MCP 오류). 종전에는 오염된 레지스트리나 `AXIS_TEMPLATE_URL` 로 지정한 레지스트리가 프로젝트 밖에 쓰거나 읽을 수 있었어요. 공식 템플릿 5개는 경로가 모두 안쪽이라 영향이 없어요(측정 결과 바이트 같음)
+  - 바뀐 점: 대상에 package.json 이 있으면 템플릿 package.json 으로 통째로 바꾸지 않고 합쳐요. `packageManager` · `name` · `version` · `private` · `workspaces` · `engines` · `type` 등 최상위 필드는 사용자 값을 두고, 템플릿에만 있는 필드는 뒤에 붙여요. `scripts` · `dependencies` · `devDependencies` · `peerDependencies` · `optionalDependencies` 는 키 단위로 합치고 같은 키는 템플릿 값을 써요(종전 동작 · 「필요한 의존성」 설치 명령과 같은 범위). 그래서 apply 뒤 `axis check` 등 다음 명령의 설치 안내가 사용자의 `packageManager` 를 따라요(종전에는 필드가 사라져 pnpm 으로 안내)
+  - 바뀐 점: 템플릿이 axis.config.json 을 가진 경우(ontology-console) 기존 axis.config.json 과 합쳐요. 같은 키는 템플릿 값(템플릿이 쓴 파일을 가리킴)이고, 사용자에게만 있는 키는 남아요(종전에는 사라짐)
+  - 바뀐 점: 합친 파일은 기존 파일의 들여쓰기 · 줄바꿈(CRLF) · 끝 줄바꿈 유무를 따라요. CLI 충돌 목록 · `--dry-run` 은 그 파일을 「합치기」로, MCP 결과는 「합치기: 기존 필드를 두고 템플릿 키를 합침」으로 표시해요
+  - 바뀐 점: 파일을 쓰는 도중 실패하면 이미 건드린 파일을 원래 내용으로 되돌리고(새로 만든 파일 · 빈 디렉터리는 지움) CLI 는 rc 1, MCP 는 오류 응답이에요. `template init` 은 그때 axis.config.json 생성과 다음 단계 안내로 넘어가지 않아요
+  - 바뀌지 않은 점: 빈 디렉터리(같은 경로의 파일이 없음)에 쓰는 파일은 템플릿 바이트 그대로예요. package.json · axis.config.json 이 아닌 파일, 하위 경로의 package.json 은 종전처럼 덮어써요. 기존 package.json 을 JSON 객체로 읽을 수 없으면 종전처럼 템플릿 내용으로 덮어쓰고 한 줄로 알려요. 충돌 확인(`-y` 없는 비대화형 rc 1) · 종료 코드 · 「필요한 의존성」 명령은 그대로예요
+
+- 5ead079: npm 워크스페이스에서 루트 `package.json` 에만 선언한 패키지가 설치되지 않았을 때, `axis theme add` · `axis init` · `axis check`(MCP `axis.check_project` 포함)가 「워크스페이스 루트에서 npm install」로 설치 위치까지 안내해요(WI-0096). 앱 디렉터리에서 plain `npm install` 을 실행하면 루트에만 선언한 패키지는 설치되지 않아서(npm 7.24.2 · 8.19.4 · 9.9.4 · 10.9.4 실측, lockfile 없음 · 빈 파일 · 정상 · 앱 lockfile 네 조건 모두), 종전 안내 「npm install」을 따라도 같은 경고가 다시 나왔어요. `axis theme list` · `axis theme info` · MCP 브랜드 도구와 check 의 Tailwind 4 CSS 줄은 이미 이 문구였고(WI-0093 · WI-0097), 이번에 남은 곳을 같은 문구로 맞췄어요. 두 패키지가 같은 공유 코어(registry-core)를 번들해 check 문구가 같아요.
+  - **문구가 바뀌는 곳**(npm 이고 그 안내 대상에 워크스페이스 루트 선언이 하나라도 있을 때만):
+    - `axis theme add`: tokens 를 루트에만 선언하고 설치하지 않았을 때 「설치: npm install」 → 「설치: 워크스페이스 루트에서 npm install」. 루트에만 선언한 컴포넌트 패키지(`@axis-ds/ui-react` 등)가 설치되지 않아 `tailwind.css` 줄을 넣지 않았다는 안내의 「설치(npm install)」 → 「설치(워크스페이스 루트에서 npm install)」
+    - `axis init`: `clsx` · `tailwind-merge` 가운데 하나라도 루트에 선언돼 있으면 「설치는 실행하지 않았습니다. 설치: npm install」 → 「… 설치: 워크스페이스 루트에서 npm install」(나머지를 앱 package.json 에 추가한 경우도 같아요. 루트에서 실행하면 앱 선언도 함께 설치돼요). 애니메이션 플러그인을 루트에 선언했지만 설치하지 않았으면 「npm install 뒤 …」 → 「워크스페이스 루트에서 npm install 뒤 …」
+    - `axis check` · `axis.check_project` 의 dependencies 항목: 「선언됐지만 설치되지 않은 의존성: … → npm install」 묶음에 루트 선언이 있으면, 그리고 「워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: … → npm install」은 「→ 워크스페이스 루트에서 npm install」
+  - **check 종료 코드가 바뀌는 경우**: 없어요. 바뀐 것은 WARN 문구의 설치 명령 구절뿐이고 PASS · WARN · FAIL 판정과 「N pass / M warn」 집계는 그대로예요.
+  - 바뀌지 않는 경우: pnpm · yarn 워크스페이스는 앱 디렉터리에서 실행해도 루트 선언이 설치돼 종전 「pnpm install」 · 「yarn install」 그대로예요(pnpm 9.15.4 · yarn 1.22.22 는 이번 실측, yarn 4.5.3 node-modules 는 WI-0093 실측). npm 이어도 앱 `package.json` 에만 선언한 패키지의 안내는 종전 「npm install」이에요. 설치본이 있어 안내가 나오지 않는 경우, Yarn Plug'n'Play 안내, `axis theme add` 의 업그레이드 안내(루트 선언이면 「워크스페이스 루트 package.json 의 … 선언을 올리고 설치하세요」)도 그대로예요.
+  - 같은 발행의 WI-0088(`template apply` 의 package.json 처리)과는 다루는 명령이 겹치지 않아요.
+
+- 5b1dc8a: `axis check` · MCP `axis.check_project` 의 Tailwind 4 tailwind.config 항목이 Yarn Plug'n'Play 에서 컴포넌트 패키지(`@axis-ds/ui-react` · `@axis-ds/agentic-ui`)가 `.yarn/cache` zip 안에만 있는 경우를 알려요(WI-0102). Plug'n'Play 는 패키지를 zip 으로 두고, `tailwind.css` 의 `@source "./dist"` 는 그 zip 안 경로로 풀려요. Tailwind 4 스캐너는 실제 디렉터리만 읽어서 import 는 성공해도(rc 0) 컴포넌트 클래스가 하나도 생성되지 않아요(Yarn 4.5.3 · `@tailwindcss/cli` · `@tailwindcss/postcss` 4.1.14 실빌드, 산출물이 `@import "tailwindcss"` 만 넣은 빌드와 바이트가 같음). Plug'n'Play 루트 `package.json` 의 `dependenciesMeta` 에 `unplugged: true` 를 두면 node_modules 설치와 바이트가 같은 산출물이 나와요. 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같아요.
+  - **PASS 가 WARN 으로 바뀌는 경우**(종료 코드는 그대로이고 「N pass / M warn」 집계가 달라져요): Plug'n'Play 앱에 컴포넌트 패키지를 선언했고 전역 CSS 에 `@import "<패키지>/tailwind.css";` 가 있는데, 앱 선언 범위에 맞는 `.yarn/unplugged/*/node_modules/<패키지>` 가 없는 경우 → 「`<패키지>/tailwind.css` import 가 있지만 Plug'n'Play 에서 @source "./dist" 가 .yarn/cache zip 안을 가리켜 컴포넌트 클래스가 생성되지 않습니다 → Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json 의 dependenciesMeta 에 "<패키지>": { "unplugged": true } 를 두고 yarn install 하세요」
+  - **WARN 문구만 바뀌는 경우**: 같은 조건에서 줄이 없으면 종전 「컴포넌트 스캔 경로(tailwind.css)가 없습니다 → @import …」 대신 「`<패키지>` 의 tailwind.css 는 … 생성되지 않습니다 → … yarn install 뒤 @import "<패키지>/tailwind.css";」예요(줄만 넣으면 효과가 없어서 설정을 먼저 안내해요)
+  - 바뀌지 않는 경우: Plug'n'Play 가 아닌 프로젝트, unplugged 설치본이 있는 프로젝트, `workspace:` · `portal:` · `link:` 범위(설치본이 실제 디렉터리), 그 패키지를 가리키는 `@source` 를 직접 쓴 CSS. 판정은 `dependenciesMeta` 설정이 아니라 설치 결과(`.yarn/unplugged` 디렉터리)를 봐요. 앱 `package.json` 의 `dependenciesMeta` 는 Yarn 이 따르지 않아(실측) 그것만으로는 WARN 이 남아요.
+  - `axis theme add` · `axis init` 의 동작과 출력은 바뀌지 않아요. `@axis-ds/ui-react` · `@axis-ds/agentic-ui` 패키지 자체는 바뀌지 않아요.
+
+- d592aef: `axis check` · MCP `axis.check_project` 가 Tailwind 3 프로젝트에서 `@axis-ds/tokens` 설치본의 `exports` 를 실빌드처럼 봐요(WI-0104). 두 패키지가 같은 공유 코어(registry-core)를 번들해 판정 · 문구가 같아요.
+  - **PASS 가 WARN 으로 바뀌는 경우**(종료 코드는 그대로이고 「N pass / M warn」 집계가 달라져요). 모두 빌드가 `exports` 때문에 실패하는 레이아웃이에요:
+    - tailwind.config: 설정 파일 위치부터 위로 올라가며 처음 잡히는 `@axis-ds/tokens` 설치본에 `exports` 가 있는데 `./tailwind` 를 내보내지 않는 경우(앱 `node_modules` 의 중첩 설치본이 워크스페이스 루트의 정상 설치본을 가리는 경우 포함, preset 을 받는 모양과 상관없음) → 「tailwind.config.mjs에 AXIS preset 참조가 있지만 먼저 잡히는 node_modules/@axis-ds/tokens(1.8.2)가 ./tailwind 를 내보내지 않아 해석되지 않습니다 → 그 node_modules 의 @axis-ds/tokens 를 지우거나 다시 설치하세요」. Tailwind 3.4 빌드는 `ERR_PACKAGE_PATH_NOT_EXPORTED` 로 실패해요. `./tailwind` 가 조건부(`{ "import": … }` 만 등)면 `require(...)` 로 받는 설정만 WARN 이에요(Node 22 기준 `require` · `node` · `module-sync` · `default` 조건, ESM `import` 로 받으면 `import` 조건도 맞음)
+    - globals.css: Tailwind 3 에서 앱 안 전역 CSS(진입 파일 · 상대 `@import` 로 들여온 하위 파일)의 tokens CSS import 줄 위치에서 먼저 잡히는 중첩 설치본이 그 경로(`./css` 등)를 내보내지 않는 경우(조건 `style` · `default` 가 맞지 않는 경우 포함) → 「… import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 src/styles/node_modules/@axis-ds/tokens(…)가 ./css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 @axis-ds/tokens 를 지우거나 다시 설치하세요」. Next 14 빌드가 `Package path ./css is not exported` 로 실패해요
+  - **WARN 문구만 바뀌는 경우**: CommonJS bare require 이고 처음 잡히는 설치본이 1.7.0 미만이면서 `./tailwind` 를 내보내지 않으면, 종전 버전 문구 대신 위의 「내보내지 않아」 문구예요.
+  - **check 종료 코드가 바뀌는 경우**: 없어요. 새 판정은 모두 WARN 이에요(다른 항목이 모두 통과하는 fixture 6개에서 발행본 cli 1.7.8 · mcp 1.4.7 과 수정본이 모두 rc 0, WI-0104 testplan 3.3).
+  - 바뀌지 않는 경우: 발행된 `@axis-ds/tokens` 는 모든 버전(1.1.0 ~ 1.8.2)이 `./tailwind` · `./css` 를 내보내므로 정상 설치본은 그대로예요. `exports` 가 없는 설치본 디렉터리는 `tailwind` 파일이 없으면 상위 설치본으로 건너뛰고(상위에도 없으면 종전 PASS), 내보낸 대상 파일이 없는 경우(dist 를 아직 빌드하지 않은 workspace 링크 등)와 설치본이 없는 경우, Plug'n'Play 는 종전 판정이에요. Tailwind 3 의 globals.css 에서 대상 파일만 없는 그림자 · `exports` 없는 그림자 · 「이 위치에서 안 보임」 · 프로젝트 밖 전역 CSS 도 종전이에요. Tailwind 4 프로젝트(tailwind.config 파일이 있어도)는 바뀌지 않아요.
+  - `axis theme add` · `axis init` 의 동작과 출력은 바뀌지 않아요.
+
 ## 1.4.7
 
 ### Patch Changes
