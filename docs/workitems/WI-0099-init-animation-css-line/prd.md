@@ -1,6 +1,6 @@
 # WI-0099: init 애니메이션 안내가 check 와 같은 전역 CSS 줄 판정을 씀 PRD
 
-> 작성일: 2026-10-31 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0099 | GitHub: #243 | 우선순위: P3 | 상태: 구현 완료, Q140 ~ Q147 은 권장안으로 진행, 사용자 확인 대기
+> 작성일: 2026-10-31 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0099 | GitHub: #243 | 우선순위: P3 | 상태: 구현 완료, Q140 ~ Q147 은 권장안으로 진행, 2026-10-31 사용자 확정
 > 기준: `main` b1912a5 (linked 1.8.2 · cli 1.7.9 · mcp 1.4.8 발행됨) 위 worktree 브랜치 `wi-0099-init-animation-css-line`. 착수 측정은 main 빌드(b1912a5)로 했어요
 > 출처: WI-0092 조사의 S9(사용자 결정 Q18), WI-0087 DEC-4 · DEC-6 을 다시 정함
 > 표기: **측정**(이번에 실행해 얻은 값) · **추정**(실행하지 않음) · **미측정**(재야 하지만 아직 재지 않음)
@@ -25,7 +25,7 @@ init 의 애니메이션 안내(`animationGuideLine`, WI-0087 DEC-4 · DEC-6)는
 
 ### 1.2 결정
 
-#### 이 WI 의 결정 (Q140 ~ Q147, 권장안으로 진행, 사용자 확인 대기)
+#### 이 WI 의 결정 (Q140 ~ Q147, 권장안으로 진행, 2026-10-31 사용자 확정)
 
 7절 표에 선택지 · 근거가 있어요.
 
@@ -101,7 +101,7 @@ init 의 애니메이션 안내(`animationGuideLine`, WI-0087 DEC-4 · DEC-6)는
 - scratchpad `measure.sh <cli dist> <출력 디렉터리>`: Tailwind 4 fixture 18칸(줄 3 × 설치본 3 × 선언 위치 2) + 추가 11칸 + PnP 5칸 + Tailwind 3 3칸 = 37칸. 각 칸에서 `axis init -y` 뒤 `axis check`. 종전은 main b1912a5 빌드 사본(`base-cli`), 수정은 worktree 빌드(`pnpm turbo build --filter=@axis-ds/cli... --force`, Cached 0).
 - scratchpad `table.mjs`(두 측정의 표), `smoke.sh`(안내대로 고친 뒤 check).
 
-## 7. 사용자 결정 항목 (Q140 ~ Q147, 권장안으로 진행, 사용자 확인 대기)
+## 7. 사용자 결정 항목 (Q140 ~ Q147, 권장안으로 진행, 2026-10-31 사용자 확정)
 
 | # | 질문 | 선택지 | 권장안 | 근거 |
 |---|---|---|---|---|
@@ -113,3 +113,7 @@ init 의 애니메이션 안내(`animationGuideLine`, WI-0087 DEC-4 · DEC-6)는
 | Q145 | `@axis-ds/ui-react` 미사용(check 항목 없음) | ① init 은 안내 유지 ② check 처럼 침묵 | ① | init 은 컴포넌트를 추가하기 전에 돌고(다음 단계가 `add button`), WI-0065 D8 부터 사용 여부와 상관없이 안내했어요 |
 | Q146 | Tailwind 3 plugins 미등록 · 설치됨(init 침묵 · check WARN) | ① 범위 밖, 별도 WI 후보 ② 함께 tailwind.config 판독 | ① | Issue 는 Tailwind 4 S9 를 지목했어요. Tailwind 3 은 설정 파일을 읽어 plugins 배열을 판독해야 해서(`readAnimationPluginUse`) 범위가 달라요 |
 | Q147 | 새 문구 확정 | ① 사용자 확정(권장안 문구로 구현) ② 지금 확정 | ① | WI-0097 Q43 · Q48 선례. 새 문구는 release-notes 「바뀐 점」에 모았어요 |
+
+## 결정 확정 (2026-10-31)
+
+Q140 ~ Q147 은 2026-10-31 사용자가 모두 권장안으로 확정했어요.
