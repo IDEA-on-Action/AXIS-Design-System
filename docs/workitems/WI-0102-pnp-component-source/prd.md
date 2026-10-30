@@ -35,7 +35,7 @@ Yarn Plug'n'Play(`nodeLinker: pnp`) 앱에 `@axis-ds/ui-react` · `@axis-ds/agen
 - B 와 C 는 겹치지 않아요. C 의 판정은 설정이 아니라 결과(`.yarn/unplugged` 디렉터리)를 봐서, B 로 발행된 버전을 설치하면 WARN 이 저절로 사라져요(측정: B 사본 앱에서 수정본 check 가 zip WARN 을 내지 않음)
 - 앱 `package.json` 의 `dependenciesMeta` 는 Yarn 이 따르지 않아요(측정: 앱에만 두고 install 하면 unplugged 0개, 빌드 0건). 안내는 「Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json」이어야 해요
 
-### 1.4 결정 (권장안, 사용자 확인 대기)
+### 1.4 결정 (권장안, 2026-10-30 사용자 확정)
 
 - 이번 WI 는 C 를 구현해요(Q120 (a)). cli · mcp 만 바뀌어 linked 4패키지 발행이 따라오지 않아요
 - B 는 사용자 결정 뒤 다음 linked 발행에 넣을지 정해요(Q121). 이번에는 구현하지 않아요
@@ -110,3 +110,7 @@ scratchpad `w102/`(이 세션): `scripts/mk.sh`(앱 생성 · 설치) · `build.
 | Q123 | `axis theme add` 가 PnP zip 앱에 컴포넌트 줄을 넣을 때도 unplug 안내를 더할까요 | (a) 이번 범위 밖, 후속 WI (b) 이번에 안내 한 줄 추가 | (a) | theme add 는 줄을 넣는 동작이 맞고(unplug 뒤 그 줄이 필요), check 가 바로 다음 실행에서 알려요. WI-0097 이 정한 theme add 출력 불변(AC9) 범위를 넘지 않아요 |
 | Q124 | WI-0098 의 Tailwind 3 PnP 안내(`contentPnpNote` · troubleshooting 3절)의 「package.json 의 dependenciesMeta」 를 「Plug'n'Play 루트 package.json」 으로 맞출까요 | (a) 후속 WI 에서 문구 통일 (b) 이번 WI 에서 함께 고침 (c) 그대로 | (a) | 측정: 모노레포 앱이 앱 `package.json` 에 넣으면 unplugged 가 생기지 않아요. 다만 문구를 바꾸면 WI-0098 기대 문자열이 바뀌어 이 WI 범위가 넓어져요 |
 | Q125 | 새 판정의 심각도 | (a) WARN(종료 코드 불변) (b) FAIL | (a) | WI-0097 · WI-0103 의 해석 불가 계열이 모두 WARN 이에요. (b) 는 CI 에서 check 를 쓰는 PnP 프로젝트가 업데이트만으로 실패해요 |
+
+## 결정 확정 (2026-10-30)
+
+Q120 ~ Q125 는 2026-10-30 사용자가 모두 권장안으로 확정했어요. Q121 은 (a) 다음 linked 발행에 포함으로 정했고, 후속 WI-0105(#265)로 등록했어요.

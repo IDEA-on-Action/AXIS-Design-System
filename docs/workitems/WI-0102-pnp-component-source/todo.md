@@ -12,8 +12,8 @@
 
 ## 결정
 - [x] 해결 후보 비교표(prd 1.3)와 결정 항목 Q120 ~ Q125(prd 7절) 작성
-- [ ] 사용자 결정 Q120 ~ Q125 (Master 가 확인)
-- [ ] Q121 이 (a) 면 다음 linked 발행 WI 에 `preferUnplugged` 를 넣는 항목 등록 (Master)
+- [x] 사용자 결정 Q120 ~ Q125 (Master 가 확인) (2026-10-30 전부 권장안으로 확정)
+- [x] Q121 이 (a) 면 다음 linked 발행 WI 에 `preferUnplugged` 를 넣는 항목 등록 (Master) (WI-0105 #265 로 등록)
 
 ## 구현 (권장안 Q120 (a) · Q122 (a) · Q125 (a))
 - [x] registry-core `project.ts`: `pnpComponentSourceHidden` · `pnpUnplugSetupPhrase` (AC2 ~ AC5)
