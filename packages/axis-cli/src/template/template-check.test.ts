@@ -23,11 +23,13 @@ import {
 import {
   COMPONENT_TAILWIND_CSS_MIN_VERSION,
   componentCssResolution,
+  cssPackageLineResolution,
   deferredComponentImportReason,
   findPnpUnpluggedPackages,
   isPnpProject,
   outsideCssPackageResolution,
   PNP_ROOT_ONLY_NOTE,
+  resolveCssPackageImport,
   tokensCssResolution,
   versionSatisfiesRange,
 } from "@axis-ds/registry-core/project";
@@ -1499,12 +1501,14 @@ describe("WI-0100b 상대 @import 펼침", () => {
       return (await items(dir))["tailwind.config"];
     }
 
-    it("s5: 하위 파일 위치의 그림자 설치본에 tailwind.css 가 없으면 진입 파일 밖 줄과 같은 해석 불가 WARN(앱 기준으로는 해석됨)", async () => {
+    it("s5: 하위 파일 위치의 그림자 설치본이 ./tailwind.css 를 내보내지 않으면 해석 불가 WARN(앱 기준으로는 해석됨, WI-0103 부터 그림자 문구)", async () => {
       const r = await nested("exports");
       expect(r.severity).toBe("warn");
+      // WI-0103(사용자 결정 Q76): 종전 「이 파일 위치에서 … 를 찾지 못해 … globalCss 를 앱 안 파일로 바꾸세요」(Q37 문구) 대신 그림자 원인 문구
       expect(r.message).toContain(
-        "@axis-ds/ui-react/tailwind.css import 가 있지만 이 파일 위치에서 @axis-ds/ui-react 를 찾지 못해 해석되지 않습니다"
+        "@axis-ds/ui-react/tailwind.css import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/vendor/node_modules/@axis-ds/ui-react(1.3.0)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다"
       );
+      expect(r.message).not.toContain("globalCss 를 앱 안 파일로 바꾸세요");
       expect(r.message.endsWith(via("app/vendor/components.css"))).toBe(true);
     });
 
@@ -5023,6 +5027,358 @@ describe("WI-0097: CSS import 해석 가능성(Tailwind 4 B1 양방향 · 해석
       expect(outsideCssPackageResolution(app, shared, "@axis-ds/agentic-ui")).toBe("unknown");
       await fs.outputFile(path.join(app, ".pnp.cjs"), "");
       expect(outsideCssPackageResolution(app, shared, "tailwindcss")).toBe("unknown");
+    });
+  });
+});
+
+// WI-0103: 패키지 CSS import 를 exports · subpath 와 중첩 설치본(그림자)까지 실빌드처럼 해석(사용자 결정 Q70 ~ Q79).
+// 칸 이름은 WI-0103 testplan 2.3(`<패키지>-<위치>-<상태>`)과 같아요. 실빌드 기대는 착수 측정(scratchpad WI-0103/out/all.tsv, @tailwindcss/postcss 4.1.14)이에요.
+describe("WI-0103 exports 를 보는 패키지 해석", () => {
+  const TW = '@import "tailwindcss";';
+  const TOK = '@import "@axis-ds/tokens/css/tailwind4";';
+  const UI_LINE = '@import "@axis-ds/ui-react/tailwind.css";';
+  const MARK = ":root{--shadow-marker:1}\n";
+
+  type ShadowState = "n0" | "nf" | "es" | "em" | "ex" | "ex0" | "cs" | "cd" | "ci" | "np" | "np0";
+
+  /** 실제 패키지와 같은 exports 를 가진 설치본(앱 기준 설치본) */
+  async function realPkg(nm: string, name: "@axis-ds/tokens" | "@axis-ds/ui-react", version = "1.8.2", withFile = true) {
+    const dir = path.join(nm, ...name.split("/"));
+    if (name === "@axis-ds/tokens") {
+      await fs.outputJSON(path.join(dir, "package.json"), { name, version, exports: { "./css": "./dist/css/variables.css", "./css/tailwind4": "./dist/css/tailwind4.css" } });
+      if (withFile) await fs.outputFile(path.join(dir, "dist/css/tailwind4.css"), ":root{--axis-x:1}\n");
+    } else {
+      await fs.outputJSON(path.join(dir, "package.json"), { name, version, exports: { ".": "./dist/index.js", "./tailwind.css": "./tailwind.css" } });
+      if (withFile) await fs.outputFile(path.join(dir, "tailwind.css"), '@source "./dist";\n');
+    }
+  }
+
+  /** 착수 측정 mx.sh 의 shadow() 와 같은 11상태 */
+  async function shadow(nm: string, name: "@axis-ds/tokens" | "@axis-ds/ui-react", s: ShadowState) {
+    const tok = name === "@axis-ds/tokens";
+    const pd = path.join(nm, ...name.split("/"));
+    const sub = tok ? "./css/tailwind4" : "./tailwind.css";
+    const bare = tok ? "css/tailwind4.css" : "tailwind.css";
+    const tgt = tok ? "dist/css/tailwind4.css" : "tailwind.css";
+    const version = tok ? "1.2.0" : "1.3.0";
+    const mark = (f: string) => fs.outputFile(path.join(pd, f), MARK);
+    const pj = (extra: Record<string, unknown> = {}) => fs.outputJSON(path.join(pd, "package.json"), { name, version, ...extra });
+    switch (s) {
+      case "n0": return pj();
+      case "nf": await pj(); return mark(bare);
+      case "es": await pj({ exports: { [sub]: `./${tgt}` } }); return mark(tgt);
+      case "em": return pj({ exports: { [sub]: `./${tgt}` } });
+      case "ex": await pj({ exports: { ".": "./dist/index.js" } }); return mark(bare);
+      case "ex0": return pj({ exports: { ".": "./dist/index.js" } });
+      case "cs": await pj({ exports: { [sub]: { style: `./${tgt}` } } }); return mark(tgt);
+      case "cd": await pj({ exports: { [sub]: { default: `./${tgt}` } } }); return mark(tgt);
+      case "ci": await pj({ exports: { [sub]: { import: `./${tgt}` } } }); return mark(tgt);
+      case "np": return mark(bare);
+      case "np0": return fs.ensureDir(path.join(pd, "dist"));
+    }
+  }
+
+  /** 앱 골격(착수 측정과 같은 선언). `rootTokens: false` 면 앱 루트에 tokens 설치본을 두지 않아요(z5) */
+  async function app(opts: { ui?: boolean; rootTokens?: boolean; tw?: 3 | 4 } = {}) {
+    const dir = await tempDir();
+    const tw = opts.tw ?? 4;
+    await fs.ensureDir(path.join(dir, ".git"));
+    await fs.outputFile(path.join(dir, "lib/utils.ts"), 'export function cn(...a: string[]) { return a.join(" "); }\n');
+    const deps: Record<string, string> = { "@axis-ds/tokens": "^1.8.2", clsx: "^2.1.1", "tailwind-merge": "^3.3.1", tailwindcss: tw === 4 ? "^4.1.14" : "^3.4.17" };
+    if (tw === 3) deps["tailwindcss-animate"] = "^1.0.7";
+    if (opts.ui) deps["@axis-ds/ui-react"] = "^1.8.2";
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "app", version: "0.0.0", private: true, dependencies: deps });
+    const nm = path.join(dir, "node_modules");
+    for (const [n, v] of [["clsx", "2.1.1"], ["tailwind-merge", "3.3.1"], ["tailwindcss", tw === 4 ? "4.1.14" : "3.4.17"]]) await writeInstalledStub(dir, n, v);
+    if (tw === 3) {
+      await writeInstalledStub(dir, "tailwindcss-animate", "1.0.7");
+      await fs.outputFile(
+        path.join(dir, "tailwind.config.js"),
+        'module.exports = { presets: [require("@axis-ds/tokens/tailwind")], content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"] };\n'
+      );
+    }
+    if (opts.rootTokens !== false) await realPkg(nm, "@axis-ds/tokens");
+    if (opts.ui) await realPkg(nm, "@axis-ds/ui-react");
+    await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+    return dir;
+  }
+
+  async function files(dir: string, map: Record<string, string>) {
+    for (const [rel, text] of Object.entries(map)) await fs.outputFile(path.join(dir, rel), text);
+  }
+
+  async function items(dir: string): Promise<Record<string, CheckResult>> {
+    return Object.fromEntries((await collectCheckResults(dir)).map((r) => [r.name, r]));
+  }
+
+  const via = (file: string) => ` (${file} 의 import)`;
+
+  /** tokens 칸: P1(하위 파일 쪽) · P2(진입 파일 쪽, 줄은 진입 파일) */
+  async function tokCell(pos: "P1" | "P2", s: ShadowState) {
+    const dir = await app();
+    if (pos === "P1") {
+      await files(dir, { "app/globals.css": `${TW}\n@import "./vendor/sub.css";\n`, "app/vendor/sub.css": `${TOK}\n` });
+      await shadow(path.join(dir, "app/vendor/node_modules"), "@axis-ds/tokens", s);
+    } else {
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n` });
+      await shadow(path.join(dir, "app/node_modules"), "@axis-ds/tokens", s);
+    }
+    return items(dir);
+  }
+
+  /** 컴포넌트 칸: P1 · P2 · P3(진입 파일 쪽, 줄은 하위 파일) */
+  async function uiCell(pos: "P1" | "P2" | "P3", s: ShadowState) {
+    const dir = await app({ ui: true });
+    if (pos === "P2") await files(dir, { "app/globals.css": `${TW}\n${TOK}\n${UI_LINE}\n` });
+    else await files(dir, { "app/globals.css": `${TW}\n${TOK}\n@import "./vendor/sub.css";\n`, "app/vendor/sub.css": `${UI_LINE}\n` });
+    await shadow(path.join(dir, pos === "P1" ? "app/vendor/node_modules" : "app/node_modules"), "@axis-ds/ui-react", s);
+    return items(dir);
+  }
+
+  const notExported = (spec: string, at: string, ver: string, sub: string, name: string) =>
+    `${spec} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 ${at}(${ver})가 ${sub} 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 1.4.0 이상으로 맞추세요`;
+  const targetMissing = (spec: string, at: string, ver: string, target: string, name: string) =>
+    `${spec} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 ${at}(${ver})에 내보낸 파일(${target})이 없어 해석되지 않습니다 → 그 중첩 node_modules 의 ${name} 를 지우거나 다시 설치하세요`;
+  const TOK_SPEC = "@axis-ds/tokens/css/tailwind4";
+  const UI_SPEC = "@axis-ds/ui-react/tailwind.css";
+
+  describe("해석기 resolveCssPackageImport (AC1, 실빌드 열과 같음)", () => {
+    const expected: Record<ShadowState, string> = {
+      n0: "resolved:root", np0: "resolved:root", nf: "resolved:shadow", es: "resolved:shadow", cs: "resolved:shadow", cd: "resolved:shadow", np: "resolved:shadow",
+      em: "target-missing", ex: "not-exported", ex0: "not-exported", ci: "not-exported",
+    };
+    for (const s of Object.keys(expected) as ShadowState[]) {
+      it(`${s}: ${expected[s]}`, async () => {
+        const dir = await app({ ui: true });
+        for (const name of ["@axis-ds/tokens", "@axis-ds/ui-react"] as const) {
+          await shadow(path.join(dir, "app/node_modules"), name, s);
+          const spec = name === "@axis-ds/tokens" ? TOK_SPEC : UI_SPEC;
+          const r = resolveCssPackageImport(path.join(dir, "app"), spec);
+          const shadowDir = path.join(await fs.realpath(path.join(dir, "app")), "node_modules", ...name.split("/"));
+          const got = r.kind === "resolved" ? `resolved:${r.pkgDir === shadowDir ? "shadow" : "root"}` : r.kind;
+          expect(got).toBe(expected[s]);
+        }
+      });
+    }
+
+    it("문자열 단축형 · 배열 · null · 중첩 조건 · 패턴 키(다루지 않음)", async () => {
+      const dir = await tempDir();
+      const pd = path.join(dir, "node_modules/@axis-ds/tokens");
+      const at = async (exportsField: unknown) => {
+        await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/tokens", version: "1.8.2", exports: exportsField });
+        return resolveCssPackageImport(dir, TOK_SPEC).kind;
+      };
+      await fs.outputFile(path.join(pd, "dist/t.css"), MARK);
+      expect(await at("./dist/t.css")).toBe("not-exported"); // 문자열 단축형은 "." 만
+      expect(await at({ "./css/tailwind4": ["./dist/t.css"] })).toBe("resolved");
+      expect(await at({ "./css/tailwind4": null })).toBe("not-exported");
+      expect(await at({ "./css/tailwind4": { node: { style: "./dist/t.css" } } })).toBe("not-exported"); // 바깥 조건 node 가 맞지 않음
+      expect(await at({ "./css/tailwind4": { default: { style: "./dist/t.css" } } })).toBe("resolved");
+      expect(await at({ "./css/tailwind4": { import: "./dist/x.css", style: "./dist/t.css" } })).toBe("resolved"); // 맞는 첫 키
+      expect(await at({ "./css/*": "./dist/*.css" })).toBe("unknown");
+      expect(await at({ "./css/": "./dist/" })).toBe("unknown");
+      expect(resolveCssPackageImport(dir, "@axis-ds/tokens").kind).toBe("unknown"); // subpath 없음
+    });
+
+    it("반박 검증 보정: 거짓 값 exports 는 exports 없음 · 대상에도 .css · index.css · 조건 안 null 은 미노출(실빌드와 같음)", async () => {
+      const dir = await tempDir();
+      const pd = path.join(dir, "node_modules/@axis-ds/tokens");
+      const at = async (exportsField: unknown) => {
+        await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/tokens", version: "1.2.0", exports: exportsField });
+        return resolveCssPackageImport(dir, TOK_SPEC).kind;
+      };
+      // c01 · c02 · c03b: null · false · "" 는 exports 없음으로 보고 맨 경로 파일을 써요(실빌드 rc 0)
+      await fs.outputFile(path.join(pd, "css/tailwind4.css"), MARK);
+      for (const v of [null, false, ""]) expect(await at(v)).toBe("resolved");
+      await fs.remove(path.join(pd, "css"));
+      // 파일이 없으면 건너뛰어 상위로(여기서는 상위가 없어 not-found, 실빌드는 상위 설치본으로 감)
+      expect(await at(null)).toBe("not-found");
+      // c07 · c08: 대상 "./dist/t" 에 t.css, "./dist/tw" 에 tw/index.css
+      await fs.outputFile(path.join(pd, "dist/t.css"), MARK);
+      expect(await at({ "./css/tailwind4": "./dist/t" })).toBe("resolved");
+      await fs.outputFile(path.join(pd, "dist/tw/index.css"), MARK);
+      expect(await at({ "./css/tailwind4": "./dist/tw" })).toBe("resolved");
+      // c22: 맞는 조건 style 의 값이 null 이면 뒤의 default 로 넘어가지 않고 미노출(실빌드 rc 1)
+      expect(await at({ "./css/tailwind4": { style: null, default: "./dist/t.css" } })).toBe("not-exported");
+    });
+
+    it("cssPackageLineResolution: 앱 기준 설치본과 실경로가 같으면 대상 파일이 없어도 ok(Q72), Plug'n'Play 는 ok", async () => {
+      const dir = await app({ rootTokens: false });
+      // dist 를 아직 빌드하지 않은 workspace 링크: exports 는 있는데 대상 파일 없음
+      const real = path.join(dir, "packages/tokens");
+      await fs.outputJSON(path.join(real, "package.json"), { name: "@axis-ds/tokens", version: "1.8.2", exports: { "./css/tailwind4": "./dist/css/tailwind4.css" } });
+      await fs.ensureSymlink(real, path.join(dir, "node_modules/@axis-ds/tokens"), "dir");
+      expect(cssPackageLineResolution(dir, path.join(dir, "app"), TOK_SPEC).kind).toBe("ok");
+      // 같은 실경로를 다른 링크로 가리키는 중첩 node_modules(pnpm 형태)도 그림자가 아님
+      await fs.ensureSymlink(real, path.join(dir, "app/node_modules/@axis-ds/tokens"), "dir");
+      expect(cssPackageLineResolution(dir, path.join(dir, "app"), TOK_SPEC).kind).toBe("ok");
+      await shadow(path.join(dir, "app/vendor/node_modules"), "@axis-ds/tokens", "ex0");
+      expect(cssPackageLineResolution(dir, path.join(dir, "app/vendor"), TOK_SPEC).kind).toBe("shadow-not-exported");
+      await fs.outputFile(path.join(dir, ".pnp.cjs"), "");
+      expect(cssPackageLineResolution(dir, path.join(dir, "app/vendor"), TOK_SPEC).kind).toBe("ok");
+    });
+  });
+
+  describe("tokens 줄 (AC2, globals.css)", () => {
+    for (const s of ["em", "ex", "ex0", "ci"] as const) {
+      it(`tok-P1-${s} · tok-P2-${s}: 거짓 PASS 가 WARN(실빌드 rc 1)`, async () => {
+        const p1 = (await tokCell("P1", s))["globals.css"];
+        const p2 = (await tokCell("P2", s))["globals.css"];
+        expect(p1.severity).toBe("warn");
+        expect(p2.severity).toBe("warn");
+        const msg =
+          s === "em"
+            ? (at: string) => targetMissing(TOK_SPEC, at, "1.2.0", "./dist/css/tailwind4.css", "@axis-ds/tokens")
+            : (at: string) => notExported(TOK_SPEC, at, "1.2.0", "./css/tailwind4", "@axis-ds/tokens");
+        expect(p1.message).toBe(`app/globals.css에 ${msg("app/vendor/node_modules/@axis-ds/tokens")}${via("app/vendor/sub.css")}`);
+        expect(p2.message).toBe(`app/globals.css에 ${msg("app/node_modules/@axis-ds/tokens")}`);
+      });
+    }
+    for (const s of ["n0", "nf", "es", "cs", "cd", "np", "np0"] as const) {
+      it(`tok-P1-${s} · tok-P2-${s}: PASS 그대로(실빌드 rc 0)`, async () => {
+        expect((await tokCell("P1", s))["globals.css"].severity).toBe("pass");
+        expect((await tokCell("P2", s))["globals.css"].severity).toBe("pass");
+      });
+    }
+  });
+
+  describe("컴포넌트 tailwind.css 줄 (AC3 · AC4 · AC6, tailwind.config)", () => {
+    it("ui-P1-n0 · ui-P3-n0(s3 형): 거짓 WARN 이 PASS(그림자를 건너뛰고 앱 설치본으로 풂)", async () => {
+      for (const pos of ["P1", "P3"] as const) {
+        expect((await uiCell(pos, "n0"))["tailwind.config"]).toEqual({
+          name: "tailwind.config",
+          severity: "pass",
+          message: `Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다${via("app/vendor/sub.css")}`,
+        });
+      }
+    });
+    for (const s of ["ex", "ci"] as const) {
+      it(`ui-P1-${s} · ui-P3-${s}: 거짓 PASS 가 미노출 WARN`, async () => {
+        const p1 = (await uiCell("P1", s))["tailwind.config"];
+        const p3 = (await uiCell("P3", s))["tailwind.config"];
+        expect(p1.message).toBe(
+          `Tailwind 4: app/globals.css에 ${notExported(UI_SPEC, "app/vendor/node_modules/@axis-ds/ui-react", "1.3.0", "./tailwind.css", "@axis-ds/ui-react")}${via("app/vendor/sub.css")}`
+        );
+        expect(p3.message).toBe(
+          `Tailwind 4: app/globals.css에 ${notExported(UI_SPEC, "app/node_modules/@axis-ds/ui-react", "1.3.0", "./tailwind.css", "@axis-ds/ui-react")}${via("app/vendor/sub.css")}`
+        );
+        expect(p1.severity).toBe("warn");
+      });
+    }
+    it("ui-P1-em · ui-P1-ex0: 맞는 WARN 의 문구가 원인 문구로(종전 「globalCss 를 앱 안 파일로 바꾸세요」 아님)", async () => {
+      const em = (await uiCell("P1", "em"))["tailwind.config"];
+      const ex0 = (await uiCell("P1", "ex0"))["tailwind.config"];
+      expect(em.message).toContain(targetMissing(UI_SPEC, "app/vendor/node_modules/@axis-ds/ui-react", "1.3.0", "./tailwind.css", "@axis-ds/ui-react"));
+      expect(ex0.message).toContain(notExported(UI_SPEC, "app/vendor/node_modules/@axis-ds/ui-react", "1.3.0", "./tailwind.css", "@axis-ds/ui-react"));
+      expect(em.message + ex0.message).not.toContain("globalCss");
+    });
+    it("미노출 그림자가 이미 1.4.0 이상이거나(조건 불일치) 버전을 못 읽으면 할 일이 다름(반박 검증 1-a)", async () => {
+      const dir = await app({ ui: true });
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n@import "./vendor/sub.css";\n`, "app/vendor/sub.css": `${UI_LINE}\n` });
+      const pd = path.join(dir, "app/vendor/node_modules/@axis-ds/ui-react");
+      await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/ui-react", version: "1.8.2", exports: { "./tailwind.css": { import: "./tailwind.css" } } });
+      await fs.outputFile(path.join(pd, "tailwind.css"), MARK);
+      const cur = (await items(dir))["tailwind.config"].message;
+      expect(cur).toContain("app/vendor/node_modules/@axis-ds/ui-react(1.8.2)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 @axis-ds/ui-react 를 지우거나 다시 설치하세요");
+      await fs.outputJSON(path.join(pd, "package.json"), { name: "@axis-ds/ui-react", exports: { ".": "./dist/index.js" } });
+      expect((await items(dir))["tailwind.config"].message).toContain("@axis-ds/ui-react(버전 모름)가 ./tailwind.css 를 내보내지 않아 해석되지 않습니다 → 그 중첩 node_modules 의 @axis-ds/ui-react 를 지우거나 1.4.0 이상으로 맞추세요");
+    });
+    for (const s of ["em", "ex", "ex0", "ci"] as const) {
+      it(`ui-P2-${s}: 진입 파일 줄도 그 파일 위치에서 풀어 WARN(Q73), 출처 접미사 없음`, async () => {
+        const r = (await uiCell("P2", s))["tailwind.config"];
+        expect(r.severity).toBe("warn");
+        expect(r.message).toContain(`app/globals.css에 ${UI_SPEC} import 가 있지만 그 줄이 있는 파일 위치에서 먼저 잡히는 app/node_modules/@axis-ds/ui-react(1.3.0)`);
+        expect(r.message).not.toContain("의 import)");
+      });
+    }
+    for (const s of ["n0", "nf", "es", "cs", "cd", "np", "np0"] as const) {
+      it(`ui-P2-${s}: PASS 그대로`, async () => {
+        expect((await uiCell("P2", s))["tailwind.config"].severity).toBe("pass");
+      });
+    }
+  });
+
+  describe("z5 (AC5, Q74)", () => {
+    async function z5(kind: "z5" | "z5c" | "z5r" | "none") {
+      const dir = await app({ rootTokens: false });
+      await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./src/app/globals.css" });
+      if (kind === "z5c") await files(dir, { "src/app/globals.css": `${TW}\n${TOK}\n` });
+      else await files(dir, { "src/app/globals.css": `${TW}\n@import "../styles/axis.css";\n`, "src/styles/axis.css": `${TOK}\n` });
+      if (kind === "z5" || kind === "z5c") await realPkg(path.join(dir, "src/app/node_modules"), "@axis-ds/tokens");
+      if (kind === "z5r") await realPkg(path.join(dir, "src/styles/node_modules"), "@axis-ds/tokens");
+      return (await items(dir))["globals.css"];
+    }
+    it("z5: 설치본이 진입 파일 쪽 중첩 node_modules 에만 있으면 하위 파일 줄은 WARN(실빌드 rc 1 「Can't resolve」)", async () => {
+      expect(await z5("z5")).toEqual({
+        name: "globals.css",
+        severity: "warn",
+        message: `src/app/globals.css에 ${TOK_SPEC} import 가 있지만 그 줄이 있는 파일 위치에서 @axis-ds/tokens 를 찾지 못해 해석되지 않습니다(설치본이 src/app/node_modules/@axis-ds/tokens 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄(src/styles/axis.css)을 src/app/globals.css 로 옮기세요${via("src/styles/axis.css")}`,
+      });
+    });
+    it("z5c · z5r: 줄 위치에서 보이면 PASS(대조)", async () => {
+      expect((await z5("z5c")).severity).toBe("pass");
+      expect((await z5("z5r")).severity).toBe("pass");
+    });
+    it("Q28 가드: 앱에 선언했지만 어디에도 설치본이 없으면 PASS 그대로", async () => {
+      expect((await z5("none")).severity).toBe("pass");
+    });
+  });
+
+  describe("회귀 가드 (AC7 · Q72 · Q78 · Q79)", () => {
+    it("앱 기준 설치본 자체가 1.4.0 미만(exports 미노출)이면 globals 는 종전 PASS(Q72, 버전 확인은 tailwind.config 가 알림)", async () => {
+      const dir = await app({ rootTokens: false });
+      await shadow(path.join(dir, "node_modules"), "@axis-ds/tokens", "ex0");
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n` });
+      const r = await items(dir);
+      expect(r["globals.css"].severity).toBe("pass");
+      expect(r["tailwind.config"].message).toContain("버전 확인이 필요합니다");
+    });
+    it("앱 기준 설치본이 stub(exports · 파일 없음)이고 앱 위에 낡은 설치본이 있으면 그림자가 아니라 종전 PASS(반박 검증 R1)", async () => {
+      const root = await tempDir();
+      const dir = path.join(root, "app");
+      await fs.ensureDir(dir);
+      await fs.ensureDir(path.join(dir, ".git"));
+      await fs.outputFile(path.join(dir, "lib/utils.ts"), 'export function cn(...a: string[]) { return a.join(" "); }\n');
+      await fs.outputJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: { "@axis-ds/tokens": "^1.8.2", clsx: "^2.1.1", "tailwind-merge": "^3.3.1", tailwindcss: "^4.1.14" } });
+      for (const [n, v] of [["clsx", "2.1.1"], ["tailwind-merge", "3.3.1"], ["tailwindcss", "4.1.14"], ["@axis-ds/tokens", "1.8.2"]]) await writeInstalledStub(dir, n, v);
+      await shadow(path.join(root, "node_modules"), "@axis-ds/tokens", "ex0");
+      await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "./app/globals.css" });
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n` });
+      expect((await items(dir))["globals.css"].severity).toBe("pass");
+    });
+    it("Tailwind 3: 하위 파일 쪽 tokens 그림자(미노출)는 종전 PASS(Q79)", async () => {
+      const dir = await app({ tw: 3 });
+      await files(dir, { "app/globals.css": '@import "./vendor/sub.css";\n@tailwind base;\n', "app/vendor/sub.css": '@import "@axis-ds/tokens/css";\n' });
+      await shadow(path.join(dir, "app/vendor/node_modules"), "@axis-ds/tokens", "ex0");
+      expect((await items(dir))["globals.css"].severity).toBe("pass");
+    });
+    it("레이아웃 JS import 갈래는 앱 기준 그대로(진입 파일 쪽 그림자가 있어도 PASS)", async () => {
+      const dir = await app();
+      await files(dir, { "app/globals.css": `${TW}\n`, "app/layout.tsx": 'import "@axis-ds/tokens/css/tailwind4";\nexport default function L() { return null; }\n' });
+      await shadow(path.join(dir, "app/node_modules"), "@axis-ds/tokens", "ex0");
+      expect((await items(dir))["globals.css"].severity).toBe("pass");
+    });
+    it("tailwindcss 줄은 종전(진입 파일 쪽 tailwindcss 그림자를 보지 않음, Q78)", async () => {
+      const dir = await app();
+      await files(dir, { "app/globals.css": `${TW}\n${TOK}\n` });
+      await fs.outputJSON(path.join(dir, "app/node_modules/tailwindcss/package.json"), { name: "tailwindcss", version: "3.4.17", exports: { "./package.json": "./package.json" } });
+      expect((await items(dir))["tailwind.config"].severity).toBe("pass");
+    });
+    it("프로젝트 밖 진입 파일은 종전 Q37 문구(밖 파일 옆 그림자에도 그림자 문구를 쓰지 않음)", async () => {
+      const root = await tempDir();
+      const dir = path.join(root, "app1");
+      await fs.ensureDir(dir);
+      await fs.ensureDir(path.join(root, ".git"));
+      await fs.outputFile(path.join(dir, "lib/utils.ts"), 'export function cn(...a: string[]) { return a.join(" "); }\n');
+      await fs.outputJSON(path.join(dir, "package.json"), { name: "app", private: true, dependencies: { "@axis-ds/tokens": "^1.8.2", clsx: "^2.1.1", "tailwind-merge": "^3.3.1", tailwindcss: "^4.1.14" } });
+      for (const [n, v] of [["clsx", "2.1.1"], ["tailwind-merge", "3.3.1"], ["tailwindcss", "4.1.14"]]) await writeInstalledStub(dir, n, v);
+      await writeInstalledStub(root, "tailwindcss", "4.1.14");
+      await realPkg(path.join(dir, "node_modules"), "@axis-ds/tokens");
+      await fs.outputJSON(path.join(dir, "axis.config.json"), { componentsDir: "./components/ui", globalCss: "../shared/globals.css" });
+      await files(root, { "shared/globals.css": `${TW}\n${TOK}\n` });
+      await shadow(path.join(root, "shared/node_modules"), "@axis-ds/tokens", "ex0");
+      const r = (await items(dir))["globals.css"];
+      expect(r.message).not.toContain("먼저 잡히는");
     });
   });
 });
