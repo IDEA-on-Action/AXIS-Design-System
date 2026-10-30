@@ -88,6 +88,41 @@ describe("WI-0085 axis.apply_template 의존성 안내", () => {
     });
   }
 
+  it("WI-0088: 기존 package.json 을 합쳐 packageManager 가 남고, 같은 픽스처에서 CLI apply -y 와 바이트가 같음", async () => {
+    const user = { name: "my-app", version: "2.3.4", packageManager: "yarn@4.5.0", workspaces: ["apps/*"], dependencies: { zod: "^3.23.0" } };
+    const mcpDir = await tree({ "package.json": user });
+    const cliDir = await tree({ "package.json": user });
+    const result = await handleApplyTemplate({ name: "fixture", targetDir: mcpDir });
+    expect(result.files).toEqual([{ path: "package.json", action: "merged" }]);
+    expect(formatApplyTemplateResult(result)).toContain("- ~ package.json (합치기: 기존 필드를 두고 템플릿 키를 합침)");
+    const merged = await fs.readJSON(path.join(mcpDir, "package.json"));
+    expect(merged).toEqual(user);
+    expect(result.installCommand).toBe("yarn install");
+
+    const cli = (await import(pathToFileURL(CLI_APPLY).href)) as {
+      applyTemplate: (slug: string, o: { dir: string; yes: boolean; interactive: boolean }) => Promise<boolean>;
+    };
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      expect(await cli.applyTemplate("fixture", { dir: cliDir, yes: true, interactive: false })).toBe(true);
+    } finally {
+      log.mockRestore();
+    }
+    expect(await fs.readFile(path.join(cliDir, "package.json"), "utf8")).toBe(await fs.readFile(path.join(mcpDir, "package.json"), "utf8"));
+  });
+
+  it("WI-0088: JSON 으로 읽을 수 없는 package.json 은 종전처럼 덮어쓰고 알림, dryRun 은 쓰지 않고 같은 action", async () => {
+    const dir = await tree({ "package.json": "// 사용자 파일\n" });
+    const dry = await handleApplyTemplate({ name: "fixture", targetDir: dir, dryRun: true });
+    expect(await fs.readFile(path.join(dir, "package.json"), "utf8")).toBe("// 사용자 파일\n");
+    const result = await handleApplyTemplate({ name: "fixture", targetDir: dir });
+    const note = "기존 package.json 을 JSON 객체로 읽을 수 없어 템플릿 내용으로 덮어씁니다";
+    expect(dry.files).toEqual([{ path: "package.json", action: "overwritten", note }]);
+    expect(result.files).toEqual(dry.files);
+    expect(await fs.readFile(path.join(dir, "package.json"), "utf8")).toBe(detail.files[0].content);
+    expect(formatApplyTemplateResult(result)).toContain(`  - ! ${note}`);
+  });
+
   it("installCommand 가 없는 종전 결과 객체는 pnpm(외부 사용처 호환)", () => {
     const text = formatApplyTemplateResult({
       success: true,

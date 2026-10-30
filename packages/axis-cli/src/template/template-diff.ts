@@ -5,6 +5,7 @@ import path from "path";
 import chalk from "chalk";
 import ora from "ora";
 import { fetchTemplateDetail } from "./registry-client.js";
+import { TemplatePathError, resolveTemplatePath } from "@axis-ds/registry-core/apply-files";
 import type { DiffEntry, DiffOptions, TemplateDetail } from "./types.js";
 
 /**
@@ -28,9 +29,20 @@ export async function diffTemplate(
   const baseDir = path.resolve(options.dir || ".");
   const entries: DiffEntry[] = [];
 
+  // WI-0088 Q107: 템플릿 경로가 대상 디렉터리 밖이면 아무것도 읽지 않고 rc 1(MCP diff_template 과 같은 문구)
+  let localPaths: string[];
+  try {
+    localPaths = detail.files.map((file) => resolveTemplatePath(baseDir, file.path));
+  } catch (err) {
+    if (!(err instanceof TemplatePathError)) throw err;
+    console.error(chalk.red(err.message));
+    process.exitCode = 1;
+    return;
+  }
+
   // 템플릿 파일과 로컬 파일 비교
-  for (const file of detail.files) {
-    const localPath = path.join(baseDir, file.path);
+  for (const [i, file] of detail.files.entries()) {
+    const localPath = localPaths[i];
 
     if (!(await fs.pathExists(localPath))) {
       entries.push({ path: file.path, status: "added" });

@@ -1,8 +1,8 @@
 /** postInstall 패치 시스템 */
 
 import fs from "fs-extra";
-import path from "path";
 import chalk from "chalk";
+import { assertTemplatePaths, resolveTemplatePath } from "@axis-ds/registry-core/apply-files";
 import type { PostInstallPatch } from "./types.js";
 
 /**
@@ -13,8 +13,10 @@ export async function runPostInstall(
   baseDir: string,
   dryRun = false
 ): Promise<void> {
+  // WI-0088 Q107: 대상 디렉터리 밖을 가리키는 패치가 하나라도 있으면 아무것도 고치지 않고 TemplatePathError
+  assertTemplatePaths(baseDir, patches.map((p) => p.file));
   for (const patch of patches) {
-    const filePath = path.resolve(baseDir, patch.file);
+    const filePath = resolveTemplatePath(baseDir, patch.file);
 
     if (dryRun) {
       console.log(chalk.gray(`  [dry-run] patch ${patch.type}: ${patch.file}`));
