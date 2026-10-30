@@ -11,10 +11,24 @@ import { ask, failNonInteractive, isInteractive, noteDefault } from "../interact
 import { createTemplateConfig, type AxisConfig } from "../config/axis-config.js";
 import { detectTailwind, tailwindMajorFromRange } from "./tailwind-core.js";
 import { addCommandFor, detectInstallCommand, runScriptCommand } from "@axis-ds/registry-core/project";
+import {
+  planTemplateFiles,
+  writeTemplateFiles,
+  type TemplateFilePlan,
+} from "@axis-ds/registry-core/apply-files";
+
+/** 충돌 목록 · 미리보기의 파일별 표시(WI-0088). 합치는 파일은 사용자 값을 남긴다는 것을 함께 보입니다 */
+const ACTION_LABEL: Record<TemplateFilePlan["action"], string> = {
+  created: "생성",
+  overwritten: "덮어쓰기",
+  merged: "합치기",
+};
+const MERGED_HINT = "기존 필드를 두고 템플릿 키를 합침";
 
 /**
  * template apply 의 「필요한 의존성」 줄(WI-0085). `installCommand` 는 대상 디렉터리의 lockfile · `packageManager` 로 고른 설치 명령이고
- * (`detectInstallCommand`, 템플릿 파일을 쓰기 전에 고름: 템플릿의 package.json 이 사용자 `packageManager` 를 덮어쓰기 때문),
+ * (`detectInstallCommand`, 템플릿 파일을 쓰기 전에 고름: WI-0088 전에는 템플릿의 package.json 이 사용자 `packageManager` 를 덮어썼고,
+ * 지금은 합쳐서 남지만 쓰기 전 프로젝트 기준이라는 순서는 그대로 둠),
  * 다른 안내처럼 범위를 따옴표로 감쌉니다. 종전에는 `pnpm add` · `pnpm add -D` 고정이었습니다. MCP `axis.apply_template` 와 같은 명령입니다.
  */
 export function templateDependencyCommands(
@@ -72,11 +86,14 @@ export async function templateApplyWarnings(baseDir: string, detail: TemplateDet
 
 /**
  * 템플릿 apply 로직 - 파일 쓰기 + postInstall 실행
+ *
+ * 템플릿 파일을 썼으면 true, 쓰지 않았으면(취소 · 비대화형 거절 · 미리보기 · 쓰기 실패 후 되돌림) false 를 돌려줍니다(WI-0088).
+ * `template init` 은 false 면 axis.config.json 생성 · 다음 단계 안내로 넘어가지 않습니다.
  */
 export async function applyTemplate(
   slug: string,
   options: ApplyOptions
-): Promise<void> {
+): Promise<boolean> {
   const spinner = ora(`'${slug}' 템플릿 가져오는 중...`).start();
 
   let detail: TemplateDetail;
@@ -97,19 +114,14 @@ export async function applyTemplate(
     console.log(chalk.yellow(`! ${w}`));
   }
 
-  // 충돌 파일 탐지
-  const conflicts: string[] = [];
-  for (const file of detail.files) {
-    const dest = path.join(baseDir, file.path);
-    if (await fs.pathExists(dest)) {
-      conflicts.push(file.path);
-    }
-  }
+  // 쓸 내용을 먼저 정합니다(WI-0088: package.json · axis.config.json 은 기존 파일과 합침, 쓰기 전에 모두 계산)
+  const plan = planTemplateFiles(baseDir, detail.files);
+  const conflicts = plan.filter((p) => p.action !== "created");
 
   if (conflicts.length > 0 && !options.yes && !options.dryRun) {
     console.log(chalk.yellow(`\n기존 파일과 충돌하는 ${conflicts.length}개 파일:`));
     for (const c of conflicts) {
-      console.log(chalk.gray(`  - ${c}`));
+      console.log(chalk.gray(`  - ${c.path}${c.action === "merged" ? ` (${MERGED_HINT})` : ""}`));
     }
 
     // 덮어쓰기는 기본값으로 삼지 않습니다(WI-0075 D1). 비대화형이면 아무것도 쓰지 않고 rc 1
@@ -119,7 +131,7 @@ export async function applyTemplate(
         `덮어쓰려면: axis template apply ${slug} -y`,
         `미리보기: axis template apply ${slug} --dry-run`,
       ]);
-      return;
+      return false;
     }
     const { proceed } = await ask(
       {
@@ -132,18 +144,18 @@ export async function applyTemplate(
     );
     if (!proceed) {
       console.log(chalk.gray("취소되었습니다."));
-      return;
+      return false;
     }
   }
 
   // 파일 쓰기
   if (options.dryRun) {
     console.log(chalk.blue("\n[미리보기] 생성될 파일:"));
-    for (const file of detail.files) {
-      const dest = path.join(baseDir, file.path);
-      const exists = conflicts.includes(file.path);
-      const label = exists ? chalk.yellow("덮어쓰기") : chalk.green("생성");
-      console.log(`  ${label} ${dest}`);
+    for (const item of plan) {
+      const text = ACTION_LABEL[item.action];
+      const label = item.action === "created" ? chalk.green(text) : chalk.yellow(text);
+      console.log(`  ${label} ${item.dest}${item.action === "merged" ? chalk.gray(` (${MERGED_HINT})`) : ""}`);
+      if (item.note) console.log(chalk.yellow(`    ! ${item.note}`));
     }
     if (detail.postInstall?.length) {
       console.log(chalk.blue("\n[미리보기] postInstall 패치:"));
@@ -151,16 +163,23 @@ export async function applyTemplate(
         console.log(chalk.gray(`  ${p.type}: ${p.file}`));
       }
     }
-    return;
+    return false;
   }
 
   const writeSpinner = ora("파일 생성 중...").start();
-  for (const file of detail.files) {
-    const dest = path.join(baseDir, file.path);
-    await fs.ensureDir(path.dirname(dest));
-    await fs.writeFile(dest, file.content);
+  try {
+    writeTemplateFiles(plan);
+  } catch (err) {
+    // 쓰는 도중 실패하면 코어가 건드린 파일을 되돌리고 TemplateApplyError 로 알립니다(WI-0088)
+    writeSpinner.fail((err as Error).message);
+    process.exitCode = 1;
+    return false;
   }
   writeSpinner.succeed(`${detail.files.length}개 파일 생성 완료`);
+  for (const item of plan) {
+    if (item.action === "merged") console.log(chalk.gray(`  ${item.path}: ${MERGED_HINT}`));
+    if (item.note) console.log(chalk.yellow(`! ${item.note}`));
+  }
 
   // postInstall 패치
   if (detail.postInstall?.length) {
@@ -178,6 +197,7 @@ export async function applyTemplate(
   }
 
   console.log(chalk.green(`\n'${detail.name}' 템플릿 적용 완료!`));
+  return true;
 }
 
 /**
@@ -289,8 +309,8 @@ export async function initTemplate(
   // 다음 단계 명령은 apply 와 같이 템플릿 파일을 쓰기 전의 디렉터리로 고릅니다(WI-0085)
   const nextSteps = templateInitNextSteps(resolved);
 
-  // apply 재사용
-  await applyTemplate(selectedSlug!, { dir: targetDir, yes: true });
+  // apply 재사용. 쓰기에 실패해 되돌렸으면(rc 1) 설정 생성 · 다음 단계로 넘어가지 않습니다(WI-0088)
+  if (!(await applyTemplate(selectedSlug!, { dir: targetDir, yes: true }))) return;
 
   // axis.config.json 생성
   const configPath = path.join(resolved, "axis.config.json");

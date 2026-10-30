@@ -139,6 +139,7 @@ stdin 이 터미널이 아니면 질문을 띄우지 않습니다(1.7.0 부터).
 - `axis template init -y` 는 질문을 기본값으로 답하고, 비어 있지 않은 디렉터리도 진행합니다(`template apply -y` 와 같은 뜻). 터미널에서도 같습니다.
 - 판정은 stdin 이 터미널인지 하나로 합니다. 그래서 `printf '\n' | axis template init dashboard` 처럼 파이프로 응답을 넣던 스크립트도 이제는 묻지 않고 위 표대로 동작합니다. 값은 `--dir` · `-y` 같은 옵션으로 주세요.
 - `axis template apply` 의 「필요한 의존성」 명령과 `axis template init` 의 다음 단계(`install` · `dev`)는 대상 디렉터리의 lockfile(없으면 `packageManager`)로 매니저를 고르고 범위를 따옴표로 감쌉니다(1.7.2 부터, 1.7.1 까지는 `pnpm` 고정).
+- `axis template apply` · `template init` 이 덮어쓰는 파일 가운데 템플릿 루트의 `package.json` · `axis.config.json` 은 기존 파일과 합칩니다(WI-0088). package.json 은 `packageManager` · `name` · `version` · `workspaces` 등 최상위 필드를 사용자 값으로 두고, `scripts` · `dependencies` · `devDependencies` · `peerDependencies` · `optionalDependencies` 는 키 단위로 합쳐 같은 키만 템플릿 값을 씁니다. axis.config.json 은 같은 키를 템플릿 값으로, 사용자에게만 있는 키는 남깁니다. 충돌 목록 · `--dry-run` 은 이 파일을 「합치기」로 보여 주고, JSON 으로 읽을 수 없는 기존 파일은 종전처럼 덮어쓰며 알립니다. 파일을 쓰는 도중 실패하면 건드린 파일을 되돌리고 rc 1 입니다.
 - Windows Git Bash(mintty)처럼 사람이 앞에 있어도 stdin 이 터미널로 잡히지 않는 환경에서는 질문 없이 위 표대로 동작할 수 있습니다(실측 전). 질문이 뜨지 않으면 `winpty npx axis ...` 로 실행하거나, PowerShell · Windows Terminal 에서 실행하거나, `--dir` · `-y` 같은 옵션으로 값을 주세요.
 
 ## 문서
