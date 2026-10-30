@@ -709,7 +709,57 @@ describe("handleCheckProject WI-0091 · 0094 · 0092 (CLI 와 같은 문구)", (
     expect(await item(dir, "dependencies")).toEqual({
       name: "dependencies",
       severity: "warn",
-      message: "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → npm install (워크스페이스 루트에 선언: @axis-ds/ui-react)",
+      // WI-0096: npm 은 앱 디렉터리의 npm install 이 루트 선언을 설치하지 않아 「워크스페이스 루트에서 npm install」(종전 「→ npm install」)
+      message:
+        "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → 워크스페이스 루트에서 npm install (워크스페이스 루트에 선언: @axis-ds/ui-react)",
+    });
+  });
+
+  // WI-0096: 미설치 안내의 설치 위치(CLI axis check 와 같은 코어 checkDependencies, 같은 문구)
+  describe("WI-0096: npm 워크스페이스 루트 선언 미설치는 「워크스페이스 루트에서 npm install」", () => {
+    const LOCKS: Record<"npm" | "pnpm" | "yarn", [string, string][]> = {
+      npm: [["package-lock.json", "{}"]],
+      pnpm: [["pnpm-lock.yaml", ""], ["pnpm-workspace.yaml", 'packages:\n  - "apps/*"\n']],
+      yarn: [["yarn.lock", ""]],
+    };
+    async function wsApp(pm: "npm" | "pnpm" | "yarn", rootDeps: Record<string, string>, appDeps: Record<string, string>) {
+      await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, workspaces: ["apps/*"], dependencies: rootDeps });
+      for (const [f, text] of LOCKS[pm]) await fs.writeFile(path.join(tmp, f), text);
+      const dir = path.join(tmp, "apps", "web");
+      await fs.outputJSON(path.join(dir, "package.json"), { name: "web", private: true, dependencies: appDeps });
+      return dir;
+    }
+    const ROOT_ALL = { ...TRIO3, "@axis-ds/ui-react": "^1.8.0" };
+    const rootMessage = (phrase: string) =>
+      `선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → ${phrase} / 워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → ${phrase} (워크스페이스 루트에 선언: tailwindcss, clsx, tailwind-merge, @axis-ds/ui-react)`;
+
+    it("루트 선언 · 미설치: npm 만 루트 위치 문구, pnpm · yarn 은 종전 그대로(음성 대조)", async () => {
+      const cases: ["npm" | "pnpm" | "yarn", string][] = [
+        ["npm", "워크스페이스 루트에서 npm install"],
+        ["pnpm", "pnpm install"],
+        ["yarn", "yarn install"],
+      ];
+      for (const [pm, phrase] of cases) {
+        await fs.emptyDir(tmp);
+        const dir = await wsApp(pm, ROOT_ALL, {});
+        expect({ pm, r: await item(dir, "dependencies") }).toEqual({ pm, r: { name: "dependencies", severity: "warn", message: rootMessage(phrase) } });
+      }
+    });
+
+    it("npm 앱 선언 · 미설치는 종전 「→ npm install」, 앱 · 루트 섞이면 루트 위치 문구", async () => {
+      const own = await wsApp("npm", {}, ROOT_ALL);
+      expect(await item(own, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge, @axis-ds/ui-react → npm install",
+      });
+      await fs.emptyDir(tmp);
+      const mixed = await wsApp("npm", { clsx: "^2.1.1" }, { tailwindcss: "^3.4.0", "tailwind-merge": "^2.6.0" });
+      expect(await item(mixed, "dependencies")).toEqual({
+        name: "dependencies",
+        severity: "warn",
+        message: "선언됐지만 설치되지 않은 의존성: tailwindcss, clsx, tailwind-merge → 워크스페이스 루트에서 npm install (워크스페이스 루트에 선언: clsx)",
+      });
     });
   });
 

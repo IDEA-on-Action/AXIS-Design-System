@@ -4490,7 +4490,8 @@ describe("WI-0091 · 0094 · 0092: Plug'n'Play 루트 선언 · @axis-ds 루트 
         name: "dependencies",
         severity: "warn",
         message:
-          "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → npm install (워크스페이스 루트에 선언: @axis-ds/ui-react, @axis-ds/tokens)",
+          // WI-0096: npm 은 앱 디렉터리의 npm install 이 루트 선언을 설치하지 않아 「워크스페이스 루트에서 npm install」(종전 「→ npm install」)
+          "워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: @axis-ds/ui-react → 워크스페이스 루트에서 npm install (워크스페이스 루트에 선언: @axis-ds/ui-react, @axis-ds/tokens)",
       });
       // WARN 이라 종료 코드에 더해지지 않음(Q11: rc 불변)
       expect((await collectCheckResults(app)).filter((r) => r.name === "dependencies" && r.severity === "fail")).toEqual([]);

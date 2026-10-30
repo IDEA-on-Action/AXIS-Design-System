@@ -374,12 +374,12 @@ describe("WI-0093: list · info · add 의 tokens 설치 안내가 선언 출처
         "가 이미 있어 범위를 바꾸지 않음",
         "    워크스페이스면 npm run build -w @axis-ds/tokens, 아니면 재설치: npm install",
       ],
-      // B2 범위 밖(WI-0096 잔여): npm 루트 선언 · 미설치의 theme add 설치 줄은 종전 앱 디렉터리 명령 그대로
+      // WI-0096: npm 루트 선언 · 미설치의 theme add 설치 줄도 「워크스페이스 루트에서 npm install」(종전 「설치: npm install」, B2 의 잔여였음)
       [
-        "npm 루트 선언 · 미설치(종전 그대로)",
+        "npm 루트 선언 · 미설치(WI-0096)",
         { kind: "npm", tokens: "none", rootDeps: DECL },
         "가 워크스페이스 루트에 선언돼 있어 앱 package.json 은 바꾸지 않음",
-        "    설치: npm install",
+        "    설치: 워크스페이스 루트에서 npm install",
       ],
     ];
     for (const [label, fx, anchorText, expected] of cases) {
