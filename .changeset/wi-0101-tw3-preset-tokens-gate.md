@@ -12,6 +12,7 @@
 - **WARN 문구만 바뀌는 경우**(CommonJS bare require, 곧 `.cjs` 나 `module.exports` 의 `.default` 없는 `require("@axis-ds/tokens/tailwind")`):
   - 미선언 · 미설치(Plug'n'Play 포함): 종전 「@axis-ds/tokens 버전을 확인하지 못했습니다(설치본 · 선언 없음)」 대신 위의 「설치되지 않아 해석되지 않습니다」 WARN 이에요
   - 워크스페이스 루트에만 1.7.0 미만(또는 하한을 읽을 수 없는 범위)으로 선언하고 설치하지 않음: 종전 「선언 ^1.6.0 에서는 CommonJS 의 require(…) 가 preset 이 아니라 { default } 를 돌려줘 …」 대신 같은 설치 안내 WARN 이에요. 안내대로 설치하면 다음 check 에서 종전 버전 WARN 이 이어서 나올 수 있어요
-- **check 종료 코드가 바뀌는 경우**: 없어요. 새 판정은 모두 WARN 이에요(fixture 90개를 발행본 1.7.7 · 1.4.6 과 같은 바이트의 main 빌드와 나란히 돌려 종료 코드가 모두 같음, WI-0101 testplan 3.2).
+- **check 종료 코드가 바뀌는 경우**: 없어요. 새 판정은 모두 WARN 이에요(fixture 91개를 발행본 1.7.7 · 1.4.6 과 같은 바이트의 빌드, 곧 WI-0103 이 들어오기 전 main e103d43 빌드와 나란히 돌려 종료 코드가 모두 같음, WI-0101 testplan 3.2).
 - 바뀌지 않는 경우: 앱 `package.json` 에 tokens 를 선언했으면 설치하지 않았어도 종전 판정이에요(미설치는 dependencies 항목이 「선언됐지만 설치되지 않은 의존성」으로 알려요). 설치본 디렉터리(`node_modules/@axis-ds/tokens`, 상위 디렉터리 포함)가 있으면 선언 위치와 상관없이 종전 판정이에요. 1.7.0 버전 판정은 종전대로 CommonJS bare require 만 봐요(다른 모양은 1.6.2 에서도 preset 이 들어와요). Plug'n'Play 루트 전용의 CommonJS bare require 문구도 그대로예요. 템플릿(`axis template init`)이 만드는 프로젝트는 tokens 를 앱에 선언하므로 바뀌지 않아요.
 - `axis theme add` · `axis init` 의 동작과 출력은 바뀌지 않아요.
+- 같은 발행의 WI-0103(패키지 CSS import 를 exports · 중첩 설치본까지 보고 해석)은 Tailwind 4 의 CSS 줄만 다뤄요. 그 항목의 「Tailwind 3 프로젝트는 바뀌지 않음」은 CSS 줄 판정을 말하고, 이 항목의 tailwind.config preset 판정과는 따로예요. preset 판정은 설치본의 exports 에 `./tailwind` 가 있는지는 보지 않아요.
