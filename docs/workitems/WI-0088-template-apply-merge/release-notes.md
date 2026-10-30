@@ -41,3 +41,9 @@
 - axis.config.json 의 `componentsDir` 는 템플릿 값(`./components/ui`)으로 바뀌어요. 다른 위치에 컴포넌트를 두고 있었다면 apply 뒤 고쳐 주세요
 - 합친 JSON 은 `JSON.stringify` 서식으로 다시 써져 한 줄 배열 같은 원래 서식은 펼쳐져요
 - postInstall json-merge 는 CLI(깊게) · MCP(얕게)가 여전히 달라요(현재 템플릿에는 postInstall 이 없어 드러나지 않음)
+
+## 주의: 합쳐도 템플릿 값으로 바뀌는 것 (2026-10-30 추가)
+
+- 양쪽에 같은 이름이 있는 `scripts` · 의존성 4맵의 키와 axis.config.json 의 키는 템플릿 값으로 바뀌어요(Q103 · Q105). 사용자가 고정한 버전(예: `react` `18.3.1`)도 템플릿 범위로 바뀌어요
+- JSON 으로 읽을 수 없는 package.json 과 하위 경로의 package.json 은 종전처럼 통째로 덮어써요(Q101)
+- 지키려면 apply 전에 `axis template diff` · `--dry-run` 으로 「합치기」 대상을 확인하고, apply 뒤 버전 관리 diff 로 되돌려요
