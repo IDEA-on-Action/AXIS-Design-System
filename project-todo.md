@@ -99,6 +99,7 @@
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
 | 114 | Yarn PnP 에서 컴포넌트 tailwind.css 를 import 해도 컴포넌트 클래스가 생성되지 않음(@source 가 zip 안을 가리킴, WI-0097 Q22 실빌드에서 발견, 사용자 결정 Q40) | WI-0102 (#249) | P18 | P3 | 🔄 배치 10 |
 | 116 | Tailwind 3 preset 판정이 tokens 설치본의 exports(./tailwind)를 보지 않아 실빌드가 실패하는 레이아웃에서 PASS(WI-0101 · 0103 병합 검증에서 발견, 2026-10-30 사용자 결정) | WI-0104 (#260) | P18 | P3 | 🔄 배치 10 |
+| 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ⏳ 다음 linked 발행 |
 
 ### 완료
 
