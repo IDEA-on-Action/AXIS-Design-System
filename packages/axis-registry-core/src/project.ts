@@ -300,6 +300,17 @@ export function dependencyInstallGuide(baseDirInput: string, name: string, range
   };
 }
 
+/**
+ * 설치 명령을 실행할 위치까지 담은 안내 구절(WI-0096). npm 이고 안내 대상에 워크스페이스 루트 선언이 하나라도 있으면(`rootDeclared`)
+ * 「워크스페이스 루트에서 npm install」, 아니면 `installCommand` 그대로예요. 문구는 WI-0093 Q15(`install-at-root`)와 같아요.
+ * npm 7.24.2 · 8.19.4 · 9.9.4 · 10.9.4 실측에서 앱 디렉터리의 `npm install` 은 루트에만 선언한 패키지를 설치하지 않았고
+ * (npm 8 이상은 `--include-workspace-root` 를 붙이면 설치, npm 7 은 붙여도 설치 안 함), 루트에서 실행하면 네 버전 모두 루트 · 앱 선언을 함께 설치했어요.
+ * pnpm 9.15.4 · yarn 1.22.22 는 앱 디렉터리에서도 루트 선언을 설치해서 그대로예요. theme add · init · check dependencies 가 같이 써요.
+ */
+export function installCommandPhrase(installCommand: string, rootDeclared: boolean): string {
+  return rootDeclared && packageManagerOf(installCommand) === "npm" ? `워크스페이스 루트에서 ${installCommand}` : installCommand;
+}
+
 export function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
@@ -956,6 +967,7 @@ export interface DeferredComponentImport {
  * theme add 가 루트 선언 컴포넌트 패키지의 `tailwind.css` 줄을 넣지 않은 이유 한 문장(WI-0087 DEC-2, WI-0097 에서 cli theme/index.ts 에서 옮김).
  * cli 가 앞에 `  ! ` 를 붙이고 노란색으로 찍어요(접두 · 색은 cli 몫). 세 갈래:
  * 미설치 · 1.4.0 이상인데 파일 없음(설치 손상, 다시 설치) · 1.4.0 미만 또는 버전 모름(올림).
+ * `installCommand` 는 괄호 안에 그대로 넣는 설치 구절이에요. cli 는 `installCommandPhrase(…, true)` 를 넘겨 npm 이면 「워크스페이스 루트에서 npm install」이에요(WI-0096).
  */
 export function deferredComponentImportReason(d: DeferredComponentImport, installCommand: string): string {
   const line = `@import "${d.name}/tailwind.css";`;

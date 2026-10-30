@@ -25,6 +25,9 @@
  *    씁니다. 루트에만 있는 `@axis-ds/*` 는 확인 대상에 넣지 않습니다(Plug'n'Play 는 설치본을 읽지 않으므로 대상 수만 늘어남).
  *    추가 결정 A3: 대신 「<이름> 가 워크스페이스 루트에만 선언돼 Plug'n'Play 에서 앱이 해석하지 못합니다」 WARN 으로 알립니다
  *    (종전에는 알리지 않아 ui-react 만 루트에 둔 PnP 앱이 PASS 였음, 측정 M7). 종료 코드는 바뀌지 않습니다.
+ * 8. WI-0096: 미설치 안내의 명령은 `installCommandPhrase` 로 만듭니다. npm 이고 그 묶음에 워크스페이스 루트 선언이 있으면
+ *    「워크스페이스 루트에서 npm install」(앱 디렉터리의 npm install 은 루트 선언을 설치하지 않음, npm 7 ~ 10 실측). pnpm · yarn 은 종전 그대로,
+ *    WARN 이라 종료 코드도 그대로입니다.
  */
 
 import { readFileSync } from "node:fs";
@@ -34,6 +37,7 @@ import {
   declaredDependency,
   detectInstallCommand,
   findInstalledPackage,
+  installCommandPhrase,
   isPlainObject,
   isPnpProject,
   pnpRootOnlyDependency,
@@ -119,11 +123,16 @@ export function checkDependencies(baseDirInput: string): DependenciesCheckResult
   if (missingRecommended.length > 0) problems.push(`권장 의존성 누락: ${missingRecommended.join(", ")}`);
   if (pnpRootRecommended.length > 0) problems.push(`권장 의존성 ${pnpRootRecommended.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
   if (pnpRootAxis.length > 0) problems.push(`${pnpRootAxis.join(", ")} 가 ${PNP_ROOT_ONLY_NOTE} → 앱 package.json 에 선언하세요`);
+  // WI-0096: npm 은 앱 디렉터리의 npm install 이 루트 선언을 설치하지 않으므로, 묶음에 루트 선언이 있으면 「워크스페이스 루트에서 npm install」
+  const installCommand = detectInstallCommand(baseDir);
   if (notInstalledOther.length > 0) {
-    problems.push(`선언됐지만 설치되지 않은 의존성: ${notInstalledOther.join(", ")} → ${detectInstallCommand(baseDir)}`);
+    const phrase = installCommandPhrase(installCommand, notInstalledOther.some((d) => fromRoot(d)));
+    problems.push(`선언됐지만 설치되지 않은 의존성: ${notInstalledOther.join(", ")} → ${phrase}`);
   }
   if (notInstalledRoot.length > 0) {
-    problems.push(`워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: ${notInstalledRoot.join(", ")} → ${detectInstallCommand(baseDir)}`);
+    problems.push(
+      `워크스페이스 루트에 선언돼 있지만 설치되지 않았습니다: ${notInstalledRoot.join(", ")} → ${installCommandPhrase(installCommand, true)}`
+    );
   }
   if (problems.length > 0) {
     return { name: "dependencies", severity: "warn", message: problems.join(" / ") + (rootNote ? ` (${rootNote})` : "") };
