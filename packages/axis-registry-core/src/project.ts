@@ -733,7 +733,8 @@ export function tokensCssResolution(
  *   (미설치는 앱 기준 판정과 dependencies 항목이 알려요, 사용자 결정 Q21 · Q28)
  * 선언은 보지 않아요(node_modules 탐색은 선언과 상관없이 풀림). 앱 기준 판정(`componentCssResolution` · `tokensCssResolution`)을
  * 대신하지 않고 그 뒤에 더하는 판정이에요.
- * WI-0103 부터 check 는 이 함수를 프로젝트 밖 진입 파일의 줄, `@import "tailwindcss"` 줄(Q78), Tailwind 3 에만 써요. Tailwind 4 의 앱 안 CSS 의
+ * WI-0103 부터 check 는 이 함수를 프로젝트 밖 진입 파일의 줄, `@import "tailwindcss"` 줄(Q78), Tailwind 3 에만 써요(Tailwind 3 의 앱 안 tokens 줄은
+ * WI-0104 부터 이 함수 뒤에 `cssPackageLineResolution` 의 그림자 미노출만 더 봐요). Tailwind 4 의 앱 안 CSS 의
  * tokens · 컴포넌트 줄은 exports 를 보는 `cssPackageLineResolution` 이 판정해요(이 함수는 처음 만난 설치본의 디렉터리(`file` 없음) · 파일 존재만
  * 봐서 그림자를 실빌드와 다르게 판정해요).
  */
@@ -777,11 +778,11 @@ function splitPackageSpec(spec: string): { name: string; rest: string } | undefi
 }
 
 /** `exports` 대상 값 하나를 조건으로 풀어요. 풀리지 않으면(맞는 조건이 없거나 맞는 조건의 값이 `null`) `undefined`(미노출) */
-function resolveExportTarget(value: unknown): string | undefined {
+function resolveExportTarget(value: unknown, conditions: ReadonlySet<string> = CSS_EXPORT_CONDITIONS): string | undefined {
   if (typeof value === "string") return value;
   if (Array.isArray(value)) {
     for (const v of value) {
-      const r = resolveExportTarget(v);
+      const r = resolveExportTarget(v, conditions);
       if (r !== undefined) return r;
     }
     return undefined;
@@ -790,9 +791,9 @@ function resolveExportTarget(value: unknown): string | undefined {
     // 키 순서대로 처음 맞는 조건(Node 규격과 같음). 맞는 조건의 값이 `null` 이면 거기서 미노출로 끝나요(다음 키로 넘어가지 않음,
     // 반박 검증 c22: `{ style: null, default: "./x.css" }` 는 실빌드 rc 1)
     for (const [key, v] of Object.entries(value)) {
-      if (!CSS_EXPORT_CONDITIONS.has(key)) continue;
+      if (!conditions.has(key)) continue;
       if (v === null) return undefined;
-      const r = resolveExportTarget(v);
+      const r = resolveExportTarget(v, conditions);
       if (r !== undefined) return r;
     }
   }
@@ -808,13 +809,17 @@ function cssFileCandidates(p: string): string[] {
  * `exports` 필드로 subpath(`./css/tailwind4`)를 풀어요. 대상 상대 경로, 미노출이면 `undefined`, 다루지 않는 모양이면 `"?"`.
  * 문자열 · 배열 · 조건 객체(키가 `.` 로 시작하지 않음)는 `"."` 만 가진 것으로 봐요.
  */
-function exportsTarget(exportsField: unknown, subpath: string): string | undefined | "?" {
+function exportsTarget(
+  exportsField: unknown,
+  subpath: string,
+  conditions: ReadonlySet<string> = CSS_EXPORT_CONDITIONS
+): string | undefined | "?" {
   const map: Record<string, unknown> =
     isPlainObject(exportsField) && Object.keys(exportsField).some((k) => k.startsWith("."))
       ? exportsField
       : { ".": exportsField };
   if (Object.prototype.hasOwnProperty.call(map, subpath)) {
-    const t = resolveExportTarget(map[subpath]);
+    const t = resolveExportTarget(map[subpath], conditions);
     if (t === undefined) return undefined;
     return t.includes("*") || !t.startsWith("./") ? "?" : t;
   }
@@ -830,6 +835,19 @@ function exportsTarget(exportsField: unknown, subpath: string): string | undefin
  * 없으면 건너뛰고 상위로 가요(Q71, 착수 측정 n0 · np0). Plug'n'Play 는 부르는 쪽이 먼저 가려요.
  */
 export function resolveCssPackageImport(fromDir: string, spec: string): CssPackageImportResolution {
+  return resolvePackageSubpath(fromDir, spec, CSS_EXPORT_CONDITIONS, cssFileCandidates);
+}
+
+/**
+ * `resolveCssPackageImport` 의 본체(WI-0104 에서 조건 · 파일 후보를 인자로 뺐어요). 탐색 순서와 멈춤 규칙은 위 설명 그대로이고,
+ * `conditions` 는 `exports` 조건부 값에서 맞는 것으로 볼 조건 이름, `candidates` 는 경로 하나에 대해 파일로 볼 후보예요.
+ */
+function resolvePackageSubpath(
+  fromDir: string,
+  spec: string,
+  conditions: ReadonlySet<string>,
+  candidates: (p: string) => string[]
+): CssPackageImportResolution {
   const parsed = splitPackageSpec(spec);
   if (parsed === undefined || parsed.rest === "") return { kind: "unknown" };
   const subpath = `./${parsed.rest}`;
@@ -847,19 +865,19 @@ export function resolveCssPackageImport(fromDir: string, spec: string): CssPacka
       // `exports` 가 거짓 값(`null` · `false` · `""`)이면 해석기는 exports 없음으로 봐요(반박 검증 c01 ~ c03b, enhanced-resolve `exportsField ? … : null`)
       if (manifest !== undefined && manifest.exports) {
         const version = exactVersionOf(manifest.version);
-        const target = exportsTarget(manifest.exports, subpath);
+        const target = exportsTarget(manifest.exports, subpath, conditions);
         if (target === "?") return { kind: "unknown" };
         if (target === undefined) {
           return version !== undefined ? { kind: "not-exported", pkgDir, subpath, version } : { kind: "not-exported", pkgDir, subpath };
         }
         // 대상에도 `.css` 확장자 · 디렉터리 `index.css` 를 붙여 봐요(반박 검증 c07 · c08)
-        const file = cssFileCandidates(path.join(pkgDir, target)).find(isFile);
+        const file = candidates(path.join(pkgDir, target)).find(isFile);
         if (file !== undefined) return { kind: "resolved", pkgDir, file };
         return version !== undefined
           ? { kind: "target-missing", pkgDir, subpath, target, version }
           : { kind: "target-missing", pkgDir, subpath, target };
       }
-      const bare = cssFileCandidates(path.join(pkgDir, parsed.rest)).find(isFile);
+      const bare = candidates(path.join(pkgDir, parsed.rest)).find(isFile);
       if (bare !== undefined) return { kind: "resolved", pkgDir, file: bare };
     }
     const parent = path.dirname(dir);
@@ -941,6 +959,56 @@ export function cssPackageLineResolution(
   for (const other of typeof otherDirs === "function" ? otherDirs() : otherDirs) {
     const o = resolveCssPackageImport(other, spec);
     if (o.kind === "resolved") return { kind: "not-visible", pkgDir: o.pkgDir, fromDir: resolveBaseDir(other) };
+  }
+  return { kind: "ok" };
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Tailwind 3 설정 파일의 JS import 해석 (WI-0104: preset `@axis-ds/tokens/tailwind` 를 exports 로 봄)
+
+/**
+ * Node 22 의 `require()` 가 맞는 것으로 보는 조건(WI-0104 착수 측정, Node 22.22.0 · Tailwind 3.4.19). `module-sync` 도 맞아요
+ * (`{"module-sync": …}` 만 내보낸 설치본에서 CommonJS bare 가 rc 0 이었어요)
+ */
+const JS_REQUIRE_CONDITIONS: ReadonlySet<string> = new Set(["require", "node", "module-sync", "default"]);
+/** Node 22 의 ESM `import` 가 맞는 것으로 보는 조건 */
+const JS_IMPORT_CONDITIONS: ReadonlySet<string> = new Set(["import", "node", "module-sync", "default"]);
+
+/** CommonJS 해석기가 경로 하나에 대해 보는 후보(적힌 이름 · `.js` · `.json` · `.node` · 디렉터리의 `index.*`) */
+function jsFileCandidates(p: string): string[] {
+  return [p, `${p}.js`, `${p}.json`, `${p}.node`, path.join(p, "index.js"), path.join(p, "index.json"), path.join(p, "index.node")];
+}
+
+/**
+ * Tailwind 3 설정 파일의 패키지 import(`@axis-ds/tokens/tailwind`)가 그 설정 파일 위치(`baseDir`)에서 `exports` 때문에 막히는지(WI-0104).
+ * - `ok`: 풀림, 또는 판정하지 않음(Plug'n'Play · 다루지 않는 모양 · 설치본을 찾지 못함 · 내보낸 대상 파일 없음). 대상 파일 없음은 dist 를 아직
+ *   빌드하지 않은 workspace 링크에서 거짓 WARN 이 되지 않게 판정하지 않아요(WI-0101 Q68 과 같은 이유, 사용자 결정 대기 Q132)
+ * - `not-exported`: 위로 올라가며 처음 잡히는 설치본에 `exports` 가 있는데 subpath 를 내보내지 않음. Node 해석기는 거기서 멈추고
+ *   `ERR_PACKAGE_PATH_NOT_EXPORTED` 로 실패해요(상위 설치본으로 가지 않음)
+ * `refs` 는 설정 파일에 있는 참조 모양이에요. `require` 는 `require()` 호출(CommonJS · `.mjs` 안의 require), `import` 는 `import … from` ·
+ * `import()` 예요. Tailwind 3.4.19 는 설정을 `require()` 로 읽고 실패하면 jiti(CommonJS 로 바꿔 `require` 조건으로 풂)로 다시 읽어서,
+ * `import` 참조는 import 조건이나 require 조건 가운데 하나로 풀리면 빌드가 돼요(착수 측정: import 만 · require 만 내보낸 설치본 모두 ESM 3형태
+ * rc 0). `require()` 참조는 require 조건으로만 풀려요(import 만 내보낸 설치본에서 CommonJS 3형태 · `.mjs` 의 require rc 1).
+ */
+export type TailwindConfigImportResolution =
+  | { kind: "ok" }
+  | { kind: "not-exported"; pkgDir: string; subpath: string; version?: string };
+
+export function tailwindConfigImportResolution(
+  baseDir: string,
+  spec: string,
+  refs: { require: boolean; import: boolean }
+): TailwindConfigImportResolution {
+  if (isPnpProject(baseDir)) return { kind: "ok" };
+  const blocked = (conditions: ReadonlySet<string>) => {
+    const r = resolvePackageSubpath(baseDir, spec, conditions, jsFileCandidates);
+    return r.kind === "not-exported" ? r : undefined;
+  };
+  const viaRequire = refs.require || refs.import ? blocked(JS_REQUIRE_CONDITIONS) : undefined;
+  if (refs.require && viaRequire !== undefined) return viaRequire;
+  if (refs.import && viaRequire !== undefined) {
+    const viaImport = blocked(JS_IMPORT_CONDITIONS);
+    if (viaImport !== undefined) return viaImport;
   }
   return { kind: "ok" };
 }
