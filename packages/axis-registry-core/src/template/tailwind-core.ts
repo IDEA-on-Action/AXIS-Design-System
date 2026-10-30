@@ -57,8 +57,11 @@
  *   (project.ts `componentCssResolution`, theme add 의 WI-0087 DEC-2 와 같은 함수). 해석되지 않는 루트 선언(Plug'n'Play 루트 전용 ·
  *   미설치 · 설치본에 파일 없음)은 줄을 바로 권하지 않고, 이미 있는 줄은 PASS 로 인정하지 않습니다. 단 줄이 있을 때 설치본이
  *   1.4.0 미만이면(root-old) 종전 버전 판정(버전 WARN)을 따르고, 버전을 읽을 수 없고 파일도 없으면 해석 불가 WARN 입니다(사용자 결정 Q39).
- *   앱 선언은 종전 그대로입니다.
+ *   앱 선언은 종전 그대로입니다(아래 WI-0102 의 Plug'n'Play zip 예외만 빼고).
  *   위 보정 2차 · 3차의 「선언된 ui-react · agentic-ui」는 이 판정으로 좁혀졌어요.
+ * - WI-0102: Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지가 `.yarn/cache` zip 안에만 있으면(`pnpComponentSourceHidden`, 범위에 맞는
+ *   unplugged 설치본 없음) `tailwind.css` 의 `@source "./dist"` 가 스캔되지 않아 import 가 해석돼도 클래스가 생기지 않아요(실빌드).
+ *   줄 없음이면 줄만 권하지 않고 루트 `dependenciesMeta` unplugged 설정을 먼저 안내하고, 줄 있음이면 PASS 대신 WARN 입니다. 종료 코드는 그대로예요.
  * - WI-0097 2부(사용자 결정 Q28 · Q37): globals.css 의 tokens 근거(CSS import · 루트 레이아웃 JS import)도 이 앱에서 해석될 때만 pass 입니다
  *   (project.ts `tokensCssResolution`. 앱 선언은 미설치여도 pass, 설치본 디렉터리가 있으면 pass, 루트 선언 미설치 · 미선언 미설치 · PnP 루트
  *   전용은 warn). 위 배치 3 의 「tokens CSS import 가 있으면 pass」는 이 조건으로 좁혀졌어요. 프로젝트 밖 진입 CSS(`globalCss` 가 앱 밖)의
@@ -88,8 +91,10 @@ import {
   hasDependency,
   isPnpProject,
   outsideCssPackageResolution,
+  pnpComponentSourceHidden,
   pnpProjectRoot,
   pnpRootOnlyDependency,
+  pnpUnplugSetupPhrase,
   resolveBaseDir,
   selectGlobalCss,
   tokensCssResolution,
@@ -1361,6 +1366,8 @@ function readPackageJson(baseDir: string): Record<string, unknown> | undefined {
  * WI-0097(사용자 결정 Q21 · Q22): 2 와 5 는 「선언됐는가」가 아니라 「이 앱에서 `<pkg>/tailwind.css` 가 해석되는가」로 봅니다
  * (registry-core `componentCssResolution`, theme add 의 WI-0087 DEC-2 와 같은 판정). 같은 패키지에는 한 갈래만 씁니다.
  * - 앱 선언(`app`)과 설치본에 파일이 있는 루트 선언(`root-ok`)은 종전 그대로입니다(줄 없음 → 2 의 묶음, 줄 있음 → 5).
+ *   WI-0102: 단 Plug'n'Play 앱 선언이 zip 안에만 있으면(`pnpComponentSourceHidden`) 줄 없음은 unplugged 설정 안내를 2 의 묶음 뒤에,
+ *   줄 있음은 5 자리에 「import 가 있지만 … 컴포넌트 클래스가 생성되지 않습니다」 WARN 을 내요.
  * - 미선언 · 앱 lockfile(P2)의 루트 선언은 요구하지 않고, 줄이 있으면 종전 5 만 봅니다.
  * - 해석되지 않는 루트 선언(Plug'n'Play 루트 전용 · 미설치 · 1.4.0 미만이나 버전 모름 · 1.4.0 이상인데 파일 없음)은 줄 없음이면
  *   줄을 바로 권하지 않고 먼저 할 일(앱에 선언 · 설치 · 올림 · 다시 설치)을 패키지마다 한 문제로 2 의 묶음 뒤에 잇습니다.
@@ -1400,7 +1407,8 @@ function tailwind4Issues(
     const r = resolutions.get(name)!;
     if (r.kind === "undeclared" || r.kind === "app-lockfile") continue;
     if (hasComponentTailwindImport(evidence, name) || hasComponentSource(evidence, name)) continue;
-    if (componentCssResolvable(r)) missing.push(name);
+    if (r.kind === "app" && pnpComponentSourceHidden(baseDir, name, r.range)) unresolvedMissing.push(componentCssPnpMissingIssue(name));
+    else if (componentCssResolvable(r)) missing.push(name);
     else unresolvedMissing.push(componentCssMissingIssue(baseDir, name, r));
   }
   if (missing.length > 0) {
@@ -1416,10 +1424,16 @@ function tailwind4Issues(
   }
   for (const name of TAILWIND4_COMPONENT_PACKAGES) {
     if (!hasComponentTailwindImport(evidence, name)) continue;
-    const unresolved = componentCssPresentIssue(baseDir, name, resolutions.get(name)!);
+    const r = resolutions.get(name)!;
+    const unresolved = componentCssPresentIssue(baseDir, name, r);
     const spec = `${name}/tailwind.css`;
     if (unresolved !== undefined) {
       issues.push(unresolved);
+      continue;
+    }
+    // WI-0102: Plug'n'Play 에서 zip 안에만 있으면 import 는 해석돼도 `@source "./dist"` 가 스캔되지 않아요
+    if (r.kind === "app" && pnpComponentSourceHidden(baseDir, name, r.range)) {
+      issues.push(componentCssPnpPresentIssue(name));
       continue;
     }
     // WI-0103: 앱 안 파일의 줄은 exports 를 보는 해석기(`lineIssue`), 그 밖(밖 진입 파일 · 줄을 못 찾음)은 종전 Q37(`cssDirOf`) 판정
@@ -1458,6 +1472,19 @@ interface Tailwind4CssInput {
 function componentInstallPhrase(baseDir: string, name: string, range: string): string {
   const g = dependencyInstallGuide(baseDir, name, range);
   return g.kind === "install-at-root" ? `워크스페이스 루트에서 ${g.installCommand}` : g.installCommand;
+}
+
+/** WI-0102: Plug'n'Play 에서 `@source "./dist"` 가 zip 안을 가리켜 스캔되지 않는 이유 구절 */
+const PNP_ZIP_SOURCE_NOTE = `Plug'n'Play 에서 @source "./dist" 가 .yarn/cache zip 안을 가리켜 컴포넌트 클래스가 생성되지 않습니다`;
+
+/** WI-0102: 앱 선언 · PnP zip 설치(unplugged 없음)인 컴포넌트 패키지의 줄 없음 방향 문제. 줄만 넣으라고 권하면 효과가 없어서 설정을 먼저 안내해요 */
+function componentCssPnpMissingIssue(name: string): string {
+  return `${name} 의 tailwind.css 는 ${PNP_ZIP_SOURCE_NOTE} → ${pnpUnplugSetupPhrase(name)} 뒤 ${componentTailwindImportLine(name)}`;
+}
+
+/** WI-0102: 줄 있음 방향. 종전에는 앱 선언이라 PASS 였어요(WI-0097 Q21 · Q40) */
+function componentCssPnpPresentIssue(name: string): string {
+  return `${name}/tailwind.css import 가 있지만 ${PNP_ZIP_SOURCE_NOTE} → ${pnpUnplugSetupPhrase(name)} 하세요`;
 }
 
 /** 해석되지 않는 루트 선언 패키지의 줄 없음 방향 문제(WI-0097 PRD 1.4 표 1 · 3 · 4 · 5번, 문구 확정 Q43) */

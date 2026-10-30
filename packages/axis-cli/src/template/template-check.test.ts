@@ -29,6 +29,7 @@ import {
   isPnpProject,
   outsideCssPackageResolution,
   PNP_ROOT_ONLY_NOTE,
+  pnpComponentSourceHidden,
   resolveCssPackageImport,
   tokensCssResolution,
   versionSatisfiesRange,
@@ -4731,11 +4732,11 @@ describe("WI-0097: CSS import 해석 가능성(Tailwind 4 B1 양방향 · 해석
         const { app } = await ws97({ rootDeps: root, appLock: true, installed: { [p]: { version: "1.8.2", css: true } } });
         expect(await item(app)).toEqual(PASS);
       });
-      it("회귀 가드 F2 · F7 · F8: 루트 선언 · 파일 있음, 앱 선언 · 미설치, PnP 앱 선언은 종전 B1 줄 안내(바이트 같음)", async () => {
+      // WI-0102: F8(PnP 앱 선언 · unplugged 없음)은 zip 안이라 줄만 넣어도 클래스가 생기지 않아 종전 B1 이 아니에요. WI-0102 describe 로 옮겼어요
+      it("회귀 가드 F2 · F7: 루트 선언 · 파일 있음, 앱 선언 · 미설치는 종전 B1 줄 안내(바이트 같음)", async () => {
         const b1 = warn(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${line(p)}`);
         expect(await item((await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2", css: true } } })).app)).toEqual(b1);
         expect(await item((await ws97({ appDeps: root })).app)).toEqual(b1);
-        expect(await item((await ws97({ pnp: true, appDeps: root })).app)).toEqual(b1);
       });
       it("회귀 가드: 그 패키지를 가리키는 @source 가 직접 있으면 루트 선언 · 미설치여도 문제를 만들지 않음(종전)", async () => {
         const { app } = await ws97({ rootDeps: root, lines: [`@source "../../node_modules/${p}/dist";`] });
@@ -4767,11 +4768,11 @@ describe("WI-0097: CSS import 해석 가능성(Tailwind 4 B1 양방향 · 해석
         const { app } = await ws97({ rootDeps: root, installed: { [p]: {} }, lines: withLine });
         expect(await item(app)).toEqual(warn(`${p}/tailwind.css import 가 있지만 ${p} 설치본(버전 모름)에 tailwind.css 가 없어 해석되지 않습니다 → 1.4.0 이상으로 올리세요`));
       });
+      // WI-0102: PnP 앱 선언 + 줄(unplugged 없음)은 PASS 가 아니라 zip WARN 이에요. WI-0102 describe 로 옮겼어요
       it("회귀 가드 F6w · F13 · F14: P2 루트 선언 + 줄, 루트 선언 · 파일 있음 + 줄, 앱 선언 · 미설치 + 줄은 PASS(종전)", async () => {
         expect(await item((await ws97({ rootDeps: root, appLock: true, lines: withLine })).app)).toEqual(PASS);
         expect(await item((await ws97({ rootDeps: root, installed: { [p]: { version: "1.8.2", css: true } }, lines: withLine })).app)).toEqual(PASS);
         expect(await item((await ws97({ appDeps: root, lines: withLine })).app)).toEqual(PASS);
-        expect(await item((await ws97({ pnp: true, appDeps: root, lines: withLine })).app)).toEqual(PASS);
       });
     });
   }
@@ -5549,6 +5550,154 @@ describe("WI-0103 exports 를 보는 패키지 해석", () => {
       await shadow(path.join(root, "shared/node_modules"), "@axis-ds/tokens", "ex0");
       const r = (await items(dir))["globals.css"];
       expect(r.message).not.toContain("먼저 잡히는");
+    });
+  });
+});
+
+// WI-0102 (#249): Yarn Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지는 .yarn/cache zip 안에 있어 tailwind.css 의 @source "./dist" 가
+// Tailwind 4 스캐너에 보이지 않아요. 실빌드(Yarn 4.5.3 · @tailwindcss/cli · @tailwindcss/postcss 4.1.14): import 는 rc 0 인데 산출물이
+// `@import "tailwindcss"` 만 넣은 빌드와 바이트가 같고(axis-button-bg-default 0건), 루트 dependenciesMeta unplugged 면 node_modules 설치와
+// 바이트가 같아요(47,858 B · 2건). 판정은 설정이 아니라 관측 가능한 결과(.yarn/unplugged 의 범위에 맞는 설치본)로 해요.
+describe("WI-0102: Plug'n'Play zip 안의 컴포넌트 tailwind.css(Tailwind 4 두 방향)", () => {
+  const PREFIX = "Tailwind 4: app/globals.css에 ";
+  const PASS = { name: "tailwind.config", severity: "pass", message: 'Tailwind 4: app/globals.css에 @import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다' };
+  const ZIP = `Plug'n'Play 에서 @source "./dist" 가 .yarn/cache zip 안을 가리켜 컴포넌트 클래스가 생성되지 않습니다`;
+  const setup = (p: string) =>
+    `Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json 의 dependenciesMeta 에 "${p}": { "unplugged": true } 를 두고 yarn install`;
+  const line = (p: string) => `@import "${p}/tailwind.css";`;
+  const warn = (message: string) => ({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${message}` });
+  const missingIssue = (p: string) => `${p} 의 tailwind.css 는 ${ZIP} → ${setup(p)} 뒤 ${line(p)}`;
+  const presentIssue = (p: string) => `${p}/tailwind.css import 가 있지만 ${ZIP} → ${setup(p)} 하세요`;
+  const item = async (dir: string) => (await collectCheckResults(dir)).find((r) => r.name === "tailwind.config");
+
+  /**
+   * 실측 앱과 같은 모양: 루트 workspaces · yarn.lock · .yarnrc.yml(nodeLinker pnp) · .pnp.cjs · 저장소 표지, node_modules 없음.
+   * `unplugged` 는 `.yarn/unplugged/<디렉터리>/node_modules/<pkg>/package.json`(Yarn 이 만드는 위치, 버전이 붙음)이고,
+   * `appMeta` 는 앱 package.json 의 dependenciesMeta(Yarn 은 루트 것만 따름, 실측 앱 쪽 unplugged 0건)예요.
+   * `pnp: false` 는 같은 모양의 node-modules linker(루트 node_modules 에 tailwindcss · tokens 설치본 stub)예요.
+   */
+  async function pnpApp(o: {
+    appDeps: Record<string, string>;
+    lines?: string[];
+    unplugged?: Array<{ name: string; version: string; dir?: string }>;
+    appMeta?: boolean;
+    pnp?: boolean;
+  }) {
+    const root = await fs.realpath(await tempDir());
+    const pnp = o.pnp ?? true;
+    await fs.ensureDir(path.join(root, ".git"));
+    await fs.writeJSON(path.join(root, "package.json"), { name: "root", private: true, packageManager: "yarn@4.5.3", workspaces: ["apps/*"] });
+    await fs.writeFile(path.join(root, "yarn.lock"), "__metadata:\n  version: 8\n");
+    await fs.writeFile(path.join(root, ".yarnrc.yml"), `nodeLinker: ${pnp ? "pnp" : "node-modules"}\n`);
+    if (pnp) await fs.writeFile(path.join(root, ".pnp.cjs"), '#!/usr/bin/env node\n"use strict";\n');
+    else {
+      for (const [name, version] of [["tailwindcss", "4.1.14"], ["@axis-ds/tokens", "1.8.2"]] as const) {
+        await fs.outputJSON(path.join(root, "node_modules", ...name.split("/"), "package.json"), { name, version });
+      }
+    }
+    for (const u of o.unplugged ?? []) {
+      const dir = path.join(root, ".yarn", "unplugged", u.dir ?? `${u.name.replace("/", "-")}-virtual-0123456789`, "node_modules", ...u.name.split("/"));
+      await fs.outputJSON(path.join(dir, "package.json"), { name: u.name, version: u.version });
+      await fs.outputFile(path.join(dir, "tailwind.css"), '@source "./dist";\n');
+    }
+    const app = path.join(root, "apps", "web");
+    const meta = o.appMeta ? { dependenciesMeta: Object.fromEntries(Object.keys(o.appDeps).map((n) => [n, { unplugged: true }])) } : {};
+    await fs.outputJSON(path.join(app, "package.json"), {
+      name: "web",
+      dependencies: { tailwindcss: "4.1.14", "@axis-ds/tokens": "1.8.2", ...o.appDeps },
+      ...meta,
+    });
+    await fs.outputJSON(path.join(app, "axis.config.json"), {});
+    await fs.outputFile(
+      path.join(app, "app/globals.css"),
+      ['@import "tailwindcss";', '@import "@axis-ds/tokens/css/tailwind4";', ...(o.lines ?? [])].join("\n") + "\n"
+    );
+    return { root, app };
+  }
+
+  for (const p of ["@axis-ds/ui-react", "@axis-ds/agentic-ui"] as const) {
+    const dep = { [p]: "1.8.2" };
+    describe(p, () => {
+      it("Z1 앱 선언 · unplugged 없음 · 줄 없음: 줄만 권하지 않고 unplugged 설정을 먼저 안내(종전 B1 줄 안내)", async () => {
+        const { app } = await pnpApp({ appDeps: dep });
+        expect(await item(app)).toEqual(warn(missingIssue(p)));
+      });
+      it("Z2 앱 선언 · unplugged 없음 · 줄 있음: 종전 PASS 가 아니라 zip WARN(실빌드 클래스 0건, 산출물이 tailwindcss 만 넣은 빌드와 같음)", async () => {
+        const { app } = await pnpApp({ appDeps: dep, lines: [line(p)] });
+        expect(await item(app)).toEqual(warn(presentIssue(p)));
+      });
+      it("Z3 양성 대조: 범위에 맞는 unplugged 설치본이 있으면 종전 판정(줄 없음 B1 · 줄 있음 PASS)", async () => {
+        const un = [{ name: p, version: "1.8.2" }];
+        expect(await item((await pnpApp({ appDeps: dep, unplugged: un })).app)).toEqual(
+          warn(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${line(p)}`)
+        );
+        expect(await item((await pnpApp({ appDeps: dep, unplugged: un, lines: [line(p)] })).app)).toEqual(PASS);
+      });
+      it("Z4 unplugged 설치본이 앱 선언 범위 밖 버전이면 인정하지 않음", async () => {
+        const { app } = await pnpApp({ appDeps: { [p]: "^1.8.2" }, unplugged: [{ name: p, version: "1.7.0" }], lines: [line(p)] });
+        expect(await item(app)).toEqual(warn(presentIssue(p)));
+      });
+      it("Z5 앱 package.json 의 dependenciesMeta 만 있고 unplugged 디렉터리가 없으면 WARN(설정이 아니라 결과를 봄)", async () => {
+        const { app } = await pnpApp({ appDeps: dep, appMeta: true, lines: [line(p)] });
+        expect(await item(app)).toEqual(warn(presentIssue(p)));
+      });
+      it("Z6 workspace: · portal: · link: 범위는 설치본이 실제 디렉터리라 zip WARN 을 내지 않음(종전 판정, portal: · link: 는 종전 버전 확인 WARN)", async () => {
+        expect(await item((await pnpApp({ appDeps: { [p]: "workspace:*" }, lines: [line(p)] })).app)).toEqual(PASS);
+        for (const range of ["portal:../../packages/x", "link:../../packages/x"]) {
+          const got = await item((await pnpApp({ appDeps: { [p]: range }, lines: [line(p)] })).app);
+          expect(got?.message).toContain(`${p} 버전 확인이 필요합니다`);
+          expect(got?.message).not.toContain(ZIP);
+        }
+      });
+      it("Z7 범위를 읽지 못하면(npm: 별칭 · file:) 이름만 맞는 unplugged 를 인정하고, 없으면 WARN", async () => {
+        const alias = { [p]: `npm:${p}@1.8.2` };
+        // 별칭 · file: 은 종전 버전 안내가 끝에 붙어요(tailwind4VersionNote)
+        expect((await item((await pnpApp({ appDeps: alias, lines: [line(p)] })).app))?.message).toContain(presentIssue(p));
+        // 별칭은 종전 버전 판정이 범위를 읽지 못해 버전 확인 WARN 을 내요. zip WARN 이 빠지는지만 봐요
+        const un = await item((await pnpApp({ appDeps: alias, unplugged: [{ name: p, version: "1.8.2" }], lines: [line(p)] })).app);
+        expect(un?.message).not.toContain(ZIP);
+        const file = { [p]: "file:./vendor/pkg.tgz" };
+        expect((await item((await pnpApp({ appDeps: file, lines: [line(p)] })).app))?.message).toContain(presentIssue(p));
+      });
+      it("Z8 회귀 가드: node-modules linker(.pnp.cjs 없음) 앱 선언 + 줄은 종전 PASS", async () => {
+        const { app } = await pnpApp({ appDeps: dep, lines: [line(p)], pnp: false });
+        expect(await item(app)).toEqual(PASS);
+      });
+      it("Z9 회귀 가드: 그 패키지를 가리키는 @source 가 직접 있으면 문제를 만들지 않음(종전, 경로 실재는 보지 않음)", async () => {
+        const { app } = await pnpApp({ appDeps: dep, lines: [`@source "../../.yarn/unplugged/x/node_modules/${p}/dist";`] });
+        expect(await item(app)).toEqual(PASS);
+      });
+    });
+  }
+
+  it("Z10 두 패키지가 섞임: ui-react 만 unplugged 면 agentic-ui 만 알림(줄 없음 · 줄 있음)", async () => {
+    const UI = "@axis-ds/ui-react";
+    const AG = "@axis-ds/agentic-ui";
+    const deps = { [UI]: "1.8.2", [AG]: "1.8.2" };
+    const un = [{ name: UI, version: "1.8.2" }];
+    expect(await item((await pnpApp({ appDeps: deps, unplugged: un })).app)).toEqual(
+      warn(`컴포넌트 스캔 경로(tailwind.css)가 없습니다 → ${line(UI)} / ${missingIssue(AG)}`)
+    );
+    expect(await item((await pnpApp({ appDeps: deps, unplugged: un, lines: [line(UI), line(AG)] })).app)).toEqual(warn(presentIssue(AG)));
+  });
+
+  it("Z11 종료 코드는 바꾸지 않음(WARN 만 늘어남)", async () => {
+    const UI = "@axis-ds/ui-react";
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    const zip = await pnpApp({ appDeps: { [UI]: "1.8.2" }, lines: [line(UI)] });
+    const un = await pnpApp({ appDeps: { [UI]: "1.8.2" }, lines: [line(UI)], unplugged: [{ name: UI, version: "1.8.2" }] });
+    expect((await runCheck(zip.app)).fail).toBe((await runCheck(un.app)).fail);
+  });
+
+  describe("헬퍼 pnpComponentSourceHidden(registry-core project.ts)", () => {
+    const UI = "@axis-ds/ui-react";
+    it("PnP 가 아니면 false, PnP zip 이면 true, 범위에 맞는 unplugged 면 false", async () => {
+      expect(pnpComponentSourceHidden((await pnpApp({ appDeps: { [UI]: "1.8.2" }, pnp: false })).app, UI, "1.8.2")).toBe(false);
+      expect(pnpComponentSourceHidden((await pnpApp({ appDeps: { [UI]: "1.8.2" } })).app, UI, "1.8.2")).toBe(true);
+      const un = (await pnpApp({ appDeps: { [UI]: "^1.8.0" }, unplugged: [{ name: UI, version: "1.8.2", dir: "@axis-ds-ui-react-npm-1.8.2-abc" }] })).app;
+      expect(pnpComponentSourceHidden(un, UI, "^1.8.0")).toBe(false);
+      expect(pnpComponentSourceHidden(un, UI, "^1.9.0")).toBe(true);
+      expect(pnpComponentSourceHidden(un, "@axis-ds/agentic-ui", "^1.8.0")).toBe(true);
     });
   });
 });
