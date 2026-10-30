@@ -1316,3 +1316,35 @@ describe("handleCheckProject WI-0103: 중첩 설치본(그림자) · exports (CL
     expect(r.message).toContain(`(설치본이 src/app/node_modules/${T} 에만 있음) → 앱 또는 워크스페이스 루트에 설치하거나 이 줄(src/styles/axis.css)을 src/app/globals.css 로 옮기세요`);
   });
 });
+
+// WI-0102: Plug'n'Play 에서 앱에 선언한 컴포넌트 패키지가 .yarn/cache zip 안에만 있으면 tailwind.css 의 @source "./dist" 가 스캔되지 않아요.
+// CLI check 와 같은 registry-core 판정(pnpComponentSourceHidden)이라 같은 문구예요
+describe("handleCheckProject WI-0102: Plug'n'Play zip 안의 컴포넌트 tailwind.css (CLI 와 같은 문구)", () => {
+  const UI = "@axis-ds/ui-react";
+  const ZIP = `Plug'n'Play 에서 @source "./dist" 가 .yarn/cache zip 안을 가리켜 컴포넌트 클래스가 생성되지 않습니다`;
+  const SETUP = `Plug'n'Play 루트(.pnp.cjs 가 있는 곳) package.json 의 dependenciesMeta 에 "${UI}": { "unplugged": true } 를 두고 yarn install`;
+  const PREFIX = "Tailwind 4: app/globals.css에 ";
+  const item = async (dir: string) => (await handleCheckProject({ targetDir: dir })).results.find((r) => r.name === "tailwind.config");
+  async function pnpApp(lines: string[]) {
+    await fs.ensureDir(path.join(tmp, ".git"));
+    await fs.writeJSON(path.join(tmp, "package.json"), { name: "root", private: true, packageManager: "yarn@4.5.3", workspaces: ["apps/*"] });
+    await fs.writeFile(path.join(tmp, "yarn.lock"), "");
+    await fs.writeFile(path.join(tmp, ".yarnrc.yml"), "nodeLinker: pnp\n");
+    await fs.writeFile(path.join(tmp, ".pnp.cjs"), "");
+    const dir = path.join(tmp, "apps", "web");
+    await fs.outputJSON(path.join(dir, "package.json"), { name: "web", dependencies: { tailwindcss: "4.1.14", "@axis-ds/tokens": "1.8.2", [UI]: "1.8.2" } });
+    await fs.outputJSON(path.join(dir, "axis.config.json"), {});
+    await fs.outputFile(path.join(dir, "app/globals.css"), ['@import "tailwindcss";', '@import "@axis-ds/tokens/css/tailwind4";', ...lines].join("\n") + "\n");
+    return dir;
+  }
+
+  it("줄 없음: unplugged 설정 안내, 줄 있음: 종전 PASS 가 아니라 WARN, unplugged 설치본이 생기면 종전 판정", async () => {
+    const line = `@import "${UI}/tailwind.css";`;
+    expect(await item(await pnpApp([]))).toEqual({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${UI} 의 tailwind.css 는 ${ZIP} → ${SETUP} 뒤 ${line}` });
+    const dir = await pnpApp([line]);
+    expect(await item(dir)).toEqual({ name: "tailwind.config", severity: "warn", message: `${PREFIX}${UI}/tailwind.css import 가 있지만 ${ZIP} → ${SETUP} 하세요` });
+    const pkgDir = path.join(tmp, ".yarn", "unplugged", "@axis-ds-ui-react-virtual-0000000000", "node_modules", "@axis-ds", "ui-react");
+    await fs.outputJSON(path.join(pkgDir, "package.json"), { name: UI, version: "1.8.2" });
+    expect(await item(dir)).toEqual({ name: "tailwind.config", severity: "pass", message: `${PREFIX}@import "tailwindcss" 와 AXIS 토큰 진입점이 있습니다` });
+  });
+});
