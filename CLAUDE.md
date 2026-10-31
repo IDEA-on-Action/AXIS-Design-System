@@ -2,8 +2,8 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: tokens · theme · ui-react · agentic-ui 1.8.2, cli 1.7.10, mcp 1.4.9 | **상태**: ✅ Active Development
-**npm 배포**: cli 1.7.10 · mcp 1.4.9 (2026-11-01, WI-0099 init 애니메이션 안내가 check 와 같은 전역 CSS 줄 판정 · WI-0095 PnP 루트 전용 선언 경계를 init · add · MCP install 로 넓힘, linked 4패키지는 1.8.2 그대로). 이전 배포 이력은 각 패키지 CHANGELOG.md · git log · WI release-notes 에 있어요
+**현재 버전**: ui-react · agentic-ui 1.8.3, tokens · theme 1.8.2, cli 1.7.10, mcp 1.4.9 | **상태**: ✅ Active Development
+**npm 배포**: ui-react · agentic-ui 1.8.3 (2026-11-01, WI-0105 Yarn PnP 에서 컴포넌트 tailwind.css 가 스캔되도록 preferUnplugged 선언, tokens · theme 1.8.2 · cli 1.7.10 · mcp 1.4.9 그대로), cli 1.7.10 · mcp 1.4.9 (2026-11-01, WI-0099 · 0095). 이전 배포 이력은 각 패키지 CHANGELOG.md · git log · WI release-notes 에 있어요
 
 ---
 

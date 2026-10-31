@@ -730,8 +730,8 @@
       "slug": "prefer-unplugged",
       "issueNumber": 265,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhEyf4g",
-      "lastSyncedAt": "2026-10-30T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastSyncedAt": "2026-11-01T00:00:00.000Z",
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0106",
@@ -739,7 +739,7 @@
       "issueNumber": 270,
       "projectItemId": "PVTI_lADODan1v84BNRmRzhFDuds",
       "lastSyncedAt": "2026-11-01T00:00:00.000Z",
-      "lastStatus": "⏳"
+      "lastStatus": "✅"
     },
     {
       "wiId": "WI-0107",

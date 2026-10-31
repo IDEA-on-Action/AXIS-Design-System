@@ -95,14 +95,16 @@
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ✅ 2026-10-29 (#252, cli 1.7.7 · mcp 1.4.6) |
 | 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ✅ 2026-11-01 (#267, cli 1.7.10 · mcp 1.4.9) |
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
-| 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ⏳ 배치 12 |
-| 118 | a11y 게이트에 ontology-console 템플릿 상세 경로 추가(지금은 상세 JSON 이 있는 첫 템플릿만 검사, ontology 테마 완료 후속) | WI-0106 (#270) | P18 | P3 | ⏳ 배치 12 |
+| 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ✅ 2026-11-01 (#272, ui-react · agentic-ui 1.8.3) |
+| 118 | a11y 게이트에 ontology-console 템플릿 상세 경로 추가(지금은 상세 JSON 이 있는 첫 템플릿만 검사, ontology 테마 완료 후속) | WI-0106 (#270) | P18 | P3 | ✅ 2026-11-01 (#273, Pages, 63경로 × 4 = 252) |
 | 119 | 템플릿별 checks 를 axis check · MCP check_project 와 연동(WI-0027 FR-4b) + registry-core axis-config.ts 주석 「brand 는 theme add 만」 정정 | WI-0107 (#271) | P18 | P3 | ⏳ 배치 13 |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 117 | ui-react · agentic-ui 가 preferUnplugged 를 선언해 Yarn PnP 에서 컴포넌트 tailwind.css 의 @source 가 스캔됨 · pack-smoke 가 @source 를 담은 배포 CSS 의 preferUnplugged 를 검사, npm ui-react · agentic-ui v1.8.3 릴리스 (#272 · Version PR #274) | WI-0105 (#265) | P18 | 2026-11-01 |
+| 118 | a11y 게이트가 상세 JSON 이 있는 템플릿 상세를 전부 검사(ontology-console 포함, 59 → 63경로 × 4 = 252) · 템플릿 이름 기반 상세 전용 준비 선택자로 404 화면 통과 차단, Pages 배포만 (#273) | WI-0106 (#270) | P18 | 2026-11-01 |
 | 107 | init · 컴포넌트 추가(axis add · MCP install_component)가 Yarn PnP 의 워크스페이스 루트 전용 선언을 「선언됨」으로 보지 않음, npm cli v1.7.10 · mcp v1.4.9 릴리스 (#269 · Version PR #268) | WI-0095 (#239) | P18 | 2026-11-01 |
 | 111 | init 의 Tailwind 4 애니메이션 안내가 check 와 같은 전역 CSS 줄 판정(registry-core inspectTailwind4Animation)을 씀, npm cli v1.7.10 · mcp v1.4.9 릴리스 (#267 · Version PR #268) | WI-0099 (#243) | P18 | 2026-11-01 |
 | 116 | check 가 Tailwind 3 preset · tokens 줄을 설치본의 exports(./tailwind) 로 판정, npm cli v1.7.9 · mcp v1.4.8 릴리스 (#264 · Version PR #266) | #260 | P18 | 2026-10-31 |
@@ -449,6 +451,7 @@
 - 배치 10 완료(2026-10-31): WI-0096 #261 머지 5ead079 · WI-0088 #262 머지 9c9f223(보안 리뷰 지적으로 템플릿 경로 탈출 차단 추가, changeset 에 「합쳐도 템플릿 값으로 바뀌는 값」 주의 명시) · WI-0102 #263 머지 5b1dc8a · WI-0104 #264 머지 d592aef(0102 와의 테스트 2파일 충돌을 병합 커밋으로 해소, 테스트 이름 대조 406 · 109 빠짐 0). 각 PR 은 앞 머지를 반영한 main 을 병합해 다시 검증한 뒤 머지. Version PR #266 머지 068a3bd, publish run 41135645387 success, npm cli 1.7.9 · mcp 1.4.8(latest), provenance 2/2, linked 4패키지는 1.8.2 그대로. 결정 Q100 ~ Q137 28건 중 27건 권장안 확정, Q121(ui-react · agentic-ui preferUnplugged)은 다음 linked 발행에 포함하기로 하고 WI-0105(#265)로 등록. 다음은 배치 11(순차) WI-0099 → 0095
 - 배치 11 완료(2026-11-01): WI-0099 #267 머지 e4d89ae → WI-0095 #269 머지 fbaea29(순차) · Version PR #268 머지 8b0829d(close/reopen 으로 CI 부착, CI 10m42s), publish run 41241569184 success, npm cli 1.7.10 · mcp 1.4.9, provenance 2/2(SLSA v1), linked 4패키지는 1.8.2 그대로. 발행본 재측정(새 HOME · env 주입 없음): 설치 rc 0 · `axis --version` 1.7.10 · MCP stdio tools 18, dist 대조 신판/구판(1.7.9 · 1.4.8) inspectTailwind4Animation cli 3/0 · mcp 2/0, appOnlyInPnp cli 9/6 · mcp 7/6(한글 문구는 dist 에서 \uXXXX 로 이스케이프돼 문자열 검색이 0 이 나오므로 식별자로 셈). PnP 동작 실측은 각 PR 의 Yarn 4.5.3 측정(WI testplan)
 - 재계획(2026-11-01, `/ax:todo plan`, 사용자 결정): 배치 12(병렬) WI-0105 preferUnplugged ∥ WI-0106 a11y 경로(고치는 파일이 겹치지 않음, linked 1.8.3 + Pages) → 배치 13 WI-0107 FR-4b(registry-core 를 고치므로 axis-config.ts 주석 정정을 함께, cli · mcp minor). WI-0084 는 Windows 실기 측정 대기로 계속 보류, v0.28 보조 상자 기본 닫힘 · 폰 폭은 디자인 오너 확인 대기
+- 배치 12 완료(2026-11-01): WI-0105 #272 머지 19f1594 · WI-0106 #273 머지 ceb4ee9(파일 겹침 없음, 단독 push 로 main run 확인 뒤 다음 머지) · Version PR #274 머지 38ceb75(close/reopen 으로 CI 부착, CI 14m9s), publish run 41252660047 success, npm ui-react · agentic-ui 1.8.3(provenance SLSA v1, 레지스트리 manifest 에 preferUnplugged true), tokens · theme 1.8.2 · cli 1.7.10 · mcp 1.4.9 그대로(linked 는 올라가는 패키지끼리만 맞춤, #265 본문의 「4패키지 발행」 은 틀린 전제였음). 결정 D1 ~ D3(0105 · 0106 각각) 모두 권장안. 발행본 재측정(npmjs, 새 HOME, Yarn 4.5.3, @tailwindcss/cli 4.1.14): PnP 1.8.3 unplugged 2 · u 47,858 B · g 31,530 B(node-modules 1.8.3 과 cmp rc 0), 대조 PnP 1.8.2 unplugged 0 · 4,455 B 클래스 0. WI-0106 은 E2E a11y 252/252 · 음성 대조 2종(대비 위반 주입, 상세 JSON 없는 slug 의 준비 선택자) 실패 확인. 남은 후보: troubleshooting 의 Tailwind 3 PnP 문단에 1.8.3 안내, 404 화면에서 data-brand 가 null 인 현상(원인 미조사), Yarn classic · @tailwindcss/postcss 축 미측정, 콘솔 결과 앱 UI 자체의 a11y 게이트. 다음은 배치 13 WI-0107(FR-4b)
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보
