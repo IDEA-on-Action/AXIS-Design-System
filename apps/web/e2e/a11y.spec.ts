@@ -15,14 +15,14 @@ import { applyBrand, readBrandState } from './helpers/brand'
  * 문서 페이지 E2E a11y 검사 (WI-0021 도입, WI-0022 baseline 해소, WI-0023 다크 모드, WI-0025 브랜드 축, WI-0062 D2 범위 확대).
  *
  * 실제 브라우저 렌더링에 axe-core를 실행해 WCAG 2.1 A/AA 위반(색상 대비 포함)을 검증한다.
- * 기본 · ontology 브랜드 × 라이트 · 다크 × 문서 경로 전부(정적 경로 + 동적 라우트 대표 1개씩).
+ * 기본 · ontology 브랜드 × 라이트 · 다크 × 문서 경로 전부(정적 경로 + library 동적 라우트 대표 1개씩 + 상세 JSON 이 있는 템플릿 상세 전부, WI-0106).
  * - 경로: e2e/a11y-routes.cjs 가 앱 라우트(page.tsx)와 library · templates index 에서 만든다.
  *   CI 건수 가드(frontend.yml)도 같은 파일에서 기대 건수를 계산하므로 페이지가 늘어도 손으로 고칠 곳이 없다.
  * - 테마: ThemeProvider가 defaultTheme="system" + enableSystem이라 prefers-color-scheme 에뮬레이션만으로 전환된다.
  * - 브랜드: ontology 는 addInitScript(applyBrand)로 <html data-brand="ontology"> 를 붙인다.
  * - 브랜드 적용 양성 대조: 검사 전에 브랜드 값이 실제로 화면에 닿았는지 계산 스타일로 확인한다
  *   (이 단언이 없으면 브랜드 CSS 가 빠져도 기본 값으로 재고 통과한다).
- * - 경로 양성 대조: HTTP 200 이고 준비 선택자(기본 h1)가 보인 뒤에만 잰다. 정적 서버는 없는 경로에도 404 페이지를
+ * - 경로 양성 대조: HTTP 200 이고 준비 선택자(기본 h1, library 상세는 「설치」 h2, templates 상세는 그 템플릿 name 의 h1)가 보인 뒤에만 잰다. 정적 서버는 없는 경로에도 404 페이지를
  *   돌려주고, library · templates 는 데이터를 받기 전 Skeleton 만 그려서, 둘 다 재면 위반 0 으로 통과하기 때문이다.
  * - incomplete: axe 가 판정을 보류한 color-contrast 노드 중 대비 수치가 4.5(큰 글씨 3) 미만인 것을 실패로 본다(WI-0062 D2).
  *   axe 는 글자가 짧거나(too short) 겹친 요소가 있으면 위반 대신 incomplete 로 보고해, 실제 미달(예: 1.47)이 빠져나갔다.

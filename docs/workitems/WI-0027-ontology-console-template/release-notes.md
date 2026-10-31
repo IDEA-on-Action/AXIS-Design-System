@@ -42,3 +42,4 @@
 - `check:ontology` 는 소스 정적 판정이라 변수에 담아 넘긴 클래스 · 런타임 조립 문자열은 보지 않아요(README 「검사의 한계」)
 - 데스크톱 콘솔 기준이에요. 폰 폭(390px 등)에서는 사이드바 240px 가 남아 표가 잘려요(README 「지원 화면 폭」)
 - 문서 사이트 a11y 게이트의 `templates/[slug]` 대표는 dashboard 하나라 `/templates/ontology-console/` 상세 페이지는 그 게이트로 재지 않아요(후속 검토)
+  - WI-0106(#270)에서 해소: 게이트가 상세 JSON 이 있는 템플릿 상세를 전부(ontology-console 포함 5개) 4조합으로 재요. 콘솔 결과 앱 UI 자체는 여전히 범위 밖이에요

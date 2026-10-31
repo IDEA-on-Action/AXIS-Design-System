@@ -190,7 +190,7 @@ jobs:
       # 확인 기록은 docs/workitems/WI-0025-brand-theme/todo.md 「Q7 CI 게이트 켜기」에 있다.
       # nontext · demo · tokens 는 앞 E2E step 이 실패해도 돌도록 if 를 둔다(모든 결과를 한 run 에서 보고, 건수 가드가 JSON 없음으로 오판하지 않게).
       # --output 을 나누는 이유: Playwright 는 실행마다 출력 디렉터리를 비우므로 같은 test-results 를 쓰면 앞 실행의 실패 산출물이 지워진다.
-      # 경로는 apps/web/e2e/a11y-routes.cjs 가 앱 라우트 · library · templates index 에서 만든다(문서 정적 경로 전부 + 동적 라우트 대표 1개씩, WI-0062 D2).
+      # 경로는 apps/web/e2e/a11y-routes.cjs 가 앱 라우트 · library · templates index 에서 만든다(문서 정적 경로 전부 + library 동적 라우트 대표 1개씩, WI-0062 D2 + 상세 JSON 이 있는 템플릿 상세 전부, WI-0106).
       - name: E2E a11y (브랜드 2 x 테마 2 x 문서 경로 전부, AC8 · WI-0062 D2)
         id: e2e-a11y
         env:
@@ -243,7 +243,7 @@ jobs:
 
       # 실행 건수 가드: 0건 실행이나 spec 축소가 통과로 보이지 않게 한다.
       # 기대 건수는 spec 을 바꾸면 함께 고친다. a11y 는 손으로 적지 않고 apps/web/e2e/a11y-routes.cjs(spec 과 같은 경로 목록)에서
-      # 경로 수 x 조합 수로 계산한다(WI-0062 D2, 2026-10-25 실측 59경로 x 4 = 236). 실측(playwright --list): demo 8 (2026-10-18),
+      # 경로 수 x 조합 수로 계산한다(WI-0062 D2, 2026-11-01 실측 63경로 x 4 = 252, WI-0106 에서 템플릿 상세 1 → 5). 실측(playwright --list): demo 8 (2026-10-18),
       # nontext 12 (2026-10-19 8건: 포커스 링 ontology 2조합 x 2 + 상태 표식 실요소 4조합 x 1, D1 「주 표식만 판정」.
       # 2026-10-26 WI-0079 에서 ui-react 폼 컨트롤 · Progress · placeholder 실요소 4조합 x 1 추가),
       # tokens 22 (2026-10-19, 라이트 선택자 (0,2,0) 상향과 「프로젝트 :root 가 브랜드 뒤」 갈래 5건 추가).
