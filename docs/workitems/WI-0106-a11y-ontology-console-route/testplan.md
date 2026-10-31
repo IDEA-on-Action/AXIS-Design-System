@@ -66,10 +66,14 @@ library 두 라우트는 그대로(`/library/ui/` 는 `h1`, `/library/ui/accordi
 
 `/templates/monet-hero/`(index.json 에 있고 상세 JSON 없음)는 정적 서버가 200 으로 404 화면을 내요.
 
+아래 표의 앞 두 줄(`neg.b9YK/`)은 래퍼가 선택자 문자열을 직접 만들어 넣은 대조예요(`templateDetailReady` 와 같은 형식, 운영 규칙은 상세 JSON 이 없는 이 slug 를 내지 않음). 그래서 「같은 모양의 선택자가 404 화면에서 실패한다」까지만 보여요. 운영 코드가 실제로 그 선택자를 낸다는 것은 셋째 줄(`negop.NiDp/`)에서 따로 확인했어요. 이 사본은 `a11y-routes.cjs` · `library-reps.cjs` 를 그대로 복사하고(`cmp` 같음) 그 옆 `public/templates/` 사본에만 `monet-hero.json`(index 의 slug · name 만)을 더했고, 서버가 내는 `out/` 에는 상세 JSON 이 없어요. 래퍼는 운영 `listA11yRoutes()` 결과에서 그 경로를 고르기만 하고 선택자는 만들지 않아요.
+
 | 준비 선택자 | 결과 |
 |---|---|
-| 새 규칙 모양 `h1:text-is("Monet Hero Sections")`(index 의 name) | rc 1, 4조합 모두 「locator.waitFor: Test timeout of 30000ms exceeded」(`waiting for locator('h1:text-is("Monet Hero Sections")')`) |
+| 래퍼가 만든 새 규칙 모양 `h1:text-is("Monet Hero Sections")`(index 의 name) | rc 1, 4조합 모두 「locator.waitFor: Test timeout of 30000ms exceeded」(`waiting for locator('h1:text-is("Monet Hero Sections")')`) |
 | 종전 기본 `h1` | rc 1, default 2조합 **통과**(404 화면을 재고 위반 0, 종전 구멍), ontology 2조합은 준비 선택자가 아니라 브랜드 양성 대조(`data-brand` Expected "ontology" Received null)에서 실패 |
+| 운영 규칙이 낸 선택자(`readySelector` = `h1:text-is("Monet Hero Sections")`, `negop.NiDp/monet.log`) | rc 1, 4조합 모두 「locator.waitFor: Test timeout of 30000ms exceeded」(`waiting for locator('h1:text-is("Monet Hero Sections")')`) |
+| 같은 사본 · 같은 래퍼의 양성 대조: ontology-console(상세 JSON 있음, `negop.NiDp/oc.log`) | rc 0, 4 passed |
 
 ## 5. 그 밖의 검사 (AC7)
 
