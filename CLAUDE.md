@@ -2,77 +2,8 @@
 
 > Claude와의 개발 협업을 위한 프로젝트 핵심 문서
 
-**현재 버전**: tokens · theme · ui-react · agentic-ui 1.8.2, cli 1.7.7, mcp 1.4.6 | **상태**: ✅ Active Development
-**npm 배포**: cli 1.7.7 · mcp 1.4.6 (2026-10-29, WI-0097 · 0098 · 0100 check 의 CSS import 해석 판정 · Yarn PnP Tailwind 3 content · 전역 CSS 선택과 상대 @import 펼침, linked 4패키지는 1.8.2 그대로), cli 1.7.6 · mcp 1.4.5 (2026-10-28, WI-0091 · 0094 · 0092 check 의 PnP 루트 선언 · @axis-ds 루트 대상 · TW4 animation 설치본 판정, WI-0093 theme 안내의 선언 출처, linked 4패키지는 1.8.2 그대로), cli 1.7.5 (2026-10-27, WI-0087 theme add · init 애니메이션 안내의 워크스페이스 루트 선언 인정, mcp · linked 4패키지는 그대로), cli 1.7.4 · mcp 1.4.4 (2026-10-26, WI-0090 pnpm 기본 레이아웃 content 판정, linked 4패키지는 1.8.2 그대로), linked 4패키지 1.8.2 · cli 1.7.3 · mcp 1.4.3 (2026-10-26, WI-0079 · 0082 ontology 남은 대비 · Select placeholder), cli 1.7.2 · mcp 1.4.2 (2026-10-26, 배치 6c WI-0085 · 0086, linked 4패키지는 1.8.1 그대로), cli 1.7.1 · mcp 1.4.1 (2026-10-26, 배치 6b WI-0080 · 0081, linked 4패키지는 1.8.1 그대로), linked 4패키지 1.8.1 · cli 1.7.0 · mcp 1.4.0 (2026-10-26, 배치 6 WI-0074 · 0075 · 0076 · 0077 · 0078), linked 4패키지 1.8.0 · cli 1.6.2 · mcp 1.3.5 (2026-10-25, 배치 4 WI-0060 · 0062 · 0063 · 0069 · 0073), linked 4패키지 1.7.0 · cli 1.6.1 · mcp 1.3.4 (2026-10-25, 배치 3 WI-0026 · 0051 · 0068 · 0070 · 0072), ui-react · agentic-ui 1.6.3 (2026-10-25, WI-0071 움직임 줄이기 로딩 표시), linked 4패키지 1.6.2 · cli 1.6.0 · mcp 1.3.3 (2026-10-25, 배치 2 WI-0046 · 0037 · 0041 · 0049 · 0065), ui-react · agentic-ui 1.6.1 (2026-10-24, WI-0054 Avatar), linked 4패키지 1.6.0 · cli 1.5.4 · mcp 1.3.2 (2026-10-24, WI-0029 기본 테마 대비), 이전 ui-react · agentic-ui 1.5.2 · tokens · theme 1.5.1 · cli 1.5.3 · mcp 1.3.1 (2026-10-24, WI-0059 · WI-0061), cli 1.5.0 (2026-10-22, axis add 레지스트리 기반 설치)
-
----
-
-## 📋 프로젝트 개요
-
-**AXIS Design System**은 React 기반 컴포넌트 라이브러리 및 디자인 토큰 시스템입니다.
-
-### 핵심 패키지
-
-| 패키지 | 설명 |
-|--------|------|
-| `@axis-ds/tokens` | 디자인 토큰 (색상, 타이포그래피, 간격 등) |
-| `@axis-ds/ui-react` | React UI 컴포넌트 라이브러리 |
-| `@axis-ds/agentic-ui` | AI/Agent 전용 UI 컴포넌트 |
-| `@axis-ds/theme` | 테마 설정 및 다크모드 지원 |
-| `@axis-ds/cli` | 컴포넌트 설치 CLI 도구 |
-
----
-
-## 🛠️ 기술 스택
-
-| 레이어 | 기술 | 버전 |
-|--------|------|------|
-| **Runtime** | Node.js | 20+ |
-| **Package Manager** | pnpm | 9.15.4+ |
-| **Build** | Turborepo | 2.3.3+ |
-| **Framework** | React | 19 |
-| **Styling** | Tailwind CSS | 3.4 |
-| **Type** | TypeScript | 5.7+ |
-| **Web App** | Next.js | 15 |
-
----
-
-## 📁 프로젝트 구조
-
-```
-axis-design-system/
-├── apps/
-│   └── web/                    # Next.js 문서 사이트
-├── packages/
-│   ├── axis-tokens/            # @axis-ds/tokens
-│   ├── axis-ui-react/          # @axis-ds/ui-react
-│   ├── axis-agentic-ui/        # @axis-ds/agentic-ui
-│   ├── axis-theme/             # @axis-ds/theme
-│   ├── axis-cli/               # @axis-ds/cli
-│   └── axis-mcp/               # MCP 서버
-├── docs/                       # 문서
-│   └── templates/              # 산출물 템플릿
-├── .claude/
-│   ├── rules/                  # AI 협업 규칙
-│   ├── agents/                 # 전문 에이전트
-│   └── commands/               # ax-* 커맨드
-└── package.json                # 루트 패키지
-```
-
----
-
-## 🤖 AI 협업 규칙
-
-> 상세 규칙은 `.claude/rules/`에서 관리됩니다.
-
-| 규칙 파일 | 내용 |
-|-----------|------|
-| `00-general.md` | 언어, 날짜, 작업 실행 원칙 |
-| `05-ssdd.md` | SSDD 파이프라인, WI 산출물 구조 |
-| `06-sync.md` | 작업 완료 후 현행화 규칙 |
-| `10-code-conventions.md` | Import, 네이밍, 스타일링 규칙 |
-| `20-quality.md` | 품질 게이트, 테스트 원칙 |
-| `30-security.md` | 민감 정보, 보안 규칙 |
+**현재 버전**: tokens · theme · ui-react · agentic-ui 1.8.2, cli 1.7.10, mcp 1.4.9 | **상태**: ✅ Active Development
+**npm 배포**: cli 1.7.10 · mcp 1.4.9 (2026-11-01, WI-0099 init 애니메이션 안내가 check 와 같은 전역 CSS 줄 판정 · WI-0095 PnP 루트 전용 선언 경계를 init · add · MCP install 로 넓힘, linked 4패키지는 1.8.2 그대로). 이전 배포 이력은 각 패키지 CHANGELOG.md · git log · WI release-notes 에 있어요
 
 ---
 
@@ -89,87 +20,20 @@ axis-design-system/
 
 ---
 
-## 🚀 개발 명령어
-
-```bash
-# 의존성 설치
-pnpm install
-
-# 개발 서버 실행
-pnpm dev:web
-
-# 빌드
-pnpm build
-
-# 타입 체크
-pnpm type-check
-
-# 린트
-pnpm lint
-
-# 웹앱 빌드 (template index 자동 생성 후 next build)
-pnpm build:web
-
-# 레지스트리 빌드
-pnpm build:registry
-
-# npm 배포 (CI는 publish.yml의 npm Trusted Publishing(OIDC), npm 토큰은 모두 삭제됨)
-pnpm release                    # build + changeset publish (전체 패키지)  (평소 배포는 CI 경로)
-pnpm publish -r --access public --no-git-checks  # 비상용 수동 배포: 로컬은 대화형 2FA(OTP) 필요, provenance 없음. 평소에는 CI(OIDC) 경로를 씀
-```
-
----
-
 ## 📦 npm 배포 참고
 
-- **npm 스코프**: `@axis-ds` (npmjs.com 조직)
-- **인증**: npm Trusted Publishing(OIDC). `publish.yml`이 `id-token: write`와 `npm@11.19.1`로 발행 (1.2.1에서 실측, 2026-10-17). `NPM_TOKEN` secret과 npm granular 토큰은 삭제함(2026-10-17). Publishing access는 linked 4패키지만 「disallow bypass 2fa tokens」로 바꿨고(사용자 설정, 2026-10-17), cli · mcp는 1.1.4 OIDC publish를 확인했으니(2026-10-17) 같은 설정으로 변경할 차례. 프로젝트 `.npmrc`에는 인증 라인 없음
-- **Trusted publisher**: linked 4패키지(tokens · ui-react · agentic-ui · theme) 와 cli · mcp 모두 등록(`IDEA-on-Action/AXIS-Design-System` · `publish.yml`). cli · mcp는 2026-10-17 등록 후 1.1.4를 OIDC로 첫 발행해 확정(#106)
-- **Changesets**: linked 설정 (tokens, ui-react, agentic-ui, theme 동시 버전 관리)
+> 인증(OIDC Trusted Publishing) · 비상 수동 배포 · publish 부수효과는 `/ax-release`(`.claude/commands/ax-release.md`)에 있어요
+
 - **tokens 를 올리면 mcp 도 함께**: `@axis-ds/tokens` 를 올리는 changeset 이 있으면 같은 발행에 `@axis-ds/mcp` patch 이상을 반드시 넣어요(같은 파일이든 다른 파일이든). mcp 는 빌드할 때 tokens dist 값을 동봉하고(WI-0076) tokens 를 devDependency 로만 가져서, tokens 만 발행하면 mcp 는 다시 발행되지 않고 MCP 토큰 응답이 이전 값으로 남아요. CI `pnpm check-changeset-mcp-tokens` 가 위반을 막아요
 - **registry-core 를 바꾸면 cli · mcp 둘 다**: `packages/axis-registry-core/` 아래 파일을 바꾸는 PR 은 미발행 changeset 에 `@axis-ds/cli` 와 `@axis-ds/mcp` 올림을 모두 넣어요(registry-core 는 private 0.0.0 이라 발행되지 않고 cli · mcp 가 빌드 때 번들해서, 한쪽만 올리면 다른 쪽이 낡은 코어로 남아요, WI-0080 · 배치 6b 사용자 결정). 같은 `pnpm check-changeset-mcp-tokens` 가 PR 은 `origin/<base>` 와의 merge-base, main push 는 push 이전 커밋(`github.event.before`, frontend.yml 이 `AXIS_PUSH_BEFORE` 로 넘김)과의 merge-base(없으면 `HEAD^`), 로컬은 `origin/main` 과의 merge-base 를 기준으로 바뀐 파일을 보고, 기준을 못 구하면 exit 2 예요(CI checkout 은 `fetch-depth: 0`). 로컬은 커밋 전 워킹트리 변경도 셈하므로 `origin/main` 이 낡았으면 `git fetch origin` 뒤 돌려요
-- **publish 부수효과**(로컬 수동 배포 때만): 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
-- **CI 배포**: `.github/workflows/publish.yml` - main push 시 changesets/action이 OIDC로 발행 (npm 인증용 GitHub Secret 불필요)
-- **현재 배포 버전**: cli 1.7.7 · mcp 1.4.6 (2026-10-29 배포, run 40811479954, cli · mcp patch, PR #250 · #252 · #253 · #255 를 Version PR #251 하나로 발행, provenance 2/2. WI-0097: Tailwind 4 컴포넌트 tailwind.css 줄 · tokens CSS import 를 「이 앱에서 해석되는가」로 판정(루트 선언 미설치 · PnP 루트 전용 · 설치본에 파일 없음은 안내 · 인정하지 않음, theme add 의 미루기 판정을 registry-core 로 옮김). WI-0098: Yarn PnP 에서 node_modules content glob 은 WARN, unplugged 실경로는 인정(rc 1 → 0 방향만), theme add PnP 안내. WI-0100: 전역 CSS 선택이 axis.config globalCss 를 먼저 씀(0100a), 상대 @import 를 펼쳐 근거로 인정 · 순환 WARN · 깊이 32 · 하위 파일 기준 해석(0100b). check 종료 코드는 0097 · 0100 이 바꾸지 않음. 발행본 재측정 CLI = MCP 174/174. linked 4패키지 1.8.2 그대로. cli 1.7.6 · mcp 1.4.5 (2026-10-28 배포, run 40578802526, cli · mcp patch, PR #245 · #246 을 Version PR #247 하나로 발행, provenance 2/2. WI-0091: Yarn PnP 에서 루트 전용 선언 불인정(tailwindcss FAIL · 나머지 전용 WARN, 「업데이트 뒤 check 종료 코드가 0 에서 1 로 바뀔 수 있는 경우」를 changeset 에 명시), isPnpProject 가 .git 에서 멈춤. WI-0094: @axis-ds/* 설치 확인에 루트 선언 포함. WI-0092: TW4 animation 은 줄마다 선언 + 설치본. WI-0093: theme list · info · add · MCP 브랜드 도구의 tokens 안내가 선언 출처를 따름(npm 루트는 「워크스페이스 루트에서 npm install」), 판정은 registry-core 공용 헬퍼). linked 4패키지 1.8.2 그대로. cli 1.7.5 (2026-10-27 배포, run 40396533945, cli patch, WI-0087: theme add 가 루트 선언 tokens 를 앱에 다시 쓰지 않음 · 루트 theme 선언이면 ThemeProvider 안내 끔 · Tailwind 4 루트 선언 컴포넌트 tailwind.css 는 설치본 파일이 있을 때만, init 애니메이션 안내 3갈래, Yarn PnP · 자체 lockfile 앱은 종전, provenance 1/1). mcp 1.4.4 · linked 4패키지 1.8.2 그대로. cli 1.7.4 · mcp 1.4.4 (2026-10-26 배포, run 40316401629, cli · mcp patch, WI-0090: pnpm 기본 레이아웃에서 실경로가 같은 상위 설치본 · 스토어 상대 실경로 content glob 인정, provenance 2/2). linked 4패키지는 1.8.2 그대로. linked 4패키지(tokens · theme · ui-react · agentic-ui) 1.8.2 · cli 1.7.3 · mcp 1.4.3 (2026-10-26 배포, run 40302972775, linked patch · cli · mcp patch, WI-0079 ontology 남은 대비 미달 반영(경계 · 트랙 · Progress 채움 · placeholder) · WI-0082 Select placeholder 색). cli 1.7.2 · mcp 1.4.2 (2026-10-26 배포, run 40271807118, cli · mcp patch, 배치 6c: 의존성 선언 판정이 워크스페이스 루트 선언을 봄(Tailwind · 컴포넌트 판정 · init · add · MCP install) · 심링크 `--dir` 실경로 기준, 설치 · 실행 안내가 매니저별 · lockfile 이 없으면 packageManager 필드를 따름, provenance 2/2). linked 4패키지는 1.8.1 그대로. cli 1.7.1 · mcp 1.4.1 (2026-10-26 배포, run 40247657745, cli · mcp patch, 배치 6b: 호이스팅 모노레포의 Tailwind 3 content 를 실제 설치 위치로 판정 · theme add 상위 경로 안내, 설치 안내 명령이 워크스페이스 루트 lockfile 을 따름 · 루트에만 선언한 의존성 인정과 출처 표시, provenance 2/2). linked 4패키지는 1.8.1 그대로. linked 4패키지(tokens · theme · ui-react · agentic-ui) 1.8.1 · cli 1.7.0 · mcp 1.4.0 (2026-10-26 배포, run 40205738223, linked patch · cli · mcp minor, 배치 6: check 설치본 상위 탐색(호이스팅 모노레포), 비대화형 실행의 기본값 진행 · rc 1 안내와 template init -y, MCP 토큰 데이터를 tokens dist 에서 빌드 때 생성, Tailwind 3 preset 기본 테두리색, library 상세 E2E 스모크(Pages), provenance 6/6). linked 4패키지(tokens · theme · ui-react · agentic-ui) 1.8.0 · cli 1.6.2 · mcp 1.3.5 (2026-10-25 배포, run 40179615916, linked minor · cli · mcp patch, 배치 4: 기본 테마 텍스트 · 비텍스트 대비(새 토큰 6개 · 바뀐 기본값), agentic-ui · ui-react 비대비 a11y · 시각 하이드레이션, Tooltip 포커스 스크롤 지속성, library 상세 id 파일 · shadcn 5개 새 slug, provenance 6/6). linked 4패키지(tokens · theme · ui-react · agentic-ui) 1.7.0 · cli 1.6.1 · mcp 1.3.4 (2026-10-25 배포, run 40137182470, linked minor · cli · mcp patch, 배치 3: 밀도 토큰, Tailwind 3 CJS preset 진입점, 브랜드 해제 유지 · 마크업 우선, check 설치본 · plugins · globals.css 판정, provenance 6/6). ui-react · agentic-ui 1.6.3 (2026-10-25 배포, run 40127935334, patch, WI-0071 움직임 줄이기에서 로딩 · 진행 표시는 느리게, provenance 2/2). linked 4패키지 1.6.2 · cli 1.6.0 · mcp 1.3.3 (2026-10-25 배포, run 40110014386, linked patch · cli minor · mcp patch, 배치 2: 애니메이션 플러그인 · keyframes, init 경로 탐색 · 재실행 병합, theme add 기본 CSS, check 새 판정, 템플릿 빌드, provenance 6/6). ui-react · agentic-ui 1.6.1 (2026-10-24 배포, run 40100713780, patch, WI-0054 Avatar 하이드레이션 전 이미지 오류 fallback, provenance 2/2). linked 4패키지(tokens · theme · ui-react · agentic-ui) 1.6.0 · cli 1.5.4 · mcp 1.3.2 (2026-10-24 배포, run 40089793369, linked minor · cli · mcp patch, WI-0029 기본 테마 흰 글자 · 보조 글자 대비 AA, provenance 6/6). 이전 cli 1.5.3 · mcp 1.3.1 (2026-10-24 배포, run 40048194529, patch, WI-0061 레지스트리 비교를 항목 sha256 으로, provenance 2/2). ui-react · agentic-ui 1.5.2 (2026-10-24 배포, run 40044378744, patch, WI-0059 d.ts 후처리, provenance 2/2). 이전 linked 4패키지 1.5.1 · cli 1.5.2 · mcp 1.3.0 (2026-10-24 배포, run 40036649294, patch · mcp minor, provenance 6/6, WI-0052 · 0053 · 0055 · 0057). 이전 cli 1.5.1 · mcp 1.2.3 (2026-10-23 배포, run 39869322957, patch, axis.minu.best(403) 참조를 pages.dev 로 전환 · axis.config.json schema 배포, provenance 2/2). 정식 주소는 `https://axis-design-system.pages.dev` 이고 사용자 config 에 기록되므로 Pages 프로젝트 `axis-design-system` 은 삭제 · 이름 변경 금지. 이전 cli 1.5.0 (2026-10-22 배포, run 39795328665, cli 단독 minor, axis add 레지스트리 기반 설치 · 원격 pages.dev 우선 · 동봉본 폴백, provenance). linked 4패키지 1.5.0 (2026-10-21 배포, run 39496056901, linked 4패키지 minor, 서버 컴포넌트 호환 · 모듈 보존 빌드, provenance 4/4). 이전 1.4.0 (2026-10-20 배포, run 39413301099, linked 4패키지 minor, Tailwind 4 연동, provenance 4/4). cli 1.4.0 · mcp 1.2.2 (같은 run, init 안내 · check WARN, provenance 2/2). 이전 1.3.0 (2026-10-19, run 39238361098), cli 1.3.0 · mcp 1.2.1 (2026-10-20, run 39351203366)
+- **현재 배포 버전**: cli 1.7.10 · mcp 1.4.9 (2026-11-01 배포, run 41241569184, cli · mcp patch, PR #267 · #269 를 Version PR #268 하나로 발행, provenance 2/2. WI-0099: init 의 Tailwind 4 애니메이션 안내가 registry-core `inspectTailwind4Animation` 하나로 check 와 같은 판정을 씀(check 판정 · 문구는 바이트 그대로). WI-0095: Yarn PnP 에서 워크스페이스 루트에만 선언한 패키지를 init · axis add · MCP install_component 도 「선언됨」으로 보지 않고 앱에 추가하라고 안내함. linked 4패키지 1.8.2 그대로). 이전 배포는 CHANGELOG.md · git log 참고
+- **정식 주소**: `https://axis-design-system.pages.dev` 이고 사용자 config 에 기록되므로 Cloudflare Pages 프로젝트 `axis-design-system` 은 삭제 · 이름 변경 금지
 
 ---
 
 ## 📝 참고사항
 
-### 문서
 - **문서 인덱스**: [docs/INDEX.md](docs/INDEX.md)
 - **Monorepo 설정**: [docs/guides/monorepo-setup.md](docs/guides/monorepo-setup.md)
 - **Agentic UI 디자인**: [docs/guides/agentic-ui-design.md](docs/guides/agentic-ui-design.md)
-
-### 커스텀 커맨드 (ax-*)
-- `ax-build`, `ax-component`, `ax-dev`, `ax-health`, `ax-library`
-- `ax-mcp`, `ax-prompt`, `ax-release`, `ax-wi`
-
-### 전문 에이전트
-- `design-system-architect`, `component-dev`, `code-reviewer`
-- `docs-writer`, `test-engineer`
-
-### 템플릿
-- **컴포넌트 PRD**: [docs/templates/component-prd.md](docs/templates/component-prd.md)
-- **컴포넌트 스펙**: [docs/templates/component-spec.md](docs/templates/component-spec.md)
-- **릴리스 노트**: [docs/templates/release-notes.md](docs/templates/release-notes.md)
-- **ADR**: [docs/templates/adr.md](docs/templates/adr.md)
-
----
-
-# important-instruction-reminders
-
-Do what has been asked; nothing more, nothing less.
-NEVER create files unless they're absolutely necessary for achieving your goal.
-ALWAYS prefer editing an existing file to creating a new one.
-NEVER proactively create documentation files (*.md) or README files.
-
-# Context Engineering
-
-당신은 최신 스택이 빠르게 변하는 프로젝트에서 작업하는 AI 개발자입니다.
-
-1. **환경 파악**: package.json, 구성 파일을 읽고 프레임워크·라이브러리 버전 확인
-2. **버전 차이 대응**: 릴리스 노트 참조, 최신 권장사항 확인
-3. **설계 시 체크**: 네트워크 리소스, 인증/데이터 레이어 호환성 고려
-4. **구현 중 검증**: 린트/타입/빌드 명령 실행, 예상 오류 미리 보고
-5. **결과 전달**: 버전 차이 반영 사항, 추가 확인 항목 명시
+- **템플릿**: [컴포넌트 PRD](docs/templates/component-prd.md) · [컴포넌트 스펙](docs/templates/component-spec.md) · [릴리스 노트](docs/templates/release-notes.md) · [ADR](docs/templates/adr.md)

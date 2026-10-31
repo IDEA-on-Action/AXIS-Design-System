@@ -90,17 +90,21 @@
 | 104 | Tailwind 4 check animation 이 CSS import 만 보고 선언 · 설치본을 보지 않음(WI-0087 측정 V12) | WI-0092 (#235) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
 | 105 | theme list · info · MCP 브랜드 도구의 미설치 안내가 선언 여부와 상관없이 add 명령(WI-0087 측정) | WI-0093 (#236) | P18 | P3 | ✅ 2026-10-28 (#246, cli 1.7.6 · mcp 1.4.5) |
 | 106 | check dependencies 의 @axis-ds/* 설치 확인 대상에 루트 선언을 넣을지 재결정(배치 6c 경계, WI-0087 조사) | WI-0094 (#237) | P18 | P3 | ✅ 2026-10-28 (#245, cli 1.7.6 · mcp 1.4.5) |
-| 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ⏳ 배치 11(0099 뒤) |
+| 107 | PnP 루트 선언 경계를 init · theme add · add · template apply 로 넓히기(WI-0091 조사에서 분리, 사용자 결정 Q2) | WI-0095 (#239) | P18 | P3 | ✅ 2026-11-01 (#269, cli 1.7.10 · mcp 1.4.9) |
 | 109 | check 가 해석되지 않는 CSS import 를 안내 · 인정함(TW4 B1 · globals.css tokens import)(WI-0091 · 0094 조사에서 발견) | WI-0097 (#241) | P18 | P3 | ✅ 2026-10-29 (#253, cli 1.7.7 · mcp 1.4.6) |
 | 110 | Yarn PnP 에서 node_modules content glob 이 아무것도 스캔하지 않는데 check 가 PASS(WI-0091 조사에서 발견) | WI-0098 (#242) | P18 | P3 | ✅ 2026-10-29 (#252, cli 1.7.7 · mcp 1.4.6) |
-| 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | 🔄 배치 11 |
+| 111 | init 이 다른 애니메이션 패키지만 설치된 경우 안내하지 않음(S9)(WI-0092 조사에서 발견) | WI-0099 (#243) | P18 | P3 | ✅ 2026-11-01 (#267, cli 1.7.10 · mcp 1.4.9) |
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
-| 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ⏳ 다음 linked 발행 |
+| 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ⏳ 배치 12 |
+| 118 | a11y 게이트에 ontology-console 템플릿 상세 경로 추가(지금은 상세 JSON 이 있는 첫 템플릿만 검사, ontology 테마 완료 후속) | WI-0106 (#270) | P18 | P3 | ⏳ 배치 12 |
+| 119 | 템플릿별 checks 를 axis check · MCP check_project 와 연동(WI-0027 FR-4b) + registry-core axis-config.ts 주석 「brand 는 theme add 만」 정정 | WI-0107 (#271) | P18 | P3 | ⏳ 배치 13 |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 107 | init · 컴포넌트 추가(axis add · MCP install_component)가 Yarn PnP 의 워크스페이스 루트 전용 선언을 「선언됨」으로 보지 않음, npm cli v1.7.10 · mcp v1.4.9 릴리스 (#269 · Version PR #268) | WI-0095 (#239) | P18 | 2026-11-01 |
+| 111 | init 의 Tailwind 4 애니메이션 안내가 check 와 같은 전역 CSS 줄 판정(registry-core inspectTailwind4Animation)을 씀, npm cli v1.7.10 · mcp v1.4.9 릴리스 (#267 · Version PR #268) | WI-0099 (#243) | P18 | 2026-11-01 |
 | 116 | check 가 Tailwind 3 preset · tokens 줄을 설치본의 exports(./tailwind) 로 판정, npm cli v1.7.9 · mcp v1.4.8 릴리스 (#264 · Version PR #266) | #260 | P18 | 2026-10-31 |
 | 114 | check 가 Yarn Plug'n'Play zip 안의 컴포넌트 tailwind.css 를 WARN 으로 알리고 PnP 루트 dependenciesMeta unplug 를 안내, npm cli v1.7.9 · mcp v1.4.8 릴리스 (#263 · Version PR #266) | #249 | P18 | 2026-10-31 |
 | 108 | npm 워크스페이스 루트 선언 미설치에 「워크스페이스 루트에서 npm install」 안내(theme add · init · check), npm cli v1.7.9 · mcp v1.4.8 릴리스 (#261 · Version PR #266) | #240 | P18 | 2026-10-31 |
@@ -443,6 +447,8 @@
 - 재계획(2026-10-29, `/ax:todo plan`, 사용자 결정): 배치 9(병렬) WI-0101 ∥ 0103 ∥ 0089 → 배치 10(병렬) WI-0088 ∥ 0096 ∥ 0102(원인 측정 · 범위 결정) → 배치 11(순차) WI-0099 → 0095. WI-0099 는 0096 과 animation 경로가 겹쳐 0096 머지 뒤, WI-0095 는 0088 · 0096 · 0099 가 고친 호출지 위에서 경계를 넓혀 마지막. WI-0084 는 Windows 실기 측정 대기로 보류. 배치마다 Version PR 하나(cli · mcp patch, 0102 가 ui-react 를 고치면 linked 동반). 배치 9 는 다음 세션에서 착수
 - 배치 9 완료(2026-10-30): WI-0103 #257 머지 c166b8a · WI-0101 #256 머지 6441a14(0103 과의 테스트 2파일 충돌을 병합 커밋으로 해소, 독립 검증 3관점 통과) · WI-0089 #258 머지 5860185 · Version PR #259 머지 2445270, publish run 41062612171 success, npm cli 1.7.8 · mcp 1.4.7(latest), provenance 2/2, linked 4패키지는 1.8.2 그대로. 결정 Q61a · Q61b · Q65a(0101) · Q86 · Q87(0089)는 모두 권장안 확정. 병합 검증에서 발견한 Tailwind 3 preset 의 exports 공백은 WI-0104(#260)로 등록하고 배치 10 에 추가(사용자 결정): 배치 10(병렬) WI-0088 ∥ 0096 ∥ 0102 ∥ 0104
 - 배치 10 완료(2026-10-31): WI-0096 #261 머지 5ead079 · WI-0088 #262 머지 9c9f223(보안 리뷰 지적으로 템플릿 경로 탈출 차단 추가, changeset 에 「합쳐도 템플릿 값으로 바뀌는 값」 주의 명시) · WI-0102 #263 머지 5b1dc8a · WI-0104 #264 머지 d592aef(0102 와의 테스트 2파일 충돌을 병합 커밋으로 해소, 테스트 이름 대조 406 · 109 빠짐 0). 각 PR 은 앞 머지를 반영한 main 을 병합해 다시 검증한 뒤 머지. Version PR #266 머지 068a3bd, publish run 41135645387 success, npm cli 1.7.9 · mcp 1.4.8(latest), provenance 2/2, linked 4패키지는 1.8.2 그대로. 결정 Q100 ~ Q137 28건 중 27건 권장안 확정, Q121(ui-react · agentic-ui preferUnplugged)은 다음 linked 발행에 포함하기로 하고 WI-0105(#265)로 등록. 다음은 배치 11(순차) WI-0099 → 0095
+- 배치 11 완료(2026-11-01): WI-0099 #267 머지 e4d89ae → WI-0095 #269 머지 fbaea29(순차) · Version PR #268 머지 8b0829d(close/reopen 으로 CI 부착, CI 10m42s), publish run 41241569184 success, npm cli 1.7.10 · mcp 1.4.9, provenance 2/2(SLSA v1), linked 4패키지는 1.8.2 그대로. 발행본 재측정(새 HOME · env 주입 없음): 설치 rc 0 · `axis --version` 1.7.10 · MCP stdio tools 18, dist 대조 신판/구판(1.7.9 · 1.4.8) inspectTailwind4Animation cli 3/0 · mcp 2/0, appOnlyInPnp cli 9/6 · mcp 7/6(한글 문구는 dist 에서 \uXXXX 로 이스케이프돼 문자열 검색이 0 이 나오므로 식별자로 셈). PnP 동작 실측은 각 PR 의 Yarn 4.5.3 측정(WI testplan)
+- 재계획(2026-11-01, `/ax:todo plan`, 사용자 결정): 배치 12(병렬) WI-0105 preferUnplugged ∥ WI-0106 a11y 경로(고치는 파일이 겹치지 않음, linked 1.8.3 + Pages) → 배치 13 WI-0107 FR-4b(registry-core 를 고치므로 axis-config.ts 주석 정정을 함께, cli · mcp minor). WI-0084 는 Windows 실기 측정 대기로 계속 보류, v0.28 보조 상자 기본 닫힘 · 폰 폭은 디자인 오너 확인 대기
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

@@ -111,3 +111,16 @@ pnpm version major
 
 WI 작업인 경우 `/ax-wi end`를 실행하세요.
 WI가 아닌 경우: project-todo.md 상태만 갱신하고 CHANGELOG.md를 업데이트합니다.
+
+## 7. npm 배포 인증 · 비상 경로 (CLAUDE.md 에서 옮김)
+
+```bash
+pnpm release                    # build + changeset publish (전체 패키지)  (평소 배포는 CI 경로)
+pnpm publish -r --access public --no-git-checks  # 비상용 수동 배포: 로컬은 대화형 2FA(OTP) 필요, provenance 없음. 평소에는 CI(OIDC) 경로를 씀
+```
+
+- **npm 스코프**: `@axis-ds` (npmjs.com 조직)
+- **인증**: npm Trusted Publishing(OIDC). `publish.yml`이 `id-token: write`와 `npm@11.19.1`로 발행 (1.2.1에서 실측, 2026-10-17). `NPM_TOKEN` secret과 npm granular 토큰은 삭제함(2026-10-17). Publishing access는 linked 4패키지만 「disallow bypass 2fa tokens」로 바꿨고(사용자 설정, 2026-10-17), cli · mcp는 1.1.4 OIDC publish를 확인했으니(2026-10-17) 같은 설정으로 변경할 차례. 프로젝트 `.npmrc`에는 인증 라인 없음
+- **Trusted publisher**: linked 4패키지(tokens · ui-react · agentic-ui · theme) 와 cli · mcp 모두 등록(`IDEA-on-Action/AXIS-Design-System` · `publish.yml`). cli · mcp는 2026-10-17 등록 후 1.1.4를 OIDC로 첫 발행해 확정(#106)
+- **publish 부수효과**(로컬 수동 배포 때만): 각 패키지 디렉토리에 `.npmrc` 복사본 생성됨 - 커밋 불필요, 삭제 권장
+- **CI 배포**: `.github/workflows/publish.yml` - main push 시 changesets/action이 OIDC로 발행 (npm 인증용 GitHub Secret 불필요)
