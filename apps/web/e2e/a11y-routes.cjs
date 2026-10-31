@@ -7,8 +7,9 @@
  * a11y.spec.ts 와 .github/workflows/frontend.yml 「E2E 실행 건수 가드」가 같은 이 파일을 읽는다.
  *
  * - 정적 경로: page.tsx 마다 1개. 경로 그룹 `(docs)` 같은 세그먼트는 주소에서 빠지고, `_` 로 시작하는 폴더는 라우트가 아니다.
- * - 동적 경로: 대표 1개씩. 고르는 규칙은 DYNAMIC 에 적고, 규칙이 없는 동적 라우트가 생기면 조용히 빼지 않고 멈춘다.
- *   library 는 WI-0060 머지 뒤 index.json 기준(상세 주소는 항목마다 하나)이다.
+ * - 동적 경로: 고르는 규칙은 DYNAMIC 에 적고, 규칙이 없는 동적 라우트가 생기면 조용히 빼지 않고 멈춘다.
+ *   library 두 라우트는 대표 1개씩이다(WI-0060 머지 뒤 index.json 기준, 상세 주소는 항목마다 하나).
+ *   templates 상세는 상세 JSON(public/templates/<slug>.json)이 있는 템플릿 전부다(WI-0106 D1).
  * - next.config.ts 가 trailingSlash: true 라 모든 경로는 `/` 로 끝난다.
  *
  * CLI: `node e2e/a11y-routes.cjs --count` 는 경로 수, `--combos` 는 조합(공백 구분), 인자가 없으면 경로 · 종류 · 라우트를 한 줄에 하나씩 출력한다.
@@ -41,6 +42,18 @@ const READY = {
  */
 const LIBRARY_DETAIL_READY = 'h2:text-is("설치")'
 
+/**
+ * templates 상세 준비 선택자(WI-0106 D2): 그 템플릿 상세 JSON 의 name 을 글자 그대로 든 h1.
+ * 정적 export 는 상세 JSON 이 없는 slug 에도(generateStaticParams 가 index 의 slug 전부를 내므로) notFound 를 담은
+ * index.html 을 200 으로 내고, 브라우저가 그리는 404 화면에도 h1(「404」)이 있어 기본 `h1` 으로는 404 화면을 재고 통과한다(WI-0106 testplan 4.2).
+ */
+function templateDetailReady(name) {
+  return `h1:text-is(${JSON.stringify(name)})`
+}
+
+/** templates 상세 목록에 반드시 들어 있어야 하는 slug(WI-0106 D1, 빠지면 설정 단계에서 멈춘다) */
+const TEMPLATE_DETAIL_REQUIRED = ['ontology-console']
+
 function readJson(rel) {
   return JSON.parse(fs.readFileSync(path.join(PUBLIC_DIR, rel), 'utf-8'))
 }
@@ -55,17 +68,35 @@ function libraryCodeRep() {
   return codeRepCache
 }
 
-/** 동적 라우트(세그먼트 패턴) -> 대표 경로 1개. 문자열 또는 { path, ready } 를 돌려준다 */
+/**
+ * 상세 JSON 이 있는 템플릿 전부의 { path, ready }(WI-0106 D1 · D2).
+ * 상세 JSON 이 없는 slug 는 상세 페이지가 notFound 라 넣지 않는다. 0건이거나 TEMPLATE_DETAIL_REQUIRED 가 빠지면 멈춘다.
+ */
+function templateDetailRoutes() {
+  const index = readJson('templates/index.json')
+  const routes = []
+  for (const x of index.templates) {
+    if (!fs.existsSync(path.join(PUBLIC_DIR, 'templates', `${x.slug}.json`))) continue
+    const detail = readJson(`templates/${x.slug}.json`)
+    if (typeof detail.name !== 'string' || detail.name.trim() === '') {
+      throw new Error(`templates/${x.slug}.json 에 name 이 없어요 (준비 선택자를 만들 수 없음)`)
+    }
+    routes.push({ path: `/templates/${x.slug}/`, ready: templateDetailReady(detail.name) })
+  }
+  if (routes.length === 0) throw new Error('templates/index.json 에 상세 JSON 이 있는 템플릿이 없어요')
+  for (const slug of TEMPLATE_DETAIL_REQUIRED) {
+    if (!routes.some((r) => r.path === `/templates/${slug}/`)) {
+      throw new Error(`templates 상세 목록에 ${slug} 가 없어요 (index.json 항목 · public/templates/${slug}.json 확인)`)
+    }
+  }
+  return routes
+}
+
+/** 동적 라우트(세그먼트 패턴) -> 경로. 문자열, { path, ready }, 또는 그 배열을 돌려준다 */
 const DYNAMIC = {
   'library/[category]': () => `/library/${libraryCodeRep().category}/`,
   'library/[category]/[slug]': () => ({ path: libraryCodeRep().pagePath, ready: LIBRARY_DETAIL_READY }),
-  'templates/[slug]': () => {
-    const index = readJson('templates/index.json')
-    // 상세 JSON 이 있는 첫 템플릿(없는 slug 는 상세 페이지가 notFound)
-    const t = index.templates.find((x) => fs.existsSync(path.join(PUBLIC_DIR, 'templates', `${x.slug}.json`)))
-    if (!t) throw new Error('templates/index.json 에 상세 JSON 이 있는 템플릿이 없어요')
-    return `/templates/${t.slug}/`
-  },
+  'templates/[slug]': templateDetailRoutes,
 }
 
 function findPages(dir, segs, out) {
@@ -92,20 +123,20 @@ function listA11yRoutes() {
   for (const segs of pages) {
     const urlSegs = segs.filter((s) => !(s.startsWith('(') && s.endsWith(')')))
     const route = urlSegs.join('/')
-    let p
-    let ready
-    let kind = 'static'
     if (urlSegs.some((s) => s.includes('['))) {
       const pick = DYNAMIC[route]
       if (!pick) throw new Error(`대표 경로 규칙이 없는 동적 라우트예요: ${route} (a11y-routes.cjs DYNAMIC 에 추가)`)
       const picked = pick()
-      if (typeof picked === 'string') p = picked
-      else ({ path: p, ready } = picked)
-      kind = 'dynamic'
+      const list = Array.isArray(picked) ? picked : [picked]
+      if (list.length === 0) throw new Error(`동적 라우트 규칙이 경로를 하나도 내지 않았어요: ${route}`)
+      for (const one of list) {
+        const { path: p, ready } = typeof one === 'string' ? { path: one } : one
+        routes.push({ path: p, name: nameOf(p), kind: 'dynamic', route, readySelector: ready ?? READY[p] ?? 'h1' })
+      }
     } else {
-      p = route === '' ? '/' : `/${route}/`
+      const p = route === '' ? '/' : `/${route}/`
+      routes.push({ path: p, name: nameOf(p), kind: 'static', route: route || '/', readySelector: READY[p] ?? 'h1' })
     }
-    routes.push({ path: p, name: nameOf(p), kind, route: route || '/', readySelector: ready ?? READY[p] ?? 'h1' })
   }
   routes.sort((a, b) => a.path.localeCompare(b.path))
   const dup = routes.map((r) => r.path).filter((v, i, a) => a.indexOf(v) !== i)
