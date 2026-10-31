@@ -14,7 +14,9 @@
  *   4. @axis-ds/mcp 는 tarball 을 빈 디렉터리에 설치해 stdio 로 실행하고
  *      레지스트리 도구를 호출한다(scripts/mcp-smoke.mjs, WI-0036)
  *   5. Tailwind 4 CSS 진입점이 tarball 에 실재하고, 그 안의 @source 상대 경로가
- *      tarball 안의 실제 경로를 가리킨다(WI-0044)
+ *      tarball 안의 실제 경로를 가리킨다(WI-0044). 배포 CSS 중 하나라도 파일을 스캔하는 @source 를
+ *      담으면 tarball package.json 의 preferUnplugged 가 true 여야 한다(WI-0105: Yarn Plug'n'Play 는
+ *      패키지를 zip 으로 두고 Tailwind 4 스캐너는 실제 디렉터리만 읽어서, 풀어 두지 않으면 아무것도 스캔되지 않는다)
  *   6. G1 "use client" 정적 검사(WI-0050): ui-react · agentic-ui · theme 의 지시문 목록 파일에는
  *      ESM · CJS 모두 지시문이 있고, 루트 배럴 · cn · *Variants 파일에는 없으며, 목록 밖 파일에
  *      상태 훅 · createContext/useContext · "use client" 모듈 점 접근이 없다(scripts/use-client-gate.mjs)
@@ -162,6 +164,25 @@ for (const pkgPath of packages) {
         if (!existsSync(join(dirname(file), m[1]))) {
           fail(name, `${rel} 의 @source "${m[1]}" 가 tarball 안에 없음`);
         }
+      }
+    }
+    // 5-1. 파일을 스캔하는 @source 를 담은 배포 CSS 가 있으면 preferUnplugged 필수(WI-0105).
+    // 패키지 이름 목록이 아니라 tarball 안 CSS 의 관측값으로 분기한다. `@source not` · `@source inline(...)` 은
+    // 디렉터리를 읽지 않으므로 세지 않는다
+    const scanningCss = collectCss(root).filter((css) =>
+      /^\s*@source\s+(?!not\b|inline\s*\()["']/m.test(readFileSync(css, 'utf8'))
+    );
+    if (scanningCss.length > 0) {
+      const files = scanningCss.map((css) => css.replace(root + '/', '')).join(', ');
+      if (published.preferUnplugged !== true) {
+        fail(
+          name,
+          `${files} 에 @source 가 있지만 package.json 의 preferUnplugged 가 true 가 아님` +
+            ` (값: ${JSON.stringify(published.preferUnplugged)}). Yarn Plug'n'Play 는 패키지를 .yarn/cache 의 zip 안에 두고` +
+            ` Tailwind 4 스캐너는 zip 안을 읽지 못해 컴포넌트 클래스가 생성되지 않음(WI-0105)`
+        );
+      } else {
+        console.log(`  · [${name}] @source CSS ${scanningCss.length}개(${files}) · preferUnplugged true`);
       }
     }
 
