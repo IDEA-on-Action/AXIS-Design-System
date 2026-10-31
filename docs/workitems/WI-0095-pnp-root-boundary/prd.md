@@ -1,6 +1,6 @@
 # WI-0095: Plug'n'Play 루트 선언 경계를 init · add 로 넓힘 PRD
 
-> 작성일: 2026-10-31 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0095 | GitHub: #239 | 우선순위: P3 | 상태: 구현 완료, Q150 ~ Q157 은 권장안으로 진행, 사용자 확인 대기
+> 작성일: 2026-10-31 | 버전: v1.0 | 작성자: Sinclair Seo | WI: WI-0095 | GitHub: #239 | 우선순위: P3 | 상태: 구현 완료, Q150 ~ Q157 은 권장안으로 진행, 2026-10-31 사용자 확정
 > 기준: `main` e4d89ae (linked 1.8.2 · cli 1.7.9 · mcp 1.4.8 발행됨, WI-0099 머지됨 · 미발행) 위 worktree 브랜치 `wi-0095-pnp-root-boundary`. 착수 측정은 main 빌드(e4d89ae)로 했어요
 > 출처: WI-0091 사용자 결정 Q2(경계를 check 에만 켜고 init · theme add · add · template apply 는 이 WI 로), WI-0099 Q144(PnP 루트 전용 애니메이션 칸 `pnp-root-Ltwa-Itwa`)
 > 표기: **측정**(이번에 실행해 얻은 값) · **추정**(실행하지 않음) · **미측정**(재야 하지만 아직 재지 않음)
@@ -28,7 +28,7 @@ WI-0091 은 Yarn Plug'n'Play 에서 워크스페이스 루트에만 선언한 �
 - 루트에 `dependenciesMeta.unplugged` 를 둬도(U4) 앱 issuer 는 루트 전용 패키지를 해석하지 못해 R4 와 같았어요.
 - 모든 명령의 종료 코드는 0 이었어요(36칸). check 는 루트 전용 레이아웃에서 rc 1 이에요.
 
-### 1.2 결정 (Q150 ~ Q157, 권장안으로 진행, 사용자 확인 대기)
+### 1.2 결정 (Q150 ~ Q157, 권장안으로 진행, 2026-10-31 사용자 확정)
 
 7절 표에 선택지 · 근거가 있어요.
 
@@ -113,7 +113,7 @@ WI-0091 은 Yarn Plug'n'Play 에서 워크스페이스 루트에만 선언한 �
 - `measure.sh <cli dist>`: fixture 마다 새 사본에서 `init -y` · `check` · `theme add ontology` · `add button -y` · `template apply dashboard --dry-run` 을 돌려 출력 · rc · 쓴 파일 sha256 을 남김. 종전은 main e4d89ae 빌드 사본(`base-cli`), 수정은 worktree 빌드(`pnpm turbo build --filter=@axis-ds/cli... --filter=@axis-ds/mcp... --force`, Cached 0).
 - `probe.sh`: 앱 issuer `yarn node -e require.resolve` 와 `yarn tailwindcss` 빌드. `smoke.sh`: init 안내대로 고친 뒤 check · 해석 · 빌드. `mcp-call.mjs`: MCP stdio `axis.install_component`.
 
-## 7. 사용자 결정 항목 (Q150 ~ Q157, 권장안으로 진행, 사용자 확인 대기)
+## 7. 사용자 결정 항목 (Q150 ~ Q157, 권장안으로 진행, 2026-10-31 사용자 확정)
 
 | # | 질문 | 선택지 | 권장안 | 근거 |
 |---|---|---|---|---|
@@ -125,3 +125,7 @@ WI-0091 은 Yarn Plug'n'Play 에서 워크스페이스 루트에만 선언한 �
 | Q155 | Tailwind 3 · 4 분기와 template apply 의 Tailwind major 경고 | ① 루트 선언 계속 인정 ② 앱 선언만 | ① | 루트 전용 Tailwind 4 워크스페이스에서 앱 선언만 보면 Tailwind 판정 불가 → Tailwind 3 분기(설정 파일 경로 기록)로 가고, template apply 는 Tailwind 4 프로젝트에 Tailwind 3 템플릿 경고를 놓쳐요. 사용자가 tailwindcss 를 앱에 선언해도 같은 분기라 ① 이 맞아요(WI-0091 Q6) |
 | Q156 | add 의존성 안내의 사유 | ① 미선언과 같게 명령에만 넣음 ② 명령 + 사유 줄 | ① | 명령은 그대로 실행하면 해결돼요. 사유 줄은 cli 출력과 MCP 응답 형식을 함께 바꿔야 해서 범위가 커요. check · init 이 사유를 알려요 |
 | Q157 | 새 문구 확정 | ① 사용자 확정(권장안 문구로 구현) ② 지금 확정 | ① | WI-0097 Q43 · WI-0099 Q147 선례. 새 문구는 release-notes 「바뀐 점」에 모았어요 |
+
+## 결정 확정 (2026-10-31)
+
+Q150 ~ Q157 은 2026-10-31 사용자가 모두 권장안으로 확정했어요. 잔여 두 가지(Tailwind 3 애니메이션의 루트 전용 문구 차이, `pnpFallbackMode: all` 미반영)는 후속 WI 를 만들지 않고 이 문서의 기록으로만 남기기로 했어요(사용자 결정).
