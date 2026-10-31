@@ -173,7 +173,9 @@ export function workspaceRootPackage(baseDirInput: string): Record<string, unkno
  * - `rootPkg` 를 주면 그것을 루트 package.json 으로 씁니다(같은 판정에서 여러 번 부를 때 다시 읽지 않으려고). `null` 은 루트 없음입니다.
  * - `options.appOnlyInPnp`(WI-0091): Plug'n'Play(`isPnpProject`)면 루트 선언을 인정하지 않고 앱 선언만 봅니다. PnP 에서 앱 issuer 는
  *   자기 package.json 에 없는 패키지를 해석하지 못하기 때문입니다(Yarn 4.5.3 실측, `pnpFallbackMode: all` 은 예외인데 잔여 오차로 둠).
- *   `axis check` · MCP `axis.check_project` 의 판정만 켭니다(사용자 결정 Q2). init · theme add · add · template apply 는 종전대로입니다.
+ *   `axis check` · MCP `axis.check_project` 의 판정에서 켰고(사용자 결정 Q2), WI-0095 에서 init(utils 의존성 · Tailwind 4 안내 · 애니메이션)과
+ *   registry-core add(cli `axis add` · MCP `axis.install_component` 의존성 안내)로 넓혔어요. theme add 는 `rootDeclarationsAllowed`(P1)로 같은
+ *   경계를 이미 지키고, Tailwind 3 · 4 분기(`detectTailwind`) · template apply 의 Tailwind major 경고는 루트 선언을 계속 인정해요(WI-0091 Q6).
  *   Tailwind 4 컴포넌트 `tailwind.css` 판정(check 의 B1 · theme add 의 DEC-2)은 이 옵션이 아니라 `componentCssResolution` 이
  *   PnP 루트 전용을 따로 갈라요(WI-0097, CSS `@import` 도 앱 issuer 에서 rc 1 「Can't resolve」인 것을 Yarn 4.5.3 · `@tailwindcss/cli` 4.1.14 로 실측).
  */

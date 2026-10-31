@@ -291,3 +291,39 @@ describe("레지스트리 출처 (D8)", () => {
     expect(DEFAULT_LAYOUT_CONFIG).toEqual({ componentsDir: "components/ui" });
   });
 });
+
+// WI-0095: Yarn Plug'n'Play 에서 워크스페이스 루트에만 선언한 의존성은 앱이 해석하지 못하므로 의존성 명령에 넣음(cli axis add 와 같은
+// registry-core missingDependencies). 착수 측정(main e4d89ae, Yarn 4.5.3 실설치): 루트 전용 clsx · tailwind-merge 를 명령에서 뺐음.
+describe("install_component: Plug'n'Play 루트 선언 경계 (WI-0095)", () => {
+  /** 루트 workspaces · apps/web 워크스페이스. `pnp` 면 yarn.lock · .yarnrc.yml · .pnp.cjs, 아니면 yarn node-modules(루트 설치본) */
+  function workspace(name: string, pnp: boolean): string {
+    const root = path.join(work, name);
+    mkdirSync(path.join(root, ".git"), { recursive: true });
+    const utils = { tailwindcss: "4.1.14", clsx: "^2.1.1", "tailwind-merge": "^3.3.1" };
+    writeFileSync(path.join(root, "package.json"), JSON.stringify({ name: "root", private: true, workspaces: ["apps/*"], dependencies: utils }));
+    writeFileSync(path.join(root, "yarn.lock"), "# yarn lockfile v8\n");
+    writeFileSync(path.join(root, ".yarnrc.yml"), `nodeLinker: ${pnp ? "pnp" : "node-modules"}\n`);
+    if (pnp) writeFileSync(path.join(root, ".pnp.cjs"), "// pnp\n");
+    else {
+      for (const [n, v] of Object.entries(utils)) {
+        mkdirSync(path.join(root, "node_modules", n), { recursive: true });
+        writeFileSync(path.join(root, "node_modules", n, "package.json"), JSON.stringify({ name: n, version: v.replace(/^\^/, "") }));
+      }
+    }
+    const app = path.join(root, "apps", "web");
+    mkdirSync(app, { recursive: true });
+    writeFileSync(path.join(app, "package.json"), JSON.stringify({ name: "web", private: true }));
+    return app;
+  }
+
+  it("PnP 루트 전용 clsx · tailwind-merge 는 의존성 명령에 들어감(종전: 빠짐)", async () => {
+    const r = await handleInstallComponent({ name: "button", targetDir: workspace("pnp", true) }, deps);
+    expect(r.success).toBe(true);
+    expect(r.dependencyCommand).toBe('yarn add @radix-ui/react-slot class-variance-authority "clsx@^2.1.1" "tailwind-merge@^3.4.0"');
+  });
+
+  it("음성 대조 yarn node-modules: 루트 선언은 종전처럼 빠짐", async () => {
+    const r = await handleInstallComponent({ name: "button", targetDir: workspace("nm", false) }, deps);
+    expect(r.dependencyCommand).toBe("yarn add @radix-ui/react-slot class-variance-authority");
+  });
+});
