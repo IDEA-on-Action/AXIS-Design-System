@@ -1,6 +1,6 @@
 # WI-0108: TODO
 
-> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #277 | 상태: 구현 완료(머지 전)
+> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #277 | 상태: 완료(2026-11-01, PR #278 · Version PR #279, ui-react · agentic-ui 1.8.5 발행)
 
 ## 조사
 - [x] ui-react · agentic-ui 그림자 클래스 전수 조사, 떠 있는 레이어 판정표 (FR-1, testplan 1절)
