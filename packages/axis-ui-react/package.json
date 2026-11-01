@@ -1,6 +1,6 @@
 {
   "name": "@axis-ds/ui-react",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "description": "AXIS Design System - Core React UI Components",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
