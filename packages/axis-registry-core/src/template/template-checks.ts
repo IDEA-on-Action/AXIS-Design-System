@@ -23,8 +23,10 @@
  *    프로젝트 실경로 안일 때만 따라갑니다(WI-0100b `expandGlobalCss` 와 같은 규칙, `isSameOrInside`). 같은 실경로는 한 번만 읽고
  *    디렉터리 깊이 32 단계까지만 내려갑니다. 256KB 를 넘는 파일은 건너뛰고 건수를 문구에 적습니다. 줄 길이 상한은 두지 않고
  *    판정을 선형 시간으로 묶습니다(문자열 리터럴 · 괄호 짝 찾기는 표를 한 번 만들어 씀, 클래스 묶음 훑기는 파일 길이에 비례한 작업량 상한).
- * 7. 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
+ * 7. 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB · 훑는 디렉터리 항목 50,000개. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
  *    파일 수 예산을 넘는 다음 파일을 만나면 목록 모으기를 멈추며, 읽기 전에 합계가 바이트 예산을 넘을 파일을 만나면 그 파일부터 판정하지 않습니다.
+ *    항목 예산은 판정 대상이 아닌 것(대상 밖 확장자 · 디렉터리 · 같은 실경로 중복 링크 · 밖 링크 · 크기 상한 초과 · 숨김 · node_modules)까지
+ *    readdir 가 돌려준 이름을 모두 셉니다. 넘는 다음 이름을 만나면 목록 모으기를 멈춥니다(판정 대상만 세면 링크 · 빈 파일 수십만 개로 시간이 무한정 늘어남).
  *    어느 쪽이든 「프로젝트 예산 초과로 측정 중단」을 건너뜀에 적고 일부 측정 실패로 다룹니다(위반이 있으면 위반 WARN 에 함께 적음).
  *    시간 기반 상한은 두지 않습니다. 기기 부하에 따라 멈추는 파일이 달라져 결과가 결정적이지 않고 패리티 테스트가 흔들리기 때문입니다.
  *    예산은 환경변수로 바꾸지 않습니다(`inspectOntologyRules` 의 인자는 테스트 · 패리티용이고 axis check · MCP 는 기본값만 씀).
@@ -85,14 +87,18 @@ export const ONTOLOGY_SCAN_STEPS_BASE = 100_000;
 export const ONTOLOGY_MAX_FILES = 4000;
 /** 프로젝트 전체 예산: 읽는 바이트 합계 상한. 합계가 넘을 파일부터 판정하지 않습니다 */
 export const ONTOLOGY_MAX_TOTAL_BYTES = 16 * 1024 * 1024;
+/** 프로젝트 전체 예산: 훑는 디렉터리 항목 수 상한(판정 대상이 아닌 이름까지 셈). 넘는 다음 이름을 만나면 목록 모으기를 멈춥니다 */
+export const ONTOLOGY_MAX_ENTRIES = 50_000;
 /** 프로젝트 전체 예산(테스트 · 패리티에서만 낮춰 씀) */
 export interface OntologyBudget {
   maxFiles: number;
   maxBytes: number;
+  maxEntries: number;
 }
 export const ONTOLOGY_DEFAULT_BUDGET: Readonly<OntologyBudget> = Object.freeze({
   maxFiles: ONTOLOGY_MAX_FILES,
   maxBytes: ONTOLOGY_MAX_TOTAL_BYTES,
+  maxEntries: ONTOLOGY_MAX_ENTRIES,
 });
 /** 문구에 넣는 파일 경로 길이 상한(이스케이프 뒤 글자 수) */
 const MESSAGE_PATH_MAX = 120;
@@ -233,9 +239,9 @@ function formatBytes(n: number): string {
 
 /** 예산 초과 문구 조각. 템플릿 스크립트와 같은 글이라 패리티 테스트가 비교합니다 */
 function ontologyBudgetStopText(stop: OntologyBudgetStop): string {
-  return stop.reason === "files"
-    ? `프로젝트 예산 초과로 측정 중단(파일 ${stop.limit}개 상한)`
-    : `프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(stop.limit)} 상한)`;
+  if (stop.reason === "files") return `프로젝트 예산 초과로 측정 중단(파일 ${stop.limit}개 상한)`;
+  if (stop.reason === "entries") return `프로젝트 예산 초과로 측정 중단(디렉터리 항목 ${stop.limit}개 상한)`;
+  return `프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(stop.limit)} 상한)`;
 }
 
 /** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
@@ -270,9 +276,9 @@ export interface OntologyInspection {
   budgetStop: OntologyBudgetStop | null;
 }
 
-/** 프로젝트 예산 초과 사유: files = 파일 수, bytes = 읽는 바이트 합계 */
+/** 프로젝트 예산 초과 사유: files = 파일 수, bytes = 읽는 바이트 합계, entries = 훑은 디렉터리 항목 수 */
 export interface OntologyBudgetStop {
-  reason: "files" | "bytes";
+  reason: "files" | "bytes" | "entries";
   limit: number;
 }
 
@@ -749,7 +755,7 @@ interface FoundFile {
 }
 
 /** 검사할 파일 목록. 읽기 오류는 그대로 던져 측정 실패로 다룹니다 */
-function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFiles: number) {
+function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFiles: number, maxEntries: number) {
   const rootReal = realpathSync(baseDir);
   const found = {
     files: [] as FoundFile[],
@@ -761,6 +767,7 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFi
   };
   const visitedDirs = new Set<string>();
   const seenFiles = new Set<string>();
+  let entries = 0;
   const toRel = (p: string) => path.relative(baseDir, p).split(path.sep).join("/");
 
   const resolveEntry = (p: string, st: Stats): { st: Stats; real: string | undefined } | undefined => {
@@ -799,6 +806,11 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFi
     const names = readdirSync(dir).sort();
     for (const name of names) {
       if (found.budgetStop) return;
+      if (entries >= maxEntries) {
+        found.budgetStop = { reason: "entries", limit: maxEntries };
+        return;
+      }
+      entries++;
       if (name === "node_modules" || name.startsWith(".")) continue;
       const p = path.join(dir, name);
       const entry = resolveEntry(p, lstatSync(p));
@@ -848,7 +860,7 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFi
 
 /**
  * 온톨로지 콘솔 5규칙을 판정합니다(읽기 전용, 스크립트를 실행하지 않음). 파일 목록 · 읽기 오류는 던집니다.
- * `targets` · `budget` 은 테스트 · 패리티용이고 axis check · MCP 는 기본값(app · components · lib, 파일 4,000개 · 16MB)만 씁니다.
+ * `targets` · `budget` 은 테스트 · 패리티용이고 axis check · MCP 는 기본값(app · components · lib, 파일 4,000개 · 16MB · 디렉터리 항목 50,000개)만 씁니다.
  */
 export function inspectOntologyRules(
   baseDirInput: string,
@@ -856,7 +868,7 @@ export function inspectOntologyRules(
   budget: Readonly<OntologyBudget> = ONTOLOGY_DEFAULT_BUDGET
 ): OntologyInspection {
   const baseDir = path.resolve(baseDirInput);
-  const found = collectOntologyFiles(baseDir, targets, budget.maxFiles);
+  const found = collectOntologyFiles(baseDir, targets, budget.maxFiles, budget.maxEntries);
   const violations: OntologyViolation[] = [];
   let checked = 0;
   let bytes = 0;

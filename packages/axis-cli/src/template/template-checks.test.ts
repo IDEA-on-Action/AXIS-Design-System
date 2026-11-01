@@ -2,7 +2,8 @@
  * WI-0107: 템플릿별 규칙 검사(axis check 10번째 항목, registry-core template-checks.ts)
  *
  * - 5규칙 양성 · 음성, 주석 안 긴 줄표, cn() 조합, 측정 실패 · 일부 측정 실패, 링크 밖 · 순환, 큰 파일 · 긴 줄 · 시간 상한 · 작업량 상한,
- *   프로젝트 전체 예산(파일 수 · 읽기 바이트, 같은 파일에서 멈추는지),
+ *   프로젝트 전체 예산(파일 수 · 읽기 바이트 · 디렉터리 항목, 같은 파일에서 멈추는지), 파이프로 받아도 요약 줄이 남는지,
+ *   템플릿 lib/utils.ts 의 그림자 병합 설정이 레지스트리 utils 와 같은지,
  *   template 이상값, 줄바꿈 · 숨은 문자 파일명, 첫 위치 정렬
  * - 패리티: 템플릿 안 scripts/check-ontology.mjs(테스트에서만 child_process 로 실행)와 내장 판정이 같은 위반 목록(파일 · 줄 · 규칙),
  *   같은 건너뜀 문구, 같은 종료 분류를 냄
@@ -21,6 +22,7 @@ import {
   inspectOntologySourceDetailed,
   isOntologyIncomplete,
   messageSafePath,
+  ONTOLOGY_MAX_ENTRIES,
   ONTOLOGY_MAX_FILE_BYTES,
   ONTOLOGY_MAX_FILES,
   ONTOLOGY_MAX_TOTAL_BYTES,
@@ -92,8 +94,10 @@ function budgetEnv(budget?: Partial<OntologyBudget>, raw?: Record<string, string
   const env: NodeJS.ProcessEnv = { ...process.env };
   delete env.CHECK_ONTOLOGY_MAX_FILES;
   delete env.CHECK_ONTOLOGY_MAX_BYTES;
+  delete env.CHECK_ONTOLOGY_MAX_ENTRIES;
   if (budget?.maxFiles !== undefined) env.CHECK_ONTOLOGY_MAX_FILES = String(budget.maxFiles);
   if (budget?.maxBytes !== undefined) env.CHECK_ONTOLOGY_MAX_BYTES = String(budget.maxBytes);
+  if (budget?.maxEntries !== undefined) env.CHECK_ONTOLOGY_MAX_ENTRIES = String(budget.maxEntries);
   return { ...env, ...raw };
 }
 
@@ -468,11 +472,12 @@ describe("프로젝트 전체 예산(파일 수 · 읽기 바이트)", () => {
     await writeFiles(dir, files);
     return dir;
   }
-  const BIG: OntologyBudget = { maxFiles: 1_000_000, maxBytes: 1 << 40 };
+  const BIG: OntologyBudget = { maxFiles: 1_000_000, maxBytes: 1 << 40, maxEntries: 1_000_000 };
 
   it("기본 예산 값(레지스트리 · 템플릿 실측 분포 대비 여유)", () => {
     expect(ONTOLOGY_MAX_FILES).toBe(4000);
     expect(ONTOLOGY_MAX_TOTAL_BYTES).toBe(16 * 1024 * 1024);
+    expect(ONTOLOGY_MAX_ENTRIES).toBe(50_000);
   });
 
   it("파일 수 예산: 같은 파일에서 멈추고 그 뒤 위반은 보지 않음, 위반 0건이면 일부 측정 실패(스크립트 rc 2)", async () => {
@@ -513,7 +518,7 @@ describe("프로젝트 전체 예산(파일 수 · 읽기 바이트)", () => {
   it("바이트 예산이 파일 수 예산보다 앞서면 바이트 사유", async () => {
     const dir = await numbered(5);
     const size = (await fs.stat(path.join(dir, "lib/f00.ts"))).size;
-    const budget = { maxFiles: 3, maxBytes: size * 2 };
+    const budget = { maxFiles: 3, maxBytes: size * 2, maxEntries: 1_000_000 };
     const r = inspectOntologyRules(dir, undefined, budget);
     expect(r).toMatchObject({ checked: 2, budgetStop: { reason: "bytes", limit: size * 2 } });
     expectParity(dir, budget);
@@ -551,6 +556,68 @@ describe("프로젝트 전체 예산(파일 수 · 읽기 바이트)", () => {
     expect(r).toMatchObject({ checked: Math.floor(ONTOLOGY_MAX_TOTAL_BYTES / size), budgetStop: { reason: "bytes" } });
     expect(collectTemplateCheckResults(dir)[0].message).toContain("프로젝트 예산 초과로 측정 중단(읽기 16MB 상한)");
     expectParity(dir);
+  }, 60_000);
+
+  it("디렉터리 항목 예산: 판정 대상이 아닌 이름(대상 밖 확장자 · 숨김 · 디렉터리 · 중복 링크)도 세고 넘으면 멈춤", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { template: "ontology-console" });
+    // 이름 정렬 순서: .hidden, a.ts, b.md, c(디렉터리), c/d.ts, e.ts(a.ts 링크), f.ts
+    await writeFiles(dir, {
+      "lib/.hidden": "x",
+      "lib/a.ts": "export const a = 1\n",
+      "lib/b.md": "x",
+      "lib/c/d.ts": "export const a = 1\n",
+      "lib/f.ts": "export const c = '#ff0000'\n",
+    });
+    await fs.symlink("a.ts", path.join(dir, "lib/e.ts"));
+    // 이름 6개를 세고 7번째 이름(f.ts)에서 멈춤: 판정한 파일은 a.ts · d.ts 둘뿐(e.ts 는 같은 실경로라 한 번만 셈)
+    const budget = { ...BIG, maxEntries: 6 };
+    const r = inspectOntologyRules(dir, undefined, budget);
+    expect(r).toMatchObject({ checked: 2, violations: [], budgetStop: { reason: "entries", limit: 6 } });
+    expect(ontologySkippedParts(r)).toEqual(["프로젝트 예산 초과로 측정 중단(디렉터리 항목 6개 상한)"]);
+    expect(isOntologyIncomplete(r)).toBe(true);
+    expect(expectParity(dir, budget)).toMatchObject({ checked: 2, rows: [], incomplete: true });
+    expect(runScript(dir, budgetEnv(budget)).rc).toBe(2);
+    // 항목 수와 정확히 같은 예산이면 멈추지 않음(경계): 이름 7개
+    const exact = { ...BIG, maxEntries: 7 };
+    expect(inspectOntologyRules(dir, undefined, exact)).toMatchObject({ checked: 3, budgetStop: null });
+    expect(expectParity(dir, exact).rows.map(rowKey)).toEqual(["lib/f.ts:1:palette"]);
+  });
+
+  it("기본 디렉터리 항목 예산 50,000개: 판정 대상 밖 파일 5만 개 뒤의 위반은 보지 않고 axis check 는 WARN, 환경변수로 올리지 못함", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { template: "ontology-console" });
+    await fs.outputFile(path.join(dir, "app/a.ts"), "export const a = 1\n");
+    const sub = path.join(dir, "lib/notes");
+    await fs.mkdirp(sub);
+    for (let i = 0; i < ONTOLOGY_MAX_ENTRIES; i++) fs.writeFileSync(path.join(sub, `n${String(i).padStart(5, "0")}.md`), "");
+    await fs.outputFile(path.join(dir, "lib/z.ts"), "export const c = '#ff0000'\n");
+    const r = inspectOntologyRules(dir);
+    expect(r).toMatchObject({ checked: 1, violations: [], budgetStop: { reason: "entries", limit: ONTOLOGY_MAX_ENTRIES } });
+    const [item] = collectTemplateCheckResults(dir);
+    expect(item.severity).toBe("warn");
+    expect(item.message).toContain("건너뜀: 프로젝트 예산 초과로 측정 중단(디렉터리 항목 50000개 상한)");
+    expectParity(dir);
+    for (const raw of ["999999", "0", "abc"]) {
+      const s = runScript(dir, budgetEnv(undefined, { CHECK_ONTOLOGY_MAX_ENTRIES: raw }));
+      expect(s.checked, raw).toBe(1);
+      expect(s.rc, raw).toBe(2);
+    }
+  }, 60_000);
+
+  it("스크립트 출력을 늦게 읽는 파이프로 받아도 마지막 줄이 요약 줄(process.exit 로 stdout 이 잘리지 않음)", async () => {
+    const dir = await tempDir();
+    await fs.writeJSON(path.join(dir, "axis.config.json"), { template: "ontology-console" });
+    for (let i = 0; i < 1200; i++) await fs.outputFile(path.join(dir, "lib", `f${String(i).padStart(4, "0")}.ts`), "export const c = '#ff0000'\n");
+    const env = budgetEnv({ maxFiles: 1000 });
+    const r = spawnSync("/bin/sh", ["-c", `"${process.execPath}" "${SCRIPT}" 2>/dev/null | (sleep 0.3; cat)`], { cwd: dir, encoding: "utf8", timeout: 60_000, env });
+    const lines = r.stdout.trimEnd().split("\n");
+    expect(lines.length).toBe(1002);
+    expect(lines[lines.length - 1]).toBe("[check:ontology] 검사 파일 1000개, 위반 1000건 (건너뜀: 프로젝트 예산 초과로 측정 중단(파일 1000개 상한))");
+    // 위반과 측정 중단이 함께 있으면 rc 1 이고 stderr 에도 알림
+    const s = runScript(dir, env);
+    expect(s.rc).toBe(1);
+    expect(s.stderr).toContain("위반이 있고, 판정하지 못한 파일도 있어요");
   }, 60_000);
 
   it("템플릿 원본 · 레지스트리 전 컴포넌트 사본은 기본 예산 안", async () => {
@@ -804,5 +871,25 @@ describe("동기화: template.json checks = registry-core 정적 표", () => {
     // 공개 JSON 의 스크립트가 원본 files 와 같은지(빌드 누락 방지)
     const script = detail.files.find((f: { path: string }) => f.path === "scripts/check-ontology.mjs");
     expect(script.content).toBe(await fs.readFile(SCRIPT, "utf8"));
+  });
+});
+
+describe("템플릿 lib/utils.ts: 그림자 병합 설정이 레지스트리 utils 와 같음", () => {
+  /** extendTailwindMerge 설정과 그림자 판정 정규식만 뽑아 따옴표 · 세미콜론 · 공백을 지운 글 */
+  const shape = (src: string) => {
+    const re = /isArbitraryShadowWithHint = \(value: string\) => (\/.+\/)\.test\(value\)/.exec(src)?.[1];
+    const cfg = /extendTailwindMerge\(([\s\S]*?)\n\}\)/.exec(src)?.[1];
+    return { re, cfg: cfg?.replace(/["';\s]/g, "") };
+  };
+  it("select · toast 의 shadow-[shadow:var(--axis-shadow-*)] 가 그림자 그룹으로 병합됨", async () => {
+    const tpl = await fs.readFile(path.join(ONTOLOGY_FILES, "lib/utils.ts"), "utf8");
+    const reg = (await fs.readJSON(path.join(REGISTRY_DIR, "utils.json"))).files[0].content as string;
+    expect(shape(tpl).re).toBe("/^\\[shadow:.+\\]$/");
+    expect(shape(tpl).cfg).toBeTruthy();
+    expect(shape(tpl)).toEqual(shape(reg));
+    // cn 이 확장한 twMerge 를 쓰는지(기본 twMerge 를 가져오지 않음)
+    expect(tpl).toMatch(/\nconst twMerge = extendTailwindMerge\(/);
+    expect(tpl).toMatch(/return twMerge\(clsx\(inputs\)\)/);
+    expect(tpl).not.toMatch(/import \{[^}]*\btwMerge\b/);
   });
 });

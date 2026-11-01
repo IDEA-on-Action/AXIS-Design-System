@@ -28,9 +28,11 @@
  * - 8,000자를 넘는 클래스 묶음 · 문자열은 클래스 규칙으로 보지 않아요(레지스트리 컴포넌트에서 가장 긴 묶음은 약 2,000자).
  * - 클래스 묶음 훑기가 파일 길이에 비례한 작업량 상한을 넘으면 그 파일의 클래스 묶음 판정만 멈추고 「일부만 판정」으로 세요.
  * - 위반은 파일 · 줄 · 규칙 순으로 정렬해 보여 줘요.
- * - 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
+ * - 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB · 훑는 디렉터리 항목 50,000개. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
  *   넘으면 그 뒤 파일은 판정하지 않고 「프로젝트 예산 초과로 측정 중단」을 알려요(시간 상한은 결과가 기기마다 달라져 두지 않아요).
- *   환경변수 CHECK_ONTOLOGY_MAX_FILES · CHECK_ONTOLOGY_MAX_BYTES 로 예산을 낮출 수만 있어요(기본값보다 큰 값 · 숫자가 아닌 값은 무시).
+ *   디렉터리 항목은 판정 대상이 아닌 이름(대상 밖 확장자 · 디렉터리 · 중복 · 밖 링크 · 숨김 · node_modules 등)까지 모두 세요.
+ *   환경변수 CHECK_ONTOLOGY_MAX_FILES · CHECK_ONTOLOGY_MAX_BYTES · CHECK_ONTOLOGY_MAX_ENTRIES 로 예산을 낮출 수만 있어요(기본값보다 큰 값 · 숫자가 아닌 값은 무시).
+ * - 요약 줄은 stdout 마지막 줄이고, 측정 중단 · 실패 안내는 stderr 에도 써요. 종료는 process.exitCode 로 해서 파이프로 받아도 출력이 잘리지 않아요.
  *
  * 사용: node scripts/check-ontology.mjs [디렉터리 ...]   (기본: app components lib)
  * 종료 코드: 0 위반 없음 / 1 위반 있음 / 2 측정 실패(검사한 파일이 0개, 읽기 오류,
@@ -55,10 +57,12 @@ const SCAN_STEPS_BASE = 100000
 /** 프로젝트 전체 예산 기본값: 판정할 파일 수 · 읽는 바이트 합계 */
 const MAX_FILES_DEFAULT = 4000
 const MAX_TOTAL_BYTES_DEFAULT = 16 * 1024 * 1024
+const MAX_ENTRIES_DEFAULT = 50000
 /** 환경변수로는 예산을 낮추기만 해요(양의 정수이고 기본값보다 작을 때만 씀) */
 const lowerOnly = (raw, fallback) => (typeof raw === 'string' && /^[1-9]\d{0,15}$/.test(raw) ? Math.min(Number(raw), fallback) : fallback)
 const MAX_FILES = lowerOnly(process.env.CHECK_ONTOLOGY_MAX_FILES, MAX_FILES_DEFAULT)
 const MAX_TOTAL_BYTES = lowerOnly(process.env.CHECK_ONTOLOGY_MAX_BYTES, MAX_TOTAL_BYTES_DEFAULT)
+const MAX_ENTRIES = lowerOnly(process.env.CHECK_ONTOLOGY_MAX_ENTRIES, MAX_ENTRIES_DEFAULT)
 /** 규칙 순서(정렬 · 요약) */
 const RULE_IDS = ['em-dash', 'exclamation', 'one-side-line', 'card-shadow', 'palette']
 
@@ -427,6 +431,7 @@ function collectFiles() {
   const found = { files: [], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0, budgetStop: null }
   const visitedDirs = new Set()
   const seenFiles = new Set()
+  let entries = 0
 
   /** 경로의 실제 대상. 링크가 밖 · 깨졌으면 undefined */
   const resolveEntry = (p, st) => {
@@ -465,6 +470,11 @@ function collectFiles() {
     const names = readdirSync(dir).sort()
     for (const name of names) {
       if (found.budgetStop) return
+      if (entries >= MAX_ENTRIES) {
+        found.budgetStop = { reason: 'entries', limit: MAX_ENTRIES }
+        return
+      }
+      entries++
       if (name === 'node_modules' || name.startsWith('.')) continue
       const p = join(dir, name)
       const entry = resolveEntry(p, lstatSync(p))
@@ -512,172 +522,179 @@ function collectFiles() {
   return found
 }
 
-let found
-try {
-  found = collectFiles()
-} catch (e) {
-  console.error(`[check:ontology] 측정 실패: 파일 목록을 읽지 못했어요 (${e && e.code ? e.code : e})`)
-  process.exit(2)
-}
-
-const violations = []
-const seen = new Set()
-let checked = 0
-let bytes = 0
-
-for (const { path: file, real, size } of found.files) {
-  if (bytes + size > MAX_TOTAL_BYTES) {
-    // 목록 순서에서 더 앞선 사유라 파일 수 예산보다 우선해요
-    found.budgetStop = { reason: 'bytes', limit: MAX_TOTAL_BYTES }
-    break
-  }
-  bytes += size
-  let raw
+/** 판정하고 종료 코드를 돌려줘요. process.exit 대신 process.exitCode 를 써서 파이프로 받아도 stdout 끝이 잘리지 않게 해요 */
+function main() {
+  let found
   try {
-    raw = readFileSync(real, 'utf8')
+    found = collectFiles()
   } catch (e) {
-    console.error(`[check:ontology] 측정 실패: ${relative(ROOT, file)} 를 읽지 못했어요 (${e && e.code ? e.code : e})`)
-    process.exit(2)
-  }
-  checked++
-  const ext = extname(file)
-  const code = stripComments(raw)
-  const lineOf = lineIndex(raw)
-  const fileViolations = []
-  const report = (index, rule, detail) => {
-    const v = { file: relative(ROOT, file), line: lineOf(index), rule, detail }
-    const key = `${v.file}:${v.line}:${v.rule}`
-    if (seen.has(key)) return // 문자열 검사와 클래스 묶음 검사가 같은 줄을 두 번 보고하지 않게
-    seen.add(key)
-    fileViolations.push(v)
+    console.error(`[check:ontology] 측정 실패: 파일 목록을 읽지 못했어요 (${e && e.code ? e.code : e})`)
+    return 2
   }
 
-  // 1. 긴 줄표: 주석 안까지 봅니다
-  for (let i = raw.indexOf(EM_DASH); i !== -1; i = raw.indexOf(EM_DASH, i + 1)) {
-    report(i, 'em-dash', '긴 줄표(U+2014) 대신 하이픈 · 쉼표 · 가운뎃점을 써요')
-  }
+  const violations = []
+  const seen = new Set()
+  let checked = 0
+  let bytes = 0
 
-  if (ext === '.css') {
-    // 3. CSS 한쪽 색 선
-    const side = /border-(?:left|right|inline-start|inline-end)(?:-color)?\s*:\s*([^;}]+)/g
-    let m
-    while ((m = side.exec(code))) {
-      if (sideValueColored(m[1])) report(m.index, 'one-side-line', `한쪽 색 선: ${m[0].trim()}`)
+  for (const { path: file, real, size } of found.files) {
+    if (bytes + size > MAX_TOTAL_BYTES) {
+      // 목록 순서에서 더 앞선 사유라 파일 수 예산보다 우선해요
+      found.budgetStop = { reason: 'bytes', limit: MAX_TOTAL_BYTES }
+      break
     }
-    // 4. 선택자에 card 가 든 규칙의 box-shadow
-    for (const r of cssRules(code)) {
-      if (/card/i.test(r.selector) && /box-shadow\s*:(?!\s*(?:none\b|0 0 #0000))/.test(r.body)) {
-        report(r.open, 'card-shadow', `카드 그림자: ${r.selector.trim()}`)
-      }
-    }
-  } else {
-    const isJsx = ext === '.tsx' || ext === '.jsx'
-    for (const chunk of textChunks(code, isJsx)) {
-      const t = chunk.text
-      // 2. 느낌표가 든 한글 문구
-      if (HANGUL.test(t) && (t.includes('!') || t.includes(FULLWIDTH_BANG))) {
-        report(chunk.index, 'exclamation', `느낌표가 든 문구: ${t.trim().slice(0, 40)}`)
-      }
-      if (chunk.kind !== 'string') continue
-      // 3 · 4. 문자열 하나 안의 클래스(클래스 묶음 상한보다 긴 문자열은 클래스로 보지 않음)
-      if (t.length > MAX_UNIT_CHARS) continue
-      const colors = oneSideColors(t)
-      if (colors.length > 0) report(chunk.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
-      if (isCardLike(t, false) && SHADOW.test(t)) {
-        report(chunk.index, 'card-shadow', `카드 그림자: ${t.trim().slice(0, 60)}`)
-      }
-    }
-    // 3 · 4. 여러 문자열로 나뉜 클래스 묶음(className={...} · cn() 인자). 작업량 상한을 넘으면 이 판정만 멈추고 일부만 판정으로 세요
-    let units = []
+    bytes += size
+    let raw
     try {
-      units = classUnits(code, { left: code.length * SCAN_STEPS_PER_CHAR + SCAN_STEPS_BASE })
+      raw = readFileSync(real, 'utf8')
     } catch (e) {
-      if (e !== SCAN_BUDGET_EXCEEDED) throw e
-      found.partialFiles++
+      console.error(`[check:ontology] 측정 실패: ${relative(ROOT, file)} 를 읽지 못했어요 (${e && e.code ? e.code : e})`)
+      return 2
     }
-    for (const unit of units) {
-      const t = unit.text
-      const colors = oneSideColors(t)
-      if (colors.length > 0) report(unit.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
-      if (isCardLike(t, unit.card) && SHADOW.test(t)) {
-        report(unit.index, 'card-shadow', `${unit.card ? 'Card 에 그림자' : '카드 그림자'}: ${t.trim().slice(0, 60)}`)
+    checked++
+    const ext = extname(file)
+    const code = stripComments(raw)
+    const lineOf = lineIndex(raw)
+    const fileViolations = []
+    const report = (index, rule, detail) => {
+      const v = { file: relative(ROOT, file), line: lineOf(index), rule, detail }
+      const key = `${v.file}:${v.line}:${v.rule}`
+      if (seen.has(key)) return // 문자열 검사와 클래스 묶음 검사가 같은 줄을 두 번 보고하지 않게
+      seen.add(key)
+      fileViolations.push(v)
+    }
+
+    // 1. 긴 줄표: 주석 안까지 봅니다
+    for (let i = raw.indexOf(EM_DASH); i !== -1; i = raw.indexOf(EM_DASH, i + 1)) {
+      report(i, 'em-dash', '긴 줄표(U+2014) 대신 하이픈 · 쉼표 · 가운뎃점을 써요')
+    }
+
+    if (ext === '.css') {
+      // 3. CSS 한쪽 색 선
+      const side = /border-(?:left|right|inline-start|inline-end)(?:-color)?\s*:\s*([^;}]+)/g
+      let m
+      while ((m = side.exec(code))) {
+        if (sideValueColored(m[1])) report(m.index, 'one-side-line', `한쪽 색 선: ${m[0].trim()}`)
+      }
+      // 4. 선택자에 card 가 든 규칙의 box-shadow
+      for (const r of cssRules(code)) {
+        if (/card/i.test(r.selector) && /box-shadow\s*:(?!\s*(?:none\b|0 0 #0000))/.test(r.body)) {
+          report(r.open, 'card-shadow', `카드 그림자: ${r.selector.trim()}`)
+        }
+      }
+    } else {
+      const isJsx = ext === '.tsx' || ext === '.jsx'
+      for (const chunk of textChunks(code, isJsx)) {
+        const t = chunk.text
+        // 2. 느낌표가 든 한글 문구
+        if (HANGUL.test(t) && (t.includes('!') || t.includes(FULLWIDTH_BANG))) {
+          report(chunk.index, 'exclamation', `느낌표가 든 문구: ${t.trim().slice(0, 40)}`)
+        }
+        if (chunk.kind !== 'string') continue
+        // 3 · 4. 문자열 하나 안의 클래스(클래스 묶음 상한보다 긴 문자열은 클래스로 보지 않음)
+        if (t.length > MAX_UNIT_CHARS) continue
+        const colors = oneSideColors(t)
+        if (colors.length > 0) report(chunk.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
+        if (isCardLike(t, false) && SHADOW.test(t)) {
+          report(chunk.index, 'card-shadow', `카드 그림자: ${t.trim().slice(0, 60)}`)
+        }
+      }
+      // 3 · 4. 여러 문자열로 나뉜 클래스 묶음(className={...} · cn() 인자). 작업량 상한을 넘으면 이 판정만 멈추고 일부만 판정으로 세요
+      let units = []
+      try {
+        units = classUnits(code, { left: code.length * SCAN_STEPS_PER_CHAR + SCAN_STEPS_BASE })
+      } catch (e) {
+        if (e !== SCAN_BUDGET_EXCEEDED) throw e
+        found.partialFiles++
+      }
+      for (const unit of units) {
+        const t = unit.text
+        const colors = oneSideColors(t)
+        if (colors.length > 0) report(unit.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
+        if (isCardLike(t, unit.card) && SHADOW.test(t)) {
+          report(unit.index, 'card-shadow', `${unit.card ? 'Card 에 그림자' : '카드 그림자'}: ${t.trim().slice(0, 60)}`)
+        }
+      }
+      // 3 · 4 · 5. style 객체: borderLeft · borderRight 등 한쪽 색 선, <Card style 의 boxShadow, 이름 색
+      const lastLt = lastLtFinder(code)
+      let m
+      STYLE_COLOR_KEY.lastIndex = 0
+      while ((m = STYLE_COLOR_KEY.exec(code))) {
+        const [, key, , value] = m
+        if (/^border(?:Left|Right|InlineStart|InlineEnd)(?:Color)?$/.test(key) && sideValueColored(value)) {
+          report(m.index, 'one-side-line', `한쪽 색 선(style): ${key}: ${value}`)
+        }
+        if (key === 'boxShadow' && !/^(?:none|0 0 #0000)$/.test(value.trim())) {
+          if (isCardTagAt(code, lastLt(m.index), code.length)) report(m.index, 'card-shadow', `Card 에 그림자(style): ${value}`)
+        }
+        const named = value.split(/[\s,()]+/).find((w) => NAMED_COLORS.has(w.toLowerCase()))
+        if (named) report(m.index, 'palette', `이름 색 ${named}(style ${key}): 토큰 변수를 써요`)
       }
     }
-    // 3 · 4 · 5. style 객체: borderLeft · borderRight 등 한쪽 색 선, <Card style 의 boxShadow, 이름 색
-    const lastLt = lastLtFinder(code)
+
+    // 5. CSS 이름 색
+    if (ext === '.css') {
+      let m
+      CSS_COLOR_PROP.lastIndex = 0
+      while ((m = CSS_COLOR_PROP.exec(code))) {
+        const named = m[2].split(/[\s,()]+/).find((w) => NAMED_COLORS.has(w.toLowerCase()))
+        if (named) report(m.index, 'palette', `이름 색 ${named}(${m[1]}): 토큰 변수를 써요`)
+      }
+    }
+
+    // 5. 팔레트 밖 리터럴 색(주석 제외)
     let m
-    STYLE_COLOR_KEY.lastIndex = 0
-    while ((m = STYLE_COLOR_KEY.exec(code))) {
-      const [, key, , value] = m
-      if (/^border(?:Left|Right|InlineStart|InlineEnd)(?:Color)?$/.test(key) && sideValueColored(value)) {
-        report(m.index, 'one-side-line', `한쪽 색 선(style): ${key}: ${value}`)
-      }
-      if (key === 'boxShadow' && !/^(?:none|0 0 #0000)$/.test(value.trim())) {
-        if (isCardTagAt(code, lastLt(m.index), code.length)) report(m.index, 'card-shadow', `Card 에 그림자(style): ${value}`)
-      }
-      const named = value.split(/[\s,()]+/).find((w) => NAMED_COLORS.has(w.toLowerCase()))
-      if (named) report(m.index, 'palette', `이름 색 ${named}(style ${key}): 토큰 변수를 써요`)
+    HEX.lastIndex = 0
+    while ((m = HEX.exec(code))) {
+      if (code[m.index - 1] === '&') continue // HTML 엔티티(&#123;)
+      if (/[\w/]/.test(code[m.index - 1] ?? '')) continue // URL 조각(/entities#abc)
+      if (/(?:href|to|id)=\{?\s*["'`]$/.test(code.slice(Math.max(0, m.index - 12), m.index))) continue // 앵커(href="#add")
+      report(m.index, 'palette', `리터럴 색 ${m[0]}: 토큰 클래스(bg-primary · text-muted-foreground 등)를 써요`)
     }
-  }
-
-  // 5. CSS 이름 색
-  if (ext === '.css') {
-    let m
-    CSS_COLOR_PROP.lastIndex = 0
-    while ((m = CSS_COLOR_PROP.exec(code))) {
-      const named = m[2].split(/[\s,()]+/).find((w) => NAMED_COLORS.has(w.toLowerCase()))
-      if (named) report(m.index, 'palette', `이름 색 ${named}(${m[1]}): 토큰 변수를 써요`)
+    COLOR_FN.lastIndex = 0
+    while ((m = COLOR_FN.exec(code))) {
+      report(m.index, 'palette', `리터럴 색 함수 ${m[0]}...: 토큰 변수를 써요`)
     }
+    PALETTE_CLASS.lastIndex = 0
+    while ((m = PALETTE_CLASS.exec(code))) {
+      report(m.index, 'palette', `Tailwind 기본 팔레트 ${m[1]}: AXIS 토큰 클래스를 써요`)
+    }
+    // 줄 · 규칙 순서로 정렬(첫 줄이 실제로 가장 앞의 위반)
+    fileViolations.sort((a, b) => a.line - b.line || RULE_IDS.indexOf(a.rule) - RULE_IDS.indexOf(b.rule))
+    violations.push(...fileViolations)
   }
 
-  // 5. 팔레트 밖 리터럴 색(주석 제외)
-  let m
-  HEX.lastIndex = 0
-  while ((m = HEX.exec(code))) {
-    if (code[m.index - 1] === '&') continue // HTML 엔티티(&#123;)
-    if (/[\w/]/.test(code[m.index - 1] ?? '')) continue // URL 조각(/entities#abc)
-    if (/(?:href|to|id)=\{?\s*["'`]$/.test(code.slice(Math.max(0, m.index - 12), m.index))) continue // 앵커(href="#add")
-    report(m.index, 'palette', `리터럴 색 ${m[0]}: 토큰 클래스(bg-primary · text-muted-foreground 등)를 써요`)
+  const skipped = []
+  if (found.skippedLarge > 0) skipped.push(`크기 상한(256KB) 초과 ${found.skippedLarge}개`)
+  if (found.skippedLinks > 0) skipped.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`)
+  if (found.skippedDeep > 0) skipped.push(`깊이 ${DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`)
+  if (found.partialFiles > 0) skipped.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`)
+  if (found.budgetStop) {
+    const { reason, limit } = found.budgetStop
+    if (reason === 'files') skipped.push(`프로젝트 예산 초과로 측정 중단(파일 ${limit}개 상한)`)
+    else if (reason === 'entries') skipped.push(`프로젝트 예산 초과로 측정 중단(디렉터리 항목 ${limit}개 상한)`)
+    else skipped.push(`프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(limit)} 상한)`)
   }
-  COLOR_FN.lastIndex = 0
-  while ((m = COLOR_FN.exec(code))) {
-    report(m.index, 'palette', `리터럴 색 함수 ${m[0]}...: 토큰 변수를 써요`)
+  const skippedNote = skipped.length > 0 ? ` (건너뜀: ${skipped.join(' · ')})` : ''
+  /** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
+  const incomplete = found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0 || found.budgetStop !== null
+
+  if (checked === 0) {
+    console.error(`[check:ontology] 측정 실패: 검사할 파일이 없어요 (대상: ${targets.join(', ')})${skippedNote}`)
+    return 2
   }
-  PALETTE_CLASS.lastIndex = 0
-  while ((m = PALETTE_CLASS.exec(code))) {
-    report(m.index, 'palette', `Tailwind 기본 팔레트 ${m[1]}: AXIS 토큰 클래스를 써요`)
+
+  for (const v of violations) console.log(`${v.file}:${v.line}  ${v.rule}  ${v.detail}`)
+  console.log(`\n[check:ontology] 검사 파일 ${checked}개, 위반 ${violations.length}건${skippedNote}`)
+  if (violations.length > 0) {
+    if (incomplete) console.error('[check:ontology] 위반이 있고, 판정하지 못한 파일도 있어요 (건너뜀 참고)')
+    return 1
   }
-  // 줄 · 규칙 순서로 정렬(첫 줄이 실제로 가장 앞의 위반)
-  fileViolations.sort((a, b) => a.line - b.line || RULE_IDS.indexOf(a.rule) - RULE_IDS.indexOf(b.rule))
-  violations.push(...fileViolations)
+  if (incomplete) {
+    console.error('[check:ontology] 일부 측정 실패: 판정하지 못한 파일이 있어 통과로 보지 않아요 (건너뜀 참고)')
+    return 2
+  }
+  return 0
 }
 
-const skipped = []
-if (found.skippedLarge > 0) skipped.push(`크기 상한(256KB) 초과 ${found.skippedLarge}개`)
-if (found.skippedLinks > 0) skipped.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`)
-if (found.skippedDeep > 0) skipped.push(`깊이 ${DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`)
-if (found.partialFiles > 0) skipped.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`)
-if (found.budgetStop) {
-  skipped.push(
-    found.budgetStop.reason === 'files'
-      ? `프로젝트 예산 초과로 측정 중단(파일 ${found.budgetStop.limit}개 상한)`
-      : `프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(found.budgetStop.limit)} 상한)`
-  )
-}
-const skippedNote = skipped.length > 0 ? ` (건너뜀: ${skipped.join(' · ')})` : ''
-/** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
-const incomplete = found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0 || found.budgetStop !== null
-
-if (checked === 0) {
-  console.error(`[check:ontology] 측정 실패: 검사할 파일이 없어요 (대상: ${targets.join(', ')})${skippedNote}`)
-  process.exit(2)
-}
-
-for (const v of violations) console.log(`${v.file}:${v.line}  ${v.rule}  ${v.detail}`)
-console.log(`\n[check:ontology] 검사 파일 ${checked}개, 위반 ${violations.length}건${skippedNote}`)
-if (violations.length > 0) process.exit(1)
-if (incomplete) {
-  console.error('[check:ontology] 일부 측정 실패: 판정하지 못한 파일이 있어 통과로 보지 않아요 (건너뜀 참고)')
-  process.exit(2)
-}
-process.exit(0)
+process.exitCode = main()
