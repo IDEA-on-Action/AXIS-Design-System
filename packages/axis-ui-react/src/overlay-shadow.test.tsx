@@ -22,7 +22,8 @@ import {
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "./sheet";
 
 const TOKEN_SHADOW = "shadow-[shadow:var(--axis-shadow-lg)]";
-const FIXED_SHADOW = /(?:^|\s)shadow-(?:sm|md|lg|xl|2xl)(?=\s|$)/;
+// bare `shadow` · Tailwind 4 `shadow-xs` · `shadow-inner` 도 고정 그림자라 함께 잡는다
+const FIXED_SHADOW = /(?:^|\s)shadow(?:-(?:xs|sm|md|lg|xl|2xl|inner))?(?=\s|$)/;
 
 function expectTokenShadow(el: HTMLElement) {
   expect(el.className).toContain(TOKEN_SHADOW);
