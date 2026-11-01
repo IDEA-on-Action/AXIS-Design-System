@@ -7,7 +7,7 @@
 
 | 파일 | 수 | 내용 |
 |---|---|---|
-| `packages/axis-cli/src/template/template-checks.test.ts` | 42 | 5규칙 양성 · 음성, 주석 안 em-dash, cn() 조합, 같은 줄 중복 제거, 측정 실패(0파일 · EACCES), 링크 밖 · 안 · 순환 · 깨짐, node_modules · 점 디렉터리, 256KB · 한 줄 상한, 시간 상한 3건, template 이상값 12종(종전 출력과 JSON 같음), `__proto__` 키, 깨진 config, 문구(건수 · 첫 위치 · 안내 조건 · 소스 조각 없음 · 이스케이프), runCheck fail 불변, 패리티 5건, 동기화 2건 |
+| `packages/axis-cli/src/template/template-checks.test.ts` | 42(2차 반영 뒤 64) | 5규칙 양성 · 음성, 주석 안 em-dash, cn() 조합, 같은 줄 중복 제거, 측정 실패(0파일 · EACCES), 링크 밖 · 안 · 순환 · 깨짐, node_modules · 점 디렉터리, 256KB · 한 줄 상한, 시간 상한 3건, template 이상값 12종(종전 출력과 JSON 같음), `__proto__` 키, 깨진 config, 문구(건수 · 첫 위치 · 안내 조건 · 소스 조각 없음 · 이스케이프), runCheck fail 불변, 패리티 5건, 동기화 2건 |
 | `packages/axis-mcp/src/tools/template-checks.test.ts` | 12 | CLI = MCP 전 항목 비교(빈 디렉터리 · PASS · WARN · 레지스트리 전 컴포넌트 · 이상값 5종 · 측정 실패), 줄바꿈 파일 이름 출력 줄 수, 원격 checks 변형 4종 apply 뒤 결과 같음 |
 
 - 패리티는 테스트 안에서만 `spawnSync(node, scripts/check-ontology.mjs)` 로 템플릿 스크립트를 실행해 출력 `파일:줄  규칙` 을 내장 판정과 순서까지 비교하고, 파일 수 · 종료 분류(0 · 1 · 2)도 맞춰요. 대상: 규칙 fixture, 템플릿 원본 files(두 구현 0건 · 20파일), 레지스트리 전 컴포넌트 사본, 링크 밖 · 순환 · 깨짐, 상한 · 링크 혼합.
@@ -91,4 +91,46 @@
 - 실경로: 신판 dist 로 init 한 사본에 `axis add <30개 전부> -y`(rc 0, 50파일)
   - 원격 레지스트리(배포된 사이트, 아직 이 브랜치 아님): 위반 5건, `components/agentic/tool-call-card.tsx:111 em-dash` + card-shadow 4건
   - 이 브랜치 동봉 레지스트리(`AXIS_REGISTRY_URL=http://127.0.0.1:1/r` 로 원격을 막아 동봉본 사용, 측정 전제): 위반 4건, em-dash 0
-- 남은 4건(모두 card-shadow, 카드 모양 `rounded-*` + `border` + `shadow-*` 휴리스틱): `components/ui/select.tsx:63` · `:64`(SelectContent 팝오버), `components/ui/toast.tsx:25` · `:26`(toast 변형). 둘 다 떠 있는 레이어의 그림자라 카드 규칙의 의도와 다른 오탐에 가까워요. 이번 PR 에서는 고치지 않았어요(open question)
+- 남은 4건(모두 card-shadow, 카드 모양 `rounded-*` + `border` + `shadow-*` 휴리스틱): `components/ui/select.tsx:63` · `:64`(SelectContent 팝오버), `components/ui/toast.tsx:25` · `:26`(toast 변형). 둘 다 떠 있는 레이어의 그림자라 카드 규칙의 의도와 다른 오탐에 가까워요. 6.1절에서 컴포넌트 쪽을 고쳐 없앴어요
+
+### 6.1 사용자 결정 [A] 반영(2026-11-01 2차): select · toast 를 토큰 그림자로
+
+- 바꾼 것: `SelectContent` 의 `shadow-md`, `toastVariants` 기본의 `shadow-lg` 를 Dialog 와 같은 `shadow-[shadow:var(--axis-shadow-lg)]` 로(테두리 · 판정 규칙은 그대로). r/ select · toast · index · registry 를 `pnpm build:registry` 로 다시 만들고 `version` 은 1.5.0 으로 되돌렸어요(mcp registry-guard 하드코딩)
+- 값 실측: tokens dist `css/variables.css` 의 `--axis-shadow-lg` 는 `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`(밝은 · 어두운 테마 같음)이고 Tailwind 3.4.19 기본 `boxShadow.lg` 와 글자까지 같아요. `md` 는 `0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)`. ontology 브랜드(`css/brands/ontology.css`)는 `--axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10)`(어두운 테마 `rgba(0,0,0,.50)`), `--axis-card-shadow: 0 0 #0000`
+- 레지스트리 전 컴포넌트(r/*.json 의 files 30개)를 템플릿 사본에 넣은 48파일: 신판 스크립트 위반 0건 rc 0, 같은 방법으로 HEAD(91c8d12) r/ 를 넣은 대조군은 card-shadow 4건(`select.tsx:63 · 64`, `toast.tsx:25 · 26`) rc 1. 패리티 테스트 「레지스트리 전 컴포넌트를 넣은 사본」은 두 구현 위반 0건 · 파일 수 같음을 요구하도록 바꿨어요
+- 걸리지 않는 이유(판정 동작, 탐침 fixture): 같은 `rounded-md border` 묶음에서 `shadow-[shadow:var(--axis-shadow-lg)]` · `shadow-[shadow:0_4px_8px_rgb(0_0_0/0.5)]` 는 0건, `shadow-[var(--axis-shadow-lg)]` · `shadow-[0_4px_8px_var(--x)]` · `shadow-lg` 는 card-shadow. 그림자 정규식이 대괄호 안의 `:` 를 받지 않기 때문이고 토큰 여부와는 관계없어요. 두 번째 줄의 `_rgb(` 는 palette 로도 잡히지 않아요(릴리스 노트 한계 절)
+
+## 7. 사용자 결정 [B] 반영(2026-11-01 2차): 프로젝트 전체 예산
+
+- 값: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB(두 구현 같음). 크기는 목록을 모을 때 본 `stat` 크기로 셈
+- 근거 분포(app · components · lib, 확장자 6종): 템플릿 원본 20파일 45,857B, 레지스트리 전 컴포넌트를 넣은 사본 48파일 164,133B(최대 9,292B, 중앙값 3,002B), 이 레포 `apps/web/src` 101파일 405,360B(최대 12,904B). 사본 대비 파일 수 83배 · 바이트 102배, apps/web 대비 약 40배 여유
+- 순서: 대상 순서(app → components → lib) → 디렉터리 이름 정렬 깊이 우선. 파일 수는 4,001번째 판정 대상을 만나면 목록 모으기를 멈추고, 바이트는 읽기 전에 합계가 넘을 파일에서 멈춰요(합계가 예산과 같으면 멈추지 않음). 바이트 사유가 목록에서 더 앞이면 바이트 사유
+- 문구: 건너뜀에 「프로젝트 예산 초과로 측정 중단(파일 4000개 상한)」 · 「(읽기 16MB 상한)」, 위반 0건이면 WARN 일부 측정 실패 · 스크립트 rc 2, 위반이 있으면 위반 WARN(스크립트 rc 1)에 같은 문구
+- 시간 상한은 두지 않았어요. 기기 부하에 따라 멈추는 파일이 달라져 두 구현 · 두 실행의 결과가 달라지고 패리티 테스트가 흔들려요
+- 주입: 코어는 `inspectOntologyRules(dir, targets, budget)` 인자(테스트 전용, axis check · MCP 는 기본값), 스크립트는 환경변수 `CHECK_ONTOLOGY_MAX_FILES` · `CHECK_ONTOLOGY_MAX_BYTES`(양의 정수이고 기본값보다 작을 때만, `99999` · `0` · `abc` · `-1` · `1e9` 는 무시함을 테스트)
+- 테스트 8건 추가(cli template-checks 64건 통과): 기본값, 파일 수 예산(같은 파일에서 멈춤 · 뒤 위반 안 봄 · rc 2), 경계(같으면 안 멈춤), 바이트 예산(위반 우선 rc 1 · 중단 문구), 바이트가 앞선 사유, 기본 4,000개(4,001개 프로젝트, 환경변수로 못 올림), 기본 16MB(255KB 66개 → 64개), 템플릿 · 레지스트리 사본은 예산 안
+
+### 7.1 변이 A/B(구현을 바꾸고 cli template-checks 만 실행, 원복 뒤 두 파일 sha256 같음 확인)
+
+| 변이 | 결과 |
+|---|---|
+| M1 코어 바이트 예산 판정 제거 | 3 failed / 64 |
+| M2 코어 파일 수 예산 판정 제거 | 2 failed / 64 |
+| M3 스크립트만 파일 수 기본값 4001 | 2 failed / 64(기본 4,000개 패리티 · 공개 JSON 동기화) |
+| M4 스크립트만 바이트 비교 `>=` | 2 failed / 64(바이트 사유 패리티 · 공개 JSON 동기화) |
+| M5 스크립트만 환경변수로 올리기 허용 | 2 failed / 64(환경변수 무시 · 공개 JSON 동기화) |
+| M6 스크립트만 예산 중단을 미완료로 안 셈 | 5 failed / 64 |
+
+### 7.2 실경로(이 브랜치 dist, 새 HOME, `env -i`)
+
+| 사본 | `axis check` 항목 | 시간 | `npm run -s check:ontology` |
+|---|---|---|---|
+| 템플릿 원본 | PASS 「파일 20개, 위반 0건」 rc 0 | 196ms | rc 0 |
+| 원본 + `lib/x00` ~ `x40` 아래 4,100파일 | WARN 「일부 측정 실패, 파일 4000개 위반 0건, 건너뜀: 프로젝트 예산 초과로 측정 중단(파일 4000개 상한)」 rc 0 | 277ms | rc 2, 같은 건너뜀 |
+| 원본 + 255KB 파일 66개 | WARN 「… 파일 82개 위반 0건, 건너뜀: … (읽기 16MB 상한)」 rc 0 | 1,478ms | rc 2, 파일 82개 |
+| 250KB 적대 입력 80개(`cn({`) | WARN, 파일 65개, 작업량 상한 65개 · 읽기 16MB 상한 | 4,468ms | rc 2, 4,649ms |
+| 같은 수(`\'`) | WARN, 파일 65개 · 읽기 16MB 상한 | 927ms | rc 2, 855ms |
+| 같은 수(`cn(\"`) | WARN, 파일 65개 | 2,620ms | rc 2, 2,368ms |
+
+- 종전 출력 바이트 같음: template 없음 · `"__proto__"` · 빈 디렉터리에서 origin/main dist(구판)와 신판의 `axis check` stdout+stderr+rc, MCP `axis.check_project` 응답 본문이 3 × 2 모두 같음(`cmp`)
+

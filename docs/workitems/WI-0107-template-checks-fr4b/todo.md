@@ -31,6 +31,11 @@
 - [x] 패리티에 건너뜀 문구 비교 · 단위 경계 입력 fixture, 스크립트만 바꾼 변이 3종 A/B
 - [x] 재검증: cli template-checks 56 · mcp 13 통과, turbo build 8/8 · type-check lint test 24/24 `--force` Cached 0, pack-smoke rc 0, check-changeset-mcp-tokens rc 0, 실경로 재측정(testplan 4.1)
 
+## 사용자 결정 반영(2026-11-01 2차)
+- [x] [A] 레지스트리 card-shadow 4건: SelectContent · Toast 그림자를 `shadow-[shadow:var(--axis-shadow-lg)]` 로(판정 규칙 그대로), r/ 재생성(version 1.5.0 유지), changeset ui-react patch(linked 로 agentic-ui 와 1.8.4)
+- [x] [B] 프로젝트 전체 예산(파일 4,000개 · 16MB) 두 구현 같게, 패리티 파싱 · 예산 fixture 8건, 스크립트 환경변수는 낮추기만
+- [x] 재검증: 변이 A/B 6종, 실경로(새 HOME · env -i), 종전 출력 바이트 비교 3종 × cli · mcp, turbo `--force`, pack-smoke, check-changeset-mcp-tokens, test:registry, registry-install-smoke(testplan 6 · 7절)
+
 ## 머지 뒤(이 WI 범위 밖에서 현행화)
 - [ ] project-todo.md · wi-mapping.json · CLAUDE.md 현행화
 - [ ] 발행 뒤 발행본으로 같은 실경로 재측정

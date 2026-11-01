@@ -44,7 +44,7 @@
 - AC5: 링크 밖 · 순환 · 깨진 링크에서 프로젝트 밖을 읽지 않고 죽지 않음. 12만 자 꼬리 주석 CSS 가 1초 안
 - AC6: 줄바꿈 파일 이름이 있어도 MCP 출력 줄 수가 늘지 않음, 소스 조각이 문구에 없음
 - AC7: 원격 템플릿 JSON 의 checks 를 바꾸거나 지워도 apply 뒤 check 결과가 같음
-- AC8: changeset cli · mcp minor, agentic-ui patch(linked 중 agentic-ui 만 1.8.4), `pnpm check-changeset-mcp-tokens` 통과
+- AC8: changeset cli · mcp minor, agentic-ui · ui-react patch(linked 중 두 패키지만 1.8.4, ui-react 는 2026-11-01 사용자 결정으로 추가), `pnpm check-changeset-mcp-tokens` 통과
 - AC9: turbo build · type-check · lint · test `--force`(Cached 0), pack-smoke, 템플릿 사본 `npm run check:ontology` rc 0
 
 ## 5. 범위 밖 · 위험
@@ -52,5 +52,6 @@
 - 다른 템플릿(dashboard 등)의 검사: 표에 없어 항목을 만들지 않아요.
 - MCP 의 기존 9항목 중 일부(axis.config.json · utils · brand 문구)는 여전히 CLI 와 별도 구현이에요. 이번 비교 테스트가 드리프트를 잡아요.
 - 사용자 사본 차이: 프로젝트의 `scripts/check-ontology.mjs` 를 고치거나 오래된 템플릿으로 만든 프로젝트는 `axis check` 결과와 다를 수 있어요. 문구에 「axis 내장 규칙, 설치한 axis 버전 기준」을 밝혔어요.
-- 정규식 휴리스틱이라 오탐이 있어요(레지스트리 select · toast 의 card-shadow 4건, testplan 6절). 그래서 WARN 까지만 내요.
+- 정규식 휴리스틱이라 오탐이 있을 수 있어요. 그래서 WARN 까지만 내요. 레지스트리 select · toast 의 card-shadow 4건은 컴포넌트를 토큰 그림자로 바꿔 없앴어요(사용자 결정, 2026-11-01, testplan 6절).
+- 프로젝트 전체 예산(파일 4,000개 · 16MB)을 넘으면 측정을 멈추고 일부 측정 실패로 알려요(사용자 결정, 2026-11-01, testplan 7절).
 - 템플릿 규칙을 고치면 cli · mcp 를 다시 발행해야 해요.
