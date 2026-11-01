@@ -28,10 +28,13 @@
  * - 8,000자를 넘는 클래스 묶음 · 문자열은 클래스 규칙으로 보지 않아요(레지스트리 컴포넌트에서 가장 긴 묶음은 약 2,000자).
  * - 클래스 묶음 훑기가 파일 길이에 비례한 작업량 상한을 넘으면 그 파일의 클래스 묶음 판정만 멈추고 「일부만 판정」으로 세요.
  * - 위반은 파일 · 줄 · 규칙 순으로 정렬해 보여 줘요.
+ * - 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
+ *   넘으면 그 뒤 파일은 판정하지 않고 「프로젝트 예산 초과로 측정 중단」을 알려요(시간 상한은 결과가 기기마다 달라져 두지 않아요).
+ *   환경변수 CHECK_ONTOLOGY_MAX_FILES · CHECK_ONTOLOGY_MAX_BYTES 로 예산을 낮출 수만 있어요(기본값보다 큰 값 · 숫자가 아닌 값은 무시).
  *
  * 사용: node scripts/check-ontology.mjs [디렉터리 ...]   (기본: app components lib)
  * 종료 코드: 0 위반 없음 / 1 위반 있음 / 2 측정 실패(검사한 파일이 0개, 읽기 오류,
- *            또는 위반은 없지만 크기 상한 · 깊이 한도 · 작업량 상한으로 판정하지 못한 파일이 있음)
+ *            또는 위반은 없지만 크기 상한 · 깊이 한도 · 작업량 상한 · 프로젝트 예산으로 판정하지 못한 파일이 있음)
  */
 import { lstatSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { extname, isAbsolute, join, relative, sep } from 'node:path'
@@ -49,6 +52,13 @@ const MAX_UNIT_CHARS = 8000
 /** 클래스 묶음 훑기 작업량 상한: 파일 글자 수 × 16 + 100,000 걸음 */
 const SCAN_STEPS_PER_CHAR = 16
 const SCAN_STEPS_BASE = 100000
+/** 프로젝트 전체 예산 기본값: 판정할 파일 수 · 읽는 바이트 합계 */
+const MAX_FILES_DEFAULT = 4000
+const MAX_TOTAL_BYTES_DEFAULT = 16 * 1024 * 1024
+/** 환경변수로는 예산을 낮추기만 해요(양의 정수이고 기본값보다 작을 때만 씀) */
+const lowerOnly = (raw, fallback) => (typeof raw === 'string' && /^[1-9]\d{0,15}$/.test(raw) ? Math.min(Number(raw), fallback) : fallback)
+const MAX_FILES = lowerOnly(process.env.CHECK_ONTOLOGY_MAX_FILES, MAX_FILES_DEFAULT)
+const MAX_TOTAL_BYTES = lowerOnly(process.env.CHECK_ONTOLOGY_MAX_BYTES, MAX_TOTAL_BYTES_DEFAULT)
 /** 규칙 순서(정렬 · 요약) */
 const RULE_IDS = ['em-dash', 'exclamation', 'one-side-line', 'card-shadow', 'palette']
 
@@ -398,6 +408,13 @@ function sideValueColored(value) {
   return colored && !neutral
 }
 
+/** 바이트 표시(예산 문구용): MB · KB 로 나누어떨어지면 그 단위, 아니면 B */
+function formatBytes(n) {
+  if (n % (1024 * 1024) === 0) return `${n / (1024 * 1024)}MB`
+  if (n % 1024 === 0) return `${n / 1024}KB`
+  return `${n}B`
+}
+
 /** child 실경로가 parent 실경로와 같거나 그 안인가 */
 function isInside(parent, child) {
   const rel = relative(parent, child)
@@ -407,7 +424,7 @@ function isInside(parent, child) {
 /** 검사할 파일 목록. 읽기 오류는 그대로 던져 측정 실패로 다룹니다 */
 function collectFiles() {
   const rootReal = realpathSync(ROOT)
-  const found = { files: [], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0 }
+  const found = { files: [], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0, budgetStop: null }
   const visitedDirs = new Set()
   const seenFiles = new Set()
 
@@ -437,12 +454,17 @@ function collectFiles() {
       found.skippedLarge++
       return
     }
-    found.files.push({ path: p, real })
+    if (found.files.length >= MAX_FILES) {
+      found.budgetStop = { reason: 'files', limit: MAX_FILES }
+      return
+    }
+    found.files.push({ path: p, real, size: st.size })
   }
 
   const walk = (dir, dirReal, depth) => {
     const names = readdirSync(dir).sort()
     for (const name of names) {
+      if (found.budgetStop) return
       if (name === 'node_modules' || name.startsWith('.')) continue
       const p = join(dir, name)
       const entry = resolveEntry(p, lstatSync(p))
@@ -463,6 +485,7 @@ function collectFiles() {
   }
 
   for (const t of targets) {
+    if (found.budgetStop) break
     const p = join(ROOT, t)
     let st
     try {
@@ -500,8 +523,15 @@ try {
 const violations = []
 const seen = new Set()
 let checked = 0
+let bytes = 0
 
-for (const { path: file, real } of found.files) {
+for (const { path: file, real, size } of found.files) {
+  if (bytes + size > MAX_TOTAL_BYTES) {
+    // 목록 순서에서 더 앞선 사유라 파일 수 예산보다 우선해요
+    found.budgetStop = { reason: 'bytes', limit: MAX_TOTAL_BYTES }
+    break
+  }
+  bytes += size
   let raw
   try {
     raw = readFileSync(real, 'utf8')
@@ -627,9 +657,16 @@ if (found.skippedLarge > 0) skipped.push(`크기 상한(256KB) 초과 ${found.sk
 if (found.skippedLinks > 0) skipped.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`)
 if (found.skippedDeep > 0) skipped.push(`깊이 ${DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`)
 if (found.partialFiles > 0) skipped.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`)
+if (found.budgetStop) {
+  skipped.push(
+    found.budgetStop.reason === 'files'
+      ? `프로젝트 예산 초과로 측정 중단(파일 ${found.budgetStop.limit}개 상한)`
+      : `프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(found.budgetStop.limit)} 상한)`
+  )
+}
 const skippedNote = skipped.length > 0 ? ` (건너뜀: ${skipped.join(' · ')})` : ''
 /** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
-const incomplete = found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0
+const incomplete = found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0 || found.budgetStop !== null
 
 if (checked === 0) {
   console.error(`[check:ontology] 측정 실패: 검사할 파일이 없어요 (대상: ${targets.join(', ')})${skippedNote}`)

@@ -23,6 +23,11 @@
  *    프로젝트 실경로 안일 때만 따라갑니다(WI-0100b `expandGlobalCss` 와 같은 규칙, `isSameOrInside`). 같은 실경로는 한 번만 읽고
  *    디렉터리 깊이 32 단계까지만 내려갑니다. 256KB 를 넘는 파일은 건너뛰고 건수를 문구에 적습니다. 줄 길이 상한은 두지 않고
  *    판정을 선형 시간으로 묶습니다(문자열 리터럴 · 괄호 짝 찾기는 표를 한 번 만들어 씀, 클래스 묶음 훑기는 파일 길이에 비례한 작업량 상한).
+ * 7. 프로젝트 전체 예산: 판정할 파일 4,000개 · 읽는 바이트 합계 16MB. 파일은 정해진 순서(대상 순서 → 이름 정렬 깊이 우선)로 모으고,
+ *    파일 수 예산을 넘는 다음 파일을 만나면 목록 모으기를 멈추며, 읽기 전에 합계가 바이트 예산을 넘을 파일을 만나면 그 파일부터 판정하지 않습니다.
+ *    어느 쪽이든 「프로젝트 예산 초과로 측정 중단」을 건너뜀에 적고 일부 측정 실패로 다룹니다(위반이 있으면 위반 WARN 에 함께 적음).
+ *    시간 기반 상한은 두지 않습니다. 기기 부하에 따라 멈추는 파일이 달라져 결과가 결정적이지 않고 패리티 테스트가 흔들리기 때문입니다.
+ *    예산은 환경변수로 바꾸지 않습니다(`inspectOntologyRules` 의 인자는 테스트 · 패리티용이고 axis check · MCP 는 기본값만 씀).
  */
 
 import { lstatSync, readdirSync, readFileSync, realpathSync, statSync, type Stats } from "node:fs";
@@ -76,6 +81,19 @@ export const ONTOLOGY_MAX_UNIT_CHARS = 8000;
 /** 클래스 묶음 훑기 작업량 상한: 파일 글자 수 × 이 값 + ONTOLOGY_SCAN_STEPS_BASE. 넘으면 그 파일의 클래스 묶음 판정만 멈추고 일부 측정 실패로 셉니다 */
 export const ONTOLOGY_SCAN_STEPS_PER_CHAR = 16;
 export const ONTOLOGY_SCAN_STEPS_BASE = 100_000;
+/** 프로젝트 전체 예산: 판정할 파일 수 상한. 넘는 다음 파일을 만나면 목록 모으기를 멈춥니다 */
+export const ONTOLOGY_MAX_FILES = 4000;
+/** 프로젝트 전체 예산: 읽는 바이트 합계 상한. 합계가 넘을 파일부터 판정하지 않습니다 */
+export const ONTOLOGY_MAX_TOTAL_BYTES = 16 * 1024 * 1024;
+/** 프로젝트 전체 예산(테스트 · 패리티에서만 낮춰 씀) */
+export interface OntologyBudget {
+  maxFiles: number;
+  maxBytes: number;
+}
+export const ONTOLOGY_DEFAULT_BUDGET: Readonly<OntologyBudget> = Object.freeze({
+  maxFiles: ONTOLOGY_MAX_FILES,
+  maxBytes: ONTOLOGY_MAX_TOTAL_BYTES,
+});
 /** 문구에 넣는 파일 경로 길이 상한(이스케이프 뒤 글자 수) */
 const MESSAGE_PATH_MAX = 120;
 
@@ -202,12 +220,27 @@ export function ontologySkippedParts(found: OntologyInspection): string[] {
   if (found.skippedLinks > 0) parts.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`);
   if (found.skippedDeep > 0) parts.push(`깊이 ${ONTOLOGY_DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`);
   if (found.partialFiles > 0) parts.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`);
+  if (found.budgetStop) parts.push(ontologyBudgetStopText(found.budgetStop));
   return parts;
+}
+
+/** 바이트 표시(예산 문구용): MB · KB 로 나누어떨어지면 그 단위, 아니면 B. 템플릿 스크립트의 formatBytes 와 같은 글 */
+function formatBytes(n: number): string {
+  if (n % (1024 * 1024) === 0) return `${n / (1024 * 1024)}MB`;
+  if (n % 1024 === 0) return `${n / 1024}KB`;
+  return `${n}B`;
+}
+
+/** 예산 초과 문구 조각. 템플릿 스크립트와 같은 글이라 패리티 테스트가 비교합니다 */
+function ontologyBudgetStopText(stop: OntologyBudgetStop): string {
+  return stop.reason === "files"
+    ? `프로젝트 예산 초과로 측정 중단(파일 ${stop.limit}개 상한)`
+    : `프로젝트 예산 초과로 측정 중단(읽기 ${formatBytes(stop.limit)} 상한)`;
 }
 
 /** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
 export function isOntologyIncomplete(found: OntologyInspection): boolean {
-  return found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0;
+  return found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0 || found.budgetStop !== null;
 }
 
 // --- 판정 엔진: apps/web/templates/ontology-console/files/scripts/check-ontology.mjs 와 같은 판정 ---
@@ -233,6 +266,14 @@ export interface OntologyInspection {
   skippedDeep: number;
   /** 클래스 묶음 작업량 상한을 넘어 그 판정만 멈춘 파일 수(나머지 규칙은 판정함) */
   partialFiles: number;
+  /** 프로젝트 전체 예산을 넘어 측정을 멈췄으면 그 사유와 상한(그 뒤 파일은 판정하지 않음), 아니면 null */
+  budgetStop: OntologyBudgetStop | null;
+}
+
+/** 프로젝트 예산 초과 사유: files = 파일 수, bytes = 읽는 바이트 합계 */
+export interface OntologyBudgetStop {
+  reason: "files" | "bytes";
+  limit: number;
 }
 
 const EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".css"]);
@@ -703,12 +744,21 @@ interface FoundFile {
   rel: string;
   real: string;
   ext: string;
+  /** 목록을 모을 때 본 크기(바이트 예산 판정에 씀) */
+  size: number;
 }
 
 /** 검사할 파일 목록. 읽기 오류는 그대로 던져 측정 실패로 다룹니다 */
-function collectOntologyFiles(baseDir: string, targets: readonly string[]) {
+function collectOntologyFiles(baseDir: string, targets: readonly string[], maxFiles: number) {
   const rootReal = realpathSync(baseDir);
-  const found = { files: [] as FoundFile[], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0 };
+  const found = {
+    files: [] as FoundFile[],
+    skippedLarge: 0,
+    skippedLinks: 0,
+    skippedDeep: 0,
+    partialFiles: 0,
+    budgetStop: null as OntologyBudgetStop | null,
+  };
   const visitedDirs = new Set<string>();
   const seenFiles = new Set<string>();
   const toRel = (p: string) => path.relative(baseDir, p).split(path.sep).join("/");
@@ -738,12 +788,17 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[]) {
       found.skippedLarge++;
       return;
     }
-    found.files.push({ rel: toRel(p), real, ext });
+    if (found.files.length >= maxFiles) {
+      found.budgetStop = { reason: "files", limit: maxFiles };
+      return;
+    }
+    found.files.push({ rel: toRel(p), real, ext, size: st.size });
   };
 
   const walk = (dir: string, dirReal: string, depth: number) => {
     const names = readdirSync(dir).sort();
     for (const name of names) {
+      if (found.budgetStop) return;
       if (name === "node_modules" || name.startsWith(".")) continue;
       const p = path.join(dir, name);
       const entry = resolveEntry(p, lstatSync(p));
@@ -764,6 +819,7 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[]) {
   };
 
   for (const t of targets) {
+    if (found.budgetStop) break;
     const p = path.join(baseDir, t);
     let st: Stats;
     try {
@@ -792,14 +848,25 @@ function collectOntologyFiles(baseDir: string, targets: readonly string[]) {
 
 /**
  * 온톨로지 콘솔 5규칙을 판정합니다(읽기 전용, 스크립트를 실행하지 않음). 파일 목록 · 읽기 오류는 던집니다.
- * `targets` 는 테스트 · 패리티용이고 axis check 는 기본값(app · components · lib)만 씁니다.
+ * `targets` · `budget` 은 테스트 · 패리티용이고 axis check · MCP 는 기본값(app · components · lib, 파일 4,000개 · 16MB)만 씁니다.
  */
-export function inspectOntologyRules(baseDirInput: string, targets: readonly string[] = ONTOLOGY_TARGETS): OntologyInspection {
+export function inspectOntologyRules(
+  baseDirInput: string,
+  targets: readonly string[] = ONTOLOGY_TARGETS,
+  budget: Readonly<OntologyBudget> = ONTOLOGY_DEFAULT_BUDGET
+): OntologyInspection {
   const baseDir = path.resolve(baseDirInput);
-  const found = collectOntologyFiles(baseDir, targets);
+  const found = collectOntologyFiles(baseDir, targets, budget.maxFiles);
   const violations: OntologyViolation[] = [];
   let checked = 0;
+  let bytes = 0;
   for (const f of found.files) {
+    if (bytes + f.size > budget.maxBytes) {
+      // 목록 순서에서 더 앞선 사유라 파일 수 예산보다 우선합니다
+      found.budgetStop = { reason: "bytes", limit: budget.maxBytes };
+      break;
+    }
+    bytes += f.size;
     const raw = readFileSync(f.real, "utf8");
     checked++;
     const result = inspectOntologySourceDetailed(raw, f.ext);
@@ -813,5 +880,6 @@ export function inspectOntologyRules(baseDirInput: string, targets: readonly str
     skippedLinks: found.skippedLinks,
     skippedDeep: found.skippedDeep,
     partialFiles: found.partialFiles,
+    budgetStop: found.budgetStop,
   };
 }
