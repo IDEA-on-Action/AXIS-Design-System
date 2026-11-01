@@ -106,7 +106,7 @@ export function ToolCallCard({
           </code>
           {description && (
             <span className="text-xs text-[var(--axis-text-secondary)]">
-              — {description}
+              · {description}
             </span>
           )}
         </div>

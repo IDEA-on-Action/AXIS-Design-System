@@ -155,7 +155,7 @@
       "type": "registry:ui",
       "title": "Tool Call Card",
       "description": "도구 호출 결과 표시 카드 컴포넌트",
-      "sha256": "7601f15cb9d796a5bae068ccb5a12b1c02078e2273bdb6be5e9d00324fd54bfb"
+      "sha256": "4411f955e7f2ee5199efb171ca218be0373d4ddac46cd7dad8bca3b4a3c19226"
     },
     {
       "name": "agentic-message-bubble",
