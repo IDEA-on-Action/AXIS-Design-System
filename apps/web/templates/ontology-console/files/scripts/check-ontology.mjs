@@ -24,11 +24,14 @@
  * 읽는 범위(WI-0107):
  * - 디렉터리는 lstat 로 훑고, 심볼릭 링크는 실경로가 프로젝트 실경로 안일 때만 따라가요(밖 · 깨진 링크는 건너뜀).
  * - 같은 실경로 디렉터리 · 파일은 한 번만 읽고, 디렉터리 깊이 32 단계까지만 내려가요(순환 링크 차단).
- * - 256KB 를 넘거나 한 줄이 4,096자를 넘는 파일은 건너뛰고 건수를 알려요(생성 · 압축 파일, 검사 시간 상한).
- * - 8,000자를 넘는 클래스 묶음은 보지 않아요(레지스트리 컴포넌트에서 가장 긴 묶음은 약 2,000자).
+ * - 256KB 를 넘는 파일은 건너뛰고 건수를 알려요(생성 · 압축 파일). 줄 길이 상한은 없고, 판정은 선형 시간으로 묶어요.
+ * - 8,000자를 넘는 클래스 묶음 · 문자열은 클래스 규칙으로 보지 않아요(레지스트리 컴포넌트에서 가장 긴 묶음은 약 2,000자).
+ * - 클래스 묶음 훑기가 파일 길이에 비례한 작업량 상한을 넘으면 그 파일의 클래스 묶음 판정만 멈추고 「일부만 판정」으로 세요.
+ * - 위반은 파일 · 줄 · 규칙 순으로 정렬해 보여 줘요.
  *
  * 사용: node scripts/check-ontology.mjs [디렉터리 ...]   (기본: app components lib)
- * 종료 코드: 0 위반 없음 / 1 위반 있음 / 2 측정 실패(검사한 파일이 0개, 또는 읽기 오류)
+ * 종료 코드: 0 위반 없음 / 1 위반 있음 / 2 측정 실패(검사한 파일이 0개, 읽기 오류,
+ *            또는 위반은 없지만 크기 상한 · 깊이 한도 · 작업량 상한으로 판정하지 못한 파일이 있음)
  */
 import { lstatSync, readdirSync, readFileSync, realpathSync, statSync } from 'node:fs'
 import { extname, isAbsolute, join, relative, sep } from 'node:path'
@@ -39,12 +42,15 @@ const targets = args.length > 0 ? args : ['app', 'components', 'lib']
 const EXTS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.css'])
 /** 파일 크기 상한(바이트). 넘으면 건너뜁니다 */
 const MAX_FILE_BYTES = 256 * 1024
-/** 한 줄 길이 상한(UTF-16 글자 수). 넘는 줄이 있으면 건너뜁니다 */
-const MAX_LINE_CHARS = 4096
 /** 디렉터리 깊이 상한 */
 const DIR_DEPTH_LIMIT = 32
 /** 클래스 묶음(className={...} · cn() 인자) 길이 상한(글자 수). 넘는 묶음은 보지 않습니다(겹친 묶음을 거듭 읽는 시간 상한) */
 const MAX_UNIT_CHARS = 8000
+/** 클래스 묶음 훑기 작업량 상한: 파일 글자 수 × 16 + 100,000 걸음 */
+const SCAN_STEPS_PER_CHAR = 16
+const SCAN_STEPS_BASE = 100000
+/** 규칙 순서(정렬 · 요약) */
+const RULE_IDS = ['em-dash', 'exclamation', 'one-side-line', 'card-shadow', 'palette']
 
 /** 긴 줄표 문자. 이 파일 자체에 그 문자를 쓰지 않으려고 코드 포인트로 만듭니다 */
 const EM_DASH = String.fromCharCode(0x2014)
@@ -125,12 +131,44 @@ function lineIndex(src) {
   }
 }
 
+const isLineTerminator = (c) => c === '\n' || c === '\r' || c === '\u2028' || c === '\u2029'
+
+/** 따옴표 q 의 문자열 내용이 i 에서 시작할 때 닫는 따옴표 위치(-1: 이 줄에서 닫히지 않음). 오른쪽에서 왼쪽으로 한 번 만듭니다 */
+function literalEnds(code, q) {
+  const n = code.length
+  const end = new Int32Array(n + 2).fill(-1)
+  for (let i = n - 1; i >= 0; i--) {
+    const c = code[i]
+    if (c === q) end[i] = i
+    else if (c === '\n') end[i] = -1
+    else if (c === '\\') end[i] = i + 1 < n && !isLineTerminator(code[i + 1]) ? end[i + 2] : -1
+    else end[i] = end[i + 1]
+  }
+  return end
+}
+
+/**
+ * 문자열 리터럴(내용 · 여는 따옴표 위치). 정규식 /(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g 와 같은 결과를 선형으로 내요
+ * (닫히지 않은 따옴표가 많은 줄에서 시작점마다 줄 끝까지 다시 훑는 2차 시간을 피함)
+ */
+function stringLiterals(code) {
+  const ends = { '"': literalEnds(code, '"'), "'": literalEnds(code, "'"), '`': literalEnds(code, '`') }
+  const out = []
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i]
+    if (c !== '"' && c !== "'" && c !== '`') continue
+    const e = ends[c][i + 1]
+    if (e === -1) continue
+    out.push({ text: code.slice(i + 1, e), index: i })
+    i = e
+  }
+  return out
+}
+
 /** 문자열 리터럴과 JSX 텍스트 조각을 위치와 함께 돌려줍니다 */
 function textChunks(code, isJsx) {
-  const out = []
-  const str = /(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g
+  const out = stringLiterals(code).map((x) => ({ text: x.text, index: x.index, kind: 'string' }))
   let m
-  while ((m = str.exec(code))) out.push({ text: m[2], index: m.index, kind: 'string' })
   if (isJsx) {
     // JSX 텍스트: 태그 · 표현식 사이 조각. = · ; 가 든 조각은 코드로 보고 건너뜁니다.
     // 따옴표가 든 조각은 문자열 리터럴을 지운 나머지를 봅니다(「현황이에요! "확인"」은 잡고, 코드 속 '문구' 는 문자열 검사에 맡김)
@@ -144,41 +182,92 @@ function textChunks(code, isJsx) {
   return out
 }
 
+/** 작업량 상한을 넘었다는 신호(그 파일의 클래스 묶음 판정만 멈춤) */
+const SCAN_BUDGET_EXCEEDED = Symbol('scan-budget-exceeded')
+
+function spend(budget, steps) {
+  budget.left -= steps
+  if (budget.left < 0) throw SCAN_BUDGET_EXCEEDED
+}
+
+/** 괄호 짝 찾기에서 따옴표 q 로 연 문자열을 i 부터 건너뛸 때 닫는 따옴표 위치(없으면 길이). 역슬래시 다음 글자는 건너뜁니다 */
+function skipEnds(code, q) {
+  const n = code.length
+  const end = new Int32Array(n + 2).fill(n)
+  for (let i = n - 1; i >= 0; i--) {
+    const c = code[i]
+    end[i] = c === q ? i : c === '\\' ? end[Math.min(i + 2, n)] : end[i + 1]
+  }
+  return end
+}
+
 /**
- * open 위치의 여는 괄호에 짝이 맞는 닫는 괄호 위치(문자열 안 괄호는 건너뜀). 못 찾으면 -1.
- * 한 번 훑으며 그 안에서 연 괄호의 짝도 함께 기억해 두어, 겹친 cn( · className={ 마다 끝까지 다시 훑지 않아요(결과는 같음)
+ * open 위치의 여는 괄호에 짝이 맞는 닫는 괄호 위치(문자열 안 괄호는 건너뜀). 묶음 길이가 MAX_UNIT_CHARS 를 넘거나 못 찾으면 -1.
+ * - 문자열은 표(skipEnds)로 한 번에 건너뛰어요.
+ * - 안에서 연 괄호의 짝을 기억해 두고, 이미 아는 괄호를 만나면 그 짝으로 바로 넘어가요(같은 상태에서 훑는 것이라 결과가 같음).
+ *   그 괄호가 -1 이면 그것을 품은 바깥 괄호도 모두 상한을 넘으므로 -1 이에요.
+ * - 상한 거리까지 닫지 못하면 그 open 만 -1 로 기억하고 멈춰요.
  */
-function closeMatcher(code) {
+function closeMatcher(code, budget) {
   const memo = new Map()
   const pair = { '(': ')', '{': '}' }
+  const skips = { '"': skipEnds(code, '"'), "'": skipEnds(code, "'"), '`': skipEnds(code, '`') }
   return (open) => {
     const known = memo.get(open)
     if (known !== undefined) return known
+    const limit = open + MAX_UNIT_CHARS
     const stack = [pair[code[open]]]
     const opens = [open]
+    let steps = 0
     for (let i = open + 1; i < code.length; i++) {
+      if (++steps === 1024) {
+        spend(budget, steps)
+        steps = 0
+      }
+      if (i >= limit) {
+        spend(budget, steps)
+        memo.set(open, -1)
+        return -1
+      }
       const c = code[i]
       if (c === '"' || c === "'" || c === '`') {
-        for (i++; i < code.length && code[i] !== c; i++) if (code[i] === '\\') i++
+        i = skips[c][i + 1]
         continue
       }
       if (c === '(' || c === '{') {
+        const inner = memo.get(i)
+        if (inner !== undefined) {
+          if (inner === -1) {
+            spend(budget, steps)
+            for (const p of opens) memo.set(p, -1)
+            return -1
+          }
+          i = inner
+          continue
+        }
         stack.push(pair[c])
         opens.push(i)
       } else if (c === stack[stack.length - 1]) {
         stack.pop()
         memo.set(opens.pop(), i)
-        if (stack.length === 0) return i
+        if (stack.length === 0) {
+          spend(budget, steps)
+          return i
+        }
       }
     }
+    spend(budget, steps)
     for (const p of opens) memo.set(p, -1)
     return -1
   }
 }
 
 /** 코드 조각 안 문자열 리터럴 내용을 공백으로 이어 붙입니다 */
-function joinStrings(expr) {
-  return [...expr.matchAll(/(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g)].map((x) => x[2]).join(' ')
+function joinStrings(expr, budget) {
+  spend(budget, expr.length)
+  return stringLiterals(expr)
+    .map((x) => x.text)
+    .join(' ')
 }
 
 /** at 위치에서 `<Card` 태그가 시작하는가(뒤가 단어 글자가 아니거나 end) */
@@ -231,9 +320,9 @@ function cardClassStrings(code) {
  * 클래스 묶음: className={...} 표현식과 cn() · clsx() · cva() · twMerge() 인자 안의 문자열을 하나로 합칩니다.
  * <Card 의 className 묶음은 card: true 로 표시합니다.
  */
-function classUnits(code) {
+function classUnits(code, budget) {
   const out = []
-  const matchClose = closeMatcher(code)
+  const matchClose = closeMatcher(code, budget)
   const lastLt = lastLtFinder(code)
   let m
   const attr = /className=\{/g
@@ -241,14 +330,14 @@ function classUnits(code) {
     const open = m.index + m[0].length - 1
     const close = matchClose(open)
     if (close === -1 || close - open + 1 > MAX_UNIT_CHARS) continue
-    out.push({ text: joinStrings(code.slice(open, close + 1)), index: m.index, card: isCardTagAt(code, lastLt(m.index), m.index) })
+    out.push({ text: joinStrings(code.slice(open, close + 1), budget), index: m.index, card: isCardTagAt(code, lastLt(m.index), m.index) })
   }
   const call = /\b(?:cn|clsx|cva|twMerge)\(/g
   while ((m = call.exec(code))) {
     const open = m.index + m[0].length - 1
     const close = matchClose(open)
     if (close === -1 || close - open + 1 > MAX_UNIT_CHARS) continue
-    out.push({ text: joinStrings(code.slice(open, close + 1)), index: m.index, card: false })
+    out.push({ text: joinStrings(code.slice(open, close + 1), budget), index: m.index, card: false })
   }
   out.push(...cardClassStrings(code))
   return out
@@ -309,17 +398,6 @@ function sideValueColored(value) {
   return colored && !neutral
 }
 
-/** 한 줄이라도 상한보다 긴가 */
-function hasLongLine(src) {
-  let start = 0
-  for (let i = src.indexOf('\n'); ; i = src.indexOf('\n', start)) {
-    const end = i === -1 ? src.length : i
-    if (end - start > MAX_LINE_CHARS) return true
-    if (i === -1) return false
-    start = i + 1
-  }
-}
-
 /** child 실경로가 parent 실경로와 같거나 그 안인가 */
 function isInside(parent, child) {
   const rel = relative(parent, child)
@@ -329,7 +407,7 @@ function isInside(parent, child) {
 /** 검사할 파일 목록. 읽기 오류는 그대로 던져 측정 실패로 다룹니다 */
 function collectFiles() {
   const rootReal = realpathSync(ROOT)
-  const found = { files: [], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0 }
+  const found = { files: [], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0 }
   const visitedDirs = new Set()
   const seenFiles = new Set()
 
@@ -431,20 +509,17 @@ for (const { path: file, real } of found.files) {
     console.error(`[check:ontology] 측정 실패: ${relative(ROOT, file)} 를 읽지 못했어요 (${e && e.code ? e.code : e})`)
     process.exit(2)
   }
-  if (hasLongLine(raw)) {
-    found.skippedLarge++
-    continue
-  }
   checked++
   const ext = extname(file)
   const code = stripComments(raw)
   const lineOf = lineIndex(raw)
+  const fileViolations = []
   const report = (index, rule, detail) => {
     const v = { file: relative(ROOT, file), line: lineOf(index), rule, detail }
     const key = `${v.file}:${v.line}:${v.rule}`
     if (seen.has(key)) return // 문자열 검사와 클래스 묶음 검사가 같은 줄을 두 번 보고하지 않게
     seen.add(key)
-    violations.push(v)
+    fileViolations.push(v)
   }
 
   // 1. 긴 줄표: 주석 안까지 봅니다
@@ -474,15 +549,23 @@ for (const { path: file, real } of found.files) {
         report(chunk.index, 'exclamation', `느낌표가 든 문구: ${t.trim().slice(0, 40)}`)
       }
       if (chunk.kind !== 'string') continue
-      // 3 · 4. 문자열 하나 안의 클래스
+      // 3 · 4. 문자열 하나 안의 클래스(클래스 묶음 상한보다 긴 문자열은 클래스로 보지 않음)
+      if (t.length > MAX_UNIT_CHARS) continue
       const colors = oneSideColors(t)
       if (colors.length > 0) report(chunk.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
       if (isCardLike(t, false) && SHADOW.test(t)) {
         report(chunk.index, 'card-shadow', `카드 그림자: ${t.trim().slice(0, 60)}`)
       }
     }
-    // 3 · 4. 여러 문자열로 나뉜 클래스 묶음(className={...} · cn() 인자)
-    for (const unit of classUnits(code)) {
+    // 3 · 4. 여러 문자열로 나뉜 클래스 묶음(className={...} · cn() 인자). 작업량 상한을 넘으면 이 판정만 멈추고 일부만 판정으로 세요
+    let units = []
+    try {
+      units = classUnits(code, { left: code.length * SCAN_STEPS_PER_CHAR + SCAN_STEPS_BASE })
+    } catch (e) {
+      if (e !== SCAN_BUDGET_EXCEEDED) throw e
+      found.partialFiles++
+    }
+    for (const unit of units) {
       const t = unit.text
       const colors = oneSideColors(t)
       if (colors.length > 0) report(unit.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
@@ -534,13 +617,19 @@ for (const { path: file, real } of found.files) {
   while ((m = PALETTE_CLASS.exec(code))) {
     report(m.index, 'palette', `Tailwind 기본 팔레트 ${m[1]}: AXIS 토큰 클래스를 써요`)
   }
+  // 줄 · 규칙 순서로 정렬(첫 줄이 실제로 가장 앞의 위반)
+  fileViolations.sort((a, b) => a.line - b.line || RULE_IDS.indexOf(a.rule) - RULE_IDS.indexOf(b.rule))
+  violations.push(...fileViolations)
 }
 
 const skipped = []
-if (found.skippedLarge > 0) skipped.push(`크기 상한(256KB · 한 줄 4,096자) 초과 ${found.skippedLarge}개`)
+if (found.skippedLarge > 0) skipped.push(`크기 상한(256KB) 초과 ${found.skippedLarge}개`)
 if (found.skippedLinks > 0) skipped.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`)
 if (found.skippedDeep > 0) skipped.push(`깊이 ${DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`)
+if (found.partialFiles > 0) skipped.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`)
 const skippedNote = skipped.length > 0 ? ` (건너뜀: ${skipped.join(' · ')})` : ''
+/** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
+const incomplete = found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0
 
 if (checked === 0) {
   console.error(`[check:ontology] 측정 실패: 검사할 파일이 없어요 (대상: ${targets.join(', ')})${skippedNote}`)
@@ -549,4 +638,9 @@ if (checked === 0) {
 
 for (const v of violations) console.log(`${v.file}:${v.line}  ${v.rule}  ${v.detail}`)
 console.log(`\n[check:ontology] 검사 파일 ${checked}개, 위반 ${violations.length}건${skippedNote}`)
-process.exit(violations.length > 0 ? 1 : 0)
+if (violations.length > 0) process.exit(1)
+if (incomplete) {
+  console.error('[check:ontology] 일부 측정 실패: 판정하지 못한 파일이 있어 통과로 보지 않아요 (건너뜀 참고)')
+  process.exit(2)
+}
+process.exit(0)

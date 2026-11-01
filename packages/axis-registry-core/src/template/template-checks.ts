@@ -13,12 +13,16 @@
  * 3. `template` 이 없거나 문자열이 아니거나 slug 형식이 아니거나 표에 없으면 항목을 만들지 않습니다(종전 출력과 바이트 같음).
  *    표는 Map 이라 "__proto__" · "constructor" 같은 값이 표에 있는 것으로 읽히지 않습니다.
  * 4. 위반은 WARN 입니다(rc 0 유지). 검사한 파일이 0개이거나 읽기 오류가 나면 WARN 「측정 실패」이고 PASS 로 다루지 않습니다.
- * 5. 문구에는 고정 문구 · 건수 · 규칙 id 만 넣고 소스 조각은 넣지 않습니다. 첫 위치의 파일 경로는 제어문자 · 줄바꿈 · 방향 제어 문자를
- *    \uXXXX 로 바꾸고 길이를 잘라 한 줄로 고정합니다. 「전체 보기: npm run <script>」 안내는 프로젝트 package.json 의 scripts 에
+ *    위반이 0건이어도 판정하지 못한 파일(크기 상한 초과 · 깊이 한도 밖 디렉터리 · 클래스 묶음 작업량 상한 초과)이 있으면
+ *    WARN 「일부 측정 실패」입니다. 프로젝트 밖 · 깨진 링크는 검사 범위 밖이라 건수만 적고 PASS 를 막지 않습니다.
+ * 5. 문구에는 고정 문구 · 건수 · 규칙 id 만 넣고 소스 조각은 넣지 않습니다. 첫 위치(파일 · 줄 · 규칙 순으로 정렬한 첫 위반)의 파일 경로는
+ *    글자 · 숫자 · 문장부호 · 기호 · 공백만 남기고 나머지(제어 · 서식 · 태그 · 폭 없는 문자 등)와 따옴표 · 역슬래시를 \uXXXX 로 바꾸며,
+ *    코드 포인트 단위로 길이를 잘라 한 줄로 고정합니다. 「전체 보기: npm run <script>」 안내는 프로젝트 package.json 의 scripts 에
  *    그 이름이 있을 때만 붙입니다.
  * 6. 읽는 범위: app · components · lib 아래 .ts · .tsx · .js · .jsx · .mjs · .css. 디렉터리는 lstat 로 훑고 심볼릭 링크는 실경로가
  *    프로젝트 실경로 안일 때만 따라갑니다(WI-0100b `expandGlobalCss` 와 같은 규칙, `isSameOrInside`). 같은 실경로는 한 번만 읽고
- *    디렉터리 깊이 32 단계까지만 내려갑니다. 256KB 를 넘거나 한 줄이 4,096자를 넘는 파일은 건너뛰고 건수를 문구에 적습니다.
+ *    디렉터리 깊이 32 단계까지만 내려갑니다. 256KB 를 넘는 파일은 건너뛰고 건수를 문구에 적습니다. 줄 길이 상한은 두지 않고
+ *    판정을 선형 시간으로 묶습니다(문자열 리터럴 · 괄호 짝 찾기는 표를 한 번 만들어 씀, 클래스 묶음 훑기는 파일 길이에 비례한 작업량 상한).
  */
 
 import { lstatSync, readdirSync, readFileSync, realpathSync, statSync, type Stats } from "node:fs";
@@ -65,12 +69,13 @@ export type OntologyRuleId = (typeof ONTOLOGY_RULE_IDS)[number];
 export const ONTOLOGY_TARGETS = ["app", "components", "lib"] as const;
 /** 파일 크기 상한(바이트). 넘으면 건너뜁니다 */
 export const ONTOLOGY_MAX_FILE_BYTES = 256 * 1024;
-/** 한 줄 길이 상한(UTF-16 글자 수). 넘는 줄이 있으면 건너뜁니다 */
-export const ONTOLOGY_MAX_LINE_CHARS = 4096;
 /** 디렉터리 깊이 상한 */
 export const ONTOLOGY_DIR_DEPTH_LIMIT = 32;
-/** 클래스 묶음 길이 상한(글자 수). 넘는 묶음은 보지 않습니다 */
+/** 클래스 묶음 길이 상한(글자 수). 넘는 묶음 · 문자열은 클래스 규칙(한쪽 색 선 · 카드 그림자)으로 보지 않습니다 */
 export const ONTOLOGY_MAX_UNIT_CHARS = 8000;
+/** 클래스 묶음 훑기 작업량 상한: 파일 글자 수 × 이 값 + ONTOLOGY_SCAN_STEPS_BASE. 넘으면 그 파일의 클래스 묶음 판정만 멈추고 일부 측정 실패로 셉니다 */
+export const ONTOLOGY_SCAN_STEPS_PER_CHAR = 16;
+export const ONTOLOGY_SCAN_STEPS_BASE = 100_000;
 /** 문구에 넣는 파일 경로 길이 상한(이스케이프 뒤 글자 수) */
 const MESSAGE_PATH_MAX = 120;
 
@@ -125,13 +130,28 @@ function hasPackageScript(baseDir: string, script: string): boolean {
   }
 }
 
-/** 문구에 넣을 경로: 제어문자 · 줄바꿈 · 방향 제어 · 줄 구분 문자를 \uXXXX 로 바꾸고 길이를 자릅니다 */
+/** 문구에 그대로 둘 문자: 글자 · 숫자 · 문장부호 · 기호 · 스페이스(따옴표 · 백틱 · 역슬래시는 아래에서 따로 바꿈) */
+const MESSAGE_PATH_KEEP = /^[\p{L}\p{N}\p{P}\p{S} ]$/u;
+
+/**
+ * 문구에 넣을 경로: 허용 목록(글자 · 숫자 · 문장부호 · 기호 · 스페이스) 밖의 문자와 따옴표 · 백틱 · 역슬래시를 \uXXXX(BMP 밖은 \u{XXXXX})로
+ * 바꿉니다. 제어 · 줄바꿈 · 방향 제어 · 서식(폭 없는 문자 · BOM · 태그 문자) · 결합 문자 · 사용자 정의 · 짝 없는 서로게이트가 모두 바뀝니다.
+ * 길이는 코드 포인트 단위로 자르고 이스케이프 시퀀스 가운데는 자르지 않습니다.
+ */
 export function messageSafePath(p: string): string {
-  // eslint-disable-next-line no-control-regex
-  const escaped = p.replace(/[\u0000-\u001f\u007f-\u009f\u061c\u200e\u200f\u2028\u2029\u202a-\u202e\u2066-\u2069]/g, (c) =>
-    `\\u${c.charCodeAt(0).toString(16).padStart(4, "0")}`
-  );
-  return escaped.length > MESSAGE_PATH_MAX ? `${escaped.slice(0, MESSAGE_PATH_MAX)}...` : escaped;
+  let out = "";
+  for (const ch of p) {
+    const cp = ch.codePointAt(0)!;
+    const piece =
+      MESSAGE_PATH_KEEP.test(ch) && ch !== '"' && ch !== "`" && ch !== "\\"
+        ? ch
+        : cp > 0xffff
+          ? `\\u{${cp.toString(16)}}`
+          : `\\u${cp.toString(16).padStart(4, "0")}`;
+    if (out.length + piece.length > MESSAGE_PATH_MAX) return `${out}...`;
+    out += piece;
+  }
+  return out;
 }
 
 function ontologyRulesResult(baseDir: string, template: string, def: TemplateCheckDefinition): TemplateCheckResult {
@@ -146,7 +166,8 @@ function ontologyRulesResult(baseDir: string, template: string, def: TemplateChe
       : "오류";
     return { name, severity: "warn", message: `${head}: 측정 실패, 파일을 읽지 못했습니다(${code})` };
   }
-  const skipped = skippedNote(inspection);
+  const parts = ontologySkippedParts(inspection);
+  const skipped = parts.length > 0 ? `, 건너뜀: ${parts.join(" · ")}` : "";
   if (inspection.checked === 0) {
     return {
       name,
@@ -156,6 +177,9 @@ function ontologyRulesResult(baseDir: string, template: string, def: TemplateChe
   }
   const { violations } = inspection;
   if (violations.length === 0) {
+    if (isOntologyIncomplete(inspection)) {
+      return { name, severity: "warn", message: `${head}: 일부 측정 실패, 파일 ${inspection.checked}개 위반 0건${skipped}` };
+    }
     return { name, severity: "pass", message: `${head}: 파일 ${inspection.checked}개, 위반 0건${skipped}` };
   }
   const counts = ONTOLOGY_RULE_IDS.map((rule) => [rule, violations.filter((v) => v.rule === rule).length] as const)
@@ -171,12 +195,19 @@ function ontologyRulesResult(baseDir: string, template: string, def: TemplateChe
   };
 }
 
-function skippedNote(found: OntologyInspection): string {
+/** 건너뛴 것의 문구 조각. 템플릿 스크립트 요약 줄의 「(건너뜀: …)」과 같은 글이라 패리티 테스트가 비교합니다 */
+export function ontologySkippedParts(found: OntologyInspection): string[] {
   const parts: string[] = [];
-  if (found.skippedLarge > 0) parts.push(`크기 상한(256KB · 한 줄 4,096자) 초과 ${found.skippedLarge}개`);
+  if (found.skippedLarge > 0) parts.push(`크기 상한(256KB) 초과 ${found.skippedLarge}개`);
   if (found.skippedLinks > 0) parts.push(`프로젝트 밖 · 깨진 링크 ${found.skippedLinks}개`);
   if (found.skippedDeep > 0) parts.push(`깊이 ${ONTOLOGY_DIR_DEPTH_LIMIT} 단계 밖 디렉터리 ${found.skippedDeep}개`);
-  return parts.length > 0 ? `, 건너뜀: ${parts.join(" · ")}` : "";
+  if (found.partialFiles > 0) parts.push(`클래스 묶음 작업량 상한 초과(일부만 판정) ${found.partialFiles}개`);
+  return parts;
+}
+
+/** 검사 범위 안인데 판정하지 못한 것이 있는가(링크는 범위 밖이라 세지 않음) */
+export function isOntologyIncomplete(found: OntologyInspection): boolean {
+  return found.skippedLarge > 0 || found.skippedDeep > 0 || found.partialFiles > 0;
 }
 
 // --- 판정 엔진: apps/web/templates/ontology-console/files/scripts/check-ontology.mjs 와 같은 판정 ---
@@ -194,12 +225,14 @@ export interface OntologyInspection {
   /** 실제로 판정한 파일 수 */
   checked: number;
   violations: OntologyViolation[];
-  /** 크기 · 줄 길이 상한으로 건너뛴 파일 수 */
+  /** 크기 상한으로 건너뛴 파일 수 */
   skippedLarge: number;
   /** 프로젝트 밖 · 깨진 링크로 건너뛴 수 */
   skippedLinks: number;
   /** 깊이 한도로 건너뛴 디렉터리 수 */
   skippedDeep: number;
+  /** 클래스 묶음 작업량 상한을 넘어 그 판정만 멈춘 파일 수(나머지 규칙은 판정함) */
+  partialFiles: number;
 }
 
 const EXTS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".css"]);
@@ -285,12 +318,44 @@ interface TextChunk {
   kind: "string" | "jsx";
 }
 
+const isLineTerminator = (c: string | undefined) => c === "\n" || c === "\r" || c === "\u2028" || c === "\u2029";
+
+/** 따옴표 q 의 문자열 내용이 i 에서 시작할 때 닫는 따옴표 위치(-1: 이 줄에서 닫히지 않음). 오른쪽에서 왼쪽으로 한 번 만듭니다 */
+function literalEnds(code: string, q: string): Int32Array {
+  const n = code.length;
+  const end = new Int32Array(n + 2).fill(-1);
+  for (let i = n - 1; i >= 0; i--) {
+    const c = code[i];
+    if (c === q) end[i] = i;
+    else if (c === "\n") end[i] = -1;
+    else if (c === "\\") end[i] = i + 1 < n && !isLineTerminator(code[i + 1]) ? end[i + 2] : -1;
+    else end[i] = end[i + 1];
+  }
+  return end;
+}
+
+/**
+ * 문자열 리터럴(내용 · 여는 따옴표 위치). 정규식 /(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g 와 같은 결과를 선형으로 냅니다
+ * (닫히지 않은 따옴표가 많은 줄에서 시작점마다 줄 끝까지 다시 훑는 2차 시간을 피함)
+ */
+function stringLiterals(code: string): Array<{ text: string; index: number }> {
+  const ends: Record<string, Int32Array> = { '"': literalEnds(code, '"'), "'": literalEnds(code, "'"), "`": literalEnds(code, "`") };
+  const out: Array<{ text: string; index: number }> = [];
+  for (let i = 0; i < code.length; i++) {
+    const c = code[i];
+    if (c !== '"' && c !== "'" && c !== "`") continue;
+    const e = ends[c][i + 1];
+    if (e === -1) continue;
+    out.push({ text: code.slice(i + 1, e), index: i });
+    i = e;
+  }
+  return out;
+}
+
 /** 문자열 리터럴과 JSX 텍스트 조각을 위치와 함께 돌려줍니다 */
 function textChunks(code: string, isJsx: boolean): TextChunk[] {
-  const out: TextChunk[] = [];
-  const str = /(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g;
+  const out: TextChunk[] = stringLiterals(code).map((x) => ({ text: x.text, index: x.index, kind: "string" as const }));
   let m: RegExpExecArray | null;
-  while ((m = str.exec(code))) out.push({ text: m[2], index: m.index, kind: "string" });
   if (isJsx) {
     const jsx = /[>}]([^<>{}]+)(?=[<{])/g;
     while ((m = jsx.exec(code))) {
@@ -302,38 +367,97 @@ function textChunks(code: string, isJsx: boolean): TextChunk[] {
   return out;
 }
 
-/** open 위치의 여는 괄호에 짝이 맞는 닫는 괄호 위치(문자열 안 괄호는 건너뜀, 못 찾으면 -1). 안에서 연 괄호의 짝도 기억합니다 */
-function closeMatcher(code: string): (open: number) => number {
+/** 작업량 상한을 넘었다는 신호(그 파일의 클래스 묶음 판정만 멈춤) */
+const SCAN_BUDGET_EXCEEDED = Symbol("scan-budget-exceeded");
+
+interface ScanBudget {
+  left: number;
+}
+
+function spend(budget: ScanBudget, steps: number) {
+  budget.left -= steps;
+  if (budget.left < 0) throw SCAN_BUDGET_EXCEEDED;
+}
+
+/** 괄호 짝 찾기에서 따옴표 q 로 연 문자열을 i 부터 건너뛸 때 닫는 따옴표 위치(없으면 길이). 역슬래시 다음 글자는 건너뜁니다 */
+function skipEnds(code: string, q: string): Int32Array {
+  const n = code.length;
+  const end = new Int32Array(n + 2).fill(n);
+  for (let i = n - 1; i >= 0; i--) {
+    const c = code[i];
+    end[i] = c === q ? i : c === "\\" ? end[Math.min(i + 2, n)] : end[i + 1];
+  }
+  return end;
+}
+
+/**
+ * open 위치의 여는 괄호에 짝이 맞는 닫는 괄호 위치(문자열 안 괄호는 건너뜀). 묶음 길이(close - open + 1)가
+ * ONTOLOGY_MAX_UNIT_CHARS 를 넘거나 못 찾으면 -1 입니다(호출하는 쪽은 어차피 그 묶음을 보지 않음).
+ * - 문자열은 표(skipEnds)로 한 번에 건너뜁니다.
+ * - 안에서 연 괄호의 짝을 기억해 두고, 이미 아는 괄호를 만나면 그 짝으로 바로 넘어갑니다(같은 상태에서 훑는 것이라 결과가 같음).
+ *   그 괄호가 -1 이면 그것을 품은 바깥 괄호도 모두 상한을 넘으므로 -1 입니다.
+ * - 상한 거리까지 닫지 못하면 그 open 만 -1 로 기억하고 멈춥니다.
+ */
+function closeMatcher(code: string, budget: ScanBudget): (open: number) => number {
   const memo = new Map<number, number>();
   const pair: Record<string, string> = { "(": ")", "{": "}" };
+  const skips: Record<string, Int32Array> = { '"': skipEnds(code, '"'), "'": skipEnds(code, "'"), "`": skipEnds(code, "`") };
   return (open) => {
     const known = memo.get(open);
     if (known !== undefined) return known;
+    const limit = open + ONTOLOGY_MAX_UNIT_CHARS;
     const stack = [pair[code[open]]];
     const opens = [open];
+    let steps = 0;
     for (let i = open + 1; i < code.length; i++) {
+      if (++steps === 1024) {
+        spend(budget, steps);
+        steps = 0;
+      }
+      if (i >= limit) {
+        spend(budget, steps);
+        memo.set(open, -1);
+        return -1;
+      }
       const c = code[i];
       if (c === '"' || c === "'" || c === "`") {
-        for (i++; i < code.length && code[i] !== c; i++) if (code[i] === "\\") i++;
+        i = skips[c][i + 1];
         continue;
       }
       if (c === "(" || c === "{") {
+        const inner = memo.get(i);
+        if (inner !== undefined) {
+          if (inner === -1) {
+            spend(budget, steps);
+            for (const p of opens) memo.set(p, -1);
+            return -1;
+          }
+          i = inner;
+          continue;
+        }
         stack.push(pair[c]);
         opens.push(i);
       } else if (c === stack[stack.length - 1]) {
         stack.pop();
         memo.set(opens.pop()!, i);
-        if (stack.length === 0) return i;
+        if (stack.length === 0) {
+          spend(budget, steps);
+          return i;
+        }
       }
     }
+    spend(budget, steps);
     for (const p of opens) memo.set(p, -1);
     return -1;
   };
 }
 
 /** 코드 조각 안 문자열 리터럴 내용을 공백으로 이어 붙입니다 */
-function joinStrings(expr: string): string {
-  return [...expr.matchAll(/(["'`])((?:\\.|(?!\1)[^\\\n])*)\1/g)].map((x) => x[2]).join(" ");
+function joinStrings(expr: string, budget: ScanBudget): string {
+  spend(budget, expr.length);
+  return stringLiterals(expr)
+    .map((x) => x.text)
+    .join(" ");
 }
 
 /** at 위치에서 `<Card` 태그가 시작하는가(뒤가 단어 글자가 아니거나 end) */
@@ -386,9 +510,9 @@ function cardClassStrings(code: string): ClassUnit[] {
 }
 
 /** 클래스 묶음: className={...} 표현식과 cn() · clsx() · cva() · twMerge() 인자 안의 문자열을 하나로 합칩니다 */
-function classUnits(code: string): ClassUnit[] {
+function classUnits(code: string, budget: ScanBudget): ClassUnit[] {
   const out: ClassUnit[] = [];
-  const matchClose = closeMatcher(code);
+  const matchClose = closeMatcher(code, budget);
   const lastLt = lastLtFinder(code);
   let m: RegExpExecArray | null;
   const attr = /className=\{/g;
@@ -396,14 +520,14 @@ function classUnits(code: string): ClassUnit[] {
     const open = m.index + m[0].length - 1;
     const close = matchClose(open);
     if (close === -1 || close - open + 1 > ONTOLOGY_MAX_UNIT_CHARS) continue;
-    out.push({ text: joinStrings(code.slice(open, close + 1)), index: m.index, card: isCardTagAt(code, lastLt(m.index), m.index) });
+    out.push({ text: joinStrings(code.slice(open, close + 1), budget), index: m.index, card: isCardTagAt(code, lastLt(m.index), m.index) });
   }
   const call = /\b(?:cn|clsx|cva|twMerge)\(/g;
   while ((m = call.exec(code))) {
     const open = m.index + m[0].length - 1;
     const close = matchClose(open);
     if (close === -1 || close - open + 1 > ONTOLOGY_MAX_UNIT_CHARS) continue;
-    out.push({ text: joinStrings(code.slice(open, close + 1)), index: m.index, card: false });
+    out.push({ text: joinStrings(code.slice(open, close + 1), budget), index: m.index, card: false });
   }
   out.push(...cardClassStrings(code));
   return out;
@@ -465,20 +589,23 @@ function sideValueColored(value: string): boolean {
   return colored && !neutral;
 }
 
-/** 한 줄이라도 상한보다 긴가 */
-function hasLongLine(src: string): boolean {
-  let start = 0;
-  for (let i = src.indexOf("\n"); ; i = src.indexOf("\n", start)) {
-    const end = i === -1 ? src.length : i;
-    if (end - start > ONTOLOGY_MAX_LINE_CHARS) return true;
-    if (i === -1) return false;
-    start = i + 1;
-  }
+/** 위반 정렬: 줄 → 규칙 순서(ONTOLOGY_RULE_IDS). 「첫 위치」가 실제로 가장 앞의 위반이 되게 합니다 */
+function byLineThenRule(a: { line: number; rule: OntologyRuleId }, b: { line: number; rule: OntologyRuleId }): number {
+  return a.line - b.line || ONTOLOGY_RULE_IDS.indexOf(a.rule) - ONTOLOGY_RULE_IDS.indexOf(b.rule);
 }
 
-/** 소스 하나의 위반(줄 · 규칙). 같은 줄 · 같은 규칙은 한 번만 냅니다 */
+/** 소스 하나의 위반(줄 · 규칙 순으로 정렬). 같은 줄 · 같은 규칙은 한 번만 냅니다 */
 export function inspectOntologySource(raw: string, ext: string): Array<{ line: number; rule: OntologyRuleId }> {
+  return inspectOntologySourceDetailed(raw, ext).violations;
+}
+
+/** 소스 하나의 위반과, 클래스 묶음 판정을 작업량 상한으로 멈췄는지(partial) */
+export function inspectOntologySourceDetailed(
+  raw: string,
+  ext: string
+): { violations: Array<{ line: number; rule: OntologyRuleId }>; partial: boolean } {
   const out: Array<{ line: number; rule: OntologyRuleId }> = [];
+  let partial = false;
   const seen = new Set<string>();
   const code = stripComments(raw);
   const lineOf = lineIndex(raw);
@@ -511,12 +638,20 @@ export function inspectOntologySource(raw: string, ext: string): Array<{ line: n
       // 2. 느낌표가 든 한글 문구
       if (HANGUL.test(t) && (t.includes("!") || t.includes(FULLWIDTH_BANG))) report(chunk.index, "exclamation");
       if (chunk.kind !== "string") continue;
-      // 3 · 4. 문자열 하나 안의 클래스
+      // 3 · 4. 문자열 하나 안의 클래스(클래스 묶음 상한보다 긴 문자열은 클래스로 보지 않음)
+      if (t.length > ONTOLOGY_MAX_UNIT_CHARS) continue;
       if (oneSideColors(t).length > 0) report(chunk.index, "one-side-line");
       if (isCardLike(t, false) && SHADOW.test(t)) report(chunk.index, "card-shadow");
     }
-    // 3 · 4. 여러 문자열로 나뉜 클래스 묶음
-    for (const unit of classUnits(code)) {
+    // 3 · 4. 여러 문자열로 나뉜 클래스 묶음. 작업량 상한을 넘으면 이 판정만 멈추고 partial 로 알립니다
+    let units: ClassUnit[] = [];
+    try {
+      units = classUnits(code, { left: code.length * ONTOLOGY_SCAN_STEPS_PER_CHAR + ONTOLOGY_SCAN_STEPS_BASE });
+    } catch (e) {
+      if (e !== SCAN_BUDGET_EXCEEDED) throw e;
+      partial = true;
+    }
+    for (const unit of units) {
       const t = unit.text;
       if (oneSideColors(t).length > 0) report(unit.index, "one-side-line");
       if (isCardLike(t, unit.card) && SHADOW.test(t)) report(unit.index, "card-shadow");
@@ -560,7 +695,7 @@ export function inspectOntologySource(raw: string, ext: string): Array<{ line: n
   while ((m = COLOR_FN.exec(code))) report(m.index, "palette");
   PALETTE_CLASS.lastIndex = 0;
   while ((m = PALETTE_CLASS.exec(code))) report(m.index, "palette");
-  return out;
+  return { violations: out.sort(byLineThenRule), partial };
 }
 
 interface FoundFile {
@@ -573,7 +708,7 @@ interface FoundFile {
 /** 검사할 파일 목록. 읽기 오류는 그대로 던져 측정 실패로 다룹니다 */
 function collectOntologyFiles(baseDir: string, targets: readonly string[]) {
   const rootReal = realpathSync(baseDir);
-  const found = { files: [] as FoundFile[], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0 };
+  const found = { files: [] as FoundFile[], skippedLarge: 0, skippedLinks: 0, skippedDeep: 0, partialFiles: 0 };
   const visitedDirs = new Set<string>();
   const seenFiles = new Set<string>();
   const toRel = (p: string) => path.relative(baseDir, p).split(path.sep).join("/");
@@ -666,12 +801,17 @@ export function inspectOntologyRules(baseDirInput: string, targets: readonly str
   let checked = 0;
   for (const f of found.files) {
     const raw = readFileSync(f.real, "utf8");
-    if (hasLongLine(raw)) {
-      found.skippedLarge++;
-      continue;
-    }
     checked++;
-    for (const v of inspectOntologySource(raw, f.ext)) violations.push({ file: f.rel, line: v.line, rule: v.rule });
+    const result = inspectOntologySourceDetailed(raw, f.ext);
+    if (result.partial) found.partialFiles++;
+    for (const v of result.violations) violations.push({ file: f.rel, line: v.line, rule: v.rule });
   }
-  return { checked, violations, skippedLarge: found.skippedLarge, skippedLinks: found.skippedLinks, skippedDeep: found.skippedDeep };
+  return {
+    checked,
+    violations,
+    skippedLarge: found.skippedLarge,
+    skippedLinks: found.skippedLinks,
+    skippedDeep: found.skippedDeep,
+    partialFiles: found.partialFiles,
+  };
 }
