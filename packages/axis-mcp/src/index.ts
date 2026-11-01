@@ -656,7 +656,7 @@ server.tool(
 // 도구 등록: axis.check_project
 server.tool(
   "axis.check_project",
-  "프로젝트의 AXIS 디자인 시스템 설정 상태를 검증합니다.",
+  "프로젝트의 AXIS 디자인 시스템 설정 상태를 검증합니다. 적용한 템플릿의 규칙 검사 포함(읽기 전용, 스크립트 실행 안 함).",
   {
     targetDir: z.string().optional().describe("검증 대상 디렉토리 (기본: 현재 디렉토리)"),
   },

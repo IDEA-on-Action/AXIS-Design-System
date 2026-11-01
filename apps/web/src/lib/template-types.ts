@@ -8,6 +8,16 @@ export interface TemplateFile {
   type: string
 }
 
+/**
+ * 템플릿에 딸린 규칙 검사 선언(WI-0107). axis check · MCP axis.check_project 가 돌리는 검사 id 이고,
+ * 실제로 돌릴 검사는 registry-core 정적 표(TEMPLATE_CHECKS)가 정합니다. 이 값은 빌드 · 동기화 테스트 전용이라 런타임에서 읽지 않아요.
+ * script 는 사람에게 보여 줄 npm script 이름이고 실행하지 않아요.
+ */
+export interface TemplateCheckDecl {
+  id: string
+  script?: string
+}
+
 export interface TemplateMetadata {
   name: string
   slug: string
@@ -27,6 +37,8 @@ export interface TemplateMetadata {
   source?: string
   /** 미리보기 이미지 URL */
   preview?: string
+  /** 규칙 검사 선언(WI-0107, 빌드 · 동기화 테스트 전용) */
+  checks?: TemplateCheckDecl[]
 }
 
 export interface TemplateDetail {
@@ -40,6 +52,8 @@ export interface TemplateDetail {
   features: string[]
   dependencies: Record<string, string>
   devDependencies: Record<string, string>
+  /** 규칙 검사 선언(WI-0107, 빌드 · 동기화 테스트 전용) */
+  checks?: TemplateCheckDecl[]
   files: TemplateFile[]
   updatedAt: string
 }

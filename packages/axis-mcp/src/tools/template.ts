@@ -29,6 +29,7 @@ import {
   type TemplateFileAction,
 } from "@axis-ds/registry-core/apply-files";
 import { PNP_ROOT_ONLY_NOTE, addCommandFor, cssImportViaNote, detectInstallCommand, globalCssSelectionNote } from "@axis-ds/registry-core/project";
+import { collectTemplateCheckResults } from "@axis-ds/registry-core/template-checks";
 import { AXIS_SITE_URL } from "../site.js";
 
 // --- 타입 ---
@@ -44,6 +45,8 @@ interface TemplateIndexEntry {
   features: string[];
   dependencies: Record<string, string>;
   devDependencies: Record<string, string>;
+  // template.json 의 `checks`(WI-0107)는 빌드 · 동기화 테스트 전용이라 여기 두지 않습니다. check_project 가 돌릴 검사는
+  // registry-core 정적 표(TEMPLATE_CHECKS)로만 정합니다(원격 템플릿 JSON 이 검사 선택을 좌우하지 않게)
 }
 
 interface TemplateIndex {
@@ -464,6 +467,8 @@ export async function handleCheckProject(
   if (content) results.push(content);
   const animation = checkAnimationPlugin(baseDir);
   if (animation) results.push(animation);
+  // 10. 적용한 템플릿의 규칙 검사(해당할 때만, WI-0107 · CLI 와 같은 공유 코어). 읽기 전용이고 프로젝트 스크립트를 실행하지 않습니다
+  results.push(...collectTemplateCheckResults(baseDir));
 
   const summary = {
     pass: results.filter((r) => r.severity === "pass").length,

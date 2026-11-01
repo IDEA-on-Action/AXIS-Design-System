@@ -36,7 +36,7 @@
 - [x] PRD v0.6.1(D1 ~ D11 표기, ListToolbar 정정, FR-4a 범위), README 판정 범위 · 한계 · 지원 폭
 - [x] project-todo 배치 5 비고 갱신, origin/main 병합(project-todo 충돌 해소)
 - [x] 후속 ① a11y 경로에 `/templates/ontology-console/` 추가 - WI-0106(#270)에서 상세 JSON 이 있는 템플릿 상세 전부(5개)로 넓혀 해소(63경로 x 4 = 252, 2026-11-01)
-- [ ] 후속 ② registry-core `axis-config.ts:13` 주석(brand 를 템플릿 config 도 씀) 정정 - 배치 13 WI-0107 에서 함께
+- [x] 후속 ② registry-core `axis-config.ts:13` 주석(brand 를 템플릿 config 도 씀) 정정 - WI-0107 에서 template · brand 주석과 schema.json 설명을 함께 정정(2026-11-01, 머지 전)
 
 ## 릴리스
 - [x] changeset 없음 확인(발행 패키지 소스 변경 0, cli 테스트 파일 1개만 · 발행물 dist 무관)

@@ -41,7 +41,7 @@
 
 **후속(별도 WI)**
 - 수정 화면(사이드바 없음 · EditBar + 변경 사유 팝업), 검토 패널, 마크다운 편집기, 칸반, 에이전트 대화, 기록, 로그인, 노드 캔버스 정적 배치, v0.26 ~ v0.28 신규 계열(Context · Use Case 편집 · CQ · 용어 · Source)
-- FR-4b: template.json `checks` 필드와 `axis check` · MCP `axis.check_project` 연동(cli · mcp minor 발행)
+- FR-4b: template.json `checks` 필드와 `axis check` · MCP `axis.check_project` 연동(cli · mcp minor 발행) - WI-0107 에서 구현(2026-11-01, 발행 전)
 - FR-5: 갤러리 · 상세 화면 미리보기 이미지 렌더링
 - 해요체 · 금지 표현 검사(판정 기준이 레포에 없음, Q8)
 - AC5b: 템플릿 결과 앱 axe 게이트의 CI 연결(D7)
@@ -100,6 +100,7 @@
 - FR-3: 레이아웃 규칙. 높이 100vh 고정, 카드 안 스크롤, 브레드크럼 없음, 1199px 이하 1열(Q6 결정 유지, 프로토타입 v0.24 · v0.26 · v0.28 모두 `@media (max-width: 1199px)` 17 · 22 · 21건. v0.28 처럼 사이드바는 남기고 카드 안 분할 · 보조 상자 · 그리드가 1열), 메뉴 첫 화면은 목록 페이지, 줄을 누르면 depth 상세(시트는 잠깐 보는 곳에만), 탭은 세그먼트, 요소 타일은 회색 하나 + 아이콘.
 - FR-4a(MVP): 템플릿 앱 안의 규칙 검사 스크립트 `scripts/check-ontology.mjs` 와 `package.json` 의 `check:ontology` 스크립트. 대상은 앱의 `app/` · `components/` · `lib/` 소스(인자로 다른 디렉터리를 줄 수 있음). 규칙은 결정적인 것만: 엠 대시(U+2014) · 느낌표(한글이 든 JSX 문구 · 문자열) · 한쪽 색 선(`border-l` · `border-r` · `border-s` · `border-e` 와 중립이 아닌 테두리 색 클래스 조합, CSS `border-left` · `border-right` 색 지정) · 카드 그림자(`<Card` · `bg-card` · 카드 모양(`rounded-*` + `border`) 과 `shadow-*` 조합, `<Card style` 의 `boxShadow`, 선택자에 card 가 든 CSS `box-shadow`) · 팔레트 밖 리터럴 색(hex · `rgb()` · `hsl()` 숫자 리터럴, CSS 이름 색, Tailwind 기본 팔레트 클래스 `*-red-500` · `*-white` 등). 클래스 조합은 문자열 하나뿐 아니라 `className={...}` 표현식과 `cn()` · `clsx()` · `cva()` · `twMerge()` 인자 안의 문자열 전체를 합쳐 봐요(v0.6.1). 한쪽 색 선은 style 객체 `borderLeft` · `borderRight` 등도 봐요. 소스 정적 판정이라 변수에 담아 넘긴 클래스 · 런타임에 조립한 문자열은 보지 않아요(README 한계). 위반이 있으면 rc 1 과 `파일:줄`, 검사한 파일이 0개면 rc 2(측정 실패). cli · mcp 는 바꾸지 않아요.
 - FR-4b(후속 WI): template.json `checks` 필드와 실행 규약, `axis check` · MCP `axis.check_project` 가 적용된 템플릿의 검사를 찾아 실행. 사용자 프로젝트의 스크립트를 실행하는 동작 변경이라 별도 설계 · 발행(cli · mcp minor)이 필요해요.
+  - **v0.7 갱신(WI-0107, 2026-11-01 사용자 결정 D1 ~ D4)**: 「사용자 프로젝트의 스크립트를 실행」 전제는 설계 전 가설이었고 대체됐어요. `axis check` · MCP 는 스크립트를 실행하지 않고, 같은 5규칙을 registry-core 순수 함수(`template-checks.ts`)로 옮겨 10번째 항목 `template.ontology-rules` 로 돌려요(읽기 전용). 실행할 검사는 `axis.config.json` 의 `template` 과 registry-core 정적 표로 고르고, template.json `checks`(`[{ "id": "ontology-rules", "script": "check:ontology" }]`)는 빌드 · 동기화 테스트 전용이라 런타임은 읽지 않아요. 위반 · 측정 실패는 WARN(rc 0). 두 구현의 드리프트는 패리티 테스트로 막아요. 상세: `docs/workitems/WI-0107-template-checks-fr4b/`
 - FR-5(후속 WI): 갤러리 · 상세 화면 미리보기. 지금 `preview?: string` 타입(`template-types.ts:29`, cli `types.ts`)만 있고 값 · 자산 · 렌더링 코드는 0건(측정)이라 그대로예요.
 - FR-6: `scripts/template-smoke.mjs` 의 기본 slug 목록을 `apps/web/public/templates/index.json`(또는 `--templates-dir`)의 로컬 템플릿(`type` 이 `external` 이 아니고 `<slug>.json` 이 있는 항목)에서 계산해요(D9). `ontology-console` 에는 빌드 HTML(`.next/server/app/index.html`)의 `data-brand="ontology"` 1건 이상을 판정에 더해요(slug 별 추가 판정 표).
 - FR-7: 갤러리 등록. `template-types.ts` 의 `TemplateCategory` · `templateCategories` 와 `templates/page.tsx` 의 `categoryIconMap` 에 `console` 을 더해요. 생성 결과(`public/templates/ontology-console.json` · `index.json`)는 내용 diff 를 커밋하고, 기존 4종 JSON 에 `updatedAt` 만 바뀐 것과 `build:registry` 의 r/ version churn 은 되돌려요.
@@ -168,3 +169,4 @@
 | v0.5 | 2026-10-20 | 디자인 오너 개정 r3(기준 v0.26) 화면 범위 병합(WI-0043), Q7 |
 | v0.6 | 2026-10-26 | 낡은 전제 9건 정정(1.4), MVP · 후속 분리(1.3), FR-4 를 4a · 4b 로 분리, AC2 를 init 기준으로, AC 별 실측 · 음성 대조, AC9(apply 위 config) 추가, 정본 v0.28, 결정 D1 ~ D11 반영 |
 | v0.6.1 | 2026-10-26 | 구현 검토 반영: FR-4a 판정 범위를 클래스 묶음(className 표현식 · cn() 인자) · style 객체 · CSS 이름 색 · 카드 모양 div 로 넓힘, 앵커 `#add` 오탐 제외. 1.3 의 ListToolbar 를 실제 구조(entity-list 안 도구줄)로, 요지의 D1 ~ D9 를 D1 ~ D11 로 정정 |
+| v0.7 | 2026-11-01 | FR-4b 상태 갱신: WI-0107 에서 「스크립트 실행」 대신 내장 판정(registry-core)으로 구현, checks 는 런타임이 읽지 않는 선언(D1 ~ D4) |

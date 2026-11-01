@@ -22,8 +22,8 @@ npx @axis-ds/cli template init ontology-console --dir my-console
 cd my-console
 npm install
 npm run dev
-npx @axis-ds/cli check      # axis.config.json · tailwind · globals.css · brand 항목 확인
-npm run check:ontology      # 템플릿 디자인 규칙 검사
+npx @axis-ds/cli check      # axis.config.json · tailwind · globals.css · brand · 템플릿 규칙 항목 확인
+npm run check:ontology      # 템플릿 디자인 규칙 검사(위반 목록 전체)
 ```
 
 ## ontology 브랜드
@@ -55,14 +55,27 @@ npm run check:ontology      # 템플릿 디자인 규칙 검사
 - 변수 · 상수에 담아 넘긴 클래스, 런타임에 조립한 문자열, 다른 파일에서 가져온 클래스 묶음은 보지 않아요.
 - 카드는 `<Card` · `bg-card` · `rounded-*` + `border` 조합으로 알아봐요. 테두리 없이 바탕색만 다른 상자에 그림자를 주면 잡지 못해요.
 - `href="#add"` 같은 앵커와 URL 조각(`/entities#abc`)은 색으로 보지 않아요. 그 밖의 `#` + 16진 글자 3 ~ 8자는 리터럴 색으로 봐요.
+- `shadow-[shadow:var(--axis-shadow-lg)]` 처럼 타입 힌트 `shadow:` 가 붙은 임의값 그림자는 그림자 클래스로 보지 않아요(클래스 모양 때문이고, 토큰인지는 보지 않아요). AXIS 의 Dialog · Select · Toast 는 떠 있는 레이어라 이 토큰 그림자를 쓰고, ontology 브랜드가 그 값을 정해요. 카드에는 쓰지 말고, 토큰이 아닌 값을 이 모양으로 쓰지 않아요(검사가 잡지 못해요).
 
-해요체 · 금지 표현 검사는 기준 목록이 정해지면 더해요. 이 검사는 `axis check` 와 따로 돌아요(연동은 후속 WI).
+읽는 범위: 심볼릭 링크는 실경로가 프로젝트 안일 때만 따라가요(같은 실경로는 한 번, 디렉터리 깊이 32 단계까지). 256KB 를 넘는 파일은 생성 · 압축 파일로 보고 건너뛰며 건수를 알려 줘요. 8,000자를 넘는 클래스 묶음 · 문자열은 클래스 규칙으로 보지 않아요. 줄 길이 상한은 없어요. 프로젝트 전체로는 파일 4,000개 · 읽는 바이트 합계 16MB · 디렉터리 항목 50,000개(대상 밖 파일 · 디렉터리 · 링크 이름까지 셈)까지만 판정하고, 넘으면 그 뒤 파일은 보지 않고 「프로젝트 예산 초과로 측정 중단」을 알려요(파일은 `app` → `components` → `lib`, 그 안은 이름순으로 모아요). 환경변수 `CHECK_ONTOLOGY_MAX_FILES` · `CHECK_ONTOLOGY_MAX_BYTES` · `CHECK_ONTOLOGY_MAX_ENTRIES` 로 예산을 낮출 수만 있어요.
+
+종료 코드: 0 위반 없음, 1 위반 있음, 2 측정 실패(검사한 파일 0개 · 읽기 오류, 또는 위반은 없지만 256KB 초과 · 깊이 한도 밖 · 작업량 상한 초과 · 프로젝트 예산 초과로 판정하지 못한 파일이 있음). 프로젝트 밖 · 깨진 링크만 건너뛴 것은 범위 밖이라 0 이에요. 위반은 파일 · 줄 · 규칙 순으로 보여 주고, 요약 줄은 stdout 마지막 줄이에요(`| tail -1` 로 받아도 잘리지 않아요). 위반이 있으면서 판정하지 못한 파일도 있으면 1 이고 stderr 에 그 사실을 한 줄 더 써요.
+
+해요체 · 금지 표현 검사는 기준 목록이 정해지면 더해요.
+
+### `axis check` 와의 관계
+
+`npx @axis-ds/cli check`(cli 1.8.0 이상)와 MCP `axis.check_project`(mcp 1.5.0 이상)도 `axis.config.json` 의 `"template": "ontology-console"` 을 보고 같은 다섯 규칙을 `template.ontology-rules` 항목으로 검사해요.
+
+- `axis check` 는 이 스크립트를 실행하지 않아요. 같은 판정을 axis 에 내장해 두었고, AXIS 저장소의 패리티 테스트가 두 구현이 같은 입력에 같은 위반 목록(파일 · 줄 · 규칙)을 내는지 확인해요.
+- 위반이 있으면 `axis check` 는 WARN 으로 건수와 첫 위치만 알려 주고 종료 코드는 0 이에요. 위반 목록 전체는 `npm run check:ontology` 로 봐요.
+- 이 스크립트를 고치거나(허용 색 추가 등) 지우면 `axis check` 결과와 달라질 수 있어요. `axis check` 는 설치한 cli 버전의 규칙을 따라요.
 
 ## 지원 화면 폭
 
 데스크톱 업무 콘솔 기준이에요. 1200px 이상에서 프로토타입 v0.28 치수를 따르고, 1199px 이하에서는 카드 안 분할 · 보조 상자 · 현황 카드가 1열로 바뀌어요. 사이드바는 240px 로 남기 때문에 폰 폭(예: 390px)에서는 카드가 좁아지고 표가 잘려요. 모바일 레이아웃(사이드바 접기 · 표 가로 스크롤)은 이 템플릿 범위 밖이에요.
 
-프로토타입과 다른 점: v0.28 의 보조 상자는 기본으로 닫혀 있다가 「확인 필요」 버튼으로 열리지만, 이 템플릿은 PRD 결정(통합 뷰 보조 상자 420px)에 따라 항상 열어 두고, 1199px 이하에서는 카드 아래로 내려요.
+프로토타입과 다른 점: v0.28 의 보조 상자는 기본으로 닫혀 있다가 「확인 필요」 버튼으로 열리지만 이 템플릿은 PRD 결정(통합 뷰 보조 상자 420px)에 따라 항상 열어 두고, 1199px 이하에서는 카드 아래로 내려요.
 
 ## 구조
 
@@ -76,7 +89,7 @@ npm run check:ontology      # 템플릿 디자인 규칙 검사
 │   └── projects/[id]/page.tsx  # 프로젝트 상세 2분할
 ├── components/ontology/        # 셸 · 사이드바 · 카드 틀 · 머리 · 표 · 탭 · 타일 · 뱃지
 ├── lib/demo-data.ts            # 가상 예시 데이터(실제 앱에서는 API 호출로 바꿔요)
-├── lib/utils.ts                # cn()
+├── lib/utils.ts                # cn() (토큰 그림자 shadow-[shadow:…] 병합 설정 포함)
 ├── scripts/check-ontology.mjs  # 규칙 검사
 ├── axis.config.json            # brand: ontology
 └── tailwind.config.ts          # AXIS preset + ui-react dist content + tailwindcss-animate

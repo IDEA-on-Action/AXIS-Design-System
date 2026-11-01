@@ -16,6 +16,7 @@
     "./tailwind-core": "./src/template/tailwind-core.ts",
     "./dependencies-core": "./src/template/dependencies-core.ts",
     "./apply-files": "./src/template/apply-files.ts",
+    "./template-checks": "./src/template/template-checks.ts",
     "./project": "./src/project.ts",
     "./utils-deps": "./src/utils-deps.ts"
   },

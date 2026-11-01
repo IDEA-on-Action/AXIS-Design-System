@@ -11,7 +11,7 @@
     },
     "template": {
       "type": "string",
-      "description": "axis template init 으로 적용한 템플릿 이름"
+      "description": "적용한 템플릿 이름. axis template init 이 쓰고, axis.config.json 을 담은 템플릿(ontology-console)의 axis template apply · MCP axis.apply_template 도 씁니다. axis check · MCP axis.check_project 가 템플릿별 규칙 검사를 고르는 데 읽습니다"
     },
     "componentsDir": {
       "type": "string",
@@ -40,7 +40,7 @@
     },
     "brand": {
       "type": "string",
-      "description": "axis theme add 가 기록하는 브랜드 이름"
+      "description": "브랜드 이름. axis theme add 와 brand 를 담은 템플릿(ontology-console)의 axis template apply · template init · MCP axis.apply_template 이 씁니다"
     }
   },
   "additionalProperties": false

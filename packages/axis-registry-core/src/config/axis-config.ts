@@ -10,10 +10,17 @@ export const AXIS_CONFIG_FILE = "axis.config.json";
 
 /**
  * `axis.config.json` 형태.
- * `axis init` · `axis template init` 이 만들고, `brand` 는 `axis theme add` 만 씁니다.
+ * `axis init` · `axis template init` 이 만들고, axis.config.json 을 담은 템플릿(ontology-console)을 `axis template apply` ·
+ * MCP `axis.apply_template` 으로 적용하면 그 파일과 키 단위로 합칩니다(apply-files.ts `mergeAxisConfigJson`, 같은 키는 템플릿 값).
+ * `brand` 를 쓰는 경로는 `axis theme add` 와, brand 를 담은 템플릿의 `axis template apply` · `template init` · MCP `axis.apply_template` 입니다.
  */
 export interface AxisConfig {
   $schema?: string;
+  /**
+   * 적용한 템플릿 이름. `axis template init` 이 config 가 없을 때 쓰고(createTemplateConfig), axis.config.json 을 담은 템플릿의
+   * apply · init · MCP apply_template 이 그 파일의 값으로 씁니다. `axis check` · MCP `axis.check_project` 가 템플릿별 규칙 검사를
+   * 고르는 데 읽습니다(WI-0107, registry-core template-checks.ts 정적 표에 있는 값만)
+   */
   template?: string;
   componentsDir?: string;
   /** `axis add` 가 agentic- 항목을 쓰는 위치. 없으면 componentsDir 의 형제 `agentic` 입니다(WI-0045 FR-4) */
@@ -23,7 +30,7 @@ export interface AxisConfig {
   registry?: string;
   /** `axis monet` 의 저장 위치(monet.ts 가 읽음) */
   monetDir?: string;
-  /** `axis theme add` 가 기록하는 브랜드 이름 */
+  /** 브랜드 이름. `axis theme add` 와 brand 를 담은 템플릿(ontology-console)의 `axis template apply` · `template init` · MCP `axis.apply_template` 이 씁니다 */
   brand?: string;
 }
 
