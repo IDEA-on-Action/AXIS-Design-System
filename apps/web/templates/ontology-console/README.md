@@ -22,8 +22,8 @@ npx @axis-ds/cli template init ontology-console --dir my-console
 cd my-console
 npm install
 npm run dev
-npx @axis-ds/cli check      # axis.config.json · tailwind · globals.css · brand 항목 확인
-npm run check:ontology      # 템플릿 디자인 규칙 검사
+npx @axis-ds/cli check      # axis.config.json · tailwind · globals.css · brand · 템플릿 규칙 항목 확인
+npm run check:ontology      # 템플릿 디자인 규칙 검사(위반 목록 전체)
 ```
 
 ## ontology 브랜드
@@ -56,7 +56,17 @@ npm run check:ontology      # 템플릿 디자인 규칙 검사
 - 카드는 `<Card` · `bg-card` · `rounded-*` + `border` 조합으로 알아봐요. 테두리 없이 바탕색만 다른 상자에 그림자를 주면 잡지 못해요.
 - `href="#add"` 같은 앵커와 URL 조각(`/entities#abc`)은 색으로 보지 않아요. 그 밖의 `#` + 16진 글자 3 ~ 8자는 리터럴 색으로 봐요.
 
-해요체 · 금지 표현 검사는 기준 목록이 정해지면 더해요. 이 검사는 `axis check` 와 따로 돌아요(연동은 후속 WI).
+읽는 범위: 심볼릭 링크는 실경로가 프로젝트 안일 때만 따라가요(같은 실경로는 한 번, 디렉터리 깊이 32 단계까지). 256KB 를 넘거나 한 줄이 4,096자를 넘는 파일은 생성 · 압축 파일로 보고 건너뛰며 건수를 알려 줘요. 8,000자를 넘는 클래스 묶음은 보지 않아요.
+
+해요체 · 금지 표현 검사는 기준 목록이 정해지면 더해요.
+
+### `axis check` 와의 관계
+
+`npx @axis-ds/cli check`(cli 1.8.0 이상)와 MCP `axis.check_project`(mcp 1.5.0 이상)도 `axis.config.json` 의 `"template": "ontology-console"` 을 보고 같은 다섯 규칙을 `template.ontology-rules` 항목으로 검사해요.
+
+- `axis check` 는 이 스크립트를 실행하지 않아요. 같은 판정을 axis 에 내장해 두었고, AXIS 저장소의 패리티 테스트가 두 구현이 같은 입력에 같은 위반 목록(파일 · 줄 · 규칙)을 내는지 확인해요.
+- 위반이 있으면 `axis check` 는 WARN 으로 건수와 첫 위치만 알려 주고 종료 코드는 0 이에요. 위반 목록 전체는 `npm run check:ontology` 로 봐요.
+- 이 스크립트를 고치거나(허용 색 추가 등) 지우면 `axis check` 결과와 달라질 수 있어요. `axis check` 는 설치한 cli 버전의 규칙을 따라요.
 
 ## 지원 화면 폭
 
