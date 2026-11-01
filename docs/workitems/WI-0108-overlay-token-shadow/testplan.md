@@ -36,7 +36,9 @@
 | X = `shadow-black/50` | 토큰 그림자 + `shadow-black/50` 공존 | 토큰 그림자가 지워짐 |
 | X = `shadow-md` | `… border shadow-md` | 둘 다 남음 |
 | X = `shadow-[0_0_0_1px_red]` | `… border shadow-[0_0_0_1px_red]` | 둘 다 남음 |
+| X = `shadow-[var(--my)]` · `shadow-[--my]` | 토큰 그림자 + X 공존(그림자 색 그룹으로 분류) | 측정 안 함 |
 
+- CSS 변수만 담은 임의값은 Tailwind 3.4.19 도 `--tw-shadow-color: var(--my); --tw-shadow: var(--tw-shadow-colored)` 인 색 유틸리티로 만들어요(측정). 토큰 클래스의 `--tw-shadow-colored` 는 `var(--axis-shadow-lg)` 라 색이 적용되지 않으므로 release-notes 「동작이 달라지는 사용 방식」에 넣었어요(독립 검토 지적 반영).
 - 변이 A/B: `utils.ts` 의 그림자 그룹 확장 줄을 지우면 `utils.test.ts` 7건과 새 `overlay-shadow.test.tsx` 의 `shadow-none` 1건이 실패해요(8 failed / 13). 원복 뒤 통과.
 
 ## 3. 단위 테스트 `packages/axis-ui-react/src/overlay-shadow.test.tsx`
@@ -47,7 +49,9 @@
 | DropdownMenuContent · SubContent | 하위 메뉴까지 연 상태로 두 요소 확인 | 실패 |
 | SheetContent | top · right · bottom · left 네 방향 | 실패 |
 | `className="shadow-none"` | 토큰 그림자를 대체 | 통과(HEAD 의 `shadow-md` 도 대체되므로 이 건은 `cn` 회귀용) |
-| 소스 검사 | 두 패키지 소스 문자열 중 `z-50` · `z-[n]` · `fixed` 와 고정 그림자를 함께 가진 것 0건. 파일 30개 초과 · 떠 있는 레이어 문자열 5개 초과를 함께 단언(0건이 측정 실패가 아님을 확인) | 실패(4건 검출) |
+| 소스 검사 | 두 패키지 소스 문자열 중 `z-50` · `z-[n]` · `fixed` 와 고정 그림자(bare `shadow` · `shadow-xs` · `sm` ~ `2xl` · `inner`)를 함께 가진 것 0건. 파일 30개 초과 · 떠 있는 레이어 문자열 5개 초과를 함께 단언(0건이 측정 실패가 아님을 확인) | 실패(4건 검출) |
+
+- 고정 그림자 정규식 변이: `sheet/index.tsx:73` 의 토큰을 bare `shadow` 로 바꾸면 SheetContent 렌더 테스트와 소스 검사가 함께 실패해요(2 failed / 5, 측정). 정규식을 넓히기 전에는 소스 검사가 이 변이를 통과시켰어요(독립 검토 재현). 원복 뒤 sha256 이 변이 전과 같아요.
 
 ## 4. 브랜드 · 테마별 box-shadow 계산값
 
@@ -84,7 +88,8 @@
 | `dist/switch`(양성 대조) | 토큰 0 · 고정 1 | 토큰 0 · 고정 1 |
 
 - 배포 진입점 `@import "@axis-ds/ui-react/tailwind.css"`(`@source "./dist"`)로 전체를 스캔한 Tailwind 4 출력에도 `.shadow-\[shadow\:var\(--axis-shadow-lg\)\]` 가 있어요.
-- 문서 · 스토리 · 스냅샷: 레포에 스토리 · 스냅샷 파일이 없고, `docs/` · `apps/web` 문서에 네 컴포넌트의 그림자 클래스를 설명한 곳이 없어요(grep 측정). 레지스트리에 네 컴포넌트가 없어 `r/` 재생성도 없어요. 빌드가 바꾼 `public/templates/*.json` 은 `updatedAt` 만 바뀌어 되돌렸어요.
+- 문서 · 스토리 · 스냅샷: 레포에 스토리 · 스냅샷 파일이 없고, `docs/` 에 네 컴포넌트의 그림자 클래스를 설명한 곳이 없어요(grep 측정). 레지스트리에 네 컴포넌트가 없어 `r/` 재생성도 없어요.
+- 라이브러리 상세 데이터: 처음 구현에서는 `apps/web/public/library/components/*.json` 의 소스 사본을 놓쳤어요(독립 검토 지적). `pnpm library:refresh-axis` 로 「추가 0 · 변경 6 · 유지 42」, 파일 10개를 다시 만들었어요. 변경 항목은 이번 네 컴포넌트가 있는 axis-dropdown-menu · axis-popover · axis-sheet 와 WI-0107 에서 바뀐 axis-select · axis-toast, 그리고 axis-tool-call-card 예요. tool-call-card 는 WI-0107 에서 소스 주석의 긴 줄표가 가운뎃점으로 바뀐 것이 사본에 늦게 반영된 것이라 함께 넣었어요. 재실행하면 변경 0 이에요(측정). 빌드가 바꾼 `public/templates/*.json` 은 `updatedAt` 만 바뀌어 되돌렸어요.
 
 ## 6. 품질 게이트
 
@@ -98,3 +103,13 @@
 | `pnpm check-changeset-mcp-tokens` | rc 0(19 pass) |
 | `pnpm changeset status` | ui-react 1.8.5 · agentic-ui 1.8.5(내부 의존 patch, linked) · axis-nextjs-example 0.1.20 |
 | 추가 줄 U+2014 | 0건(203줄). 양성 대조: 같은 검사로 추적 파일 63개에서 검출 |
+
+### 6.1 독립 검토 반영 뒤 재실행(2026-11-01)
+
+| 명령 | 결과 |
+|---|---|
+| `turbo build --force` | 8/8, Cached 0. 바뀐 `public/templates/*.json` 은 `updatedAt` 만이라 되돌림 |
+| `turbo type-check lint test --force --concurrency=1 --continue` | 23/24, Cached 0. 실패 1건은 `@axis-ds/cli` `template-checks.test.ts` 1건(앞 회차와 같은 파일). 단독 `turbo test --force --filter=@axis-ds/cli` 는 1354 통과, Cached 0 |
+| `pnpm pack-smoke` · `pnpm check-changeset-mcp-tokens` · `pnpm check-library-links` | 모두 rc 0 |
+| `library refresh-axis --dry-run` 재실행 | 변경 0 · 유지 48 |
+| `origin/main` 대비 추가 줄 U+2014 | 0건(362줄). 양성 대조: 지운 줄에서 2건 검출(tool-call-card 사본의 옛 주석) |

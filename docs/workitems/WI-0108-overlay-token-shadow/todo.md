@@ -11,6 +11,8 @@
 - [x] 단위 테스트 `overlay-shadow.test.tsx`(렌더 4건 + 소스 검사 1건) (AC1 ~ AC3)
 - [x] changeset ui-react patch, `pnpm changeset status` 로 agentic-ui 1.8.5 동반 확인 (FR-5)
 - [x] 문서 · 스토리 · 스냅샷 확인(바꿀 곳 없음, testplan 5절)
+- [x] 라이브러리 상세 데이터 `pnpm library:refresh-axis` 재생성(변경 6 · 파일 10, 재실행 변경 0, testplan 5절)
+- [x] 소스 검사 고정 그림자 정규식에 bare `shadow` · `shadow-xs` · `shadow-inner` 추가, 변이 확인(testplan 3절)
 
 ## 검증
 - [x] Tailwind 3 · 4 클래스 생성 (AC4)

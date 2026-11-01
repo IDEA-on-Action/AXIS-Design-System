@@ -11,12 +11,13 @@
 
 ## 바뀌지 않은 점
 
-- `className` 으로 `shadow-none` · `shadow-md` · `shadow-[…]` 를 넘기면 종전처럼 기본 그림자를 대체해요(패키지 `cn` 이 이 클래스를 그림자 그룹으로 병합, WI-0025 부터).
+- `className` 으로 `shadow-none` · `shadow-md` 나 길이로 시작하는 그림자 임의값(`shadow-[0_10px_15px_-3px_rgb(0_0_0/0.5)]` 등)을 넘기면 종전처럼 기본 그림자를 대체해요(패키지 `cn` 이 이 클래스를 그림자 그룹으로 병합, WI-0025 부터).
 - Tailwind 3 `content` · Tailwind 4 `@import "@axis-ds/ui-react/tailwind.css"` 설정은 그대로예요. 새 클래스는 기존 스캔 경로에서 생성돼요.
 
 ## 동작이 달라지는 사용 방식
 
 - 그림자 색 수식어(`shadow-black/50` 등)만 넘긴 경우 색이 더는 적용되지 않아요. 토큰 그림자는 색까지 값에 들어 있어서예요(Dialog · Select · Toast 와 같은 동작). 색을 바꾸려면 그림자 전체를 임의값으로 넘기거나 `--axis-shadow-lg` 를 덮어써요.
+- CSS 변수만 담은 임의값(`shadow-[var(--x)]` · `shadow-[--x]`)도 색 수식어와 같아요. `cn` 은 이 클래스를 그림자 색 그룹으로 보고 토큰 그림자를 남기고, Tailwind 도 그림자 색 유틸리티로 만들어요. 종전에는 `shadow-md` 모양에 그 색이 입혀졌지만 이제는 색이 무시되고 토큰 그림자가 보여요. 변수로 그림자 전체를 넘기려면 `shadow-[shadow:var(--x)]` 처럼 `shadow:` 타입 힌트를 붙여요.
 
 ## 알려진 한계
 
