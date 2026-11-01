@@ -2,6 +2,7 @@
 "@axis-ds/cli": minor
 "@axis-ds/mcp": minor
 "@axis-ds/agentic-ui": patch
+"@axis-ds/ui-react": patch
 ---
 
 `axis check` 와 MCP `axis.check_project` 가 적용한 템플릿의 규칙 검사를 함께 해요(WI-0107, WI-0027 FR-4b).
@@ -12,3 +13,4 @@
 - 심볼릭 링크는 실경로가 프로젝트 안일 때만 따라가고, 256KB 를 넘는 파일은 건너뛰고 건수를 알려요. 줄 길이 상한은 없고 판정은 선형 시간이에요.
 - `template` 이 없거나 다른 템플릿이면 항목을 만들지 않아 종전 출력과 같아요. 실행할 검사는 cli · mcp 안의 정적 표로 정하고, 원격 템플릿 JSON 의 `checks` 는 읽지 않아요.
 - `@axis-ds/agentic-ui`: ToolCallCard 의 설명 앞 구분자를 긴 줄표에서 가운뎃점(`·`)으로 바꿨어요. 레지스트리로 넣은 컴포넌트가 ontology 규칙에 걸리지 않게 하려는 것이고 다른 동작은 같아요.
+- `@axis-ds/ui-react`: SelectContent 와 Toast 의 그림자를 Tailwind `shadow-md` · `shadow-lg` 에서 Dialog 와 같은 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 바꿨어요. 떠 있는 레이어의 고도를 브랜드 토큰이 정하게 하려는 것이에요. 기본 브랜드의 `--axis-shadow-lg` 는 Tailwind `shadow-lg` 와 값이 같아 Toast 는 그대로이고, Select 목록은 `shadow-md` 보다 조금 큰 그림자가 돼요. ontology 브랜드에서는 그 브랜드의 `--axis-shadow-lg` 값을 써요. 테두리는 그대로예요.

@@ -64,7 +64,7 @@
       "type": "registry:ui",
       "title": "Select",
       "description": "AXIS 셀렉트 컴포넌트 - 드롭다운 선택",
-      "sha256": "3c38d5bbe13dee18e111a4453a0fc4cb43e0bab40233bb3ae7282e96a67d1b7d"
+      "sha256": "cf6a8a5ef905a09580a7420b0ee7d77751599ef9455dfba3382ca79414d02cef"
     },
     {
       "name": "tabs",
@@ -78,7 +78,7 @@
       "type": "registry:ui",
       "title": "Toast",
       "description": "AXIS 토스트 컴포넌트 - 알림 메시지",
-      "sha256": "c56513bb2338c57ffee093d7c610ce2ec493857621607ad735b1c4bb4806a21a"
+      "sha256": "c21626ca0ef04ccb6b88a3a4728bec32867e7bc4430f728f630b7e16fcc6c217"
     },
     {
       "name": "agentic-a11y-labels",

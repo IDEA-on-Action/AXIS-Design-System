@@ -626,9 +626,11 @@ describe("패리티: 템플릿 스크립트 = 내장 판정(같은 위반 목록
   it("레지스트리 전 컴포넌트를 넣은 사본(axis add 경로)", async () => {
     const dir = await ontologyCopy();
     expect(await addAllRegistryComponents(dir)).toBeGreaterThan(25);
-    const { rows } = expectParity(dir);
-    // WI-0107 D4: tool-call-card 의 긴 줄표를 가운뎃점으로 고쳐 em-dash 는 0건. 남은 것은 카드 모양 + 그림자 판정(open_questions)
-    expect(rows.filter((r) => r.rule === "em-dash")).toEqual([]);
+    const { rows, checked } = expectParity(dir);
+    // WI-0107 D4: tool-call-card 의 긴 줄표를 가운뎃점으로 고쳐 em-dash 0건, select · toast 를 토큰 그림자
+    // shadow-[shadow:var(--axis-shadow-lg)] 로 바꿔 card-shadow 0건(구판 레지스트리는 select.tsx:63 · 64, toast.tsx:25 · 26 의 4건)
+    expect(rows).toEqual([]);
+    expect(checked).toBeGreaterThan(40);
   });
 
   it("상한 · 링크가 섞인 fixture", async () => {
