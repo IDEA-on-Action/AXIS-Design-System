@@ -17,6 +17,8 @@ export interface TemplateIndexEntry {
   type?: 'local' | 'external';
   /** external 타입 시 외부 링크 URL */
   externalUrl?: string;
+  // template.json 의 `checks`(WI-0107)는 빌드 · 동기화 테스트 전용 메타데이터라 런타임 타입에 두지 않습니다.
+  // axis check 가 돌릴 검사는 registry-core 정적 표(TEMPLATE_CHECKS)로만 정합니다(원격 템플릿 JSON 이 검사 선택을 좌우하지 않게).
   /** 출처: 'axis' | 'shadcn' 등 */
   source?: string;
   /** 미리보기 이미지 URL */

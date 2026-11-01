@@ -12,6 +12,7 @@ import {
 } from "../theme/brand-core.js";
 import { checkDependencies } from "@axis-ds/registry-core/dependencies-core";
 import { PNP_ROOT_ONLY_NOTE, cssImportViaNote, globalCssSelectionNote } from "@axis-ds/registry-core/project";
+import { collectTemplateCheckResults } from "@axis-ds/registry-core/template-checks";
 import { checkAnimationPlugin, checkGlobalsCss, checkTailwindContent, checkTailwindSetup, versionGateLabel } from "./tailwind-core.js";
 import type { CheckResult, CheckSeverity } from "./types.js";
 
@@ -28,6 +29,8 @@ const SEVERITY_ICON: Record<CheckSeverity, string> = {
  * - brand.activation: brand 가 있을 때. 루트 레이아웃에 브랜드를 켜는 코드(data-brand · setBrand 등)가 없으면 WARN(ThemeProvider 단독은 켜지 않음)(휴리스틱)
  * - tailwind.content: Tailwind 3 설정 파일이 있고 componentsDir · 선언된 컴포넌트 패키지가 있을 때. 덮지 않으면 FAIL(정적 판독)
  * - animation: ui-react 를 쓸 때. 애니메이션 플러그인이 없으면 WARN
+ * WI-0107 에서 10번째로 적용한 템플릿의 규칙 검사를 더합니다(`axis.config.json` 의 template 이 registry-core 정적 표에 있을 때만).
+ * - template.<검사 id>: axis 에 내장한 규칙으로 판정(프로젝트 스크립트는 실행하지 않음). 위반 · 측정 실패는 WARN(정적 판독 · 휴리스틱)
  * MCP `axis.check_project` 도 같은 순서 · 문구입니다.
  */
 export async function collectCheckResults(dir?: string): Promise<CheckResult[]> {
@@ -64,6 +67,9 @@ export async function collectCheckResults(dir?: string): Promise<CheckResult[]> 
   // 9. 애니메이션 플러그인(ui-react 를 쓸 때만, WI-0065 D8)
   const animation = checkAnimationPlugin(baseDir);
   if (animation) results.push(animation);
+
+  // 10. 적용한 템플릿의 규칙 검사(해당할 때만, WI-0107 · 공유 코어). 해당하지 않으면 아무것도 더하지 않아 종전 출력과 같습니다
+  results.push(...collectTemplateCheckResults(baseDir));
 
   return results;
 }

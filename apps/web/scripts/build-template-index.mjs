@@ -107,6 +107,22 @@ async function loadExternalBlocks() {
   return allBlocks
 }
 
+/** template.json `checks` 의 모양 문제(배열 · id 는 slug · script 는 문자열). 없으면 빈 배열 */
+function templateCheckProblems(meta) {
+  if (meta.checks === undefined) return []
+  if (!Array.isArray(meta.checks)) return ['checks 는 배열이어야 합니다']
+  const problems = []
+  meta.checks.forEach((c, i) => {
+    if (typeof c !== 'object' || c === null || Array.isArray(c)) {
+      problems.push(`checks[${i}] 는 객체여야 합니다`)
+      return
+    }
+    if (typeof c.id !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(c.id)) problems.push(`checks[${i}].id 는 slug 문자열이어야 합니다`)
+    if (c.script !== undefined && typeof c.script !== 'string') problems.push(`checks[${i}].script 는 문자열이어야 합니다`)
+  })
+  return problems
+}
+
 async function build() {
   // 출력 디렉토리 생성
   await mkdir(OUTPUT_DIR, { recursive: true })
@@ -156,6 +172,13 @@ async function build() {
       throw new Error(
         `${entry.name}: template.json 과 files/package.json 의 의존성이 다릅니다\n  ${mismatches.join('\n  ')}`
       )
+    }
+
+    // checks(WI-0107)는 axis check 가 돌릴 검사 id 선언이에요. 모양만 여기서 보고, id 가 registry-core 정적 표(TEMPLATE_CHECKS)와
+    // 같은지는 packages/axis-cli/src/template/template-checks.test.ts 의 동기화 테스트가 봐요(런타임은 이 필드를 읽지 않음)
+    const checkProblems = templateCheckProblems(meta)
+    if (checkProblems.length > 0) {
+      throw new Error(`${entry.name}: template.json checks 모양이 맞지 않습니다\n  ${checkProblems.join('\n  ')}`)
     }
 
     // 상세 JSON 생성

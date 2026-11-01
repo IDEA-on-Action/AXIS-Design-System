@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "updatedAt": "2026-10-26T10:18:12.920Z",
+  "updatedAt": "2026-11-01T02:20:38.033Z",
   "total": 43,
   "templates": [
     {
@@ -185,7 +185,13 @@
         "@types/react-dom": "^19.0.0",
         "autoprefixer": "^10.4.0",
         "postcss": "^8.4.0"
-      }
+      },
+      "checks": [
+        {
+          "id": "ontology-rules",
+          "script": "check:ontology"
+        }
+      ]
     },
     {
       "name": "Theme Only",
