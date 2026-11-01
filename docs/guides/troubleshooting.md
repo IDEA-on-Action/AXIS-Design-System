@@ -373,13 +373,17 @@ module.exports = nextConfig
 
 **방법 3: 토큰 값을 바꾸기** (떠 있는 레이어 전체에 적용)
 
-모든 떠 있는 레이어의 그림자를 한꺼번에 바꾸려면 전역 CSS 에서 토큰을 다시 정의합니다. 브랜드 · 다크 모드 선택자보다 뒤에 두어야 합니다.
+모든 떠 있는 레이어의 그림자를 한꺼번에 바꾸려면 전역 CSS 에서 토큰을 다시 정의합니다. 토큰 CSS 는 다크 모드(`.dark`)와 브랜드(`[data-brand="ontology"]` 등)마다 이 값을 다시 정의하고, ontology 브랜드는 우선순위를 높인 선택자를 씁니다. 그래서 `:root` 만 다시 정의하면 기본 브랜드에만 적용되고 ontology 브랜드에서는 무시됩니다. 값이 정의되는 요소를 모두 덮도록 아래처럼 `!important` 를 붙입니다.
 
 ```css
-:root {
-  --axis-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+:root,
+.dark,
+[data-brand] {
+  --axis-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5) !important;
 }
 ```
+
+특정 브랜드나 다크 모드에서만 바꾸려면 `[data-brand="ontology"]` 처럼 해당 선택자만 남깁니다.
 
 ---
 
