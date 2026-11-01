@@ -756,7 +756,15 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhFHWrM",
       "lastSyncedAt": "2026-11-01T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0109",
+      "slug": "card-shadow-token-only",
+      "issueNumber": 280,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhFOqfs",
+      "lastSyncedAt": "2026-11-02T00:00:00.000Z",
+      "lastStatus": "🔄"
     }
   ],
-  "updatedAt": "2026-11-01T00:00:00.000Z"
+  "updatedAt": "2026-11-02T00:00:00.000Z"
 }
