@@ -70,7 +70,7 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = "SheetOverlay";
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-[var(--axis-surface-default)] border-[var(--axis-border-default)] p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-reduce:!animate-none",
+  "fixed z-50 gap-4 bg-[var(--axis-surface-default)] border-[var(--axis-border-default)] p-6 shadow-[shadow:var(--axis-shadow-lg)] transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500 motion-reduce:!animate-none",
   {
     variants: {
       side: {
