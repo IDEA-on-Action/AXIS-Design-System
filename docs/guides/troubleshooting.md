@@ -330,7 +330,60 @@ module.exports = nextConfig
 
 ---
 
-## 5. 자주 묻는 질문 (FAQ)
+## 5. 떠 있는 레이어에 지정한 그림자 색이 적용되지 않음
+
+### 증상
+
+`@axis-ds/ui-react` 를 1.8.4 · 1.8.5 이상으로 올린 뒤, 아래 컴포넌트에 `className` 으로 넘긴 그림자 색이 화면에 보이지 않습니다. 오류는 나지 않고 그림자 모양만 기본값으로 보입니다.
+
+```tsx
+<PopoverContent className="shadow-black/50">...</PopoverContent>
+<SelectContent className="shadow-[var(--my-shadow-color)]">...</SelectContent>
+```
+
+### 원인
+
+떠 있는 레이어의 기본 그림자를 Tailwind 고정 클래스에서 브랜드 토큰 `shadow-[shadow:var(--axis-shadow-lg)]` 로 바꿨습니다(Dialog 와 같은 방식). Tailwind 의 그림자 색 클래스는 고정 그림자 클래스에만 색을 입히므로, 토큰 그림자에는 적용되지 않습니다. `shadow-[var(--x)]` 처럼 CSS 변수 하나만 넣은 값도 Tailwind 가 그림자 색으로 해석하므로 같은 결과가 나옵니다.
+
+| 버전 | 컴포넌트 | 바뀌기 전 기본 그림자 |
+|------|----------|----------------------|
+| 1.8.4 | `SelectContent` | `shadow-md` |
+| 1.8.4 | `Toast` | `shadow-lg` |
+| 1.8.5 | `PopoverContent` · `DropdownMenuContent` | `shadow-md` |
+| 1.8.5 | `DropdownMenuSubContent` · `SheetContent` | `shadow-lg` |
+
+`shadow-none`, `shadow-sm`, `shadow-[0_4px_8px_rgb(0_0_0/0.2)]` 처럼 그림자 전체를 바꾸는 클래스는 종전처럼 기본 그림자를 대체합니다.
+
+### 해결
+
+**방법 1: 그림자 크기를 함께 넘기기** (종전 동작 그대로)
+
+위 표의 「바뀌기 전 기본 그림자」를 색 클래스와 함께 넘기면, 패키지의 `cn` 이 토큰 그림자를 대체하고 색이 다시 적용됩니다.
+
+```tsx
+<PopoverContent className="shadow-md shadow-black/50">...</PopoverContent>
+<Toast className="shadow-lg shadow-black/50">...</Toast>
+```
+
+**방법 2: 그림자 전체를 임의값으로 지정하기**
+
+```tsx
+<SelectContent className="shadow-[shadow:0_10px_15px_-3px_rgb(0_0_0/0.5)]">...</SelectContent>
+```
+
+**방법 3: 토큰 값을 바꾸기** (떠 있는 레이어 전체에 적용)
+
+모든 떠 있는 레이어의 그림자를 한꺼번에 바꾸려면 전역 CSS 에서 토큰을 다시 정의합니다. 브랜드 · 다크 모드 선택자보다 뒤에 두어야 합니다.
+
+```css
+:root {
+  --axis-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
+}
+```
+
+---
+
+## 6. 자주 묻는 질문 (FAQ)
 
 ### Q: Tailwind CSS 없이 사용할 수 있나요?
 
