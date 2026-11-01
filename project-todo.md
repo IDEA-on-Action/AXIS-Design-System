@@ -2,8 +2,8 @@
 
 > 프로젝트 진행 상황 및 다음 단계
 
-**현재 버전**: 1.2.1 (npm 패키지 v1.2.1)
-**마지막 업데이트**: 2026-10-29
+**현재 버전**: cli 1.8.0, mcp 1.5.0, ui-react · agentic-ui 1.8.4, tokens · theme 1.8.2 (npm 발행본)
+**마지막 업데이트**: 2026-11-01 (배치 13 발행)
 **상태**: ✅ Active Development
 
 ---
@@ -97,12 +97,17 @@
 | 112 | check · init 의 전역 CSS 파일 선택이 고정 후보만 보고 axis.config globalCss 를 쓰지 않음(WI-0092 조사에서 발견) | WI-0100 (#244) | P18 | P3 | ✅ 2026-10-29 (#250 · #255, cli 1.7.7 · mcp 1.4.6) |
 | 117 | ui-react · agentic-ui 에 preferUnplugged 를 넣어 Yarn PnP 에서 컴포넌트 클래스가 생성되게 함(WI-0102 측정, 2026-10-30 사용자 결정 Q121: 다음 linked 발행에 포함) | WI-0105 (#265) | P18 | P3 | ✅ 2026-11-01 (#272, ui-react · agentic-ui 1.8.3) |
 | 118 | a11y 게이트에 ontology-console 템플릿 상세 경로 추가(지금은 상세 JSON 이 있는 첫 템플릿만 검사, ontology 테마 완료 후속) | WI-0106 (#270) | P18 | P3 | ✅ 2026-11-01 (#273, Pages, 63경로 × 4 = 252) |
-| 119 | 템플릿별 checks 를 axis check · MCP check_project 와 연동(WI-0027 FR-4b) + registry-core axis-config.ts 주석 「brand 는 theme add 만」 정정 | WI-0107 (#271) | P18 | P3 | ⏳ 배치 13 |
+| 119 | 템플릿별 checks 를 axis check · MCP check_project 와 연동(WI-0027 FR-4b) + registry-core axis-config.ts 주석 「brand 는 theme add 만」 정정 | WI-0107 (#271) | P18 | P3 | ✅ 2026-11-01 (#275, cli 1.8.0 · mcp 1.5.0 · ui-react · agentic-ui 1.8.4) |
+| 120 | card-shadow 판정이 `shadow-[shadow:<값>]` 처럼 대괄호 안에 콜론이 든 임의값을 그림자로 보지 않음. 토큰(`var(--axis-*)`)만 통과시키도록 두 구현(registry-core · 템플릿 스크립트)을 함께 보정(WI-0107 후속, 2026-11-01 사용자 결정: 후속 WI) | 미배정 | P18 | P3 | ⏳ |
+| 121 | ui-react popover · dropdown-menu · sheet 도 select · toast 처럼 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 맞출지 판단(레지스트리에는 없는 컴포넌트, WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
+| 122 | 이미 만든 ontology-console 프로젝트의 lib/utils.ts 에 그림자 병합 설정이 없으면 SelectContent · Toast 에 shadow-<색> 을 줄 때 그림자가 사라짐. axis check 점검 항목 추가 검토(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
+| 123 | 템플릿 규칙 검사 예산(파일 4,000개 · 16MB · 디렉터리 항목 5만 개) 값과 한 디렉터리를 통째로 읽는 readdir 를 실제 큰 앱에서 다시 측정(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
 
 ### 완료
 
 | # | 항목 | GitHub Issue | Phase | 완료일 |
 |---|------|--------------|-------|--------|
+| 119 | axis check · MCP check_project 가 axis.config.json template 값(정적 표)으로 적용한 템플릿의 규칙(ontology-console 5규칙, registry-core 내장 모듈)을 검사해 위반은 WARN(rc 0)으로 알림 · 템플릿 스크립트와 패리티 테스트 · 측정 실패와 프로젝트 예산 · ToolCallCard 구분자 가운뎃점 · Select · Toast 토큰 그림자, npm cli v1.8.0 · mcp v1.5.0 · ui-react · agentic-ui v1.8.4 릴리스 (#275 · Version PR #276) | #271 | P18 | 2026-11-01 |
 | 117 | ui-react · agentic-ui 가 preferUnplugged 를 선언해 Yarn PnP 에서 컴포넌트 tailwind.css 의 @source 가 스캔됨 · pack-smoke 가 @source 를 담은 배포 CSS 의 preferUnplugged 를 검사, npm ui-react · agentic-ui v1.8.3 릴리스 (#272 · Version PR #274) | WI-0105 (#265) | P18 | 2026-11-01 |
 | 118 | a11y 게이트가 상세 JSON 이 있는 템플릿 상세를 전부 검사(ontology-console 포함, 59 → 63경로 × 4 = 252) · 템플릿 이름 기반 상세 전용 준비 선택자로 404 화면 통과 차단, Pages 배포만 (#273) | WI-0106 (#270) | P18 | 2026-11-01 |
 | 107 | init · 컴포넌트 추가(axis add · MCP install_component)가 Yarn PnP 의 워크스페이스 루트 전용 선언을 「선언됨」으로 보지 않음, npm cli v1.7.10 · mcp v1.4.9 릴리스 (#269 · Version PR #268) | WI-0095 (#239) | P18 | 2026-11-01 |
@@ -452,6 +457,7 @@
 - 배치 11 완료(2026-11-01): WI-0099 #267 머지 e4d89ae → WI-0095 #269 머지 fbaea29(순차) · Version PR #268 머지 8b0829d(close/reopen 으로 CI 부착, CI 10m42s), publish run 41241569184 success, npm cli 1.7.10 · mcp 1.4.9, provenance 2/2(SLSA v1), linked 4패키지는 1.8.2 그대로. 발행본 재측정(새 HOME · env 주입 없음): 설치 rc 0 · `axis --version` 1.7.10 · MCP stdio tools 18, dist 대조 신판/구판(1.7.9 · 1.4.8) inspectTailwind4Animation cli 3/0 · mcp 2/0, appOnlyInPnp cli 9/6 · mcp 7/6(한글 문구는 dist 에서 \uXXXX 로 이스케이프돼 문자열 검색이 0 이 나오므로 식별자로 셈). PnP 동작 실측은 각 PR 의 Yarn 4.5.3 측정(WI testplan)
 - 재계획(2026-11-01, `/ax:todo plan`, 사용자 결정): 배치 12(병렬) WI-0105 preferUnplugged ∥ WI-0106 a11y 경로(고치는 파일이 겹치지 않음, linked 1.8.3 + Pages) → 배치 13 WI-0107 FR-4b(registry-core 를 고치므로 axis-config.ts 주석 정정을 함께, cli · mcp minor). WI-0084 는 Windows 실기 측정 대기로 계속 보류, v0.28 보조 상자 기본 닫힘 · 폰 폭은 디자인 오너 확인 대기
 - 배치 12 완료(2026-11-01): WI-0105 #272 머지 19f1594 · WI-0106 #273 머지 ceb4ee9(파일 겹침 없음, 단독 push 로 main run 확인 뒤 다음 머지) · Version PR #274 머지 38ceb75(close/reopen 으로 CI 부착, CI 14m9s), publish run 41252660047 success, npm ui-react · agentic-ui 1.8.3(provenance SLSA v1, 레지스트리 manifest 에 preferUnplugged true), tokens · theme 1.8.2 · cli 1.7.10 · mcp 1.4.9 그대로(linked 는 올라가는 패키지끼리만 맞춤, #265 본문의 「4패키지 발행」 은 틀린 전제였음). 결정 D1 ~ D3(0105 · 0106 각각) 모두 권장안. 발행본 재측정(npmjs, 새 HOME, Yarn 4.5.3, @tailwindcss/cli 4.1.14): PnP 1.8.3 unplugged 2 · u 47,858 B · g 31,530 B(node-modules 1.8.3 과 cmp rc 0), 대조 PnP 1.8.2 unplugged 0 · 4,455 B 클래스 0. WI-0106 은 E2E a11y 252/252 · 음성 대조 2종(대비 위반 주입, 상세 JSON 없는 slug 의 준비 선택자) 실패 확인. 남은 후보: troubleshooting 의 Tailwind 3 PnP 문단에 1.8.3 안내, 404 화면에서 data-brand 가 null 인 현상(원인 미조사), Yarn classic · @tailwindcss/postcss 축 미측정, 콘솔 결과 앱 UI 자체의 a11y 게이트. 다음은 배치 13 WI-0107(FR-4b)
+- 배치 13 완료(2026-11-01): WI-0107 #275 머지 05de486(사용자 결정 D1 내장 모듈 · D2 WARN 과 정적 표 · D3 보안 보완 · D4 구분자 가운뎃점, 이후 추가 결정: 판정 못 한 파일은 WARN 「일부 측정 실패」 · 스크립트 rc 2, box-shadow none 오탐 수정 유지, 레지스트리 card-shadow 4건은 select · toast 를 dialog 와 같은 토큰 그림자로 바꿔 해소, 프로젝트 전체 예산 추가) · Version PR #276 머지 f43ed47(close/reopen 으로 CI 부착, CI 12m28s), publish run 41275421252 success, npm cli 1.8.0 · mcp 1.5.0 · ui-react · agentic-ui 1.8.4(provenance 4/4, 발행 직후 버전 문서 404 는 약 1분 전파 지연), tokens · theme 1.8.2 그대로. 독립 검토 2회에서 지적 9건(major 2: cn(\" 반복 2차 시간 11초, 한 줄 상한 파일을 건너뛰고 PASS)을 모두 재현 뒤 수정, 변이 A/B 10종 · 차분 퍼징 12만 건 차이 0. 발행본 재측정(npmjs, 새 HOME, env -i): cli 1.8.0 template init ontology-console rc 0 → check 8 pass / 2 warn, 10번째 항목 PASS 「파일 20개, 위반 0건」(1.7.10 대조는 그 줄만 없고 7 pass), 긴 줄표 · #ff0000 주입 시 WARN 「위반 2건(em-dash 1 · palette 1)」 rc 0 · npm run check:ontology rc 1, mcp 1.5.0 check_project 같은 항목. Pages 레지스트리 tool-call-card 긴 줄표 0(배포 전 1) · select · toast 토큰 그림자 1. 후속 후보는 120 ~ 123 행
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

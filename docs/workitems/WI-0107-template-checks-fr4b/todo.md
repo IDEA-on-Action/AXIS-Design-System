@@ -1,6 +1,6 @@
 # WI-0107: TODO
 
-> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #271 | 상태: 진행 중(구현 · 검증 완료, PR #275 검토 중)
+> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #271 | 상태: 완료(2026-11-01, PR #275 · Version PR #276, cli 1.8.0 · mcp 1.5.0 · ui-react · agentic-ui 1.8.4 발행)
 
 ## 결정
 - [x] D1 ~ D4 (2026-11-01 사용자 결정, 모두 권장안)

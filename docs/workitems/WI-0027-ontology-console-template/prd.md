@@ -41,7 +41,7 @@
 
 **후속(별도 WI)**
 - 수정 화면(사이드바 없음 · EditBar + 변경 사유 팝업), 검토 패널, 마크다운 편집기, 칸반, 에이전트 대화, 기록, 로그인, 노드 캔버스 정적 배치, v0.26 ~ v0.28 신규 계열(Context · Use Case 편집 · CQ · 용어 · Source)
-- FR-4b: template.json `checks` 필드와 `axis check` · MCP `axis.check_project` 연동(cli · mcp minor 발행) - WI-0107 에서 구현(2026-11-01, 발행 전)
+- FR-4b: template.json `checks` 필드와 `axis check` · MCP `axis.check_project` 연동(cli · mcp minor 발행) - WI-0107 에서 구현(2026-11-01, cli 1.8.0 · mcp 1.5.0 발행)
 - FR-5: 갤러리 · 상세 화면 미리보기 이미지 렌더링
 - 해요체 · 금지 표현 검사(판정 기준이 레포에 없음, Q8)
 - AC5b: 템플릿 결과 앱 axe 게이트의 CI 연결(D7)
