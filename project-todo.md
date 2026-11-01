@@ -99,7 +99,7 @@
 | 118 | a11y 게이트에 ontology-console 템플릿 상세 경로 추가(지금은 상세 JSON 이 있는 첫 템플릿만 검사, ontology 테마 완료 후속) | WI-0106 (#270) | P18 | P3 | ✅ 2026-11-01 (#273, Pages, 63경로 × 4 = 252) |
 | 119 | 템플릿별 checks 를 axis check · MCP check_project 와 연동(WI-0027 FR-4b) + registry-core axis-config.ts 주석 「brand 는 theme add 만」 정정 | WI-0107 (#271) | P18 | P3 | ✅ 2026-11-01 (#275, cli 1.8.0 · mcp 1.5.0 · ui-react · agentic-ui 1.8.4) |
 | 120 | card-shadow 판정이 `shadow-[shadow:<값>]` 처럼 대괄호 안에 콜론이 든 임의값을 그림자로 보지 않음. 토큰(`var(--axis-*)`)만 통과시키도록 두 구현(registry-core · 템플릿 스크립트)을 함께 보정(WI-0107 후속, 2026-11-01 사용자 결정: 후속 WI) | 미배정 | P18 | P3 | ⏳ |
-| 121 | ui-react popover · dropdown-menu · sheet 도 select · toast 처럼 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 맞출지 판단(레지스트리에는 없는 컴포넌트, WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
+| 121 | ui-react popover · dropdown-menu · sheet 도 select · toast 처럼 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 맞춤(레지스트리에는 없는 컴포넌트, WI-0107 후속, 2026-11-01 사용자 결정: 다음 배치로 바로 진행) | WI-0108 (#277) | P18 | P3 | 🔄 배치 14 |
 | 122 | 이미 만든 ontology-console 프로젝트의 lib/utils.ts 에 그림자 병합 설정이 없으면 SelectContent · Toast 에 shadow-<색> 을 줄 때 그림자가 사라짐. axis check 점검 항목 추가 검토(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
 | 123 | 템플릿 규칙 검사 예산(파일 4,000개 · 16MB · 디렉터리 항목 5만 개) 값과 한 디렉터리를 통째로 읽는 readdir 를 실제 큰 앱에서 다시 측정(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
 

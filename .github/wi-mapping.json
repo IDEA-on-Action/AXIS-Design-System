@@ -748,6 +748,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhFDue4",
       "lastSyncedAt": "2026-11-01T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0108",
+      "slug": "overlay-token-shadow",
+      "issueNumber": 277,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhFHWrM",
+      "lastSyncedAt": "2026-11-01T00:00:00.000Z",
+      "lastStatus": "🔄"
     }
   ],
   "updatedAt": "2026-11-01T00:00:00.000Z"
