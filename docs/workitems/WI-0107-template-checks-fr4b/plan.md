@@ -45,3 +45,11 @@
 3. 단위 · 패리티 · 비교 테스트, 변이 A/B
 4. 레지스트리 재생성 · 템플릿 인덱스 재생성(churn 정리)
 5. 실경로(새 HOME, 신 · 구 dist) · turbo `--force` · 스모크
+
+## 4. 독립 검토 반영(2026-11-01 3차)
+
+| 지적 | 재현 | 바꾼 것 |
+|---|---|---|
+| 템플릿 `lib/utils.ts` 의 기본 `twMerge` 가 `shadow-[shadow:…]` 를 그림자 색으로 봄 | tailwind-merge 2.6.0 에서 `cn('rounded-md border shadow-[shadow:var(--axis-shadow-lg)]', 'shadow-black/50')` → `rounded-md border shadow-black/50`(그림자 사라짐), 확장판은 둘 다 남음 | 레지스트리 utils 와 같은 `extendTailwindMerge` 설정, 공개 JSON 재생성, 동기화 테스트 |
+| 판정 목록에 들지 않는 항목의 순회에 상한이 없음 | HEAD 코어로 같은 파일 링크 20만 개 9.8초 · 빈 `.md` 30만 개 3.0초 · 빈 디렉터리 10만 개 1.8초, 셋 다 budgetStop 없음(PASS) | 디렉터리 항목 예산 50,000개(readdir 가 돌려준 이름을 숨김 · `node_modules` 까지 모두 셈, 넘는 다음 이름에서 목록 모으기를 멈춤), 두 구현 같게 |
+| 스크립트가 출력 직후 `process.exit()` 해서 파이프로 받으면 stdout 끝이 잘림 | 위반 4,100파일 사본, HEAD 스크립트 `\| (sleep 0.3; cat) \| wc -l` 534 · 534 · 1,914줄, `\| tail -1` 이 위반 줄 | 판정을 `main()` 으로 감싸고 `process.exitCode = main()`, 위반 + 측정 중단이면 stderr 안내 한 줄 |

@@ -1,6 +1,6 @@
 # WI-0107: TODO
 
-> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #271 | 상태: 🔄 구현 · 검증 완료, PR 전
+> PRD: [prd.md](./prd.md) | 계획: [plan.md](./plan.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #271 | 상태: 진행 중(구현 · 검증 완료, PR #275 검토 중)
 
 ## 결정
 - [x] D1 ~ D4 (2026-11-01 사용자 결정, 모두 권장안)
@@ -35,6 +35,12 @@
 - [x] [A] 레지스트리 card-shadow 4건: SelectContent · Toast 그림자를 `shadow-[shadow:var(--axis-shadow-lg)]` 로(판정 규칙 그대로), r/ 재생성(version 1.5.0 유지), changeset ui-react patch(linked 로 agentic-ui 와 1.8.4)
 - [x] [B] 프로젝트 전체 예산(파일 4,000개 · 16MB) 두 구현 같게, 패리티 파싱 · 예산 fixture 8건, 스크립트 환경변수는 낮추기만
 - [x] 재검증: 변이 A/B 6종, 실경로(새 HOME · env -i), 종전 출력 바이트 비교 3종 × cli · mcp, turbo `--force`, pack-smoke, check-changeset-mcp-tokens, test:registry, registry-install-smoke(testplan 6 · 7절)
+
+## 독립 검토 반영(2026-11-01 3차)
+- [x] 템플릿 `lib/utils.ts` 를 레지스트리 utils 와 같은 `extendTailwindMerge` 로(그림자 색 수식어가 Select · Toast 그림자를 지우던 회귀), 동기화 테스트 1건
+- [x] 디렉터리 항목 예산 50,000개(판정 대상 밖 이름까지 셈) 두 구현 같게, 테스트 2건
+- [x] 템플릿 스크립트 `process.exit` → `process.exitCode`(파이프에서 요약 줄 잘림), 위반 + 측정 중단이면 stderr 안내, 테스트 1건
+- [x] 재검증: 변이 A/B 10종, 실경로(새 HOME · env -i), 종전 출력 바이트 비교, turbo `--force`, pack-smoke, check-changeset-mcp-tokens, test:registry, registry-install-smoke(testplan 8절)
 
 ## 머지 뒤(이 WI 범위 밖에서 현행화)
 - [ ] project-todo.md · wi-mapping.json · CLAUDE.md 현행화

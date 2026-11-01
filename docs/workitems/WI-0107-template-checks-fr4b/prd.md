@@ -6,7 +6,7 @@
 
 ## 1. 배경
 
-- ontology-console 템플릿은 `scripts/check-ontology.mjs`(`npm run check:ontology`)로 디자인 규칙 다섯 가지를 검사해요(WI-0027 FR-4a). `axis check` · MCP `axis.check_project` 는 이 규칙을 보지 않아서, em-dash 위반 1건이 있는 사본도 9항목 7 pass / 2 warn / 0 fail · rc 0 이었어요(브리프 측정).
+- ontology-console 템플릿은 `scripts/check-ontology.mjs`(`npm run check:ontology`)로 디자인 규칙 다섯 가지를 검사해요(WI-0027 FR-4a). `axis check` · MCP `axis.check_project` 는 이 규칙을 보지 않아서 em-dash 위반 1건이 있는 사본도 9항목 7 pass / 2 warn / 0 fail · rc 0 이었어요(브리프 측정).
 - `axis.config.json` 의 `template` 키를 읽는 코드는 0건이었어요. 이번에 처음 읽으므로 신뢰 경계를 넘는 값으로 다뤄요.
 - `registry-core/src/config/axis-config.ts:12-13 · :27` 주석과 `apps/web/public/schema.json` 의 template · brand 설명이 코드와 달랐어요(brand 를 템플릿 apply · init · MCP apply_template 도 씀).
 - AXIS 가 배포하는 `agentic-tool-call-card` 가 ontology 규칙(em-dash)에 걸려, `axis add` 만 해도 사용자 프로젝트에 WARN 이 생길 수 있었어요(반박 검토 측정).
@@ -53,5 +53,5 @@
 - MCP 의 기존 9항목 중 일부(axis.config.json · utils · brand 문구)는 여전히 CLI 와 별도 구현이에요. 이번 비교 테스트가 드리프트를 잡아요.
 - 사용자 사본 차이: 프로젝트의 `scripts/check-ontology.mjs` 를 고치거나 오래된 템플릿으로 만든 프로젝트는 `axis check` 결과와 다를 수 있어요. 문구에 「axis 내장 규칙, 설치한 axis 버전 기준」을 밝혔어요.
 - 정규식 휴리스틱이라 오탐이 있을 수 있어요. 그래서 WARN 까지만 내요. 레지스트리 select · toast 의 card-shadow 4건은 컴포넌트를 토큰 그림자로 바꿔 없앴어요(사용자 결정, 2026-11-01, testplan 6절).
-- 프로젝트 전체 예산(파일 4,000개 · 16MB)을 넘으면 측정을 멈추고 일부 측정 실패로 알려요(사용자 결정, 2026-11-01, testplan 7절).
+- 프로젝트 전체 예산(파일 4,000개 · 16MB)을 넘으면 측정을 멈추고 일부 측정 실패로 알려요(사용자 결정, 2026-11-01, testplan 7절). 판정 대상이 아닌 항목(링크 · 대상 밖 파일 · 디렉터리)이 시간을 쓰는 경로는 디렉터리 항목 50,000개 예산으로 묶었어요(독립 검토 반영, testplan 8절).
 - 템플릿 규칙을 고치면 cli · mcp 를 다시 발행해야 해요.

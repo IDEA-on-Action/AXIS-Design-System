@@ -134,3 +134,47 @@
 
 - 종전 출력 바이트 같음: template 없음 · `"__proto__"` · 빈 디렉터리에서 origin/main dist(구판)와 신판의 `axis check` stdout+stderr+rc, MCP `axis.check_project` 응답 본문이 3 × 2 모두 같음(`cmp`)
 
+
+## 8. 독립 검토 반영(2026-11-01 3차)
+
+### 8.1 지적 재현(고치기 전 HEAD fe2e245)
+
+| 지적 | 재현 결과 |
+|---|---|
+| 템플릿 utils 의 기본 `twMerge` | tailwind-merge 2.6.0 에서 HEAD 템플릿 `lib/utils.ts` 의 `cn('rounded-md border shadow-[shadow:var(--axis-shadow-lg)]', 'shadow-black/50')` → `rounded-md border shadow-black/50`(그림자 사라짐). 신판은 `… shadow-[shadow:var(--axis-shadow-lg)] shadow-black/50`, `shadow-none` 을 주면 `rounded-md border shadow-none` 으로 레지스트리 utils 와 같음 |
+| 판정 대상 밖 항목의 순회 | 검토자 사본에 HEAD 코어(esbuild 번들): 같은 파일 링크 20만 개 9,755ms · 빈 `.md` 30만 개 2,952ms · 빈 디렉터리 10만 개 1,837ms, 셋 다 `checked 1`, `budgetStop null`(PASS) |
+| 파이프에서 stdout 잘림 | 위반 4,100파일 사본, HEAD 스크립트 `2>/dev/null \| (sleep 0.3; cat) \| wc -l` 534 · 534 · 1,914줄, `\| tail -1` 은 위반 줄. 신판은 3회 모두 4,002줄, 마지막 줄이 요약 |
+
+### 8.2 바꾼 것과 테스트
+
+- 디렉터리 항목 예산 50,000개: readdir 가 돌려준 이름을 숨김 · `node_modules` 까지 모두 세고, 넘는 다음 이름에서 목록 모으기를 멈춰요(사유 `entries`, 문구 「프로젝트 예산 초과로 측정 중단(디렉터리 항목 50000개 상한)」). 값 근거: 템플릿 원본 · 레지스트리 사본은 수십 개, 파일 수 예산 4,000개의 12.5배. 검토자 사본에서 신판 코어는 링크 20만 개 3,329ms · `.md` 30만 개 722ms · 빈 디렉터리 10만 개 730ms, 셋 다 `budgetStop entries`(일부 측정 실패), 스크립트 rc 2
+- 스크립트: `process.exitCode = main()`, 위반 + 판정 못 한 파일이면 stderr 「위반이 있고, 판정하지 못한 파일도 있어요 (건너뜀 참고)」
+- 템플릿 `lib/utils.ts`: 레지스트리 utils 와 같은 `extendTailwindMerge`(그림자 그룹에 `^\[shadow:.+\]$`), 공개 JSON 재생성(index.json 은 updatedAt 만 바뀌어 되돌림)
+- 테스트 4건 추가(cli template-checks 68건 통과): 항목 예산(대상 밖 이름 · 숨김 · 디렉터리 · 중복 링크를 셈, 경계 같으면 안 멈춤, 패리티), 기본 50,000개(5만 `.md` 뒤 위반 안 봄, axis check WARN, 환경변수로 못 올림), 느린 파이프에서 마지막 줄이 요약 · rc 1 · stderr 안내, 템플릿 utils 의 그림자 병합 설정이 레지스트리 utils 와 같음
+
+### 8.3 변이 A/B(구현을 바꾸고 cli template-checks 만 실행, 원복 뒤 세 파일 sha256 같음 확인)
+
+| 변이 | 결과 |
+|---|---|
+| M1 코어 파일 수 예산 판정 제거 | 2 failed / 68 |
+| M2 스크립트 파일 수 예산 판정 제거 | 4 failed / 68 |
+| M3 코어 바이트 예산 판정 제거 | 3 failed / 68 |
+| M4 스크립트 바이트 예산 판정 제거 | 4 failed / 68 |
+| M5 코어 항목 예산 판정 제거 | 2 failed / 68 |
+| M6 스크립트 항목 예산 판정 제거 | 3 failed / 68 |
+| M7 스크립트 `process.exit(main())` 로 되돌림 | 2 failed / 68 |
+| M8 템플릿 utils 의 `cn` 이 확장 안 한 twMerge 를 씀 | 1 failed / 68 |
+| M9 템플릿 utils 의 그림자 그룹 등록 제거 | 1 failed / 68 |
+| M10 템플릿 utils 를 HEAD 판으로 | 1 failed / 68 |
+
+### 8.4 실경로(이 브랜치 dist, 새 HOME, `env -i`)
+
+| 사본 | `axis check` 항목 | 시간 | `npm run -s check:ontology` |
+|---|---|---|---|
+| 템플릿 원본 | PASS 「파일 20개, 위반 0건」 rc 0 | 126ms | rc 0, 느린 파이프 마지막 줄 요약 |
+| 원본 + `app/zz` 아래 `lib/utils.ts` 링크 6만 개 | WARN 「일부 측정 실패, 파일 7개 위반 0건, 건너뜀: 프로젝트 예산 초과로 측정 중단(디렉터리 항목 50000개 상한)」 rc 0 | 1,525ms | rc 2, 1,438ms, 같은 건너뜀 |
+| 원본 + 위반 4,100파일 | WARN 「파일 4000개, 위반 3980건 … 건너뜀: … (파일 4000개 상한)」 rc 0 | 227ms | rc 1, stderr 안내, 느린 파이프 마지막 줄 요약 |
+
+- MCP `axis.check_project` 도 링크 · 위반 사본에서 같은 문구
+- 종전 출력 바이트 같음: template 없음 · `"__proto__"` · 빈 디렉터리에서 구판 dist 와 신판의 `axis check` 출력+rc, MCP 응답 본문 3 × 2 모두 같음(`cmp`)
+- 품질 게이트: turbo type-check lint test `--force` 24/24 Cached 0 rc 0, turbo build `--force` 8/8 Cached 0 rc 0, pack-smoke · check-changeset-mcp-tokens · test:registry · registry-install-smoke rc 0
