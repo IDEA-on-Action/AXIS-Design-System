@@ -2,7 +2,7 @@
  * 떠 있는 레이어의 토큰 그림자 (WI-0107 · WI-0108)
  *
  * Dialog · Select · Toast · Popover · DropdownMenu · Sheet 처럼 화면 위에 떠 있는 레이어는
- * Tailwind 고정 그림자(shadow-md · shadow-lg) 대신 브랜드가 값을 정하는 `--axis-shadow-lg` 토큰을 쓴다.
+ * Tailwind 고정 그림자(shadow-md · shadow-lg) 대신 브랜드가 값을 정하는 var(--axis-shadow-lg) 토큰을 쓴다.
  * ontology 브랜드는 카드 그림자만 끄고 떠 있는 레이어의 고도는 이 토큰으로 표현한다.
  */
 import { readdirSync, readFileSync } from "node:fs";
