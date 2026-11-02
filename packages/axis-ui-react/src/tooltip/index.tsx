@@ -127,7 +127,7 @@ const TooltipContent = React.forwardRef<
           if (!event.defaultPrevented) persistence?.markDismiss();
         }}
         className={cn(
-          "z-50 overflow-hidden rounded-md bg-[var(--axis-surface-inverse)] px-3 py-1.5 text-xs text-[var(--axis-text-inverse)]",
+          "z-50 overflow-hidden rounded-md bg-[var(--axis-surface-inverse)] px-3 py-1.5 text-xs text-[var(--axis-text-inverse)] shadow-[shadow:var(--axis-shadow-lg)]",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 motion-reduce:!animate-none",
           "data-[side=bottom]:slide-in-from-top-2",
           "data-[side=left]:slide-in-from-right-2",

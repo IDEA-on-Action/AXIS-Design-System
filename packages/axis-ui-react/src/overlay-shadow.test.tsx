@@ -1,7 +1,7 @@
 /**
- * 떠 있는 레이어의 토큰 그림자 (WI-0107 · WI-0108)
+ * 떠 있는 레이어의 토큰 그림자 (WI-0107 · WI-0108 · WI-0110)
  *
- * Dialog · Select · Toast · Popover · DropdownMenu · Sheet 처럼 화면 위에 떠 있는 레이어는
+ * Dialog · Select · Toast · Popover · DropdownMenu · Sheet · Tooltip 처럼 화면 위에 떠 있는 레이어는
  * Tailwind 고정 그림자(shadow-md · shadow-lg) 대신 브랜드가 값을 정하는 var(--axis-shadow-lg) 토큰을 쓴다.
  * ontology 브랜드는 카드 그림자만 끄고 떠 있는 레이어의 고도는 이 토큰으로 표현한다.
  */
@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "./sheet";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./tooltip";
 
 const TOKEN_SHADOW = "shadow-[shadow:var(--axis-shadow-lg)]";
 // bare `shadow` · Tailwind 4 `shadow-xs` · `shadow-inner` 도 고정 그림자라 함께 잡는다
@@ -73,6 +74,39 @@ describe("떠 있는 레이어가 토큰 그림자를 씀 (WI-0108)", () => {
       expectTokenShadow(screen.getByTestId("content"));
       unmount();
     }
+  });
+
+  it("TooltipContent (WI-0110)", () => {
+    render(
+      <TooltipProvider>
+        <Tooltip open>
+          <TooltipTrigger>열기</TooltipTrigger>
+          <TooltipContent data-testid="content">설명</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+    // Radix 는 스크린 리더용 숨은 사본(role=tooltip)도 그리므로 testid 가 보이는 판 하나에만 붙는지 먼저 확인한다
+    expect(screen.getAllByText("설명")).toHaveLength(2);
+    const contents = screen.getAllByTestId("content");
+    expect(contents).toHaveLength(1);
+    expect(contents[0].getAttribute("data-state")).toMatch(/open/);
+    expectTokenShadow(contents[0]);
+  });
+
+  it("TooltipContent 의 className shadow-none 이 토큰 그림자를 대체 (WI-0110)", () => {
+    render(
+      <TooltipProvider>
+        <Tooltip open>
+          <TooltipTrigger>열기</TooltipTrigger>
+          <TooltipContent data-testid="content" className="shadow-none">
+            설명
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+    const el = screen.getByTestId("content");
+    expect(el.className).toContain("shadow-none");
+    expect(el.className).not.toContain(TOKEN_SHADOW);
   });
 
   it("className 의 shadow-none 이 토큰 그림자를 대체 (cn 그림자 그룹 병합)", () => {

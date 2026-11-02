@@ -7,19 +7,19 @@
 - [x] 사용자 결정 D1 ~ D5 (prd 2절)
 
 ## 구현
-- [ ] TooltipContent 토큰 그림자 (FR-1)
-- [ ] overlay-shadow.test.tsx 렌더 단언 (FR-2)
-- [ ] 라이브러리 상세 데이터 재생성 · 재실행 변경 0 (FR-3)
-- [ ] troubleshooting 5절 (FR-4)
-- [ ] changeset ui-react patch, agentic-ui 동반 확인 (FR-5)
+- [x] TooltipContent 토큰 그림자 (FR-1)
+- [x] overlay-shadow.test.tsx 렌더 단언 (FR-2)
+- [x] 라이브러리 상세 데이터 재생성 · 재실행 변경 0 (FR-3)
+- [x] troubleshooting 5절 (FR-4)
+- [x] changeset ui-react patch, agentic-ui 동반 확인 (FR-5)
 
 ## 검증
-- [ ] 단위 · 음성 대조 · 변이 (AC1 ~ AC3)
-- [ ] 문서 페이지 브라우저 계산값 4조합 (AC4)
-- [ ] Tailwind 3 · 4 클래스 생성 (AC5)
-- [ ] turbo build · type-check · lint · test `--force`, check-changeset-mcp-tokens, check-token-refs (AC6)
+- [x] 단위 · 음성 대조 · 변이 (AC1 ~ AC3)
+- [x] 문서 페이지 브라우저 계산값 4조합 (AC4)
+- [x] Tailwind 3 · 4 클래스 생성 (AC5)
+- [x] turbo build · type-check · lint · test `--force`, check-changeset-mcp-tokens, check-token-refs (AC6)
 
 ## 릴리스
-- [ ] release-notes.md
+- [x] release-notes.md
 - [ ] PR 리뷰 · 머지 · 발행
 - [ ] 발행 뒤 Issue #283 닫기 · project-todo · CLAUDE.md 현행화

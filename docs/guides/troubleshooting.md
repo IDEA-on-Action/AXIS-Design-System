@@ -351,6 +351,9 @@ module.exports = nextConfig
 | 1.8.4 | `Toast` | `shadow-lg` |
 | 1.8.5 | `PopoverContent` · `DropdownMenuContent` | `shadow-md` |
 | 1.8.5 | `DropdownMenuSubContent` · `SheetContent` | `shadow-lg` |
+| 1.8.6 | `TooltipContent` | 없음 |
+
+바뀌기 전 기본 그림자가 「없음」인 `TooltipContent` 는 종전에 그림자 자체가 없었으므로, 방법 1 대신 `className="shadow-none"` 을 넘기면 종전 모양이 됩니다.
 
 `shadow-none`, `shadow-sm`, `shadow-[0_4px_8px_rgb(0_0_0/0.2)]` 처럼 그림자 전체를 바꾸는 클래스는 종전처럼 기본 그림자를 대체합니다.
 
