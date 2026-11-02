@@ -15,7 +15,7 @@
 - [x] 사본 음성 · 양성 대조 (AC1 · AC2)
 - [x] dry-run 의존 그래프 (AC3)
 - [x] build 끝 검사 양성 · 음성 (AC4)
-- [ ] 레포 turbo 게이트, PR CI 시간 · 캐시 비교 (AC5)
+- [x] 레포 turbo 게이트, PR CI 시간 · 캐시 비교 (AC5)
 
 ## 릴리스
 - [x] testplan.md · release-notes.md (FR-3)

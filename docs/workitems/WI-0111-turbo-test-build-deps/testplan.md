@@ -1,6 +1,6 @@
 # WI-0111 테스트 계획 · 결과
 
-> PRD: [prd.md](./prd.md) | 작성일: 2026-11-02 | 상태: 측정 완료(2026-11-02, PR CI 비교는 머지 전 기록)
+> PRD: [prd.md](./prd.md) | 작성일: 2026-11-02 | 상태: 측정 완료(2026-11-02)
 > 환경: node v22.22.0 · pnpm 9.15.4 · turbo 2.7.5 · tsup 8.5.1 · WSL2 Linux x64(8코어)
 > 표기: **측정**(이번에 실행해 얻은 값) · **계산** · **추정**(실행하지 않음)
 > 실험은 모두 레포 사본(`scratchpad/wi0111/{ab,refute}`, rsync + `pnpm install --offline`)에서 했어요. before 사본은 변경 파일을 HEAD 판으로 되돌린 것이에요.
@@ -62,7 +62,7 @@ ui-react 빌드 중 d.ts 가 0개가 되는 순간 프로세스 그룹을 끊어
 |---|---|
 | `npx turbo run build --force` | rc 0 · 8/8 · Cached 0(측정) |
 | `npx turbo run type-check lint test --force`(기본 동시 실행, load 11 ~ 17 / 8코어) | rc 0 · 24/24 · Cached 0(측정). ui-react 206 + fix-cva-dts 7 · agentic-ui 148 · tokens 568 · theme 47 · cli 1568 · mcp 266 passed. 고치기 전에도 이 조합은 가끔만 실패했으므로 1회 통과는 판정 근거로 쓰지 않아요(근거는 AC1 ~ AC3). 빌드가 바꾼 `public/templates/*.json` 6개 updatedAt 은 되돌림 |
-| PR CI Test step | 첫 run 은 패키지 turbo.json · ui-react package.json 이 build 입력이라 해시가 바뀌어(사본 측정: type-check lint test 32개 중 18개, build 9개 중 7개) 캐시 조건이 달라요. 시간 비교는 「조건 다름」으로 표시해요 |
+| PR CI(job 로그 API 로 같은 방법으로 읽음) | 고치기 전 #284 run 41388591374: type-check 11 task · 6 cached · 42.7s, test 7 task · 5 cached · 47.1s. 고친 뒤 #287 run 41439619504(첫 run): type-check 11 · 2 cached · 53.8s, test 8 task(ui-react#build 추가, 같은 job 의 type-check 단계 결과 재생) · 4 cached · 38.3s. 첫 run 은 패키지 turbo.json · ui-react package.json 이 build 입력이라 해시가 바뀌어(사본 측정: type-check lint test 32개 중 18개) 캐시 조건이 달라요. 「조건 다름」이라 시간 증감의 근거로 쓰지 않아요 |
 
 ## 3. 잃는 보증
 
