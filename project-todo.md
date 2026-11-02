@@ -3,7 +3,7 @@
 > 프로젝트 진행 상황 및 다음 단계
 
 **현재 버전**: cli 1.8.0, mcp 1.5.0, ui-react · agentic-ui 1.8.5, tokens · theme 1.8.2 (npm 발행본)
-**마지막 업데이트**: 2026-11-02 (배치 16 WI-0110 발행)
+**마지막 업데이트**: 2026-11-02 (인프라 WI-0111, 배치 15 · 16 · 인프라 완료)
 **상태**: ✅ Active Development
 
 ---
@@ -102,7 +102,7 @@
 | 121 | ui-react popover · dropdown-menu · sheet 도 select · toast 처럼 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 맞춤(레지스트리에는 없는 컴포넌트, WI-0107 후속, 2026-11-01 사용자 결정: 다음 배치로 바로 진행) | WI-0108 (#277) | P18 | P3 | ✅ 2026-11-01 (#278, ui-react · agentic-ui 1.8.5) |
 | 122 | ~~이미 만든 ontology-console 프로젝트의 lib/utils.ts 에 그림자 병합 설정이 없으면 SelectContent · Toast 에 shadow-<색> 을 줄 때 그림자가 사라짐~~ → 결함 아님(전제 붕괴, 2026-11-02 조사 워크플로 · 반박 검토 2명 실측): 패키지 컴포넌트는 패키지 안의 확장판 cn 을 써서 프로젝트 utils.ts 와 무관. 실제 결함은 좁음: `axis add` 복사본(card · dialog · select · toast) + cli 1.4.0 이하 기본판 componentsDir/utils.ts, 또는 직접 만든 요소의 기본판 cn, 둘 다 tailwind-merge 2.x ~ 3.1.x 에서만(3.2.0 부터 기본 분류로 해소). 정적 점검은 텍스트 · AST 판정 모두 정확도가 낮아(반례 5건 중 0건) 사용자 결정으로 점검 대신 docs/guides/troubleshooting.md 5절에 안내를 더함 | 없음(발행 없음) | P18 | P3 | ✅ 2026-11-02 (문서) |
 | 123 | 템플릿 규칙 검사 예산(파일 4,000개 · 16MB · 디렉터리 항목 5만 개) 값과 한 디렉터리를 통째로 읽는 readdir 를 실제 큰 앱에서 다시 측정(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
-| 124 | turbo type-check lint test --force 를 기본 동시 실행으로 돌리면 ui-react fix-cva-dts 가 agentic-ui type-check 의 ^build 와 dist 재작성 경합으로 「d.ts 0개」 실패(WI-0108 측정, 기존 문제). 같은 부하에서 cli template-checks 시간 한도 테스트 1건이 단독은 통과 · 동시 실행은 실패. WI-0109 재관찰(2026-11-02): 실패로 중단된 실행이 ui-react 빌드를 DTS 단계에서 끊어 d.ts 0개 dist 를 남기고, `test` 에 `build` 의존이 없어 다음 실행의 test 가 그 dist 를 먼저 읽어 `--concurrency=1` 에서도 실패(빌드를 먼저 끝내면 통과) | WI-0111 (#286) | P18 | P3 | 🔄 |
+| 124 | turbo type-check lint test --force 를 기본 동시 실행으로 돌리면 ui-react fix-cva-dts 가 agentic-ui type-check 의 ^build 와 dist 재작성 경합으로 「d.ts 0개」 실패(WI-0108 측정, 기존 문제). 같은 부하에서 cli template-checks 시간 한도 테스트 1건이 단독은 통과 · 동시 실행은 실패. WI-0109 재관찰(2026-11-02): 실패로 중단된 실행이 ui-react 빌드를 DTS 단계에서 끊어 d.ts 0개 dist 를 남기고, `test` 에 `build` 의존이 없어 다음 실행의 test 가 그 dist 를 먼저 읽어 `--concurrency=1` 에서도 실패(빌드를 먼저 끝내면 통과) | WI-0111 (#286) | P18 | P3 | ✅ 2026-11-02 (#287, 발행 없음) |
 | 125 | Tooltip 은 떠 있는 레이어인데 그림자가 없음. 토큰 그림자 `var(--axis-shadow-lg)` 를 넣음(2026-11-02 사용자 결정, ontology 에서 28 ~ 36px 퍼지는 측정을 보고도 lg 유지) | WI-0110 (#283) | P18 | P3 | ✅ 2026-11-02 (#284, ui-react · agentic-ui 1.8.6) |
 | 126 | registry-core utils-deps.ts 주석이 「템플릿은 tailwind-merge ^3.4.0 을 함께 선언」이라 적었지만 ontology-console template.json · files/package.json 은 ^2.6.0(122 조사 곁가지, registry-core 변경이라 cli · mcp changeset 동반) | 미배정 | P18 | P3 | ⏳ |
 | 127 | axis check · MCP 의 utils 점검(CLI checkUtils · MCP handleCheckProject 별도 구현)이 axis.config componentsDir 를 보지 않아 componentsDir 가 ./src/ui 이고 src/ui/utils.ts 만 있으면 「utils.ts를 찾을 수 없습니다」 오경고(122 조사 곁가지, 모든 프로젝트 출력 · run-check-baseline 이 바뀜) | 미배정 | P18 | P3 | ⏳ |
@@ -472,6 +472,7 @@
 - 배치 15 첫 항목 완료(2026-11-02): WI-0109 #281 머지 78c57f5(구현 · 다관점 검증 워크플로 3회차까지, 마지막 회차에서 HEAD 대비 회귀 1건(연결식 style 값)과 살아남은 변이 2건을 잡아 고침) · Version PR #282 머지 4d71374(close/reopen 으로 CI 부착, CI 12m57s) · Publish run 41374101810 → cli 1.8.1 · mcp 1.5.1(provenance 2/2, registry.npmjs.org 원본 확인). 발행본 스모크: 고정값 · 연결식 style 은 card-shadow, 진짜 카드 토큰 · 모양 단위 `--axis-shadow-lg` 는 통과. 다음: 122 utils 그림자 병합 점검
 - 배치 15 두 번째 항목(122) 처리(2026-11-02, 사용자 결정): 조사 워크플로(현상 · 검사 경로 · 판정 방식 3갈래 → 설계 → 반박 2명) 결과 전제 붕괴로 「결함 아님」 정정 + docs/guides/troubleshooting.md 5절에 좁은 실제 결함 안내(독립 검증 1명 지적 반영), 발행 없음. 곁가지 3건은 126 ~ 128 후속 후보. 배치 15 종료, 다음: 배치 16 의 125 Tooltip 토큰 그림자 → 124 turbo 경합
 - 배치 16 완료(2026-11-02): WI-0110 #284 머지 920cf3d(조사 워크플로에서 ontology 28 ~ 36px 퍼짐을 측정해 다시 확인했고 사용자가 lg 유지, 구현 · 검증 워크플로 1회로 지적 2건 고침) · Version PR #285 머지 9b116d5(close/reopen 으로 CI 부착) · Publish run 41400599723 → ui-react · agentic-ui 1.8.6(provenance 2/2, registry.npmjs.org 원본 확인, 발행본 dist/tooltip 에 토큰 1건). 다음: 124 turbo 경합(인프라, 발행 없음)
+- 인프라 124 완료(2026-11-02): WI-0111 #287 머지 0ec33a2(조사 워크플로로 원인 확정: test 에 build 의존 없음 + tsup 이 DTS 단계 끝에 d.ts 를 지움, CI 는 단계 분리라 Test step 실패 0건/300 run. 사용자 결정으로 ui-react · agentic-ui · tokens test 에만 build 의존, ui-react 산출물 검사를 build 끝 --check 로 이동. 사본 음성 · 양성 대조로 확인). 시간 한도 테스트 · web .next/types 경합은 후속 130 · 131. 이번 세션 계획(배치 15 · 16 · 인프라) 모두 완료
 - WI 별 설계 결정은 배치 시작 때 브리프로 모아 정해요(WI-0026 Q1 · Q3~Q6 · fallback, WI-0068 해제 저장 방식, WI-0051 심각도, WI-0060 URL 체계, WI-0062 · 0063 고치는 층 등)
 
 ### 향후 후보

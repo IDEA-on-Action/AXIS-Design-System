@@ -1,6 +1,6 @@
 # WI-0111: TODO
 
-> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #286 | 상태: 진행 중
+> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #286 | 상태: 완료(2026-11-02, PR #287 머지, 발행 없음)
 
 ## 조사
 - [x] 경합 재현 · dist 를 읽는 테스트 전수 · CI 경로 · 시간 한도, 설계 · 반박(조사 워크플로, 2026-11-02)
@@ -19,5 +19,5 @@
 
 ## 릴리스
 - [x] testplan.md · release-notes.md (FR-3)
-- [ ] PR 리뷰 · 머지(발행 없음)
-- [ ] 머지 뒤 Issue #286 닫기 · project-todo 현행화
+- [x] PR 리뷰 · 머지(발행 없음)
+- [x] 머지 뒤 Issue #286 닫기 · project-todo 현행화

@@ -62,7 +62,7 @@ ui-react 빌드 중 d.ts 가 0개가 되는 순간 프로세스 그룹을 끊어
 |---|---|
 | `npx turbo run build --force` | rc 0 · 8/8 · Cached 0(측정) |
 | `npx turbo run type-check lint test --force`(기본 동시 실행, load 11 ~ 17 / 8코어) | rc 0 · 24/24 · Cached 0(측정). ui-react 206 + fix-cva-dts 7 · agentic-ui 148 · tokens 568 · theme 47 · cli 1568 · mcp 266 passed. 고치기 전에도 이 조합은 가끔만 실패했으므로 1회 통과는 판정 근거로 쓰지 않아요(근거는 AC1 ~ AC3). 빌드가 바꾼 `public/templates/*.json` 6개 updatedAt 은 되돌림 |
-| PR CI(job 로그 API 로 같은 방법으로 읽음) | 고치기 전 #284 run 41388591374: type-check 11 task · 6 cached · 42.7s, test 7 task · 5 cached · 47.1s. 고친 뒤 #287 run 41439619504(첫 run): type-check 11 · 2 cached · 53.8s, test 8 task(ui-react#build 추가, 같은 job 의 type-check 단계 결과 재생) · 4 cached · 38.3s. 첫 run 은 패키지 turbo.json · ui-react package.json 이 build 입력이라 해시가 바뀌어(사본 측정: type-check lint test 32개 중 18개) 캐시 조건이 달라요. 「조건 다름」이라 시간 증감의 근거로 쓰지 않아요 |
+| PR CI(job 로그 API 로 같은 방법으로 읽음) | 고치기 전 #284 run 41388591374: type-check 11 task · 6 cached · 42.7s, test 7 task · 5 cached · 47.1s. 고친 뒤 #287 run 41439619504(첫 run): type-check 11 · 2 cached · 53.8s, test 8 task(ui-react#build 추가, 같은 job 의 type-check 단계 결과 재생) · 4 cached · 38.3s. 첫 run 은 패키지 turbo.json · ui-react package.json 이 build 입력이라 해시가 바뀌어(사본 측정: type-check lint test 32개 중 18개) 캐시 조건이 달라요. 「조건 다름」이라 시간 증감의 근거로 쓰지 않아요. 같은 PR 의 다음 run 41442225623(docs 커밋)은 type-check 11/11 · test 8/8 모두 캐시 적중(FULL TURBO)이라 첫 run 뒤 캐시가 다시 쌓인 것만 확인돼요 |
 
 ## 3. 잃는 보증
 
