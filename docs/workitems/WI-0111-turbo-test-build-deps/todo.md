@@ -7,17 +7,17 @@
 - [x] 사용자 결정 D1 ~ D5 (prd 2절)
 
 ## 구현
-- [ ] 패키지별 turbo.json 3개 (FR-1)
-- [ ] ui-react build 끝 fix-cva-dts 검사 (FR-2)
-- [ ] 후속 후보 등록 (FR-4)
+- [x] 패키지별 turbo.json 3개 (FR-1)
+- [x] ui-react build 끝 fix-cva-dts 검사 (FR-2)
+- [x] 후속 후보 등록 (FR-4)
 
 ## 검증
-- [ ] 사본 음성 · 양성 대조 (AC1 · AC2)
-- [ ] dry-run 의존 그래프 (AC3)
-- [ ] build 끝 검사 양성 · 음성 (AC4)
+- [x] 사본 음성 · 양성 대조 (AC1 · AC2)
+- [x] dry-run 의존 그래프 (AC3)
+- [x] build 끝 검사 양성 · 음성 (AC4)
 - [ ] 레포 turbo 게이트, PR CI 시간 · 캐시 비교 (AC5)
 
 ## 릴리스
-- [ ] testplan.md · release-notes.md (FR-3)
+- [x] testplan.md · release-notes.md (FR-3)
 - [ ] PR 리뷰 · 머지(발행 없음)
 - [ ] 머지 뒤 Issue #286 닫기 · project-todo 현행화

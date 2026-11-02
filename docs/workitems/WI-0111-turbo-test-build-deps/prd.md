@@ -18,7 +18,7 @@
 | ID | 결정 |
 |---|---|
 | D1 | 패키지별 turbo.json 으로 레포 dist 를 읽는 test 에만 build 의존을 걸어요: ui-react `["^build", "build"]`, agentic-ui `["^build"]`, tokens `["build"]`(mcp 선례). 루트 turbo.json 은 바꾸지 않아요 |
-| D2 | ui-react build 스크립트 끝에 fix-cva-dts 검사를 붙여, 패키지에서 직접 test 를 돌리는 경로도 불완전한 빌드를 알아보게 해요 |
+| D2 | ui-react 산출물 검사(fix-cva-dts `--check`)를 test 에서 build 스크립트 끝으로 옮겨요(설계 3b). 불완전한 빌드는 build 단계에서 실패해요. test 는 dist 상태에 따라 결과가 갈리지 않아요. 대신 turbo 를 거치지 않고 직접 돌리는 test 는 남은 불완전 dist 를 더는 잡지 않아요(의도한 교환, testplan 에 잃는 보증으로 기록) |
 | D3 | cli 시간 한도 테스트(500ms · 1000ms 고정 상한) · guidance 5초 제한은 이번 범위에서 빼고 후속 후보로 등록해요. 상한을 올리면 WI-0107 이 잡은 회귀 일부를 놓쳐요(측정) |
 | D4 | web 의 next build 와 type-check 가 `.next/types` 를 두고 경합하는 문제(사본 3회 중 2회 TS6053)는 후속 후보로 등록해요 |
 | D5 | 발행 없음(turbo.json · 빌드 스크립트만 바뀌고 패키지 dist 내용은 같음) |
@@ -26,7 +26,7 @@
 ## 3. 요구사항
 
 - FR-1: `packages/axis-ui-react/turbo.json`(새 파일) · `packages/axis-agentic-ui/turbo.json`(새 파일) · `packages/axis-tokens/turbo.json`(수정)에 D1 의존을 넣어요. 기존 `inputs` 는 유지하고 `extends: ["//"]` 를 써요.
-- FR-2: ui-react build 스크립트 끝에서 dist 의 d.ts 가 1개 이상이고 cva/types 참조가 0인지 검사해요. 어긋나면 build 가 실패해요(D2).
+- FR-2: ui-react build 스크립트 끝에서 dist 의 d.ts 가 1개 이상이고 cva/types 참조가 0인지 검사해요. 어긋나면 build 가 실패해요. `scripts/fix-cva-dts.test.mjs` 의 산출물 테스트는 dist 를 읽지 않는 「빌드 배선」 정적 검사(tsup 뒤 후처리, 마지막 단계가 `--check`)로 바꿔요(D2).
 - FR-3: 결정과 판정 기준(어떤 test 가 어떤 산출물을 읽는지, 새 테스트가 dist 를 읽으면 그 패키지 turbo.json 에 의존을 추가)을 testplan 과 release-notes 에 남겨요.
 - FR-4: 후속 후보(D3 · D4)를 project-todo 에 등록해요.
 

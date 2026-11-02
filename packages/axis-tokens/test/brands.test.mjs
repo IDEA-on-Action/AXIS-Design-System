@@ -1,7 +1,7 @@
 /**
  * 브랜드 토큰 순수 함수 테스트 (WI-0025 M2, FR-4 · FR-5)
  *
- * dist 를 읽지 않는다(turbo test 는 build 에 의존하지 않음). 기본 집합은 src 에서 직접 읽고,
+ * dist 를 읽지 않는다(turbo test 가 같은 호출에서 다시 쓰는 dist 상태와 무관하게 하려고). 기본 집합은 src 에서 직접 읽고,
  * 브랜드는 test/fixtures/brands 의 fixture 를 쓴다(src/brands 에 두면 배포된다).
  * 실행: node --test test/brands.test.mjs
  */

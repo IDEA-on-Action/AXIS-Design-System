@@ -267,7 +267,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsup && node scripts/fix-cva-dts.mjs && node scripts/postbuild.mjs && node scripts/sync-exports.mjs && node ../../scripts/sync-types-versions.mjs --only .",
+    "build": "tsup && node scripts/fix-cva-dts.mjs && node scripts/postbuild.mjs && node scripts/sync-exports.mjs && node ../../scripts/sync-types-versions.mjs --only . && node scripts/fix-cva-dts.mjs --check",
     "dev": "tsup --watch --onSuccess \"node scripts/postbuild.mjs\"",
     "clean": "rm -rf dist",
     "lint": "eslint .",

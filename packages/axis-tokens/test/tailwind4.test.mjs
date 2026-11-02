@@ -6,7 +6,7 @@
  * - 생성기(scripts/tailwind4.mjs)와 다른 코드로 preset 을 직접 펼쳐 기대값을 만들고, 생성 결과를 파싱해 대조한다.
  *   같은 함수로 기대값과 실제값을 만들면 둘이 같이 틀려도 통과하므로 펼치기를 여기서 따로 구현한다.
  * - build-tokens.mjs 를 패키지 사본에서 실제로 실행해 파일이 만들어지고 CSS import 대상이 같은 디렉터리에 있는지 본다.
- *   dist 를 읽지 않는다(turbo test 는 build 에 의존하지 않음). 산출물은 OS 임시 디렉터리에 쓴다.
+ *   dist 를 읽지 않는다(turbo test 가 같은 호출에서 다시 쓰는 dist 상태와 무관하게 하려고). 산출물은 OS 임시 디렉터리에 쓴다.
  *
  * 실행: node --test test/tailwind4.test.mjs
  */

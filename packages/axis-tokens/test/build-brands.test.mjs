@@ -6,7 +6,7 @@
  * 임시 디렉터리 정리를 확인한다. 마지막 묶음은 build-tokens.mjs 를 패키지 사본에서 통째로 실행해
  * 5단계 배선(검증 실패 시 rc 1)까지 본다.
  *
- * dist 를 읽지 않는다(turbo test 는 build 에 의존하지 않음). 모든 산출물은 OS 임시 디렉터리에 쓴다.
+ * dist 를 읽지 않는다(turbo test 가 같은 호출에서 다시 쓰는 dist 상태와 무관하게 하려고). 모든 산출물은 OS 임시 디렉터리에 쓴다.
  * 실행: node --test test/build-brands.test.mjs
  */
 

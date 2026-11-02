@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test": {
+      "dependsOn": ["build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/scripts/check-token-refs.mjs"]
     }
   }
