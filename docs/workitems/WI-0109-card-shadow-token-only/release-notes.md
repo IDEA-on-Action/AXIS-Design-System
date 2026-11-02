@@ -1,6 +1,6 @@
 # WI-0109: card-shadow 값 판정 릴리스 노트
 
-> 미발행(2026-11-02 작성) | 대상: `@axis-ds/cli` patch → 1.8.1 · `@axis-ds/mcp` patch → 1.5.1 · ontology-console 템플릿 스크립트 | GitHub: #280
+> 발행(2026-11-02, Version PR #282, run 41374101810, provenance 2/2) | 대상: `@axis-ds/cli` patch → 1.8.1 · `@axis-ds/mcp` patch → 1.5.1 · ontology-console 템플릿 스크립트 | GitHub: #280
 > registry-core 는 private 이라 cli · mcp 가 번들해요. ui-react · agentic-ui · tokens · theme 은 바뀌지 않아요
 
 ## 바뀐 점

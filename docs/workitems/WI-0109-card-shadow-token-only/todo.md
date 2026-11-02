@@ -1,6 +1,6 @@
 # WI-0109: TODO
 
-> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #280 | 상태: 진행 중
+> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #280 | 상태: 완료(2026-11-02, PR #281 · Version PR #282, cli 1.8.1 · mcp 1.5.1 발행)
 
 ## 조사
 - [x] 두 구현 판정 경로 · 테스트 · Tailwind 문법 · 영향 코퍼스 조사, 설계안과 반박 검토(조사 워크플로, 2026-11-02)
@@ -23,9 +23,9 @@
 - [x] 코퍼스 A/B와 양성 대조군 (AC3)
 - [x] 변이 3종 rc 1 (AC4)
 - [x] 적대 입력 시간 · 작업량 (AC5)
-- [ ] turbo build · type-check · lint · test `--force`, check-changeset-mcp-tokens, check-token-refs (AC6)
+- [x] turbo build · type-check · lint · test `--force`, check-changeset-mcp-tokens, check-token-refs (AC6)
 
 ## 릴리스
 - [x] release-notes.md(이미 만든 프로젝트 안내 포함) · testplan.md
-- [ ] PR 리뷰 · 머지 · 발행(Master)
-- [ ] 발행 뒤 Issue #280 닫기 · project-todo 현행화(Master)
+- [x] PR 리뷰 · 머지 · 발행(Master)
+- [x] 발행 뒤 Issue #280 닫기 · project-todo 현행화(Master)
