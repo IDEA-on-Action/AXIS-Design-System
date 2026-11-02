@@ -385,6 +385,27 @@ module.exports = nextConfig
 
 특정 브랜드나 다크 모드에서만 바꾸려면 `[data-brand="ontology"]` 처럼 해당 선택자만 남깁니다.
 
+### 그림자 색을 넘기면 토큰 그림자까지 사라지는 경우
+
+`@axis-ds/ui-react` 패키지에서 가져온 컴포넌트는 패키지 안의 `cn` 으로 클래스를 병합하므로, 프로젝트의 `utils.ts` 와 상관없이 위 설명대로 동작합니다. 아래 경우에는 프로젝트의 `cn` 이 병합을 맡으므로 그림자 색 클래스(`shadow-black/50` 등)를 넘기면 토큰 그림자 클래스가 지워지고 색 클래스만 남습니다.
+
+- **`axis add` 로 복사한 컴포넌트**(`card` · `dialog` · `select` · `toast`): 복사본은 `axis.config.json` 의 `componentsDir` 에 있는 `utils.ts` 를 씁니다. 이 파일이 cli 1.4.0 이하에서 만든 기본판(`twMerge` 를 그대로 쓰는 `cn`)이면 그대로 남습니다. `axis add` 는 내용이 다른 기존 파일을 덮어쓸지 묻고, `-y` 로 실행하면 묻지 않고 건너뛰기 때문입니다.
+- **shadcn CLI 로 받은 복사본**: `components.json` 의 `aliases.utils` 가 가리키는 파일(보통 `lib/utils.ts`)의 `cn` 을 씁니다.
+- **직접 만든 요소의 `cn`**: 자기 요소에 `shadow-[shadow:var(--axis-shadow-lg)]` 같은 토큰 그림자 클래스를 쓰고 같은 `cn` 에 그림자 색을 함께 넣을 때입니다. `cn` 의 결과를 패키지 컴포넌트의 `className` 으로 넘기는 경우, 그 컴포넌트가 기본으로 토큰 그림자를 가지고 있으면(`Card` · `Dialog` · `SelectContent` 등) 패키지 `cn` 이 다시 병합하므로 해당하지 않습니다.
+
+모두 설치된 `tailwind-merge` 가 3.2.0 미만일 때만 생깁니다. 3.2.0 이상은 기본 설정으로도 토큰 그림자를 남깁니다. 해당하는지는 그 `cn` 이 레지스트리 `utils` 처럼 `extendTailwindMerge` 로 `shadow` 그룹에 `[shadow:…]` 값을 넣었는지와 `tailwind-merge` 버전으로 확인합니다. `extendTailwindMerge` 가 있어도 다른 그룹만 넓혔다면 해당합니다.
+
+**해결**
+
+- `axis add` 로 복사한 컴포넌트: `componentsDir` 의 `utils.ts` 를 레지스트리 확장판으로 바꿉니다. 바뀌는 파일은 이 하나입니다.
+
+  ```bash
+  npx @axis-ds/cli add utils --overwrite
+  ```
+
+- shadcn CLI 로 받은 복사본과 직접 만든 요소의 `cn`: 위 명령은 `componentsDir` 의 `utils.ts` 만 바꾸므로, 그 `cn` 이 있는 파일(예: `lib/utils.ts`)을 레지스트리 `utils`(위 명령으로 받은 `utils.ts`)와 같은 내용으로 직접 바꿉니다.
+- `tailwind-merge` 1.x 는 확장판의 `extendTailwindMerge({ extend: ... })` 설정을 적용하지 않습니다. Tailwind 3 이면 2.x(`^2.6.0`), Tailwind 4 면 3.x 로 올린 뒤 위 방법을 씁니다.
+
 ---
 
 ## 6. 자주 묻는 질문 (FAQ)
