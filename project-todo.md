@@ -103,10 +103,11 @@
 | 122 | ~~이미 만든 ontology-console 프로젝트의 lib/utils.ts 에 그림자 병합 설정이 없으면 SelectContent · Toast 에 shadow-<색> 을 줄 때 그림자가 사라짐~~ → 결함 아님(전제 붕괴, 2026-11-02 조사 워크플로 · 반박 검토 2명 실측): 패키지 컴포넌트는 패키지 안의 확장판 cn 을 써서 프로젝트 utils.ts 와 무관. 실제 결함은 좁음: `axis add` 복사본(card · dialog · select · toast) + cli 1.4.0 이하 기본판 componentsDir/utils.ts, 또는 직접 만든 요소의 기본판 cn, 둘 다 tailwind-merge 2.x ~ 3.1.x 에서만(3.2.0 부터 기본 분류로 해소). 정적 점검은 텍스트 · AST 판정 모두 정확도가 낮아(반례 5건 중 0건) 사용자 결정으로 점검 대신 docs/guides/troubleshooting.md 5절에 안내를 더함 | 없음(발행 없음) | P18 | P3 | ✅ 2026-11-02 (문서) |
 | 123 | 템플릿 규칙 검사 예산(파일 4,000개 · 16MB · 디렉터리 항목 5만 개) 값과 한 디렉터리를 통째로 읽는 readdir 를 실제 큰 앱에서 다시 측정(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
 | 124 | turbo type-check lint test --force 를 기본 동시 실행으로 돌리면 ui-react fix-cva-dts 가 agentic-ui type-check 의 ^build 와 dist 재작성 경합으로 「d.ts 0개」 실패(WI-0108 측정, 기존 문제). 같은 부하에서 cli template-checks 시간 한도 테스트 1건이 단독은 통과 · 동시 실행은 실패. WI-0109 재관찰(2026-11-02): 실패로 중단된 실행이 ui-react 빌드를 DTS 단계에서 끊어 d.ts 0개 dist 를 남기고, `test` 에 `build` 의존이 없어 다음 실행의 test 가 그 dist 를 먼저 읽어 `--concurrency=1` 에서도 실패(빌드를 먼저 끝내면 통과) | 미배정 | P18 | P3 | ⏳ |
-| 125 | Tooltip 은 떠 있는 레이어인데 그림자가 없음. 토큰 그림자를 넣을지 디자인 판단(WI-0108 범위 밖) | 미배정 | P18 | P3 | ⏳ |
+| 125 | Tooltip 은 떠 있는 레이어인데 그림자가 없음. 토큰 그림자 `var(--axis-shadow-lg)` 를 넣음(2026-11-02 사용자 결정, ontology 에서 28 ~ 36px 퍼지는 측정을 보고도 lg 유지) | WI-0110 (#283) | P18 | P3 | 🔄 |
 | 126 | registry-core utils-deps.ts 주석이 「템플릿은 tailwind-merge ^3.4.0 을 함께 선언」이라 적었지만 ontology-console template.json · files/package.json 은 ^2.6.0(122 조사 곁가지, registry-core 변경이라 cli · mcp changeset 동반) | 미배정 | P18 | P3 | ⏳ |
 | 127 | axis check · MCP 의 utils 점검(CLI checkUtils · MCP handleCheckProject 별도 구현)이 axis.config componentsDir 를 보지 않아 componentsDir 가 ./src/ui 이고 src/ui/utils.ts 만 있으면 「utils.ts를 찾을 수 없습니다」 오경고(122 조사 곁가지, 모든 프로젝트 출력 · run-check-baseline 이 바뀜) | 미배정 | P18 | P3 | ⏳ |
 | 128 | 같은 utils 점검이 고정 순서 5경로에서 처음 찾은 파일 하나만 보고 멈춰, lib/utils.ts 와 components/ui/utils.ts 가 함께 있으면 뒤쪽을 보지 않음(ontology-console 에 axis add 를 하면 생기는 모양, 122 조사 곁가지) | 미배정 | P18 | P3 | ⏳ |
+| 129 | 기본 브랜드 어두운 테마에서 떠 있는 레이어 lg 그림자(`rgb(0 0 0 / 0.1)`)가 어두운 바탕에서 거의 보이지 않음(차이 최대 7/765, Tooltip 포함 7종 공통). 어두운 테마 그림자 토큰 재검토(WI-0110 조사, 2026-11-02 사용자 결정: 후속 후보, tokens · theme · mcp 동반 발행 대상) | 미배정 | P18 | P3 | ⏳ |
 
 ### 완료
 
