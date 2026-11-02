@@ -7,7 +7,7 @@
  * import 하면 "Unexpected identifier 'as'" 로 실패했다. 여기서는 build-tokens.mjs 를 패키지 사본에서
  * 실제로 실행하고, 만들어진 tokens.mjs 를 node 로 import 해 본다.
  *
- * dist 를 읽지 않는다(turbo test 는 build 에 의존하지 않음). 산출물은 OS 임시 디렉터리에 쓴다.
+ * dist 를 읽지 않는다(turbo test 가 같은 호출에서 다시 쓰는 dist 상태와 무관하게 하려고). 산출물은 OS 임시 디렉터리에 쓴다.
  * 실행: node --test test/js-entry.test.mjs
  */
 

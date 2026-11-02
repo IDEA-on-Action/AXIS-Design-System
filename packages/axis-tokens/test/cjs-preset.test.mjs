@@ -8,7 +8,7 @@
  *
  * 여기서는 패키지 사본에서 tsup + scripts/cjs-preset.mjs 를 실제로 돌리고, 사본을 node_modules/@axis-ds/tokens 로 둔 소비자 디렉터리에서
  * Tailwind 3 의 loadConfig + resolveConfig 로 설정 형태별 결과를 본다. 후처리 전 산출물로 같은 검사를 돌려 음성 대조군도 둔다.
- * dist 를 읽지 않는다(turbo test 는 build 에 의존하지 않음). 산출물은 OS 임시 디렉터리에 쓴다.
+ * dist 를 읽지 않는다(turbo test 가 같은 호출에서 다시 쓰는 dist 상태와 무관하게 하려고). 산출물은 OS 임시 디렉터리에 쓴다.
  * 사본 빌드의 tsup 인자와 후처리 여부는 package.json 의 build 스크립트에서 읽는다(손으로 복제하면 build 가 바뀔 때 낡는다).
  *
  * WI-0083: 같은 사본 dist 의 세 진입점(import → .mjs default, require → .js, require(...).default)마다 Tailwind 3 로

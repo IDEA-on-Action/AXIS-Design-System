@@ -4,16 +4,18 @@
  * 1. 변환: tsup 이 내는 모양의 d.ts 에서 cva/types import 를 지우고 ClassProp 을 로컬 타입으로 바꾸는지
  * 2. 실패: 예상 밖 모양 · ClassProp 밖 멤버는 고치지 않고 문제로 알리는지
  * 3. 동치: 로컬 타입이 설치된 cva 의 ClassProp 과 서로 대입 가능한지(tsc). cva 를 올려 모양이 바뀌면 여기서 실패
- * 4. 산출물: dist 가 있으면 남은 참조가 0 인지(빌드에 후처리가 붙어 있는지)
+ * 4. 빌드 배선: build 스크립트가 tsup 뒤에 후처리를 하고 끝에서 --check 로 산출물을 검사하는지.
+ *    산출물 자체는 test 에서 읽지 않아요(WI-0111). 동시 실행 중 빌드가 dist 를 다시 쓰거나 끊긴 빌드가
+ *    불완전한 dist 를 남기면 test 결과가 dist 상태에 따라 갈리므로, 산출물 검사는 build 끝에서 해요
  */
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { CVA_TYPES_SPEC, LOCAL_CLASSPROP_DECL, fixDts, run } from "./fix-cva-dts.mjs";
+import { CVA_TYPES_SPEC, LOCAL_CLASSPROP_DECL, fixDts } from "./fix-cva-dts.mjs";
 
 const pkgRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const require = createRequire(join(pkgRoot, "package.json"));
@@ -98,10 +100,13 @@ test("동치: 로컬 ClassProp 이 설치된 cva 의 ClassProp 과 서로 대입
   }
 });
 
-test("산출물: dist 가 있으면 남은 cva/types 참조가 0", (t) => {
-  const dist = join(pkgRoot, "dist");
-  if (!existsSync(dist)) return t.skip("dist 없음(빌드 전)");
-  const r = run(dist, { check: true });
-  assert.ok(r.files > 0, "d.ts 0개");
-  assert.deepEqual(r.problems, []);
+test("빌드 배선: tsup 뒤 후처리, 끝에서 --check 로 산출물 검사", () => {
+  const build = JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")).scripts?.build ?? "";
+  const steps = build.split("&&").map((s) => s.trim());
+  const tsup = steps.findIndex((s) => /^tsup(\s|$)/.test(s));
+  const fix = steps.findIndex((s) => s === "node scripts/fix-cva-dts.mjs");
+  const check = steps.findIndex((s) => s === "node scripts/fix-cva-dts.mjs --check");
+  assert.ok(tsup >= 0, `build 에 tsup 이 없음: ${build}`);
+  assert.ok(fix > tsup, `tsup 뒤에 fix-cva-dts 후처리가 없음: ${build}`);
+  assert.equal(check, steps.length - 1, `build 마지막 단계가 fix-cva-dts --check 가 아님: ${build}`);
 });

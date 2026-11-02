@@ -772,6 +772,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhFSe6I",
       "lastSyncedAt": "2026-11-02T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0111",
+      "slug": "turbo-test-build-deps",
+      "issueNumber": 286,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhFX3PU",
+      "lastSyncedAt": "2026-11-02T00:00:00.000Z",
+      "lastStatus": "🔄"
     }
   ],
   "updatedAt": "2026-11-02T00:00:00.000Z"
