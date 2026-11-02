@@ -764,6 +764,14 @@
       "projectItemId": "PVTI_lADODan1v84BNRmRzhFOqfs",
       "lastSyncedAt": "2026-11-02T00:00:00.000Z",
       "lastStatus": "✅"
+    },
+    {
+      "wiId": "WI-0110",
+      "slug": "tooltip-token-shadow",
+      "issueNumber": 283,
+      "projectItemId": "PVTI_lADODan1v84BNRmRzhFSe6I",
+      "lastSyncedAt": "2026-11-02T00:00:00.000Z",
+      "lastStatus": "🔄"
     }
   ],
   "updatedAt": "2026-11-02T00:00:00.000Z"
