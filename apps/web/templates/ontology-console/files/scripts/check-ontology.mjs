@@ -7,9 +7,13 @@
  *   2. exclamation    느낌표(반각 · 전각)가 든 한글 문구(JSX 텍스트 · 문자열)
  *   3. one-side-line  한쪽 색 선: border-l · border-r · border-s · border-e 와 중립이 아닌 테두리 색 클래스를 같은 클래스 묶음에 함께 씀,
  *                     CSS border-left · border-right(-color) 나 style 객체 borderLeft · borderRight 등에 중립이 아닌 색을 지정
- *   4. card-shadow    카드 그림자: <Card · bg-card · 카드 모양(rounded-* + border) 과 shadow-* 를 같은 클래스 묶음에 함께 씀,
- *                     <Card style 의 boxShadow, 선택자에 card 가 든 CSS 규칙의 box-shadow
- *   5. palette        팔레트 밖 리터럴 색: hex · rgb() · hsl() 숫자 리터럴, CSS 이름 색(red · white 등),
+ *   4. card-shadow    카드 그림자 값이 토큰이 아님(WI-0109): <Card · bg-card · 카드 모양(rounded-* · rounded-[…] + border) 클래스 묶음의
+ *                     shadow-* · [box-shadow:…] · 그림자 토큰 재정의, <Card style 의 boxShadow · '--axis-…shadow…' 키,
+ *                     선택자에 card 가 든 CSS 규칙의 (-webkit-)box-shadow · 그림자 토큰 재정의 · @apply 를 값으로 판정해요.
+ *                     shadow-sm 같은 크기 이름 · 고정값 · 모르는 이름은 위반, none 과 그림자 색(shadow-black/10 · shadow-[color:…])은 통과,
+ *                     토큰은 진짜 카드(<Card · bg-card · card 선택자)에서 var(--axis-card-shadow…) 만,
+ *                     모양으로만 카드인 묶음(떠 있는 레이어)에서는 이름에 shadow 가 든 var(--axis-…) 를 통과시켜요(폴백 · 고정 레이어가 섞이면 위반)
+ *   5. palette        팔레트 밖 리터럴 색: hex · rgb() · hsl() 숫자 리터럴(임의값 밑줄 뒤 _#000 · _rgb( 포함), CSS 이름 색(red · white 등),
  *                     Tailwind 기본 팔레트 클래스(bg-red-500 · text-white 등)
  *
  * 클래스 묶음: 문자열 하나, className={...} 표현식 안의 문자열 전체, cn() · clsx() · cva() · twMerge() 인자 안의 문자열 전체.
@@ -77,7 +81,6 @@ const BORDER_COLOR =
 /** 색이 아닌 테두리 클래스(두께 · 방향 · 선 모양): border-r-0 · border-x-2 · border-dashed 등 */
 const BORDER_NOT_COLOR =
   /^border-(?:(?:[lrsetbxy])(?:-(?:0|2|4|8|\[[^\]]+\]))?|0|2|4|8|\[\d[^\]]*\]|solid|dashed|dotted|double|none|hidden|collapse|separate)$/
-const SHADOW = /(?:^|\s|:)shadow(?:-(?!none(?:\s|$))[\w[\]().,%-]+)?(?=\s|$)/
 const PALETTE_NAMES =
   'slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose'
 const PALETTE_CLASS = new RegExp(
@@ -85,6 +88,24 @@ const PALETTE_CLASS = new RegExp(
   'g'
 )
 const HEX = /#[0-9a-fA-F]{3,8}\b/g
+/** 그림자 크기 이름(Tailwind 기본 고정 그림자). shadow 단독도 고정입니다 */
+const SHADOW_SIZES = new Set(['xs', '2xs', 'sm', 'md', 'lg', 'xl', '2xl', 'inner'])
+/**
+ * 그림자 색으로 볼 이름(알려진 색 모양만): 팔레트-숫자, white · black · transparent · current · inherit, 프리셋 색 키.
+ * 나머지 이름(config 로 확장한 shadow-card 등)은 고정 그림자로 봅니다
+ */
+const SHADOW_COLOR_NAME = new RegExp(
+  `^(?:(?:${PALETTE_NAMES})-\\d{2,3}|white|black|transparent|current|inherit|border|input|ring|background|foreground|(?:primary|secondary|destructive|muted|accent|popover)(?:-foreground)?|chart-[1-5])$`
+)
+/** 그림자 값 레이어 하나가 var(--이름) 하나인가. 이름만 뽑고 허용 여부는 includes 로 봅니다(선형) */
+const SHADOW_VAR = /^var\((--[\w-]+)\)$/i
+/** 불투명도 접미(/ 뒤): 숫자 · [임의값] · (변수) */
+const SHADOW_ALPHA = /^(?:\d+|\[[^\]]*\]|\([^)]*\))$/
+/**
+ * style 객체의 그림자 토큰 변수 키('--axis-…': '값', 계산 키 ['--axis-…' as string]: '값' 포함).
+ * 이름에 shadow 가 드는지는 includes 로 봅니다. 공백 다음에는 고정 글자(as · ] · :)만 와서 공백이 길어도 선형입니다
+ */
+const STYLE_SHADOW_VAR_KEY = /(?:\[\s*)?(["'])(--axis-[\w-]*)\1(?:\s+as\s+[\w.]+)?\s*(?:\]\s*)?:\s*(["'`])([^"'`]*)\3/g
 /** CSS 이름 색(transparent · currentColor · inherit 는 색이 아니라 통과) */
 const NAMED_COLORS = new Set(
   (
@@ -108,7 +129,8 @@ const CSS_COLOR_PROP =
   /(?:^|[;{\s])((?:background|border|outline|text-decoration|column-rule)(?:-(?:top|right|bottom|left|inline-start|inline-end))?(?:-color)?|color|fill|stroke|caret-color|accent-color|box-shadow)\s*:\s*([^;}]+)/g
 const STYLE_COLOR_KEY =
   /\b((?:background|border|outline|textDecoration|columnRule)(?:Top|Right|Bottom|Left|InlineStart|InlineEnd)?(?:Color)?|color|fill|stroke|caretColor|accentColor|boxShadow)\s*:\s*(["'`])([^"'`]*)\2/g
-const COLOR_FN = /\b(?:rgba?|hsla?)\(\s*\d/g
+/** 색 함수 리터럴. 앞 글자가 영문 · 숫자가 아니면 잡습니다(임의값 밑줄 뒤 _rgb( 포함) */
+const COLOR_FN = /(?<![A-Za-z0-9])(?:rgba?|hsla?)\(\s*\d/g
 const HANGUL = /[가-힣]/
 
 /**
@@ -399,9 +421,230 @@ function oneSideColors(t) {
     .filter((c) => !NEUTRAL_BORDER.has(c.replace(/^border-[lrse]-/, 'border-')) && !BORDER_NOT_COLOR.test(c))
 }
 
-/** 카드로 볼 클래스 묶음인가: <Card · bg-card · 카드 모양(rounded-* 와 border 를 함께) */
-function isCardLike(t, card) {
-  return card || /(?:^|\s)bg-card(?=\s|$)/.test(t) || (/(?:^|\s)rounded(?:-[\w[\]]+)?(?=\s|$)/.test(t) && /(?:^|\s)border(?:-(?:0|2|4|8))?(?=\s|$)/.test(t))
+/**
+ * 카드 단위 종류(WI-0109 D1). card = 진짜 카드(<Card 태그 · bg-card 가 든 묶음 · 선택자에 card 가 든 CSS 규칙),
+ * shape = 클래스 모양(rounded-* 또는 rounded-[…] 와 border 를 함께)으로만 카드처럼 보이는 묶음(떠 있는 레이어 포함)
+ */
+/** @typedef {'card' | 'shape'} CardKind */
+
+/** 클래스 토큰 판정 결과(shadowClassVerdict) */
+/** @typedef {'none' | 'color' | 'token' | 'fixed' | null} ShadowVerdict */
+
+/**
+ * 파일 하나 안에서 클래스 토큰 판정을 기억합니다. 겹친 cn( 처럼 같은 토큰이 여러 묶음에 다시 들어와도
+ * 판정은 토큰마다 한 번이라, 묶음 판정 비용이 클래스 묶음 작업량 예산 안의 글자 수에 비례합니다
+ */
+/** @typedef {{ card: Map<string, ShadowVerdict>, shape: Map<string, ShadowVerdict>, bgCard: Map<string, boolean> }} ShadowMemo */
+
+/** @returns {ShadowMemo} */
+function newShadowMemo() {
+  return { card: new Map(), shape: new Map(), bgCard: new Map() }
+}
+
+/** 클래스 토큰의 유틸 부분: 끝의 쉼표 · 세미콜론, 변형 접두(괄호 밖 :), 앞뒤 ! 를 벗깁니다 */
+function classBase(token) {
+  let end = token.length
+  while (end > 0 && (token[end - 1] === ',' || token[end - 1] === ';')) end--
+  const parts = splitTopLevel(token.slice(0, end), ':')
+  let base = parts[parts.length - 1]
+  if (base.startsWith('!')) base = base.slice(1)
+  if (base.endsWith('!')) base = base.slice(0, -1)
+  return base
+}
+
+/** 클래스 토큰이 bg-card 인가: 변형 접두 · 앞뒤 ! · 불투명도 접미(/NN · /[..] · /(..))를 벗기고 봅니다(hover:bg-card · !bg-card · bg-card/90) */
+function isBgCardToken(token, memo) {
+  if (!token.includes('bg-card')) return false
+  const known = memo.bgCard.get(token)
+  if (known !== undefined) return known
+  let base = classBase(token)
+  const slash = base.indexOf('/')
+  if (slash !== -1 && SHADOW_ALPHA.test(base.slice(slash + 1))) base = base.slice(0, slash)
+  const yes = base === 'bg-card'
+  memo.bgCard.set(token, yes)
+  return yes
+}
+
+/** 카드로 볼 클래스 묶음의 종류. 카드가 아니면 null */
+function cardKind(t, card, memo) {
+  if (card || (t.includes('bg-card') && t.split(/\s+/).some((tok) => isBgCardToken(tok, memo)))) return 'card'
+  return /(?:^|\s)rounded(?:-[\w[\]]+|-\[[^\]\s]*\])?(?=\s|$)/.test(t) && /(?:^|\s)border(?:-(?:0|2|4|8))?(?=\s|$)/.test(t)
+    ? 'shape'
+    : null
+}
+
+/** 그림자 토큰 변수 이름인가: --axis- 로 시작하고 이름에 shadow 가 듦 */
+function isAxisShadowName(name) {
+  return name.startsWith('--axis-') && name.includes('shadow')
+}
+
+/** 단위 종류에 따라 토큰으로 인정하는 변수인가: card 는 var(--axis-card-shadow…) 만, shape 는 그림자 토큰 변수 전체 */
+function isAllowedShadowVar(name, kind) {
+  return kind === 'card' ? name.startsWith('--axis-card-shadow') : isAxisShadowName(name)
+}
+
+/** 대괄호 · 괄호 깊이 0 에서 sep 으로 나눕니다(짝 없는 닫는 괄호로 깊이가 0 아래로 내려가지 않음) */
+function splitTopLevel(s, sep) {
+  const out = []
+  let depth = 0
+  let from = 0
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (c === '[' || c === '(') depth++
+    else if (c === ']' || c === ')') {
+      if (depth > 0) depth--
+    } else if (c === sep && depth === 0) {
+      out.push(s.slice(from, i))
+      from = i + 1
+    }
+  }
+  out.push(s.slice(from))
+  return out
+}
+
+/** s 첫 글자의 여는 괄호([ 또는 ()와 짝이 맞는 닫는 괄호 위치(두 종류를 함께 셈). 닫히지 않으면 -1 */
+function closingBracket(s) {
+  let depth = 0
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i]
+    if (c === '[' || c === '(') depth++
+    else if (c === ']' || c === ')') {
+      depth--
+      if (depth === 0) return i
+    }
+  }
+  return -1
+}
+
+/** 그림자 값 정규화: 끝의 !important(! 와 important 사이 공백 포함)를 벗기고, 공백을 한 칸으로 줄이며, 여는 괄호 뒤 · 닫는 괄호 앞 · 쉼표 앞뒤 공백을 지웁니다 */
+function normalizeShadowValue(value) {
+  let v = value.trim()
+  v = v.replace(/!\s*important$/i, '').trim()
+  // 이어 붙이는 문자열을 글자 단위로 읽으면 매번 평탄화돼 2차 시간이 되므로 글자 배열과 직전 글자를 따로 둡니다
+  const out = []
+  let prev = ''
+  let space = false
+  for (let i = 0; i < v.length; i++) {
+    const c = v[i]
+    if (c === ' ' || c === '\t' || c === '\n' || c === '\r' || c === '\f') {
+      space = true
+      continue
+    }
+    if (space && prev !== '' && prev !== '(' && prev !== ',' && c !== ')' && c !== ',') out.push(' ')
+    space = false
+    out.push(c)
+    prev = c
+  }
+  return out.join('')
+}
+
+/**
+ * style 객체 값이 따옴표 문자열 하나로 끝나는가: 닫는 따옴표 뒤(공백 다음) 글자가 , 또는 } 일 때만 참.
+ * + · || · ? · as 등이 이어지면 값이 문자열 하나가 아니라 보수적으로 고정으로 봅니다. 공백만 건너뛰어 선형입니다
+ */
+function styleValueEnds(code, end) {
+  let i = end
+  while (i < code.length) {
+    const c = code[i]
+    if (c !== ' ' && c !== '\t' && c !== '\n' && c !== '\r' && c !== '\f' && c !== '\v') break
+    i++
+  }
+  return code[i] === ',' || code[i] === '}'
+}
+
+/**
+ * CSS · style 값 하나의 그림자 판정(WI-0109 D2 · D3): none = 그림자 없음(none · 0 0 #0000, 대소문자 무시),
+ * token = 쉼표로 나눈 모든 레이어가 허용 토큰 변수 하나뿐이고 폴백이 없음, fixed = 그 밖의 모든 값
+ */
+function judgeShadowValue(value, kind) {
+  const v = normalizeShadowValue(value)
+  const lower = v.toLowerCase()
+  if (lower === 'none' || lower === '0 0 #0000') return 'none'
+  for (const layer of splitTopLevel(v, ',')) {
+    const m = SHADOW_VAR.exec(layer)
+    if (!m || !isAllowedShadowVar(m[1], kind)) return 'fixed'
+  }
+  return 'token'
+}
+
+/**
+ * 클래스 토큰 하나의 그림자 판정. null = 그림자 클래스가 아님, color = 그림자 색(palette 가 맡음), none · token · fixed 는 값 판정.
+ * 끝의 쉼표 · 세미콜론, 변형 접두(괄호 밖 :), 앞뒤 ! 를 벗기고 봅니다. 임의 속성 [box-shadow:…] 과 그림자 토큰 재정의
+ * [--axis-…shadow…:…] 는 값으로 판정하고, 닫히지 않은 대괄호 · 괄호 조각과 모르는 이름은 고정으로 봅니다
+ */
+function shadowClassVerdict(token, kind) {
+  const base = classBase(token)
+  if (base.startsWith('[')) {
+    const colon = base.indexOf(':')
+    if (colon === -1) return null
+    const prop = base.slice(1, colon)
+    if (prop !== 'box-shadow' && !prop.endsWith('-box-shadow') && !isAxisShadowName(prop)) return null
+    if (!base.endsWith(']')) return 'fixed'
+    return judgeShadowValue(base.slice(colon + 1, -1).replace(/_/g, ' '), kind)
+  }
+  if (base === 'shadow') return 'fixed'
+  if (!base.startsWith('shadow-')) return null
+  const rest = base.slice(7)
+  if (rest.startsWith('[') || rest.startsWith('(')) {
+    const close = closingBracket(rest)
+    if (close === -1) return 'fixed'
+    const alpha = rest.slice(close + 1)
+    if (alpha !== '' && !(alpha.startsWith('/') && SHADOW_ALPHA.test(alpha.slice(1)))) return 'fixed'
+    let inner = rest.slice(1, close)
+    if (inner.startsWith('color:')) return 'color'
+    if (inner.startsWith('shadow:')) inner = inner.slice(7)
+    if (inner.startsWith('--')) inner = `var(${inner})`
+    return judgeShadowValue(inner.replace(/_/g, ' '), kind)
+  }
+  let name = rest
+  const slash = rest.indexOf('/')
+  if (slash !== -1) {
+    if (!SHADOW_ALPHA.test(rest.slice(slash + 1))) return 'fixed'
+    name = rest.slice(0, slash)
+  }
+  if (name === 'none') return 'none'
+  if (SHADOW_SIZES.has(name)) return 'fixed'
+  return SHADOW_COLOR_NAME.test(name) ? 'color' : 'fixed'
+}
+
+/**
+ * 클래스 묶음 안에서 고정 그림자로 판정한 클래스 토큰들. shadow 가 들지 않은 토큰은 그림자 클래스가 아니라 판정하지 않고,
+ * 판정은 memo 로 토큰마다 한 번만 합니다
+ */
+function fixedShadowClasses(t, kind, memo) {
+  const known = memo[kind]
+  return t.split(/\s+/).filter((tok) => {
+    if (!tok.includes('shadow')) return false
+    let v = known.get(tok)
+    if (v === undefined) {
+      v = shadowClassVerdict(tok, kind)
+      known.set(tok, v)
+    }
+    return v === 'fixed'
+  })
+}
+
+/** 카드 CSS 규칙 본문의 선언마다 그림자를 판정해 고정인 것이 하나라도 있는가: (-webkit-)box-shadow · 그림자 토큰 재정의 · @apply 의 그림자 클래스 */
+function cardRuleHasFixedShadow(body, memo) {
+  for (const decl of body.split(';')) {
+    const d = decl.trim()
+    if (/^@apply\s/i.test(d)) {
+      if (fixedShadowClasses(d.slice(6), 'card', memo).length > 0) return true
+      continue
+    }
+    const colon = d.indexOf(':')
+    if (colon === -1) continue
+    const prop = d.slice(0, colon).trim()
+    const lower = prop.toLowerCase()
+    const shadowProp = lower === 'box-shadow' || lower.endsWith('-box-shadow') || isAxisShadowName(prop)
+    if (shadowProp && judgeShadowValue(d.slice(colon + 1), 'card') === 'fixed') return true
+  }
+  return false
+}
+
+/** 보고 문구의 허용 토큰 안내(스크립트 전용, 패리티 비교 밖) */
+function allowedShadowText(kind) {
+  return kind === 'card' ? 'var(--axis-card-shadow…)' : 'var(--axis-…shadow…)'
 }
 
 /** CSS 값 또는 style 값이 한쪽 색 선인가 */
@@ -568,6 +811,7 @@ function main() {
     for (let i = raw.indexOf(EM_DASH); i !== -1; i = raw.indexOf(EM_DASH, i + 1)) {
       report(i, 'em-dash', '긴 줄표(U+2014) 대신 하이픈 · 쉼표 · 가운뎃점을 써요')
     }
+    const shadowMemo = newShadowMemo()
 
     if (ext === '.css') {
       // 3. CSS 한쪽 색 선
@@ -576,10 +820,10 @@ function main() {
       while ((m = side.exec(code))) {
         if (sideValueColored(m[1])) report(m.index, 'one-side-line', `한쪽 색 선: ${m[0].trim()}`)
       }
-      // 4. 선택자에 card 가 든 규칙의 box-shadow
+      // 4. 선택자에 card 가 든 규칙의 그림자 선언(box-shadow · -webkit-box-shadow · 그림자 토큰 재정의 · @apply), 값이 토큰이 아니면 위반
       for (const r of cssRules(code)) {
-        if (/card/i.test(r.selector) && /box-shadow\s*:(?!\s*(?:none\b|0 0 #0000))/.test(r.body)) {
-          report(r.open, 'card-shadow', `카드 그림자: ${r.selector.trim()}`)
+        if (/card/i.test(r.selector) && cardRuleHasFixedShadow(r.body, shadowMemo)) {
+          report(r.open, 'card-shadow', `카드 그림자 값이 토큰이 아니에요(허용: ${allowedShadowText('card')}): ${r.selector.trim().slice(0, 60)}`)
         }
       }
     } else {
@@ -595,8 +839,10 @@ function main() {
         if (t.length > MAX_UNIT_CHARS) continue
         const colors = oneSideColors(t)
         if (colors.length > 0) report(chunk.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
-        if (isCardLike(t, false) && SHADOW.test(t)) {
-          report(chunk.index, 'card-shadow', `카드 그림자: ${t.trim().slice(0, 60)}`)
+        const kind = cardKind(t, false, shadowMemo)
+        const fixed = kind ? fixedShadowClasses(t, kind, shadowMemo) : []
+        if (fixed.length > 0) {
+          report(chunk.index, 'card-shadow', `카드 그림자 값이 토큰이 아니에요(허용: ${allowedShadowText(kind)}): ${fixed.join(' ').slice(0, 60)}`)
         }
       }
       // 3 · 4. 여러 문자열로 나뉜 클래스 묶음(className={...} · cn() 인자). 작업량 상한을 넘으면 이 판정만 멈추고 일부만 판정으로 세요
@@ -611,8 +857,10 @@ function main() {
         const t = unit.text
         const colors = oneSideColors(t)
         if (colors.length > 0) report(unit.index, 'one-side-line', `한쪽 색 선: ${colors.join(' ')}`)
-        if (isCardLike(t, unit.card) && SHADOW.test(t)) {
-          report(unit.index, 'card-shadow', `${unit.card ? 'Card 에 그림자' : '카드 그림자'}: ${t.trim().slice(0, 60)}`)
+        const kind = cardKind(t, unit.card, shadowMemo)
+        const fixed = kind ? fixedShadowClasses(t, kind, shadowMemo) : []
+        if (fixed.length > 0) {
+          report(unit.index, 'card-shadow', `${unit.card ? 'Card' : '카드'} 그림자 값이 토큰이 아니에요(허용: ${allowedShadowText(kind)}): ${fixed.join(' ').slice(0, 60)}`)
         }
       }
       // 3 · 4 · 5. style 객체: borderLeft · borderRight 등 한쪽 색 선, <Card style 의 boxShadow, 이름 색
@@ -624,11 +872,25 @@ function main() {
         if (/^border(?:Left|Right|InlineStart|InlineEnd)(?:Color)?$/.test(key) && sideValueColored(value)) {
           report(m.index, 'one-side-line', `한쪽 색 선(style): ${key}: ${value}`)
         }
-        if (key === 'boxShadow' && !/^(?:none|0 0 #0000)$/.test(value.trim())) {
-          if (isCardTagAt(code, lastLt(m.index), code.length)) report(m.index, 'card-shadow', `Card 에 그림자(style): ${value}`)
+        const ends = key !== 'boxShadow' || styleValueEnds(code, m.index + m[0].length)
+        if (key === 'boxShadow' && (judgeShadowValue(value, 'card') === 'fixed' || !ends)) {
+          if (isCardTagAt(code, lastLt(m.index), code.length)) {
+            report(m.index, 'card-shadow', `Card 그림자 값이 토큰이 아니에요(style boxShadow, 허용: ${allowedShadowText('card')}): ${value.slice(0, 60)}${ends ? '' : ' …(문자열 하나가 아님)'}`)
+          }
         }
         const named = value.split(/[\s,()]+/).find((w) => NAMED_COLORS.has(w.toLowerCase()))
         if (named) report(m.index, 'palette', `이름 색 ${named}(style ${key}): 토큰 변수를 써요`)
+      }
+      // 4. <Card style 의 그림자 토큰 재정의('--axis-…shadow…' 키). 값이 문자열 하나로 끝나지 않으면 고정
+      const lastLtVar = lastLtFinder(code)
+      STYLE_SHADOW_VAR_KEY.lastIndex = 0
+      while ((m = STYLE_SHADOW_VAR_KEY.exec(code))) {
+        if (!isAxisShadowName(m[2])) continue
+        const ends = styleValueEnds(code, m.index + m[0].length)
+        if (judgeShadowValue(m[4], 'card') !== 'fixed' && ends) continue
+        if (isCardTagAt(code, lastLtVar(m.index), code.length)) {
+          report(m.index, 'card-shadow', `Card 그림자 토큰 재정의 값이 토큰이 아니에요(style ${m[2]}, 허용: ${allowedShadowText('card')}): ${m[4].slice(0, 60)}${ends ? '' : ' …(문자열 하나가 아님)'}`)
+        }
       }
     }
 
@@ -647,7 +909,8 @@ function main() {
     HEX.lastIndex = 0
     while ((m = HEX.exec(code))) {
       if (code[m.index - 1] === '&') continue // HTML 엔티티(&#123;)
-      if (/[\w/]/.test(code[m.index - 1] ?? '')) continue // URL 조각(/entities#abc)
+      const prev = code[m.index - 1] ?? ''
+      if (prev !== '_' && /[\w/]/.test(prev)) continue // URL 조각(/entities#abc). 임의값 밑줄 뒤(_#000)는 색으로 봄
       if (/(?:href|to|id)=\{?\s*["'`]$/.test(code.slice(Math.max(0, m.index - 12), m.index))) continue // 앵커(href="#add")
       report(m.index, 'palette', `리터럴 색 ${m[0]}: 토큰 클래스(bg-primary · text-muted-foreground 등)를 써요`)
     }

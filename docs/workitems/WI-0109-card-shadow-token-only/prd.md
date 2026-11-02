@@ -29,6 +29,33 @@
 - 모든 판정 정규식은 입력 길이에 선형이어야 해요(변수 이름을 먼저 뽑고 `includes` 로 검사).
 - 발행은 patch(cli 1.8.1 · mcp 1.5.1)예요. 위반은 지금처럼 WARN · rc 0 이에요.
 
+구현 검증(2026-11-02)에서 정한 해석(결정 D1 ~ D4 는 그대로이고 적용 범위를 글로 적은 것):
+
+- D3 의 「힌트 유무와 관계없이」는 `shadow:` 힌트와 힌트 없는 값에 적용해요. `color:` 힌트(`shadow-[color:…]` · `shadow-(color:…)`)는 Tailwind 3 · 4 모두 box-shadow 를 만들지 않고 그림자 색 변수만 정해요. 그래서 값과 관계없이 그림자 색으로 보고 card-shadow 대상에서 빼요(리터럴 색은 palette 가 잡아요).
+- D1 의 `bg-card` 단위는 변형 접두 · 앞뒤 `!` · 불투명도 접미를 벗긴 뒤 `bg-card` 인 클래스가 든 묶음이에요(`hover:bg-card` · `bg-card/90` · `!bg-card` · `bg-card!` 포함, `bg-card-foreground` 는 아님).
+- D2 의 style 키에는 계산 키(`['--axis-card-shadow' as string]: …`)도 들어가요.
+- CSS · style 값은 앞부분이 아니라 값 전체로 판정해요. 그래서 `0 0 #0000 inset` · `none, 0 1px …` 처럼 그림자 없음 뒤에 값이 붙으면 새로 위반이에요(D2 · D3 에 맞는 변화).
+- 클래스 토큰 판정은 파일 안에서 토큰마다 한 번만 해요(겹친 `cn(` 이 같은 문자열을 묶음마다 다시 넣어도 판정 비용이 늘지 않게).
+- style 값(`boxShadow`, `'--axis-…shadow…'` 재정의 키)은 따옴표 문자열 하나로 끝날 때만 값으로 판정해요. 닫는 따옴표 뒤(공백 다음)가 `,` 나 `}` 가 아니면(`+` · `||` · `as const` 등이 이어지면) 보수적으로 위반이에요. 템플릿 리터럴 치환(`${…}`)이 든 값도 토큰 하나가 아니라 위반이에요. HEAD 는 이 꼴을 잡았어요(검증 지적, 신판 1차 구현에서 첫 문자열만 보고 통과시킨 회귀를 바로잡음).
+- CSS · style 값 끝의 `!important` 는 `!` 와 `important` 사이 공백(`! important`)이 있어도 벗겨요.
+- 코퍼스 정의(AC3): ontology-console 템플릿 `files` 전체 + `apps/web/public/r/*.json` 의 `files[].content` + ui-react · agentic-ui `src`, 확장자 `.ts` · `.tsx` · `.js` · `.jsx` · `.mjs` · `.css`. 측정(2026-11-02): 138파일, 전체 규칙 위반 HEAD 9건 · 신판 9건, 차이 0(card-shadow 는 둘 다 0건).
+
+알려진 한계(release-notes 한계 절로 옮겨요):
+
+- 카드 단위 밖에서 그림자 토큰을 다시 정의한 것(조상 요소의 `[--axis-card-shadow:…]`, 전역 CSS `:root`)은 보지 않아요. 테마 정의와 구분할 수 없어서예요. `--axis-card-shadow` 로 시작하는 아무 이름(`--axis-card-shadow-x`)도 D1 접두 규칙대로 토큰으로 인정해요.
+- Tailwind 내부 변수(`[--tw-shadow:…]` · `[--tw-ring-shadow:…]`, CSS `--tw-shadow:` 선언)로 넣은 고정 그림자는 보지 않아요. D2 의 재정의 범위(`--axis-…shadow…`) 밖이라 넣을지는 사용자 결정 항목이에요.
+- `inherit` · `0 0 transparent` 는 그림자 없음으로 면제하지 않아요(`none` · `0 0 #0000` 만 면제). 카드에 쓰면 위반이에요(측정: 클래스 `shadow-[shadow:inherit]` · CSS · style 경로 모두 card-shadow).
+- 임의값 카드 바탕(`bg-[hsl(var(--card))]`), `cva()` 로 정의해 `<Card className={v()}>` 에 넘긴 클래스, 작은따옴표 `<Card className='…'>` 는 진짜 카드로 보지 않아요. `rounded` + `border` 가 함께 있으면 모양으로만 카드인 묶음이 되어 떠 있는 레이어 토큰(`--axis-shadow-lg`)이 통과해요.
+- `className` 앞 속성에 JSX 요소나 `<` · `>` 비교식, TS 제네릭(`items={[] as Array<string>}`)이 있는 `<Card`(`<Card icon={<Icon />} className="…">`, `<Card data-x={a > b} className="…">`)도 진짜 카드로 보지 않아요. 태그 경계를 가장 가까운 `<` 와 `=>` 가 아닌 `>` 로 정하기 때문이에요. 같은 묶음에 `rounded` + `border` 가 있으면 떠 있는 레이어 토큰이 통과해요(측정: 다섯 꼴 모두 HEAD 는 card-shadow, 신판은 통과. 레포 tsx 에서 이 꼴은 0건. TS 제네릭 꼴은 HEAD · 신판 모두 통과).
+- style 값이 따옴표로 시작하지 않으면(변수 `boxShadow: shadow`, 삼항 `boxShadow: on ? '…' : '…'`, 함수 호출) 보지 않아요(HEAD 와 같음). 따옴표 문자열 뒤에 `as const` 처럼 값을 바꾸지 않는 꼬리가 붙어도 문자열 하나로 끝나지 않는 값으로 보아 위반이에요.
+- style 경로(`boxShadow`, `'--axis-…shadow…'` 재정의 키)는 `<Card` 태그에서만 봐요. `bg-card` 묶음이나 모양 묶음(`rounded` + `border`) 요소의 style 은 보지 않아요(종전과 같음). 넓히면 D2 해석이 넓어지므로 사용자 결정 항목이에요.
+- 임의 속성 이름은 소문자 `box-shadow` · `-box-shadow` 로 끝나는 이름만 그림자 속성으로 봐요. 대문자 `[BOX-SHADOW:…]` 는 Tailwind 3.4.19 · 4.1.11 모두 CSS 를 만들지 않아서(측정) 판정할 그림자가 없어요. Tailwind 4 는 `[-WEBKIT-BOX-SHADOW:…]` 를 그대로 내보내지만(측정) 템플릿은 Tailwind 3 이고, Tailwind 3 은 이 이름을 그림자가 아닌 사용자 변수로 바꿔요(측정).
+- palette 는 밑줄 바로 뒤의 `#` + 16진 3 ~ 8자를 URL 안에서도 색으로 봐요(`/docs/page_#abc`). 임의값 밑줄(`_#000`)과 글자로 구분할 수 없어서예요(FR-7 의 부작용, 코퍼스 138파일에서 새로 잡힌 것 0건).
+- palette 의 색 함수 판정(FR-7 로 바꾼 COLOR_FN)은 앞 글자가 영문 · 숫자가 아니면 잡으므로 밑줄로 이어진 snake_case 함수 호출(`to_rgb(1` · `hex_to_hsl(2`)도 색으로 봐요(측정: HEAD 0건, 신판 palette. 코퍼스에서 새로 잡힌 것 0건).
+- style 계산 키를 백틱으로 쓴 것(``[`--axis-card-shadow`]: "0 1px black"``)과, 값 안에 다른 종류의 따옴표가 섞인 문자열(`boxShadow: "var(--axis-card-shadow), 0 0 'x'"`)은 보지 않아요(측정: HEAD · 신판 모두 0건).
+- 재정의 키 판정은 `'--axis-…shadow…': '값'` 꼴을 style 객체 밖에서도 키로 읽어요. 그래서 `<Card data-v={on ? '--axis-card-shadow' : 'x'}>` 같은 삼항이 card-shadow 로 잡혀요(측정: HEAD 0건, 신판 1건, 보수적인 쪽 오탐). 닫는 따옴표 뒤에 ASCII 가 아닌 공백(NBSP)이 오면 문자열 하나로 끝나지 않는 값으로 봐요(HEAD 도 위반).
+- (WI-0109 이전부터) CSS 파일에서도 앞이 `:` 가 아닌 `//` 를 줄 주석으로 보고 그 줄 끝까지 지워요. 그래서 `url(//…)` 뿐 아니라 문자열 안 `//`(`content: "a//b"`) 뒤에 같은 줄로 이어진 선언도 판정에서 빠져요(측정: 두 꼴 모두 HEAD · 신판 0건). 후속 후보예요.
+
 ## 3. 요구사항
 
 - FR-1: 두 구현에 같은 글자의 값 판정 헬퍼를 넣어요. 클래스 토큰을 「그림자 없음 · 그림자 색 · 토큰 · 고정」으로 분류하고, CSS · style 값을 「그림자 없음 · 토큰 · 고정」으로 분류해요(D1 의 단위 종류에 따라 허용 토큰이 달라요).

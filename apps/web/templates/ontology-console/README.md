@@ -45,17 +45,19 @@ npm run check:ontology      # 템플릿 디자인 규칙 검사(위반 목록 �
 | em-dash | 긴 줄표(U+2014), 주석 포함 |
 | exclamation | 느낌표가 든 한글 문구 |
 | one-side-line | `border-l-4 border-primary` 처럼 한쪽 테두리에 색을 준 것(중립 `border-border` 선은 통과), CSS `border-left` · style `borderLeft` 등에 색을 준 것 |
-| card-shadow | `<Card` · `bg-card` · 카드 모양(`rounded-*` 와 `border` 를 함께 쓴 상자) 과 `shadow-*` 조합, `<Card style` 의 `boxShadow`, 선택자에 card 가 든 CSS `box-shadow` |
-| palette | hex · `rgb()` · `hsl()` 리터럴, CSS 이름 색(`red` · `white` 등), Tailwind 기본 팔레트 클래스(`text-red-500` · `text-white` 등) |
+| card-shadow | 카드에 준 그림자 값이 토큰이 아닌 것. `<Card` · `bg-card` · 카드 모양(`rounded-*` 나 `rounded-[…]` 와 `border` 를 함께 쓴 상자)의 `shadow-*` · `[box-shadow:…]`, `<Card style` 의 `boxShadow`, 선택자에 card 가 든 CSS 의 `box-shadow` · `@apply` 를 값으로 판정해요 |
+| palette | hex · `rgb()` · `hsl()` 리터럴(임의값 밑줄 뒤 `_#000` · `_rgb(` 포함), CSS 이름 색(`red` · `white` 등), Tailwind 기본 팔레트 클래스(`text-red-500` · `text-white` 등) |
 
 클래스 조합은 문자열 하나만 보지 않고 `className={...}` 표현식과 `cn()` · `clsx()` · `cva()` · `twMerge()` 인자 안의 문자열을 모두 합쳐 봐요. 그래서 `cn('border-l-4', active && 'border-primary')` 처럼 나눠 써도 잡혀요.
 
 검사의 한계(소스를 정적으로 읽기 때문이에요):
 
 - 변수 · 상수에 담아 넘긴 클래스, 런타임에 조립한 문자열, 다른 파일에서 가져온 클래스 묶음은 보지 않아요.
-- 카드는 `<Card` · `bg-card` · `rounded-*` + `border` 조합으로 알아봐요. 테두리 없이 바탕색만 다른 상자에 그림자를 주면 잡지 못해요.
-- `href="#add"` 같은 앵커와 URL 조각(`/entities#abc`)은 색으로 보지 않아요. 그 밖의 `#` + 16진 글자 3 ~ 8자는 리터럴 색으로 봐요.
-- `shadow-[shadow:var(--axis-shadow-lg)]` 처럼 타입 힌트 `shadow:` 가 붙은 임의값 그림자는 그림자 클래스로 보지 않아요(클래스 모양 때문이고, 토큰인지는 보지 않아요). AXIS 의 Dialog · Select · Toast 는 떠 있는 레이어라 이 토큰 그림자를 쓰고, ontology 브랜드가 그 값을 정해요. 카드에는 쓰지 말고, 토큰이 아닌 값을 이 모양으로 쓰지 않아요(검사가 잡지 못해요).
+- 카드는 `<Card` · `bg-card`(`hover:bg-card` · `bg-card/90` · `!bg-card` 처럼 변형 접두 · 불투명도 · 중요도가 붙은 것 포함) · `rounded-*`(또는 `rounded-[…]`) + `border` 조합으로 알아봐요. 테두리 없이 바탕색만 다른 상자에 그림자를 주면 잡지 못해요. `bg-[hsl(var(--card))]` 처럼 임의값으로 쓴 카드 바탕은 진짜 카드로 보지 않아서 `rounded` + `border` 가 함께 있으면 모양으로만 카드인 상자로 판정해요. `className` 앞 속성에 JSX 요소나 `<` · `>` 비교식, TS 제네릭(`Array<string>`)이 있는 `<Card`(`<Card icon={<Icon />} className="…">`)와 작은따옴표 `<Card className='…'>` 도 진짜 카드로 보지 않아요. style 의 `boxShadow` 와 그림자 토큰 재정의 키는 `<Card` 태그에서만 봐요.
+- `href="#add"` 같은 앵커와 URL 조각(`/entities#abc`)은 색으로 보지 않아요. 그 밖의 `#` + 16진 글자 3 ~ 8자는 리터럴 색으로 봐요. 밑줄 바로 뒤의 `#` + 16진(`page_#abc`)은 임의값 밑줄과 구분하지 않아 URL 안이어도 색으로 봐요. 같은 이유로 `to_rgb(1` · `hex_to_hsl(2` 같은 snake_case 함수 호출도 색 리터럴로 봐요.
+- card-shadow 는 그림자 값이 토큰인지로 판정해요. `<Card` · `bg-card` · 선택자에 card 가 든 CSS 에서는 `var(--axis-card-shadow…)` 만 토큰으로 인정하고 모양(`rounded` + `border`)으로만 카드처럼 보이는 상자에서는 이름에 `shadow` 가 든 `var(--axis-…)`(떠 있는 레이어용 `--axis-shadow-lg` 포함)를 인정해요. AXIS 의 Dialog · Select · Toast 는 떠 있는 레이어라 `shadow-[shadow:var(--axis-shadow-lg)]` 를 쓰고, ontology 브랜드가 그 값을 정해요. 카드에는 쓰지 않아요(진짜 카드에서는 위반이에요). `shadow-sm` 같은 크기 이름, 고정값(`shadow-[shadow:0_1px_2px_#000]` 처럼 힌트가 있어도), 폴백이나 고정 레이어를 섞은 값, 토큰이 아닌 변수, 카드에서 그림자 토큰 변수에 고정값을 대입한 것(`[--axis-card-shadow:…]` · style `'--axis-card-shadow'` 키나 계산 키 `['--axis-card-shadow' as string]` · CSS 선언)은 위반이에요. CSS · style 값은 앞부분이 아니라 값 전체로 판정해요(`none` 이나 `0 0 #0000` 뒤에 다른 값이 붙으면 위반). 그림자 없음으로 보는 값은 `none` · `0 0 #0000` 뿐이라 `inherit` · `0 0 transparent` 도 위반이에요. style 값은 따옴표 문자열 하나일 때만 토큰으로 보고, 뒤에 `+` · `||` 등이 이어지거나 `${…}` 가 들면 위반이에요. 따옴표로 시작하지 않는 값(변수 · 삼항)은 보지 않아요. `shadow-none` 과 그림자 색(`shadow-black/10` · `shadow-[color:…]`)은 card-shadow 가 아니에요(팔레트 색은 palette 가 잡아요). config 로 이름을 늘린 그림자(`shadow-card` 등)는 고정 그림자로 봐요.
+- 카드 밖(조상 요소의 `[--axis-card-shadow:…]` · 전역 CSS `:root`)에서 그림자 토큰을 다시 정의한 것과 Tailwind 내부 변수(`[--tw-shadow:…]` · `--tw-ring-shadow`)로 넣은 그림자는 보지 않아요. 테마 정의와 구분할 수 없어서예요.
+- CSS 파일에서도 `//` 를 줄 주석으로 보고 그 줄 끝까지 지워요(앞이 `:` 인 `https://` 는 남김). `url(//…)` 이나 문자열 안 `//` 뒤에 같은 줄로 이어 쓴 선언은 검사하지 않으니 줄을 나눠 써요.
 
 읽는 범위: 심볼릭 링크는 실경로가 프로젝트 안일 때만 따라가요(같은 실경로는 한 번, 디렉터리 깊이 32 단계까지). 256KB 를 넘는 파일은 생성 · 압축 파일로 보고 건너뛰며 건수를 알려 줘요. 8,000자를 넘는 클래스 묶음 · 문자열은 클래스 규칙으로 보지 않아요. 줄 길이 상한은 없어요. 프로젝트 전체로는 파일 4,000개 · 읽는 바이트 합계 16MB · 디렉터리 항목 50,000개(대상 밖 파일 · 디렉터리 · 링크 이름까지 셈)까지만 판정하고, 넘으면 그 뒤 파일은 보지 않고 「프로젝트 예산 초과로 측정 중단」을 알려요(파일은 `app` → `components` → `lib`, 그 안은 이름순으로 모아요). 환경변수 `CHECK_ONTOLOGY_MAX_FILES` · `CHECK_ONTOLOGY_MAX_BYTES` · `CHECK_ONTOLOGY_MAX_ENTRIES` 로 예산을 낮출 수만 있어요.
 

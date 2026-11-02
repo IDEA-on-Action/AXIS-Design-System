@@ -99,6 +99,7 @@
 - 값 실측: tokens dist `css/variables.css` 의 `--axis-shadow-lg` 는 `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)`(밝은 · 어두운 테마 같음)이고 Tailwind 3.4.19 기본 `boxShadow.lg` 와 글자까지 같아요. `md` 는 `0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)`. ontology 브랜드(`css/brands/ontology.css`)는 `--axis-shadow-lg: 0 8px 24px rgba(17,20,24,.10)`(어두운 테마 `rgba(0,0,0,.50)`), `--axis-card-shadow: 0 0 #0000`
 - 레지스트리 전 컴포넌트(r/*.json 의 files 30개)를 템플릿 사본에 넣은 48파일: 신판 스크립트 위반 0건 rc 0, 같은 방법으로 HEAD(91c8d12) r/ 를 넣은 대조군은 card-shadow 4건(`select.tsx:63 · 64`, `toast.tsx:25 · 26`) rc 1. 패리티 테스트 「레지스트리 전 컴포넌트를 넣은 사본」은 두 구현 위반 0건 · 파일 수 같음을 요구하도록 바꿨어요
 - 걸리지 않는 이유(판정 동작, 탐침 fixture): 같은 `rounded-md border` 묶음에서 `shadow-[shadow:var(--axis-shadow-lg)]` · `shadow-[shadow:0_4px_8px_rgb(0_0_0/0.5)]` 는 0건, `shadow-[var(--axis-shadow-lg)]` · `shadow-[0_4px_8px_var(--x)]` · `shadow-lg` 는 card-shadow. 그림자 정규식이 대괄호 안의 `:` 를 받지 않기 때문이고 토큰 여부와는 관계없어요. 두 번째 줄의 `_rgb(` 는 palette 로도 잡히지 않아요(릴리스 노트 한계 절)
+  - WI-0109 에서 바뀜: 판정이 값 기준이 되어 같은 `rounded-md border` 묶음에서 `shadow-[shadow:var(--axis-shadow-lg)]` · `shadow-[var(--axis-shadow-lg)]` 는 토큰이라 0건, `shadow-[shadow:0_4px_8px_rgb(0_0_0/0.5)]` · `shadow-[0_4px_8px_var(--x)]` · `shadow-lg` 는 card-shadow 예요. `_rgb(` 는 palette 로 잡혀요(WI-0109 testplan)
 
 ## 7. 사용자 결정 [B] 반영(2026-11-01 2차): 프로젝트 전체 예산
 

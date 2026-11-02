@@ -102,7 +102,7 @@
 | 121 | ui-react popover · dropdown-menu · sheet 도 select · toast 처럼 토큰 그림자 `shadow-[shadow:var(--axis-shadow-lg)]` 로 맞춤(레지스트리에는 없는 컴포넌트, WI-0107 후속, 2026-11-01 사용자 결정: 다음 배치로 바로 진행) | WI-0108 (#277) | P18 | P3 | ✅ 2026-11-01 (#278, ui-react · agentic-ui 1.8.5) |
 | 122 | 이미 만든 ontology-console 프로젝트의 lib/utils.ts 에 그림자 병합 설정이 없으면 SelectContent · Toast 에 shadow-<색> 을 줄 때 그림자가 사라짐. axis check 점검 항목 추가 검토(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
 | 123 | 템플릿 규칙 검사 예산(파일 4,000개 · 16MB · 디렉터리 항목 5만 개) 값과 한 디렉터리를 통째로 읽는 readdir 를 실제 큰 앱에서 다시 측정(WI-0107 후속) | 미배정 | P18 | P3 | ⏳ |
-| 124 | turbo type-check lint test --force 를 기본 동시 실행으로 돌리면 ui-react fix-cva-dts 가 agentic-ui type-check 의 ^build 와 dist 재작성 경합으로 「d.ts 0개」 실패(WI-0108 측정, 기존 문제). 같은 부하에서 cli template-checks 시간 한도 테스트 1건이 단독은 통과 · 동시 실행은 실패 | 미배정 | P18 | P3 | ⏳ |
+| 124 | turbo type-check lint test --force 를 기본 동시 실행으로 돌리면 ui-react fix-cva-dts 가 agentic-ui type-check 의 ^build 와 dist 재작성 경합으로 「d.ts 0개」 실패(WI-0108 측정, 기존 문제). 같은 부하에서 cli template-checks 시간 한도 테스트 1건이 단독은 통과 · 동시 실행은 실패. WI-0109 재관찰(2026-11-02): 실패로 중단된 실행이 ui-react 빌드를 DTS 단계에서 끊어 d.ts 0개 dist 를 남기고, `test` 에 `build` 의존이 없어 다음 실행의 test 가 그 dist 를 먼저 읽어 `--concurrency=1` 에서도 실패(빌드를 먼저 끝내면 통과) | 미배정 | P18 | P3 | ⏳ |
 | 125 | Tooltip 은 떠 있는 레이어인데 그림자가 없음. 토큰 그림자를 넣을지 디자인 판단(WI-0108 범위 밖) | 미배정 | P18 | P3 | ⏳ |
 
 ### 완료
