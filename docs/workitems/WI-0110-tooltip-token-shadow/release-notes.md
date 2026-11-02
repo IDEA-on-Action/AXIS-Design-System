@@ -1,6 +1,6 @@
 # WI-0110: Tooltip 토큰 그림자 릴리스 노트
 
-> 미발행(2026-11-02 작성) | 대상: `@axis-ds/ui-react` patch · `@axis-ds/agentic-ui` patch(내부 의존) → 1.8.6 | GitHub: #283
+> 발행(2026-11-02, Version PR #285, run 41400599723, provenance 2/2) | 대상: `@axis-ds/ui-react` patch · `@axis-ds/agentic-ui` patch(내부 의존) → 1.8.6 | GitHub: #283
 > `@axis-ds/tokens` · `@axis-ds/theme` · cli · mcp 는 바뀌지 않아요. 레지스트리(`r/`)에는 tooltip 이 없어요
 
 ## 바뀐 점

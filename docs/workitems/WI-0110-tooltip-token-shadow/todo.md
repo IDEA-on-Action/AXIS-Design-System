@@ -1,6 +1,6 @@
 # WI-0110: TODO
 
-> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #283 | 상태: 진행 중
+> PRD: [prd.md](./prd.md) | 테스트: [testplan.md](./testplan.md) | 릴리스 노트: [release-notes.md](./release-notes.md) | GitHub: #283 | 상태: 완료(2026-11-02, PR #284 · Version PR #285, ui-react · agentic-ui 1.8.6 발행)
 
 ## 조사
 - [x] 현재 구조 · 함께 고칠 곳 · 레지스트리 · 템플릿 규칙 영향, 브랜드별 시각 측정, 설계 · 반박(조사 워크플로, 2026-11-02)
@@ -21,5 +21,5 @@
 
 ## 릴리스
 - [x] release-notes.md
-- [ ] PR 리뷰 · 머지 · 발행
-- [ ] 발행 뒤 Issue #283 닫기 · project-todo · CLAUDE.md 현행화
+- [x] PR 리뷰 · 머지 · 발행
+- [x] 발행 뒤 Issue #283 닫기 · project-todo · CLAUDE.md 현행화
