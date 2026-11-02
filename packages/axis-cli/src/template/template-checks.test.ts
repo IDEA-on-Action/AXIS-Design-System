@@ -168,8 +168,287 @@ const NEGATIVE: Record<string, string> = {
   "app/ok.css": `.x { border-left: 1px solid hsl(var(--border)); color: hsl(var(--foreground)); }\n.card { box-shadow: none; }\n`,
 };
 
+/**
+ * WI-0109 card-shadow 값 판정 경계 사례(한 줄에 한 사례). 단위 단언은 줄마다, 패리티는 파일로 써서 줄 번호까지 봅니다.
+ * 허용 토큰: 진짜 카드(<Card · bg-card · card 선택자)는 var(--axis-card-shadow…) 만, 모양으로만 카드(rounded + border)는
+ * 이름에 shadow 가 든 var(--axis-…) 전체(prd D1). 폴백 · 고정 레이어 혼합 · 비 axis 변수 · 힌트 없는 값도 값으로 판정(D3)
+ */
+const SHADOW_CLASS_FIXED = [
+  // 힌트가 있어도 값이 고정이면 위반(종전에는 대괄호 안의 : · # · / 때문에 놓침)
+  "rounded-lg border shadow-[shadow:0_1px_2px_#000]",
+  "rounded-lg border hover:shadow-[shadow:0_1px_2px_#0003]",
+  "rounded-lg border shadow-[shadow:0_4px_8px_rgb(0_0_0/0.5)]",
+  "bg-card shadow-[shadow:var(--x)]",
+  "rounded-md border shadow-[shadow:var(--axis-text-primary)]",
+  "bg-card shadow-[shadow:var(--axis-shadow-lg),0_0_0_1px_red]",
+  "bg-card shadow-[shadow:var(--axis-shadow-lg,0_1px_2px_black)]",
+  "bg-card shadow-[shadow:var(--axis-card-shadow,0_1px_2px_black)]",
+  "rounded-lg border shadow-[shadow:var(--axis-shadow-lg),]",
+  // D1: 진짜 카드에서는 떠 있는 레이어 토큰도 위반
+  "bg-card shadow-[shadow:var(--axis-shadow-lg)]",
+  "bg-card shadow-[var(--axis-shadow-sm)]",
+  // D1: 변형 접두 · 중요도 · 불투명도가 붙은 bg-card 도 진짜 카드(모양 클래스가 함께 있어도 card 기준)
+  "rounded-lg border bg-card/90 shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-lg border bg-card/[.9] shadow-[var(--axis-shadow-lg)]",
+  "rounded-lg border hover:bg-card shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-lg border dark:md:bg-card shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-lg border !bg-card shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-lg border bg-card! shadow-[shadow:var(--axis-shadow-lg)]",
+  "bg-card/80 shadow-md",
+  // D3: 힌트 없는 값
+  "bg-card shadow-[0_1px_2px_#000]",
+  "bg-card shadow-[0_1px_2px_rgb(0_0_0/0.1)]",
+  "bg-card shadow-[var(--x)]",
+  "bg-card shadow-[#000]",
+  "bg-card shadow-(--x)",
+  "bg-card shadow-[length:var(--axis-card-shadow)]",
+  // 크기 이름 · 모르는 이름 · 중요도 · 불투명도 · 변형 접두
+  "bg-card shadow",
+  "bg-card shadow-2xs",
+  "bg-card shadow-xs",
+  "bg-card shadow-xl",
+  "bg-card shadow-2xl",
+  "bg-card shadow-sm/20",
+  "bg-card shadow-inner",
+  "bg-card shadow-3xl",
+  "bg-card shadow-card",
+  "bg-card !shadow-md",
+  "bg-card hover:!shadow-lg",
+  "bg-card shadow-md!",
+  "bg-card shadow-lg/50",
+  "bg-card shadow-lg/[50%]",
+  "bg-card shadow-lg/(--alpha)",
+  "bg-card dark:hover:shadow-lg",
+  "bg-card [&>div]:shadow-lg",
+  "bg-card data-[state=open]:shadow-[shadow:0_1px_black]",
+  // 닫히지 않은 조각(공백 때문에 잘림) · 이상한 꼬리 · 끝 구두점
+  "bg-card shadow-[0 1px 2px #000]",
+  "bg-card shadow-[shadow:0 1px black]",
+  "bg-card shadow-[shadow:var(--axis-card-shadow)]]",
+  "bg-card shadow-md,",
+  "bg-card shadow-md;",
+  // D4 · D2: 임의 속성 box-shadow 와 그림자 토큰 재정의
+  "bg-card [box-shadow:0_1px_2px_black]",
+  "bg-card ![box-shadow:0_1px_black]",
+  "bg-card hover:[box-shadow:0_1px_black]",
+  "bg-card [box-shadow:0 1px black]",
+  "bg-card [--axis-card-shadow:0_1px_2px_black]",
+  "rounded-md border [--axis-shadow-lg:0_8px_24px_black]",
+  // D1 · D2: 임의 속성 · 재정의도 진짜 카드에서는 var(--axis-card-shadow…) 만 토큰(모양 단위 통과 사례와 짝)
+  "bg-card [box-shadow:var(--axis-shadow-lg)]",
+  "bg-card [--axis-card-shadow:var(--axis-shadow-lg)]",
+  // 값 전체로 판정: 그림자 없음 뒤에 다른 레이어가 붙으면 위반
+  "bg-card shadow-[shadow:none,0_1px_var(--x)]",
+  // FR-2: 토큰 클래스가 있어도 고정 클래스가 하나라도 있으면 위반
+  "bg-card shadow-[var(--axis-card-shadow)] hover:shadow-lg",
+  "rounded-md border shadow-[shadow:var(--axis-shadow-lg)] shadow-md",
+  // D4: isCardLike 가 rounded-[…] 임의값을 카드 모양으로 봄
+  "rounded-[var(--axis-radius-surface,0.5rem)] border shadow-lg",
+  "rounded-[12px] border shadow-md",
+  "rounded-[0.75rem] border shadow-sm",
+  // D3: 모양으로만 카드인 묶음에서도 힌트 없는 고정값 · 비 axis 변수 · --axis- 가 아닌 그림자 이름은 위반
+  "rounded-md border shadow-[var(--x)]",
+  "rounded-md border shadow-[0_1px_2px_var(--x)]",
+  "rounded-md border shadow-[shadow:var(--shadow-lg)]",
+  // 보수 판정 고정: 접두 붙은 임의 속성 box-shadow, 빈 값, 빈 재정의, 대문자 변수 이름(토큰 이름은 대소문자를 가림)
+  "bg-card [-webkit-box-shadow:0_1px_black]",
+  "bg-card shadow-[]",
+  "bg-card [--axis-card-shadow:]",
+  "bg-card shadow-[var(--AXIS-CARD-SHADOW)]",
+];
+const SHADOW_CLASS_PASS = [
+  // 모양으로만 카드인 묶음(떠 있는 레이어)의 그림자 토큰
+  "rounded-md border shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-md border md:shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-md border shadow-[shadow:var(--axis-shadow-lg)]!",
+  "rounded-md border shadow-(--axis-shadow-lg)",
+  "rounded-md border shadow-[shadow:var(--axis-shadow-lg),var(--axis-shadow-sm)]",
+  "rounded-md border [box-shadow:var(--axis-shadow-lg)]",
+  "rounded-[var(--axis-radius-surface,0.5rem)] border shadow-[shadow:var(--axis-card-shadow)]",
+  // 진짜 카드의 카드 그림자 토큰(힌트 · 단축형 · TW4 괄호형 · 대소문자 · !important)
+  "bg-card md:shadow-[shadow:var(--axis-card-shadow)]",
+  "bg-card shadow-[var(--axis-card-shadow)]",
+  "bg-card shadow-[--axis-card-shadow]",
+  "bg-card shadow-(--axis-card-shadow)",
+  "bg-card shadow-(shadow:--axis-card-shadow)",
+  "bg-card shadow-[var(--axis-card-shadow-default)]",
+  "bg-card shadow-[shadow:VAR(--axis-card-shadow)]",
+  "bg-card shadow-[shadow:var(--axis-card-shadow)_!important]",
+  "bg-card shadow-[shadow:var(--axis-card-shadow)]/[50%]",
+  "bg-card [box-shadow:var(--axis-card-shadow)]",
+  "bg-card [-webkit-box-shadow:var(--axis-card-shadow)]",
+  "bg-card [--axis-card-shadow:var(--axis-card-shadow-default)]",
+  "bg-card [--axis-card-shadow:none]",
+  // 그림자 없음
+  "bg-card shadow-none",
+  "bg-card print:shadow-none",
+  "bg-card shadow-[shadow:none]",
+  "bg-card shadow-[shadow:NONE]",
+  // 그림자 색(box-shadow 를 만들지 않음, 팔레트 색은 palette 가 맡음)
+  "bg-card shadow-[color:var(--x)]",
+  "bg-card shadow-(color:--x)",
+  "bg-card shadow-primary",
+  "bg-card shadow-primary-foreground",
+  "bg-card shadow-transparent",
+  "bg-card shadow-chart-1",
+  "bg-card shadow-current",
+  "bg-card shadow-inherit",
+  "bg-card shadow-border",
+  "bg-card shadow-input",
+  "bg-card shadow-ring",
+  "bg-card shadow-background",
+  "bg-card shadow-foreground",
+  // 그림자 유틸이 아님(범위 밖)
+  "bg-card -shadow-md",
+  "bg-card drop-shadow-lg",
+  "bg-card inset-shadow-sm",
+  "bg-card text-shadow-lg",
+  "bg-card ring-1",
+  // bg-card 와 이름만 비슷하거나 불투명도 모양이 아닌 클래스는 진짜 카드가 아님(모양으로만 카드라 떠 있는 레이어 토큰 통과)
+  "rounded-lg border bg-card-foreground shadow-[shadow:var(--axis-shadow-lg)]",
+  "rounded-lg border bg-card/x shadow-[shadow:var(--axis-shadow-lg)]",
+  // 카드가 아닌 묶음
+  "p-4 shadow-lg",
+  "rounded-md shadow-[shadow:0_1px_black]",
+];
+/** 통과하지만 palette 는 따로 잡는 것(card-shadow 0건만 단언) */
+const SHADOW_CLASS_PASS_PALETTE = [
+  "bg-card shadow-[shadow:0_0_#0000]",
+  "bg-card shadow-black/10",
+  "bg-card shadow-red-500",
+  "bg-card shadow-white",
+];
+/** <Card 태그 · style 경로(.tsx) */
+const SHADOW_TSX_FIXED = [
+  `export const A = () => <Card className="shadow-[shadow:0_4px_8px_#000]">x</Card>`,
+  `export const A = () => <Card className="shadow-[shadow:var(--axis-shadow-lg)]">x</Card>`,
+  `export const A = () => <Card className={cn('p-4', on && 'shadow-[var(--axis-shadow-lg)]')}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-shadow-lg)' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow), 0 0 0 1px var(--x)' }}>x</Card>`,
+  `export const A = () => <Card style={{ '--axis-card-shadow': '0 1px 2px var(--x)' }}>x</Card>`,
+  `export const A = () => <Card style={{ "--axis-shadow-lg": "0 1px 2px var(--x)" }}>x</Card>`,
+  `export const A = () => <Card style={{ ['--axis-card-shadow' as string]: '0 1px 2px var(--x)' }}>x</Card>`,
+  `export const A = () => <Card style={{ [ "--axis-shadow-lg" ]: "0 1px 2px var(--x)" }}>x</Card>`,
+  // D1 · D2: <Card style 재정의 키에 떠 있는 레이어 토큰을 넣으면 위반(진짜 카드 기준)
+  `export const A = () => <Card style={{ '--axis-card-shadow': 'var(--axis-shadow-lg)' }}>x</Card>`,
+  // 값 전체로 판정
+  `export const A = () => <Card style={{ boxShadow: 'none, 0 1px var(--x)' }}>x</Card>`,
+  // FR-2: 토큰 클래스와 고정 클래스가 한 묶음
+  `export const A = () => <Card className={cn('shadow-[var(--axis-card-shadow)]', x && 'shadow-lg')}>x</Card>`,
+  // 값이 따옴표 문자열 하나로 끝나지 않으면(+ · || · 템플릿 리터럴 치환) 보수적으로 위반(HEAD 도 잡던 꼴)
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow)' + ', 0 1px black' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow), ' + x }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow)' || x }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: \`var(--axis-card-shadow)\${x}\` }}>x</Card>`,
+  `export const A = () => <Card style={{ '--axis-card-shadow': 'var(--axis-card-shadow-default)' + x }}>x</Card>`,
+];
+const SHADOW_TSX_PASS = [
+  `export const A = () => <Card className="shadow-[shadow:var(--axis-card-shadow)]">x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow)' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'VAR( --axis-card-shadow ) !important' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'NONE' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow) ! important' }}>x</Card>`,
+  `export const A = () => <Card style={{ boxShadow: 'var(--axis-card-shadow)' , padding: 4 }}>x</Card>`,
+  `export const A = () => <Card style={{ '--axis-card-shadow': 'var(--axis-card-shadow-default)' }}>x</Card>`,
+  `export const A = () => <Card style={{ ['--axis-card-shadow' as string]: 'var(--axis-card-shadow-default)' }}>x</Card>`,
+  `export const A = () => <Card style={{ '--axis-card-bg': '0 1px 2px var(--x)' }}>x</Card>`,
+  `export const A = () => <div style={{ boxShadow: '0 1px 2px var(--x)' }} />`,
+  `export const s = { '--axis-card-shadow': '0 1px 2px var(--x)' }`,
+];
+/** 선택자에 card 가 든 CSS 규칙(.css). 규칙 하나가 한 줄 */
+const SHADOW_CSS_FIXED = [
+  ".my-card { box-shadow: var(--axis-shadow-lg); }",
+  ".card-a { box-shadow: var(--axis-card-shadow); -webkit-box-shadow: 0 1px 2px var(--x); }",
+  ".card-b { box-shadow: var(--axis-card-shadow), 0 0 0 1px var(--x); }",
+  ".card-c { box-shadow: var(--axis-card-shadow, 0 1px 2px var(--x)); }",
+  ".card-d { --axis-card-shadow: 0 1px 2px var(--x); }",
+  ".card-e { @apply rounded shadow-md; }",
+  // D1 · D4: 카드 CSS 규칙의 @apply 는 진짜 카드 기준이라 떠 있는 레이어 토큰도 위반
+  ".card-x { @apply shadow-[shadow:var(--axis-shadow-lg)]; }",
+  ".card-f { BOX-SHADOW: 0 1px var(--x); }",
+  // D1 · D2: 카드 규칙의 재정의 값도 진짜 카드 기준, 카드 규칙 안 떠 있는 레이어 토큰 재정의도 판정
+  ".card-r { --axis-card-shadow: var(--axis-shadow-lg); }",
+  ".card-q { --axis-shadow-lg: 0 8px 24px var(--x); }",
+  // 값 전체로 판정: 그림자 없음 뒤에 값이 붙으면 위반
+  ".card-z { box-shadow: none, 0 1px var(--x); }",
+  ".card-w { box-shadow: 0 0 #0000 inset; }",
+  // 보수 판정 고정: 접두가 붙은 box-shadow 이름 · 빈 값 · 대문자 @apply
+  ".card-m { -moz-box-shadow: 0 1px black; }",
+  ".card-n { --my-box-shadow: 0 1px var(--x); }",
+  ".card-o { box-shadow: ; }",
+  ".card-s { @APPLY shadow-lg; }",
+];
+const SHADOW_CSS_PASS = [
+  ".my-card { box-shadow: var(--axis-card-shadow) !important; }",
+  ".card-p { box-shadow: var(--axis-card-shadow) ! important; }",
+  ".card-g { box-shadow: var( --axis-card-shadow ), var(--axis-card-shadow-default); }",
+  ".card-h { -webkit-box-shadow: none; box-shadow: NONE; }",
+  ".card-i { --axis-card-shadow: var(--axis-card-shadow-default); }",
+  ".card-j { @apply rounded shadow-none; }",
+  ".card-y { @apply shadow-[shadow:var(--axis-card-shadow)]; }",
+  ".panel { box-shadow: 0 1px 2px var(--x); }",
+];
+/** 통과하지만 palette 는 따로 잡는 CSS(그림자 없음 0 0 #0000 의 #0000) */
+const SHADOW_CSS_PASS_PALETTE = [".card-k { box-shadow: 0 0 #0000; }"];
+/**
+ * 현재 동작 고정(prd 알려진 한계). 후속 WI 가 의도적으로 뒤집을 때 이 표를 함께 고쳐요. [소스 한 줄, card-shadow 건수]
+ * 0 = 보지 못함(작은따옴표 className 의 <Card, 방향 rounded-t-lg, Tailwind 내부 변수, 따옴표로 시작하지 않는 style 값),
+ * 1 = 그림자 없음으로 면제하지 않음(inherit · 0 0 transparent)
+ */
+const SHADOW_KNOWN_TSX: ReadonlyArray<readonly [string, 0 | 1]> = [
+  [`export const A = () => <Card className='p-4 shadow-lg'>x</Card>`, 0],
+  [`export const A = () => <Card items={[] as Array<string>} className="rounded border shadow-[shadow:var(--axis-shadow-lg)]">x</Card>`, 0],
+  [`export const A = () => <Card style={{ boxShadow: on ? '0 1px black' : 'none' }}>x</Card>`, 0],
+  [`export const A = () => <Card style={{ boxShadow: 'inherit' }}>x</Card>`, 1],
+];
+const SHADOW_KNOWN_CLASS: ReadonlyArray<readonly [string, 0 | 1]> = [
+  ["rounded-t-lg border shadow-lg", 0],
+  ["bg-card [--tw-shadow:0_1px_black]", 0],
+  ["bg-card shadow-[shadow:inherit]", 1],
+  ["bg-card shadow-[shadow:0_0_transparent]", 1],
+];
+const SHADOW_KNOWN_CSS: ReadonlyArray<readonly [string, 0 | 1]> = [
+  [".card-t { box-shadow: inherit; }", 1],
+  [".card-u { box-shadow: 0 0 transparent; }", 1],
+];
+/** 표에서 card-shadow 가 나야 하는 줄 번호(1부터) */
+const knownLines = (cases: ReadonlyArray<readonly [string, 0 | 1]>) => cases.flatMap(([, n], i) => (n === 1 ? [i + 1] : []));
+/** FR-7: 임의값 밑줄 뒤 색(카드가 아니어도 palette) */
+const PALETTE_UNDERSCORE = [
+  "p-2 shadow-[0_1px_2px_#000]",
+  "p-2 shadow-[0_1px_rgb(0_0_0/0.1)]",
+  "p-2 shadow-[0_1px_rgba(0,0,0,.1)]",
+  "p-2 shadow-[0_1px_hsl(0_0%_0%)]",
+  "p-2 shadow-[0_1px_hsla(0,0%,0%,.1)]",
+];
+/** FR-7 음성: 영문 · 숫자 뒤의 색 함수 이름(myrgb() 등)과 밑줄 아닌 글자 뒤의 URL 조각은 palette 가 아님 */
+const PALETTE_FN_NEGATIVE = `const x = myrgb(1, 2, 3)\nconst y = hsl2(1)\nconst a = 'https://x/entities#abc'\nconst b = '&#123;'\nconst c = 'a_b'\n`;
+/** FR-7 의도한 부작용: 밑줄 바로 뒤의 #16진은 URL 조각이어도 색으로 봄(임의값 밑줄과 구분하지 않음) */
+const PALETTE_URL_UNDERSCORE = `const a = '/docs/page_#abc'\n`;
+const classLines = (cases: readonly string[]) => cases.map((c, i) => `export const c${i} = '${c}'`).join("\n") + "\n";
+const cssLines = (cases: readonly string[]) => cases.join("\n") + "\n";
+const tsxLines = (cases: readonly string[]) => cases.join("\n") + "\n";
+
+/** 판정 메모가 단위 종류별인지: 모양 카드가 먼저 쓴 토큰을 진짜 카드가 뒤에 다시 쓰면 그 줄은 위반(2줄) */
+const SHADOW_MEMO_KIND = classLines(["rounded-md border shadow-[shadow:var(--axis-shadow-lg)]", "bg-card shadow-[shadow:var(--axis-shadow-lg)]"]);
+
 /** 단위 테스트의 경계 입력(파일로 써서 패리티에도 넣음). 스크립트 쪽만 바뀌는 드리프트를 잡으려는 것 */
 const UNIT_INPUTS: Record<string, string> = {
+  "lib/u-shadow-fixed.ts": classLines(SHADOW_CLASS_FIXED),
+  "lib/u-shadow-pass.ts": classLines(SHADOW_CLASS_PASS),
+  "lib/u-shadow-pass-palette.ts": classLines(SHADOW_CLASS_PASS_PALETTE),
+  "components/u-shadow-fixed.tsx": tsxLines(SHADOW_TSX_FIXED),
+  "components/u-shadow-pass.tsx": tsxLines(SHADOW_TSX_PASS),
+  "app/u-shadow-fixed.css": cssLines(SHADOW_CSS_FIXED),
+  "app/u-shadow-pass.css": cssLines(SHADOW_CSS_PASS),
+  "app/u-shadow-pass-palette.css": cssLines(SHADOW_CSS_PASS_PALETTE),
+  "components/u-shadow-known.tsx": tsxLines(SHADOW_KNOWN_TSX.map(([c]) => c)),
+  "lib/u-shadow-known.ts": classLines(SHADOW_KNOWN_CLASS.map(([c]) => c)),
+  "app/u-shadow-known.css": cssLines(SHADOW_KNOWN_CSS.map(([c]) => c)),
+  "lib/u-shadow-memo-kind.ts": SHADOW_MEMO_KIND,
+  "lib/u-palette-underscore.ts": classLines(PALETTE_UNDERSCORE),
+  "lib/u-palette-fn-negative.ts": PALETTE_FN_NEGATIVE,
+  "lib/u-palette-url-underscore.ts": PALETTE_URL_UNDERSCORE,
   "lib/u-em-comment.ts": `/* a ${EM} b */\nconst x = 1\n`,
   "lib/u-comment-only.ts": `/* '#ff0000' */\n// 'text-red-500'\n`,
   "lib/u-cn-side.ts": `cn('border-l-4', a && 'border-primary')\n`,
@@ -222,6 +501,14 @@ describe("inspectOntologyRules: 5규칙", () => {
     expect(inspectOntologySource(`cn('rounded-lg border', a && 'shadow-lg')`, ".ts")).toEqual([{ line: 1, rule: "card-shadow" }]);
   });
 
+  it("palette: 임의값 밑줄 뒤 색(_#000 · _rgb( · _rgba( · _hsl( · _hsla()도 잡음(WI-0109 FR-7)", () => {
+    for (const c of PALETTE_UNDERSCORE) expect(inspectOntologySource(`export const c = '${c}'\n`, ".ts"), c).toEqual([{ line: 1, rule: "palette" }]);
+    // 영문 · 숫자 뒤의 색 함수 이름, URL 조각 · 엔티티는 그대로 통과
+    expect(inspectOntologySource(PALETTE_FN_NEGATIVE, ".ts")).toEqual([]);
+    // 의도한 부작용: 밑줄 바로 뒤의 #16진은 URL 안이어도 palette
+    expect(inspectOntologySource(PALETTE_URL_UNDERSCORE, ".ts")).toEqual([{ line: 1, rule: "palette" }]);
+  });
+
   it("같은 줄 · 같은 규칙은 한 번만", () => {
     expect(inspectOntologySource(`const a = '#fff #000 #123'\n`, ".ts")).toEqual([{ line: 1, rule: "palette" }]);
   });
@@ -237,6 +524,81 @@ describe("inspectOntologyRules: 5규칙", () => {
       { line: 1, rule: "em-dash" },
       { line: 1, rule: "palette" },
     ]);
+  });
+});
+
+describe("card-shadow: 그림자 값이 허용 토큰인가(WI-0109)", () => {
+  const shadowLines = (src: string, ext: string) =>
+    inspectOntologySource(src, ext)
+      .filter((v) => v.rule === "card-shadow")
+      .map((v) => v.line);
+  const one = (src: string, ext: string) => shadowLines(`${src}\n`, ext).length;
+
+  it.each(SHADOW_CLASS_FIXED)("문자열 '%s' 는 card-shadow", (c) => {
+    expect(one(`export const c = '${c}'`, ".ts")).toBe(1);
+    // cn() 으로 나눠 써도 같은 판정(클래스 묶음 경로)
+    const [first, ...rest] = c.split(" ");
+    expect(one(`cn('${first}', on && '${rest.join(" ")}')`, ".ts")).toBe(1);
+  });
+
+  it.each([...SHADOW_CLASS_PASS, ...SHADOW_CLASS_PASS_PALETTE])("문자열 '%s' 는 card-shadow 아님", (c) => {
+    expect(one(`export const c = '${c}'`, ".ts")).toBe(0);
+    const [first, ...rest] = c.split(" ");
+    expect(one(`cn('${first}', on && '${rest.join(" ")}')`, ".ts")).toBe(0);
+  });
+
+  it("통과하는 그림자 색 · 그림자 없음도 palette 는 따로 잡음", () => {
+    for (const c of SHADOW_CLASS_PASS_PALETTE) expect(inspectOntologySource(`export const c = '${c}'\n`, ".ts"), c).toEqual([{ line: 1, rule: "palette" }]);
+  });
+
+  it.each(SHADOW_TSX_FIXED)("<Card · style %s 는 card-shadow", (src) => {
+    expect(one(src, ".tsx")).toBe(1);
+  });
+
+  it.each(SHADOW_TSX_PASS)("<Card · style %s 는 card-shadow 아님", (src) => {
+    expect(one(src, ".tsx")).toBe(0);
+  });
+
+  it.each(SHADOW_CSS_FIXED)("CSS %s 는 card-shadow", (src) => {
+    expect(one(src, ".css")).toBe(1);
+  });
+
+  it.each([...SHADOW_CSS_PASS, ...SHADOW_CSS_PASS_PALETTE])("CSS %s 는 card-shadow 아님", (src) => {
+    expect(one(src, ".css")).toBe(0);
+  });
+
+  it("통과하는 CSS 그림자 없음(0 0 #0000)도 palette 는 따로 잡음", () => {
+    for (const c of SHADOW_CSS_PASS_PALETTE) expect(inspectOntologySource(`${c}\n`, ".css"), c).toEqual([{ line: 1, rule: "palette" }]);
+  });
+
+  it.each([
+    ...SHADOW_KNOWN_TSX.map(([c, n]) => [".tsx", c, n] as const),
+    ...SHADOW_KNOWN_CLASS.map(([c, n]) => [".ts", `export const c = '${c}'`, n] as const),
+    ...SHADOW_KNOWN_CSS.map(([c, n]) => [".css", c, n] as const),
+  ])("현재 동작 고정(prd 알려진 한계, %s) %s: card-shadow %i건", (ext, src, n) => {
+    expect(one(src, ext)).toBe(n);
+  });
+
+  it("D1: 같은 토큰이 단위 종류에 따라 갈림(모양으로만 카드는 통과, 진짜 카드는 위반)", () => {
+    expect(one(`export const c = 'rounded-md border shadow-[shadow:var(--axis-shadow-lg)]'`, ".ts")).toBe(0);
+    expect(one(`export const c = 'rounded-md border bg-card shadow-[shadow:var(--axis-shadow-lg)]'`, ".ts")).toBe(1);
+    expect(one(`export const c = 'rounded-md border bg-card shadow-[shadow:var(--axis-card-shadow)]'`, ".ts")).toBe(0);
+  });
+
+  it("판정 메모는 단위 종류별: 모양 카드에서 통과한 토큰을 진짜 카드가 다시 쓰면 위반", () => {
+    expect(shadowLines(SHADOW_MEMO_KIND, ".ts")).toEqual([2]);
+  });
+
+  it("CSS 는 선언마다 판정하고 보고는 규칙 여는 괄호 줄", () => {
+    expect(shadowLines(`.card {\n  box-shadow: var(--axis-card-shadow);\n  -webkit-box-shadow: 0 1px 2px var(--x);\n}\n`, ".css")).toEqual([1]);
+    expect(shadowLines(`.card {\n  box-shadow: var(--axis-card-shadow);\n  -webkit-box-shadow: var(--axis-card-shadow) !important;\n}\n`, ".css")).toEqual([]);
+  });
+
+  it("종전 판정이 유지되는 것: 크기 이름 · 기존 양성 fixture 는 위반, shadow-none · none 은 통과", () => {
+    expect(one(`export const c = 'bg-card shadow-md'`, ".ts")).toBe(1);
+    expect(one(`export const c = 'rounded-lg border shadow-none'`, ".ts")).toBe(0);
+    expect(one(`.my-card { box-shadow: 0 1px 2px hsl(var(--x)); }`, ".css")).toBe(1);
+    expect(one(`export function A() { return <Card style={{ boxShadow: '0 0 4px var(--x)' }}>x</Card> }`, ".tsx")).toBe(1);
   });
 });
 
@@ -418,6 +780,76 @@ describe("시간 상한(2차 시간 정규식 대체, WI-0107 D3 ②)", () => {
     const t = performance.now();
     inspectOntologySource(src, ext);
     expect(performance.now() - t).toBeLessThan(500);
+  });
+
+  // WI-0109 값 판정 헬퍼(변형 접두 · 괄호 짝 · 쉼표 레이어 · var 이름 · 끝 구두점)의 적대 입력. 한 줄이 클래스 묶음 상한(8,000자) 안의 문자열 · 규칙
+  const line8k = (head: string, unit: string, tail = "") => head + unit.repeat(Math.floor((7900 - head.length - tail.length) / unit.length)) + tail;
+  const fill = (line: string) => {
+    const lines: string[] = [];
+    while (lines.length * (line.length + 1) < 250 * 1024) lines.push(line);
+    return lines.join("\n");
+  };
+  it.each([
+    ["shadow 반복 이름(닫는 괄호 없음)", ".ts", fill(`'${line8k("bg-card shadow-[shadow:var(--axis-", "shadow")}'`)],
+    ["shadow 반복 이름(닫힘)", ".ts", fill(`'${line8k("rounded border shadow-[shadow:var(--axis-", "shadow", ")]")}'`)],
+    ["shadow 반복 이름(cn 묶음)", ".ts", fill(`cn('bg-card', '${line8k("shadow-[var(--axis-", "shadow")}')`)],
+    ["깊은 대괄호", ".ts", fill(`'${line8k("bg-card shadow-", "[")}'`)],
+    ["깊은 대괄호 · 괄호 짝", ".ts", fill(`'${line8k("rounded border shadow-", "[(")}'`)],
+    ["짝 맞는 깊은 대괄호", ".ts", fill(`'bg-card shadow-${"[".repeat(3900)}${"]".repeat(3900)}'`)],
+    ["변형 접두 반복", ".ts", fill(`'${line8k("bg-card ", "a:", "shadow-md")}'`)],
+    ["쉼표 레이어(토큰)", ".ts", fill(`'${line8k("bg-card shadow-[shadow:", "var(--axis-card-shadow),", "0]")}'`)],
+    ["빈 쉼표 레이어", ".ts", fill(`'${line8k("rounded border shadow-[shadow:", ",", "]")}'`)],
+    ["끝 구두점 반복", ".ts", fill(`'${line8k("bg-card shadow-md", ",;")}'`)],
+    ["rounded 임의값 닫히지 않음", ".ts", fill(`'${line8k("border rounded-[", "a")}'`)],
+    ["임의 속성 재정의 이름", ".ts", fill(`'${line8k("bg-card [--axis-", "shadow", ":0_1px_black]")}'`)],
+    ["CSS 쉼표 레이어 한 규칙", ".css", `.card{box-shadow:${"var(--axis-card-shadow),".repeat(10_000)}0}`],
+    ["CSS shadow 반복 이름(닫는 괄호 없음, var 정규식 실패 경로)", ".css", `.card{box-shadow:var(--axis-${"shadow".repeat(42_000)}}`],
+    ["style shadow 반복 이름(닫는 괄호 없음)", ".tsx", fill(`<Card style={{ boxShadow: '${line8k("var(--axis-", "shadow")}' }}>x</Card>`)],
+    ["CSS shadow 반복 이름 선언", ".css", `.card{${"--axis-shadow:var(--axis-shadow".repeat(7000)}}`],
+    ["CSS @apply 깊은 괄호", ".css", `.card{@apply ${"shadow-[(".repeat(25_000)}}`],
+    ["style 재정의 키 반복", ".tsx", fill(`<Card style={{ '${line8k("--axis-", "shadow")}': '0 1px 2px var(--x)' }}>x</Card>`)],
+    ["style 계산 키 뒤 긴 공백", ".tsx", `<Card style={{ [${" ".repeat(110_000)}'--axis-card-shadow' as${" ".repeat(110_000)}x }}>x</Card>`],
+    ["밑줄 뒤 색 반복", ".ts", fill(`'${line8k("p-2 ", "_rgb(1_#fff_")}'`)],
+    ["style boxShadow 문자열 연결 반복(따옴표 뒤 공백 · +)", ".tsx", fill(`<Card style={{ ${line8k("", "boxShadow: 'var(--axis-card-shadow)'      + ")}x }}>x</Card>`)],
+  ] as const)("적대 입력(그림자 값 판정) %s(%s): 상한 크기 판정이 500ms 안", (_label, ext, src) => {
+    expect(src.length).toBeGreaterThan(200 * 1024);
+    const t = performance.now();
+    inspectOntologySource(src, ext);
+    expect(performance.now() - t).toBeLessThan(500);
+  });
+
+  // 겹친 cn( 은 같은 문자열을 묶음마다 다시 넣어 값 판정 횟수가 깊이만큼 늘어요. 판정은 파일 안에서 토큰마다 한 번이라(ShadowMemo)
+  // 그림자 토큰이 든 입력도 같은 모양의 그림자 없는 입력(대조군, 종전부터 있던 묶음 경로 비용)과 비슷한 시간이어야 해요.
+  // 깊이 16 은 작업량 상한(partial) 바로 아래라 모든 묶음을 실제로 판정한 경우예요. 이 입력은 대조군 자체가 수십 ~ 수백 ms 라
+  // 고정 500ms 는 turbo 병렬 부하에서 대상과 무관하게 넘어서(측정 860 ~ 1,006ms, load 33), 같은 순간에 번갈아 잰 대조군의 배수로 봐요
+  const nestSame = (d: number, body: string) => `${"cn(".repeat(d)}'${body}'${")".repeat(d)}`;
+  const nestVaried = (d: number, body: string) => `${Array.from({ length: d }, (_, i) => `cn('x${i}', `).join("")}'${body}'${")".repeat(d)}`;
+  const layerTok = "shadow-[shadow:var(--axis-card-shadow),var(--axis-card-shadow)] ";
+  const plainTok = "p-4 text-sm font-medium gap-2 ";
+  /** 대상과 대조군을 번갈아 5번씩 재서 각각의 최솟값(같은 순간의 부하를 함께 받게) */
+  const pairMinMs = (src: string, control: string) => {
+    let t = Infinity;
+    let base = Infinity;
+    for (let i = 0; i < 5; i++) {
+      let at = performance.now();
+      inspectOntologySourceDetailed(control, ".ts");
+      base = Math.min(base, performance.now() - at);
+      at = performance.now();
+      inspectOntologySourceDetailed(src, ".ts");
+      t = Math.min(t, performance.now() - at);
+    }
+    return { t, base };
+  };
+  it.each([
+    ["겹친 cn 깊이 16 · 같은 문자열 · 그림자 토큰 레이어", fill(nestSame(16, line8k("bg-card ", layerTok, "x"))), fill(nestSame(16, line8k("bg-card ", plainTok, "x")))],
+    ["겹친 cn 깊이 16 · 묶음마다 다른 문자열 · 그림자 토큰 레이어", fill(nestVaried(16, line8k("bg-card ", layerTok, "x"))), fill(nestVaried(16, line8k("bg-card ", plainTok, "x")))],
+    ["겹친 cn 깊이 16 · 변형 bg-card 토큰", fill(nestSame(16, line8k("rounded border ", "hover:bg-card/90 ", "x"))), fill(nestSame(16, line8k("rounded border ", plainTok, "x")))],
+  ] as const)("적대 입력(겹친 묶음의 값 판정) %s: 모든 묶음을 판정하고 그림자 없는 같은 모양의 1.6배 안", (_label, src, control) => {
+    expect(src.length).toBeGreaterThan(200 * 1024);
+    for (const s of [src, control]) expect(inspectOntologySourceDetailed(s, ".ts").partial).toBe(false);
+    // 측정(esbuild 번들, 3회 최솟값): 수정본 0.7 ~ 1.0배, HEAD 1.05 ~ 1.2배, 토큰 판정을 기억하지 않는 판본 2.1 ~ 2.5배
+    const { t, base } = pairMinMs(src, control);
+    expect(t, `대상 ${t.toFixed(0)}ms · 대조군 ${base.toFixed(0)}ms`).toBeLessThan(base * 1.6 + 20);
   });
 
   it("닫히지 않은 cn( 가 겹겹이면 클래스 묶음 판정만 멈추고 partial(다른 규칙은 계속 판정)", async () => {
@@ -805,6 +1237,71 @@ describe("패리티: 템플릿 스크립트 = 내장 판정(같은 위반 목록
     expect(rows.filter((r) => r.file === "lib/u-hex3.ts").map((r) => r.line)).toEqual([1, 2, 3]);
   });
 
+  it("WI-0109 card-shadow 값 판정 경계 사례: 위반 사례는 모든 줄, 통과 사례는 0줄(두 구현 같음)", async () => {
+    const dir = await tempDir();
+    await writeFiles(dir, UNIT_INPUTS);
+    const { rows } = expectParity(dir);
+    const lines = (file: string, rule: string) => rows.filter((r) => r.file === file && r.rule === rule).map((r) => r.line);
+    const all = (n: number) => Array.from({ length: n }, (_, i) => i + 1);
+    // 위반 사례(파일 단위 양성 목록에도 등록: 이 파일들이 0건이면 측정이 수행되지 않은 것)
+    expect(lines("lib/u-shadow-fixed.ts", "card-shadow")).toEqual(all(SHADOW_CLASS_FIXED.length));
+    expect(lines("components/u-shadow-fixed.tsx", "card-shadow")).toEqual(all(SHADOW_TSX_FIXED.length));
+    expect(lines("app/u-shadow-fixed.css", "card-shadow")).toEqual(all(SHADOW_CSS_FIXED.length));
+    expect(lines("lib/u-shadow-memo-kind.ts", "card-shadow")).toEqual([2]);
+    expect(lines("lib/u-palette-underscore.ts", "palette")).toEqual(all(PALETTE_UNDERSCORE.length));
+    expect(lines("lib/u-palette-url-underscore.ts", "palette")).toEqual([1]);
+    // 통과 사례: card-shadow 0줄, palette 는 따로 잡는 파일만 그 줄
+    expect(lines("lib/u-shadow-pass-palette.ts", "card-shadow")).toEqual([]);
+    expect(lines("lib/u-shadow-pass-palette.ts", "palette")).toEqual(all(SHADOW_CLASS_PASS_PALETTE.length));
+    expect(lines("app/u-shadow-pass-palette.css", "card-shadow")).toEqual([]);
+    expect(lines("app/u-shadow-pass-palette.css", "palette")).toEqual(all(SHADOW_CSS_PASS_PALETTE.length));
+    // 현재 동작 고정(알려진 한계): 표의 1 인 줄만 card-shadow
+    expect(lines("components/u-shadow-known.tsx", "card-shadow")).toEqual(knownLines(SHADOW_KNOWN_TSX));
+    expect(lines("lib/u-shadow-known.ts", "card-shadow")).toEqual(knownLines(SHADOW_KNOWN_CLASS));
+    expect(lines("app/u-shadow-known.css", "card-shadow")).toEqual(knownLines(SHADOW_KNOWN_CSS));
+    const files = new Set(rows.map((r) => r.file));
+    for (const f of [
+      "lib/u-shadow-fixed.ts",
+      "components/u-shadow-fixed.tsx",
+      "app/u-shadow-fixed.css",
+      "lib/u-palette-underscore.ts",
+      "lib/u-palette-url-underscore.ts",
+      "lib/u-shadow-pass-palette.ts",
+      "app/u-shadow-pass-palette.css",
+    ]) {
+      expect(files.has(f), f).toBe(true);
+    }
+    for (const f of ["lib/u-shadow-pass.ts", "components/u-shadow-pass.tsx", "app/u-shadow-pass.css", "lib/u-palette-fn-negative.ts"]) {
+      expect(files.has(f), f).toBe(false);
+    }
+  });
+
+  it("스크립트 card-shadow 문구는 새 기준(값이 토큰이 아님)과 허용 토큰을 알려 줌", async () => {
+    const dir = await tempDir();
+    await writeFiles(dir, {
+      "lib/a.ts": "export const c = 'bg-card p-4 shadow-md'\nexport const d = 'rounded-md border shadow-[shadow:var(--x)]'\n",
+      "components/b.tsx":
+        "export const A = () => <Card style={{ boxShadow: '0 0 4px var(--x)' }}>x</Card>\n" +
+        "export const B = () => <Card className={cn('p-4', on && 'shadow-lg')}>x</Card>\n" +
+        "export const C = () => <Card style={{ '--axis-card-shadow': '0 1px 2px var(--x)' }}>x</Card>\n" +
+        "export const D = () => <Card style={{ boxShadow: 'var(--axis-card-shadow)' + x }}>x</Card>\n",
+      "app/c.css": ".my-card { box-shadow: 0 1px 2px var(--x); }\n",
+    });
+    const s = runScript(dir);
+    expect(s.rc).toBe(1);
+    expect(s.stdout).toContain("lib/a.ts:1  card-shadow  카드 그림자 값이 토큰이 아니에요(허용: var(--axis-card-shadow…)): shadow-md");
+    expect(s.stdout).toContain("lib/a.ts:2  card-shadow  카드 그림자 값이 토큰이 아니에요(허용: var(--axis-…shadow…)): shadow-[shadow:var(--x)]");
+    expect(s.stdout).toContain("components/b.tsx:1  card-shadow  Card 그림자 값이 토큰이 아니에요(style boxShadow, 허용: var(--axis-card-shadow…)): 0 0 4px var(--x)");
+    expect(s.stdout).toContain("components/b.tsx:2  card-shadow  Card 그림자 값이 토큰이 아니에요(허용: var(--axis-card-shadow…)): shadow-lg");
+    expect(s.stdout).toContain(
+      "components/b.tsx:3  card-shadow  Card 그림자 토큰 재정의 값이 토큰이 아니에요(style --axis-card-shadow, 허용: var(--axis-card-shadow…)): 0 1px 2px var(--x)"
+    );
+    expect(s.stdout).toContain(
+      "components/b.tsx:4  card-shadow  Card 그림자 값이 토큰이 아니에요(style boxShadow, 허용: var(--axis-card-shadow…)): var(--axis-card-shadow) …(문자열 하나가 아님)"
+    );
+    expect(s.stdout).toContain("app/c.css:1  card-shadow  카드 그림자 값이 토큰이 아니에요(허용: var(--axis-card-shadow…)): .my-card");
+  });
+
   it("빈 프로젝트: 둘 다 측정 실패", async () => {
     const dir = await tempDir();
     const s = runScript(dir);
@@ -817,7 +1314,9 @@ describe("패리티: 템플릿 스크립트 = 내장 판정(같은 위반 목록
     expect(await addAllRegistryComponents(dir)).toBeGreaterThan(25);
     const { rows, checked } = expectParity(dir);
     // WI-0107 D4: tool-call-card 의 긴 줄표를 가운뎃점으로 고쳐 em-dash 0건, select · toast 를 토큰 그림자
-    // shadow-[shadow:var(--axis-shadow-lg)] 로 바꿔 card-shadow 0건(구판 레지스트리는 select.tsx:63 · 64, toast.tsx:25 · 26 의 4건)
+    // shadow-[shadow:var(--axis-shadow-lg)] 로 바꿔 card-shadow 0건(구판 레지스트리는 select.tsx:63 · 64, toast.tsx:25 · 26 의 4건).
+    // WI-0109 부터는 값 판정이라 0건의 이유가 「모양으로만 카드인 묶음의 그림자 토큰」이에요(Card 본체는 rounded-[…] 로 카드 모양이 되고
+    // var(--axis-card-shadow) 라 통과). 토큰 면제를 끈 변이에서는 이 사본에서 card-shadow 가 생겨요
     expect(rows).toEqual([]);
     expect(checked).toBeGreaterThan(40);
   });
